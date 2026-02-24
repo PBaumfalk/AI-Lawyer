@@ -1,6 +1,7 @@
 "use client";
 
 import { ComposeManager } from "@/components/email/compose-manager";
+import { ComposeFab } from "@/components/email/compose-fab";
 
 /**
  * Email-specific layout that removes outer padding from the dashboard
@@ -17,6 +18,7 @@ export default function EmailLayout({
       <div className="h-[calc(100vh-4rem)] -m-6 overflow-hidden">
         {children}
       </div>
+      <ComposeFab />
     </ComposeManager>
   );
 }

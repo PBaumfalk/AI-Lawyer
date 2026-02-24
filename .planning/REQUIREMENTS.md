@@ -199,10 +199,10 @@
 | REQ-FI-005 | Phase 5 | Complete |
 | REQ-FI-006 | Phase 5 | Complete |
 | REQ-FI-007 | Phase 5 | Complete |
-| REQ-FI-008 | Phase 5 | Pending |
-| REQ-FI-009 | Phase 5 | Pending |
-| REQ-FI-010 | Phase 5 | Pending |
-| REQ-FI-011 | Phase 5 | Pending |
+| REQ-FI-008 | Phase 5 | Complete |
+| REQ-FI-009 | Phase 5 | Complete |
+| REQ-FI-010 | Phase 5 | Complete |
+| REQ-FI-011 | Phase 5 | Complete |
 | REQ-KI-002 | Phase 6 | Pending |
 | REQ-KI-003 | Phase 6 | Pending |
 | REQ-KI-004 | Phase 6 | Pending |

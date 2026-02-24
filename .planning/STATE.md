@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 5 of 7 (Financial Module)
-Plan: 4 of 6 in current phase (4 complete)
+Plan: 5 of 6 in current phase (5 complete)
 Status: Executing
-Last activity: 2026-02-24 -- Completed 05-04-PLAN.md (E-Rechnung XRechnung/ZUGFeRD)
+Last activity: 2026-02-24 -- Completed 05-05-PLAN.md (DATEV/SEPA/Banking/TimeTracking)
 
-Progress: [██████████████████████] 85%
+Progress: [████████████████████████] 89%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 24
-- Average duration: 7.5 min
-- Total execution time: 3.1 hours
+- Total plans completed: 25
+- Average duration: 7.6 min
+- Total execution time: 3.3 hours
 
 **By Phase:**
 
@@ -35,10 +35,10 @@ Progress: [██████████████████████] 8
 | 3.1 - Wire Email Real-Time + Compose | 1/1 | 2 min | 2 min |
 | 4 - Document Pipeline OCR + RAG | 3/3 | 25 min | 8.3 min |
 | 4.1 - Wire Akte RT + Email + Pipeline | 1/1 | 4 min | 4 min |
-| 5 - Financial Module | 4/6 | 34 min | 8.5 min |
+| 5 - Financial Module | 5/6 | 44 min | 8.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 04.1-01 (4 min), 05-01 (12 min), 05-02 (9 min), 05-03 (7 min), 05-04 (6 min)
+- Last 5 plans: 05-01 (12 min), 05-02 (9 min), 05-03 (7 min), 05-04 (6 min), 05-05 (10 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -66,6 +66,7 @@ Progress: [██████████████████████] 8
 | Phase 05 P02 | 9min | 2 tasks | 12 files |
 | Phase 05 P03 | 7min | 2 tasks | 12 files |
 | Phase 05 P04 | 6min | 1 tasks | 4 files |
+| Phase 05 P05 | 10min | 3 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -195,6 +196,12 @@ Recent decisions affecting current work:
 - [05-04]: Non-fatal ZUGFeRD fallback: plain PDF returned if XML embedding fails
 - [05-04]: ?format=plain query param to skip ZUGFeRD embedding when needed
 - [05-04]: Buyer electronic address placeholder derived from name (XRechnung BT-49 required but Kontakt may lack email)
+- [05-05]: SHA-256 hash of date+amount+purpose+sender for bank transaction deduplication
+- [05-05]: Match confidence as max of individual scores (not sum) to prevent multi-criteria inflation
+- [05-05]: Fire-and-forget timer auto-start via client component useEffect (does not block server-rendered Akte page)
+- [05-05]: Timer idempotency: starting for same Akte returns existing timer without duplicate
+- [05-05]: Lazy Taetigkeitskategorien initialization: auto-seed defaults on first GET per Kanzlei
+- [05-05]: Kontakt display name constructed from vorname/nachname/firma fields for invoice matcher
 
 ### Pending Todos
 
@@ -207,5 +214,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 05-04-PLAN.md (E-Rechnung XRechnung/ZUGFeRD) -- Phase 5 plan 4/6
+Stopped at: Completed 05-05-PLAN.md (DATEV/SEPA/Banking/TimeTracking) -- Phase 5 plan 5/6
 Resume file: None

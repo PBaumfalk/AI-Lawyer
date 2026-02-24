@@ -10,6 +10,7 @@ const log = createLogger("socket:rooms");
  * - `user:{userId}` — personal notifications (auto-joined on connect)
  * - `role:{ROLE}` — role-based broadcasts (auto-joined on connect)
  * - `akte:{akteId}` — case-specific updates (joined/left dynamically)
+ * - `mailbox:{kontoId}` — email real-time updates (joined/left dynamically)
  */
 export function setupRooms(io: Server): void {
   io.on("connection", (socket: Socket) => {
@@ -42,6 +43,22 @@ export function setupRooms(io: Server): void {
       const akteRoom = `akte:${akteId}`;
       socket.leave(akteRoom);
       log.debug({ userId, akteId }, "Left Akte room");
+    });
+
+    // Dynamic Mailbox room join (real-time email folder updates)
+    socket.on("join:mailbox", (kontoId: string) => {
+      if (!kontoId || typeof kontoId !== "string") return;
+      const mailboxRoom = `mailbox:${kontoId}`;
+      socket.join(mailboxRoom);
+      log.debug({ userId, kontoId }, "Joined mailbox room");
+    });
+
+    // Dynamic Mailbox room leave
+    socket.on("leave:mailbox", (kontoId: string) => {
+      if (!kontoId || typeof kontoId !== "string") return;
+      const mailboxRoom = `mailbox:${kontoId}`;
+      socket.leave(mailboxRoom);
+      log.debug({ userId, kontoId }, "Left mailbox room");
     });
 
     // Disconnect logging (Socket.IO auto-removes from all rooms)

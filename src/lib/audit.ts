@@ -25,7 +25,9 @@ export type AuditAktion =
   | "URLAUB_ERSTELLT"
   | "URLAUB_GELOESCHT"
   | "EINSTELLUNGEN_IMPORTIERT"
-  | "EINSTELLUNGEN_EXPORTIERT";
+  | "EINSTELLUNGEN_EXPORTIERT"
+  | "EINSTELLUNG_GEAENDERT"
+  | "EINSTELLUNG_ZURUECKGESETZT";
 
 // German labels for field names used in change diffs
 const feldLabels: Record<string, string> = {

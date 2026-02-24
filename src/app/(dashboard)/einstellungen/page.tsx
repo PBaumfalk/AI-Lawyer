@@ -8,11 +8,20 @@ import {
   Users,
   Download,
   Settings,
+  Clock,
+  FolderTree,
+  Bell,
+  Stamp,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VertretungUrlaubTab } from "@/components/einstellungen/vertretung-urlaub-tab";
 import { ImportExportTab } from "@/components/einstellungen/import-export-tab";
 import { OnboardingWizard } from "@/components/einstellungen/onboarding-wizard";
+import { FristenTab } from "@/components/einstellungen/fristen-tab";
+import { VorlagenTab } from "@/components/einstellungen/vorlagen-tab";
+import { BriefkopfTab } from "@/components/einstellungen/briefkopf-tab";
+import { OrdnerSchemataTab } from "@/components/einstellungen/ordner-schemata-tab";
+import { BenachrichtigungenTab } from "@/components/einstellungen/benachrichtigungen-tab";
 
 export default function EinstellungenPage() {
   const [session, setSession] = useState<any>(null);
@@ -90,6 +99,36 @@ export default function EinstellungenPage() {
               </TabsTrigger>
             )}
             {isAdmin && (
+              <TabsTrigger value="fristen">
+                <Clock className="w-4 h-4 mr-1.5" />
+                Fristen
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="vorlagen-settings">
+                <FileText className="w-4 h-4 mr-1.5" />
+                Vorlagen
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="briefkoepfe">
+                <Stamp className="w-4 h-4 mr-1.5" />
+                Briefkoepfe
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="ordner-schemata">
+                <FolderTree className="w-4 h-4 mr-1.5" />
+                Ordner-Schemata
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="benachrichtigungen">
+                <Bell className="w-4 h-4 mr-1.5" />
+                Benachrichtigungen
+              </TabsTrigger>
+            )}
+            {isAdmin && (
               <TabsTrigger value="import-export">
                 <Download className="w-4 h-4 mr-1.5" />
                 Import/Export
@@ -155,6 +194,36 @@ export default function EinstellungenPage() {
           {isAdmin && (
             <TabsContent value="vertretung">
               <VertretungUrlaubTab />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="fristen">
+              <FristenTab />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="vorlagen-settings">
+              <VorlagenTab />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="briefkoepfe">
+              <BriefkopfTab />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="ordner-schemata">
+              <OrdnerSchemataTab />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="benachrichtigungen">
+              <BenachrichtigungenTab />
             </TabsContent>
           )}
 

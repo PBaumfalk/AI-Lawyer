@@ -76,10 +76,10 @@ Plans:
   3. The frist-reminder queue appears in `ALL_QUEUES` and is visible in the admin Bull Board monitor
   4. `initializeDefaults()` is called at app/worker startup so fresh installs have default settings
   5. E2E flow: a Frist with Vorfrist 7 days out triggers a reminder notification when the cron runs
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 02.1-01-PLAN.md — Register frist-reminder processor in worker.ts, consolidate queue registry, schedule cron job, wire initializeDefaults()
+- [ ] 02.1-01-PLAN.md — Consolidate queue registry, add email transport, enhance frist-reminder processor (deduplication, dual-channel, weekend shift, catch-up), register in worker.ts with startup init
 
 ### Phase 2.2: Fix API Routes + UI Paths
 **Goal**: Ordner-Schemata can be updated and deleted from the admin UI, and template favoriting works from the Vorlagen overview — both currently returning 404 due to missing/wrong API routes.

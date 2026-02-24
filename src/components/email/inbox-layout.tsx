@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -13,6 +13,7 @@ import { VeraktungPanel } from "@/components/email/veraktung-panel";
 import { TicketFromEmailDialog } from "@/components/email/ticket-from-email-dialog";
 import { useEmailStore } from "@/hooks/use-email-store";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useSocket } from "@/components/socket-provider";
 
 /**
  * Three-pane resizable inbox layout.
@@ -22,6 +23,39 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
  */
 export function InboxLayout() {
   const emailStore = useEmailStore();
+  const { socket, isConnected } = useSocket();
+
+  // Join/leave mailbox room for real-time email updates (INT-001)
+  useEffect(() => {
+    if (!socket || !isConnected || !emailStore.selectedKontoId) return;
+
+    const kontoId = emailStore.selectedKontoId;
+    socket.emit("join:mailbox", kontoId);
+
+    return () => {
+      socket.emit("leave:mailbox", kontoId);
+    };
+  }, [socket, isConnected, emailStore.selectedKontoId]);
+
+  // Bridge Socket.IO email:folder-update to window CustomEvent for folder-tree (INT-001)
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleFolderUpdate = (data: {
+      kontoId: string;
+      ordnerId: string;
+      ungeleseneAnzahl: number;
+    }) => {
+      window.dispatchEvent(
+        new CustomEvent("email:folder-update", { detail: data })
+      );
+    };
+
+    socket.on("email:folder-update", handleFolderUpdate);
+    return () => {
+      socket.off("email:folder-update", handleFolderUpdate);
+    };
+  }, [socket]);
 
   // Veraktung panel state
   const [veraktungOpen, setVeraktungOpen] = useState(false);

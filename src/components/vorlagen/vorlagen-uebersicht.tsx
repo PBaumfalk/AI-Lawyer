@@ -116,22 +116,36 @@ export function VorlagenUebersicht() {
     setRecentIds(getRecentVorlagen());
   }, []);
 
-  // Toggle favorite
+  // Toggle favorite with optimistic update
   const handleToggleFavorite = async (vorlageId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // Optimistic update: immediately toggle in UI
+    const previousVorlagen = vorlagen;
+    setVorlagen((prev) =>
+      prev.map((v) =>
+        v.id === vorlageId ? { ...v, isFavorit: !v.isFavorit } : v
+      )
+    );
+
     try {
-      const res = await fetch(`/api/vorlagen/${vorlageId}/favorit`, {
-        method: "POST",
+      const res = await fetch(`/api/vorlagen/${vorlageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "favorite" }),
       });
       if (!res.ok) throw new Error("Fehler");
       const data = await res.json();
+      // Update from server response for consistency
       setVorlagen((prev) =>
         prev.map((v) =>
-          v.id === vorlageId ? { ...v, isFavorit: data.isFavorit } : v
+          v.id === vorlageId ? { ...v, isFavorit: data.vorlage.isFavorit } : v
         )
       );
     } catch {
-      toast.error("Fehler beim Aendern des Favoriten-Status");
+      // Revert to previous state on error
+      setVorlagen(previousVorlagen);
+      toast.error("Favorit konnte nicht gespeichert werden");
     }
   };
 

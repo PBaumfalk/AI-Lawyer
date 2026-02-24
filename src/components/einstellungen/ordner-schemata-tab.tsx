@@ -18,6 +18,16 @@ import {
   Loader2,
   X,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -55,6 +65,7 @@ export function OrdnerSchemataTab() {
   const [editingSchema, setEditingSchema] = useState<OrdnerSchemaItem | null>(null);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<OrdnerSchemaItem | null>(null);
 
   // New schema form state
   const [newName, setNewName] = useState("");
@@ -110,18 +121,23 @@ export function OrdnerSchemataTab() {
     }
   };
 
-  // Delete schema
-  const handleDelete = async (schema: OrdnerSchemaItem) => {
-    if (!confirm(`Schema "${schema.name}" wirklich loeschen?`)) return;
+  // Delete schema (called from AlertDialog confirmation)
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const schemaId = deleteTarget.id;
+    setDeleteTarget(null);
     try {
-      const res = await fetch(`/api/ordner-schemata/${schema.id}`, {
+      const res = await fetch(`/api/ordner-schemata/${schemaId}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Fehler");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Fehler beim Loeschen");
+      }
       toast.success("Schema geloescht");
       fetchSchemata();
-    } catch {
-      toast.error("Fehler beim Loeschen");
+    } catch (err: any) {
+      toast.error(`Loeschen fehlgeschlagen: ${err.message || "Unbekannter Fehler"}`);
     }
   };
 
@@ -129,7 +145,7 @@ export function OrdnerSchemataTab() {
   const handleSetDefault = async (id: string) => {
     try {
       const res = await fetch(`/api/ordner-schemata/${id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ istStandard: true }),
       });
@@ -249,7 +265,7 @@ export function OrdnerSchemataTab() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDelete(schema)}
+                      onClick={() => setDeleteTarget(schema)}
                     >
                       <Trash2 className="w-3.5 h-3.5 text-rose-500" />
                     </Button>
@@ -383,6 +399,28 @@ export function OrdnerSchemataTab() {
           </div>
         </div>
       )}
+
+      {/* Delete confirmation AlertDialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ordner-Schema loeschen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ordner-Schema <strong>&laquo;{deleteTarget?.name}&raquo;</strong> wirklich loeschen?
+              Diese Aktion kann nicht rueckgaengig gemacht werden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Loeschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Reset confirmation dialog */}
       {showResetConfirm && (

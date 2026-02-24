@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
+import { TimerSidebarWidget } from "@/components/finanzen/timer-sidebar-widget";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -148,6 +149,9 @@ export function Sidebar() {
           </nav>
         </div>
       )}
+
+      {/* Timer Widget */}
+      {!collapsed && <TimerSidebarWidget />}
 
       {/* User / Logout */}
       <div className="border-t border-white/[0.06] p-2">

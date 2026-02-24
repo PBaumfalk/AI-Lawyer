@@ -101,6 +101,48 @@ enum EmailRichtung {
   AUSGEHEND
 }
 
+enum EmailAuthTyp {
+  PASSWORT
+  OAUTH2
+}
+
+enum EmailSpezialTyp {
+  INBOX
+  SENT
+  DRAFTS
+  TRASH
+  JUNK
+  ARCHIVE
+  CUSTOM
+}
+
+enum EmailSendeStatus {
+  ENTWURF
+  GEPLANT
+  WIRD_GESENDET
+  GESENDET
+  FEHLGESCHLAGEN
+}
+
+enum EmailPrioritaet {
+  NIEDRIG
+  NORMAL
+  HOCH
+}
+
+enum EmailInitialSync {
+  NUR_NEUE
+  DREISSIG_TAGE
+  ALLES
+}
+
+enum EmailSyncStatus {
+  VERBUNDEN
+  SYNCHRONISIERT
+  FEHLER
+  GETRENNT
+}
+
 enum TicketStatus {
   OFFEN
   IN_BEARBEITUNG
@@ -290,6 +332,10 @@ model User {
   urlaubZeitraeume      UrlaubZeitraum[]
   sachbearbeiterKalender KalenderEintrag[] @relation("SachbearbeiterKalender")
   quittierteFristen      KalenderEintrag[] @relation("QuittiertVon")
+  // Email relations
+  emailKontoZuweisungen    EmailKontoZuweisung[]
+  verantwortlichEmails     EmailNachricht[]   @relation("EmailVerantwortlicher")
+  emailVeraktungen         EmailVeraktung[]
 
   @@map("users")
 }
@@ -588,6 +634,7 @@ model Akte {
   auditLogs         AuditLog[]
   emailMessages     EmailMessage[]
   tickets           Ticket[]
+  emailVeraktungen  EmailVeraktung[]
 
   @@index([status])
   @@index([anwaltId])
@@ -984,6 +1031,183 @@ model EmailMessage {
   @@map("email_messages")
 }
 
+// ─── E-Mail Konten & Nachrichten (Phase 3) ──────────────────────────────────
+
+model EmailKonto {
+  id               String          @id @default(cuid())
+  name             String          // Display name, e.g. "Kanzlei Hauptpostfach"
+  emailAdresse     String          // Full email address
+  benutzername     String          // Login username (often same as emailAdresse)
+  passwortEnc      String?         // AES-256-GCM encrypted password
+  oauthTokens      Json?           // OAuth2 tokens: { accessToken, refreshToken, expiresAt }
+  authTyp          EmailAuthTyp    @default(PASSWORT)
+  // IMAP configuration
+  imapHost         String
+  imapPort         Int             @default(993)
+  imapSecure       Boolean         @default(true)
+  // SMTP configuration
+  smtpHost         String
+  smtpPort         Int             @default(587)
+  smtpSecure       Boolean         @default(false)
+  // Settings
+  istKanzlei       Boolean         @default(false)  // Shared firm-wide mailbox
+  aktiv            Boolean         @default(true)
+  initialSync      EmailInitialSync @default(DREISSIG_TAGE)
+  syncStatus       EmailSyncStatus @default(GETRENNT)
+  letzterSync      DateTime?
+  fehlerLog        Json?           // Last 5 errors: [{ timestamp, message }]
+  softDeleteTage   Int             @default(30)     // Days before permanent email deletion
+  // Signature
+  signaturVorlage  String?         @db.Text         // Kanzlei-wide HTML signature template
+  signaturPlaceholders Json?       // User field definitions for signature
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // Relations
+  zuweisungen      EmailKontoZuweisung[]
+  ordner           EmailOrdner[]
+  nachrichten      EmailNachricht[]
+
+  @@index([aktiv])
+  @@index([emailAdresse])
+  @@map("email_konten")
+}
+
+model EmailKontoZuweisung {
+  id        String   @id @default(cuid())
+  kontoId   String
+  konto     EmailKonto @relation(fields: [kontoId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([kontoId, userId])
+  @@index([userId])
+  @@map("email_konto_zuweisungen")
+}
+
+model EmailOrdner {
+  id               String          @id @default(cuid())
+  kontoId          String
+  konto            EmailKonto      @relation(fields: [kontoId], references: [id], onDelete: Cascade)
+  name             String          // Display name, e.g. "INBOX", "Sent"
+  pfad             String          // Full IMAP path, e.g. "INBOX", "INBOX.Sent"
+  spezialTyp       EmailSpezialTyp @default(CUSTOM)
+  ungeleseneAnzahl Int             @default(0)
+  gesamtAnzahl     Int             @default(0)
+  sortierung       Int             @default(0)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // Relations
+  nachrichten      EmailNachricht[]
+
+  @@unique([kontoId, pfad])
+  @@index([kontoId])
+  @@map("email_ordner")
+}
+
+model EmailNachricht {
+  id               String            @id @default(cuid())
+  emailKontoId     String
+  emailKonto       EmailKonto        @relation(fields: [emailKontoId], references: [id], onDelete: Cascade)
+  emailOrdnerId    String?
+  emailOrdner      EmailOrdner?      @relation(fields: [emailOrdnerId], references: [id], onDelete: SetNull)
+  // IMAP tracking
+  imapUid          Int?
+  imapFolder       String?           // IMAP folder path at time of sync
+  messageId        String?           @unique // Original Message-ID header
+  inReplyTo        String?           // In-Reply-To header
+  references       String[]          // References header (for threading)
+  threadId         String?           // Computed thread identifier
+  // Direction & content
+  richtung         EmailRichtung     @default(EINGEHEND)
+  betreff          String
+  absender         String
+  absenderName     String?
+  empfaenger       String[]
+  cc               String[]
+  bcc              String[]
+  inhalt           String?           @db.Text // Sanitized HTML body
+  inhaltText       String?           @db.Text // Plain text version
+  // Dates
+  empfangenAm      DateTime?
+  gesendetAm       DateTime?
+  // Flags
+  gelesen          Boolean           @default(false)
+  flagged          Boolean           @default(false)
+  prioritaet       EmailPrioritaet   @default(NORMAL)
+  groesse          Int?              // Message size in bytes
+  // Case assignment
+  veraktet         Boolean           @default(false)
+  verantwortlichId String?
+  verantwortlich   User?             @relation("EmailVerantwortlicher", fields: [verantwortlichId], references: [id], onDelete: SetNull)
+  // Soft delete
+  geloescht        Boolean           @default(false)
+  geloeschtAm      DateTime?
+  // Send status (for outgoing)
+  sendeStatus      EmailSendeStatus?
+  geplanterVersand DateTime?
+  sendeFehler      String?
+  // Ticket link
+  ticketId         String?
+  ticket           Ticket?           @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  anhaenge         EmailAnhang[]
+  veraktungen      EmailVeraktung[]
+
+  @@index([emailKontoId])
+  @@index([emailOrdnerId])
+  @@index([threadId])
+  @@index([empfangenAm])
+  @@index([gelesen])
+  @@index([veraktet])
+  @@index([geloescht])
+  @@index([verantwortlichId])
+  @@index([sendeStatus])
+  @@index([absender])
+  @@map("email_nachrichten")
+}
+
+model EmailAnhang {
+  id               String         @id @default(cuid())
+  emailNachrichtId String
+  emailNachricht   EmailNachricht @relation(fields: [emailNachrichtId], references: [id], onDelete: Cascade)
+  dateiname        String
+  mimeType         String
+  groesse          Int            // bytes
+  speicherPfad     String         // MinIO storage key
+  contentId        String?        // For inline images (cid: references)
+  createdAt        DateTime       @default(now())
+
+  @@index([emailNachrichtId])
+  @@map("email_anhaenge")
+}
+
+model EmailVeraktung {
+  id               String         @id @default(cuid())
+  emailNachrichtId String
+  emailNachricht   EmailNachricht @relation(fields: [emailNachrichtId], references: [id], onDelete: Cascade)
+  akteId           String
+  akte             Akte           @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User           @relation(fields: [userId], references: [id])
+  notiz            String?        @db.Text
+  anhaengeKopiert  Boolean        @default(false)
+  dmsOrdner        String?        // Target DMS folder within the Akte
+  aufgehoben       Boolean        @default(false)
+  aufgehobenAm     DateTime?
+  createdAt        DateTime       @default(now())
+
+  @@index([emailNachrichtId])
+  @@index([akteId])
+  @@index([userId])
+  @@map("email_veraktungen")
+}
+
 // ─── Tickets / Aufgaben ─────────────────────────────────────────────────────
 
 model Ticket {
@@ -1007,6 +1231,7 @@ model Ticket {
   aiLockedBy           String?          // Runner identifier (e.g. hostname or random ID)
 
   emails               EmailMessage[]
+  emailNachrichten     EmailNachricht[]
 
   @@index([akteId])
   @@index([verantwortlichId])

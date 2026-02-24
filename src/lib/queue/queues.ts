@@ -27,5 +27,37 @@ export const testQueue = new Queue("test", {
   defaultJobOptions,
 });
 
+/** Frist-Reminder queue for daily deadline reminder scans */
+export const fristReminderQueue = new Queue("frist-reminder", {
+  connection: getQueueConnection(),
+  defaultJobOptions,
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
-export const ALL_QUEUES: Queue[] = [testQueue];
+export const ALL_QUEUES: Queue[] = [testQueue, fristReminderQueue];
+
+/**
+ * Register the repeatable frist-reminder cron job.
+ * Uses upsertJobScheduler for idempotent (re)registration.
+ *
+ * @param cronPattern - Cron expression (default: "0 6 * * *" = 6:00 AM daily)
+ */
+export async function registerFristReminderJob(
+  cronPattern = "0 6 * * *"
+): Promise<void> {
+  await fristReminderQueue.upsertJobScheduler(
+    "frist-reminder-daily",
+    {
+      pattern: cronPattern,
+      tz: "Europe/Berlin",
+    },
+    {
+      name: "check-fristen",
+      data: {},
+      opts: {
+        removeOnComplete: { count: 100 },
+        removeOnFail: { count: 50 },
+      },
+    }
+  );
+}

@@ -65,6 +65,31 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     max: 365,
   },
 
+  // Fristen category
+  {
+    key: "fristen.scan_zeit",
+    value: "06:00",
+    type: "string",
+    category: "fristen",
+    label: "Fristen-Scan Uhrzeit (HH:MM)",
+  },
+  {
+    key: "fristen.email_enabled",
+    value: "true",
+    type: "boolean",
+    category: "fristen",
+    label: "E-Mail-Erinnerungen aktiviert",
+  },
+  {
+    key: "fristen.max_retry_age_days",
+    value: "3",
+    type: "number",
+    category: "fristen",
+    label: "Max. E-Mail-Nachversand (Tage)",
+    min: 1,
+    max: 14,
+  },
+
   // System category
   {
     key: "system.maintenance",
@@ -80,5 +105,6 @@ export const CATEGORY_LABELS: Record<string, string> = {
   worker: "Worker",
   logging: "Logging",
   notifications: "Benachrichtigungen",
+  fristen: "Fristen",
   system: "System",
 };

@@ -267,6 +267,7 @@ model User {
   auditLogs             AuditLog[]
   ticketsVerantwortlich Ticket[]         @relation("TicketVerantwortlicher")
   dokumenteFreigegeben  Dokument[]       @relation("DokumentFreigabe")
+  dokumentVersionen     DokumentVersion[] @relation("DokumentVersionen")
   notifications         Notification[]
 
   @@map("users")
@@ -634,11 +635,29 @@ model Dokument {
   updatedAt   DateTime @updatedAt
 
   chatNachrichten ChatNachricht[] @relation("BezugDokument")
+  versionen       DokumentVersion[]
 
   @@index([akteId])
   @@index([name])
   @@index([status])
   @@map("dokumente")
+}
+
+model DokumentVersion {
+  id          String   @id @default(cuid())
+  dokumentId  String
+  dokument    Dokument @relation(fields: [dokumentId], references: [id], onDelete: Cascade)
+  version     Int
+  dateipfad   String   // MinIO path to this version's file
+  groesse     Int
+  name        String?  // Named snapshot label (null = auto-version)
+  createdById String
+  createdBy   User     @relation("DokumentVersionen", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([dokumentId, version])
+  @@index([dokumentId])
+  @@map("dokument_versionen")
 }
 
 // ─── Kalender & Fristen ──────────────────────────────────────────────────────

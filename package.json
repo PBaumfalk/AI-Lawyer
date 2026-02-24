@@ -88,6 +88,7 @@
     "react-pdf": "^10.4.0",
     "react-resizable-panels": "^4.6.5",
     "sanitize-html": "^2.17.1",
+    "sepa": "^2.1.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "sonner": "^1.7.1",

@@ -24,6 +24,8 @@ interface EmailActionsBarProps {
   isVeraktet: boolean;
   onReplyAction: (mode: ReplyMode) => void;
   onEmailDeleted?: () => void;
+  onVerakten?: () => void;
+  onTicket?: () => void;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -33,6 +35,8 @@ export function EmailActionsBar({
   isVeraktet,
   onReplyAction,
   onEmailDeleted,
+  onVerakten,
+  onTicket,
 }: EmailActionsBarProps) {
   const [showVeraktungBanner, setShowVeraktungBanner] = useState(false);
 
@@ -86,26 +90,23 @@ export function EmailActionsBar({
         method: "DELETE",
       });
       if (res.ok) {
-        const undoPromise = new Promise<void>((resolve, reject) => {
-          toast("E-Mail geloescht", {
-            action: {
-              label: "Rueckgaengig",
-              onClick: async () => {
-                try {
-                  await fetch(`/api/emails/${emailId}`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ geloescht: false }),
-                  });
-                  toast.success("Loeschung rueckgaengig gemacht");
-                  resolve();
-                } catch {
-                  reject();
-                }
-              },
+        toast("E-Mail geloescht", {
+          action: {
+            label: "Rueckgaengig",
+            onClick: async () => {
+              try {
+                await fetch(`/api/emails/${emailId}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ geloescht: false }),
+                });
+                toast.success("Loeschung rueckgaengig gemacht");
+              } catch {
+                // Ignore
+              }
             },
-            duration: 5000,
-          });
+          },
+          duration: 5000,
         });
         onEmailDeleted?.();
       }
@@ -154,10 +155,7 @@ export function EmailActionsBar({
           variant="ghost"
           size="sm"
           className="h-8 text-xs gap-1.5"
-          onClick={() => {
-            // Verakten panel will be implemented in Plan 04
-            toast.info("Verakten-Panel wird in einer spaeteren Version verfuegbar");
-          }}
+          onClick={onVerakten}
         >
           <FolderInput className="w-4 h-4" />
           Verakten
@@ -167,10 +165,7 @@ export function EmailActionsBar({
           variant="ghost"
           size="sm"
           className="h-8 text-xs gap-1.5"
-          onClick={() => {
-            // Ticket creation will be implemented in Plan 04
-            toast.info("Ticket-Erstellung wird in einer spaeteren Version verfuegbar");
-          }}
+          onClick={onTicket}
         >
           <Ticket className="w-4 h-4" />
           Ticket
@@ -221,7 +216,7 @@ export function EmailActionsBar({
             size="sm"
             className="h-6 text-xs text-amber-700 hover:text-amber-800"
             onClick={() => {
-              toast.info("Verakten-Panel wird in einer spaeteren Version verfuegbar");
+              onVerakten?.();
               setShowVeraktungBanner(false);
             }}
           >

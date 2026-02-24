@@ -13,12 +13,18 @@ import {
   File,
   Download,
   Loader2,
+  FolderInput,
+  X,
+  UserCircle,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { EmailEmptyState } from "@/components/email/email-empty-state";
 import { EmailHtmlBody } from "@/components/email/email-html-body";
 import { EmailActionsBar, type ReplyMode } from "@/components/email/email-actions-bar";
 import { EmailInlineReply } from "@/components/email/email-inline-reply";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -37,6 +43,10 @@ interface EmailDetailData {
   gelesen: boolean;
   veraktet: boolean;
   prioritaet: string;
+  emailKontoId?: string;
+  istKanzlei?: boolean;
+  verantwortlichId?: string | null;
+  verantwortlichName?: string | null;
   anhaenge: Array<{
     id: string;
     dateiname: string;
@@ -45,22 +55,38 @@ interface EmailDetailData {
     downloadUrl?: string;
   }>;
   veraktungen?: Array<{
-    akte: { aktenzeichen: string; kurzrubrum: string } | null;
+    id: string;
+    aufgehoben: boolean;
+    notiz?: string | null;
+    createdAt: string;
+    akte: { id: string; aktenzeichen: string; kurzrubrum: string } | null;
+    user: { id: string; name: string } | null;
   }>;
 }
 
 interface EmailDetailProps {
   emailId: string | null;
   onSelectEmail: (emailId: string | null) => void;
+  onOpenVeraktung?: (emailId: string) => void;
+  onOpenTicket?: (emailId: string) => void;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function EmailDetail({ emailId, onSelectEmail }: EmailDetailProps) {
+export function EmailDetail({
+  emailId,
+  onSelectEmail,
+  onOpenVeraktung,
+  onOpenTicket,
+}: EmailDetailProps) {
   const [email, setEmail] = useState<EmailDetailData | null>(null);
   const [loading, setLoading] = useState(false);
   const [showAllRecipients, setShowAllRecipients] = useState(false);
   const [replyMode, setReplyMode] = useState<ReplyMode | null>(null);
+
+  // Verantwortlicher assignment
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [users, setUsers] = useState<Array<{ id: string; name: string }>>([]);
 
   // Fetch full email when selectedEmailId changes
   useEffect(() => {
@@ -95,6 +121,10 @@ export function EmailDetail({ emailId, onSelectEmail }: EmailDetailProps) {
             gelesen: data.gelesen,
             veraktet: data.veraktet,
             prioritaet: data.prioritaet ?? "NORMAL",
+            emailKontoId: data.emailKontoId,
+            istKanzlei: data.emailKonto?.istKanzlei ?? false,
+            verantwortlichId: data.verantwortlichId,
+            verantwortlichName: data.verantwortlich?.name ?? null,
             anhaenge: (data.anhaenge ?? []).map((a: any) => ({
               id: a.id,
               dateiname: a.dateiname,
@@ -142,6 +172,113 @@ export function EmailDetail({ emailId, onSelectEmail }: EmailDetailProps) {
     onSelectEmail(null);
   }, [onSelectEmail]);
 
+  const handleVerakten = useCallback(() => {
+    if (emailId && onOpenVeraktung) {
+      onOpenVeraktung(emailId);
+    }
+  }, [emailId, onOpenVeraktung]);
+
+  const handleTicket = useCallback(() => {
+    if (emailId && onOpenTicket) {
+      onOpenTicket(emailId);
+    }
+  }, [emailId, onOpenTicket]);
+
+  // Remove veraktung
+  const handleRemoveVeraktung = useCallback(
+    async (veraktungId: string) => {
+      if (!emailId) return;
+      try {
+        const res = await fetch(`/api/emails/${emailId}/veraktung`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ veraktungId }),
+        });
+        if (res.ok) {
+          toast.success("Veraktung aufgehoben");
+          // Refresh email data
+          const refreshRes = await fetch(`/api/emails/${emailId}`);
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            setEmail((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    veraktet: data.veraktet,
+                    veraktungen: data.veraktungen,
+                  }
+                : null
+            );
+          }
+        }
+      } catch {
+        toast.error("Fehler beim Aufheben der Veraktung");
+      }
+    },
+    [emailId]
+  );
+
+  // Verantwortlicher assignment
+  const handleAssignVerantwortlicher = useCallback(
+    async (userId: string, userName: string) => {
+      if (!emailId) return;
+      try {
+        const res = await fetch(
+          `/api/emails/${emailId}/verantwortlicher`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId }),
+          }
+        );
+        if (res.ok) {
+          toast.success(`Verantwortlich: ${userName}`);
+          setEmail((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  verantwortlichId: userId,
+                  verantwortlichName: userName,
+                }
+              : null
+          );
+          setShowUserDropdown(false);
+        } else {
+          const err = await res.json();
+          toast.error(err.error || "Fehler bei Zuweisung");
+        }
+      } catch {
+        toast.error("Fehler bei Zuweisung");
+      }
+    },
+    [emailId]
+  );
+
+  // Load users for Verantwortlicher dropdown
+  useEffect(() => {
+    if (!showUserDropdown) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users?take=50");
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setUsers(
+            (data.users ?? data ?? []).map((u: any) => ({
+              id: u.id,
+              name: u.name,
+            }))
+          );
+        }
+      } catch {
+        // Silently fail
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [showUserDropdown]);
+
   // No email selected
   if (!emailId) {
     return <EmailEmptyState type="no-selection" />;
@@ -178,6 +315,10 @@ export function EmailDetail({ emailId, onSelectEmail }: EmailDetailProps) {
   const totalRecipients = email.empfaenger.length + email.cc.length;
   const hasMultipleRecipients = totalRecipients > 2;
 
+  const activeVeraktungen = (email.veraktungen ?? []).filter(
+    (v) => !v.aufgehoben
+  );
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-950">
       <div className="flex-1 overflow-y-auto">
@@ -193,7 +334,47 @@ export function EmailDetail({ emailId, onSelectEmail }: EmailDetailProps) {
             isVeraktet={email.veraktet}
             onReplyAction={handleReplyAction}
             onEmailDeleted={handleEmailDeleted}
+            onVerakten={handleVerakten}
+            onTicket={handleTicket}
           />
+
+          {/* Veraktung info section */}
+          {activeVeraktungen.length > 0 && (
+            <div className="space-y-2">
+              {activeVeraktungen.map((v) => (
+                <div
+                  key={v.id}
+                  className="flex items-center justify-between gap-3 px-3 py-2 rounded-md bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200/50 dark:border-brand-800/30"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FolderInput className="w-4 h-4 text-brand-600 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-mono font-medium text-brand-700 dark:text-brand-300">
+                        {v.akte?.aktenzeichen}
+                      </p>
+                      <p className="text-xs text-brand-600/70 dark:text-brand-400/70 truncate">
+                        {v.akte?.kurzrubrum}
+                        {v.notiz && ` -- ${v.notiz}`}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        Veraktet von {v.user?.name} am{" "}
+                        {new Date(v.createdAt).toLocaleDateString("de-DE")}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-slate-500 hover:text-rose-600 flex-shrink-0"
+                    onClick={() => handleRemoveVeraktung(v.id)}
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    Aufheben
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Email header */}
           <div className="flex items-start gap-3 pt-2">
@@ -214,23 +395,85 @@ export function EmailDetail({ emailId, onSelectEmail }: EmailDetailProps) {
                   )}
                 </div>
 
-                {/* Date */}
-                {date && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
-                    <Clock className="w-3.5 h-3.5" />
-                    {date.toLocaleDateString("de-DE", {
-                      weekday: "short",
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                    {", "}
-                    {date.toLocaleTimeString("de-DE", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  {/* Verantwortlicher indicator (Kanzlei mailbox only) */}
+                  {email.istKanzlei && (
+                    <div className="relative">
+                      <button
+                        onClick={() =>
+                          setShowUserDropdown(!showUserDropdown)
+                        }
+                        className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        title={
+                          email.verantwortlichName
+                            ? `Verantwortlich: ${email.verantwortlichName}`
+                            : "Verantwortlichen zuweisen"
+                        }
+                      >
+                        <UserCircle
+                          className={cn(
+                            "w-4 h-4",
+                            email.verantwortlichId
+                              ? "text-brand-600"
+                              : "text-slate-400"
+                          )}
+                        />
+                        {email.verantwortlichName && (
+                          <span className="text-xs text-brand-600 dark:text-brand-400">
+                            {email.verantwortlichName}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* User dropdown */}
+                      {showUserDropdown && (
+                        <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 shadow-lg max-h-48 overflow-y-auto">
+                          {users.map((u) => (
+                            <button
+                              key={u.id}
+                              onClick={() =>
+                                handleAssignVerantwortlicher(
+                                  u.id,
+                                  u.name
+                                )
+                              }
+                              className={cn(
+                                "w-full text-left px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors",
+                                email.verantwortlichId === u.id &&
+                                  "bg-brand-50 dark:bg-brand-950/20"
+                              )}
+                            >
+                              {u.name}
+                            </button>
+                          ))}
+                          {users.length === 0 && (
+                            <div className="px-3 py-2 text-xs text-slate-400">
+                              Laden...
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Date */}
+                  {date && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
+                      <Clock className="w-3.5 h-3.5" />
+                      {date.toLocaleDateString("de-DE", {
+                        weekday: "short",
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                      {", "}
+                      {date.toLocaleTimeString("de-DE", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Recipients (collapsible) */}

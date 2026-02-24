@@ -27,7 +27,11 @@ export type AuditAktion =
   | "EINSTELLUNGEN_IMPORTIERT"
   | "EINSTELLUNGEN_EXPORTIERT"
   | "EINSTELLUNG_GEAENDERT"
-  | "EINSTELLUNG_ZURUECKGESETZT";
+  | "EINSTELLUNG_ZURUECKGESETZT"
+  | "EMAIL_VERAKTET"
+  | "EMAIL_VERAKTUNG_AUFGEHOBEN"
+  | "EMAIL_VERANTWORTLICHER_GESETZT"
+  | "EMAIL_TICKET_ERSTELLT";
 
 // German labels for field names used in change diffs
 const feldLabels: Record<string, string> = {

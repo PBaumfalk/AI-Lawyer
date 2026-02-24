@@ -163,10 +163,10 @@ Plans:
   2. `document:ocr-complete` events from worker reach the browser and upload panel OCR status transitions in real-time
   3. "Neue E-Mail" button in email inbox header calls `openCompose()` and opens the compose popup
   4. Admin pipeline dashboard page (or section in admin/system) displays OCR/embedding queue stats from `/api/admin/pipeline`
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 04.1-01-PLAN.md — Wire akte Socket.IO room, add Neue E-Mail button, create admin pipeline dashboard
+- [ ] 04.1-01-PLAN.md — Wire akte Socket.IO room join/leave + global OCR toasts, Neue E-Mail FAB button, admin pipeline dashboard page with navigation
 
 ### Phase 5: Financial Module
 **Goal**: Attorneys can calculate fees using current RVG tables, create legally compliant invoices with PDF and E-Rechnung export, track all financial movements per case in the Aktenkonto with Fremdgeld compliance safeguards, and export data to DATEV and SEPA formats.

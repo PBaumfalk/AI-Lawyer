@@ -10,6 +10,9 @@ import { startImapConnections, stopAllConnections } from "@/lib/email/imap/conne
 import { emailSendProcessor, emailSyncProcessor } from "@/lib/email/smtp/send-processor";
 import { closeAllTransports } from "@/lib/email/smtp/transport-factory";
 import type { EmailSendJob, EmailSyncJob } from "@/lib/email/types";
+import { processOcrJob } from "@/lib/queue/processors/ocr.processor";
+import { processPreviewJob } from "@/lib/queue/processors/preview.processor";
+import type { OcrJobData, PreviewJobData } from "@/lib/ocr/types";
 
 const log = createLogger("worker");
 
@@ -204,6 +207,100 @@ emailSyncWorker.on("error", (err) => {
 
 workers.push(emailSyncWorker);
 
+// ─── Document OCR Queue Worker ──────────────────────────────────────────────
+
+const ocrWorker = new Worker<OcrJobData>(
+  "document-ocr",
+  async (job) => processOcrJob(job),
+  {
+    connection,
+    concurrency: 1, // Memory-heavy OCR: one at a time
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+ocrWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, dokumentId: job.data.dokumentId },
+    "OCR job completed"
+  );
+
+  // Notify via Socket.IO that OCR is done
+  socketEmitter.to(`akte:${job.data.akteId}`).emit("document:ocr-complete", {
+    dokumentId: job.data.dokumentId,
+    status: "ABGESCHLOSSEN",
+  });
+});
+
+ocrWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, dokumentId: job.data.dokumentId, err: err.message, attemptsMade: job.attemptsMade },
+    "OCR job failed"
+  );
+
+  // Notify on final failure
+  if (job.attemptsMade >= (job.opts.attempts ?? 3)) {
+    socketEmitter.to(`akte:${job.data.akteId}`).emit("document:ocr-complete", {
+      dokumentId: job.data.dokumentId,
+      status: "FEHLGESCHLAGEN",
+      error: err.message,
+    });
+
+    socketEmitter.to("role:ADMIN").emit("notification", {
+      type: "ocr:failed",
+      title: "OCR fehlgeschlagen",
+      message: `OCR fuer "${job.data.fileName}" fehlgeschlagen: ${err.message}`,
+      data: { dokumentId: job.data.dokumentId, akteId: job.data.akteId },
+    });
+  }
+});
+
+ocrWorker.on("error", (err) => {
+  log.error({ err }, "OCR worker error");
+});
+
+workers.push(ocrWorker);
+
+// ─── Document Preview Queue Worker ─────────────────────────────────────────
+
+const previewWorker = new Worker<PreviewJobData>(
+  "document-preview",
+  async (job) => processPreviewJob(job),
+  {
+    connection,
+    concurrency: 2,
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+previewWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, dokumentId: job.data.dokumentId },
+    "Preview generation completed"
+  );
+});
+
+previewWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, dokumentId: job.data.dokumentId, err: err.message },
+    "Preview generation failed"
+  );
+});
+
+previewWorker.on("error", (err) => {
+  log.error({ err }, "Preview worker error");
+});
+
+workers.push(previewWorker);
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -299,7 +396,7 @@ async function startup() {
   log.info(
     {
       concurrency,
-      queues: ["test", "frist-reminder", "email-send", "email-sync"],
+      queues: ["test", "frist-reminder", "email-send", "email-sync", "document-ocr", "document-preview"],
       fristScanZeit: scanZeit,
     },
     "Worker started"

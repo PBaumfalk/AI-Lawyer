@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { uploadFile, generateStorageKey } from "@/lib/storage";
 import { logAuditEvent } from "@/lib/audit";
 import { indexDokument } from "@/lib/meilisearch";
+import { ocrQueue, previewQueue } from "@/lib/queue/queues";
+import type { OcrJobData, PreviewJobData } from "@/lib/ocr/types";
 
 /**
  * GET /api/akten/[id]/dokumente — list documents for a case
@@ -95,6 +97,17 @@ export async function POST(
     return NextResponse.json({ error: "Keine Datei(en) hochgeladen" }, { status: 400 });
   }
 
+  // Enforce 100 MB file size limit
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+  for (const file of files) {
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: `Datei "${file.name}" ueberschreitet das Limit von 100 MB` },
+        { status: 413 }
+      );
+    }
+  }
+
   const uploaded: any[] = [];
   const errors: { name: string; error: string }[] = [];
 
@@ -104,6 +117,11 @@ export async function POST(
       const storageKey = generateStorageKey(akteId, file.name);
 
       await uploadFile(storageKey, buffer, file.type, file.size);
+
+      // Determine if file needs OCR processing
+      const textMimes = new Set(["text/plain", "text/csv", "text/html", "text/markdown", "application/json"]);
+      const needsOcr = !textMimes.has(file.type);
+      const initialOcrStatus = needsOcr ? "AUSSTEHEND" : "NICHT_NOETIG";
 
       const dokument = await prisma.dokument.create({
         data: {
@@ -115,6 +133,7 @@ export async function POST(
           ordner,
           tags,
           createdById: userId,
+          ocrStatus: initialOcrStatus as any,
         },
       });
 
@@ -125,6 +144,16 @@ export async function POST(
         details: { name: file.name, mimeType: file.type, groesse: file.size, ordner },
       });
 
+      // For text files, read content directly and index
+      let initialOcrText: string | null = null;
+      if (!needsOcr) {
+        initialOcrText = buffer.toString("utf-8");
+        await prisma.dokument.update({
+          where: { id: dokument.id },
+          data: { ocrText: initialOcrText, ocrAbgeschlossen: new Date() },
+        });
+      }
+
       // Index in Meilisearch (non-blocking)
       indexDokument({
         id: dokument.id,
@@ -133,13 +162,39 @@ export async function POST(
         mimeType: dokument.mimeType,
         ordner: dokument.ordner,
         tags: dokument.tags,
-        ocrText: null,
+        ocrText: initialOcrText,
         createdById: userId,
         createdByName: session.user.name ?? "",
         aktenzeichen: akte.aktenzeichen,
         kurzrubrum: akte.kurzrubrum,
         createdAt: Math.floor(new Date(dokument.createdAt).getTime() / 1000),
+        ocrStatus: initialOcrStatus,
+        dokumentStatus: dokument.status,
       }).catch(() => {}); // Silently fail if Meilisearch is down
+
+      // Enqueue OCR job for non-text files
+      if (needsOcr) {
+        const ocrJobData: OcrJobData = {
+          dokumentId: dokument.id,
+          akteId,
+          storagePath: storageKey,
+          mimeType: dokument.mimeType,
+          fileName: file.name,
+        };
+        await ocrQueue.add("ocr-document", ocrJobData).catch(() => {});
+
+        // For non-PDF files, also enqueue preview generation
+        if (file.type !== "application/pdf") {
+          const previewJobData: PreviewJobData = {
+            dokumentId: dokument.id,
+            storagePath: storageKey,
+            mimeType: dokument.mimeType,
+            fileName: file.name,
+            akteId,
+          };
+          await previewQueue.add("generate-preview", previewJobData).catch(() => {});
+        }
+      }
 
       // Auto-Wiedervorlage: create WIEDERVORLAGE with priority DRINGEND when document is added
       const nextBusinessDay = new Date();

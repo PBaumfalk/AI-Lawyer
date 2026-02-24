@@ -19,9 +19,9 @@ Progress: [██████████████████████] 8
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
-- Average duration: 7.6 min
-- Total execution time: 2.9 hours
+- Total plans completed: 24
+- Average duration: 7.5 min
+- Total execution time: 3.1 hours
 
 **By Phase:**
 
@@ -35,10 +35,10 @@ Progress: [██████████████████████] 8
 | 3.1 - Wire Email Real-Time + Compose | 1/1 | 2 min | 2 min |
 | 4 - Document Pipeline OCR + RAG | 3/3 | 25 min | 8.3 min |
 | 4.1 - Wire Akte RT + Email + Pipeline | 1/1 | 4 min | 4 min |
-| 5 - Financial Module | 2/6 | 21 min | 10.5 min |
+| 5 - Financial Module | 4/6 | 34 min | 8.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (6 min), 04-03 (8 min), 04.1-01 (4 min), 05-01 (12 min), 05-02 (9 min)
+- Last 5 plans: 04.1-01 (4 min), 05-01 (12 min), 05-02 (9 min), 05-03 (7 min), 05-04 (6 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -64,6 +64,7 @@ Progress: [██████████████████████] 8
 | Phase 04.1 P01 | 4min | 3 tasks | 8 files |
 | Phase 05 P01 | 12min | 1 tasks | 9 files |
 | Phase 05 P02 | 9min | 2 tasks | 12 files |
+| Phase 05 P03 | 7min | 2 tasks | 12 files |
 | Phase 05 P04 | 6min | 1 tasks | 4 files |
 
 ## Accumulated Context
@@ -182,6 +183,13 @@ Recent decisions affecting current work:
 - [05-02]: Per-rate USt breakdown from positionen supports mixed-rate invoices per SS 14 UStG
 - [05-02]: RVG uebernehmenAlsRechnung response provides pre-filled invoice data for one-click transfer
 - [05-02]: Buffer to Uint8Array conversion for NextResponse compatibility with pdf-lib output
+- [05-03]: Signed betrag convention: AUSGABE/AUSLAGE stored negative, EINNAHME/FREMDGELD positive in the ledger
+- [05-03]: Period lock null guard: Akte with null kanzleiId skips period validation instead of failing
+- [05-03]: Storno double-reversal prevention: check for existing Storno entry before creating new one
+- [05-03]: Fremdgeld deadline only set for positive-amount bookings (not for Storno entries)
+- [05-03]: Sequential period closing enforced: cannot lock month N+1 while month N is still OFFEN
+- [05-03]: Kostenstellen soft-delete only: set aktiv=false, never hard-delete if bookings reference it
+- [05-03]: Invoice auto-booking in same Prisma transaction ensures atomicity between invoice and Aktenkonto
 - [05-04]: Hand-built CII XML over @e-invoice-eu/core (library too complex, hand-build gives full EN16931 field control)
 - [05-04]: PDFRawStream.of() for embedded file streams (PDFStream base has no .of() in pdf-lib v1.17.1)
 - [05-04]: Non-fatal ZUGFeRD fallback: plain PDF returned if XML embedding fails

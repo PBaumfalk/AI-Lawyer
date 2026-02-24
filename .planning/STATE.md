@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 2 of 7 (Deadline Calculation + Document Templates)
-Plan: 6 of 6 in current phase
-Status: In Progress
-Last activity: 2026-02-24 -- Completed 02-04-PLAN.md (Vorlagen-System Backend)
+Plan: 6 of 6 in current phase (COMPLETE)
+Status: Phase Complete
+Last activity: 2026-02-24 -- Completed 02-06-PLAN.md (Vertretung/Urlaub & Settings)
 
-Progress: [██████░░░░░░░░░░░░░░] 29%
+Progress: [██████░░░░░░░░░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 6.5 min
-- Total execution time: 0.6 hours
+- Total plans completed: 7
+- Average duration: 7.0 min
+- Total execution time: 0.8 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 - Infrastructure Foundation | 3/3 | 17 min | 5.7 min |
-| 2 - Deadline Calculation + Document Templates | 3/6 | 23 min | 7.7 min |
+| 2 - Deadline Calculation + Document Templates | 4/6 | 34 min | 8.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (5 min), 01-03 (6 min), 02-03 (6 min), 02-01 (9 min), 02-04 (8 min)
+- Last 5 plans: 01-03 (6 min), 02-03 (6 min), 02-01 (9 min), 02-04 (8 min), 02-06 (11 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -41,6 +41,7 @@ Progress: [██████░░░░░░░░░░░░░░] 29%
 | Phase 02 P03 | 6min | 2 tasks | 9 files |
 | Phase 02 P01 | 9min | 4 tasks | 8 files |
 | Phase 02 P04 | 8min | 2 tasks | 10 files |
+| Phase 02 P06 | 11min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,10 @@ Recent decisions affecting current work:
 - [02-04]: fillDocxTemplate accepts Record<string, unknown> for loops/arrays
 - [02-04]: OrdnerSchema per-Sachgebiet defaults with global fallback
 - [02-04]: Auto-filename pattern: {Aktenzeichen}_{Kategorie}_{Mandant}_{Datum}.docx
+- [02-06]: Vertretung auto-deactivation in reminder worker prevents stale vacation states
+- [02-06]: Settings export excludes file references (dateipfad/logoUrl) -- files transferred separately
+- [02-06]: OnboardingWizard saves settings via import API for consistency
+- [02-06]: Escalation chain for overdue Fristen: Verantwortlicher -> Vertreter -> Admin
 
 ### Pending Todos
 
@@ -87,5 +92,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 02-04-PLAN.md (Vorlagen-System Backend)
+Stopped at: Completed 02-06-PLAN.md (Vertretung/Urlaub & Settings)
 Resume file: None

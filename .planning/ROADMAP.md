@@ -179,14 +179,14 @@ Plans:
   3. User can export invoices as XRechnung (CII) and ZUGFeRD (PDF/A-3) -- validated against official XRechnung Validator
   4. Aktenkonto displays all bookings (Einnahme/Ausgabe/Fremdgeld/Auslage) with Fremdgeld displayed separately, 5-business-day forwarding alerts, and 15k EUR Anderkonto threshold warnings
   5. User can export Buchungsstapel to DATEV CSV, generate SEPA pain.001/pain.008 XML files, import bank statements (CSV + CAMT053) with semi-automatic invoice matching, and track time per case
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 05-01: RVG calculator as pure-function library with versioned fee tables + unit tests
-- [ ] 05-02: Invoice system (DB model, Nummernkreis, status flow, PDF generation)
-- [ ] 05-03: Aktenkonto + Fremdgeld compliance
-- [ ] 05-04: E-Rechnung (XRechnung + ZUGFeRD) export
-- [ ] 05-05: DATEV CSV + SEPA XML + Banking import + Zeiterfassung
+- [ ] 05-01-PLAN.md — RVG/GKG fee calculator TDD: pure-function library with KostBRaeG 2025 tables, VV catalog, Anrechnung, PKH, presets, 50+ unit tests
+- [ ] 05-02-PLAN.md — Prisma schema expansion (11+ new models) + invoice backend (Nummernkreis, status flow, PDF with Briefkopf) + RVG-to-invoice transfer API
+- [ ] 05-03-PLAN.md — Aktenkonto append-only booking model + Fremdgeld compliance (5-Werktage alerts, 15k Anderkonto) + Buchungsperioden + Kostenstellen
+- [ ] 05-04-PLAN.md — E-Rechnung: ZUGFeRD PDF/A-3 auto-embed + XRechnung CII XML export via @e-invoice-eu/core
+- [ ] 05-05-PLAN.md — DATEV EXTF_ CSV export + SEPA pain.001/008 XML + bank CSV/CAMT import with invoice matching + Zeiterfassung timer
 
 ### Phase 6: AI Features + beA
 **Goal**: OpenClaw proactively scans incoming emails and documents to suggest actions and create drafts, attorneys can chat with case documents via RAG, deadlines are auto-recognized from Schriftsaetze, and beA messages can be sent and received through the application -- with every AI output starting as a human-reviewable draft, never auto-sent.

@@ -144,12 +144,12 @@ Plans:
   3. User can view PDFs in-browser with navigation, zoom, and download (pdf.js viewer)
   4. Document detail page shows metadata, version history, status, tags, and audit history with an actions bar for rename, move, tag, and status changes
   5. Documents are chunked (paragraph-aware for German legal text) and embedded into pgvector with embedding model version tracked per vector, ready for RAG retrieval in Phase 6
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: Stirling-PDF Docker setup + auto-OCR worker + OCR status UI
-- [ ] 04-02: PDF preview + document detail page + actions bar
-- [ ] 04-03: RAG ingestion pipeline (chunking + embedding + pgvector storage)
+- [ ] 04-01-PLAN.md — Stirling-PDF Docker sidecar + Prisma schema (OCR fields, DocumentChunk, DokumentTagKategorie) + BullMQ queues (ocr, embedding, preview) + OCR processor + upload panel + OCR badges + admin pipeline dashboard + tag management
+- [ ] 04-02-PLAN.md — react-pdf PDF viewer + document detail page (split view) + version timeline + actions bar + tag manager + document APIs
+- [ ] 04-03-PLAN.md — RAG ingestion pipeline (German legal chunking + Ollama embedding + pgvector storage) + search API with highlighting + /suche advanced search page + Cmd+K document search
 
 ### Phase 5: Financial Module
 **Goal**: Attorneys can calculate fees using current RVG tables, create legally compliant invoices with PDF and E-Rechnung export, track all financial movements per case in the Aktenkonto with Fremdgeld compliance safeguards, and export data to DATEV and SEPA formats.

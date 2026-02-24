@@ -183,7 +183,7 @@
 | REQ-EM-003 | Phase 3 | Complete |
 | REQ-EM-004 | Phase 3 | Complete |
 | REQ-EM-005 | Phase 3 | Pending |
-| REQ-EM-006 | Phase 3 | Pending |
+| REQ-EM-006 | Phase 3 | Complete |
 | REQ-EM-007 | Phase 3 | Pending |
 | REQ-EM-008 | Phase 3 | Pending |
 | REQ-DV-004 | Phase 4 | Pending |

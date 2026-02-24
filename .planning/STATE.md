@@ -123,6 +123,11 @@ Recent decisions affecting current work:
 - [03-02]: contentEditable for inline reply editor (minimal, TipTap planned for compose)
 - [03-02]: Custom event dispatch for keyboard shortcut actions bridging shortcuts to detail component
 - [03-02]: Verakten/Ticket buttons as stubs -- full implementation in Plan 04
+- [03-03]: TipTap v3 TextStyle/Color use named exports (no default export)
+- [03-03]: User.position mapped to signature titel, User.telefon to mobil/durchwahl
+- [03-03]: Set.add() pattern for downlevelIteration TypeScript compatibility
+- [03-03]: Compose popup for NEW emails only -- reply/forward inline in detail (Plan 02)
+- [03-03]: Provider auto-discovery: M365, Gmail, IONOS, Strato with manual fallback
 
 ### Pending Todos
 
@@ -135,5 +140,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 03-02-PLAN.md (Inbox UI) -- Phase 3, Plan 2 of 4
+Stopped at: Completed 03-03-PLAN.md (Email Compose & Mailbox Admin) -- Phase 3, Plan 3 of 4
 Resume file: None

@@ -21,6 +21,7 @@ services:
       MINIO_PUBLIC_URL: http://localhost:9000
       MEILISEARCH_URL: http://meilisearch:7700
       MEILISEARCH_API_KEY: ailawyer-meili-key
+      EMAIL_ENCRYPTION_KEY: dev-email-encryption-key-change-in-production-32chars
       ONLYOFFICE_URL: http://localhost:8080
       ONLYOFFICE_INTERNAL_URL: http://onlyoffice:80
       ONLYOFFICE_SECRET: dev-onlyoffice-secret
@@ -73,6 +74,7 @@ services:
       LOG_LEVEL: info
       LOG_FILE_PATH: /var/log/ai-lawyer/worker
       NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
+      EMAIL_ENCRYPTION_KEY: dev-email-encryption-key-change-in-production-32chars
     depends_on:
       redis:
         condition: service_healthy
@@ -164,6 +166,21 @@ services:
       timeout: 5s
       retries: 5
 
+  # ─── LanguageTool (optional: spell/grammar check for German) ──────────────────
+  languagetool:
+    image: erikvl87/languagetool:latest
+    container_name: ailawyer-languagetool
+    restart: unless-stopped
+    profiles: ["full"]
+    ports:
+      - "8010:8010"
+    environment:
+      Java_Xms: 512m
+      Java_Xmx: 1g
+      langtool_languageModel: /ngrams
+    volumes:
+      - languagetool_ngrams:/ngrams
+
 volumes:
   pgdata:
   redisdata:
@@ -172,3 +189,4 @@ volumes:
   onlyoffice_data:
   onlyoffice_log:
   worker_logs:
+  languagetool_ngrams:

@@ -33,8 +33,35 @@ export const fristReminderQueue = new Queue("frist-reminder", {
   defaultJobOptions,
 });
 
+/** Email-Send queue for outgoing emails via SMTP */
+export const emailSendQueue = new Queue("email-send", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    ...defaultJobOptions,
+    attempts: 3,
+    removeOnComplete: { age: 86_400 },   // 1 day
+    removeOnFail: { age: 604_800 },      // 7 days
+  },
+});
+
+/** Email-Sync queue for on-demand IMAP sync requests */
+export const emailSyncQueue = new Queue("email-sync", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    ...defaultJobOptions,
+    attempts: 2,
+    removeOnComplete: { age: 3_600 },    // 1 hour
+    removeOnFail: { age: 86_400 },       // 1 day
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
-export const ALL_QUEUES: Queue[] = [testQueue, fristReminderQueue];
+export const ALL_QUEUES: Queue[] = [
+  testQueue,
+  fristReminderQueue,
+  emailSendQueue,
+  emailSyncQueue,
+];
 
 /**
  * Register the repeatable frist-reminder cron job.

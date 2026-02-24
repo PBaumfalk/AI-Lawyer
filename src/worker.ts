@@ -6,6 +6,10 @@ import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.pro
 import { processFristReminders } from "@/workers/processors/frist-reminder";
 import { initializeDefaults, getSettingTyped } from "@/lib/settings/service";
 import { getSocketEmitter } from "@/lib/socket/emitter";
+import { startImapConnections, stopAllConnections } from "@/lib/email/imap/connection-manager";
+import { emailSendProcessor, emailSyncProcessor } from "@/lib/email/smtp/send-processor";
+import { closeAllTransports } from "@/lib/email/smtp/transport-factory";
+import type { EmailSendJob, EmailSyncJob } from "@/lib/email/types";
 
 const log = createLogger("worker");
 
@@ -128,14 +132,91 @@ fristReminderWorker.on("error", (err) => {
 
 workers.push(fristReminderWorker);
 
+// ─── Email-Send Queue Worker ─────────────────────────────────────────────────
+
+const emailSendWorker = new Worker<EmailSendJob>(
+  "email-send",
+  async (job) => emailSendProcessor(job),
+  {
+    connection,
+    concurrency: 3, // Max 3 concurrent sends
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+emailSendWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, emailNachrichtId: job.data.emailNachrichtId },
+    "Email send job completed"
+  );
+});
+
+emailSendWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, emailNachrichtId: job.data.emailNachrichtId, err: err.message },
+    "Email send job failed"
+  );
+});
+
+emailSendWorker.on("error", (err) => {
+  log.error({ err }, "Email send worker error");
+});
+
+workers.push(emailSendWorker);
+
+// ─── Email-Sync Queue Worker ─────────────────────────────────────────────────
+
+const emailSyncWorker = new Worker<{ kontoId: string; folder?: string }>(
+  "email-sync",
+  async (job) => emailSyncProcessor(job),
+  {
+    connection,
+    concurrency: 2,
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+emailSyncWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, kontoId: job.data.kontoId },
+    "Email sync job completed"
+  );
+});
+
+emailSyncWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, kontoId: job.data.kontoId, err: err.message },
+    "Email sync job failed"
+  );
+});
+
+emailSyncWorker.on("error", (err) => {
+  log.error({ err }, "Email sync worker error");
+});
+
+workers.push(emailSyncWorker);
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
   log.info({ signal }, "Received shutdown signal, closing workers...");
 
   try {
+    // Stop all IMAP connections first (long-running)
+    await stopAllConnections();
+    // Close SMTP transport pool
+    closeAllTransports();
+    // Close BullMQ workers
     await Promise.all(workers.map((w) => w.close()));
-    log.info("All workers closed, exiting");
+    log.info("All workers and connections closed, exiting");
   } catch (err) {
     log.error({ err }, "Error during graceful shutdown");
   }
@@ -208,8 +289,19 @@ async function startup() {
   // Register repeatable frist-reminder cron job
   await registerFristReminderJob(cronPattern);
 
+  // Start IMAP connections for all active mailboxes
+  try {
+    await startImapConnections();
+  } catch (err) {
+    log.error({ err }, "Failed to start IMAP connections (non-fatal)");
+  }
+
   log.info(
-    { concurrency, queues: ["test", "frist-reminder"], fristScanZeit: scanZeit },
+    {
+      concurrency,
+      queues: ["test", "frist-reminder", "email-send", "email-sync"],
+      fristScanZeit: scanZeit,
+    },
     "Worker started"
   );
 }

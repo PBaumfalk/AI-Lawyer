@@ -5,7 +5,7 @@ import { SocketProvider } from "@/components/socket-provider";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
-import { CommandPalette } from "@/components/layout/command-palette";
+import { CommandFristenRechnerWrapper } from "@/components/layout/command-fristenrechner-wrapper";
 
 // All dashboard pages require auth + fresh data — skip static generation during build
 export const dynamic = "force-dynamic";
@@ -34,7 +34,7 @@ export default async function DashboardLayout({
                 {children}
               </main>
             </div>
-            <CommandPalette />
+            <CommandFristenRechnerWrapper />
           </div>
         </NotificationProvider>
       </SocketProvider>

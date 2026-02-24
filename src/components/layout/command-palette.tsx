@@ -13,6 +13,7 @@ import {
   Plus,
   Loader2,
   Calculator,
+  ArrowRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -46,6 +47,22 @@ const statusBadge: Record<string, "success" | "warning" | "muted" | "danger"> = 
   GESCHLOSSEN: "danger",
 };
 
+/** OCR status display config */
+const ocrStatusConfig: Record<string, { label: string; className: string }> = {
+  ABGESCHLOSSEN: {
+    label: "OCR",
+    className: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400",
+  },
+  AUSSTEHEND: {
+    label: "OCR ausstehend",
+    className: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+  },
+  FEHLGESCHLAGEN: {
+    label: "OCR fehlgeschlagen",
+    className: "bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400",
+  },
+};
+
 interface SearchResults {
   akten: Array<{
     id: string;
@@ -66,6 +83,9 @@ interface SearchResults {
     akteId: string;
     name: string;
     aktenzeichen: string;
+    nameHighlighted?: string;
+    ocrStatus?: string | null;
+    kurzrubrum?: string;
   }>;
 }
 
@@ -129,7 +149,7 @@ export function CommandPalette({ onFristenRechner }: CommandPaletteProps = {}) {
           .then((r) => r.json()),
         fetch(`/api/kontakte?q=${encodeURIComponent(q)}&take=5`, { signal: controller.signal })
           .then((r) => r.json()),
-        fetch(`/api/dokumente/search?q=${encodeURIComponent(q)}&limit=5`, { signal: controller.signal })
+        fetch(`/api/search?q=${encodeURIComponent(q)}&limit=5`, { signal: controller.signal })
           .then((r) => r.json()),
       ]);
 
@@ -303,20 +323,65 @@ export function CommandPalette({ onFristenRechner }: CommandPaletteProps = {}) {
                     heading="Dokumente"
                     className="[&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5"
                   >
-                    {searchResults.dokumente.map((doc) => (
-                      <Command.Item
-                        key={`doc-${doc.id}`}
-                        value={`doc-${doc.id}`}
-                        onSelect={() => handleSelect(`/akten/${doc.akteId}`)}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer text-foreground/80 data-[selected=true]:bg-brand-500/15 data-[selected=true]:text-brand-700 dark:data-[selected=true]:text-brand-300"
-                      >
-                        <FileText className="w-4 h-4 shrink-0" />
-                        <span className="truncate">{doc.name}</span>
-                        <span className="ml-auto shrink-0 text-xs text-muted-foreground font-mono">
-                          {doc.aktenzeichen}
-                        </span>
-                      </Command.Item>
-                    ))}
+                    {searchResults.dokumente.map((doc) => {
+                      const ocrInfo = doc.ocrStatus
+                        ? ocrStatusConfig[doc.ocrStatus]
+                        : null;
+
+                      return (
+                        <Command.Item
+                          key={`doc-${doc.id}`}
+                          value={`doc-${doc.id}`}
+                          onSelect={() =>
+                            handleSelect(
+                              `/akten/${doc.akteId}/dokumente/${doc.id}`
+                            )
+                          }
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer text-foreground/80 data-[selected=true]:bg-brand-500/15 data-[selected=true]:text-brand-700 dark:data-[selected=true]:text-brand-300"
+                        >
+                          <FileText className="w-4 h-4 shrink-0" />
+                          <span className="truncate min-w-0 flex-1">
+                            {doc.nameHighlighted ? (
+                              <span
+                                dangerouslySetInnerHTML={{
+                                  __html: doc.nameHighlighted,
+                                }}
+                                className="[&>mark]:bg-yellow-200 [&>mark]:text-yellow-900 dark:[&>mark]:bg-yellow-900/40 dark:[&>mark]:text-yellow-200 [&>mark]:rounded-sm [&>mark]:px-0.5"
+                              />
+                            ) : (
+                              doc.name
+                            )}
+                          </span>
+                          <span className="shrink-0 flex items-center gap-1.5">
+                            {ocrInfo && (
+                              <Badge
+                                variant="secondary"
+                                className={`text-[9px] py-0 px-1 ${ocrInfo.className}`}
+                              >
+                                {ocrInfo.label}
+                              </Badge>
+                            )}
+                            <span className="text-xs text-muted-foreground font-mono">
+                              {doc.aktenzeichen}
+                            </span>
+                          </span>
+                        </Command.Item>
+                      );
+                    })}
+
+                    {/* "Alle Ergebnisse anzeigen" link */}
+                    <Command.Item
+                      value="__alle_dokumente__"
+                      onSelect={() =>
+                        handleSelect(
+                          `/suche?q=${encodeURIComponent(query.trim())}`
+                        )
+                      }
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs cursor-pointer text-brand-600 dark:text-brand-400 data-[selected=true]:bg-brand-500/15"
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>Alle Ergebnisse anzeigen</span>
+                    </Command.Item>
                   </Command.Group>
                 )}
               </>

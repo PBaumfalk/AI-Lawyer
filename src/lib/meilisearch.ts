@@ -54,7 +54,10 @@ export async function ensureDokumenteIndex(): Promise<void> {
     displayedAttributes: [
       "id", "akteId", "name", "mimeType", "ordner", "tags",
       "createdById", "createdByName", "aktenzeichen", "kurzrubrum", "createdAt",
-      "ocrStatus", "dokumentStatus",
+      "ocrStatus", "dokumentStatus", "ocrText",
+    ],
+    rankingRules: [
+      "words", "typo", "proximity", "attribute", "sort", "exactness",
     ],
   });
 }
@@ -126,5 +129,8 @@ export async function searchDokumente(
     attributesToHighlight: ["ocrText", "name"],
     highlightPreTag: "<mark>",
     highlightPostTag: "</mark>",
+    attributesToCrop: ["ocrText"],
+    cropLength: 200,
+    showRankingScore: true,
   });
 }

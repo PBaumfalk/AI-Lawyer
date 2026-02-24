@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 4 - Document Pipeline (OCR + RAG Ingestion)
+**Current focus:** Phase 4.1 - Wire Akte Real-Time, Email Compose, Admin Pipeline
 
 ## Current Position
 
-Phase: 4 of 7 (Document Pipeline OCR + RAG Ingestion) -- COMPLETE
-Plan: 3 of 3 in current phase (3 complete)
+Phase: 4.1 of 7 (Wire Akte Real-Time + Email Compose + Admin Pipeline) -- COMPLETE
+Plan: 1 of 1 in current phase (1 complete)
 Status: Phase Complete
-Last activity: 2026-02-24 -- Completed 04-03-PLAN.md (RAG embedding pipeline + search experience)
+Last activity: 2026-02-24 -- Completed 04.1-01-PLAN.md (wire akte realtime, email compose, admin pipeline)
 
-Progress: [████████████████████] 76%
+Progress: [█████████████████████] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 19
-- Average duration: 7.6 min
-- Total execution time: 2.48 hours
+- Total plans completed: 20
+- Average duration: 7.4 min
+- Total execution time: 2.55 hours
 
 **By Phase:**
 
@@ -34,9 +34,10 @@ Progress: [████████████████████] 76%
 | 3 - Email Client | 4/4 | 42 min | 10.5 min |
 | 3.1 - Wire Email Real-Time + Compose | 1/1 | 2 min | 2 min |
 | 4 - Document Pipeline OCR + RAG | 3/3 | 25 min | 8.3 min |
+| 4.1 - Wire Akte RT + Email + Pipeline | 1/1 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-04 (8 min), 03.1-01 (2 min), 04-01 (11 min), 04-02 (6 min), 04-03 (8 min)
+- Last 5 plans: 03.1-01 (2 min), 04-01 (11 min), 04-02 (6 min), 04-03 (8 min), 04.1-01 (4 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -59,6 +60,7 @@ Progress: [████████████████████] 76%
 | Phase 04 P01 | 11min | 3 tasks | 22 files |
 | Phase 04 P02 | 6min | 2 tasks | 11 files |
 | Phase 04 P03 | 8min | 2 tasks | 13 files |
+| Phase 04.1 P01 | 4min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -160,6 +162,11 @@ Recent decisions affecting current work:
 - [04-03]: Command palette uses /api/search instead of /api/dokumente/search for richer results
 - [04-03]: E5 instruction format: "passage: " prefix for documents, "query: " for search queries
 
+- [04.1-01]: Worker emits OCR events to both akte:{akteId} and user:{userId} rooms for global toast reach
+- [04.1-01]: Prisma lookup in worker event handler for createdById (not in OcrJobData type)
+- [04.1-01]: Workflow icon for Pipeline sidebar link to differentiate from Activity (Job-Monitor)
+- [04.1-01]: Z-index z-[80] for ComposeFab between upload panel (z-50) and minimized compose tabs (z-[85])
+
 ### Pending Todos
 
 None yet.
@@ -171,5 +178,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 04-03-PLAN.md (RAG embedding pipeline + search experience) -- Phase 4 complete (3/3)
+Stopped at: Completed 04.1-01-PLAN.md (wire akte realtime, email compose, admin pipeline) -- Phase 4.1 complete (1/1)
 Resume file: None

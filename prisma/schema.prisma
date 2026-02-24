@@ -1,0 +1,901 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  ANWALT
+  SACHBEARBEITER
+  SEKRETARIAT
+  PRAKTIKANT
+}
+
+enum KontaktTyp {
+  NATUERLICH
+  JURISTISCH
+}
+
+enum BeteiligterRolle {
+  MANDANT
+  GEGNER
+  GEGNERVERTRETER
+  GERICHT
+  ZEUGE
+  SACHVERSTAENDIGER
+  SONSTIGER
+}
+
+enum AkteStatus {
+  OFFEN
+  RUHEND
+  ARCHIVIERT
+  GESCHLOSSEN
+}
+
+enum Sachgebiet {
+  ARBEITSRECHT
+  FAMILIENRECHT
+  VERKEHRSRECHT
+  MIETRECHT
+  STRAFRECHT
+  ERBRECHT
+  SOZIALRECHT
+  INKASSO
+  HANDELSRECHT
+  VERWALTUNGSRECHT
+  SONSTIGES
+}
+
+enum KalenderTyp {
+  TERMIN
+  FRIST
+  WIEDERVORLAGE
+}
+
+enum BuchungsTyp {
+  EINNAHME
+  AUSGABE
+  FREMDGELD
+  AUSLAGE
+}
+
+enum RechnungStatus {
+  ENTWURF
+  GESTELLT
+  BEZAHLT
+  MAHNUNG
+  STORNIERT
+}
+
+enum RechnungTyp {
+  RVG
+  STUNDENHONORAR
+  PAUSCHALE
+}
+
+enum BeaNachrichtStatus {
+  EINGANG
+  GELESEN
+  ZUGEORDNET
+  GESENDET
+  FEHLER
+}
+
+enum EmailRichtung {
+  EINGEHEND
+  AUSGEHEND
+}
+
+enum TicketStatus {
+  OFFEN
+  IN_BEARBEITUNG
+  ERLEDIGT
+}
+
+enum TicketPrioritaet {
+  NIEDRIG
+  NORMAL
+  HOCH
+  KRITISCH
+}
+
+enum DokumentStatus {
+  ENTWURF         // Newly created, not yet reviewed
+  ZUR_PRUEFUNG    // Marked for review by human user
+  FREIGEGEBEN     // Approved by human user
+  VERSENDET       // Successfully sent (beA, email, etc.)
+}
+
+// ─── Kontakt-Stammdaten Enums ───────────────────────────────────────────────
+
+enum Familienstand {
+  LEDIG
+  VERHEIRATET
+  GESCHIEDEN
+  VERWITWET
+  LEBENSPARTNERSCHAFT
+}
+
+enum Registerart {
+  HRB
+  HRA
+  VR
+  PR
+  GNR
+  SONSTIGE
+}
+
+enum AdressenTyp {
+  HAUPTANSCHRIFT
+  ZUSTELLANSCHRIFT
+  RECHNUNGSANSCHRIFT
+  SONSTIGE
+}
+
+enum BevorzugteKontaktart {
+  EMAIL
+  TELEFON
+  BRIEF
+  FAX
+  BEA
+}
+
+enum KycDokumentart {
+  PERSONALAUSWEIS
+  REISEPASS
+  FUEHRERSCHEIN
+  AUFENTHALTSTITEL
+  SONSTIGE
+}
+
+enum KycStatus {
+  NICHT_GEPRUEFT
+  IN_PRUEFUNG
+  VERIFIZIERT
+  ABGELEHNT
+  ABGELAUFEN
+}
+
+enum RisikoEinstufung {
+  NIEDRIG
+  MITTEL
+  HOCH
+}
+
+enum VollmachtTyp {
+  EINZELVOLLMACHT
+  GENERALVOLLMACHT
+  PROZESSVOLLMACHT
+  VORSORGEVOLLMACHT
+  SONSTIGE
+}
+
+enum KontaktDokumentKategorie {
+  IDENTITAET
+  VERTRAG
+  VOLLMACHT
+  KYC
+  HR_AUSZUG
+  SONSTIGE
+}
+
+enum BeziehungTyp {
+  EHEPARTNER
+  KIND
+  ELTERNTEIL
+  GESETZLICHER_VERTRETER
+  BETREUER
+  ARBEITGEBER
+  ARBEITNEHMER
+  GESCHAEFTSFUEHRER
+  GESELLSCHAFTER
+  SONSTIGE
+}
+
+enum MandatsKategorie {
+  A_KUNDE
+  DAUERAUFTRAGGEBER
+  GELEGENHEITSMANDANT
+  PRO_BONO
+  SONSTIGE
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model Kanzlei {
+  id        String   @id @default(cuid())
+  name      String
+  strasse   String?
+  plz       String?
+  ort       String?
+  telefon   String?
+  fax       String?
+  email     String?
+  website   String?
+  beaId     String?
+  steuernr  String?
+  ustIdNr   String?
+  bankName  String?
+  iban      String?
+  bic       String?
+  logo      String?  // URL to MinIO
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+  akten Akte[]
+
+  @@map("kanzleien")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          UserRole  @default(SACHBEARBEITER)
+  aktiv         Boolean   @default(true)
+  telefon       String?
+  position      String?
+  avatarUrl     String?
+  kanzleiId     String?
+  kanzlei       Kanzlei?  @relation(fields: [kanzleiId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Auth.js fields
+  emailVerified DateTime?
+  accounts      Account[]
+  sessions      Session[]
+
+  // Relations
+  aktenAlsAnwalt        Akte[]           @relation("AnwaltAkten")
+  aktenAlsSachbearbeiter Akte[]          @relation("SachbearbeiterAkten")
+  dokumente             Dokument[]
+  dokumentVorlagen      DokumentVorlage[]
+  kalenderEintraege     KalenderEintrag[] @relation("VerantwortlicherKalender")
+  zeiterfassungen       Zeiterfassung[]
+  chatNachrichten       ChatNachricht[]
+  aiConversations       AiConversation[]
+  auditLogs             AuditLog[]
+  ticketsVerantwortlich Ticket[]         @relation("TicketVerantwortlicher")
+  dokumenteFreigegeben  Dokument[]       @relation("DokumentFreigabe")
+  notifications         Notification[]
+
+  @@map("users")
+}
+
+// ─── Auth.js Models ──────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── Kontakte & Adressen ─────────────────────────────────────────────────────
+
+model Kontakt {
+  id           String     @id @default(cuid())
+  typ          KontaktTyp
+  // Natural person
+  anrede       String?
+  titel        String?
+  vorname      String?
+  nachname     String?
+  geburtsdatum DateTime?
+  // Natural person (extended)
+  geburtsname           String?
+  geburtsort            String?
+  geburtsland           String?
+  staatsangehoerigkeiten String[]
+  familienstand         Familienstand?
+  beruf                 String?
+  branche               String?
+  // Legal entity
+  firma        String?
+  rechtsform   String?
+  // Legal entity (extended)
+  kurzname              String?
+  registerart           Registerart?
+  registernummer        String?
+  registergericht       String?
+  gruendungsdatum       DateTime?
+  geschaeftszweck       String?    @db.Text
+  wirtschaftlichBerechtigte Json?
+  // Address (legacy — kept for compatibility, use Adresse relation for new data)
+  strasse      String?
+  plz          String?
+  ort          String?
+  land         String?    @default("Deutschland")
+  // Communication
+  telefon      String?
+  telefon2     String?
+  mobil        String?
+  fax          String?
+  email        String?
+  email2       String?
+  website      String?
+  // Communication (extended)
+  bevorzugteKontaktart  BevorzugteKontaktart?
+  kontaktzeiten         String?
+  korrespondenzSprachen String[]
+  // Legal identifiers
+  beaSafeId    String?
+  aktenzeichen String?    // Opponent's reference
+  steuernr     String?
+  // Tax & Bank
+  finanzamt             String?
+  ustIdNr               String?
+  iban                  String?
+  bic                   String?
+  kontoinhaber          String?
+  zahlungsmodalitaeten  String?    @db.Text
+  bonitaetseinschaetzung String?
+  // Legal status
+  minderjaehrig         Boolean    @default(false)
+  unterBetreuung        Boolean    @default(false)
+  geschaeftsunfaehig    Boolean    @default(false)
+  // Internal (Kanzlei)
+  mandantennummer       String?
+  mandatsKategorie      MandatsKategorie?
+  akquisekanal          String?
+  einwilligungEmail     Boolean    @default(false)
+  einwilligungNewsletter Boolean   @default(false)
+  einwilligungAi        Boolean    @default(false)
+  // Notes & custom data
+  notizen      String?    @db.Text
+  tags         String[]
+  customFields Json?      // User-defined fields { [fieldKey]: value }
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  beteiligte          Beteiligter[]
+  adressen            Adresse[]
+  identitaetsPruefungen IdentitaetsPruefung[]
+  vollmachtenAlsGeber Vollmacht[]        @relation("VollmachtGeber")
+  vollmachtenAlsNehmer Vollmacht[]       @relation("VollmachtNehmer")
+  kontaktDokumente    KontaktDokument[]
+  beziehungenVon      KontaktBeziehung[] @relation("BeziehungVon")
+  beziehungenZu       KontaktBeziehung[] @relation("BeziehungZu")
+
+  @@index([nachname, vorname])
+  @@index([firma])
+  @@index([mandantennummer])
+  @@index([ustIdNr])
+  @@map("kontakte")
+}
+
+model KontaktFeldDefinition {
+  id          String   @id @default(cuid())
+  key         String   @unique // Machine-readable key
+  label       String   // Display label
+  typ         String   // text, number, date, select, boolean
+  optionen    Json?    // For select: [{ value, label }]
+  pflicht     Boolean  @default(false)
+  sortierung  Int      @default(0) // Display order
+  aktiv       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("kontakt_feld_definitionen")
+}
+
+// ─── Kontakt Sub-Entities ───────────────────────────────────────────────────
+
+model Adresse {
+  id          String     @id @default(cuid())
+  kontaktId   String
+  kontakt     Kontakt    @relation(fields: [kontaktId], references: [id], onDelete: Cascade)
+  typ         AdressenTyp @default(HAUPTANSCHRIFT)
+  bezeichnung String?
+  strasse     String?
+  hausnummer  String?
+  plz         String?
+  ort         String?
+  land        String?    @default("Deutschland")
+  istHaupt    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([kontaktId])
+  @@map("adressen")
+}
+
+model IdentitaetsPruefung {
+  id               String          @id @default(cuid())
+  kontaktId        String
+  kontakt          Kontakt         @relation(fields: [kontaktId], references: [id], onDelete: Cascade)
+  dokumentart      KycDokumentart
+  ausweisnummer    String?
+  behoerde         String?
+  datum            DateTime?
+  gueltigBis       DateTime?
+  pruefmethode     String?
+  status           KycStatus       @default(NICHT_GEPRUEFT)
+  risikoEinstufung RisikoEinstufung?
+  notizen          String?         @db.Text
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([kontaktId])
+  @@map("identitaets_pruefungen")
+}
+
+model Vollmacht {
+  id              String       @id @default(cuid())
+  geberId         String
+  geber           Kontakt      @relation("VollmachtGeber", fields: [geberId], references: [id], onDelete: Cascade)
+  nehmerId        String
+  nehmer          Kontakt      @relation("VollmachtNehmer", fields: [nehmerId], references: [id], onDelete: Cascade)
+  typ             VollmachtTyp
+  umfang          String?      @db.Text
+  erteilungsdatum DateTime?
+  beginn          DateTime?
+  ende            DateTime?
+  beschraenkungen String?      @db.Text
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([geberId])
+  @@index([nehmerId])
+  @@map("vollmachten")
+}
+
+model KontaktDokument {
+  id         String                   @id @default(cuid())
+  kontaktId  String
+  kontakt    Kontakt                  @relation(fields: [kontaktId], references: [id], onDelete: Cascade)
+  kategorie  KontaktDokumentKategorie @default(SONSTIGE)
+  name       String
+  dateipfad  String                   // MinIO path
+  mimeType   String
+  groesse    Int                      // bytes
+  createdAt  DateTime                 @default(now())
+  updatedAt  DateTime                 @updatedAt
+
+  @@index([kontaktId])
+  @@map("kontakt_dokumente")
+}
+
+model KontaktBeziehung {
+  id            String       @id @default(cuid())
+  vonKontaktId  String
+  vonKontakt    Kontakt      @relation("BeziehungVon", fields: [vonKontaktId], references: [id], onDelete: Cascade)
+  zuKontaktId   String
+  zuKontakt     Kontakt      @relation("BeziehungZu", fields: [zuKontaktId], references: [id], onDelete: Cascade)
+  typ           BeziehungTyp
+  beschreibung  String?
+  createdAt     DateTime     @default(now())
+
+  @@unique([vonKontaktId, zuKontaktId, typ])
+  @@index([vonKontaktId])
+  @@index([zuKontaktId])
+  @@map("kontakt_beziehungen")
+}
+
+// ─── Akten ───────────────────────────────────────────────────────────────────
+
+model Akte {
+  id               String      @id @default(cuid())
+  aktenzeichen     String      @unique
+  kurzrubrum       String      // Short description, e.g. "Müller ./. Schmidt"
+  wegen            String?     // Subject matter
+  sachgebiet       Sachgebiet  @default(SONSTIGES)
+  status           AkteStatus  @default(OFFEN)
+  gegenstandswert  Decimal?    @db.Decimal(12, 2)
+  // Custom case data (JSON Schema based, per Sachgebiet)
+  falldaten        Json?
+  notizen          String?     @db.Text
+  // Assigned staff
+  anwaltId         String?
+  anwalt           User?       @relation("AnwaltAkten", fields: [anwaltId], references: [id])
+  sachbearbeiterId String?
+  sachbearbeiter   User?       @relation("SachbearbeiterAkten", fields: [sachbearbeiterId], references: [id])
+  // Organization
+  kanzleiId        String?
+  kanzlei          Kanzlei?    @relation(fields: [kanzleiId], references: [id])
+  angelegt         DateTime    @default(now())
+  geaendert        DateTime    @updatedAt
+  archiviert       DateTime?
+
+  // Relations
+  beteiligte        Beteiligter[]
+  dokumente         Dokument[]
+  kalenderEintraege KalenderEintrag[]
+  zeiterfassungen   Zeiterfassung[]
+  rechnungen        Rechnung[]
+  aktenKonto        AktenKontoBuchung[]
+  beaNachrichten    BeaNachricht[]
+  chatNachrichten   ChatNachricht[]
+  aiConversations   AiConversation[]
+  auditLogs         AuditLog[]
+  emailMessages     EmailMessage[]
+  tickets           Ticket[]
+
+  @@index([status])
+  @@index([anwaltId])
+  @@index([sachgebiet])
+  @@map("akten")
+}
+
+model Beteiligter {
+  id        String          @id @default(cuid())
+  akteId    String
+  akte      Akte            @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  kontaktId String
+  kontakt   Kontakt         @relation(fields: [kontaktId], references: [id])
+  rolle     BeteiligterRolle
+  notizen   String?
+  createdAt DateTime        @default(now())
+
+  emailMessages EmailMessage[]
+
+  @@unique([akteId, kontaktId, rolle])
+  @@map("beteiligte")
+}
+
+// ─── Dokument-Vorlagen ──────────────────────────────────────────────────────
+
+enum VorlageKategorie {
+  SCHRIFTSATZ
+  KLAGE
+  MANDATSVOLLMACHT
+  MAHNUNG
+  VERTRAG
+  BRIEF
+  BESCHEID
+  SONSTIGES
+}
+
+model DokumentVorlage {
+  id          String            @id @default(cuid())
+  name        String            // Display name, e.g. "Mandatsvollmacht"
+  beschreibung String?
+  kategorie   VorlageKategorie  @default(SONSTIGES)
+  dateipfad   String            // MinIO path to the DOCX template
+  dateiname   String            // Original filename
+  groesse     Int               // bytes
+  platzhalter String[]          // Extracted placeholder keys, e.g. ["mandant.name", "akte.aktenzeichen"]
+  createdById String
+  createdBy   User              @relation(fields: [createdById], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([kategorie])
+  @@map("dokument_vorlagen")
+}
+
+// ─── Dokumente ───────────────────────────────────────────────────────────────
+
+model Dokument {
+  id          String   @id @default(cuid())
+  akteId      String
+  akte        Akte     @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  name        String
+  dateipfad   String   // MinIO path
+  mimeType    String
+  groesse     Int      // bytes
+  version     Int      @default(1)
+  ocrText     String?  @db.Text
+  tags        String[]
+  ordner      String?  // Virtual folder within case
+  // Document lifecycle status
+  status              DokumentStatus @default(ENTWURF)
+  erstelltDurch       String?        // "user" | "ai" | "system" — origin of document
+  freigegebenDurchId  String?
+  freigegebenDurch    User?          @relation("DokumentFreigabe", fields: [freigegebenDurchId], references: [id])
+  freigegebenAm       DateTime?
+  // Creator
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  chatNachrichten ChatNachricht[] @relation("BezugDokument")
+
+  @@index([akteId])
+  @@index([name])
+  @@index([status])
+  @@map("dokumente")
+}
+
+// ─── Kalender & Fristen ──────────────────────────────────────────────────────
+
+model KalenderEintrag {
+  id               String      @id @default(cuid())
+  akteId           String?
+  akte             Akte?       @relation(fields: [akteId], references: [id], onDelete: SetNull)
+  typ              KalenderTyp
+  titel            String
+  beschreibung     String?     @db.Text
+  datum            DateTime
+  datumBis         DateTime?   // End date/time for appointments
+  ganztaegig       Boolean     @default(false)
+  erledigt         Boolean     @default(false)
+  erledigtAm       DateTime?
+  verantwortlichId String
+  verantwortlich   User        @relation("VerantwortlicherKalender", fields: [verantwortlichId], references: [id])
+  // Deadline-specific
+  fristablauf      DateTime?   // Calculated deadline with holiday/weekend adjustment
+  vorfrist         DateTime?   // Pre-deadline reminder
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([datum])
+  @@index([verantwortlichId])
+  @@index([erledigt])
+  @@map("kalender_eintraege")
+}
+
+// ─── Finanzen ────────────────────────────────────────────────────────────────
+
+model Zeiterfassung {
+  id           String   @id @default(cuid())
+  akteId       String
+  akte         Akte     @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  datum        DateTime
+  dauer        Int      // Duration in minutes
+  beschreibung String
+  stundensatz  Decimal? @db.Decimal(8, 2)
+  abrechenbar  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("zeiterfassungen")
+}
+
+model Rechnung {
+  id              String         @id @default(cuid())
+  akteId          String
+  akte            Akte           @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  rechnungsnummer String         @unique
+  typ             RechnungTyp    @default(RVG)
+  status          RechnungStatus @default(ENTWURF)
+  betragNetto     Decimal        @db.Decimal(12, 2)
+  mwstSatz        Decimal        @default(19) @db.Decimal(5, 2)
+  betragBrutto    Decimal        @db.Decimal(12, 2)
+  rechnungsdatum  DateTime       @default(now())
+  faelligAm       DateTime?
+  bezahltAm       DateTime?
+  positionen      Json           // Array of line items
+  notizen         String?        @db.Text
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@map("rechnungen")
+}
+
+model AktenKontoBuchung {
+  id               String     @id @default(cuid())
+  akteId           String
+  akte             Akte       @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  buchungstyp      BuchungsTyp
+  betrag           Decimal    @db.Decimal(12, 2)
+  verwendungszweck String
+  buchungsdatum    DateTime   @default(now())
+  belegnummer      String?
+  createdAt        DateTime   @default(now())
+
+  @@map("akten_konto_buchungen")
+}
+
+// ─── beA ─────────────────────────────────────────────────────────────────────
+
+model BeaNachricht {
+  id              String             @id @default(cuid())
+  akteId          String?
+  akte            Akte?              @relation(fields: [akteId], references: [id], onDelete: SetNull)
+  nachrichtenId   String?            @unique // External beA message ID
+  betreff         String
+  absender        String
+  empfaenger      String
+  inhalt          String?            @db.Text
+  status          BeaNachrichtStatus @default(EINGANG)
+  pruefprotokoll  Json?
+  anhaenge        Json?              // Array of attachment references
+  gesendetAm      DateTime?
+  empfangenAm     DateTime?
+  createdAt       DateTime           @default(now())
+
+  @@index([akteId])
+  @@map("bea_nachrichten")
+}
+
+// ─── AI & Chat ───────────────────────────────────────────────────────────────
+
+model ChatNachricht {
+  id              String    @id @default(cuid())
+  akteId          String
+  akte            Akte      @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  userId          String?   // Nullable: null = AI-generated (OpenClaw/Agent)
+  user            User?     @relation(fields: [userId], references: [id])
+  nachricht       String    @db.Text
+  bezugDokumentId String?
+  bezugDokument   Dokument? @relation("BezugDokument", fields: [bezugDokumentId], references: [id])
+  createdAt       DateTime  @default(now())
+
+  @@index([akteId])
+  @@map("chat_nachrichten")
+}
+
+model AiConversation {
+  id         String   @id @default(cuid())
+  akteId     String?
+  akte       Akte?    @relation(fields: [akteId], references: [id], onDelete: SetNull)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  titel      String?
+  messages   Json     // Array of { role, content, timestamp }
+  model      String   // e.g. "gpt-4o", "claude-3-opus"
+  tokenCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([akteId])
+  @@index([userId])
+  @@map("ai_conversations")
+}
+
+// ─── E-Mail ──────────────────────────────────────────────────────────────────
+
+model EmailMessage {
+  id            String         @id @default(cuid())
+  messageId     String?        @unique // Original Message-ID header
+  akteId        String?
+  akte          Akte?          @relation(fields: [akteId], references: [id], onDelete: SetNull)
+  beteiligterId String?
+  beteiligter   Beteiligter?   @relation(fields: [beteiligterId], references: [id], onDelete: SetNull)
+  richtung      EmailRichtung  @default(EINGEHEND)
+  betreff       String
+  absender      String
+  absenderName  String?
+  empfaenger    String[]
+  cc            String[]
+  inhalt        String?        @db.Text // HTML or plain text body
+  inhaltText    String?        @db.Text // Plain text version
+  empfangenAm   DateTime?
+  gesendetAm    DateTime?
+  gelesen       Boolean        @default(false)
+  veraktet      Boolean        @default(false)
+  ticketId      String?
+  ticket        Ticket?        @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  anhangDokumentIds String[]   // IDs of documents stored in DMS
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([akteId])
+  @@index([empfangenAm])
+  @@index([veraktet])
+  @@index([gelesen])
+  @@map("email_messages")
+}
+
+// ─── Tickets / Aufgaben ─────────────────────────────────────────────────────
+
+model Ticket {
+  id                   String           @id @default(cuid())
+  akteId               String?
+  akte                 Akte?            @relation(fields: [akteId], references: [id], onDelete: SetNull)
+  titel                String
+  beschreibung         String?          @db.Text
+  status               TicketStatus     @default(OFFEN)
+  prioritaet           TicketPrioritaet @default(NORMAL)
+  faelligAm            DateTime?
+  verantwortlichId     String?
+  verantwortlich       User?            @relation("TicketVerantwortlicher", fields: [verantwortlichId], references: [id], onDelete: SetNull)
+  tags                 String[]
+  erledigtAm           DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  // AI-Runner locking: prevents double processing of the same ticket
+  aiLockedAt           DateTime?        // When the lock was acquired (null = unlocked)
+  aiLockedBy           String?          // Runner identifier (e.g. hostname or random ID)
+
+  emails               EmailMessage[]
+
+  @@index([akteId])
+  @@index([verantwortlichId])
+  @@index([status])
+  @@index([faelligAm])
+  @@map("tickets")
+}
+
+// ─── Audit ───────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  akteId    String?
+  akte      Akte?    @relation(fields: [akteId], references: [id], onDelete: SetNull)
+  aktion    String   // e.g. "AKTE_ERSTELLT", "DOKUMENT_HOCHGELADEN"
+  details   Json?    // Additional context
+  ipAdresse String?
+  createdAt DateTime @default(now())
+
+  @@index([akteId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Notifications ──────────────────────────────────────────────────────────
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // e.g. "job:completed", "job:failed", "document:created"
+  title       String
+  message     String
+  data        Json?    // Arbitrary payload (link target, jobId, akteId, etc.)
+  read        Boolean  @default(false)
+  dismissed   Boolean  @default(false)
+  soundType   String?  // Optional sound identifier
+  createdAt   DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+// ─── System Settings ────────────────────────────────────────────────────────
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  type      String   @default("string") // string, number, boolean, json
+  category  String   @default("general")
+  label     String?  // German display label
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([category])
+  @@map("system_settings")
+}

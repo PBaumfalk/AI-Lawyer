@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
 | 1. Infrastructure Foundation | 3/3 | Complete    | 2026-02-24 |
-| 2. Deadline Calculation + Document Templates | 0/6 | Not started | - |
+| 2. Deadline Calculation + Document Templates | 5/6 | In progress | - |
 | 3. Email Client | 0/3 | Not started | - |
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Not started | - |
 | 5. Financial Module | 0/5 | Not started | - |

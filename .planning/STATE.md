@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 2 of 7 (Deadline Calculation + Document Templates)
-Plan: 6 of 6 in current phase (COMPLETE)
-Status: Phase Complete
-Last activity: 2026-02-24 -- Completed 02-06-PLAN.md (Vertretung/Urlaub & Settings)
+Plan: 5 of 6 in current phase
+Status: In Progress
+Last activity: 2026-02-24 -- Completed 02-02-PLAN.md (FristenRechner UI + API + Tagesuebersicht)
 
 Progress: [██████░░░░░░░░░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 7.0 min
-- Total execution time: 0.8 hours
+- Total plans completed: 8
+- Average duration: 7.6 min
+- Total execution time: 1.0 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 - Infrastructure Foundation | 3/3 | 17 min | 5.7 min |
-| 2 - Deadline Calculation + Document Templates | 4/6 | 34 min | 8.5 min |
+| 2 - Deadline Calculation + Document Templates | 5/6 | 49 min | 9.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (6 min), 02-03 (6 min), 02-01 (9 min), 02-04 (8 min), 02-06 (11 min)
+- Last 5 plans: 02-03 (6 min), 02-01 (9 min), 02-04 (8 min), 02-06 (11 min), 02-02 (15 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -42,6 +42,7 @@ Progress: [██████░░░░░░░░░░░░░░] 33%
 | Phase 02 P01 | 9min | 4 tasks | 8 files |
 | Phase 02 P04 | 8min | 2 tasks | 10 files |
 | Phase 02 P06 | 11min | 2 tasks | 13 files |
+| Phase 02 P02 | 15min | 2 tasks | 31 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,13 @@ Recent decisions affecting current work:
 - [02-06]: Settings export excludes file references (dateipfad/logoUrl) -- files transferred separately
 - [02-06]: OnboardingWizard saves settings via import API for consistency
 - [02-06]: Escalation chain for overdue Fristen: Verantwortlicher -> Vertreter -> Admin
+- [02-02]: pdf-lib for Fristenzettel PDF generation (lightweight, no native deps, A4 landscape)
+- [02-02]: Sheet-Command-Palette bridge: CommandFristenRechnerWrapper client component connects server-rendered CommandPalette with FristenRechnerSheet
+- [02-02]: Sonderfaelle as nullable string field on KalenderEintrag (not a separate enum)
+- [02-02]: FristHistorie stored as Json field for Verlaengerung audit trail
+- [02-02]: Auto-Wiedervorlage on document upload with DRINGEND priority and next-business-day date
+- [02-02]: Mandatory erledigungsgrund for FRIST entries, plus ueberschreitungsgrund for overdue
+- [02-02]: Warn-Ampel colors: emerald >7d, amber 3-7d, rose <3d, slate-900 overdue, slate-400 erledigt
 
 ### Pending Todos
 
@@ -92,5 +100,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 02-06-PLAN.md (Vertretung/Urlaub & Settings)
+Stopped at: Completed 02-02-PLAN.md (FristenRechner UI + API + Tagesuebersicht)
 Resume file: None

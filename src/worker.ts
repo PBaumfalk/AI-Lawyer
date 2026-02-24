@@ -230,11 +230,27 @@ ocrWorker.on("completed", (job) => {
     "OCR job completed"
   );
 
-  // Notify via Socket.IO that OCR is done
-  socketEmitter.to(`akte:${job.data.akteId}`).emit("document:ocr-complete", {
+  const ocrPayload = {
     dokumentId: job.data.dokumentId,
+    akteId: job.data.akteId,
+    fileName: job.data.fileName,
     status: "ABGESCHLOSSEN",
-  });
+  };
+
+  // Notify via Socket.IO that OCR is done (akte room for upload panel)
+  socketEmitter.to(`akte:${job.data.akteId}`).emit("document:ocr-complete", ocrPayload);
+
+  // Also emit to user room for global toast (even when navigated away from Akte)
+  prisma.dokument
+    .findUnique({ where: { id: job.data.dokumentId }, select: { createdById: true } })
+    .then((doc) => {
+      if (doc?.createdById) {
+        socketEmitter.to(`user:${doc.createdById}`).emit("document:ocr-complete", ocrPayload);
+      }
+    })
+    .catch((err) => {
+      log.warn({ err, dokumentId: job.data.dokumentId }, "Failed to look up user for OCR notification");
+    });
 });
 
 ocrWorker.on("failed", (job, err) => {
@@ -246,11 +262,27 @@ ocrWorker.on("failed", (job, err) => {
 
   // Notify on final failure
   if (job.attemptsMade >= (job.opts.attempts ?? 3)) {
-    socketEmitter.to(`akte:${job.data.akteId}`).emit("document:ocr-complete", {
+    const failPayload = {
       dokumentId: job.data.dokumentId,
+      akteId: job.data.akteId,
+      fileName: job.data.fileName,
       status: "FEHLGESCHLAGEN",
       error: err.message,
-    });
+    };
+
+    // Notify akte room (upload panel) and user room (global toast)
+    socketEmitter.to(`akte:${job.data.akteId}`).emit("document:ocr-complete", failPayload);
+
+    prisma.dokument
+      .findUnique({ where: { id: job.data.dokumentId }, select: { createdById: true } })
+      .then((doc) => {
+        if (doc?.createdById) {
+          socketEmitter.to(`user:${doc.createdById}`).emit("document:ocr-complete", failPayload);
+        }
+      })
+      .catch((lookupErr) => {
+        log.warn({ err: lookupErr, dokumentId: job.data.dokumentId }, "Failed to look up user for OCR failure notification");
+      });
 
     socketEmitter.to("role:ADMIN").emit("notification", {
       type: "ocr:failed",

@@ -19,10 +19,6 @@ import {
   subYears,
   isSaturday,
   isSunday,
-  differenceInDays,
-  getDate,
-  lastDayOfMonth,
-  setDate,
   startOfDay,
 } from 'date-fns'
 import { istFeiertag, getFeiertagName } from './feiertage'
@@ -138,32 +134,6 @@ function subtractDuration(date: Date, dauer: FristDauer): Date {
   }
 
   return result
-}
-
-/**
- * Apply Section 193 BGB: If deadline falls on Saturday, Sunday, or Feiertag,
- * shift to the NEXT business day.
- *
- * Returns the shifted date and all shift reasons.
- */
-function applySection193(
-  date: Date,
-  bundesland: BundeslandCode,
-): { shifted: Date; reasons: VerschiebungsGrund[] } {
-  const reasons: VerschiebungsGrund[] = []
-  let current = startOfDay(date)
-
-  // Keep shifting until we land on a business day
-  while (!isGeschaeftstag(current, bundesland)) {
-    const grund = getShiftReason(current, bundesland)
-    reasons.push({
-      datum: current,
-      grund,
-    })
-    current = addDays(current, 1)
-  }
-
-  return { shifted: current, reasons }
 }
 
 /**

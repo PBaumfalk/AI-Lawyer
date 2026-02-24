@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 3.1 - Wire Email Real-Time + Compose
+**Current focus:** Phase 4 - Document Pipeline (OCR + RAG Ingestion)
 
 ## Current Position
 
-Phase: 3.1 of 7 (Wire Email Real-Time + Compose) -- COMPLETE
-Plan: 1 of 1 in current phase (all complete)
-Status: Phase Complete
-Last activity: 2026-02-24 -- Completed 03.1-01-PLAN.md (Wire Email Real-Time, Signature API, ComposeManager)
+Phase: 4 of 7 (Document Pipeline OCR + RAG Ingestion) -- IN PROGRESS
+Plan: 1 of 3 in current phase (1 complete)
+Status: Executing
+Last activity: 2026-02-24 -- Completed 04-01-PLAN.md (Stirling-PDF OCR pipeline, upload experience, tag management)
 
-Progress: [█████████████████░░░] 63%
+Progress: [██████████████████░░] 68%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
-- Average duration: 7.5 min
-- Total execution time: 2.07 hours
+- Total plans completed: 17
+- Average duration: 7.7 min
+- Total execution time: 2.25 hours
 
 **By Phase:**
 
@@ -33,9 +33,10 @@ Progress: [█████████████████░░░] 63%
 | 2.2 - Fix API Routes and UI Paths | 1/1 | 5 min | 5 min |
 | 3 - Email Client | 4/4 | 42 min | 10.5 min |
 | 3.1 - Wire Email Real-Time + Compose | 1/1 | 2 min | 2 min |
+| 4 - Document Pipeline OCR + RAG | 1/3 | 11 min | 11 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (14 min), 03-02 (10 min), 03-03 (10 min), 03-04 (8 min), 03.1-01 (2 min)
+- Last 5 plans: 03-02 (10 min), 03-03 (10 min), 03-04 (8 min), 03.1-01 (2 min), 04-01 (11 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -55,6 +56,7 @@ Progress: [█████████████████░░░] 63%
 | Phase 03 P03 | 10min | 2 tasks | 17 files |
 | Phase 03 P04 | 8min | 2 tasks | 13 files |
 | Phase 03.1 P01 | 2min | 3 tasks | 4 files |
+| Phase 04 P01 | 11min | 3 tasks | 22 files |
 
 ## Accumulated Context
 
@@ -139,6 +141,13 @@ Recent decisions affecting current work:
 - [03.1-01]: Socket-to-CustomEvent bridge in inbox-layout (not folder-tree) to keep bridge in one place
 - [03.1-01]: Separate useEffects for room join/leave vs event bridge (different dependency arrays)
 - [03.1-01]: Email layout converted to client component for ComposeManager context (no server-only code lost)
+- [04-01]: Stirling-PDF skip-text OCR mode to avoid re-processing already-searchable PDFs
+- [04-01]: pdf-parse via require() for text extraction; regex fallback for basic extraction
+- [04-01]: Universal streamToBuffer for AWS SDK SdkStreamMixin, Blob, ReadableStream, Node Readable
+- [04-01]: XHR for upload progress tracking (fetch API lacks upload progress events)
+- [04-01]: dragCounter ref pattern for reliable drag-zone detection without false leaves
+- [04-01]: OCR concurrency:1 (memory-heavy), preview concurrency:2
+- [04-01]: Text files (plain, CSV, HTML) bypass OCR and get indexed directly
 
 ### Pending Todos
 
@@ -151,5 +160,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 03.1-01-PLAN.md (Wire Email Real-Time, Signature API, ComposeManager) -- Phase 3.1 COMPLETE (1/1)
+Stopped at: Completed 04-01-PLAN.md (Stirling-PDF OCR pipeline, upload experience, tag management) -- Phase 4 plan 1/3
 Resume file: None

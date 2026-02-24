@@ -19,6 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Email Client** - IMAP IDLE worker, SMTP send, Inbox UI, Veraktung, Compose, Ticket-from-Email (completed 2026-02-24)
 - [ ] **Phase 3.1: Wire Email Real-Time + Compose Integration** - Socket.IO mailbox room wiring, email-signature API, ComposeManager provider (INSERTED — gap closure)
 - [x] **Phase 4: Document Pipeline (OCR + RAG Ingestion)** - Stirling-PDF, auto-OCR, PDF preview, document detail page, chunking, embedding, pgvector storage (completed 2026-02-24)
+- [ ] **Phase 4.1: Wire Akte Real-Time + Email Compose + Admin Pipeline** - Socket.IO akte room join, Neue E-Mail button, admin pipeline dashboard (INSERTED — gap closure)
 - [ ] **Phase 5: Financial Module** - RVG calculation, invoicing, Aktenkonto, Fremdgeld compliance, E-Rechnung, DATEV, SEPA, banking import, Zeiterfassung
 - [ ] **Phase 6: AI Features + beA** - Multi-provider AI, RAG retrieval, document chat, proactive agent, deadline recognition, beA integration via bea.expert
 - [ ] **Phase 7: Rollen/Sicherheit + Compliance + Observability** - RBAC enforcement, Audit-Trail UI, DSGVO compliance, health checks, structured logs
@@ -151,6 +152,22 @@ Plans:
 - [ ] 04-02-PLAN.md — react-pdf PDF viewer + document detail page (split view) + version timeline + actions bar + tag manager + document APIs
 - [ ] 04-03-PLAN.md — RAG ingestion pipeline (German legal chunking + Ollama embedding + pgvector storage) + search API with highlighting + /suche advanced search page + Cmd+K document search
 
+### Phase 4.1: Wire Akte Real-Time + Email Compose + Admin Pipeline
+**Goal**: Real-time OCR status updates reach the browser via Socket.IO (akte room wiring), users can start new email composition from the inbox, and admins can monitor the document pipeline — closing all 3 integration gaps and 2 broken E2E flows from the 3rd v3.4 audit.
+**Depends on**: Phase 1 (Socket.IO rooms), Phase 3.1 (ComposeManager), Phase 4 (OCR pipeline + admin API)
+**Requirements**: REQ-DV-004, REQ-DV-005, REQ-EM-006 (all already satisfied — this phase fixes cross-phase wiring)
+**Gap Closure**: Closes INT-004 (critical), INT-005 (medium), INT-006 (low) from v3.4 3rd audit
+**Research flag**: No research needed — pure wiring of existing code.
+**Success Criteria** (what must be TRUE):
+  1. Akte pages emit `join:akte`/`leave:akte` on mount/unmount — `akte:{akteId}` room is populated when user views documents
+  2. `document:ocr-complete` events from worker reach the browser and upload panel OCR status transitions in real-time
+  3. "Neue E-Mail" button in email inbox header calls `openCompose()` and opens the compose popup
+  4. Admin pipeline dashboard page (or section in admin/system) displays OCR/embedding queue stats from `/api/admin/pipeline`
+**Plans**: TBD
+
+Plans:
+- [ ] 04.1-01-PLAN.md — Wire akte Socket.IO room, add Neue E-Mail button, create admin pipeline dashboard
+
 ### Phase 5: Financial Module
 **Goal**: Attorneys can calculate fees using current RVG tables, create legally compliant invoices with PDF and E-Rechnung export, track all financial movements per case in the Aktenkonto with Fremdgeld compliance safeguards, and export data to DATEV and SEPA formats.
 **Depends on**: Phase 2 (Briefkopf/letterhead for invoice PDFs, template system for Rechnungs-PDF)
@@ -210,7 +227,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 5 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
@@ -221,6 +238,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 5 -> 6
 | 3. Email Client | 0/4 | Complete    | 2026-02-24 |
 | 3.1 Wire Email Real-Time + Compose Integration | 0/1 | Not started | - |
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Complete    | 2026-02-24 |
+| 4.1 Wire Akte Real-Time + Email Compose + Admin Pipeline | 0/1 | Not started | - |
 | 5. Financial Module | 0/5 | Not started | - |
 | 6. AI Features + beA | 0/4 | Not started | - |
 | 7. Rollen/Sicherheit + Compliance + Observability | 0/2 | Not started | - |

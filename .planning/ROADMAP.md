@@ -108,12 +108,13 @@ Plans:
   3. User can view email list with pagination and filter by veraktet/unveraktet, Akte, and Verantwortlicher, and view email details with correctly rendered HTML body and downloadable attachments
   4. User can compose and send emails (To, CC, BCC, rich text, attachments from DMS, case linking) via SMTP
   5. User can assign an email to a case (Veraktung) with auto-suggested case matching and one-click confirmation, with attachments automatically saved to the case DMS; user can create a Ticket from an email with pre-filled data
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 03-01: IMAP IDLE worker + email DB models + mailbox configuration
-- [ ] 03-02: Inbox UI + email detail + HTML rendering
-- [ ] 03-03: Veraktung + Compose/SMTP + Ticket-from-Email + Akte E-Mail Tab
+- [ ] 03-01-PLAN.md — Prisma schema (6 email models), IMAP connection manager with IDLE + reconnection, email sync engine, BullMQ queues, email CRUD + mailbox config APIs, SMTP send processor, AES-256 credential encryption
+- [ ] 03-02-PLAN.md — Three-pane resizable Inbox UI (folder tree, virtualized email list, detail pane), sanitized HTML rendering, attachment strip, filter bar, keyboard shortcuts
+- [ ] 03-03-PLAN.md — Gmail-style floating compose popup with TipTap editor, recipient auto-complete, DMS attachments, signature system, send with 10s undo + scheduled sending, mailbox admin settings page
+- [ ] 03-04-PLAN.md — Veraktung slide-over with auto-suggest + DMS copy, Ticket-from-Email, Akte E-Mail Tab, Verantwortlicher assignment, sidebar navigation
 
 ### Phase 4: Document Pipeline (OCR + RAG Ingestion)
 **Goal**: Uploaded PDF documents are automatically OCR-processed (if not already searchable), indexed in Meilisearch, and chunked+embedded into pgvector for AI retrieval -- with a rich document detail page and in-browser PDF preview.
@@ -200,7 +201,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Deadline Calculation + Document Templates | 5/6 | Complete    | 2026-02-24 |
 | 2.1 Wire Frist-Reminder Pipeline + Settings Init | 1/1 | Complete    | 2026-02-24 |
 | 2.2 Fix API Routes + UI Paths | 0/1 | Not started | - |
-| 3. Email Client | 0/3 | Not started | - |
+| 3. Email Client | 0/4 | Not started | - |
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Not started | - |
 | 5. Financial Module | 0/5 | Not started | - |
 | 6. AI Features + beA | 0/4 | Not started | - |

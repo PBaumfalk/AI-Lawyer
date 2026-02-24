@@ -59,6 +59,14 @@ enum KalenderTyp {
   WIEDERVORLAGE
 }
 
+enum FristPrioritaet {
+  SEHR_NIEDRIG
+  NIEDRIG
+  NORMAL
+  HOCH
+  DRINGEND
+}
+
 enum BuchungsTyp {
   EINNAHME
   AUSGABE
@@ -250,6 +258,14 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Vertretung (deputy) fields
+  vertreterId      String?
+  vertreter        User?     @relation("Vertretung", fields: [vertreterId], references: [id])
+  vertretenVon     User[]    @relation("Vertretung")
+  vertretungAktiv  Boolean   @default(false)
+  vertretungVon    DateTime?
+  vertretungBis    DateTime?
+
   // Auth.js fields
   emailVerified DateTime?
   accounts      Account[]
@@ -269,8 +285,26 @@ model User {
   dokumenteFreigegeben  Dokument[]       @relation("DokumentFreigabe")
   dokumentVersionen     DokumentVersion[] @relation("DokumentVersionen")
   notifications         Notification[]
+  vorlagenFreigegeben   DokumentVorlage[] @relation("VorlageFreigabe")
+  vorlageVersionen      VorlageVersion[]  @relation("VorlageVersionen")
+  urlaubZeitraeume      UrlaubZeitraum[]
+  sachbearbeiterKalender KalenderEintrag[] @relation("SachbearbeiterKalender")
+  quittierteFristen      KalenderEintrag[] @relation("QuittiertVon")
 
   @@map("users")
+}
+
+model UrlaubZeitraum {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  von       DateTime
+  bis       DateTime
+  notiz     String?  // Optional note (e.g., "Sommerurlaub 2026")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("urlaub_zeitraeume")
 }
 
 // ─── Auth.js Models ──────────────────────────────────────────────────────────
@@ -591,21 +625,84 @@ enum VorlageKategorie {
 }
 
 model DokumentVorlage {
-  id          String            @id @default(cuid())
-  name        String            // Display name, e.g. "Mandatsvollmacht"
-  beschreibung String?
-  kategorie   VorlageKategorie  @default(SONSTIGES)
-  dateipfad   String            // MinIO path to the DOCX template
-  dateiname   String            // Original filename
-  groesse     Int               // bytes
-  platzhalter String[]          // Extracted placeholder keys, e.g. ["mandant.name", "akte.aktenzeichen"]
-  createdById String
-  createdBy   User              @relation(fields: [createdById], references: [id])
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id              String            @id @default(cuid())
+  name            String            // Display name, e.g. "Mandatsvollmacht"
+  beschreibung    String?
+  kategorie       VorlageKategorie  @default(SONSTIGES)
+  dateipfad       String            // MinIO path to the DOCX template
+  dateiname       String            // Original filename
+  groesse         Int               // bytes
+  platzhalter     String[]          // Extracted placeholder keys, e.g. ["mandant.name", "akte.aktenzeichen"]
+  version         Int               @default(1)
+  tags            String[]          // Tags for search/filter
+  freigegeben     Boolean           @default(false)
+  freigegebenVonId String?
+  freigegebenVon  User?             @relation("VorlageFreigabe", fields: [freigegebenVonId], references: [id])
+  freigegebenAm   DateTime?
+  customFelder    Json?             // Array of { key, label, typ: TEXT|NUMBER|DATE|DROPDOWN, optionen? }
+  favoritenVon    String[]          // User IDs who favorited
+  createdById     String
+  createdBy       User              @relation(fields: [createdById], references: [id])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  versionen       VorlageVersion[]
 
   @@index([kategorie])
+  @@index([freigegeben])
   @@map("dokument_vorlagen")
+}
+
+model VorlageVersion {
+  id          String          @id @default(cuid())
+  vorlageId   String
+  vorlage     DokumentVorlage @relation(fields: [vorlageId], references: [id], onDelete: Cascade)
+  version     Int
+  dateipfad   String          // MinIO path to this version's template file
+  groesse     Int
+  createdById String
+  createdBy   User            @relation("VorlageVersionen", fields: [createdById], references: [id])
+  createdAt   DateTime        @default(now())
+
+  @@unique([vorlageId, version])
+  @@index([vorlageId])
+  @@map("vorlage_versionen")
+}
+
+model Briefkopf {
+  id            String   @id @default(cuid())
+  name          String
+  dateipfad     String?  // MinIO path to DOCX with header/footer
+  logoUrl       String?  // MinIO path to logo image
+  kanzleiName   String?
+  adresse       String?
+  telefon       String?
+  fax           String?
+  email         String?
+  website       String?
+  steuernr      String?
+  ustIdNr       String?
+  iban          String?
+  bic           String?
+  bankName      String?
+  braoInfo      String?  // BRAO/regulatory info text
+  istStandard   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("briefkoepfe")
+}
+
+model OrdnerSchema {
+  id            String      @id @default(cuid())
+  name          String
+  sachgebiet    Sachgebiet?
+  ordner        String[]    // Array of folder names to create
+  istStandard   Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("ordner_schemata")
 }
 
 // ─── Dokumente ───────────────────────────────────────────────────────────────
@@ -663,29 +760,83 @@ model DokumentVersion {
 // ─── Kalender & Fristen ──────────────────────────────────────────────────────
 
 model KalenderEintrag {
-  id               String      @id @default(cuid())
+  id               String          @id @default(cuid())
   akteId           String?
-  akte             Akte?       @relation(fields: [akteId], references: [id], onDelete: SetNull)
+  akte             Akte?           @relation(fields: [akteId], references: [id], onDelete: SetNull)
   typ              KalenderTyp
   titel            String
-  beschreibung     String?     @db.Text
+  beschreibung     String?         @db.Text
   datum            DateTime
-  datumBis         DateTime?   // End date/time for appointments
-  ganztaegig       Boolean     @default(false)
-  erledigt         Boolean     @default(false)
+  datumBis         DateTime?       // End date/time for appointments
+  ganztaegig       Boolean         @default(false)
+  erledigt         Boolean         @default(false)
   erledigtAm       DateTime?
   verantwortlichId String
-  verantwortlich   User        @relation("VerantwortlicherKalender", fields: [verantwortlichId], references: [id])
-  // Deadline-specific
-  fristablauf      DateTime?   // Calculated deadline with holiday/weekend adjustment
-  vorfrist         DateTime?   // Pre-deadline reminder
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  verantwortlich   User            @relation("VerantwortlicherKalender", fields: [verantwortlichId], references: [id])
+  // Deadline-specific (legacy, kept for backward compatibility)
+  fristablauf      DateTime?       // Calculated deadline with holiday/weekend adjustment
+  vorfrist         DateTime?       // Pre-deadline reminder (single, legacy)
+  // Enhanced Frist fields
+  prioritaet       FristPrioritaet @default(NORMAL)
+  fristArt         String?         // EREIGNISFRIST | BEGINNFRIST
+  bundesland       String?         // BundeslandCode (e.g. NW, BY)
+  istNotfrist      Boolean         @default(false)
+  quittiert        Boolean         @default(false)
+  quittiertAm      DateTime?
+  quittiertVonId   String?
+  quittiertVon     User?           @relation("QuittiertVon", fields: [quittiertVonId], references: [id])
+  erledigungsgrund String?         // Mandatory when erledigt=true for FRIST entries
+  vorfristen       DateTime[]      // Array of pre-deadline reminder dates
+  halbfrist        DateTime?       // Half-period reminder date
+  // Self-relation for Hauptfrist/Vorfrist linkage
+  hauptfristId     String?
+  hauptfrist       KalenderEintrag?  @relation("VorfristZuHauptfrist", fields: [hauptfristId], references: [id])
+  vorfristEintraege KalenderEintrag[] @relation("VorfristZuHauptfrist")
+  // Sachbearbeiter assignment
+  sachbearbeiterId String?
+  sachbearbeiter   User?           @relation("SachbearbeiterKalender", fields: [sachbearbeiterId], references: [id])
+  // Series/recurring
+  serienId         String?
+  serienRegel      String?         // Recurrence rule (e.g. RRULE)
+  // Document links
+  dokumentIds      String[]        // IDs of linked documents
+  // Sonderfaelle for special delivery types
+  sonderfall       String?         // OEFFENTLICHE_ZUSTELLUNG | AUSLANDSZUSTELLUNG_EU | null
+  // Frist history (for Verlaengerung)
+  fristHistorie    Json?           // Array of {altesEnde, neuesEnde, grund, datum}
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
   @@index([datum])
   @@index([verantwortlichId])
+  @@index([sachbearbeiterId])
   @@index([erledigt])
+  @@index([prioritaet])
+  @@index([istNotfrist])
+  @@index([hauptfristId])
   @@map("kalender_eintraege")
+}
+
+model FristPreset {
+  id               String   @id @default(cuid())
+  name             String
+  fristArt         String   // EREIGNISFRIST | BEGINNFRIST
+  dauerWochen      Int?
+  dauerMonate      Int?
+  dauerTage        Int?
+  istNotfrist      Boolean  @default(false)
+  defaultVorfristen Int[]   // Array of calendar days before deadline
+  kategorie        String   // zivilprozess, verwaltungsrecht, strafrecht, arbeitsrecht, allgemein
+  beschreibung     String?  @db.Text
+  rechtsgrundlage  String?  // Legal basis, e.g. "Section 517 ZPO"
+  sortierung       Int      @default(0)
+  aktiv            Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([kategorie])
+  @@index([aktiv])
+  @@map("frist_presets")
 }
 
 // ─── Finanzen ────────────────────────────────────────────────────────────────

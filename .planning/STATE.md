@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 4 of 7 (Document Pipeline OCR + RAG Ingestion) -- IN PROGRESS
-Plan: 2 of 3 in current phase (2 complete)
-Status: Executing
-Last activity: 2026-02-24 -- Completed 04-02-PLAN.md (Document detail page with PDF viewer, version timeline, actions bar, tag management)
+Phase: 4 of 7 (Document Pipeline OCR + RAG Ingestion) -- COMPLETE
+Plan: 3 of 3 in current phase (3 complete)
+Status: Phase Complete
+Last activity: 2026-02-24 -- Completed 04-03-PLAN.md (RAG embedding pipeline + search experience)
 
-Progress: [███████████████████░] 72%
+Progress: [████████████████████] 76%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 18
+- Total plans completed: 19
 - Average duration: 7.6 min
-- Total execution time: 2.35 hours
+- Total execution time: 2.48 hours
 
 **By Phase:**
 
@@ -33,10 +33,10 @@ Progress: [███████████████████░] 72%
 | 2.2 - Fix API Routes and UI Paths | 1/1 | 5 min | 5 min |
 | 3 - Email Client | 4/4 | 42 min | 10.5 min |
 | 3.1 - Wire Email Real-Time + Compose | 1/1 | 2 min | 2 min |
-| 4 - Document Pipeline OCR + RAG | 2/3 | 17 min | 8.5 min |
+| 4 - Document Pipeline OCR + RAG | 3/3 | 25 min | 8.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-03 (10 min), 03-04 (8 min), 03.1-01 (2 min), 04-01 (11 min), 04-02 (6 min)
+- Last 5 plans: 03-04 (8 min), 03.1-01 (2 min), 04-01 (11 min), 04-02 (6 min), 04-03 (8 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -58,6 +58,7 @@ Progress: [███████████████████░] 72%
 | Phase 03.1 P01 | 2min | 3 tasks | 4 files |
 | Phase 04 P01 | 11min | 3 tasks | 22 files |
 | Phase 04 P02 | 6min | 2 tasks | 11 files |
+| Phase 04 P03 | 8min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -153,6 +154,11 @@ Recent decisions affecting current work:
 - [04-02]: ?detail=true query param on existing GET /api/dokumente/[id] for full relations (avoids new endpoint)
 - [04-02]: Document name in list is a Link to detail page (replaces preview dialog as primary click action)
 - [04-02]: Array.from(new Set()) pattern for downlevelIteration TypeScript compatibility
+- [04-03]: Task 1 files already committed in 04-02 plan execution (no duplicate work needed)
+- [04-03]: Enhanced /api/search as new route (preserving existing /api/dokumente/search for backward compat)
+- [04-03]: Meilisearch ocrText added to displayedAttributes and attributesToCrop for snippet generation
+- [04-03]: Command palette uses /api/search instead of /api/dokumente/search for richer results
+- [04-03]: E5 instruction format: "passage: " prefix for documents, "query: " for search queries
 
 ### Pending Todos
 
@@ -165,5 +171,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 04-02-PLAN.md (Document detail page with PDF viewer, version timeline, actions bar, tag management) -- Phase 4 plan 2/3
+Stopped at: Completed 04-03-PLAN.md (RAG embedding pipeline + search experience) -- Phase 4 complete (3/3)
 Resume file: None

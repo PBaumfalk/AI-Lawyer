@@ -200,13 +200,14 @@ Plans:
   3. OpenClaw proactively scans new emails and documents, suggests actions (deadline detected, response draft, party recognized, document classified), and all suggestions appear as ENTWURF requiring explicit human approval -- never auto-sent
   4. Deadlines recognized from Schriftsaetze are created as DRAFT calendar entries; chat history is saved per user and per case; token usage is tracked per user/case with admin dashboard
   5. beA messages can be received (auto-assigned to cases), sent (with document attachments), eEB acknowledged, Pruefprotokolle displayed, Safe-IDs managed on contacts, and XJustiz documents parsed and viewable
-**Plans**: 4 plans
+**Plans**: 5 plans
 
 Plans:
 - [ ] 06-01-PLAN.md — AI SDK v4 multi-provider setup (Ollama/OpenAI/Anthropic), provider factory, Helena bot user, TokenUsage tracking, KI-Entwurf workflow enforcement, rate-limited OpenClaw, admin AI settings page
-- [ ] 06-02-PLAN.md — Streaming RAG document chat at /ki-chat with useChat hook, pgvector retrieval, inline source citations [1][2], conversation history per Akte, Cmd+K Helena integration, sidebar rename
-- [ ] 06-03-PLAN.md — Helena proactive agent: HelenaSuggestion model, ai-scan/ai-briefing/ai-proactive BullMQ queues, deadline extractor (generateObject), party extractor, suggestion feed UI, email KI-Antwort banner
-- [ ] 06-04-PLAN.md — beA integration via bea.expert: browser-side auth with software token, inbox/outbox, eEB one-click, Pruefprotokoll viewer, XJustiz parser (fast-xml-parser) + structured viewer, auto-assignment, SAFE-ID management
+- [ ] 06-02-PLAN.md — Streaming RAG document chat at /ki-chat with useChat hook, pgvector retrieval, inline source citations [1][2], conversation history per Akte, Cmd+K Helena integration, sidebar rename, Fallzusammenfassung button
+- [ ] 06-03-PLAN.md — Helena proactive agent: HelenaSuggestion model, ai-scan/ai-briefing/ai-proactive BullMQ queues, deadline extractor (generateObject), party extractor, suggestion feed UI, email KI-Antwort banner, email-sync wiring
+- [ ] 06-04-PLAN.md — beA foundation: bea.expert library install, schema extension, browser-side client + session, XJustiz parser with unit tests, auto-assignment logic with unit tests
+- [ ] 06-05-PLAN.md — beA UI layer: inbox/outbox pages, message detail, compose form, eEB one-click, Pruefprotokoll viewer, XJustiz structured viewer, API routes, Helena scan trigger
 
 ### Phase 7: Rollen/Sicherheit + Compliance + Observability
 **Goal**: Fine-grained access control is enforced across the application with role-specific permissions, administrators have full audit trail visibility, DSGVO compliance is implemented, and the system is observable with health checks and structured logging.
@@ -241,7 +242,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 ->
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Complete    | 2026-02-24 |
 | 4.1 Wire Akte Real-Time + Email Compose + Admin Pipeline | 0/1 | Not started | - |
 | 5. Financial Module | 0/6 | Complete    | 2026-02-24 |
-| 6. AI Features + beA | 0/4 | Not started | - |
+| 6. AI Features + beA | 0/5 | Not started | - |
 | 7. Rollen/Sicherheit + Compliance + Observability | 0/2 | Not started | - |
 
 ## Coverage Matrix

@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 5 - Financial Module
+**Current focus:** Phase 6 - AI Features + beA (next up)
 
 ## Current Position
 
-Phase: 5 of 7 (Financial Module)
+Phase: 5 of 7 (Financial Module) — COMPLETE
 Plan: 6 of 6 in current phase (6 complete)
-Status: Complete
-Last activity: 2026-02-24 -- Completed 05-06-PLAN.md (Financial Module UI)
+Status: Phase 5 closed, transitioning to Phase 6
+Last activity: 2026-02-24 -- Phase 5 verification approved, phase closed
 
 Progress: [█████████████████████████] 93%
 
@@ -209,10 +209,10 @@ None yet.
 
 ### Blockers/Concerns
 
-None yet.
+- Docker build fails on webpack errors in financial module files (dev mode works fine). Needs investigation.
 
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 05-05-PLAN.md (DATEV/SEPA/Banking/TimeTracking) -- Phase 5 plan 5/6
-Resume file: None
+Stopped at: Phase 6 context gathered — Helena (OpenClaw agent), Document Chat, beA, Provider/Tokens all discussed
+Resume file: .planning/phases/06-ai-features-bea/06-CONTEXT.md

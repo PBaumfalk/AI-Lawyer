@@ -179,14 +179,15 @@ Plans:
   3. User can export invoices as XRechnung (CII) and ZUGFeRD (PDF/A-3) -- validated against official XRechnung Validator
   4. Aktenkonto displays all bookings (Einnahme/Ausgabe/Fremdgeld/Auslage) with Fremdgeld displayed separately, 5-business-day forwarding alerts, and 15k EUR Anderkonto threshold warnings
   5. User can export Buchungsstapel to DATEV CSV, generate SEPA pain.001/pain.008 XML files, import bank statements (CSV + CAMT053) with semi-automatic invoice matching, and track time per case
-**Plans**: 5 plans
+**Plans**: 6 plans
 
 Plans:
 - [ ] 05-01-PLAN.md — RVG/GKG fee calculator TDD: pure-function library with KostBRaeG 2025 tables, VV catalog, Anrechnung, PKH, presets, 50+ unit tests
 - [ ] 05-02-PLAN.md — Prisma schema expansion (11+ new models) + invoice backend (Nummernkreis, status flow, PDF with Briefkopf) + RVG-to-invoice transfer API
-- [ ] 05-03-PLAN.md — Aktenkonto append-only booking model + Fremdgeld compliance (5-Werktage alerts, 15k Anderkonto) + Buchungsperioden + Kostenstellen
+- [ ] 05-03-PLAN.md — Aktenkonto append-only booking model + Fremdgeld compliance (5-Werktage alerts, 15k Anderkonto) + Invoice→Aktenkonto auto-booking wiring + Buchungsperioden + Kostenstellen
 - [ ] 05-04-PLAN.md — E-Rechnung: ZUGFeRD PDF/A-3 auto-embed + XRechnung CII XML export via @e-invoice-eu/core
-- [ ] 05-05-PLAN.md — DATEV EXTF_ CSV export + SEPA pain.001/008 XML + bank CSV/CAMT import with invoice matching + Zeiterfassung timer
+- [ ] 05-05-PLAN.md — DATEV EXTF_ CSV export + SEPA pain.001/008 XML + bank CSV/CAMT import with invoice matching + Zeiterfassung timer + Akte auto-start wiring
+- [ ] 05-06-PLAN.md — Financial UI pages: RVG calculator, invoice list+detail, Aktenkonto ledger with Fremdgeld display, timer sidebar widget
 
 ### Phase 6: AI Features + beA
 **Goal**: OpenClaw proactively scans incoming emails and documents to suggest actions and create drafts, attorneys can chat with case documents via RAG, deadlines are auto-recognized from Schriftsaetze, and beA messages can be sent and received through the application -- with every AI output starting as a human-reviewable draft, never auto-sent.
@@ -239,7 +240,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 ->
 | 3.1 Wire Email Real-Time + Compose Integration | 0/1 | Not started | - |
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Complete    | 2026-02-24 |
 | 4.1 Wire Akte Real-Time + Email Compose + Admin Pipeline | 0/1 | Not started | - |
-| 5. Financial Module | 0/5 | Not started | - |
+| 5. Financial Module | 0/6 | Not started | - |
 | 6. AI Features + beA | 0/4 | Not started | - |
 | 7. Rollen/Sicherheit + Compliance + Observability | 0/2 | Not started | - |
 

@@ -22,6 +22,7 @@ import {
   Activity,
   Server,
   Wrench,
+  Workflow,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -44,6 +45,7 @@ const navigation = [
 const adminNavigation = [
   { name: "Job-Monitor", href: "/admin/jobs", icon: Activity },
   { name: "System", href: "/admin/system", icon: Server },
+  { name: "Pipeline", href: "/admin/pipeline", icon: Workflow },
   { name: "Einstellungen", href: "/admin/settings", icon: Wrench },
 ];
 

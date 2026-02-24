@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 const adminNavigation = [
   { name: "Job-Monitor", href: "/admin/jobs" },
   { name: "System", href: "/admin/system" },
+  { name: "Pipeline", href: "/admin/pipeline" },
   { name: "Einstellungen", href: "/admin/settings" },
 ];
 

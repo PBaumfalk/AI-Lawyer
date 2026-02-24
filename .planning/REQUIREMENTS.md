@@ -164,7 +164,7 @@
 |-------------|-------|--------|
 | REQ-IF-001 | Phase 1 | Complete |
 | REQ-IF-002 | Phase 1 | Complete |
-| REQ-IF-003 | Phase 1 | Pending |
+| REQ-IF-003 | Phase 1 | Complete |
 | REQ-IF-005 | Phase 1 | Complete |
 | REQ-FK-001 | Phase 2 | Pending |
 | REQ-FK-002 | Phase 2 | Pending |

@@ -10,31 +10,32 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 1 of 7 (Infrastructure Foundation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-02-24 -- Completed 01-01-PLAN.md (Redis + BullMQ + Worker + Health)
+Last activity: 2026-02-24 -- Completed 01-02-PLAN.md (Socket.IO + Notification System)
 
-Progress: [██░░░░░░░░░░░░░░░░░░] 5%
+Progress: [████░░░░░░░░░░░░░░░░] 10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 6 min
-- Total execution time: 0.1 hours
+- Total plans completed: 2
+- Average duration: 5.5 min
+- Total execution time: 0.2 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 - Infrastructure Foundation | 1/3 | 6 min | 6 min |
+| 1 - Infrastructure Foundation | 2/3 | 11 min | 5.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6 min)
-- Trend: Starting
+- Last 5 plans: 01-01 (6 min), 01-02 (5 min)
+- Trend: Steady
 
 *Updated after each plan completion*
 | Phase 01 P01 | 6min | 3 tasks | 17 files |
+| Phase 01 P02 | 5min | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -49,6 +50,10 @@ Recent decisions affecting current work:
 - [01-01]: Health endpoint returns 200 if core services (postgres, redis) healthy, 503 only if core down
 - [01-01]: Worker depends on app service_healthy before processing jobs
 - [01-01]: esbuild built-in alias option for @/ path resolution (no plugin needed)
+- [01-02]: Cookie-first auth for Socket.IO: extracts NextAuth session-token from cookies, falls back to explicit token
+- [01-02]: Room naming convention: user:{userId}, role:{ROLE}, akte:{akteId}
+- [01-02]: Notification catch-up via since parameter on GET /api/notifications
+- [01-02]: Browser push notifications only when tab backgrounded (document.hidden)
 
 ### Pending Todos
 
@@ -61,5 +66,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 01-01-PLAN.md (Redis + BullMQ + Worker + Health)
+Stopped at: Completed 01-02-PLAN.md (Socket.IO + Notification System)
 Resume file: None

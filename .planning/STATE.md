@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 2 of 7 (Deadline Calculation + Document Templates)
-Plan: 4 of 6 in current phase
+Plan: 5 of 6 in current phase
 Status: In Progress
-Last activity: 2026-02-24 -- Completed 02-03-PLAN.md (OnlyOffice Integration Rebuild)
+Last activity: 2026-02-24 -- Completed 02-01-PLAN.md (FristenRechner Pure Function Library)
 
-Progress: [████░░░░░░░░░░░░░░░░] 19%
+Progress: [█████░░░░░░░░░░░░░░░] 24%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 5.8 min
-- Total execution time: 0.4 hours
+- Total plans completed: 5
+- Average duration: 6.2 min
+- Total execution time: 0.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 - Infrastructure Foundation | 3/3 | 17 min | 5.7 min |
-| 2 - Deadline Calculation + Document Templates | 1/6 | 6 min | 6.0 min |
+| 2 - Deadline Calculation + Document Templates | 2/6 | 15 min | 7.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6 min), 01-02 (5 min), 01-03 (6 min), 02-03 (6 min)
+- Last 5 plans: 01-01 (6 min), 01-02 (5 min), 01-03 (6 min), 02-03 (6 min), 02-01 (9 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -39,6 +39,7 @@ Progress: [████░░░░░░░░░░░░░░░░] 19%
 | Phase 01 P02 | 5min | 2 tasks | 16 files |
 | Phase 01 P03 | 6min | 2 tasks | 13 files |
 | Phase 02 P03 | 6min | 2 tasks | 9 files |
+| Phase 02 P01 | 9min | 4 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,10 @@ Recent decisions affecting current work:
 - [02-03]: Keep existing ZUR_PRUEFUNG enum value (backward compatible with existing code)
 - [02-03]: Version snapshots stored at {dateipfad}_v{version} in MinIO
 - [02-03]: Non-destructive restore: always creates new version, pre-restore snapshot auto-created
+- [02-01]: Normalize dates to noon before feiertagejs calls to avoid CET/CEST timezone false negatives
+- [02-01]: date-fns addMonths handles BGB 188(3) month-end overflow natively
+- [02-01]: Ereignisfrist month/year calculation applies period to event date directly per BGB 188(2)
+- [02-01]: Section 193 defaults to true when not specified
 
 ### Pending Todos
 
@@ -76,5 +81,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 02-03-PLAN.md (OnlyOffice Integration Rebuild)
+Stopped at: Completed 02-01-PLAN.md (FristenRechner Pure Function Library)
 Resume file: None

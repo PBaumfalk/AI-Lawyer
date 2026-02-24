@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 2.2 - Fix API Routes and UI Paths
+**Current focus:** Phase 3 - Email Client
 
 ## Current Position
 
-Phase: 2.2 of 7 (Fix API Routes and UI Paths)
-Plan: 1 of 1 in current phase
-Status: Phase Complete
-Last activity: 2026-02-24 -- Completed 02.2-01-PLAN.md (Fix API Routes and UI Paths)
+Phase: 3 of 7 (Email Client)
+Plan: 1 of 4 in current phase
+Status: In Progress
+Last activity: 2026-02-24 -- Completed 03-01-PLAN.md (Email Backend: Schema, IMAP, SMTP, API Routes)
 
-Progress: [█████████░░░░░░░░░░░] 44%
+Progress: [██████████░░░░░░░░░░] 48%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 7.3 min
-- Total execution time: 1.33 hours
+- Total plans completed: 12
+- Average duration: 7.8 min
+- Total execution time: 1.57 hours
 
 **By Phase:**
 
@@ -31,9 +31,10 @@ Progress: [█████████░░░░░░░░░░░] 44%
 | 2 - Deadline Calculation + Document Templates | 6/6 | 58 min | 9.7 min |
 | 2.1 - Wire Frist-Reminder Pipeline | 1/1 | 5 min | 5 min |
 | 2.2 - Fix API Routes and UI Paths | 1/1 | 5 min | 5 min |
+| 3 - Email Client | 1/4 | 14 min | 14 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-06 (11 min), 02-02 (15 min), 02-05 (9 min), 02.1-01 (5 min), 02.2-01 (5 min)
+- Last 5 plans: 02-02 (15 min), 02-05 (9 min), 02.1-01 (5 min), 02.2-01 (5 min), 03-01 (14 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -48,6 +49,7 @@ Progress: [█████████░░░░░░░░░░░] 44%
 | Phase 02 P05 | 9min | 2 tasks | 13 files |
 | Phase 02.1 P01 | 5min | 3 tasks | 8 files |
 | Phase 02.2 P01 | 5min | 3 tasks | 8 files |
+| Phase 03 P01 | 14min | 4 tasks | 31 files |
 
 ## Accumulated Context
 
@@ -105,6 +107,15 @@ Recent decisions affecting current work:
 - [02.2-01]: 204 No Content for successful DELETE (empty response body)
 - [02.2-01]: Manual alert-dialog component creation (no components.json for shadcn CLI)
 - [02.2-01]: Optimistic UI with full state revert on error for favorit toggle
+- [03-01]: ImapFlow with IDLE on INBOX per mailbox, NOOP heartbeat every 4 min
+- [03-01]: AES-256-GCM with scryptSync key derivation for credential encryption
+- [03-01]: sanitize-html server-side with email-specific tag allowlist (tables, fonts, styles)
+- [03-01]: Thread detection: References header first, then In-Reply-To, then new thread
+- [03-01]: normalizeSubject strips German prefixes (AW, WG, Antwort, Weiterleitung)
+- [03-01]: 10-second BullMQ delay for outgoing emails as undo window
+- [03-01]: SMTP transport factory with lazy creation and per-kontoId caching
+- [03-01]: Exponential backoff reconnection: 5s base, 5min max, admin notify after 3 failures
+- [03-01]: LanguageTool as optional Docker service with profiles: [full]
 
 ### Pending Todos
 
@@ -117,5 +128,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 02.2-01-PLAN.md (Fix API Routes and UI Paths) -- Phase 2.2 complete
+Stopped at: Completed 03-01-PLAN.md (Email Backend) -- Phase 3, Plan 1 of 4
 Resume file: None

@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 3 of 7 (Email Client)
-Plan: 1 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-24 -- Completed 03-01-PLAN.md (Email Backend: Schema, IMAP, SMTP, API Routes)
+Last activity: 2026-02-24 -- Completed 03-03-PLAN.md (Email Compose & Mailbox Admin)
 
-Progress: [██████████░░░░░░░░░░] 48%
+Progress: [████████████░░░░░░░░] 56%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 7.8 min
-- Total execution time: 1.57 hours
+- Total plans completed: 14
+- Average duration: 7.9 min
+- Total execution time: 1.91 hours
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [██████████░░░░░░░░░░] 48%
 | 2 - Deadline Calculation + Document Templates | 6/6 | 58 min | 9.7 min |
 | 2.1 - Wire Frist-Reminder Pipeline | 1/1 | 5 min | 5 min |
 | 2.2 - Fix API Routes and UI Paths | 1/1 | 5 min | 5 min |
-| 3 - Email Client | 1/4 | 14 min | 14 min |
+| 3 - Email Client | 3/4 | 34 min | 11.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (15 min), 02-05 (9 min), 02.1-01 (5 min), 02.2-01 (5 min), 03-01 (14 min)
+- Last 5 plans: 02.1-01 (5 min), 02.2-01 (5 min), 03-01 (14 min), 03-02 (10 min), 03-03 (10 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -50,6 +50,8 @@ Progress: [██████████░░░░░░░░░░] 48%
 | Phase 02.1 P01 | 5min | 3 tasks | 8 files |
 | Phase 02.2 P01 | 5min | 3 tasks | 8 files |
 | Phase 03 P01 | 14min | 4 tasks | 31 files |
+| Phase 03 P02 | 10min | 2 tasks | 15 files |
+| Phase 03 P03 | 10min | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -116,6 +118,11 @@ Recent decisions affecting current work:
 - [03-01]: SMTP transport factory with lazy creation and per-kontoId caching
 - [03-01]: Exponential backoff reconnection: 5s base, 5min max, admin notify after 3 failures
 - [03-01]: LanguageTool as optional Docker service with profiles: [full]
+- [03-02]: react-resizable-panels v4: Group/Panel/Separator exports, orientation prop, manual localStorage persistence
+- [03-02]: DOMPurify client-side with email-safe allowlist and forced target=_blank on links
+- [03-02]: contentEditable for inline reply editor (minimal, TipTap planned for compose)
+- [03-02]: Custom event dispatch for keyboard shortcut actions bridging shortcuts to detail component
+- [03-02]: Verakten/Ticket buttons as stubs -- full implementation in Plan 04
 
 ### Pending Todos
 
@@ -128,5 +135,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 03-01-PLAN.md (Email Backend) -- Phase 3, Plan 1 of 4
+Stopped at: Completed 03-02-PLAN.md (Inbox UI) -- Phase 3, Plan 2 of 4
 Resume file: None

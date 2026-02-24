@@ -180,8 +180,8 @@
 | REQ-DV-011 | Phase 2 | Complete |
 | REQ-EM-001 | Phase 3 | Complete |
 | REQ-EM-002 | Phase 3 | Complete |
-| REQ-EM-003 | Phase 3 | Pending |
-| REQ-EM-004 | Phase 3 | Pending |
+| REQ-EM-003 | Phase 3 | Complete |
+| REQ-EM-004 | Phase 3 | Complete |
 | REQ-EM-005 | Phase 3 | Pending |
 | REQ-EM-006 | Phase 3 | Pending |
 | REQ-EM-007 | Phase 3 | Pending |

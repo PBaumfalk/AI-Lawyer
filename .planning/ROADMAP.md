@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Deadline Calculation + Document Templates** - BGB Fristenberechnung, Feiertagskalender, Vorfristen, Vorlagen, Briefkopf, PDF-Export, WOPI rebuild (completed 2026-02-24)
 - [x] **Phase 2.1: Wire Frist-Reminder Pipeline + Settings Init** - Register frist-reminder processor in worker.ts, consolidate queue registry, schedule cron job, call initializeDefaults() (INSERTED -- gap closure, completed 2026-02-24)
 - [ ] **Phase 2.2: Fix API Routes + UI Paths** - Create /api/ordner-schemata/[id] route, fix favorit toggle URL, fix build failure (INSERTED — gap closure)
-- [ ] **Phase 3: Email Client** - IMAP IDLE worker, SMTP send, Inbox UI, Veraktung, Compose, Ticket-from-Email
+- [x] **Phase 3: Email Client** - IMAP IDLE worker, SMTP send, Inbox UI, Veraktung, Compose, Ticket-from-Email (completed 2026-02-24)
 - [ ] **Phase 4: Document Pipeline (OCR + RAG Ingestion)** - Stirling-PDF, auto-OCR, PDF preview, document detail page, chunking, embedding, pgvector storage
 - [ ] **Phase 5: Financial Module** - RVG calculation, invoicing, Aktenkonto, Fremdgeld compliance, E-Rechnung, DATEV, SEPA, banking import, Zeiterfassung
 - [ ] **Phase 6: AI Features + beA** - Multi-provider AI, RAG retrieval, document chat, proactive agent, deadline recognition, beA integration via bea.expert
@@ -201,7 +201,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Deadline Calculation + Document Templates | 5/6 | Complete    | 2026-02-24 |
 | 2.1 Wire Frist-Reminder Pipeline + Settings Init | 1/1 | Complete    | 2026-02-24 |
 | 2.2 Fix API Routes + UI Paths | 0/1 | Not started | - |
-| 3. Email Client | 0/4 | Not started | - |
+| 3. Email Client | 0/4 | Complete    | 2026-02-24 |
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Not started | - |
 | 5. Financial Module | 0/5 | Not started | - |
 | 6. AI Features + beA | 0/4 | Not started | - |

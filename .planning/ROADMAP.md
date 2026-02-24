@@ -41,7 +41,7 @@ Plans:
 - [ ] 01-03-PLAN.md — Admin pages (Bull Board job monitor, system health + log viewer, runtime settings)
 
 ### Phase 2: Deadline Calculation + Document Templates
-**Goal**: Attorneys can calculate legally correct deadlines with automatic weekend/holiday extension per BGB Sections 187-193, receive configurable pre-deadline reminders, and create documents from templates with auto-filled placeholders and firm letterhead, exportable as PDF.
+**Goal**: Attorneys can calculate legally correct deadlines with automatic weekend/holiday extension per BGB Sections 187-193, receive configurable pre-deadline reminders with deputy/vacation coverage, and create documents from templates with auto-filled placeholders and firm letterhead, exportable as PDF. Includes stable OnlyOffice co-editing with Track Changes and document status workflow.
 **Depends on**: Phase 1 (worker for future reminder notifications)
 **Requirements**: REQ-FK-001, REQ-FK-002, REQ-FK-003, REQ-FK-004, REQ-FK-005, REQ-DV-001, REQ-DV-002, REQ-DV-003, REQ-DV-008, REQ-DV-009, REQ-DV-010, REQ-DV-011
 **Research flag**: Standard patterns for templates; deadline calculation requires verification against LTO Fristenrechner and DAV test cases. WOPI rebuild needs careful implementation research (OnlyOffice lock management, PutFile callbacks).
@@ -51,13 +51,16 @@ Plans:
   3. User can create a document from a template with placeholders (mandant.name, akte.aktenzeichen, gegner.name etc.) auto-filled from case data, with firm letterhead applied
   4. User can manage the Briefkopf (logo + firm data) in OnlyOffice and it is automatically applied to all outgoing documents and PDF exports
   5. WOPI protocol handles Laden/Speichern reliably including sessions >1 hour, with Track Changes, Comments, and multi-user collaboration working
-**Plans**: 4 plans
+  6. Vertretung & Urlaub system routes deadline notifications to deputy when user is on vacation
+**Plans**: 6 plans
 
 Plans:
 - [ ] 02-01-PLAN.md — FristenRechner TDD: pure-function library (BGB 187-193, feiertagejs, Vorfristen, Halbfrist) with >50 unit tests
-- [ ] 02-02-PLAN.md — Calendar enhancements: schema (Prioritaet, Frist fields, FristPreset), Fristen API, FristenRechner UI (sidebar sheet + Tagesuebersicht + Warn-Ampel), reminder worker
-- [ ] 02-03-PLAN.md — OnlyOffice Callback rebuild: stable document.key, co-editing, Track Changes, Comments, versioning, DOCX-to-PDF conversion API
-- [ ] 02-04-PLAN.md — Vorlagen-System (card browser, 4-step wizard, Freigabe, versioning) + Briefkopf management + PDF export + Ordner-Schemata + Kanzlei-Einstellungen tabs
+- [ ] 02-02-PLAN.md — Calendar enhancements: schema, Fristen API (incl. Sonderfaelle + Fristenzettel PDF), FristenRechner UI (sidebar sheet + Tagesuebersicht + Warn-Ampel), reminder worker, Auto-WV + Keine-Akte-ohne-Frist validation
+- [ ] 02-03-PLAN.md — OnlyOffice Callback rebuild: stable document.key, co-editing, Track Changes, Comments, versioning, DOCX-to-PDF conversion API, Dokument-Status-Workflow (Entwurf -> Freigegeben -> Versendet with Schreibschutz)
+- [ ] 02-04-PLAN.md — Vorlagen-System backend: schema (versioning, Freigabe, custom fields), template engine (conditionals, loops), Briefkopf library, generation endpoint, Briefkopf CRUD, Ordner-Schemata API
+- [ ] 02-05-PLAN.md — Vorlagen-System UI: card browser, 4-step wizard, placeholder sidebar, Briefkopf editor, PDF export dialog, Kanzlei-Einstellungen tabs (Fristen, Vorlagen, Briefkopf, Ordner-Schemata, Benachrichtigungen) with audit-trail + reset
+- [ ] 02-06-PLAN.md — Vertretung & Urlaub: User model enhancements, Vertretungs-Modus, vacation management, reminder worker integration, settings Import/Export JSON, Onboarding-Wizard
 
 ### Phase 3: Email Client
 **Goal**: Law firm staff can receive, read, compose, and send emails directly within the application, with real-time notifications for incoming mail, and can assign any email to a case file (Veraktung) with one click -- the primary daily workflow entry point.
@@ -159,7 +162,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
 | 1. Infrastructure Foundation | 3/3 | Complete    | 2026-02-24 |
-| 2. Deadline Calculation + Document Templates | 0/4 | Not started | - |
+| 2. Deadline Calculation + Document Templates | 0/6 | Not started | - |
 | 3. Email Client | 0/3 | Not started | - |
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Not started | - |
 | 5. Financial Module | 0/5 | Not started | - |

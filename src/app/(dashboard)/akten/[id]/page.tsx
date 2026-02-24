@@ -11,6 +11,7 @@ import {
 import { AkteDetailTabs } from "@/components/akten/akte-detail-tabs";
 import { AkteDetailHeader } from "@/components/akten/akte-detail-header";
 import { AkteSocketBridge } from "@/components/akten/akte-socket-bridge";
+import { AkteTimerBridge } from "@/components/akten/akte-timer-bridge";
 
 interface AkteDetailPageProps {
   params: Promise<{ id: string }>;
@@ -65,6 +66,9 @@ export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
     <div className="space-y-6">
       {/* Socket.IO bridge for real-time OCR notifications */}
       <AkteSocketBridge akteId={id} />
+
+      {/* Auto-start time tracking timer when opening any Akte */}
+      <AkteTimerBridge akteId={id} />
 
       {/* Header with edit + status controls */}
       <AkteDetailHeader akte={serializedAkte} />

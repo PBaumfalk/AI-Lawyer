@@ -13,7 +13,7 @@ Milestone 2 transforms AI-Lawyer from an MVP case management system into a full-
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Infrastructure Foundation** - Redis, BullMQ worker process, custom server.ts with Socket.IO, graceful shutdown
-- [ ] **Phase 2: Deadline Calculation + Document Templates** - BGB Fristenberechnung, Feiertagskalender, Vorfristen, Vorlagen, Briefkopf, PDF-Export, WOPI rebuild
+- [x] **Phase 2: Deadline Calculation + Document Templates** - BGB Fristenberechnung, Feiertagskalender, Vorfristen, Vorlagen, Briefkopf, PDF-Export, WOPI rebuild (completed 2026-02-24)
 - [ ] **Phase 3: Email Client** - IMAP IDLE worker, SMTP send, Inbox UI, Veraktung, Compose, Ticket-from-Email
 - [ ] **Phase 4: Document Pipeline (OCR + RAG Ingestion)** - Stirling-PDF, auto-OCR, PDF preview, document detail page, chunking, embedding, pgvector storage
 - [ ] **Phase 5: Financial Module** - RVG calculation, invoicing, Aktenkonto, Fremdgeld compliance, E-Rechnung, DATEV, SEPA, banking import, Zeiterfassung
@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
 | 1. Infrastructure Foundation | 3/3 | Complete    | 2026-02-24 |
-| 2. Deadline Calculation + Document Templates | 5/6 | In progress | - |
+| 2. Deadline Calculation + Document Templates | 5/6 | Complete    | 2026-02-24 |
 | 3. Email Client | 0/3 | Not started | - |
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Not started | - |
 | 5. Financial Module | 0/5 | Not started | - |

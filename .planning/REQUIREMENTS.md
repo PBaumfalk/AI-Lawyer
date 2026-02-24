@@ -152,10 +152,83 @@
 
 | Scope | Count | P0 | P1 | P2 |
 |-------|-------|----|----|-----|
-| v1 | 52 | 5 | 27 | 20 |
+| v1 | 64 | 5 | 40 | 19 |
 | v2 | 12 | — | — | — |
 | Out of Scope | 8 | — | — | — |
 
 ---
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| REQ-IF-001 | Phase 1 | Complete |
+| REQ-IF-002 | Phase 1 | Complete |
+| REQ-IF-003 | Phase 1 | Pending |
+| REQ-IF-005 | Phase 1 | Complete |
+| REQ-FK-001 | Phase 2 | Pending |
+| REQ-FK-002 | Phase 2 | Pending |
+| REQ-FK-003 | Phase 2 | Pending |
+| REQ-FK-004 | Phase 2 | Pending |
+| REQ-FK-005 | Phase 2 | Pending |
+| REQ-DV-001 | Phase 2 | Pending |
+| REQ-DV-002 | Phase 2 | Pending |
+| REQ-DV-003 | Phase 2 | Pending |
+| REQ-DV-008 | Phase 2 | Pending |
+| REQ-DV-009 | Phase 2 | Pending |
+| REQ-DV-010 | Phase 2 | Pending |
+| REQ-DV-011 | Phase 2 | Pending |
+| REQ-EM-001 | Phase 3 | Pending |
+| REQ-EM-002 | Phase 3 | Pending |
+| REQ-EM-003 | Phase 3 | Pending |
+| REQ-EM-004 | Phase 3 | Pending |
+| REQ-EM-005 | Phase 3 | Pending |
+| REQ-EM-006 | Phase 3 | Pending |
+| REQ-EM-007 | Phase 3 | Pending |
+| REQ-EM-008 | Phase 3 | Pending |
+| REQ-DV-004 | Phase 4 | Pending |
+| REQ-DV-005 | Phase 4 | Pending |
+| REQ-DV-006 | Phase 4 | Pending |
+| REQ-DV-007 | Phase 4 | Pending |
+| REQ-IF-004 | Phase 4 | Pending |
+| REQ-KI-001 | Phase 4 | Pending |
+| REQ-FI-001 | Phase 5 | Pending |
+| REQ-FI-002 | Phase 5 | Pending |
+| REQ-FI-003 | Phase 5 | Pending |
+| REQ-FI-004 | Phase 5 | Pending |
+| REQ-FI-005 | Phase 5 | Pending |
+| REQ-FI-006 | Phase 5 | Pending |
+| REQ-FI-007 | Phase 5 | Pending |
+| REQ-FI-008 | Phase 5 | Pending |
+| REQ-FI-009 | Phase 5 | Pending |
+| REQ-FI-010 | Phase 5 | Pending |
+| REQ-FI-011 | Phase 5 | Pending |
+| REQ-KI-002 | Phase 6 | Pending |
+| REQ-KI-003 | Phase 6 | Pending |
+| REQ-KI-004 | Phase 6 | Pending |
+| REQ-KI-005 | Phase 6 | Pending |
+| REQ-KI-006 | Phase 6 | Pending |
+| REQ-KI-007 | Phase 6 | Pending |
+| REQ-KI-008 | Phase 6 | Pending |
+| REQ-KI-009 | Phase 6 | Pending |
+| REQ-KI-010 | Phase 6 | Pending |
+| REQ-KI-011 | Phase 6 | Pending |
+| REQ-KI-012 | Phase 6 | Pending |
+| REQ-BA-001 | Phase 6 | Pending |
+| REQ-BA-002 | Phase 6 | Pending |
+| REQ-BA-003 | Phase 6 | Pending |
+| REQ-BA-004 | Phase 6 | Pending |
+| REQ-BA-005 | Phase 6 | Pending |
+| REQ-BA-006 | Phase 6 | Pending |
+| REQ-RS-001 | Phase 7 | Pending |
+| REQ-RS-002 | Phase 7 | Pending |
+| REQ-RS-003 | Phase 7 | Pending |
+| REQ-RS-004 | Phase 7 | Pending |
+| REQ-RS-005 | Phase 7 | Pending |
+| REQ-RS-006 | Phase 7 | Pending |
+
+---
 *Generated: 2026-02-24*
 *Source: PROJECT.md + FEATURES.md + SUMMARY.md research + user scoping confirmation*
+*Traceability added: 2026-02-24 by roadmap creation*
+*Requirement count corrected: 2026-02-24 (was 52, actual 64 after detailed recount)*

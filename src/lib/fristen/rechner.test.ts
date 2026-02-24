@@ -815,10 +815,20 @@ describe('Presets', () => {
     expect(klage).toBeDefined()
   })
 
-  it('Widerspruchsfrist preset exists with 2 weeks', () => {
-    const widerspruch = DEFAULT_FRISTEN_PRESETS.find(p => p.name === 'Widerspruchsfrist')
+  it('Widerspruchsfrist preset exists with 2 weeks (BGB)', () => {
+    const widerspruch = DEFAULT_FRISTEN_PRESETS.find(
+      p => p.name === 'Widerspruchsfrist' && p.kategorie === 'allgemein'
+    )
     expect(widerspruch).toBeDefined()
     expect(widerspruch!.dauer.wochen).toBe(2)
+  })
+
+  it('Widerspruchsfrist (VwGO) preset exists with 1 month', () => {
+    const widerspruch = DEFAULT_FRISTEN_PRESETS.find(
+      p => p.name === 'Widerspruchsfrist' && p.kategorie === 'verwaltungsrecht'
+    )
+    expect(widerspruch).toBeDefined()
+    expect(widerspruch!.dauer.monate).toBe(1)
   })
 
   it('all presets have required fields', () => {

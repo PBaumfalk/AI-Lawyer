@@ -55,12 +55,48 @@ export const emailSyncQueue = new Queue("email-sync", {
   },
 });
 
+/** OCR queue for document OCR processing via Stirling-PDF */
+export const ocrQueue = new Queue("document-ocr", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    ...defaultJobOptions,
+    attempts: 3,
+    removeOnComplete: { age: 86_400 },   // 1 day
+    removeOnFail: { age: 604_800 },      // 7 days
+  },
+});
+
+/** Embedding queue for generating document chunk embeddings */
+export const embeddingQueue = new Queue("document-embedding", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    ...defaultJobOptions,
+    attempts: 2,
+    removeOnComplete: { age: 86_400 },
+    removeOnFail: { age: 604_800 },
+  },
+});
+
+/** Preview queue for generating PDF previews of non-PDF documents */
+export const previewQueue = new Queue("document-preview", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    ...defaultJobOptions,
+    attempts: 2,
+    removeOnComplete: { age: 86_400 },
+    removeOnFail: { age: 604_800 },
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
 export const ALL_QUEUES: Queue[] = [
   testQueue,
   fristReminderQueue,
   emailSendQueue,
   emailSyncQueue,
+  ocrQueue,
+  embeddingQueue,
+  previewQueue,
 ];
 
 /**

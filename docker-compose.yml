@@ -26,6 +26,7 @@ services:
       ONLYOFFICE_INTERNAL_URL: http://onlyoffice:80
       ONLYOFFICE_SECRET: dev-onlyoffice-secret
       APP_INTERNAL_URL: http://app:3000
+      STIRLING_PDF_URL: http://stirling-pdf:8080
     depends_on:
       db:
         condition: service_healthy
@@ -75,12 +76,24 @@ services:
       LOG_FILE_PATH: /var/log/ai-lawyer/worker
       NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
       EMAIL_ENCRYPTION_KEY: dev-email-encryption-key-change-in-production-32chars
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: ailawyer
+      MINIO_SECRET_KEY: ailawyer123
+      MINIO_BUCKET: dokumente
+      MINIO_USE_SSL: "false"
+      MEILISEARCH_URL: http://meilisearch:7700
+      MEILISEARCH_API_KEY: ailawyer-meili-key
+      STIRLING_PDF_URL: http://stirling-pdf:8080
+      OLLAMA_URL: http://ollama:11434
     depends_on:
       redis:
         condition: service_healthy
       db:
         condition: service_healthy
       app:
+        condition: service_healthy
+      stirling-pdf:
         condition: service_healthy
     volumes:
       - worker_logs:/var/log/ai-lawyer
@@ -148,6 +161,33 @@ services:
       retries: 5
       start_period: 60s
 
+  # ─── Stirling-PDF (OCR + document conversion) ──────────────────────────────
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:latest
+    container_name: ailawyer-stirling-pdf
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      DOCKER_ENABLE_SECURITY: "false"
+      SYSTEM_DEFAULTLOCALE: de-DE
+      SYSTEM_MAXFILESIZE: 100
+      TESSERACT_LANGS: deu,eng
+    volumes:
+      - stirling_configs:/configs
+      - stirling_logs:/logs
+      - stirling_tessdata:/usr/share/tessdata
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/info/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
   # ─── Meilisearch (full-text search) ─────────────────────────────────────────
   meilisearch:
     image: getmeili/meilisearch:v1.11
@@ -181,6 +221,23 @@ services:
     volumes:
       - languagetool_ngrams:/ngrams
 
+  # ─── Ollama (optional: local LLM inference) ─────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ailawyer-ollama
+    restart: unless-stopped
+    profiles: ["ai"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      OLLAMA_HOST: "0.0.0.0"
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+
 volumes:
   pgdata:
   redisdata:
@@ -190,3 +247,7 @@ volumes:
   onlyoffice_log:
   worker_logs:
   languagetool_ngrams:
+  stirling_configs:
+  stirling_logs:
+  stirling_tessdata:
+  ollama_data:

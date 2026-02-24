@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
@@ -161,6 +163,14 @@ enum DokumentStatus {
   ZUR_PRUEFUNG    // Marked for review by human user
   FREIGEGEBEN     // Approved by human user
   VERSENDET       // Successfully sent (beA, email, etc.)
+}
+
+enum OcrStatus {
+  AUSSTEHEND      // Pending OCR processing
+  IN_BEARBEITUNG  // Currently being processed
+  ABGESCHLOSSEN   // Successfully completed
+  FEHLGESCHLAGEN  // Failed after all retries
+  NICHT_NOETIG    // OCR not needed (e.g. text files)
 }
 
 // ─── Kontakt-Stammdaten Enums ───────────────────────────────────────────────
@@ -772,6 +782,12 @@ model Dokument {
   freigegebenDurchId  String?
   freigegebenDurch    User?          @relation("DokumentFreigabe", fields: [freigegebenDurchId], references: [id])
   freigegebenAm       DateTime?
+  // OCR pipeline fields
+  ocrStatus         OcrStatus @default(AUSSTEHEND)
+  ocrFehler         String?   @db.Text    // Error message if OCR failed
+  ocrVersuche       Int       @default(0) // Number of OCR attempts
+  ocrAbgeschlossen  DateTime?             // When OCR completed successfully
+  previewPfad       String?               // MinIO path for generated PDF preview (non-PDF files)
   // Creator
   createdById String
   createdBy   User     @relation(fields: [createdById], references: [id])
@@ -780,10 +796,12 @@ model Dokument {
 
   chatNachrichten ChatNachricht[] @relation("BezugDokument")
   versionen       DokumentVersion[]
+  chunks          DocumentChunk[]
 
   @@index([akteId])
   @@index([name])
   @@index([status])
+  @@index([ocrStatus])
   @@map("dokumente")
 }
 
@@ -802,6 +820,37 @@ model DokumentVersion {
   @@unique([dokumentId, version])
   @@index([dokumentId])
   @@map("dokument_versionen")
+}
+
+// ─── Document Chunks (for RAG embeddings) ───────────────────────────────────
+
+model DocumentChunk {
+  id           String   @id @default(cuid())
+  dokumentId   String
+  dokument     Dokument @relation(fields: [dokumentId], references: [id], onDelete: Cascade)
+  chunkIndex   Int
+  content      String   @db.Text
+  embedding    Unsupported("vector(1024)")?
+  modelVersion String
+  createdAt    DateTime @default(now())
+
+  @@unique([dokumentId, chunkIndex])
+  @@index([dokumentId])
+  @@map("document_chunks")
+}
+
+// ─── Dokument-Tag-Kategorien ────────────────────────────────────────────────
+
+model DokumentTagKategorie {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  farbe      String   // Hex color
+  sortierung Int      @default(0)
+  system     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("dokument_tag_kategorien")
 }
 
 // ─── Kalender & Fristen ──────────────────────────────────────────────────────

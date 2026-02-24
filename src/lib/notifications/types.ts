@@ -11,6 +11,8 @@ export type NotificationType =
   | "deadline:approaching"
   | "frist:vorfrist"
   | "frist:ueberfaellig"
+  | "email:connection-failure"
+  | "email:send-failed"
   | "system:alert";
 
 /**

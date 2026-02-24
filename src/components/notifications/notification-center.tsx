@@ -35,6 +35,8 @@ const typeIcons: Record<NotificationType, React.ElementType> = {
   "deadline:approaching": Clock,
   "frist:vorfrist": Clock,
   "frist:ueberfaellig": AlertTriangle,
+  "email:connection-failure": AlertTriangle,
+  "email:send-failed": XCircle,
   "system:alert": AlertTriangle,
 };
 
@@ -45,6 +47,8 @@ const typeColors: Record<NotificationType, string> = {
   "document:created": "text-blue-500",
   "document:updated": "text-blue-400",
   "email:received": "text-amber-500",
+  "email:connection-failure": "text-rose-600",
+  "email:send-failed": "text-rose-500",
   "deadline:approaching": "text-orange-500",
   "frist:vorfrist": "text-amber-500",
   "frist:ueberfaellig": "text-rose-600",

@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 5 of 7 (Financial Module)
-Plan: 2 of 6 in current phase (2 complete)
+Plan: 4 of 6 in current phase (4 complete)
 Status: Executing
-Last activity: 2026-02-24 -- Completed 05-02-PLAN.md (Invoice system + RVG API)
+Last activity: 2026-02-24 -- Completed 05-04-PLAN.md (E-Rechnung XRechnung/ZUGFeRD)
 
 Progress: [██████████████████████] 85%
 
@@ -64,6 +64,7 @@ Progress: [██████████████████████] 8
 | Phase 04.1 P01 | 4min | 3 tasks | 8 files |
 | Phase 05 P01 | 12min | 1 tasks | 9 files |
 | Phase 05 P02 | 9min | 2 tasks | 12 files |
+| Phase 05 P04 | 6min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -181,6 +182,11 @@ Recent decisions affecting current work:
 - [05-02]: Per-rate USt breakdown from positionen supports mixed-rate invoices per SS 14 UStG
 - [05-02]: RVG uebernehmenAlsRechnung response provides pre-filled invoice data for one-click transfer
 - [05-02]: Buffer to Uint8Array conversion for NextResponse compatibility with pdf-lib output
+- [05-04]: Hand-built CII XML over @e-invoice-eu/core (library too complex, hand-build gives full EN16931 field control)
+- [05-04]: PDFRawStream.of() for embedded file streams (PDFStream base has no .of() in pdf-lib v1.17.1)
+- [05-04]: Non-fatal ZUGFeRD fallback: plain PDF returned if XML embedding fails
+- [05-04]: ?format=plain query param to skip ZUGFeRD embedding when needed
+- [05-04]: Buyer electronic address placeholder derived from name (XRechnung BT-49 required but Kontakt may lack email)
 
 ### Pending Todos
 
@@ -193,5 +199,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 05-02-PLAN.md (Invoice system + RVG API) -- Phase 5 plan 2/6
+Stopped at: Completed 05-04-PLAN.md (E-Rechnung XRechnung/ZUGFeRD) -- Phase 5 plan 4/6
 Resume file: None

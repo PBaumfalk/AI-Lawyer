@@ -31,7 +31,12 @@ export type AuditAktion =
   | "EMAIL_VERAKTET"
   | "EMAIL_VERAKTUNG_AUFGEHOBEN"
   | "EMAIL_VERANTWORTLICHER_GESETZT"
-  | "EMAIL_TICKET_ERSTELLT";
+  | "EMAIL_TICKET_ERSTELLT"
+  | "RECHNUNG_ERSTELLT"
+  | "RECHNUNG_BEARBEITET"
+  | "RECHNUNG_STATUS_GEAENDERT"
+  | "RECHNUNG_GELOESCHT"
+  | "RVG_BERECHNUNG_GESPEICHERT";
 
 // German labels for field names used in change diffs
 const feldLabels: Record<string, string> = {

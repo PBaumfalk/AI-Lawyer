@@ -76,6 +76,23 @@ enum BuchungsTyp {
   AUSLAGE
 }
 
+enum KontoTyp {
+  GESCHAEFT
+  ANDERKONTO
+}
+
+enum MahnStufe {
+  ERINNERUNG
+  ERSTE_MAHNUNG
+  ZWEITE_MAHNUNG
+  DRITTE_MAHNUNG
+}
+
+enum BuchungsperiodeStatus {
+  OFFEN
+  GESPERRT
+}
+
 enum RechnungStatus {
   ENTWURF
   GESTELLT
@@ -286,11 +303,22 @@ model Kanzlei {
   iban      String?
   bic       String?
   logo      String?  // URL to MinIO
+  // Financial settings
+  defaultZahlungszielTage Int      @default(14)
+  skr                     String   @default("03")
+  defaultStundensatz      Decimal? @db.Decimal(8, 2)
+  nummernkreisPattern     String   @default("RE-{YEAR}-{SEQ:4}")
+  stornoPattern           String   @default("GS-{YEAR}-{SEQ:4}")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users User[]
-  akten Akte[]
+  users           User[]
+  akten           Akte[]
+  bankKonten      BankKonto[]
+  buchungsperioden Buchungsperiode[]
+  kostenstellen   Kostenstelle[]
+  taetigkeitskategorien Taetigkeitskategorie[]
+  finanzEinstellungen   FinanzEinstellung[]
 
   @@map("kanzleien")
 }
@@ -948,9 +976,21 @@ model Zeiterfassung {
   beschreibung String
   stundensatz  Decimal? @db.Decimal(8, 2)
   abrechenbar  Boolean  @default(true)
+  // Timer fields
+  startzeit    DateTime?
+  endzeit      DateTime?
+  isRunning    Boolean  @default(false)
+  // Category
+  kategorie    String?  // Taetigkeitskategorie reference
+  // Billing
+  abgerechnet  Boolean  @default(false)
+  rechnungId   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  @@index([akteId])
+  @@index([userId])
+  @@index([isRunning])
   @@map("zeiterfassungen")
 }
 
@@ -967,11 +1007,31 @@ model Rechnung {
   rechnungsdatum  DateTime       @default(now())
   faelligAm       DateTime?
   bezahltAm       DateTime?
-  positionen      Json           // Array of line items
+  positionen      Json           // Array of { vvNr?, beschreibung, menge, einzelpreis, ustSatz, betrag }[]
   notizen         String?        @db.Text
+  // Expanded fields for SS 14 UStG compliance
+  empfaengerId    String?        // Can differ from Mandant (via Kontakt)
+  ustSummary      Json?          // Per-rate breakdown: { satz, bemessungsgrundlage, betrag }[]
+  zahlungszielTage Int           @default(14)
+  stornoVon       String?        // Reference to original invoice for Stornierung
+  korrekturVon    String?        // Reference for Korrekturrechnung
+  dokumentId      String?        // Reference to generated PDF in DMS
+  mahnStufe       MahnStufe?
+  mahnDatum       DateTime?
+  zustellart      String?        @default("EMAIL")
+  isRecurring     Boolean        @default(false)
+  isPkh           Boolean        @default(false)
+  rvgBerechnungId String?        // Link back to source RVG calculation
+  restBetrag      Decimal?       @db.Decimal(12, 2) // Remaining after partial payments
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
+  teilzahlungen   Teilzahlung[]
+  mahnungen       Mahnung[]
+
+  @@index([akteId])
+  @@index([status])
+  @@index([empfaengerId])
   @@map("rechnungen")
 }
 
@@ -984,9 +1044,182 @@ model AktenKontoBuchung {
   verwendungszweck String
   buchungsdatum    DateTime   @default(now())
   belegnummer      String?
+  // Expanded fields
+  gebuchtVon       String?    // userId of the booking user
+  stornoVon        String?    // For Storno chain
+  stornoGrund      String?
+  rechnungId       String?    // Link to invoice
+  bankTransaktionId String?   // Link to bank transaction
+  dokumentId       String?    // Link to Beleg in DMS
+  kostenstelle     String?
+  konto            KontoTyp   @default(GESCHAEFT)
+  fremdgeldFrist   DateTime?  // Deadline for Fremdgeld forwarding
+  periodeId        String?    // Link to Buchungsperiode
   createdAt        DateTime   @default(now())
 
+  @@index([akteId])
+  @@index([buchungsdatum])
+  @@index([rechnungId])
   @@map("akten_konto_buchungen")
+}
+
+// ─── Financial Sub-Models ────────────────────────────────────────────────────
+
+model Nummernkreis {
+  id       String @id @default(cuid())
+  prefix   String
+  year     Int
+  sequence Int    @default(0)
+
+  @@unique([prefix, year])
+  @@map("nummernkreise")
+}
+
+model Teilzahlung {
+  id                String    @id @default(cuid())
+  rechnungId        String
+  rechnung          Rechnung  @relation(fields: [rechnungId], references: [id], onDelete: Cascade)
+  betrag            Decimal   @db.Decimal(12, 2)
+  zahlungsdatum     DateTime
+  verwendungszweck  String?
+  bankTransaktionId String?
+  createdAt         DateTime  @default(now())
+
+  @@index([rechnungId])
+  @@map("teilzahlungen")
+}
+
+model Mahnung {
+  id          String    @id @default(cuid())
+  rechnungId  String
+  rechnung    Rechnung  @relation(fields: [rechnungId], references: [id], onDelete: Cascade)
+  stufe       MahnStufe
+  datum       DateTime
+  dokumentId  String?
+  gesendetAm  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([rechnungId])
+  @@map("mahnungen")
+}
+
+model BankKonto {
+  id         String    @id @default(cuid())
+  kanzleiId  String
+  kanzlei    Kanzlei   @relation(fields: [kanzleiId], references: [id], onDelete: Cascade)
+  name       String
+  iban       String    @unique
+  bic        String?
+  typ        KontoTyp  @default(GESCHAEFT)
+  isDefault  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  transaktionen BankTransaktion[]
+
+  @@map("bank_konten")
+}
+
+model BankTransaktion {
+  id                 String    @id @default(cuid())
+  bankKontoId        String
+  bankKonto          BankKonto @relation(fields: [bankKontoId], references: [id], onDelete: Cascade)
+  buchungsdatum      DateTime
+  wertstellung       DateTime?
+  betrag             Decimal   @db.Decimal(12, 2)
+  verwendungszweck   String
+  absenderEmpfaenger String?
+  saldo              Decimal?  @db.Decimal(12, 2)
+  importHash         String    @unique
+  zugeordnet         Boolean   @default(false)
+  rechnungId         String?
+  akteId             String?
+  createdAt          DateTime  @default(now())
+
+  @@index([bankKontoId])
+  @@index([buchungsdatum])
+  @@map("bank_transaktionen")
+}
+
+model RvgBerechnung {
+  id              String    @id @default(cuid())
+  akteId          String?
+  userId          String
+  streitwert      Decimal   @db.Decimal(12, 2)
+  positionen      Json      // VV positions with options
+  ergebnis        Json      // Full CalculationResult
+  auftragseingang DateTime?
+  tabelleVersion  String    // e.g., "RVG_2025"
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([akteId])
+  @@index([userId])
+  @@map("rvg_berechnungen")
+}
+
+model Buchungsperiode {
+  id          String               @id @default(cuid())
+  kanzleiId   String
+  kanzlei     Kanzlei              @relation(fields: [kanzleiId], references: [id], onDelete: Cascade)
+  jahr        Int
+  monat       Int
+  status      BuchungsperiodeStatus @default(OFFEN)
+  gesperrtVon String?
+  gesperrtAm  DateTime?
+
+  @@unique([kanzleiId, jahr, monat])
+  @@map("buchungsperioden")
+}
+
+model Kostenstelle {
+  id           String   @id @default(cuid())
+  kanzleiId    String
+  kanzlei      Kanzlei  @relation(fields: [kanzleiId], references: [id], onDelete: Cascade)
+  name         String
+  beschreibung String?
+  sachkonto    String?
+  aktiv        Boolean  @default(true)
+
+  @@map("kostenstellen")
+}
+
+model Taetigkeitskategorie {
+  id          String   @id @default(cuid())
+  kanzleiId   String
+  kanzlei     Kanzlei  @relation(fields: [kanzleiId], references: [id], onDelete: Cascade)
+  name        String
+  abrechenbar Boolean  @default(true)
+  aktiv       Boolean  @default(true)
+
+  @@map("taetigkeitskategorien")
+}
+
+model RecurringInvoiceTemplate {
+  id                   String    @id @default(cuid())
+  akteId               String
+  mandantId            String?
+  empfaengerId         String?
+  positionen           Json
+  intervallMonate      Int       @default(1)
+  naechsteFaelligkeit  DateTime
+  aktiv                Boolean   @default(true)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@map("recurring_invoice_templates")
+}
+
+model FinanzEinstellung {
+  id         String   @id @default(cuid())
+  kanzleiId  String
+  kanzlei    Kanzlei  @relation(fields: [kanzleiId], references: [id], onDelete: Cascade)
+  schluessel String
+  wert       Json
+  updatedAt  DateTime @updatedAt
+
+  @@unique([kanzleiId, schluessel])
+  @@map("finanz_einstellungen")
 }
 
 // ─── beA ─────────────────────────────────────────────────────────────────────

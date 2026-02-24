@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 5 of 7 (Financial Module)
-Plan: 1 of 6 in current phase (1 complete)
+Plan: 2 of 6 in current phase (2 complete)
 Status: Executing
-Last activity: 2026-02-24 -- Completed 05-01-PLAN.md (RVG/GKG fee calculator library)
+Last activity: 2026-02-24 -- Completed 05-02-PLAN.md (Invoice system + RVG API)
 
-Progress: [█████████████████████] 82%
+Progress: [██████████████████████] 85%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
+- Total plans completed: 22
 - Average duration: 7.6 min
-- Total execution time: 2.75 hours
+- Total execution time: 2.9 hours
 
 **By Phase:**
 
@@ -35,10 +35,10 @@ Progress: [█████████████████████] 82%
 | 3.1 - Wire Email Real-Time + Compose | 1/1 | 2 min | 2 min |
 | 4 - Document Pipeline OCR + RAG | 3/3 | 25 min | 8.3 min |
 | 4.1 - Wire Akte RT + Email + Pipeline | 1/1 | 4 min | 4 min |
-| 5 - Financial Module | 1/6 | 12 min | 12 min |
+| 5 - Financial Module | 2/6 | 21 min | 10.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (11 min), 04-02 (6 min), 04-03 (8 min), 04.1-01 (4 min), 05-01 (12 min)
+- Last 5 plans: 04-02 (6 min), 04-03 (8 min), 04.1-01 (4 min), 05-01 (12 min), 05-02 (9 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -63,6 +63,7 @@ Progress: [█████████████████████] 82%
 | Phase 04 P03 | 8min | 2 tasks | 13 files |
 | Phase 04.1 P01 | 4min | 3 tasks | 8 files |
 | Phase 05 P01 | 12min | 1 tasks | 9 files |
+| Phase 05 P02 | 9min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -174,6 +175,12 @@ Recent decisions affecting current work:
 - [05-01]: Anrechnung credit capped at Verfahrensgebuehr amount (credit cannot exceed target fee)
 - [05-01]: RvgCalculator auto-adds 7002/7008 in getResult() not addPosition() to ensure correct totals
 - [05-01]: PKH computePkhFee returns null above cap to signal caller should use full RVG table
+- [05-02]: Atomic Nummernkreis via PostgreSQL UPSERT (INSERT ON CONFLICT DO UPDATE RETURNING) for gap-free concurrent-safe invoice numbers
+- [05-02]: Invoice status machine side effects in transaction: GESTELLT locks date, STORNIERT creates Stornorechnung with GS-number, MAHNUNG creates Mahnung record
+- [05-02]: Dual PATCH mode on invoice detail: action field triggers status transition, otherwise edit mode (ENTWURF only)
+- [05-02]: Per-rate USt breakdown from positionen supports mixed-rate invoices per SS 14 UStG
+- [05-02]: RVG uebernehmenAlsRechnung response provides pre-filled invoice data for one-click transfer
+- [05-02]: Buffer to Uint8Array conversion for NextResponse compatibility with pdf-lib output
 
 ### Pending Todos
 
@@ -186,5 +193,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 05-01-PLAN.md (RVG/GKG fee calculator library) -- Phase 5 plan 1/6
+Stopped at: Completed 05-02-PLAN.md (Invoice system + RVG API) -- Phase 5 plan 2/6
 Resume file: None

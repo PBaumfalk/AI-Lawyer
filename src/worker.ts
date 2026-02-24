@@ -12,7 +12,9 @@ import { closeAllTransports } from "@/lib/email/smtp/transport-factory";
 import type { EmailSendJob, EmailSyncJob } from "@/lib/email/types";
 import { processOcrJob } from "@/lib/queue/processors/ocr.processor";
 import { processPreviewJob } from "@/lib/queue/processors/preview.processor";
-import type { OcrJobData, PreviewJobData } from "@/lib/ocr/types";
+import { processEmbeddingJob } from "@/lib/queue/processors/embedding.processor";
+import type { OcrJobData, PreviewJobData, EmbeddingJobData } from "@/lib/ocr/types";
+import { prisma } from "@/lib/db";
 
 const log = createLogger("worker");
 
@@ -301,6 +303,43 @@ previewWorker.on("error", (err) => {
 
 workers.push(previewWorker);
 
+// ─── Document Embedding Queue Worker ────────────────────────────────────────
+
+const embeddingWorker = new Worker<EmbeddingJobData>(
+  "document-embedding",
+  async (job) => processEmbeddingJob(job),
+  {
+    connection,
+    concurrency: 1, // Memory-intensive embedding: one at a time
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+embeddingWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, dokumentId: job.data.dokumentId },
+    "Embedding job completed"
+  );
+});
+
+embeddingWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, dokumentId: job.data.dokumentId, err: err.message, attemptsMade: job.attemptsMade },
+    "Embedding job failed"
+  );
+});
+
+embeddingWorker.on("error", (err) => {
+  log.error({ err }, "Embedding worker error");
+});
+
+workers.push(embeddingWorker);
+log.info("[Worker] document-embedding processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -386,6 +425,19 @@ async function startup() {
   // Register repeatable frist-reminder cron job
   await registerFristReminderJob(cronPattern);
 
+  // Ensure pgvector extension and HNSW index exist (idempotent)
+  try {
+    await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS vector`);
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS document_chunks_embedding_idx
+      ON document_chunks USING hnsw (embedding vector_cosine_ops)
+      WITH (m = 16, ef_construction = 64)
+    `);
+    log.info("pgvector extension and HNSW index ensured");
+  } catch (err) {
+    log.warn({ err }, "Failed to ensure pgvector extension/index (non-fatal)");
+  }
+
   // Start IMAP connections for all active mailboxes
   try {
     await startImapConnections();
@@ -396,7 +448,7 @@ async function startup() {
   log.info(
     {
       concurrency,
-      queues: ["test", "frist-reminder", "email-send", "email-sync", "document-ocr", "document-preview"],
+      queues: ["test", "frist-reminder", "email-send", "email-sync", "document-ocr", "document-preview", "document-embedding"],
       fristScanZeit: scanZeit,
     },
     "Worker started"

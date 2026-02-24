@@ -1,0 +1,304 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { getDownloadUrl, deleteFile, getFileStream } from "@/lib/storage";
+import { logAuditEvent } from "@/lib/audit";
+import { removeDokumentFromIndex, indexDokument } from "@/lib/meilisearch";
+
+/**
+ * GET /api/dokumente/[id] — get document info + pre-signed download URL
+ * ?download=true — returns the actual file stream
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const { searchParams } = new URL(request.url);
+  const download = searchParams.get("download") === "true";
+
+  // ?detail=true returns full document with relations for document detail page
+  const detail = searchParams.get("detail") === "true";
+
+  if (detail) {
+    const dokument = await prisma.dokument.findUnique({
+      where: { id },
+      include: {
+        akte: { select: { id: true, aktenzeichen: true, kurzrubrum: true } },
+        createdBy: { select: { id: true, name: true } },
+        freigegebenDurch: { select: { id: true, name: true } },
+        versionen: {
+          orderBy: { version: "desc" },
+          include: { createdBy: { select: { id: true, name: true } } },
+        },
+      },
+    });
+
+    if (!dokument) {
+      return NextResponse.json({ error: "Dokument nicht gefunden" }, { status: 404 });
+    }
+
+    // Count DocumentChunks to show AI-indexed status
+    const chunkCount = await prisma.documentChunk.count({
+      where: { dokumentId: id },
+    });
+
+    // Generate presigned URLs
+    let downloadUrl: string | null = null;
+    let previewUrl: string | null = null;
+    try {
+      downloadUrl = await getDownloadUrl(dokument.dateipfad);
+    } catch {
+      // Storage may be unavailable
+    }
+
+    // For non-PDF files, use previewPfad if available
+    if (dokument.mimeType === "application/pdf") {
+      previewUrl = downloadUrl;
+    } else if (dokument.previewPfad) {
+      try {
+        previewUrl = await getDownloadUrl(dokument.previewPfad);
+      } catch {
+        // Preview not available
+      }
+    }
+
+    return NextResponse.json({
+      ...dokument,
+      downloadUrl,
+      previewUrl,
+      chunkCount,
+    });
+  }
+
+  // Simple mode: basic document info
+  const dokument = await prisma.dokument.findUnique({
+    where: { id },
+    include: {
+      createdBy: { select: { name: true } },
+      freigegebenDurch: { select: { id: true, name: true } },
+    },
+  });
+
+  if (!dokument) {
+    return NextResponse.json({ error: "Dokument nicht gefunden" }, { status: 404 });
+  }
+
+  if (download) {
+    try {
+      const stream = await getFileStream(dokument.dateipfad);
+      if (!stream) {
+        return NextResponse.json({ error: "Datei nicht gefunden im Speicher" }, { status: 404 });
+      }
+
+      // Convert to web ReadableStream
+      const webStream = stream.transformToWebStream();
+
+      return new NextResponse(webStream as any, {
+        headers: {
+          "Content-Type": dokument.mimeType,
+          "Content-Disposition": `attachment; filename="${encodeURIComponent(dokument.name)}"`,
+          "Content-Length": String(dokument.groesse),
+        },
+      });
+    } catch (err: any) {
+      return NextResponse.json(
+        { error: "Datei konnte nicht geladen werden" },
+        { status: 500 }
+      );
+    }
+  }
+
+  // Return metadata + pre-signed URL
+  try {
+    const url = await getDownloadUrl(dokument.dateipfad);
+    return NextResponse.json({ ...dokument, downloadUrl: url });
+  } catch {
+    return NextResponse.json({ ...dokument, downloadUrl: null });
+  }
+}
+
+/**
+ * PATCH /api/dokumente/[id] — update document metadata
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const body = await request.json();
+
+  const dokument = await prisma.dokument.findUnique({ where: { id } });
+  if (!dokument) {
+    return NextResponse.json({ error: "Dokument nicht gefunden" }, { status: 404 });
+  }
+
+  const updateData: any = {};
+  if (body.name !== undefined) updateData.name = body.name;
+  if (body.ordner !== undefined) updateData.ordner = body.ordner || null;
+  if (body.tags !== undefined) updateData.tags = body.tags;
+
+  // Status transitions (human users only, not for VERSENDET — that's via send endpoints)
+  if (body.status !== undefined) {
+    const userRole = (session.user as any).role;
+    const currentStatus = dokument.status;
+    const targetStatus = body.status;
+
+    // Role-based access control for status transitions
+    // FREIGEGEBEN requires ADMIN, ANWALT, or SACHBEARBEITER
+    const FREIGABE_ROLES = ["ADMIN", "ANWALT", "SACHBEARBEITER"];
+
+    if (targetStatus === "VERSENDET") {
+      return NextResponse.json(
+        { error: "Status 'VERSENDET' kann nur über Versand-Endpoints gesetzt werden." },
+        { status: 403 }
+      );
+    }
+
+    if (targetStatus === "FREIGEGEBEN" && !FREIGABE_ROLES.includes(userRole)) {
+      return NextResponse.json(
+        { error: "Nur Anwälte, Sachbearbeiter oder Administratoren dürfen Dokumente freigeben." },
+        { status: 403 }
+      );
+    }
+
+    // Revoking approval also requires FREIGABE_ROLES
+    if (currentStatus === "FREIGEGEBEN" && targetStatus !== "FREIGEGEBEN" && !FREIGABE_ROLES.includes(userRole)) {
+      return NextResponse.json(
+        { error: "Nur Anwälte, Sachbearbeiter oder Administratoren dürfen eine Freigabe widerrufen." },
+        { status: 403 }
+      );
+    }
+
+    const allowedTransitions: Record<string, string[]> = {
+      ENTWURF: ["ZUR_PRUEFUNG"],
+      ZUR_PRUEFUNG: ["ENTWURF", "FREIGEGEBEN"],
+      FREIGEGEBEN: ["ZUR_PRUEFUNG"], // Can revoke approval
+      // VERSENDET is set only by send endpoints, not via PATCH
+    };
+
+    const allowed = allowedTransitions[currentStatus] ?? [];
+    if (!allowed.includes(targetStatus)) {
+      return NextResponse.json(
+        { error: `Statusänderung von '${currentStatus}' zu '${targetStatus}' ist nicht erlaubt.` },
+        { status: 400 }
+      );
+    }
+
+    updateData.status = targetStatus;
+
+    // Set approval metadata when approving
+    if (targetStatus === "FREIGEGEBEN") {
+      updateData.freigegebenDurchId = session.user.id;
+      updateData.freigegebenAm = new Date();
+    } else if (
+      currentStatus === "FREIGEGEBEN" &&
+      targetStatus !== "FREIGEGEBEN"
+    ) {
+      // Revoke approval — clear metadata
+      updateData.freigegebenDurchId = null;
+      updateData.freigegebenAm = null;
+    }
+  }
+
+  const updated = await prisma.dokument.update({
+    where: { id },
+    data: updateData,
+    include: {
+      akte: { select: { aktenzeichen: true, kurzrubrum: true } },
+      createdBy: { select: { name: true } },
+      freigegebenDurch: { select: { id: true, name: true } },
+    },
+  });
+
+  // Audit log for status changes
+  if (body.status !== undefined && body.status !== dokument.status) {
+    const statusLabels: Record<string, string> = {
+      ENTWURF: "Entwurf",
+      ZUR_PRUEFUNG: "Zur Prüfung",
+      FREIGEGEBEN: "Freigegeben",
+      VERSENDET: "Versendet",
+    };
+    logAuditEvent({
+      userId: session.user.id!,
+      akteId: dokument.akteId,
+      aktion: "DOKUMENT_STATUS_GEAENDERT",
+      details: {
+        dokumentId: id,
+        name: dokument.name,
+        vonStatus: statusLabels[dokument.status] ?? dokument.status,
+        zuStatus: statusLabels[body.status] ?? body.status,
+      },
+    }).catch(() => {});
+  }
+
+  // Update Meilisearch index (non-blocking)
+  indexDokument({
+    id: updated.id,
+    akteId: updated.akteId,
+    name: updated.name,
+    mimeType: updated.mimeType,
+    ordner: updated.ordner,
+    tags: updated.tags,
+    ocrText: updated.ocrText,
+    createdById: updated.createdById,
+    createdByName: updated.createdBy.name,
+    aktenzeichen: updated.akte.aktenzeichen,
+    kurzrubrum: updated.akte.kurzrubrum,
+    createdAt: Math.floor(new Date(updated.createdAt).getTime() / 1000),
+  }).catch(() => {});
+
+  return NextResponse.json(updated);
+}
+
+/**
+ * DELETE /api/dokumente/[id] — delete a document
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  const dokument = await prisma.dokument.findUnique({ where: { id } });
+  if (!dokument) {
+    return NextResponse.json({ error: "Dokument nicht gefunden" }, { status: 404 });
+  }
+
+  // Delete from storage
+  try {
+    await deleteFile(dokument.dateipfad);
+  } catch {
+    // Continue even if storage deletion fails
+  }
+
+  // Delete from database
+  await prisma.dokument.delete({ where: { id } });
+
+  // Remove from Meilisearch (non-blocking)
+  removeDokumentFromIndex(id).catch(() => {});
+
+  await logAuditEvent({
+    userId: session.user.id!,
+    akteId: dokument.akteId,
+    aktion: "DOKUMENT_GELOESCHT",
+    details: { name: dokument.name, mimeType: dokument.mimeType },
+  });
+
+  return NextResponse.json({ success: true });
+}

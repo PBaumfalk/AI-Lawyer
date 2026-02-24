@@ -8,6 +8,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
 import { transitionInvoiceStatus } from '@/lib/finance/invoice/status-machine';
+import { autoBookFromInvoice } from '@/lib/finance/aktenkonto/booking';
 import { z } from 'zod';
 import type { InvoicePosition, UstSummary } from '@/lib/finance/invoice/types';
 
@@ -174,7 +175,12 @@ export async function PATCH(
       const stornoPattern = rechnung.akte.kanzlei?.stornoPattern ?? undefined;
 
       const result = await prisma.$transaction(async (tx) => {
-        return transitionInvoiceStatus(tx, id, targetStatus, userId, stornoPattern);
+        const transitionResult = await transitionInvoiceStatus(tx, id, targetStatus, userId, stornoPattern);
+        // Auto-book Aktenkonto entry on successful status transition
+        if (transitionResult.success) {
+          await autoBookFromInvoice(tx, id, action, userId);
+        }
+        return transitionResult;
       });
 
       if (!result.success) {

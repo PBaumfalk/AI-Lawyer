@@ -33,6 +33,8 @@ const typeIcons: Record<NotificationType, React.ElementType> = {
   "document:updated": FilePenLine,
   "email:received": Mail,
   "deadline:approaching": Clock,
+  "frist:vorfrist": Clock,
+  "frist:ueberfaellig": AlertTriangle,
   "system:alert": AlertTriangle,
 };
 
@@ -44,6 +46,8 @@ const typeColors: Record<NotificationType, string> = {
   "document:updated": "text-blue-400",
   "email:received": "text-amber-500",
   "deadline:approaching": "text-orange-500",
+  "frist:vorfrist": "text-amber-500",
+  "frist:ueberfaellig": "text-rose-600",
   "system:alert": "text-rose-600",
 };
 

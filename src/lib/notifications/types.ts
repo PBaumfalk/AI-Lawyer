@@ -9,6 +9,8 @@ export type NotificationType =
   | "document:updated"
   | "email:received"
   | "deadline:approaching"
+  | "frist:vorfrist"
+  | "frist:ueberfaellig"
   | "system:alert";
 
 /**

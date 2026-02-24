@@ -17,6 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2.1: Wire Frist-Reminder Pipeline + Settings Init** - Register frist-reminder processor in worker.ts, consolidate queue registry, schedule cron job, call initializeDefaults() (INSERTED -- gap closure, completed 2026-02-24)
 - [ ] **Phase 2.2: Fix API Routes + UI Paths** - Create /api/ordner-schemata/[id] route, fix favorit toggle URL, fix build failure (INSERTED — gap closure)
 - [x] **Phase 3: Email Client** - IMAP IDLE worker, SMTP send, Inbox UI, Veraktung, Compose, Ticket-from-Email (completed 2026-02-24)
+- [ ] **Phase 3.1: Wire Email Real-Time + Compose Integration** - Socket.IO mailbox room wiring, email-signature API, ComposeManager provider (INSERTED — gap closure)
 - [ ] **Phase 4: Document Pipeline (OCR + RAG Ingestion)** - Stirling-PDF, auto-OCR, PDF preview, document detail page, chunking, embedding, pgvector storage
 - [ ] **Phase 5: Financial Module** - RVG calculation, invoicing, Aktenkonto, Fremdgeld compliance, E-Rechnung, DATEV, SEPA, banking import, Zeiterfassung
 - [ ] **Phase 6: AI Features + beA** - Multi-provider AI, RAG retrieval, document chat, proactive agent, deadline recognition, beA integration via bea.expert
@@ -116,6 +117,22 @@ Plans:
 - [ ] 03-03-PLAN.md — Gmail-style floating compose popup with TipTap editor, recipient auto-complete, DMS attachments, signature system, send with 10s undo + scheduled sending, mailbox admin settings page
 - [ ] 03-04-PLAN.md — Veraktung slide-over with auto-suggest + DMS copy, Ticket-from-Email, Akte E-Mail Tab, Verantwortlicher assignment, sidebar navigation
 
+### Phase 3.1: Wire Email Real-Time + Compose Integration
+**Goal**: Real-time email notifications arrive in the browser via Socket.IO (mailbox room wiring), compose preview shows the email signature, and ComposeManager is available app-wide for compose-from-anywhere — closing all 3 integration gaps and 2 broken E2E flows from the v3.4 audit.
+**Depends on**: Phase 1 (Socket.IO rooms), Phase 3 (email client code)
+**Requirements**: REQ-IF-003, REQ-EM-001, REQ-EM-003, REQ-EM-006 (all already satisfied — this phase fixes cross-phase wiring)
+**Gap Closure**: Closes INT-001 (critical), INT-002 (medium), INT-003 (low) from v3.4 audit
+**Research flag**: No research needed — pure wiring of existing code.
+**Success Criteria** (what must be TRUE):
+  1. Socket.IO clients join `mailbox:{kontoId}` room when viewing email — `rooms.ts` handles `join:mailbox` event
+  2. `email:folder-update` emitted by IMAP connection-manager reaches the browser and triggers folder tree / inbox refresh
+  3. `GET /api/email-signature?kontoId=` returns the rendered signature HTML for compose preview
+  4. `<ComposeManager>` provider is mounted in the email layout so `useComposeManager()` works from any email page
+**Plans**: TBD
+
+Plans:
+- [ ] 03.1-01-PLAN.md — Wire Socket.IO mailbox rooms, create email-signature API route, mount ComposeManager provider
+
 ### Phase 4: Document Pipeline (OCR + RAG Ingestion)
 **Goal**: Uploaded PDF documents are automatically OCR-processed (if not already searchable), indexed in Meilisearch, and chunked+embedded into pgvector for AI retrieval -- with a rich document detail page and in-browser PDF preview.
 **Depends on**: Phase 1 (worker process for OCR and embedding jobs), Phase 2 (WOPI for document viewing)
@@ -193,7 +210,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 4 -> 5 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
@@ -202,6 +219,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2.1 Wire Frist-Reminder Pipeline + Settings Init | 1/1 | Complete    | 2026-02-24 |
 | 2.2 Fix API Routes + UI Paths | 0/1 | Not started | - |
 | 3. Email Client | 0/4 | Complete    | 2026-02-24 |
+| 3.1 Wire Email Real-Time + Compose Integration | 0/1 | Not started | - |
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Not started | - |
 | 5. Financial Module | 0/5 | Not started | - |
 | 6. AI Features + beA | 0/4 | Not started | - |

@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 4 of 7 (Document Pipeline OCR + RAG Ingestion) -- IN PROGRESS
-Plan: 1 of 3 in current phase (1 complete)
+Plan: 2 of 3 in current phase (2 complete)
 Status: Executing
-Last activity: 2026-02-24 -- Completed 04-01-PLAN.md (Stirling-PDF OCR pipeline, upload experience, tag management)
+Last activity: 2026-02-24 -- Completed 04-02-PLAN.md (Document detail page with PDF viewer, version timeline, actions bar, tag management)
 
-Progress: [██████████████████░░] 68%
+Progress: [███████████████████░] 72%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
-- Average duration: 7.7 min
-- Total execution time: 2.25 hours
+- Total plans completed: 18
+- Average duration: 7.6 min
+- Total execution time: 2.35 hours
 
 **By Phase:**
 
@@ -33,10 +33,10 @@ Progress: [██████████████████░░] 68%
 | 2.2 - Fix API Routes and UI Paths | 1/1 | 5 min | 5 min |
 | 3 - Email Client | 4/4 | 42 min | 10.5 min |
 | 3.1 - Wire Email Real-Time + Compose | 1/1 | 2 min | 2 min |
-| 4 - Document Pipeline OCR + RAG | 1/3 | 11 min | 11 min |
+| 4 - Document Pipeline OCR + RAG | 2/3 | 17 min | 8.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (10 min), 03-03 (10 min), 03-04 (8 min), 03.1-01 (2 min), 04-01 (11 min)
+- Last 5 plans: 03-03 (10 min), 03-04 (8 min), 03.1-01 (2 min), 04-01 (11 min), 04-02 (6 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -57,6 +57,7 @@ Progress: [██████████████████░░] 68%
 | Phase 03 P04 | 8min | 2 tasks | 13 files |
 | Phase 03.1 P01 | 2min | 3 tasks | 4 files |
 | Phase 04 P01 | 11min | 3 tasks | 22 files |
+| Phase 04 P02 | 6min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -148,6 +149,10 @@ Recent decisions affecting current work:
 - [04-01]: dragCounter ref pattern for reliable drag-zone detection without false leaves
 - [04-01]: OCR concurrency:1 (memory-heavy), preview concurrency:2
 - [04-01]: Text files (plain, CSV, HTML) bypass OCR and get indexed directly
+- [04-02]: react-pdf v10 with pdfjs-dist v5 (latest) plus core-js for Promise.withResolvers polyfill on Node 20
+- [04-02]: ?detail=true query param on existing GET /api/dokumente/[id] for full relations (avoids new endpoint)
+- [04-02]: Document name in list is a Link to detail page (replaces preview dialog as primary click action)
+- [04-02]: Array.from(new Set()) pattern for downlevelIteration TypeScript compatibility
 
 ### Pending Todos
 
@@ -160,5 +165,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 04-01-PLAN.md (Stirling-PDF OCR pipeline, upload experience, tag management) -- Phase 4 plan 1/3
+Stopped at: Completed 04-02-PLAN.md (Document detail page with PDF viewer, version timeline, actions bar, tag management) -- Phase 4 plan 2/3
 Resume file: None

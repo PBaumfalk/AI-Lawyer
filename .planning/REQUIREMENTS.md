@@ -188,8 +188,8 @@
 | REQ-EM-008 | Phase 3 | Complete |
 | REQ-DV-004 | Phase 4 | Complete |
 | REQ-DV-005 | Phase 4 | Complete |
-| REQ-DV-006 | Phase 4 | Pending |
-| REQ-DV-007 | Phase 4 | Pending |
+| REQ-DV-006 | Phase 4 | Complete |
+| REQ-DV-007 | Phase 4 | Complete |
 | REQ-IF-004 | Phase 4 | Complete |
 | REQ-KI-001 | Phase 4 | Pending |
 | REQ-FI-001 | Phase 5 | Pending |

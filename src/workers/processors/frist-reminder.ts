@@ -296,6 +296,20 @@ export async function processFristReminders(): Promise<{
       }
     }
 
+    // Halbfrist reminder
+    if (frist.halbfrist) {
+      const hfDay = frist.halbfrist.toISOString().split("T")[0];
+      const todayStr = now.toISOString().split("T")[0];
+      if (hfDay === todayStr) {
+        await sendVorfristNotification(
+          frist,
+          frist.verantwortlich,
+          Math.max(0, diffDays)
+        );
+        vorfristenSent++;
+      }
+    }
+
     // Check for overdue
     if (diffDays < 0) {
       await sendOverdueEscalation(frist, frist.verantwortlich);

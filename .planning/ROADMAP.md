@@ -14,6 +14,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Infrastructure Foundation** - Redis, BullMQ worker process, custom server.ts with Socket.IO, graceful shutdown
 - [x] **Phase 2: Deadline Calculation + Document Templates** - BGB Fristenberechnung, Feiertagskalender, Vorfristen, Vorlagen, Briefkopf, PDF-Export, WOPI rebuild (completed 2026-02-24)
+- [ ] **Phase 2.1: Wire Frist-Reminder Pipeline + Settings Init** - Register frist-reminder processor in worker.ts, consolidate queue registry, schedule cron job, call initializeDefaults() (INSERTED — gap closure)
+- [ ] **Phase 2.2: Fix API Routes + UI Paths** - Create /api/ordner-schemata/[id] route, fix favorit toggle URL, fix build failure (INSERTED — gap closure)
 - [ ] **Phase 3: Email Client** - IMAP IDLE worker, SMTP send, Inbox UI, Veraktung, Compose, Ticket-from-Email
 - [ ] **Phase 4: Document Pipeline (OCR + RAG Ingestion)** - Stirling-PDF, auto-OCR, PDF preview, document detail page, chunking, embedding, pgvector storage
 - [ ] **Phase 5: Financial Module** - RVG calculation, invoicing, Aktenkonto, Fremdgeld compliance, E-Rechnung, DATEV, SEPA, banking import, Zeiterfassung
@@ -61,6 +63,39 @@ Plans:
 - [ ] 02-04-PLAN.md — Vorlagen-System backend: schema (versioning, Freigabe, custom fields), template engine (conditionals, loops), Briefkopf library, generation endpoint, Briefkopf CRUD, Ordner-Schemata API
 - [ ] 02-05-PLAN.md — Vorlagen-System UI: card browser, 4-step wizard, placeholder sidebar, Briefkopf editor, PDF export dialog, Kanzlei-Einstellungen tabs (Fristen, Vorlagen, Briefkopf, Ordner-Schemata, Benachrichtigungen) with audit-trail + reset
 - [ ] 02-06-PLAN.md — Vertretung & Urlaub: User model enhancements, Vertretungs-Modus, vacation management, reminder worker integration, settings Import/Export JSON, Onboarding-Wizard
+
+### Phase 2.1: Wire Frist-Reminder Pipeline + Settings Init
+**Goal**: The frist-reminder worker processor is live at runtime — pre-deadline reminders (7/3/1 day) are scheduled via cron, processed by the BullMQ worker, and delivered as notifications. The dual queue registry is consolidated so the frist-reminder queue is visible in admin monitoring. SystemSettings defaults are initialized at startup for fresh installs.
+**Depends on**: Phase 1 (worker infrastructure), Phase 2 (frist-reminder processor code)
+**Requirements**: REQ-FK-003
+**Gap Closure**: Closes gaps from v3.4 audit — REQ-FK-003 unsatisfied, frist-reminder integration, Vorfrist Reminder flow
+**Research flag**: No research needed — wiring existing code, all pieces already built.
+**Success Criteria** (what must be TRUE):
+  1. `processFristReminders()` is imported and registered as a BullMQ Worker in `src/worker.ts` for the `frist-reminder` queue
+  2. `registerFristReminderJob()` is called at worker startup, scheduling the repeatable cron job
+  3. The frist-reminder queue appears in `ALL_QUEUES` and is visible in the admin Bull Board monitor
+  4. `initializeDefaults()` is called at app/worker startup so fresh installs have default settings
+  5. E2E flow: a Frist with Vorfrist 7 days out triggers a reminder notification when the cron runs
+**Plans**: TBD
+
+Plans:
+- [ ] 02.1-01-PLAN.md — Register frist-reminder processor in worker.ts, consolidate queue registry, schedule cron job, wire initializeDefaults()
+
+### Phase 2.2: Fix API Routes + UI Paths
+**Goal**: Ordner-Schemata can be updated and deleted from the admin UI, and template favoriting works from the Vorlagen overview — both currently returning 404 due to missing/wrong API routes.
+**Depends on**: Phase 2 (existing Ordner-Schemata and Vorlagen code)
+**Requirements**: REQ-DV-008, REQ-DV-009
+**Gap Closure**: Closes gaps from v3.4 audit — REQ-DV-008 partial, REQ-DV-009 partial, OrdnerSchema/Favorit flows
+**Research flag**: No research needed — straightforward API route creation and URL fix.
+**Success Criteria** (what must be TRUE):
+  1. `PATCH /api/ordner-schemata/${id}` updates an Ordner-Schema and returns 200
+  2. `DELETE /api/ordner-schemata/${id}` deletes an Ordner-Schema and returns 200
+  3. Favorit toggle in `vorlagen-uebersicht.tsx` calls the correct endpoint (`PATCH /api/vorlagen/[id]` with `{action: "favorite"}`)
+  4. `next build` passes without the ordner-schemata non-route export error
+**Plans**: TBD
+
+Plans:
+- [ ] 02.2-01-PLAN.md — Create /api/ordner-schemata/[id]/route.ts, fix favorit toggle URL, fix build export
 
 ### Phase 3: Email Client
 **Goal**: Law firm staff can receive, read, compose, and send emails directly within the application, with real-time notifications for incoming mail, and can assign any email to a case file (Veraktung) with one click -- the primary daily workflow entry point.
@@ -157,12 +192,14 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
 | 1. Infrastructure Foundation | 3/3 | Complete    | 2026-02-24 |
 | 2. Deadline Calculation + Document Templates | 5/6 | Complete    | 2026-02-24 |
+| 2.1 Wire Frist-Reminder Pipeline + Settings Init | 0/1 | Not started | - |
+| 2.2 Fix API Routes + UI Paths | 0/1 | Not started | - |
 | 3. Email Client | 0/3 | Not started | - |
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Not started | - |
 | 5. Financial Module | 0/5 | Not started | - |
@@ -181,14 +218,14 @@ Every v1 requirement mapped to exactly one phase. No orphans.
 | REQ-IF-005 | Graceful Shutdown fuer Worker | Phase 1 | P1 |
 | REQ-FK-001 | BGB Sections 187-193 Fristberechnung | Phase 2 | P0 |
 | REQ-FK-002 | Feiertagskalender pro Bundesland | Phase 2 | P0 |
-| REQ-FK-003 | Vorfristen-Erinnerungen (7/3/1 Tag) | Phase 2 | P1 |
+| REQ-FK-003 | Vorfristen-Erinnerungen (7/3/1 Tag) | Phase 2.1 | P1 |
 | REQ-FK-004 | Tagesuebersicht + Quick-Actions | Phase 2 | P1 |
 | REQ-FK-005 | Prioritaeten: 5 Stufen | Phase 2 | P1 |
 | REQ-DV-001 | Vorlagen-System mit Platzhaltern | Phase 2 | P1 |
 | REQ-DV-002 | Briefkopf-Verwaltung | Phase 2 | P1 |
 | REQ-DV-003 | PDF-Export mit Briefkopf | Phase 2 | P1 |
-| REQ-DV-008 | Ordner-Schemata fuer Akten | Phase 2 | P1 |
-| REQ-DV-009 | Vorlagenkategorien | Phase 2 | P1 |
+| REQ-DV-008 | Ordner-Schemata fuer Akten | Phase 2.2 | P1 |
+| REQ-DV-009 | Vorlagenkategorien | Phase 2.2 | P1 |
 | REQ-DV-010 | WOPI-Protokoll stabil | Phase 2 | P1 |
 | REQ-DV-011 | Track Changes, Kommentare, Versionierung | Phase 2 | P1 |
 | REQ-EM-001 | IMAP-Sync mit IDLE | Phase 3 | P1 |

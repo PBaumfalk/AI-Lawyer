@@ -89,13 +89,13 @@ Plans:
 **Research flag**: No research needed — straightforward API route creation and URL fix.
 **Success Criteria** (what must be TRUE):
   1. `PATCH /api/ordner-schemata/${id}` updates an Ordner-Schema and returns 200
-  2. `DELETE /api/ordner-schemata/${id}` deletes an Ordner-Schema and returns 200
+  2. `DELETE /api/ordner-schemata/${id}` deletes an Ordner-Schema and returns 204
   3. Favorit toggle in `vorlagen-uebersicht.tsx` calls the correct endpoint (`PATCH /api/vorlagen/[id]` with `{action: "favorite"}`)
   4. `next build` passes without the ordner-schemata non-route export error
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 02.2-01-PLAN.md — Create /api/ordner-schemata/[id]/route.ts, fix favorit toggle URL, fix build export
+- [ ] 02.2-01-PLAN.md — Create /api/ordner-schemata/[id]/route.ts, fix favorit toggle URL, extract helper to fix build, upgrade delete UX with AlertDialog, optimistic favorit toggle
 
 ### Phase 3: Email Client
 **Goal**: Law firm staff can receive, read, compose, and send emails directly within the application, with real-time notifications for incoming mail, and can assign any email to a case file (Veraktung) with one click -- the primary daily workflow entry point.

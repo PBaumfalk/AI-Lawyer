@@ -11,7 +11,11 @@
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "build:server": "tsx scripts/build-server.ts",
+    "build:worker": "tsx scripts/build-worker.ts",
+    "build:custom": "npm run build:server && npm run build:worker",
+    "dev:worker": "tsx --watch src/worker.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

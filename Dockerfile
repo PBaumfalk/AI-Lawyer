@@ -1,0 +1,78 @@
+# ── Stage 1: Install dependencies ────────────────────────────────────────────
+FROM node:18-alpine AS deps
+RUN apk add --no-cache libc6-compat openssl
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma/
+RUN npm ci
+
+# ── Stage 2: Build the application ──────────────────────────────────────────
+FROM node:18-alpine AS builder
+RUN apk add --no-cache libc6-compat openssl
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Generate Prisma client (needs dummy DATABASE_URL since .env is excluded)
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
+
+# Build Next.js in standalone mode (no .env — env vars come from docker-compose at runtime)
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npm run build
+
+# Bundle server.ts and worker.ts with esbuild
+RUN npx tsx scripts/build-server.ts
+RUN npx tsx scripts/build-worker.ts
+
+# ── Stage 3: Production runner ──────────────────────────────────────────────
+FROM node:18-alpine AS runner
+RUN apk add --no-cache libc6-compat openssl
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Copy standalone build output
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+# Copy esbuild bundled outputs (custom server + worker)
+COPY --from=builder /app/dist-server ./dist-server
+COPY --from=builder /app/dist-worker ./dist-worker
+
+# Copy Prisma schema + seed for runtime migrations
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+
+# Copy seed dependencies (tsx needs esbuild + get-tsconfig at runtime)
+COPY --from=builder /app/node_modules/tsx ./node_modules/tsx
+COPY --from=builder /app/node_modules/esbuild ./node_modules/esbuild
+COPY --from=builder /app/node_modules/@esbuild ./node_modules/@esbuild
+COPY --from=builder /app/node_modules/get-tsconfig ./node_modules/get-tsconfig
+COPY --from=builder /app/node_modules/resolve-pkg-maps ./node_modules/resolve-pkg-maps
+COPY --from=builder /app/node_modules/typescript ./node_modules/typescript
+COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
+COPY --from=builder /app/package.json ./package.json
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+
+# Set correct permissions
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
+
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+ENTRYPOINT ["./docker-entrypoint.sh"]

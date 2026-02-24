@@ -1,0 +1,174 @@
+services:
+  # ─── Next.js Application ─────────────────────────────────────────────────────
+  app:
+    build: .
+    container_name: ailawyer-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://ailawyer:ailawyer@db:5432/ailawyer?schema=public
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
+      AUTH_TRUST_HOST: "true"
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: ailawyer
+      MINIO_SECRET_KEY: ailawyer123
+      MINIO_BUCKET: dokumente
+      MINIO_USE_SSL: "false"
+      MINIO_PUBLIC_URL: http://localhost:9000
+      MEILISEARCH_URL: http://meilisearch:7700
+      MEILISEARCH_API_KEY: ailawyer-meili-key
+      ONLYOFFICE_URL: http://localhost:8080
+      ONLYOFFICE_INTERNAL_URL: http://onlyoffice:80
+      ONLYOFFICE_SECRET: dev-onlyoffice-secret
+      APP_INTERNAL_URL: http://app:3000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      onlyoffice:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ─── Redis (job queues + Socket.IO adapter + pub/sub) ─────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ailawyer-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory-policy noeviction --save 60 1000
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ─── BullMQ Worker Process ────────────────────────────────────────────────────
+  worker:
+    build: .
+    container_name: ailawyer-worker
+    restart: unless-stopped
+    command: ["node", "dist-worker/index.js"]
+    stop_grace_period: 30s
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://ailawyer:ailawyer@db:5432/ailawyer?schema=public
+      LOG_LEVEL: info
+      LOG_FILE_PATH: /var/log/ai-lawyer/worker
+      NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    volumes:
+      - worker_logs:/var/log/ai-lawyer
+
+  # ─── PostgreSQL with pgvector ───────────────────────────────────────────────
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: ailawyer-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ailawyer
+      POSTGRES_PASSWORD: ailawyer
+      POSTGRES_DB: ailawyer
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ailawyer"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── MinIO (S3-compatible file storage) ─────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: ailawyer-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ailawyer
+      MINIO_ROOT_PASSWORD: ailawyer123
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Console
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── ONLYOFFICE Document Server (browser-based office suite) ────────────────
+  onlyoffice:
+    image: onlyoffice/documentserver:latest
+    container_name: ailawyer-onlyoffice
+    restart: unless-stopped
+    environment:
+      JWT_ENABLED: "true"
+      JWT_SECRET: "dev-onlyoffice-secret"
+      JWT_HEADER: "Authorization"
+      JWT_IN_BODY: "true"
+      ALLOW_PRIVATE_IP_ADDRESS: "true"
+      ALLOW_META_IP_ADDRESS: "true"
+    ports:
+      - "8080:80"
+    volumes:
+      - onlyoffice_data:/var/www/onlyoffice/Data
+      - onlyoffice_log:/var/log/onlyoffice
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/healthcheck"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ─── Meilisearch (full-text search) ─────────────────────────────────────────
+  meilisearch:
+    image: getmeili/meilisearch:v1.11
+    container_name: ailawyer-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ailawyer-meili-key
+      MEILI_ENV: development
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilidata:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  meilidata:
+  onlyoffice_data:
+  onlyoffice_log:
+  worker_logs:

@@ -32,6 +32,7 @@ import {
   Undo2,
   Filter,
 } from "lucide-react";
+import Link from "next/link";
 import { UploadDialog } from "./upload-dialog";
 import { PreviewDialog } from "./preview-dialog";
 import { VorlageErstellenDialog } from "./vorlage-erstellen-dialog";
@@ -658,19 +659,16 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
                     key={dok.id}
                     className="flex items-center gap-4 px-4 py-3 hover:bg-white/20 dark:hover:bg-white/[0.05] transition-colors group"
                   >
-                    {/* File icon */}
-                    <div
+                    {/* File icon -- links to detail page */}
+                    <Link
+                      href={`/akten/${akteId}/dokumente/${dok.id}`}
                       className="cursor-pointer flex-shrink-0"
-                      onClick={() => setPreviewDoc(dok)}
                     >
                       <Icon className={`w-5 h-5 ${iconColor}`} />
-                    </div>
+                    </Link>
 
                     {/* File info */}
-                    <div
-                      className="flex-1 min-w-0 cursor-pointer"
-                      onClick={() => setPreviewDoc(dok)}
-                    >
+                    <div className="flex-1 min-w-0">
                       {renameDocId === dok.id ? (
                         <form
                           onSubmit={(e) => {
@@ -701,9 +699,12 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
                         </form>
                       ) : (
                         <>
-                          <p className="text-sm font-medium text-foreground truncate">
+                          <Link
+                            href={`/akten/${akteId}/dokumente/${dok.id}`}
+                            className="text-sm font-medium text-foreground truncate block hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          >
                             {dok.name}
-                          </p>
+                          </Link>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-slate-500">
                               {formatFileSize(dok.groesse)}
@@ -720,6 +721,14 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
                             <span className="text-xs text-slate-500">
                               {formatDate(dok.createdAt)}
                             </span>
+                            {/* Inline OCR status for all states */}
+                            {dok.ocrStatus && (
+                              <OcrStatusBadge
+                                status={dok.ocrStatus}
+                                dokumentId={dok.id}
+                                onRetry={fetchDokumente}
+                              />
+                            )}
                           </div>
                         </>
                       )}

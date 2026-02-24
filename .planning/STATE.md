@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 4.1 - Wire Akte Real-Time, Email Compose, Admin Pipeline
+**Current focus:** Phase 5 - Financial Module
 
 ## Current Position
 
-Phase: 4.1 of 7 (Wire Akte Real-Time + Email Compose + Admin Pipeline) -- COMPLETE
-Plan: 1 of 1 in current phase (1 complete)
-Status: Phase Complete
-Last activity: 2026-02-24 -- Completed 04.1-01-PLAN.md (wire akte realtime, email compose, admin pipeline)
+Phase: 5 of 7 (Financial Module)
+Plan: 1 of 6 in current phase (1 complete)
+Status: Executing
+Last activity: 2026-02-24 -- Completed 05-01-PLAN.md (RVG/GKG fee calculator library)
 
-Progress: [█████████████████████] 80%
+Progress: [█████████████████████] 82%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
-- Average duration: 7.4 min
-- Total execution time: 2.55 hours
+- Total plans completed: 21
+- Average duration: 7.6 min
+- Total execution time: 2.75 hours
 
 **By Phase:**
 
@@ -35,9 +35,10 @@ Progress: [█████████████████████] 80%
 | 3.1 - Wire Email Real-Time + Compose | 1/1 | 2 min | 2 min |
 | 4 - Document Pipeline OCR + RAG | 3/3 | 25 min | 8.3 min |
 | 4.1 - Wire Akte RT + Email + Pipeline | 1/1 | 4 min | 4 min |
+| 5 - Financial Module | 1/6 | 12 min | 12 min |
 
 **Recent Trend:**
-- Last 5 plans: 03.1-01 (2 min), 04-01 (11 min), 04-02 (6 min), 04-03 (8 min), 04.1-01 (4 min)
+- Last 5 plans: 04-01 (11 min), 04-02 (6 min), 04-03 (8 min), 04.1-01 (4 min), 05-01 (12 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -61,6 +62,7 @@ Progress: [█████████████████████] 80%
 | Phase 04 P02 | 6min | 2 tasks | 11 files |
 | Phase 04 P03 | 8min | 2 tasks | 13 files |
 | Phase 04.1 P01 | 4min | 3 tasks | 8 files |
+| Phase 05 P01 | 12min | 1 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -167,6 +169,12 @@ Recent decisions affecting current work:
 - [04.1-01]: Workflow icon for Pipeline sidebar link to differentiate from Activity (Job-Monitor)
 - [04.1-01]: Z-index z-[80] for ComposeFab between upload panel (z-50) and minimized compose tabs (z-[85])
 
+- [05-01]: Precomputed lookup table for fee tables: built from step parameters at module load, stored as [boundary, fee] pairs
+- [05-01]: VV search relevance sorting: exact nr match > partial nr match > description/category match
+- [05-01]: Anrechnung credit capped at Verfahrensgebuehr amount (credit cannot exceed target fee)
+- [05-01]: RvgCalculator auto-adds 7002/7008 in getResult() not addPosition() to ensure correct totals
+- [05-01]: PKH computePkhFee returns null above cap to signal caller should use full RVG table
+
 ### Pending Todos
 
 None yet.
@@ -178,5 +186,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 04.1-01-PLAN.md (wire akte realtime, email compose, admin pipeline) -- Phase 4.1 complete (1/1)
+Stopped at: Completed 05-01-PLAN.md (RVG/GKG fee calculator library) -- Phase 5 plan 1/6
 Resume file: None

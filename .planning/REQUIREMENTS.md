@@ -192,8 +192,8 @@
 | REQ-DV-007 | Phase 4 | Complete |
 | REQ-IF-004 | Phase 4 | Complete |
 | REQ-KI-001 | Phase 4 | Complete |
-| REQ-FI-001 | Phase 5 | Pending |
-| REQ-FI-002 | Phase 5 | Pending |
+| REQ-FI-001 | Phase 5 | Complete |
+| REQ-FI-002 | Phase 5 | Complete |
 | REQ-FI-003 | Phase 5 | Pending |
 | REQ-FI-004 | Phase 5 | Pending |
 | REQ-FI-005 | Phase 5 | Pending |

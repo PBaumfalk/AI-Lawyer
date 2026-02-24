@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 2 - Deadline Calculation + Document Templates
+**Current focus:** Phase 2.1 - Wire Frist-Reminder Pipeline
 
 ## Current Position
 
-Phase: 2 of 7 (Deadline Calculation + Document Templates)
-Plan: 6 of 6 in current phase
+Phase: 2.1 of 7 (Wire Frist-Reminder Pipeline)
+Plan: 1 of 1 in current phase
 Status: Phase Complete
-Last activity: 2026-02-24 -- Completed 02-05-PLAN.md (Vorlagen UI + Kanzlei-Einstellungen Tabs)
+Last activity: 2026-02-24 -- Completed 02.1-01-PLAN.md (Wire Frist-Reminder Pipeline)
 
-Progress: [███████░░░░░░░░░░░░░] 37%
+Progress: [████████░░░░░░░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 7.8 min
-- Total execution time: 1.2 hours
+- Total plans completed: 10
+- Average duration: 7.5 min
+- Total execution time: 1.25 hours
 
 **By Phase:**
 
@@ -29,9 +29,10 @@ Progress: [███████░░░░░░░░░░░░░] 37%
 |-------|-------|-------|----------|
 | 1 - Infrastructure Foundation | 3/3 | 17 min | 5.7 min |
 | 2 - Deadline Calculation + Document Templates | 6/6 | 58 min | 9.7 min |
+| 2.1 - Wire Frist-Reminder Pipeline | 1/1 | 5 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (9 min), 02-04 (8 min), 02-06 (11 min), 02-02 (15 min), 02-05 (9 min)
+- Last 5 plans: 02-04 (8 min), 02-06 (11 min), 02-02 (15 min), 02-05 (9 min), 02.1-01 (5 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -44,6 +45,7 @@ Progress: [███████░░░░░░░░░░░░░] 37%
 | Phase 02 P06 | 11min | 2 tasks | 13 files |
 | Phase 02 P02 | 15min | 2 tasks | 31 files |
 | Phase 02 P05 | 9min | 2 tasks | 13 files |
+| Phase 02.1 P01 | 5min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -93,6 +95,10 @@ Recent decisions affecting current work:
 - [02-05]: Settings auto-save via /api/einstellungen/import endpoint (reuses existing infrastructure)
 - [02-05]: Benachrichtigungen as admin-only stub with Phase 3 email notice
 - [02-05]: Briefkopf OnlyOffice mode as informational placeholder (save in form mode first)
+- [02.1-01]: nodemailer v7 (not v8) for next-auth peer dependency compatibility
+- [02.1-01]: Deduplication via Notification table JSON path query (no new DB model)
+- [02.1-01]: Lazy SMTP transporter creation (no connection at import time)
+- [02.1-01]: Dual-channel: in-app first (fast), then email (best-effort, never throws)
 
 ### Pending Todos
 
@@ -105,5 +111,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 02-05-PLAN.md (Vorlagen UI + Kanzlei-Einstellungen Tabs) -- Phase 2 complete
+Stopped at: Completed 02.1-01-PLAN.md (Wire Frist-Reminder Pipeline) -- Phase 2.1 complete
 Resume file: None

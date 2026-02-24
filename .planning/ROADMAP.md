@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Infrastructure Foundation** - Redis, BullMQ worker process, custom server.ts with Socket.IO, graceful shutdown
 - [x] **Phase 2: Deadline Calculation + Document Templates** - BGB Fristenberechnung, Feiertagskalender, Vorfristen, Vorlagen, Briefkopf, PDF-Export, WOPI rebuild (completed 2026-02-24)
-- [ ] **Phase 2.1: Wire Frist-Reminder Pipeline + Settings Init** - Register frist-reminder processor in worker.ts, consolidate queue registry, schedule cron job, call initializeDefaults() (INSERTED — gap closure)
+- [x] **Phase 2.1: Wire Frist-Reminder Pipeline + Settings Init** - Register frist-reminder processor in worker.ts, consolidate queue registry, schedule cron job, call initializeDefaults() (INSERTED -- gap closure, completed 2026-02-24)
 - [ ] **Phase 2.2: Fix API Routes + UI Paths** - Create /api/ordner-schemata/[id] route, fix favorit toggle URL, fix build failure (INSERTED — gap closure)
 - [ ] **Phase 3: Email Client** - IMAP IDLE worker, SMTP send, Inbox UI, Veraktung, Compose, Ticket-from-Email
 - [ ] **Phase 4: Document Pipeline (OCR + RAG Ingestion)** - Stirling-PDF, auto-OCR, PDF preview, document detail page, chunking, embedding, pgvector storage
@@ -79,7 +79,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 02.1-01-PLAN.md — Consolidate queue registry, add email transport, enhance frist-reminder processor (deduplication, dual-channel, weekend shift, catch-up), register in worker.ts with startup init
+- [x] 02.1-01-PLAN.md — Consolidate queue registry, add email transport, enhance frist-reminder processor (deduplication, dual-channel, weekend shift, catch-up), register in worker.ts with startup init
 
 ### Phase 2.2: Fix API Routes + UI Paths
 **Goal**: Ordner-Schemata can be updated and deleted from the admin UI, and template favoriting works from the Vorlagen overview — both currently returning 404 due to missing/wrong API routes.
@@ -198,7 +198,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|---------------|--------|-----------|
 | 1. Infrastructure Foundation | 3/3 | Complete    | 2026-02-24 |
 | 2. Deadline Calculation + Document Templates | 5/6 | Complete    | 2026-02-24 |
-| 2.1 Wire Frist-Reminder Pipeline + Settings Init | 0/1 | Not started | - |
+| 2.1 Wire Frist-Reminder Pipeline + Settings Init | 1/1 | Complete    | 2026-02-24 |
 | 2.2 Fix API Routes + UI Paths | 0/1 | Not started | - |
 | 3. Email Client | 0/3 | Not started | - |
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Not started | - |

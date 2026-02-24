@@ -26,6 +26,7 @@
     "@aws-sdk/s3-request-presigner": "^3.995.0",
     "@bull-board/api": "^6.19.0",
     "@bull-board/hono": "^6.19.0",
+    "@e-invoice-eu/core": "^2.3.1",
     "@hookform/resolvers": "^3.9.1",
     "@langchain/core": "^1.1.27",
     "@langchain/textsplitters": "^1.0.1",

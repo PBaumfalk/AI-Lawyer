@@ -6,15 +6,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { generateInvoicePdf } from '@/lib/finance/invoice/pdf-generator';
+import { generateZugferdPdf } from '@/lib/finance/invoice/e-rechnung';
 import { uploadFile } from '@/lib/storage';
 import type {
   InvoiceData,
   InvoicePosition,
   UstSummary,
+  InvoiceKanzleiData,
+  InvoiceRecipientData,
 } from '@/lib/finance/invoice/types';
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await auth();
@@ -23,6 +26,8 @@ export async function GET(
   }
 
   const { id } = await params;
+  // ?format=plain skips ZUGFeRD embedding (returns plain PDF)
+  const skipZugferd = request.nextUrl.searchParams.get('format') === 'plain';
 
   try {
     // Load invoice with full relations
@@ -137,8 +142,23 @@ export async function GET(
       stornoVon: rechnung.stornoVon,
     };
 
-    // Generate PDF
-    const pdfBuffer = await generateInvoicePdf(invoiceData);
+    // Generate base PDF
+    const basePdfBuffer = await generateInvoicePdf(invoiceData);
+
+    // Convert to ZUGFeRD PDF/A-3 by embedding CII XML (per user decision: every invoice is ZUGFeRD)
+    // Skip if ?format=plain or if kanzlei has no tax ID (required for E-Rechnung)
+    let pdfBuffer = basePdfBuffer;
+    const hasKanzleiTaxId = !!(kanzlei?.steuernr || kanzlei?.ustIdNr);
+    if (!skipZugferd && hasKanzleiTaxId) {
+      try {
+        const kanzleiData: InvoiceKanzleiData = invoiceData.kanzlei;
+        const empfaengerForZugferd: InvoiceRecipientData = invoiceData.empfaenger;
+        pdfBuffer = await generateZugferdPdf(basePdfBuffer, invoiceData, kanzleiData, empfaengerForZugferd);
+      } catch (zugferdErr) {
+        // Non-fatal: fall back to plain PDF if ZUGFeRD embedding fails
+        console.warn('ZUGFeRD PDF generation failed, returning plain PDF:', zugferdErr);
+      }
+    }
 
     // Upload to MinIO (non-blocking for the response, but we try)
     const storageKey = `rechnungen/${rechnung.akteId}/${rechnung.rechnungsnummer.replace(/\//g, '-')}.pdf`;

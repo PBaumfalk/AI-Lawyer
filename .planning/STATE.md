@@ -5,38 +5,40 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 1 - Infrastructure Foundation
+**Current focus:** Phase 2 - Deadline Calculation + Document Templates
 
 ## Current Position
 
-Phase: 1 of 7 (Infrastructure Foundation)
-Plan: 3 of 3 in current phase
-Status: Phase Complete
-Last activity: 2026-02-24 -- Completed 01-03-PLAN.md (Admin Pages + Settings)
+Phase: 2 of 7 (Deadline Calculation + Document Templates)
+Plan: 4 of 6 in current phase
+Status: In Progress
+Last activity: 2026-02-24 -- Completed 02-03-PLAN.md (OnlyOffice Integration Rebuild)
 
-Progress: [███░░░░░░░░░░░░░░░░░] 14%
+Progress: [████░░░░░░░░░░░░░░░░] 19%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 5.7 min
-- Total execution time: 0.3 hours
+- Total plans completed: 4
+- Average duration: 5.8 min
+- Total execution time: 0.4 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 - Infrastructure Foundation | 3/3 | 17 min | 5.7 min |
+| 2 - Deadline Calculation + Document Templates | 1/6 | 6 min | 6.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6 min), 01-02 (5 min), 01-03 (6 min)
+- Last 5 plans: 01-01 (6 min), 01-02 (5 min), 01-03 (6 min), 02-03 (6 min)
 - Trend: Steady
 
 *Updated after each plan completion*
 | Phase 01 P01 | 6min | 3 tasks | 17 files |
 | Phase 01 P02 | 5min | 2 tasks | 16 files |
 | Phase 01 P03 | 6min | 2 tasks | 13 files |
+| Phase 02 P03 | 6min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -58,6 +60,10 @@ Recent decisions affecting current work:
 - [01-03]: Custom JSON API instead of Bull Board Hono adapter (serveStatic incompatible with Next.js App Router)
 - [01-03]: Boolean settings auto-save on toggle for better UX
 - [01-03]: Log viewer gracefully handles missing log files in development
+- [02-03]: Stable document key format {dokumentId}_v{version} for OnlyOffice co-editing
+- [02-03]: Keep existing ZUR_PRUEFUNG enum value (backward compatible with existing code)
+- [02-03]: Version snapshots stored at {dateipfad}_v{version} in MinIO
+- [02-03]: Non-destructive restore: always creates new version, pre-restore snapshot auto-created
 
 ### Pending Todos
 
@@ -70,5 +76,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 01-03-PLAN.md (Admin Pages + Settings) -- Phase 1 complete
+Stopped at: Completed 02-03-PLAN.md (OnlyOffice Integration Rebuild)
 Resume file: None

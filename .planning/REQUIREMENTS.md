@@ -176,8 +176,8 @@
 | REQ-DV-003 | Phase 2 | Pending |
 | REQ-DV-008 | Phase 2 | Pending |
 | REQ-DV-009 | Phase 2 | Pending |
-| REQ-DV-010 | Phase 2 | Pending |
-| REQ-DV-011 | Phase 2 | Pending |
+| REQ-DV-010 | Phase 2 | Complete |
+| REQ-DV-011 | Phase 2 | Complete |
 | REQ-EM-001 | Phase 3 | Pending |
 | REQ-EM-002 | Phase 3 | Pending |
 | REQ-EM-003 | Phase 3 | Pending |

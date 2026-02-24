@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 3 - Email Client
+**Current focus:** Phase 3.1 - Wire Email Real-Time + Compose
 
 ## Current Position
 
-Phase: 3 of 7 (Email Client) -- COMPLETE
-Plan: 4 of 4 in current phase (all complete)
+Phase: 3.1 of 7 (Wire Email Real-Time + Compose) -- COMPLETE
+Plan: 1 of 1 in current phase (all complete)
 Status: Phase Complete
-Last activity: 2026-02-24 -- Completed 03-04-PLAN.md (Veraktung, Ticket-from-Email, Akte E-Mail Tab)
+Last activity: 2026-02-24 -- Completed 03.1-01-PLAN.md (Wire Email Real-Time, Signature API, ComposeManager)
 
-Progress: [████████████████░░░░] 60%
+Progress: [█████████████████░░░] 63%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
-- Average duration: 7.9 min
-- Total execution time: 2.04 hours
+- Total plans completed: 16
+- Average duration: 7.5 min
+- Total execution time: 2.07 hours
 
 **By Phase:**
 
@@ -32,9 +32,10 @@ Progress: [████████████████░░░░] 60%
 | 2.1 - Wire Frist-Reminder Pipeline | 1/1 | 5 min | 5 min |
 | 2.2 - Fix API Routes and UI Paths | 1/1 | 5 min | 5 min |
 | 3 - Email Client | 4/4 | 42 min | 10.5 min |
+| 3.1 - Wire Email Real-Time + Compose | 1/1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 02.2-01 (5 min), 03-01 (14 min), 03-02 (10 min), 03-03 (10 min), 03-04 (8 min)
+- Last 5 plans: 03-01 (14 min), 03-02 (10 min), 03-03 (10 min), 03-04 (8 min), 03.1-01 (2 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -53,6 +54,7 @@ Progress: [████████████████░░░░] 60%
 | Phase 03 P02 | 10min | 2 tasks | 15 files |
 | Phase 03 P03 | 10min | 2 tasks | 17 files |
 | Phase 03 P04 | 8min | 2 tasks | 13 files |
+| Phase 03.1 P01 | 2min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -134,6 +136,9 @@ Recent decisions affecting current work:
 - [03-04]: All attachments selected by default in Veraktung panel
 - [03-04]: Default DMS folder "Korrespondenz" for email attachment copies
 - [03-04]: Sidebar E-Mail link already in correct position (no change needed)
+- [03.1-01]: Socket-to-CustomEvent bridge in inbox-layout (not folder-tree) to keep bridge in one place
+- [03.1-01]: Separate useEffects for room join/leave vs event bridge (different dependency arrays)
+- [03.1-01]: Email layout converted to client component for ComposeManager context (no server-only code lost)
 
 ### Pending Todos
 
@@ -146,5 +151,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 03-04-PLAN.md (Veraktung, Ticket-from-Email, Akte E-Mail Tab) -- Phase 3 COMPLETE (4/4)
+Stopped at: Completed 03.1-01-PLAN.md (Wire Email Real-Time, Signature API, ComposeManager) -- Phase 3.1 COMPLETE (1/1)
 Resume file: None

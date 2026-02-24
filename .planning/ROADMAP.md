@@ -51,13 +51,13 @@ Plans:
   3. User can create a document from a template with placeholders (mandant.name, akte.aktenzeichen, gegner.name etc.) auto-filled from case data, with firm letterhead applied
   4. User can manage the Briefkopf (logo + firm data) in OnlyOffice and it is automatically applied to all outgoing documents and PDF exports
   5. WOPI protocol handles Laden/Speichern reliably including sessions >1 hour, with Track Changes, Comments, and multi-user collaboration working
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 02-01: FristenRechner pure-function library with unit tests + feiertagejs integration
-- [ ] 02-02: Kalender UI enhancements (Vorfristen, Prioritaeten, Tagesuebersicht)
-- [ ] 02-03: WOPI protocol rebuild + Track Changes + Collaboration
-- [ ] 02-04: Vorlagen-System + Briefkopf + PDF-Export + Ordner-Schemata
+- [ ] 02-01-PLAN.md — FristenRechner TDD: pure-function library (BGB 187-193, feiertagejs, Vorfristen, Halbfrist) with >50 unit tests
+- [ ] 02-02-PLAN.md — Calendar enhancements: schema (Prioritaet, Frist fields, FristPreset), Fristen API, FristenRechner UI (sidebar sheet + Tagesuebersicht + Warn-Ampel), reminder worker
+- [ ] 02-03-PLAN.md — OnlyOffice Callback rebuild: stable document.key, co-editing, Track Changes, Comments, versioning, DOCX-to-PDF conversion API
+- [ ] 02-04-PLAN.md — Vorlagen-System (card browser, 4-step wizard, Freigabe, versioning) + Briefkopf management + PDF export + Ordner-Schemata + Kanzlei-Einstellungen tabs
 
 ### Phase 3: Email Client
 **Goal**: Law firm staff can receive, read, compose, and send emails directly within the application, with real-time notifications for incoming mail, and can assign any email to a case file (Veraktung) with one click -- the primary daily workflow entry point.

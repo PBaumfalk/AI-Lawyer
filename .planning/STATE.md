@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 2 of 7 (Deadline Calculation + Document Templates)
-Plan: 5 of 6 in current phase
+Plan: 6 of 6 in current phase
 Status: In Progress
-Last activity: 2026-02-24 -- Completed 02-01-PLAN.md (FristenRechner Pure Function Library)
+Last activity: 2026-02-24 -- Completed 02-04-PLAN.md (Vorlagen-System Backend)
 
-Progress: [█████░░░░░░░░░░░░░░░] 24%
+Progress: [██████░░░░░░░░░░░░░░] 29%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 6.2 min
-- Total execution time: 0.5 hours
+- Total plans completed: 6
+- Average duration: 6.5 min
+- Total execution time: 0.6 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 - Infrastructure Foundation | 3/3 | 17 min | 5.7 min |
-| 2 - Deadline Calculation + Document Templates | 2/6 | 15 min | 7.5 min |
+| 2 - Deadline Calculation + Document Templates | 3/6 | 23 min | 7.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6 min), 01-02 (5 min), 01-03 (6 min), 02-03 (6 min), 02-01 (9 min)
+- Last 5 plans: 01-02 (5 min), 01-03 (6 min), 02-03 (6 min), 02-01 (9 min), 02-04 (8 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -40,6 +40,7 @@ Progress: [█████░░░░░░░░░░░░░░░] 24%
 | Phase 01 P03 | 6min | 2 tasks | 13 files |
 | Phase 02 P03 | 6min | 2 tasks | 9 files |
 | Phase 02 P01 | 9min | 4 tasks | 8 files |
+| Phase 02 P04 | 8min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,11 @@ Recent decisions affecting current work:
 - [02-01]: date-fns addMonths handles BGB 188(3) month-end overflow natively
 - [02-01]: Ereignisfrist month/year calculation applies period to event date directly per BGB 188(2)
 - [02-01]: Section 193 defaults to true when not specified
+- [02-04]: Full-template Briefkopf approach: copy header/footer XML parts from Briefkopf DOCX
+- [02-04]: PizZip filter() API instead of forEach() for DOCX ZIP iteration
+- [02-04]: fillDocxTemplate accepts Record<string, unknown> for loops/arrays
+- [02-04]: OrdnerSchema per-Sachgebiet defaults with global fallback
+- [02-04]: Auto-filename pattern: {Aktenzeichen}_{Kategorie}_{Mandant}_{Datum}.docx
 
 ### Pending Todos
 
@@ -81,5 +87,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 02-01-PLAN.md (FristenRechner Pure Function Library)
+Stopped at: Completed 02-04-PLAN.md (Vorlagen-System Backend)
 Resume file: None

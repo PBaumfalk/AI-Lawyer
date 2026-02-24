@@ -171,11 +171,11 @@
 | REQ-FK-003 | Phase 2 | Pending |
 | REQ-FK-004 | Phase 2 | Pending |
 | REQ-FK-005 | Phase 2 | Pending |
-| REQ-DV-001 | Phase 2 | Pending |
-| REQ-DV-002 | Phase 2 | Pending |
-| REQ-DV-003 | Phase 2 | Pending |
-| REQ-DV-008 | Phase 2 | Pending |
-| REQ-DV-009 | Phase 2 | Pending |
+| REQ-DV-001 | Phase 2 | Complete |
+| REQ-DV-002 | Phase 2 | Complete |
+| REQ-DV-003 | Phase 2 | Complete |
+| REQ-DV-008 | Phase 2 | Complete |
+| REQ-DV-009 | Phase 2 | Complete |
 | REQ-DV-010 | Phase 2 | Complete |
 | REQ-DV-011 | Phase 2 | Complete |
 | REQ-EM-001 | Phase 3 | Pending |

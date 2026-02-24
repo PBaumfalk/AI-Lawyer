@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 3 of 7 (Email Client)
-Plan: 3 of 4 in current phase
-Status: In Progress
-Last activity: 2026-02-24 -- Completed 03-03-PLAN.md (Email Compose & Mailbox Admin)
+Phase: 3 of 7 (Email Client) -- COMPLETE
+Plan: 4 of 4 in current phase (all complete)
+Status: Phase Complete
+Last activity: 2026-02-24 -- Completed 03-04-PLAN.md (Veraktung, Ticket-from-Email, Akte E-Mail Tab)
 
-Progress: [████████████░░░░░░░░] 56%
+Progress: [████████████████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: 7.9 min
-- Total execution time: 1.91 hours
+- Total execution time: 2.04 hours
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [████████████░░░░░░░░] 56%
 | 2 - Deadline Calculation + Document Templates | 6/6 | 58 min | 9.7 min |
 | 2.1 - Wire Frist-Reminder Pipeline | 1/1 | 5 min | 5 min |
 | 2.2 - Fix API Routes and UI Paths | 1/1 | 5 min | 5 min |
-| 3 - Email Client | 3/4 | 34 min | 11.3 min |
+| 3 - Email Client | 4/4 | 42 min | 10.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02.1-01 (5 min), 02.2-01 (5 min), 03-01 (14 min), 03-02 (10 min), 03-03 (10 min)
+- Last 5 plans: 02.2-01 (5 min), 03-01 (14 min), 03-02 (10 min), 03-03 (10 min), 03-04 (8 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -52,6 +52,7 @@ Progress: [████████████░░░░░░░░] 56%
 | Phase 03 P01 | 14min | 4 tasks | 31 files |
 | Phase 03 P02 | 10min | 2 tasks | 15 files |
 | Phase 03 P03 | 10min | 2 tasks | 17 files |
+| Phase 03 P04 | 8min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -128,6 +129,11 @@ Recent decisions affecting current work:
 - [03-03]: Set.add() pattern for downlevelIteration TypeScript compatibility
 - [03-03]: Compose popup for NEW emails only -- reply/forward inline in detail (Plan 02)
 - [03-03]: Provider auto-discovery: M365, Gmail, IONOS, Strato with manual fallback
+- [03-04]: Auto-suggest priority: thread history (hoch) > sender/contact match (mittel) > Aktenzeichen regex (niedrig)
+- [03-04]: Veraktung reversal keeps DMS copies (removes link only)
+- [03-04]: All attachments selected by default in Veraktung panel
+- [03-04]: Default DMS folder "Korrespondenz" for email attachment copies
+- [03-04]: Sidebar E-Mail link already in correct position (no change needed)
 
 ### Pending Todos
 
@@ -140,5 +146,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 03-03-PLAN.md (Email Compose & Mailbox Admin) -- Phase 3, Plan 3 of 4
+Stopped at: Completed 03-04-PLAN.md (Veraktung, Ticket-from-Email, Akte E-Mail Tab) -- Phase 3 COMPLETE (4/4)
 Resume file: None

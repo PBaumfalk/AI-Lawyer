@@ -98,7 +98,11 @@ function getOverdueColor(days: number): string {
 // Component
 // ---------------------------------------------------------------
 
-export function InvoiceList() {
+interface InvoiceListProps {
+  akteId?: string;
+}
+
+export function InvoiceList({ akteId }: InvoiceListProps = {}) {
   const router = useRouter();
 
   // Data
@@ -132,6 +136,7 @@ export function InvoiceList() {
       params.set("limit", String(pageSize));
       params.set("sortBy", sortField);
       params.set("sortDir", sortDir);
+      if (akteId) params.set("akteId", akteId);
       if (statusFilter !== "ALLE") params.set("status", statusFilter);
       if (searchQuery.trim()) params.set("search", searchQuery.trim());
       if (ueberfaelligOnly) params.set("ueberfaellig", "true");
@@ -148,7 +153,7 @@ export function InvoiceList() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, statusFilter, searchQuery, ueberfaelligOnly, sortField, sortDir]);
+  }, [akteId, page, pageSize, statusFilter, searchQuery, ueberfaelligOnly, sortField, sortDir]);
 
   useEffect(() => {
     fetchInvoices();

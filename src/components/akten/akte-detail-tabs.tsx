@@ -32,6 +32,9 @@ import { getFalldatenSchema } from "@/lib/falldaten-schemas";
 import { DokumenteTab } from "@/components/dokumente/dokumente-tab";
 import { KalenderTab } from "@/components/kalender/kalender-tab";
 import { AkteEmailTab } from "@/components/email/akte-email-tab";
+import { AktenkontoLedger } from "@/components/finanzen/aktenkonto-ledger";
+import { InvoiceList } from "@/components/finanzen/invoice-list";
+import { AkteZeiterfassungTab } from "@/components/finanzen/akte-zeiterfassung-tab";
 import { toast } from "sonner";
 
 // Serialized version of the Prisma akte with includes
@@ -173,6 +176,9 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
         <TabsTrigger value="kalender">
           Termine & Fristen ({akte.kalenderEintraege.length})
         </TabsTrigger>
+        <TabsTrigger value="aktenkonto">Aktenkonto</TabsTrigger>
+        <TabsTrigger value="rechnungen">Rechnungen</TabsTrigger>
+        <TabsTrigger value="zeiterfassung">Zeiterfassung</TabsTrigger>
         <TabsTrigger value="emails">E-Mails</TabsTrigger>
         <TabsTrigger value="historie">
           Historie ({akte.auditLogs?.length ?? 0})
@@ -330,6 +336,21 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
           akteId={akte.id}
           initialEintraege={akte.kalenderEintraege}
         />
+      </TabsContent>
+
+      {/* ─── Aktenkonto ─────────────────────────────────────────────── */}
+      <TabsContent value="aktenkonto">
+        <AktenkontoLedger akteId={akte.id} aktenzeichen={akte.aktenzeichen} />
+      </TabsContent>
+
+      {/* ─── Rechnungen ──────────────────────────────────────────────── */}
+      <TabsContent value="rechnungen">
+        <InvoiceList akteId={akte.id} />
+      </TabsContent>
+
+      {/* ─── Zeiterfassung ───────────────────────────────────────────── */}
+      <TabsContent value="zeiterfassung">
+        <AkteZeiterfassungTab akteId={akte.id} />
       </TabsContent>
 
       {/* ─── E-Mails ───────────────────────────────────────────────── */}

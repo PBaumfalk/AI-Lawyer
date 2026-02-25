@@ -11,6 +11,7 @@ import { PdfViewer } from "./pdf-viewer";
 import { VersionTimeline } from "./version-timeline";
 import { DocumentActionsBar } from "./document-actions-bar";
 import { TagManager } from "./tag-manager";
+import { AuditTimeline, type AuditItem } from "@/components/audit/audit-timeline";
 import { DokumentStatusBadge } from "./dokument-status-badge";
 import { OcrStatusBadge } from "./ocr-status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -510,12 +511,59 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                   onRestore={handleRestore}
                 />
               </section>
+
+              {/* Audit history */}
+              <section>
+                <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
+                  Historie
+                </h3>
+                <DocumentHistorie
+                  dokumentId={dokument.id}
+                  akteId={dokument.akte.id}
+                />
+              </section>
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
     </div>
   );
+}
+
+function DocumentHistorie({ dokumentId, akteId }: { dokumentId: string; akteId: string }) {
+  const [items, setItems] = useState<AuditItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(
+      `/api/akten/${akteId}/historie?dokumentId=${dokumentId}&aktion=DOKUMENT_HOCHGELADEN,DOKUMENT_GELOESCHT,DOKUMENT_STATUS_GEAENDERT,DOKUMENT_ANGESEHEN&take=20`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        setItems(data.items ?? []);
+      })
+      .catch(() => {
+        setItems([]);
+      })
+      .finally(() => setLoading(false));
+  }, [dokumentId, akteId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 py-3 text-xs text-slate-400">
+        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        Historie wird geladen...
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <p className="text-xs text-slate-400 py-2">Keine Eintraege vorhanden</p>
+    );
+  }
+
+  return <AuditTimeline items={items} hasMore={false} compact showAkteLink={false} />;
 }
 
 // Reusable metadata row

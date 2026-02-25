@@ -274,41 +274,6 @@ export async function syncMailbox(
 }
 
 /**
- * Incremental sync: fetch only new messages since the last known UID.
- */
-export async function syncNewMessages(
-  kontoId: string,
-  folder: string
-): Promise<SyncResult> {
-  // This will be called by the connection manager when the IDLE
-  // "exists" event fires. The actual sync is delegated to syncMailbox
-  // with a since filter based on the last sync time.
-
-  const konto = await prisma.emailKonto.findUnique({
-    where: { id: kontoId },
-    select: { letzterSync: true },
-  });
-
-  // Use last sync time as since filter, or 1 day ago as fallback
-  const since = konto?.letzterSync ?? new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-  // Note: The actual ImapFlow client connection is managed by connection-manager.ts
-  // This function is called with context but the client is obtained from the managed connection
-  log.info({ kontoId, folder, since }, "Incremental sync requested");
-
-  // The caller (connection-manager) will provide the client
-  // For now, return a placeholder; the actual call happens in connection-manager
-  return {
-    kontoId,
-    folder,
-    newMessages: 0,
-    updatedMessages: 0,
-    errors: [],
-    duration: 0,
-  };
-}
-
-/**
  * Initial sync strategy based on EmailKonto.initialSync setting.
  */
 export async function initialSync(

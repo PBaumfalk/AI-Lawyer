@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ChatInputProps {
   akteId: string | null;
@@ -124,10 +125,13 @@ export function ChatInput({
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    // Stub: show info about document processing
-    alert(
-      "Dokument wird verarbeitet, bitte warten... (Diese Funktion wird in einer spaeteren Version vollstaendig implementiert.)"
-    );
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      toast.info(
+        "Dokument-Upload in den Chat wird in einer spaeteren Version unterstuetzt.",
+        { description: `${files.length} Datei(en) abgelegt` }
+      );
+    }
   }, []);
 
   return (

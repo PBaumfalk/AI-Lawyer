@@ -24,6 +24,11 @@ export async function GET(
     where.aktion = aktionen.length === 1 ? aktionen[0] : { in: aktionen };
   }
 
+  const dokumentId = searchParams.get("dokumentId");
+  if (dokumentId) {
+    where.details = { path: ["dokumentId"], equals: dokumentId };
+  }
+
   const logs = await prisma.auditLog.findMany({
     where,
     orderBy: { createdAt: "desc" },

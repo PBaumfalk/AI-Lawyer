@@ -23,12 +23,23 @@ import {
   Server,
   Wrench,
   Workflow,
+  Building2,
+  ShieldCheck,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TimerSidebarWidget } from "@/components/finanzen/timer-sidebar-widget";
+import type { UserRole } from "@prisma/client";
 
-const navigation = [
+// Roles that should NOT see a given nav item
+type NavItem = {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  hideForRoles?: UserRole[];
+};
+
+const navigation: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Akten", href: "/akten", icon: FolderOpen },
   { name: "Kontakte", href: "/kontakte", icon: Users },
@@ -36,17 +47,34 @@ const navigation = [
   { name: "Dokumente", href: "/dokumente", icon: FileText },
   { name: "E-Mails", href: "/email", icon: Mail },
   { name: "Tickets", href: "/tickets", icon: TicketCheck },
-  { name: "Helena", href: "/ki-chat", icon: Sparkles },
+  {
+    name: "Helena",
+    href: "/ki-chat",
+    icon: Sparkles,
+    hideForRoles: ["PRAKTIKANT"],
+  },
   { name: "Finanzen", href: "/finanzen", icon: Wallet },
-  { name: "beA", href: "/bea", icon: Shield },
+  {
+    name: "beA",
+    href: "/bea",
+    icon: Shield,
+    hideForRoles: ["PRAKTIKANT"],
+  },
   { name: "Nachrichten", href: "/nachrichten", icon: MessageSquare },
-  { name: "Einstellungen", href: "/einstellungen", icon: Settings },
+  {
+    name: "Einstellungen",
+    href: "/einstellungen",
+    icon: Settings,
+    hideForRoles: ["PRAKTIKANT", "SEKRETARIAT"],
+  },
 ];
 
-const adminNavigation = [
+const adminNavigation: NavItem[] = [
   { name: "Job-Monitor", href: "/admin/jobs", icon: Activity },
   { name: "System", href: "/admin/system", icon: Server },
   { name: "Pipeline", href: "/admin/pipeline", icon: Workflow },
+  { name: "Dezernate", href: "/admin/dezernate", icon: Building2 },
+  { name: "Rollen", href: "/admin/rollen", icon: ShieldCheck },
   { name: "Einstellungen", href: "/admin/settings", icon: Wrench },
 ];
 
@@ -54,7 +82,17 @@ export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
-  const isAdmin = (session?.user as any)?.role === "ADMIN";
+  const userRole = (session?.user as any)?.role as UserRole | undefined;
+  const isAdmin = userRole === "ADMIN";
+
+  // Filter navigation items based on user role
+  const filteredNavigation = useMemo(() => {
+    if (!userRole) return navigation;
+    return navigation.filter((item) => {
+      if (!item.hideForRoles) return true;
+      return !item.hideForRoles.includes(userRole);
+    });
+  }, [userRole]);
 
   return (
     <aside
@@ -93,7 +131,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {navigation.map((item) => {
+        {filteredNavigation.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
           return (
@@ -115,7 +153,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Administration section — ADMIN only */}
+      {/* Administration section -- ADMIN only */}
       {isAdmin && (
         <div className="px-2 pb-2">
           <div className="border-t border-white/[0.06] pt-3 mb-1">

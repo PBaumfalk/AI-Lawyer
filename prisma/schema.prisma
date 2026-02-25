@@ -319,6 +319,7 @@ model Kanzlei {
   kostenstellen   Kostenstelle[]
   taetigkeitskategorien Taetigkeitskategorie[]
   finanzEinstellungen   FinanzEinstellung[]
+  dezernate             Dezernat[]
 
   @@map("kanzleien")
 }
@@ -379,6 +380,10 @@ model User {
   isSystem            Boolean   @default(false)
   tokenUsages         TokenUsage[]
   helenaSuggestions   HelenaSuggestion[]
+
+  // RBAC: Dezernat membership and Admin-Override
+  dezernate           Dezernat[]       @relation("DezernatMitglieder")
+  adminOverrides      AdminOverride[]  @relation("AdminOverrides")
 
   @@map("users")
 }
@@ -511,6 +516,9 @@ model Kontakt {
   notizen      String?    @db.Text
   tags         String[]
   customFields Json?      // User-defined fields { [fieldKey]: value }
+  // DSGVO anonymization (prepared for Plan 02)
+  anonymisiertAm  DateTime?
+  anonymisiertVon String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -681,10 +689,45 @@ model Akte {
   tokenUsages         TokenUsage[]
   helenaSuggestions   HelenaSuggestion[]
 
+  // RBAC: Dezernat membership and Admin-Override
+  dezernate           Dezernat[]       @relation("DezernatAkten")
+  adminOverrides      AdminOverride[]
+
   @@index([status])
   @@index([anwaltId])
   @@index([sachgebiet])
   @@map("akten")
+}
+
+// ─── RBAC: Dezernate & Admin-Override ────────────────────────────────────────
+
+model Dezernat {
+  id           String   @id @default(cuid())
+  name         String
+  beschreibung String?
+  kanzleiId    String?
+  kanzlei      Kanzlei? @relation(fields: [kanzleiId], references: [id])
+  mitglieder   User[]   @relation("DezernatMitglieder")
+  akten        Akte[]   @relation("DezernatAkten")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("dezernate")
+}
+
+model AdminOverride {
+  id         String    @id @default(cuid())
+  adminId    String
+  admin      User      @relation("AdminOverrides", fields: [adminId], references: [id])
+  akteId     String
+  akte       Akte      @relation(fields: [akteId], references: [id])
+  grund      String
+  gueltigBis DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([adminId, akteId])
+  @@index([akteId])
+  @@map("admin_overrides")
 }
 
 model Beteiligter {

@@ -50,7 +50,9 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
   1. `docker compose build` completes without webpack errors in the financial module or any other module
   2. `docker compose up` starts all 8 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice) and they pass health checks
   3. The application is reachable in the browser at localhost and login works in the Docker-built production image
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 10-01-PLAN.md -- Fix Next.js production build (logger, next.config, Dockerfile)
+- [ ] 10-02-PLAN.md -- Harden Docker entrypoint and verify full stack
 
 ### Phase 11: Glass UI Migration
 **Goal**: Every user-facing page uses the Glass design system for visual consistency

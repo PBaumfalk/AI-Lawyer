@@ -56,6 +56,20 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 
+# Copy pino transports (not included by Next.js standalone — resolved dynamically at runtime)
+COPY --from=builder /app/node_modules/pino ./node_modules/pino
+COPY --from=builder /app/node_modules/pino-roll ./node_modules/pino-roll
+COPY --from=builder /app/node_modules/pino-abstract-transport ./node_modules/pino-abstract-transport
+COPY --from=builder /app/node_modules/pino-std-serializers ./node_modules/pino-std-serializers
+COPY --from=builder /app/node_modules/sonic-boom ./node_modules/sonic-boom
+COPY --from=builder /app/node_modules/real-require ./node_modules/real-require
+COPY --from=builder /app/node_modules/fast-redact ./node_modules/fast-redact
+COPY --from=builder /app/node_modules/on-exit-leak-free ./node_modules/on-exit-leak-free
+COPY --from=builder /app/node_modules/quick-format-unescaped ./node_modules/quick-format-unescaped
+COPY --from=builder /app/node_modules/atomic-sleep ./node_modules/atomic-sleep
+COPY --from=builder /app/node_modules/thread-stream ./node_modules/thread-stream
+COPY --from=builder /app/node_modules/safe-stable-stringify ./node_modules/safe-stable-stringify
+
 # Copy seed dependencies (tsx needs esbuild + get-tsconfig at runtime)
 COPY --from=builder /app/node_modules/tsx ./node_modules/tsx
 COPY --from=builder /app/node_modules/esbuild ./node_modules/esbuild

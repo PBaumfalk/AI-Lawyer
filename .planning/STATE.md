@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 8 of 8 (Integration Hardening)
-Plan: 1 of 3 in current phase (1 complete)
-Status: Executing Phase 8
-Last activity: 2026-02-25 -- Plan 08-01 completed (Remove PRAKTIKANT role + add canSeeKanzleiFinanzen)
+Plan: 3 of 3 in current phase (3 complete)
+Status: Phase 8 COMPLETE
+Last activity: 2026-02-25 -- Plan 08-03 completed (Versand-Gate + beA Audit + Pruefprotokoll)
 
-Progress: [█████████████████████████████░] 97%
+Progress: [██████████████████████████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
-- Average duration: 7.6 min
-- Total execution time: 4.15 hours
+- Total plans completed: 33
+- Average duration: 7.5 min
+- Total execution time: 4.5 hours
 
 **By Phase:**
 
@@ -40,7 +40,7 @@ Progress: [███████████████████████
 | 7 - Rollen, Sicherheit, Compliance, Observability | 3/3 | 23 min | 7.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-02b (8 min), 06-04 (8 min), 06-05 (24 min), 07-02 (10 min), 07-03 (3 min)
+- Last 5 plans: 07-03 (3 min), 08-01 (5 min), 08-02 (8 min), 08-03 (8 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -79,6 +79,8 @@ Progress: [███████████████████████
 | Phase 07 P01 | 15min | 2 tasks | 38 files |
 | Phase 07 P03 | 3min | 2 tasks | 5 files |
 | Phase 08 P01 | 5min | 2 tasks | 10 files |
+| Phase 08 P02 | 8min | 2 tasks | 9 files |
+| Phase 08 P03 | 8min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -265,6 +267,12 @@ Recent decisions affecting current work:
 - [08-01]: Optimistic UI with full state revert on error for finance toggle
 - [08-01]: beA routes left untouched (Plan 08-03 scope)
 
+- [08-02]: Fix API to match frontend (stats key) rather than changing frontend consumption code
+- [08-02]: Provide both stats and summary keys in rechnungen response for backward compatibility
+- [08-02]: gesamtUmsatz = sum of BEZAHLT invoices (not GESTELLT)
+- [08-02]: FremdgeldAlerts computed per-Akte from FREMDGELD bookings with negative saldo detection
+- [08-02]: Dashboard access filter applied to akte relation for KalenderEintrag queries
+
 ### Pending Todos
 
 None yet.
@@ -276,5 +284,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 08-01-PLAN.md
-Resume file: .planning/phases/08-integration-hardening/08-01-SUMMARY.md
+Stopped at: Completed 08-02-PLAN.md
+Resume file: .planning/phases/08-integration-hardening/08-02-SUMMARY.md

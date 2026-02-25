@@ -98,6 +98,89 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     category: "system",
     label: "Wartungsmodus",
   },
+
+  // AI / Helena category
+  {
+    key: "ai.provider",
+    value: "ollama",
+    type: "string",
+    category: "ai",
+    label: "KI-Provider",
+    options: ["ollama", "openai", "anthropic"],
+  },
+  {
+    key: "ai.provider.apiKey",
+    value: "",
+    type: "string",
+    category: "ai",
+    label: "API-Schluessel",
+  },
+  {
+    key: "ai.provider.model",
+    value: "mistral:7b",
+    type: "string",
+    category: "ai",
+    label: "KI-Modell",
+  },
+  {
+    key: "ai.ollama.url",
+    value: process.env.OLLAMA_BASE_URL || "http://ollama:11434",
+    type: "string",
+    category: "ai",
+    label: "Ollama-URL",
+  },
+  {
+    key: "ai.monthly_budget",
+    value: "0",
+    type: "number",
+    category: "ai",
+    label: "Monatliches Token-Budget (0 = unbegrenzt)",
+    min: 0,
+  },
+  {
+    key: "ai.scan_enabled",
+    value: "true",
+    type: "boolean",
+    category: "ai",
+    label: "Proaktive Aktenanalyse",
+  },
+  {
+    key: "ai.scan_interval",
+    value: "0 */4 * * *",
+    type: "string",
+    category: "ai",
+    label: "Scan-Intervall (Cron)",
+  },
+  {
+    key: "ai.briefing_enabled",
+    value: "false",
+    type: "boolean",
+    category: "ai",
+    label: "Tagesbriefing aktiviert",
+  },
+  {
+    key: "ai.briefing_time",
+    value: "07:00",
+    type: "string",
+    category: "ai",
+    label: "Briefing-Uhrzeit (HH:MM)",
+  },
+
+  // beA category
+  {
+    key: "bea.api_url",
+    value: "https://api.bea.expert",
+    type: "string",
+    category: "bea",
+    label: "beA-API-URL",
+  },
+  {
+    key: "bea.enabled",
+    value: "false",
+    type: "boolean",
+    category: "bea",
+    label: "beA-Integration aktiviert",
+  },
 ];
 
 /** Category display labels (German) */
@@ -107,4 +190,6 @@ export const CATEGORY_LABELS: Record<string, string> = {
   notifications: "Benachrichtigungen",
   fristen: "Fristen",
   system: "System",
+  ai: "KI / Helena",
+  bea: "beA",
 };

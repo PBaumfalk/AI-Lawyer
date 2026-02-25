@@ -375,6 +375,10 @@ model User {
   verantwortlichEmails     EmailNachricht[]   @relation("EmailVerantwortlicher")
   emailVeraktungen         EmailVeraktung[]
 
+  // AI / Helena
+  isSystem        Boolean   @default(false)
+  tokenUsages     TokenUsage[]
+
   @@map("users")
 }
 
@@ -673,6 +677,7 @@ model Akte {
   emailMessages     EmailMessage[]
   tickets           Ticket[]
   emailVeraktungen  EmailVeraktung[]
+  tokenUsages       TokenUsage[]
 
   @@index([status])
   @@index([anwaltId])
@@ -1575,4 +1580,24 @@ model SystemSetting {
 
   @@index([category])
   @@map("system_settings")
+}
+
+// ─── AI Token Usage Tracking ────────────────────────────────────────────────
+
+model TokenUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  akteId    String?
+  akte      Akte?    @relation(fields: [akteId], references: [id], onDelete: SetNull)
+  funktion  String   // CHAT | SCAN | ENTWURF | BRIEFING
+  provider  String   // ollama | openai | anthropic
+  model     String
+  tokensIn  Int
+  tokensOut Int
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("token_usages")
 }

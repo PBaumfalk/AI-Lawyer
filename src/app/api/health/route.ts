@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import Redis from "ioredis";
 import { testQueue } from "@/lib/queue/queues";
+import { auth } from "@/lib/auth";
+import { checkOllama, checkStirlingPdf } from "@/lib/health/checks";
+import { checkAndAlertHealthStatus } from "@/lib/health/alerts";
 
 interface ServiceStatus {
   status: "healthy" | "unhealthy";
@@ -160,12 +163,16 @@ async function checkWorker(): Promise<ServiceStatus> {
 }
 
 /**
- * GET /api/health — Public health check endpoint.
- * Returns JSON with status of every infrastructure service.
- * Used by Docker Compose healthcheck (no auth required).
+ * GET /api/health - Health check endpoint.
+ *
+ * Without auth (public): returns basic status { status: "ok"|"degraded"|"down" }
+ *   Used by Docker Compose healthcheck, must remain unauthenticated.
+ *
+ * With admin auth: returns detailed per-service status with latency, error messages.
  */
-export async function GET() {
-  const [postgres, redis, minio, meilisearch, onlyoffice, worker] =
+export async function GET(request: NextRequest) {
+  // Check all services in parallel (including new ones)
+  const [postgres, redis, minio, meilisearch, onlyoffice, worker, ollamaResult, stirlingResult] =
     await Promise.all([
       checkPostgres(),
       checkRedis(),
@@ -173,6 +180,8 @@ export async function GET() {
       checkMeilisearch(),
       checkOnlyOffice(),
       checkWorker(),
+      checkOllama(),
+      checkStirlingPdf(),
     ]);
 
   const services: Record<string, ServiceStatus> = {
@@ -182,6 +191,8 @@ export async function GET() {
     meilisearch,
     onlyoffice,
     worker,
+    ollama: { status: ollamaResult.status as "healthy" | "unhealthy", latency: ollamaResult.latency, error: ollamaResult.error },
+    stirlingPdf: { status: stirlingResult.status as "healthy" | "unhealthy", latency: stirlingResult.latency, error: stirlingResult.error },
   };
 
   // Aggregate: all healthy -> 200, otherwise -> 503 degraded
@@ -192,6 +203,28 @@ export async function GET() {
     (s) => s.status === "healthy"
   );
 
+  // Trigger health alerts in background (fire-and-forget)
+  const alertResults = Object.entries(services).map(([name, s]) => ({
+    name,
+    status: s.status as "healthy" | "unhealthy",
+    error: s.error,
+  }));
+  checkAndAlertHealthStatus(alertResults).catch(() => {});
+
+  // Check for admin auth to decide response detail level
+  const session = await auth();
+  const isAdmin = session?.user && (session.user as any).role === "ADMIN";
+
+  if (!isAdmin) {
+    // Public: basic status only (for Docker healthcheck)
+    const basicStatus = !coreHealthy ? "down" : allHealthy ? "ok" : "degraded";
+    return NextResponse.json(
+      { status: basicStatus },
+      { status: coreHealthy ? 200 : 503 }
+    );
+  }
+
+  // Admin: detailed response
   const response: HealthResponse = {
     status: allHealthy ? "healthy" : "degraded",
     timestamp: new Date().toISOString(),
@@ -199,8 +232,6 @@ export async function GET() {
     services,
   };
 
-  // Return 200 if core services are healthy (Docker healthcheck passes),
-  // 503 only if core services are down
   return NextResponse.json(response, {
     status: coreHealthy ? 200 : 503,
   });

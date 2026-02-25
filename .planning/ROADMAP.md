@@ -2,7 +2,7 @@
 
 ## Overview
 
-Milestone 2 transforms AI-Lawyer from an MVP case management system into a full-featured Kanzleisoftware with 64 new capabilities across 7 phases. The roadmap follows a strict dependency order: infrastructure foundation first (Redis, Worker, WebSocket), then high-impact daily-use features (deadlines, templates, email), then the document pipeline and financial module (both legally mandated), then AI differentiation (RAG, proactive agent, beA), and finally security/compliance hardening. Every phase delivers a coherent, verifiable capability. Legal-risk features (deadline calculation, RVG, Fremdgeld, E-Rechnung) are prioritized and require near-100% test coverage regardless of the general 20% test effort rule.
+Milestone 2 transforms AI-Lawyer from an MVP case management system into a full-featured Kanzleisoftware with 64 new capabilities across 8 phases (plus 5 gap-closure phases). The roadmap follows a strict dependency order: infrastructure foundation first (Redis, Worker, WebSocket), then high-impact daily-use features (deadlines, templates, email), then the document pipeline and financial module (both legally mandated), then AI differentiation (RAG, proactive agent, beA), and finally security/compliance hardening. Every phase delivers a coherent, verifiable capability. Legal-risk features (deadline calculation, RVG, Fremdgeld, E-Rechnung) are prioritized and require near-100% test coverage regardless of the general 20% test effort rule.
 
 ## Phases
 
@@ -24,6 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: AI Features + beA** - Multi-provider AI, RAG retrieval, document chat, proactive agent, deadline recognition, beA integration via bea.expert (completed 2026-02-25)
 - [ ] **Phase 7: Rollen/Sicherheit + Compliance + Observability** - RBAC enforcement, Audit-Trail UI, DSGVO compliance, health checks, structured logs
 - [ ] **Phase 8: Integration Hardening** - RBAC enforcement coverage for finance/ki-chat/dashboard routes, Versand-Gate wiring, beA audit logging, Finance KPI fix (gap closure from 5th audit)
+- [ ] **Phase 9: Final Integration Wiring + Tech Debt** - markDokumenteVersendet() after send, embedding Socket.IO signal, dead code removal, TS fixes, UI completions (gap closure from 6th audit + tech debt)
 
 ## Phase Details
 
@@ -249,10 +250,29 @@ Plans:
 - [ ] 08-02-PLAN.md — Finance/dashboard RBAC wiring (buildAkteAccessFilter) + KPI key fix + role-based KPI visibility
 - [ ] 08-03-PLAN.md — Versand-Gate wiring (email + beA) + attach dialog UI + beA audit logging (incl. attachment download + Safe-ID) + Pruefprotokoll tab + KI-Chat auth simplification
 
+### Phase 9: Final Integration Wiring + Tech Debt
+**Goal**: Documents transition to VERSENDET after email/beA send, browser receives RAG-readiness signal via Socket.IO, and all tech debt from the 6th audit is resolved — dead code removed, TypeScript errors fixed, stubbed features completed, and missing UI sections added.
+**Depends on**: Phase 8 (Versand-Gate infrastructure), Phase 1 (Socket.IO), Phase 4 (embedding pipeline)
+**Requirements**: REQ-EM-006, REQ-BA-002, REQ-DV-010, REQ-KI-001, REQ-DV-005 (all already satisfied — this phase fixes integration wiring + tech debt)
+**Gap Closure**: Closes INT-B01 (high), INT-B02 (medium) from v3.4 6th audit + 6 tech debt items
+**Research flag**: No research needed — wiring existing code and cleanup.
+**Success Criteria** (what must be TRUE):
+  1. `markDokumenteVersendet()` is called after successful email send in `/api/email-send/route.ts` — documents attached to sent emails transition from FREIGEGEBEN to VERSENDET
+  2. `markDokumenteVersendet()` is called after successful beA send in `/api/bea/messages/route.ts` — same VERSENDET transition for beA
+  3. `document:embedding-complete` Socket.IO event is emitted from embeddingWorker completion handler and received by browser clients viewing the relevant Akte
+  4. `syncNewMessages()` dead code removed from `src/lib/email/sync.ts`
+  5. `e-rechnung.ts` TypeScript error (`PDFStream.of`) is fixed
+  6. `chat-input.tsx` drag-drop upload is implemented (or stub replaced with toast notification)
+  7. Document detail page displays audit history section (per REQ-DV-007 "Historie")
+**Plans**: 1 plan
+
+Plans:
+- [ ] 09-01-PLAN.md — markDokumenteVersendet wiring + embedding Socket.IO event + dead code removal + TS fix + drag-drop + doc audit history
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7 -> 8
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
@@ -268,6 +288,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 ->
 | 6. AI Features + beA | 0/5 | Complete    | 2026-02-25 |
 | 7. Rollen/Sicherheit + Compliance + Observability | 2/3 | In Progress | - |
 | 8. Integration Hardening | 0/3 | Not started | - |
+| 9. Final Integration Wiring + Tech Debt | 0/1 | Not started | - |
 
 ## Coverage Matrix
 

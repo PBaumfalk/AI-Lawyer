@@ -38,6 +38,7 @@ async function main() {
 }
 
 main().catch((err) => {
+  console.error("Server startup failed:", err);
   log.error({ err }, "Server startup failed");
   process.exit(1);
 });

@@ -96,4 +96,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["node", "dist-server/index.js"]
+CMD ["node", "server.js"]

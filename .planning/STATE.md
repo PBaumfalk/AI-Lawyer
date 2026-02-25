@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 6 of 7 (AI Features + beA)
-Plan: 1 of 5 in current phase (1 complete)
+Plan: 2 of 5 in current phase (2 complete)
 Status: Executing Phase 6
-Last activity: 2026-02-25 -- Plan 06-01 completed (AI Foundation)
+Last activity: 2026-02-25 -- Plan 06-02 completed (Document Chat)
 
 Progress: [█████████████████████████] 94%
 
@@ -68,6 +68,7 @@ Progress: [███████████████████████
 | Phase 05 P04 | 6min | 1 tasks | 4 files |
 | Phase 05 P05 | 10min | 3 tasks | 20 files |
 | Phase 06 P01 | 7min | 2 tasks | 13 files |
+| Phase 06 P02 | 8min | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -210,6 +211,10 @@ Recent decisions affecting current work:
 - [06-01]: Provider instance caching with config-change invalidation
 - [06-01]: OpenClaw gateway token kept as secondary auth alongside new ADMIN RBAC
 - [06-01]: Array.from pattern for Map iteration (consistent project convention)
+- [Phase 06]: onFinish callback for token tracking (streamText has no .then() in AI SDK v4)
+- [Phase 06]: Cross-Akte search via JOIN on anwalt_id/sachbearbeiter_id for RBAC filtering
+- [Phase 06]: X-Sources response header for source citations metadata alongside stream
+- [Phase 06]: Conversation RBAC: owner access + Akte assignment for shared links
 
 ### Pending Todos
 
@@ -222,5 +227,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 06-01-PLAN.md (AI Foundation)
-Resume file: .planning/phases/06-ai-features-bea/06-01-SUMMARY.md
+Stopped at: Completed 06-02-PLAN.md (Document Chat)
+Resume file: .planning/phases/06-ai-features-bea/06-02-SUMMARY.md

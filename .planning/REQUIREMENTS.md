@@ -204,14 +204,14 @@
 | REQ-FI-010 | Phase 5 | Complete |
 | REQ-FI-011 | Phase 5 | Complete |
 | REQ-KI-002 | Phase 6 | Complete |
-| REQ-KI-003 | Phase 6 | Pending |
+| REQ-KI-003 | Phase 6 | Complete |
 | REQ-KI-004 | Phase 6 | Pending |
 | REQ-KI-005 | Phase 6 | Pending |
 | REQ-KI-006 | Phase 6 | Pending |
-| REQ-KI-007 | Phase 6 | Pending |
+| REQ-KI-007 | Phase 6 | Complete |
 | REQ-KI-008 | Phase 6 | Complete |
 | REQ-KI-009 | Phase 6 | Complete |
-| REQ-KI-010 | Phase 6 | Pending |
+| REQ-KI-010 | Phase 6 | Complete |
 | REQ-KI-011 | Phase 6 | Pending |
 | REQ-KI-012 | Phase 6 | Complete |
 | REQ-BA-001 | Phase 6 | Pending |

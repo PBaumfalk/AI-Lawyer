@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Building2, Plus, Users, FolderOpen, Trash2, Pencil } from "lucide-react";
+import { Building2, Plus, Users, FolderOpen, Trash2, Pencil, ShieldAlert, ShieldOff } from "lucide-react";
 import { DezernatDialog } from "@/components/admin/dezernat-dialog";
 
 interface Dezernat {
@@ -12,11 +12,21 @@ interface Dezernat {
   _count: { akten: number; mitglieder: number };
 }
 
+interface AdminOverride {
+  id: string;
+  grund: string;
+  createdAt: string;
+  gueltigBis: string | null;
+  akte: { id: string; aktenzeichen: string; kurzrubrum: string | null };
+}
+
 export default function DezernatePage() {
   const [dezernate, setDezernate] = useState<Dezernat[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDezernat, setEditingDezernat] = useState<Dezernat | null>(null);
+  const [overrides, setOverrides] = useState<AdminOverride[]>([]);
+  const [overridesLoading, setOverridesLoading] = useState(true);
 
   const loadDezernate = useCallback(async () => {
     try {
@@ -32,9 +42,37 @@ export default function DezernatePage() {
     }
   }, []);
 
+  const loadOverrides = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/override");
+      if (res.ok) {
+        const data = await res.json();
+        setOverrides(data);
+      }
+    } catch {
+      // Silent fail
+    } finally {
+      setOverridesLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadDezernate();
-  }, [loadDezernate]);
+    loadOverrides();
+  }, [loadDezernate, loadOverrides]);
+
+  const handleRevokeOverride = async (overrideId: string) => {
+    try {
+      const res = await fetch(`/api/admin/override?id=${overrideId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setOverrides((prev) => prev.filter((o) => o.id !== overrideId));
+      }
+    } catch {
+      // Silent fail
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Dezernat wirklich loeschen?")) return;
@@ -164,6 +202,73 @@ export default function DezernatePage() {
         dezernat={editingDezernat}
         onSuccess={loadDezernate}
       />
+
+      {/* Active Admin Overrides Section */}
+      <div className="mt-8 space-y-4">
+        <h2 className="text-xl font-heading font-bold">
+          Aktive Admin-Zugriffsueberschreibungen
+        </h2>
+        {overridesLoading ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Lade Ueberschreibungen...
+          </div>
+        ) : overrides.length === 0 ? (
+          <div className="text-center py-8 border border-dashed rounded-lg">
+            <ShieldAlert className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
+            <p className="text-sm text-muted-foreground">
+              Keine aktiven Zugriffsueberschreibungen vorhanden
+            </p>
+          </div>
+        ) : (
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/50 text-left">
+                  <th className="px-4 py-3 font-medium">Akte</th>
+                  <th className="px-4 py-3 font-medium">Grund</th>
+                  <th className="px-4 py-3 font-medium">Erstellt am</th>
+                  <th className="px-4 py-3 font-medium">Gueltig bis</th>
+                  <th className="px-4 py-3 font-medium text-right">Aktion</th>
+                </tr>
+              </thead>
+              <tbody>
+                {overrides.map((override) => (
+                  <tr key={override.id} className="border-t hover:bg-muted/30">
+                    <td className="px-4 py-3">
+                      <div className="font-medium">{override.akte.aktenzeichen}</div>
+                      {override.akte.kurzrubrum && (
+                        <div className="text-xs text-muted-foreground">
+                          {override.akte.kurzrubrum}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">
+                      {override.grund}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {new Date(override.createdAt).toLocaleDateString("de-DE")}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {override.gueltigBis
+                        ? new Date(override.gueltigBis).toLocaleDateString("de-DE")
+                        : "Unbefristet"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => handleRevokeOverride(override.id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 dark:text-rose-300 dark:bg-rose-950 dark:hover:bg-rose-900 transition-colors"
+                      >
+                        <ShieldOff className="w-3.5 h-3.5" />
+                        Aufheben
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

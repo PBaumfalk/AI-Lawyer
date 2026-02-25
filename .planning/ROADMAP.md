@@ -235,16 +235,18 @@ Plans:
 **Gap Closure**: Closes INT-A01, INT-A02, INT-A03, INT-A04, INT-A05 + 2 broken E2E flows from v3.4 5th audit
 **Research flag**: No research needed — wiring existing code (buildAkteAccessFilter, requirePermission, logAuditEvent, checkDokumenteFreigegeben).
 **Success Criteria** (what must be TRUE):
-  1. Finance API routes (invoices, bookings, aktenkonto) use `buildAkteAccessFilter()` — users can only see financial data for cases they have access to
-  2. `/api/ki-chat`, `/api/ki-chat/conversations`, `/api/helena/suggestions` require `canUseKI` permission — PRAKTIKANT cannot access RAG chat
-  3. Dashboard Prisma queries use `buildAkteAccessFilter()` — PRAKTIKANT only sees counts for assigned cases
-  4. `checkDokumenteFreigegeben()` is called before email compose send and beA compose send — ENTWURF documents cannot be attached and sent
-  5. All beA API routes call `logAuditEvent()` for beA operations (send, receive, eEB)
-  6. Finanzen overview KPI cards display correct data (API response keys match what the page reads)
-**Plans**: TBD
+  1. PRAKTIKANT role entirely removed (4 roles: ADMIN, ANWALT, SACHBEARBEITER, SEKRETARIAT); canSeeKanzleiFinanzen flag controls ANWALT kanzlei-wide finance visibility
+  2. Finance API routes (invoices, bookings, aktenkonto) use `buildAkteAccessFilter()` — users can only see financial data for cases they have access to
+  3. `/api/ki-chat`, `/api/ki-chat/conversations`, `/api/helena/suggestions` require only authentication — open to all logged-in users
+  4. Dashboard Prisma queries use `buildAkteAccessFilter()` — non-ADMIN users only see counts for accessible cases
+  5. `checkDokumenteFreigegeben()` is called before email compose send and beA compose send — ENTWURF documents cannot be attached and sent; ENTWURF docs visible but greyed out in attach dialogs with Quick-Release
+  6. All beA API routes call `logAuditEvent()` for beA operations (send, receive, eEB, read, assignment) with detailed metadata; Pruefprotokoll tab on Akte detail page
+  7. Finanzen overview KPI cards display correct data (API response keys match what the page reads); role-based KPI visibility (operative only for SEKRETARIAT/SACHBEARBEITER)
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — RBAC enforcement for finance/ki-chat/dashboard routes + Versand-Gate wiring + beA audit logging + Finance KPI data key fix
+- [ ] 08-01-PLAN.md — PRAKTIKANT removal + canSeeKanzleiFinanzen migration + finance/dashboard RBAC + KPI key fix + role-based KPI visibility
+- [ ] 08-02-PLAN.md — Versand-Gate wiring (email + beA) + attach dialog UI + beA audit logging + Pruefprotokoll tab + KI-Chat auth simplification
 
 ## Progress
 
@@ -264,7 +266,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 ->
 | 5. Financial Module | 0/6 | Complete    | 2026-02-24 |
 | 6. AI Features + beA | 0/5 | Complete    | 2026-02-25 |
 | 7. Rollen/Sicherheit + Compliance + Observability | 2/3 | In Progress | - |
-| 8. Integration Hardening | 0/1 | Not started | - |
+| 8. Integration Hardening | 0/2 | Not started | - |
 
 ## Coverage Matrix
 

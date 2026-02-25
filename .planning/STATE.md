@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 6 - AI Features + beA (next up)
+**Current focus:** Phase 6 - AI Features + beA
 
 ## Current Position
 
-Phase: 5 of 7 (Financial Module) — COMPLETE
-Plan: 6 of 6 in current phase (6 complete)
-Status: Phase 5 closed, transitioning to Phase 6
-Last activity: 2026-02-24 -- Phase 5 verification approved, phase closed
+Phase: 6 of 7 (AI Features + beA)
+Plan: 1 of 5 in current phase (1 complete)
+Status: Executing Phase 6
+Last activity: 2026-02-25 -- Plan 06-01 completed (AI Foundation)
 
-Progress: [█████████████████████████] 93%
+Progress: [█████████████████████████] 94%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [███████████████████████
 | Phase 05 P03 | 7min | 2 tasks | 12 files |
 | Phase 05 P04 | 6min | 1 tasks | 4 files |
 | Phase 05 P05 | 10min | 3 tasks | 20 files |
+| Phase 06 P01 | 7min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -203,6 +204,13 @@ Recent decisions affecting current work:
 - [05-05]: Lazy Taetigkeitskategorien initialization: auto-seed defaults on first GET per Kanzlei
 - [05-05]: Kontakt display name constructed from vorname/nachname/firma fields for invoice matcher
 
+- [06-01]: ollama-ai-provider package name (not ollama-ai-provider-v2 from plan)
+- [06-01]: Helena user with SACHBEARBEITER role + isSystem:true + aktiv:false (cannot login)
+- [06-01]: In-memory sliding window rate limiter for /api/openclaw/process (10 req/min per user)
+- [06-01]: Provider instance caching with config-change invalidation
+- [06-01]: OpenClaw gateway token kept as secondary auth alongside new ADMIN RBAC
+- [06-01]: Array.from pattern for Map iteration (consistent project convention)
+
 ### Pending Todos
 
 None yet.
@@ -213,6 +221,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-24
-Stopped at: Phase 6 context gathered — Helena (OpenClaw agent), Document Chat, beA, Provider/Tokens all discussed
-Resume file: .planning/phases/06-ai-features-bea/06-CONTEXT.md
+Last session: 2026-02-25
+Stopped at: Completed 06-01-PLAN.md (AI Foundation)
+Resume file: .planning/phases/06-ai-features-bea/06-01-SUMMARY.md

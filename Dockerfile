@@ -68,6 +68,7 @@ COPY --from=builder /app/node_modules/quick-format-unescaped ./node_modules/quic
 COPY --from=builder /app/node_modules/atomic-sleep ./node_modules/atomic-sleep
 COPY --from=builder /app/node_modules/thread-stream ./node_modules/thread-stream
 COPY --from=builder /app/node_modules/safe-stable-stringify ./node_modules/safe-stable-stringify
+COPY --from=builder /app/node_modules/date-fns ./node_modules/date-fns
 
 # Copy seed dependencies (tsx needs esbuild + get-tsconfig at runtime)
 COPY --from=builder /app/node_modules/tsx ./node_modules/tsx

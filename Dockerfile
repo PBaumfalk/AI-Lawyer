@@ -1,5 +1,5 @@
 # ── Stage 1: Install dependencies ────────────────────────────────────────────
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
@@ -8,17 +8,21 @@ COPY prisma ./prisma/
 RUN npm ci
 
 # ── Stage 2: Build the application ──────────────────────────────────────────
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Copy pdfjs worker to public/ (avoids Terser import.meta error)
+RUN cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs
+
 # Generate Prisma client (needs dummy DATABASE_URL since .env is excluded)
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
 # Build Next.js in standalone mode (no .env — env vars come from docker-compose at runtime)
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npm run build
 
 # Bundle server.ts and worker.ts with esbuild
@@ -26,7 +30,7 @@ RUN npx tsx scripts/build-server.ts
 RUN npx tsx scripts/build-worker.ts
 
 # ── Stage 3: Production runner ──────────────────────────────────────────────
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
@@ -66,6 +70,9 @@ COPY --from=builder /app/package.json ./package.json
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
+# Create log directory for pino-roll file transport at runtime
+RUN mkdir -p /var/log/ai-lawyer && chown nextjs:nodejs /var/log/ai-lawyer
+
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
 
@@ -76,3 +83,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["node", "dist-server/index.js"]

@@ -214,8 +214,8 @@ export async function POST(req: NextRequest) {
 
           await prisma.aiConversation.create({
             data: {
-              akteId: akteId ?? null,
-              userId,
+              ...(akteId ? { akte: { connect: { id: akteId } } } : {}),
+              user: { connect: { id: userId } },
               titel,
               messages: [
                 { role: "user", content: queryText, timestamp: now },
@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
                 },
               ],
               model: modelName,
-              tokenCount: tokensIn + tokensOut,
+              tokenCount: (tokensIn || 0) + (tokensOut || 0),
             },
           });
         }

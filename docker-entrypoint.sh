@@ -37,33 +37,36 @@ else
   echo "==> Database already seeded, skipping"
 fi
 
-# Pull default Ollama model if this is the worker and model is missing
+# Pull default Ollama models if this is the worker
 if echo "$@" | grep -q "dist-worker"; then
   OLLAMA_HOST="${OLLAMA_URL:-http://ollama:11434}"
-  echo "==> Checking Ollama model..."
-  # Check if mistral:7b is already available
-  HAS_MODEL=$(node -e "
-    fetch('${OLLAMA_HOST}/api/tags').then(r => r.json()).then(d => {
-      const has = (d.models || []).some(m => m.name.startsWith('mistral'));
-      console.log(has ? 'yes' : 'no');
-    }).catch(() => console.log('no'));
-  " 2>/dev/null)
+  echo "==> Checking Ollama models..."
 
-  if [ "$HAS_MODEL" != "yes" ]; then
-    echo "==> Pulling mistral:7b (this may take a few minutes on first run)..."
-    node -e "
-      fetch('${OLLAMA_HOST}/api/pull', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({name: 'mistral:7b', stream: false})
-      }).then(r => r.json()).then(d => {
-        if (d.error) { console.error('    Pull error:', d.error); process.exit(1); }
-        console.log('==> mistral:7b ready');
-      }).catch(e => { console.error('    Pull failed:', e.message); process.exit(1); });
-    " || echo "    Ollama pull failed (non-fatal, can pull manually later)"
-  else
-    echo "==> Ollama model already available"
-  fi
+  for MODEL_NAME in "mistral:7b" "blaifa/multilingual-e5-large-instruct"; do
+    SHORT_NAME=$(echo "$MODEL_NAME" | cut -d: -f1 | sed 's|.*/||')
+    HAS_MODEL=$(node -e "
+      fetch('${OLLAMA_HOST}/api/tags').then(r => r.json()).then(d => {
+        const has = (d.models || []).some(m => m.name.includes('${SHORT_NAME}'));
+        console.log(has ? 'yes' : 'no');
+      }).catch(() => console.log('no'));
+    " 2>/dev/null)
+
+    if [ "$HAS_MODEL" != "yes" ]; then
+      echo "==> Pulling ${MODEL_NAME} (this may take a few minutes on first run)..."
+      node -e "
+        fetch('${OLLAMA_HOST}/api/pull', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name: '${MODEL_NAME}', stream: false})
+        }).then(r => r.json()).then(d => {
+          if (d.error) { console.error('    Pull error:', d.error); process.exit(1); }
+          console.log('==> ${MODEL_NAME} ready');
+        }).catch(e => { console.error('    Pull failed:', e.message); process.exit(1); });
+      " || echo "    Ollama pull failed for ${MODEL_NAME} (non-fatal)"
+    else
+      echo "==> ${MODEL_NAME} already available"
+    fi
+  done
 fi
 
 echo "==> Starting: $@"

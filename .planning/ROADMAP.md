@@ -242,11 +242,12 @@ Plans:
   5. `checkDokumenteFreigegeben()` is called before email compose send and beA compose send — ENTWURF documents cannot be attached and sent; ENTWURF docs visible but greyed out in attach dialogs with Quick-Release
   6. All beA API routes call `logAuditEvent()` for beA operations (send, receive, eEB, read, assignment) with detailed metadata; Pruefprotokoll tab on Akte detail page
   7. Finanzen overview KPI cards display correct data (API response keys match what the page reads); role-based KPI visibility (operative only for SEKRETARIAT/SACHBEARBEITER)
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — PRAKTIKANT removal + canSeeKanzleiFinanzen migration + finance/dashboard RBAC + KPI key fix + role-based KPI visibility
-- [ ] 08-02-PLAN.md — Versand-Gate wiring (email + beA) + attach dialog UI + beA audit logging + Pruefprotokoll tab + KI-Chat auth simplification
+- [ ] 08-01-PLAN.md — PRAKTIKANT role removal + canSeeKanzleiFinanzen migration + RBAC/sidebar/route cleanup
+- [ ] 08-02-PLAN.md — Finance/dashboard RBAC wiring (buildAkteAccessFilter) + KPI key fix + role-based KPI visibility
+- [ ] 08-03-PLAN.md — Versand-Gate wiring (email + beA) + attach dialog UI + beA audit logging (incl. attachment download + Safe-ID) + Pruefprotokoll tab + KI-Chat auth simplification
 
 ## Progress
 
@@ -266,7 +267,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 ->
 | 5. Financial Module | 0/6 | Complete    | 2026-02-24 |
 | 6. AI Features + beA | 0/5 | Complete    | 2026-02-25 |
 | 7. Rollen/Sicherheit + Compliance + Observability | 2/3 | In Progress | - |
-| 8. Integration Hardening | 0/2 | Not started | - |
+| 8. Integration Hardening | 0/3 | Not started | - |
 
 ## Coverage Matrix
 

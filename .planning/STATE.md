@@ -273,6 +273,12 @@ Recent decisions affecting current work:
 - [08-02]: FremdgeldAlerts computed per-Akte from FREMDGELD bookings with negative saldo detection
 - [08-02]: Dashboard access filter applied to akte relation for KalenderEintrag queries
 
+- [08-03]: Attachment download audit via ?download=attachmentId query param on existing GET route
+- [08-03]: KI-Chat routes already use auth-only checks (no changes needed)
+- [08-03]: Email compose attachments use dms-{id} format prefix for DMS docs
+- [08-03]: BEA_POSTFACH_GEWECHSELT registered for future multi-postbox UI
+- [08-03]: Versand-Gate pattern: checkDokumenteFreigegeben() before any send operation
+
 ### Pending Todos
 
 None yet.
@@ -284,5 +290,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 08-02-PLAN.md
-Resume file: .planning/phases/08-integration-hardening/08-02-SUMMARY.md
+Stopped at: Completed 08-03-PLAN.md (Phase 8 complete -- all integration hardening plans executed)
+Resume file: .planning/phases/08-integration-hardening/08-03-SUMMARY.md

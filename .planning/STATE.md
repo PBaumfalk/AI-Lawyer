@@ -76,6 +76,7 @@ Progress: [███████████████████████
 | Phase 06 P04 | 8min | 2 tasks | 9 files |
 | Phase 06 P05 | 24min | 3 tasks | 13 files |
 | Phase 07 P02 | 10min | 2 tasks | 18 files |
+| Phase 07 P01 | 15min | 2 tasks | 38 files |
 
 ## Accumulated Context
 
@@ -252,6 +253,7 @@ Recent decisions affecting current work:
 - [07-02]: DSGVO anonymization: Prisma transaction with never-delete semantics, field-by-field replacement
 - [07-02]: 10-year retention period enforcement with admin override option
 - [07-02]: Fire-and-forget health alert checks on every health endpoint call
+- [Phase 07]: PERMISSIONS as code-defined constant (not configurable); requireAkteAccess returns 404 to hide existence; three-path access: direct+Dezernat+AdminOverride
 
 ### Pending Todos
 

@@ -220,9 +220,9 @@
 | REQ-BA-004 | Phase 6 | Complete |
 | REQ-BA-005 | Phase 6 | Complete |
 | REQ-BA-006 | Phase 6 | Complete |
-| REQ-RS-001 | Phase 7 | Pending |
-| REQ-RS-002 | Phase 7 | Pending |
-| REQ-RS-003 | Phase 7 | Pending |
+| REQ-RS-001 | Phase 7 | Complete |
+| REQ-RS-002 | Phase 7 | Complete |
+| REQ-RS-003 | Phase 7 | Complete |
 | REQ-RS-004 | Phase 7 | Complete |
 | REQ-RS-005 | Phase 7 | Complete |
 | REQ-RS-006 | Phase 7 | Complete |

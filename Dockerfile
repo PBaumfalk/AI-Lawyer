@@ -63,7 +63,6 @@ COPY --from=builder /app/node_modules/pino-abstract-transport ./node_modules/pin
 COPY --from=builder /app/node_modules/pino-std-serializers ./node_modules/pino-std-serializers
 COPY --from=builder /app/node_modules/sonic-boom ./node_modules/sonic-boom
 COPY --from=builder /app/node_modules/real-require ./node_modules/real-require
-COPY --from=builder /app/node_modules/fast-redact ./node_modules/fast-redact
 COPY --from=builder /app/node_modules/on-exit-leak-free ./node_modules/on-exit-leak-free
 COPY --from=builder /app/node_modules/quick-format-unescaped ./node_modules/quick-format-unescaped
 COPY --from=builder /app/node_modules/atomic-sleep ./node_modules/atomic-sleep

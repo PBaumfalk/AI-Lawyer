@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { requirePermission } from "@/lib/rbac";
+import { logAuditEvent } from "@/lib/audit";
 
 // --- Validation ---
 
@@ -36,6 +37,39 @@ export async function GET(
     return NextResponse.json({ error: "Nachricht nicht gefunden" }, { status: 404 });
   }
 
+  // Audit log: beA message read
+  logAuditEvent({
+    userId: result.session!.user.id,
+    akteId: nachricht.akteId,
+    aktion: "BEA_NACHRICHT_GELESEN",
+    details: {
+      nachrichtId: nachricht.id,
+      betreff: nachricht.betreff,
+      absender: nachricht.absender,
+      ergebnis: "ERFOLG",
+    },
+  }).catch(() => {});
+
+  // Check for attachment download logging
+  const { searchParams } = new URL(_request.url);
+  const downloadAttachmentId = searchParams.get("download");
+  if (downloadAttachmentId) {
+    const attachments = Array.isArray(nachricht.anhaenge) ? (nachricht.anhaenge as any[]) : [];
+    const attachment = attachments.find((a) => a.id === downloadAttachmentId);
+    logAuditEvent({
+      userId: result.session!.user.id,
+      akteId: nachricht.akteId,
+      aktion: "BEA_ANHANG_HERUNTERGELADEN",
+      details: {
+        nachrichtId: nachricht.id,
+        anhangId: downloadAttachmentId,
+        anhangName: attachment?.name || "Unbekannt",
+        anhangGroesse: attachment?.size || null,
+        ergebnis: "ERFOLG",
+      },
+    }).catch(() => {});
+  }
+
   return NextResponse.json(nachricht);
 }
 
@@ -62,7 +96,7 @@ export async function PATCH(
 
   const existing = await prisma.beaNachricht.findUnique({
     where: { id },
-    select: { id: true },
+    select: { id: true, akteId: true, betreff: true },
   });
 
   if (!existing) {
@@ -93,6 +127,22 @@ export async function PATCH(
       },
     },
   });
+
+  // Audit log: assignment change
+  if (parsed.data.akteId !== undefined) {
+    logAuditEvent({
+      userId: result.session!.user.id,
+      akteId: nachricht.akteId,
+      aktion: "BEA_ZUORDNUNG_GEAENDERT",
+      details: {
+        nachrichtId: nachricht.id,
+        betreff: existing.betreff,
+        alteAkteId: existing.akteId || null,
+        neueAkteId: parsed.data.akteId,
+        ergebnis: "ERFOLG",
+      },
+    }).catch(() => {});
+  }
 
   return NextResponse.json(nachricht);
 }

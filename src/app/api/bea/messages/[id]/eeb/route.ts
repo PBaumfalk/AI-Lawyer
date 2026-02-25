@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
+import { logAuditEvent } from "@/lib/audit";
 
 // --- POST /api/bea/messages/[id]/eeb ---
 // Records the eEB (elektronisches Empfangsbekenntnis) acknowledgment.
@@ -19,7 +20,7 @@ export async function POST(
 
   const nachricht = await prisma.beaNachricht.findUnique({
     where: { id },
-    select: { id: true, eebStatus: true },
+    select: { id: true, eebStatus: true, betreff: true, safeIdAbsender: true, akteId: true },
   });
 
   if (!nachricht) {
@@ -42,6 +43,20 @@ export async function POST(
       eebDatum,
     },
   });
+
+  // Audit log: eEB confirmed
+  logAuditEvent({
+    userId: result.session!.user.id,
+    akteId: nachricht.akteId,
+    aktion: "BEA_EEB_BESTAETIGT",
+    details: {
+      nachrichtId: id,
+      betreff: nachricht.betreff,
+      senderSafeId: nachricht.safeIdAbsender || null,
+      eebDatum: eebDatum.toISOString(),
+      ergebnis: "ERFOLG",
+    },
+  }).catch(() => {});
 
   return NextResponse.json({
     success: true,

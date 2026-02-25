@@ -51,7 +51,15 @@ export type AuditAktion =
   | "ADMIN_OVERRIDE_ERSTELLT"
   | "ADMIN_OVERRIDE_ENTFERNT"
   | "DSGVO_ANONYMISIERT"
-  | "DSGVO_AUSKUNFT_EXPORTIERT";
+  | "DSGVO_AUSKUNFT_EXPORTIERT"
+  | "BEA_NACHRICHT_GESENDET"
+  | "BEA_NACHRICHT_EMPFANGEN"
+  | "BEA_EEB_BESTAETIGT"
+  | "BEA_NACHRICHT_GELESEN"
+  | "BEA_ZUORDNUNG_GEAENDERT"
+  | "BEA_ANHANG_HERUNTERGELADEN"
+  | "BEA_SAFEID_GEAENDERT"
+  | "BEA_POSTFACH_GEWECHSELT"; // BEA_POSTFACH_GEWECHSELT: reserved for future multi-postbox UI
 
 /**
  * German human-readable labels for all audit actions.
@@ -109,6 +117,14 @@ export const AKTION_LABELS: Record<string, string> = {
   ADMIN_OVERRIDE_ENTFERNT: "hat Admin-Zugriff zurueckgegeben",
   DSGVO_ANONYMISIERT: "hat personenbezogene Daten anonymisiert",
   DSGVO_AUSKUNFT_EXPORTIERT: "hat Datenauskunft exportiert",
+  BEA_NACHRICHT_GESENDET: "beA Nachricht gesendet",
+  BEA_NACHRICHT_EMPFANGEN: "beA Nachricht empfangen",
+  BEA_EEB_BESTAETIGT: "eEB bestaetigt",
+  BEA_NACHRICHT_GELESEN: "beA Nachricht gelesen",
+  BEA_ZUORDNUNG_GEAENDERT: "beA Zuordnung geaendert",
+  BEA_ANHANG_HERUNTERGELADEN: "beA Anhang heruntergeladen",
+  BEA_SAFEID_GEAENDERT: "Safe-ID geaendert",
+  BEA_POSTFACH_GEWECHSELT: "beA Postfach gewechselt",
 };
 
 /**

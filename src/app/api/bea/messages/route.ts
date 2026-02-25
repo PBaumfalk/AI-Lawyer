@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
   logAuditEvent({
     userId: result.session!.user.id,
     akteId: nachricht.akteId,
-    aktion: (isOutgoing ? "BEA_NACHRICHT_GESENDET" : "BEA_NACHRICHT_EMPFANGEN") as any,
+    aktion: isOutgoing ? "BEA_NACHRICHT_GESENDET" : "BEA_NACHRICHT_EMPFANGEN",
     details: {
       nachrichtId: nachricht.id,
       betreff: data.betreff,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { autoAssignToAkte } from "@/lib/bea/auto-assign";
 import { requirePermission } from "@/lib/rbac";
+import { logAuditEvent } from "@/lib/audit";
 import { z } from "zod";
 
 // ─── Validation ──────────────────────────────────────────────────────────────
@@ -59,6 +60,20 @@ export async function POST(request: NextRequest) {
         status: assignResult.confidence === "SICHER" ? "ZUGEORDNET" : undefined,
       },
     });
+
+    // Audit log: auto-assignment
+    logAuditEvent({
+      userId: authResult.session!.user.id,
+      akteId: assignResult.akteId,
+      aktion: "BEA_ZUORDNUNG_GEAENDERT",
+      details: {
+        nachrichtId: nachricht.id,
+        betreff: nachricht.betreff,
+        confidence: assignResult.confidence,
+        reason: assignResult.reason,
+        ergebnis: "ERFOLG",
+      },
+    }).catch(() => {});
   }
 
   return NextResponse.json({

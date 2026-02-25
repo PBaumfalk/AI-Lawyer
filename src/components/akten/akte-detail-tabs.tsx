@@ -25,6 +25,7 @@ import {
   Loader2,
   ChevronDown,
   Filter,
+  Shield,
 } from "lucide-react";
 import { BeteiligteAddDialog } from "./beteiligte-add-dialog";
 import { FalldatenForm } from "./falldaten-form";
@@ -180,6 +181,7 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
         <TabsTrigger value="rechnungen">Rechnungen</TabsTrigger>
         <TabsTrigger value="zeiterfassung">Zeiterfassung</TabsTrigger>
         <TabsTrigger value="emails">E-Mails</TabsTrigger>
+        <TabsTrigger value="pruefprotokoll">Pruefprotokoll</TabsTrigger>
         <TabsTrigger value="historie">
           Historie ({akte.auditLogs?.length ?? 0})
         </TabsTrigger>
@@ -356,6 +358,11 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
       {/* ─── E-Mails ───────────────────────────────────────────────── */}
       <TabsContent value="emails">
         <AkteEmailTab akteId={akte.id} />
+      </TabsContent>
+
+      {/* ─── Pruefprotokoll ────────────────────────────────────────── */}
+      <TabsContent value="pruefprotokoll">
+        <BeaPruefprotokoll akteId={akte.id} />
       </TabsContent>
 
       {/* ─── Historie ──────────────────────────────────────────────── */}
@@ -718,6 +725,167 @@ function AuditDetails({ aktion, details }: { aktion: string; details: any }) {
           </span>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ─── beA Pruefprotokoll Component ────────────────────────────────────────────
+
+const beaAktionLabels: Record<string, string> = {
+  BEA_NACHRICHT_GESENDET: "Nachricht gesendet",
+  BEA_NACHRICHT_EMPFANGEN: "Nachricht empfangen",
+  BEA_EEB_BESTAETIGT: "eEB bestaetigt",
+  BEA_NACHRICHT_GELESEN: "Nachricht gelesen",
+  BEA_ZUORDNUNG_GEAENDERT: "Zuordnung geaendert",
+  BEA_ANHANG_HERUNTERGELADEN: "Anhang heruntergeladen",
+};
+
+const beaAktionIcons: Record<string, React.ElementType> = {
+  BEA_NACHRICHT_GESENDET: ArrowRightLeft,
+  BEA_NACHRICHT_EMPFANGEN: FileUp,
+  BEA_EEB_BESTAETIGT: CheckCircle2,
+  BEA_NACHRICHT_GELESEN: History,
+  BEA_ZUORDNUNG_GEAENDERT: ArrowRightLeft,
+  BEA_ANHANG_HERUNTERGELADEN: FileUp,
+};
+
+interface BeaAuditEntry {
+  id: string;
+  aktion: string;
+  details: any;
+  createdAt: string;
+  user: { name: string } | null;
+}
+
+function BeaPruefprotokoll({ akteId }: { akteId: string }) {
+  const [entries, setEntries] = useState<BeaAuditEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/akten/${akteId}/historie?aktion=BEA_NACHRICHT_GESENDET,BEA_NACHRICHT_EMPFANGEN,BEA_EEB_BESTAETIGT,BEA_NACHRICHT_GELESEN,BEA_ZUORDNUNG_GEAENDERT,BEA_ANHANG_HERUNTERGELADEN&take=100`
+        );
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setEntries(data.items || []);
+        }
+      } catch {
+        // Ignore
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [akteId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (entries.length === 0) {
+    return (
+      <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08] p-12 text-center">
+        <Shield className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+        <p className="text-sm text-muted-foreground">
+          Keine beA-Aktivitaeten fuer diese Akte.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">
+        Chronologisches Pruefprotokoll der beA-Kommunikation fuer diese Akte.
+      </p>
+
+      <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08]">
+        <div className="divide-y divide-white/10 dark:divide-white/[0.04]">
+          {entries.map((entry) => {
+            const Icon = beaAktionIcons[entry.aktion] ?? Shield;
+            const details = entry.details || {};
+            const isError = details.ergebnis === "FEHLER";
+
+            return (
+              <div
+                key={entry.id}
+                className={`flex items-start gap-4 px-6 py-4 ${
+                  isError ? "bg-rose-50/50 dark:bg-rose-950/20" : ""
+                }`}
+              >
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                    isError
+                      ? "bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400"
+                      : "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <p className={`text-sm font-medium ${isError ? "text-rose-700 dark:text-rose-400" : "text-foreground"}`}>
+                      {beaAktionLabels[entry.aktion] ?? entry.aktion}
+                    </p>
+                    <span className="text-xs text-slate-400">
+                      {formatDateTime(entry.createdAt)}
+                    </span>
+                    {isError && (
+                      <span className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                        FEHLER
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Detail fields */}
+                  <div className="mt-1 text-xs text-slate-500 space-y-0.5">
+                    {details.betreff && (
+                      <div>
+                        <span className="text-slate-400">Betreff:</span>{" "}
+                        <span className="text-foreground/80">{details.betreff}</span>
+                      </div>
+                    )}
+                    {details.empfaengerSafeId && (
+                      <div>
+                        <span className="text-slate-400">Empfaenger-SAFE-ID:</span>{" "}
+                        <span className="text-foreground/80 font-mono text-[11px]">{details.empfaengerSafeId}</span>
+                      </div>
+                    )}
+                    {details.anhaengeAnzahl !== undefined && details.anhaengeAnzahl > 0 && (
+                      <div>
+                        <span className="text-slate-400">Anhaenge:</span>{" "}
+                        <span className="text-foreground/80">{details.anhaengeAnzahl}</span>
+                      </div>
+                    )}
+                    {details.anhangName && (
+                      <div>
+                        <span className="text-slate-400">Anhang:</span>{" "}
+                        <span className="text-foreground/80">{details.anhangName}</span>
+                      </div>
+                    )}
+                    {details.fehlerMeldung && (
+                      <div className="text-rose-600 dark:text-rose-400">
+                        <span className="text-rose-500">Fehler:</span> {details.fehlerMeldung}
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-slate-500 mt-1">
+                    von {entry.user?.name ?? "System"}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

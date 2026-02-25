@@ -376,8 +376,9 @@ model User {
   emailVeraktungen         EmailVeraktung[]
 
   // AI / Helena
-  isSystem        Boolean   @default(false)
-  tokenUsages     TokenUsage[]
+  isSystem            Boolean   @default(false)
+  tokenUsages         TokenUsage[]
+  helenaSuggestions   HelenaSuggestion[]
 
   @@map("users")
 }
@@ -676,8 +677,9 @@ model Akte {
   auditLogs         AuditLog[]
   emailMessages     EmailMessage[]
   tickets           Ticket[]
-  emailVeraktungen  EmailVeraktung[]
-  tokenUsages       TokenUsage[]
+  emailVeraktungen    EmailVeraktung[]
+  tokenUsages         TokenUsage[]
+  helenaSuggestions   HelenaSuggestion[]
 
   @@index([status])
   @@index([anwaltId])
@@ -1600,4 +1602,31 @@ model TokenUsage {
   @@index([userId, createdAt])
   @@index([createdAt])
   @@map("token_usages")
+}
+
+// ─── Helena Proactive Suggestions ───────────────────────────────────────────
+
+model HelenaSuggestion {
+  id          String    @id @default(cuid())
+  userId      String    // Target user (Verantwortlicher of the Akte)
+  akteId      String?
+  dokumentId  String?   // Source document that triggered this
+  emailId     String?   // Source email that triggered this
+  typ         String    // FRIST_ERKANNT | ANTWORT_ENTWURF | BETEILIGTE_ERKANNT | DOKUMENT_KLASSIFIZIERT | TERMIN_VORSCHLAG | HINWEIS | BRIEFING
+  titel       String
+  inhalt      String    @db.Text
+  quellen     Json?     // [{dokumentId, name, passage}]
+  status      String    @default("NEU") // NEU | UEBERNOMMEN | ABGELEHNT | BEARBEITET
+  feedback    String?   // POSITIV | NEGATIV (Daumen hoch/runter)
+  linkedId    String?   // ID of created entity when accepted (KalenderEintrag, Kontakt, etc.)
+  retryCount  Int       @default(0)
+  errorMsg    String?
+  createdAt   DateTime  @default(now())
+  readAt      DateTime?
+  user        User      @relation(fields: [userId], references: [id])
+  akte        Akte?     @relation(fields: [akteId], references: [id])
+
+  @@index([userId, status, createdAt])
+  @@index([akteId, typ, createdAt])
+  @@map("helena_suggestions")
 }

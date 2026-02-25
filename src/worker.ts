@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
-import { calculateBackoff, registerFristReminderJob } from "@/lib/queue/queues";
+import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob } from "@/lib/queue/queues";
 import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.processor";
 import { processFristReminders } from "@/workers/processors/frist-reminder";
 import { initializeDefaults, getSettingTyped } from "@/lib/settings/service";
@@ -14,6 +14,9 @@ import { processOcrJob } from "@/lib/queue/processors/ocr.processor";
 import { processPreviewJob } from "@/lib/queue/processors/preview.processor";
 import { processEmbeddingJob } from "@/lib/queue/processors/embedding.processor";
 import type { OcrJobData, PreviewJobData, EmbeddingJobData } from "@/lib/ocr/types";
+import { processScan, type AiScanJobData } from "@/lib/ai/scan-processor";
+import { processBriefing, type BriefingJobData } from "@/lib/ai/briefing-processor";
+import { processProactive, type ProactiveJobData } from "@/lib/ai/proactive-processor";
 import { prisma } from "@/lib/db";
 
 const log = createLogger("worker");
@@ -372,6 +375,118 @@ embeddingWorker.on("error", (err) => {
 workers.push(embeddingWorker);
 log.info("[Worker] document-embedding processor registered");
 
+// ─── AI Scan Queue Worker ─────────────────────────────────────────────────
+
+const aiScanWorker = new Worker<AiScanJobData>(
+  "ai-scan",
+  async (job) => processScan(job),
+  {
+    connection,
+    concurrency: 1, // AI calls are sequential to avoid rate limiting
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+aiScanWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, type: job.data.type, id: job.data.id },
+    "AI scan job completed"
+  );
+});
+
+aiScanWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, type: job.data.type, id: job.data.id, err: err.message },
+    "AI scan job failed"
+  );
+});
+
+aiScanWorker.on("error", (err) => {
+  log.error({ err }, "AI scan worker error");
+});
+
+workers.push(aiScanWorker);
+log.info("[Worker] ai-scan processor registered");
+
+// ─── AI Briefing Queue Worker ─────────────────────────────────────────────
+
+const aiBriefingWorker = new Worker<BriefingJobData>(
+  "ai-briefing",
+  async (job) => {
+    // For scheduler-triggered jobs (no userId), generate for all active ANWALTs
+    if (!job.data.userId) {
+      const anwaelte = await prisma.user.findMany({
+        where: { role: "ANWALT", aktiv: true, isSystem: false },
+        select: { id: true },
+      });
+      for (const anwalt of anwaelte) {
+        await processBriefing({ ...job, data: { userId: anwalt.id } } as any);
+      }
+      return;
+    }
+    return processBriefing(job);
+  },
+  {
+    connection,
+    concurrency: 1,
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+aiBriefingWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info({ jobId: job.id }, "AI briefing job completed");
+});
+
+aiBriefingWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error({ jobId: job.id, err: err.message }, "AI briefing job failed");
+});
+
+aiBriefingWorker.on("error", (err) => {
+  log.error({ err }, "AI briefing worker error");
+});
+
+workers.push(aiBriefingWorker);
+log.info("[Worker] ai-briefing processor registered");
+
+// ─── AI Proactive Queue Worker ────────────────────────────────────────────
+
+const aiProactiveWorker = new Worker<ProactiveJobData>(
+  "ai-proactive",
+  async (job) => processProactive(job),
+  {
+    connection,
+    concurrency: 1,
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+aiProactiveWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info({ jobId: job.id }, "AI proactive scan job completed");
+});
+
+aiProactiveWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error({ jobId: job.id, err: err.message }, "AI proactive scan job failed");
+});
+
+aiProactiveWorker.on("error", (err) => {
+  log.error({ err }, "AI proactive worker error");
+});
+
+workers.push(aiProactiveWorker);
+log.info("[Worker] ai-proactive processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -470,6 +585,27 @@ async function startup() {
     log.warn({ err }, "Failed to ensure pgvector extension/index (non-fatal)");
   }
 
+  // Register AI repeatable jobs (if enabled)
+  try {
+    const scanEnabled = await getSettingTyped<boolean>("ai.scan_enabled", false);
+    if (scanEnabled) {
+      const scanInterval = await getSettingTyped<string>("ai.scan_interval", "0 */4 * * *");
+      await registerAiProactiveJob(scanInterval);
+      log.info({ scanInterval }, "AI proactive scan job registered");
+
+      const briefingEnabled = await getSettingTyped<boolean>("ai.briefing_enabled", false);
+      if (briefingEnabled) {
+        const briefingTime = await getSettingTyped<string>("ai.briefing_time", "07:00");
+        const [bHours, bMinutes] = briefingTime.split(":").map(Number);
+        const briefingCron = `${bMinutes} ${bHours} * * *`;
+        await registerAiBriefingJob(briefingCron);
+        log.info({ briefingTime, briefingCron }, "AI briefing job registered");
+      }
+    }
+  } catch (err) {
+    log.warn({ err }, "Failed to register AI jobs (non-fatal)");
+  }
+
   // Start IMAP connections for all active mailboxes
   try {
     await startImapConnections();
@@ -480,7 +616,11 @@ async function startup() {
   log.info(
     {
       concurrency,
-      queues: ["test", "frist-reminder", "email-send", "email-sync", "document-ocr", "document-preview", "document-embedding"],
+      queues: [
+        "test", "frist-reminder", "email-send", "email-sync",
+        "document-ocr", "document-preview", "document-embedding",
+        "ai-scan", "ai-briefing", "ai-proactive",
+      ],
       fristScanZeit: scanZeit,
     },
     "Worker started"

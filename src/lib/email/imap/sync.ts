@@ -10,6 +10,8 @@ import { parseRawEmail } from "@/lib/email/imap/parser";
 import { sanitizeEmailHtml } from "@/lib/email/sanitize";
 import { findThreadId } from "@/lib/email/threading";
 import { uploadFile } from "@/lib/storage";
+import { aiScanQueue } from "@/lib/queue/queues";
+import { getSettingTyped } from "@/lib/settings/service";
 import type { SyncResult, EmailInitialSync } from "@/lib/email/types";
 import { Readable } from "node:stream";
 
@@ -194,6 +196,28 @@ export async function syncMailbox(
                 "Failed to upload attachment"
               );
             }
+          }
+
+          // Trigger AI scan for new inbound email (if enabled)
+          try {
+            const scanEnabled = await getSettingTyped<boolean>("ai.scan_enabled", false);
+            if (scanEnabled && emailNachricht.richtung === "EINGEHEND") {
+              const emailContent = parsed.text || (sanitizedHtml ?? "");
+              if (emailContent.length > 50) {
+                await aiScanQueue.add("scan-email", {
+                  type: "email",
+                  id: emailNachricht.id,
+                  content: emailContent,
+                  metadata: {
+                    betreff: emailNachricht.betreff,
+                    absender: emailNachricht.absender,
+                  },
+                });
+              }
+            }
+          } catch (scanErr) {
+            // Non-fatal: don't fail email sync if AI scan enqueue fails
+            log.warn({ err: scanErr, emailId: emailNachricht.id }, "Failed to enqueue AI scan for email (non-fatal)");
           }
 
           result.newMessages++;

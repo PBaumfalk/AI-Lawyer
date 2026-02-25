@@ -16,6 +16,7 @@ import {
   RefreshCw,
   CheckCheck,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -38,6 +39,7 @@ const typeIcons: Record<NotificationType, React.ElementType> = {
   "email:connection-failure": AlertTriangle,
   "email:send-failed": XCircle,
   "system:alert": AlertTriangle,
+  "ai_suggestion": Sparkles,
 };
 
 /** Map notification types to icon colors */
@@ -53,6 +55,7 @@ const typeColors: Record<NotificationType, string> = {
   "frist:vorfrist": "text-amber-500",
   "frist:ueberfaellig": "text-rose-600",
   "system:alert": "text-rose-600",
+  "ai_suggestion": "text-violet-500",
 };
 
 /**

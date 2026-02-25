@@ -88,6 +88,39 @@ export const previewQueue = new Queue("document-preview", {
   },
 });
 
+/** AI Scan queue for Helena document/email analysis */
+export const aiScanQueue = new Queue("ai-scan", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    ...defaultJobOptions,
+    attempts: 2,
+    removeOnComplete: { age: 86_400 },
+    removeOnFail: { age: 604_800 },
+  },
+});
+
+/** AI Briefing queue for daily morning briefings */
+export const aiBriefingQueue = new Queue("ai-briefing", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    ...defaultJobOptions,
+    attempts: 2,
+    removeOnComplete: { age: 86_400 },
+    removeOnFail: { age: 86_400 },
+  },
+});
+
+/** AI Proactive queue for periodic Akten scanning */
+export const aiProactiveQueue = new Queue("ai-proactive", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    ...defaultJobOptions,
+    attempts: 1,
+    removeOnComplete: { age: 86_400 },
+    removeOnFail: { age: 86_400 },
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
 export const ALL_QUEUES: Queue[] = [
   testQueue,
@@ -97,6 +130,9 @@ export const ALL_QUEUES: Queue[] = [
   ocrQueue,
   embeddingQueue,
   previewQueue,
+  aiScanQueue,
+  aiBriefingQueue,
+  aiProactiveQueue,
 ];
 
 /**
@@ -120,6 +156,57 @@ export async function registerFristReminderJob(
       opts: {
         removeOnComplete: { count: 100 },
         removeOnFail: { count: 50 },
+      },
+    }
+  );
+}
+
+/**
+ * Register the repeatable AI proactive scanning job.
+ *
+ * @param cronPattern - Cron expression (default: every 4 hours)
+ */
+export async function registerAiProactiveJob(
+  cronPattern = "0 */4 * * *"
+): Promise<void> {
+  await aiProactiveQueue.upsertJobScheduler(
+    "ai-proactive-scan",
+    {
+      pattern: cronPattern,
+      tz: "Europe/Berlin",
+    },
+    {
+      name: "proactive-scan",
+      data: {},
+      opts: {
+        removeOnComplete: { count: 50 },
+        removeOnFail: { count: 20 },
+      },
+    }
+  );
+}
+
+/**
+ * Register the repeatable AI briefing job.
+ * Creates briefings for all active ANWALT users.
+ *
+ * @param cronPattern - Cron expression (default: 07:00 daily)
+ */
+export async function registerAiBriefingJob(
+  cronPattern = "0 7 * * *"
+): Promise<void> {
+  await aiBriefingQueue.upsertJobScheduler(
+    "ai-briefing-daily",
+    {
+      pattern: cronPattern,
+      tz: "Europe/Berlin",
+    },
+    {
+      name: "daily-briefing",
+      data: {},
+      opts: {
+        removeOnComplete: { count: 50 },
+        removeOnFail: { count: 20 },
       },
     }
   );

@@ -13,7 +13,8 @@ export type NotificationType =
   | "frist:ueberfaellig"
   | "email:connection-failure"
   | "email:send-failed"
-  | "system:alert";
+  | "system:alert"
+  | "ai_suggestion";
 
 /**
  * Payload for creating a new notification.

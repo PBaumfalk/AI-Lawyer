@@ -13,6 +13,8 @@ import {
   MODEL_VERSION,
 } from "@/lib/embedding/embedder";
 import { insertChunks } from "@/lib/embedding/vector-store";
+import { aiScanQueue } from "@/lib/queue/queues";
+import { getSettingTyped } from "@/lib/settings/service";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("embedding-processor");
@@ -89,4 +91,31 @@ export async function processEmbeddingJob(
     { dokumentId, chunkCount: embeddedChunks.length, modelVersion: MODEL_VERSION },
     "[Embedding] Successfully embedded and stored chunks"
   );
+
+  // Trigger AI scan after successful embedding (if enabled)
+  try {
+    const scanEnabled = await getSettingTyped<boolean>("ai.scan_enabled", false);
+    if (scanEnabled) {
+      // Look up the document name for metadata
+      const { prisma } = await import("@/lib/db");
+      const dok = await prisma.dokument.findUnique({
+        where: { id: dokumentId },
+        select: { name: true },
+      });
+
+      // Concatenate chunk texts for AI analysis
+      const fullText = embeddedChunks.map((c) => c.content).join("\n\n");
+      await aiScanQueue.add("scan-document", {
+        type: "document",
+        id: dokumentId,
+        akteId: job.data.akteId,
+        content: fullText,
+        metadata: { dokumentName: dok?.name ?? dokumentId },
+      });
+      log.info({ dokumentId }, "[Embedding] AI scan job enqueued after embedding");
+    }
+  } catch (err) {
+    // Non-fatal: don't fail the embedding job if AI scan enqueue fails
+    log.warn({ err, dokumentId }, "[Embedding] Failed to enqueue AI scan (non-fatal)");
+  }
 }

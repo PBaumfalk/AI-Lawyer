@@ -1245,9 +1245,18 @@ model BeaNachricht {
   anhaenge        Json?              // Array of attachment references
   gesendetAm      DateTime?
   empfangenAm     DateTime?
+  // eEB (Elektronisches Empfangsbekenntnis)
+  eebStatus       String?            // AUSSTEHEND | BESTAETIGT | NICHT_ERFORDERLICH
+  eebDatum        DateTime?          // When eEB was acknowledged
+  // XJustiz parsed content for quick rendering
+  xjustizData     Json?
+  // SAFE-IDs for contact matching
+  safeIdAbsender  String?
+  safeIdEmpfaenger String?
   createdAt       DateTime           @default(now())
 
   @@index([akteId])
+  @@index([safeIdAbsender])
   @@map("bea_nachrichten")
 }
 

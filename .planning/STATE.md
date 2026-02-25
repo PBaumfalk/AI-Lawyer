@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 6 of 7 (AI Features + beA)
-Plan: 2 of 5 in current phase (2 complete)
+Plan: 3 of 5 in current phase (3 complete)
 Status: Executing Phase 6
-Last activity: 2026-02-25 -- Plan 06-02 completed (Document Chat)
+Last activity: 2026-02-25 -- Plan 06-03 completed (Helena Proactive Scanning)
 
-Progress: [█████████████████████████] 94%
+Progress: [██████████████████████████] 96%
 
 ## Performance Metrics
 
@@ -68,6 +68,8 @@ Progress: [███████████████████████
 | Phase 05 P04 | 6min | 1 tasks | 4 files |
 | Phase 05 P05 | 10min | 3 tasks | 20 files |
 | Phase 06 P01 | 7min | 2 tasks | 13 files |
+| Phase 06 P02 | 12min | 2 tasks | 15 files |
+| Phase 06 P03 | 16min | 2 tasks | 19 files |
 | Phase 06 P02 | 8min | 2 tasks | 16 files |
 
 ## Accumulated Context
@@ -205,6 +207,12 @@ Recent decisions affecting current work:
 - [05-05]: Lazy Taetigkeitskategorien initialization: auto-seed defaults on first GET per Kanzlei
 - [05-05]: Kontakt display name constructed from vorname/nachname/firma fields for invoice matcher
 
+- [06-03]: AI scan triggered from imap/sync.ts (where emails are created) not smtp/send-processor.ts
+- [06-03]: EmailNachricht has no akteId field; AI scan for emails works without akte context
+- [06-03]: ENTWURF KalenderEintrag created during scan, activated on accept via suggestion card
+- [06-03]: Single HelenaSuggestion per document for parties (not one per party)
+- [06-03]: ChatLayout integrated into HelenaTab for Chat/Vorschlaege tab switching
+- [06-03]: ai_suggestion notification type with Sparkles icon (violet-500)
 - [06-01]: ollama-ai-provider package name (not ollama-ai-provider-v2 from plan)
 - [06-01]: Helena user with SACHBEARBEITER role + isSystem:true + aktiv:false (cannot login)
 - [06-01]: In-memory sliding window rate limiter for /api/openclaw/process (10 req/min per user)
@@ -227,5 +235,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 06-02-PLAN.md (Document Chat)
-Resume file: .planning/phases/06-ai-features-bea/06-02-SUMMARY.md
+Stopped at: Completed 06-03-PLAN.md (Helena Proactive Scanning)
+Resume file: .planning/phases/06-ai-features-bea/06-03-SUMMARY.md

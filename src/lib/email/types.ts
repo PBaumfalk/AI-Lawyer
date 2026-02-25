@@ -98,6 +98,7 @@ export interface EmailSendJob {
   emailNachrichtId: string;
   kontoId: string;
   userId: string;
+  dmsDocumentIds?: string[]; // DMS document IDs for VERSENDET marking after successful send
 }
 
 export interface EmailSyncJob {

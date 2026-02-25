@@ -9,6 +9,7 @@ import { prisma } from "@/lib/db";
 import { createLogger } from "@/lib/logger";
 import { createSmtpTransport } from "@/lib/email/smtp/transport-factory";
 import { createNotification } from "@/lib/notifications/service";
+import { markDokumenteVersendet } from "@/lib/versand-gate";
 import type { EmailSendJob } from "@/lib/email/types";
 
 const log = createLogger("smtp:send");
@@ -121,6 +122,20 @@ export async function emailSendProcessor(
         messageId: info.messageId ?? email.messageId,
       },
     });
+
+    // Mark DMS documents as VERSENDET after confirmed send
+    if (job.data.dmsDocumentIds && job.data.dmsDocumentIds.length > 0) {
+      try {
+        await markDokumenteVersendet(job.data.dmsDocumentIds);
+        log.info(
+          { emailNachrichtId, docCount: job.data.dmsDocumentIds.length },
+          "Marked DMS documents as VERSENDET"
+        );
+      } catch (err) {
+        // Non-fatal: document status update failure should not fail the email send
+        log.warn({ err, emailNachrichtId }, "Failed to mark documents as VERSENDET");
+      }
+    }
 
     return { status: "GESENDET", messageId: info.messageId };
   } catch (err) {

@@ -140,6 +140,7 @@ export async function POST(req: NextRequest) {
       emailNachrichtId: email.id,
       kontoId: data.kontoId,
       userId: session.user.id,
+      dmsDocumentIds: dmsIds, // Pass DMS doc IDs for VERSENDET marking
     },
     {
       delay,

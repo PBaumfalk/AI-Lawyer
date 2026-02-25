@@ -5,7 +5,7 @@ import { autoAssignToAkte } from "@/lib/bea/auto-assign";
 import { parseXJustiz } from "@/lib/xjustiz/parser";
 import { aiScanQueue } from "@/lib/queue/queues";
 import { requirePermission } from "@/lib/rbac";
-import { checkDokumenteFreigegeben } from "@/lib/versand-gate";
+import { checkDokumenteFreigegeben, markDokumenteVersendet } from "@/lib/versand-gate";
 import { logAuditEvent } from "@/lib/audit";
 
 // --- Validation ---
@@ -192,6 +192,15 @@ export async function POST(request: NextRequest) {
       },
     },
   });
+
+  // Mark DMS documents as VERSENDET after confirmed beA send
+  if (data.status === "GESENDET" && data.dokumentIds && data.dokumentIds.length > 0) {
+    try {
+      await markDokumenteVersendet(data.dokumentIds);
+    } catch {
+      // Non-fatal: document status update failure should not fail beA message creation
+    }
+  }
 
   // Trigger Helena AI scan for beA message content
   if (data.inhalt && data.inhalt.trim().length >= 50) {

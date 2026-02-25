@@ -358,6 +358,36 @@ embeddingWorker.on("completed", (job) => {
     { jobId: job.id, dokumentId: job.data.dokumentId },
     "Embedding job completed"
   );
+
+  const embeddingPayload = {
+    dokumentId: job.data.dokumentId,
+    akteId: job.data.akteId,
+    status: "ABGESCHLOSSEN",
+  };
+
+  socketEmitter
+    .to(`akte:${job.data.akteId}`)
+    .emit("document:embedding-complete", embeddingPayload);
+
+  // Also emit to user room for global toast
+  prisma.dokument
+    .findUnique({
+      where: { id: job.data.dokumentId },
+      select: { createdById: true },
+    })
+    .then((doc) => {
+      if (doc?.createdById) {
+        socketEmitter
+          .to(`user:${doc.createdById}`)
+          .emit("document:embedding-complete", embeddingPayload);
+      }
+    })
+    .catch((err) => {
+      log.warn(
+        { err, dokumentId: job.data.dokumentId },
+        "Failed to look up user for embedding notification"
+      );
+    });
 });
 
 embeddingWorker.on("failed", (job, err) => {

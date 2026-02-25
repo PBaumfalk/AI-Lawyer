@@ -19,7 +19,10 @@ import {
   CheckCircle2,
   XCircle,
   Activity,
+  Bot,
+  FileSearch,
 } from "lucide-react";
+import { AuditDashboardWidget } from "@/components/audit/audit-dashboard-widget";
 
 interface ServiceStatus {
   status: "healthy" | "unhealthy";
@@ -50,6 +53,8 @@ const serviceConfig: Record<string, { label: string; icon: React.ElementType }> 
   meilisearch: { label: "Meilisearch", icon: Search },
   onlyoffice: { label: "OnlyOffice", icon: FileText },
   worker: { label: "Worker", icon: Cpu },
+  ollama: { label: "Ollama", icon: Bot },
+  stirlingPdf: { label: "Stirling-PDF", icon: FileSearch },
 };
 
 const levelColors: Record<string, string> = {
@@ -290,6 +295,9 @@ export default function AdminSystemPage() {
             );
           })}
       </div>
+
+      {/* Audit dashboard widget */}
+      <AuditDashboardWidget />
 
       {/* Log viewer section */}
       <Card>

@@ -23,6 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Financial Module** - RVG calculation, invoicing, Aktenkonto, Fremdgeld compliance, E-Rechnung, DATEV, SEPA, banking import, Zeiterfassung (completed 2026-02-24)
 - [x] **Phase 6: AI Features + beA** - Multi-provider AI, RAG retrieval, document chat, proactive agent, deadline recognition, beA integration via bea.expert (completed 2026-02-25)
 - [ ] **Phase 7: Rollen/Sicherheit + Compliance + Observability** - RBAC enforcement, Audit-Trail UI, DSGVO compliance, health checks, structured logs
+- [ ] **Phase 8: Integration Hardening** - RBAC enforcement coverage for finance/ki-chat/dashboard routes, Versand-Gate wiring, beA audit logging, Finance KPI fix (gap closure from 5th audit)
 
 ## Phase Details
 
@@ -227,10 +228,28 @@ Plans:
 - [x] 07-02-PLAN.md -- Audit-Trail UI + DSGVO Compliance + Observability: system-wide audit timeline, per-Akte Historie enhancement, CSV/PDF export, DSGVO anonymization workflow, Auskunftsrecht PDF, extended health checks, email alerts
 - [ ] 07-03-PLAN.md -- Gap closure: Admin Override UI (Zugriff uebernehmen button on Akte detail) + Dezernat Akte multi-select assignment
 
+### Phase 8: Integration Hardening
+**Goal**: All cross-phase integration gaps from the 5th milestone audit are closed — RBAC enforcement covers finance, ki-chat, and dashboard routes; Versand-Gate prevents sending ENTWURF documents; beA operations are audit-logged; and Finance KPI dashboard displays correct data.
+**Depends on**: Phase 7 (RBAC helpers), Phase 5 (finance routes), Phase 6 (ki-chat, beA routes), Phase 2 (versand-gate.ts)
+**Requirements**: REQ-RS-001, REQ-RS-002, REQ-RS-003, REQ-RS-004, REQ-KI-003, REQ-KI-009, REQ-FI-003, REQ-FI-005, REQ-FI-006
+**Gap Closure**: Closes INT-A01, INT-A02, INT-A03, INT-A04, INT-A05 + 2 broken E2E flows from v3.4 5th audit
+**Research flag**: No research needed — wiring existing code (buildAkteAccessFilter, requirePermission, logAuditEvent, checkDokumenteFreigegeben).
+**Success Criteria** (what must be TRUE):
+  1. Finance API routes (invoices, bookings, aktenkonto) use `buildAkteAccessFilter()` — users can only see financial data for cases they have access to
+  2. `/api/ki-chat`, `/api/ki-chat/conversations`, `/api/helena/suggestions` require `canUseKI` permission — PRAKTIKANT cannot access RAG chat
+  3. Dashboard Prisma queries use `buildAkteAccessFilter()` — PRAKTIKANT only sees counts for assigned cases
+  4. `checkDokumenteFreigegeben()` is called before email compose send and beA compose send — ENTWURF documents cannot be attached and sent
+  5. All beA API routes call `logAuditEvent()` for beA operations (send, receive, eEB)
+  6. Finanzen overview KPI cards display correct data (API response keys match what the page reads)
+**Plans**: TBD
+
+Plans:
+- [ ] 08-01-PLAN.md — RBAC enforcement for finance/ki-chat/dashboard routes + Versand-Gate wiring + beA audit logging + Finance KPI data key fix
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
@@ -245,6 +264,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 ->
 | 5. Financial Module | 0/6 | Complete    | 2026-02-24 |
 | 6. AI Features + beA | 0/5 | Complete    | 2026-02-25 |
 | 7. Rollen/Sicherheit + Compliance + Observability | 2/3 | In Progress | - |
+| 8. Integration Hardening | 0/1 | Not started | - |
 
 ## Coverage Matrix
 

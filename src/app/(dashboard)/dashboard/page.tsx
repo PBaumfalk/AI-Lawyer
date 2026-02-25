@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { buildAkteAccessFilter } from "@/lib/rbac";
+import type { UserRole } from "@prisma/client";
 import {
   FolderOpen,
   Clock,
@@ -14,6 +16,11 @@ import { Tagesuebersicht } from "@/components/fristen/tagesuebersicht";
 export default async function DashboardPage() {
   const session = await auth();
 
+  // Build user-scoped access filter for all dashboard queries
+  const userId = session?.user?.id ?? "";
+  const userRole = ((session?.user as any)?.role ?? "SACHBEARBEITER") as UserRole;
+  const accessFilter = buildAkteAccessFilter(userId, userRole);
+
   // Fetch dashboard stats in parallel
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -22,34 +29,37 @@ export default async function DashboardPage() {
 
   const [offeneAkten, fristenHeute, ueberfaelligeFristen, erledigteAufgaben, letzteAkten, anstehendeFristen] =
     await Promise.all([
-      // Open cases count
-      prisma.akte.count({ where: { status: "OFFEN" } }),
-      // Deadlines today
+      // Open cases count -- user-scoped
+      prisma.akte.count({ where: { status: "OFFEN", ...accessFilter } }),
+      // Deadlines today -- user-scoped via akte relation
       prisma.kalenderEintrag.count({
         where: {
           erledigt: false,
           typ: "FRIST",
           datum: { gte: today, lt: tomorrow },
+          akte: accessFilter,
         },
       }),
-      // Overdue deadlines
+      // Overdue deadlines -- user-scoped via akte relation
       prisma.kalenderEintrag.count({
         where: {
           erledigt: false,
           typ: { in: ["FRIST", "WIEDERVORLAGE"] },
           datum: { lt: today },
+          akte: accessFilter,
         },
       }),
-      // Completed tasks (last 30 days)
+      // Completed tasks (last 30 days) -- user-scoped via akte relation
       prisma.kalenderEintrag.count({
         where: {
           erledigt: true,
           erledigtAm: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+          akte: accessFilter,
         },
       }),
-      // Recently modified cases
+      // Recently modified cases -- user-scoped
       prisma.akte.findMany({
-        where: { status: { in: ["OFFEN", "RUHEND"] } },
+        where: { status: { in: ["OFFEN", "RUHEND"] }, ...accessFilter },
         include: {
           anwalt: { select: { name: true } },
           _count: { select: { dokumente: true, kalenderEintraege: true } },
@@ -57,11 +67,12 @@ export default async function DashboardPage() {
         orderBy: { geaendert: "desc" },
         take: 5,
       }),
-      // Upcoming deadlines/appointments
+      // Upcoming deadlines/appointments -- user-scoped via akte relation
       prisma.kalenderEintrag.findMany({
         where: {
           erledigt: false,
           datum: { gte: today },
+          akte: accessFilter,
         },
         include: {
           akte: { select: { aktenzeichen: true, kurzrubrum: true } },

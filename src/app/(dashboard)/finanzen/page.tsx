@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { GlassKpiCard } from "@/components/ui/glass-kpi-card";
 import {
   TrendingUp,
@@ -14,24 +15,30 @@ import {
 } from "lucide-react";
 
 interface FinanzenSummary {
-  umsatzMtd: number;
-  umsatzYtd: number;
+  gesamtUmsatz: number;
   offeneForderungen: number;
   ueberfaelligeRechnungen: number;
   fremdgeldWarnungen: number;
 }
 
-function formatEuro(cents: number): string {
+function formatEuro(amount: number): string {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
     currency: "EUR",
-  }).format(cents / 100);
+  }).format(amount);
 }
 
 export default function FinanzenPage() {
+  const { data: session } = useSession();
+  const userRole = (session?.user as any)?.role as string | undefined;
+
+  // Role-based KPI visibility:
+  // ADMIN + ANWALT see all KPIs including Gesamtumsatz
+  // SEKRETARIAT + SACHBEARBEITER see only operative KPIs
+  const canSeeAllKpis = userRole === "ADMIN" || userRole === "ANWALT";
+
   const [summary, setSummary] = useState<FinanzenSummary>({
-    umsatzMtd: 0,
-    umsatzYtd: 0,
+    gesamtUmsatz: 0,
     offeneForderungen: 0,
     ueberfaelligeRechnungen: 0,
     fremdgeldWarnungen: 0,
@@ -42,22 +49,23 @@ export default function FinanzenPage() {
     async function fetchSummary() {
       try {
         // Fetch invoice summary stats
-        const invoiceRes = await fetch("/api/finanzen/rechnungen?limit=0");
+        // API now returns 'stats' key with: gesamtUmsatz, offeneForderungen, ueberfaellig
+        const invoiceRes = await fetch("/api/finanzen/rechnungen?take=0");
         if (invoiceRes.ok) {
           const invoiceData = await invoiceRes.json();
           const stats = invoiceData.stats;
           if (stats) {
             setSummary((prev) => ({
               ...prev,
-              umsatzMtd: stats.gesamtUmsatz ?? 0,
-              umsatzYtd: stats.gesamtUmsatz ?? 0,
+              gesamtUmsatz: stats.gesamtUmsatz ?? 0,
               offeneForderungen: stats.offeneForderungen ?? 0,
               ueberfaelligeRechnungen: stats.ueberfaellig ?? 0,
             }));
           }
         }
 
-        // Fetch Fremdgeld alerts count
+        // Fetch Fremdgeld alerts count from cross-case aktenkonto API
+        // API now returns 'fremdgeldAlerts' array at top level
         const aktenkontoRes = await fetch("/api/finanzen/aktenkonto");
         if (aktenkontoRes.ok) {
           const aktenkontoData = await aktenkontoRes.json();
@@ -89,14 +97,18 @@ export default function FinanzenPage() {
         </p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <GlassKpiCard
-          title="Umsatz (Monat)"
-          value={loading ? "..." : formatEuro(summary.umsatzMtd)}
-          icon={TrendingUp}
-          color="emerald"
-        />
+      {/* KPI Cards -- role-based visibility */}
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${canSeeAllKpis ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-4`}>
+        {/* Gesamtumsatz: only visible to ADMIN and ANWALT */}
+        {canSeeAllKpis && (
+          <GlassKpiCard
+            title="Gesamtumsatz"
+            value={loading ? "..." : formatEuro(summary.gesamtUmsatz)}
+            icon={TrendingUp}
+            color="emerald"
+          />
+        )}
+        {/* Operative KPIs: visible to all roles */}
         <GlassKpiCard
           title="Offene Forderungen"
           value={loading ? "..." : formatEuro(summary.offeneForderungen)}

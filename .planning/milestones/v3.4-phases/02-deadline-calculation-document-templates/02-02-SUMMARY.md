@@ -108,7 +108,7 @@ Each task was committed atomically:
 1. **Task 1: Schema Enhancements + Fristen API + Presets CRUD + Fristenzettel + Reminder Worker** - `d70ba7f` (feat)
 2. **Task 2: FristenRechner UI + Tagesuebersicht + Warn-Ampel Components** - `6f4d707` (feat)
 
-**Plan metadata:** (pending)
+**Plan metadata:** `3d68626` (docs: complete plan)
 
 ## Files Created/Modified
 

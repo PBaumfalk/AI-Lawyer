@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Eine vollständig browserbasierte Kanzleisoftware mit integrierter KI ("KI-Rechtsanwaltsfachangestellte") für die Kanzlei Baumfalk, Dortmund. Vereint Aktenverwaltung, Dokumentenmanagement mit integrierter Textverarbeitung (OnlyOffice), Kalender/Fristen, E-Mail-Client, Finanzen (RVG, Rechnungen, DATEV), beA-Integration und eine proaktive KI-Agentin (OpenClaw) in einer modernen, self-hosted Anwendung. Nach Server-Installation wird keine Zusatzsoftware benötigt — alles läuft im Browser.
+Eine vollständig browserbasierte Kanzleisoftware mit integrierter KI-Agentin ("Helena") für die Kanzlei Baumfalk, Dortmund. Vereint Aktenverwaltung, Dokumentenmanagement mit OnlyOffice (Co-Editing, Track Changes, Vorlagen, Briefkopf), BGB-konforme Fristenberechnung, vollständigen E-Mail-Client (IMAP IDLE + SMTP), OCR-Pipeline mit RAG-Ingestion, Finanzen (RVG, Rechnungen, E-Rechnung, DATEV, SEPA, Zeiterfassung), beA-Integration, proaktive KI mit Document Chat, RBAC mit Dezernaten, DSGVO-Compliance und Audit-Trail — alles self-hosted via Docker Compose, alles im Browser.
 
 ## Core Value
 
@@ -12,19 +12,19 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Validated
 
-<!-- Shipped and confirmed valuable. Inferred from existing codebase. -->
+<!-- Shipped and confirmed working in v3.4 -->
 
+**Pre-existing (before v3.4):**
 - ✓ Authentifizierung mit NextAuth.js v5 (Credentials, JWT Sessions, RBAC) — existing
 - ✓ Aktenverwaltung CRUD (Anlegen, Bearbeiten, Archivieren, Aktenzeichen-Generierung) — existing
 - ✓ Conflict Check bei Aktenanlage (Namensabgleich über Beteiligte) — existing
 - ✓ Kontaktverwaltung CRUD (Natürliche/Juristische Personen, KYC, CSV/vCard-Import) — existing
 - ✓ Beteiligtenverwaltung (Mandant, Gegner, Gericht etc. einer Akte zuweisen) — existing
 - ✓ Dokumentenverwaltung (Upload zu MinIO, Metadaten in DB, Ordnerstruktur) — existing
-- ✓ OnlyOffice Editor-Integration (React-Wrapper, Config, Callback — Basis) — existing
+- ✓ OnlyOffice Editor-Integration (React-Wrapper, Config, Callback) — existing
 - ✓ Kalender CRUD (Termine, Fristen, Wiedervorlagen anlegen/bearbeiten) — existing
-- ✓ Ticket-System (CRUD, Filter nach Status/Fälligkeit/Tag/Akte, Sortierung, Quick-Actions, Detailseite) — existing
+- ✓ Ticket-System (CRUD, Filter, Sortierung, Quick-Actions, Detailseite) — existing
 - ✓ KI-Entwürfe-Workspace (Liste, Detail, als Dokument/Aktennotiz speichern) — existing
-- ✓ AI-Service Basis (Ollama-Client, Prompt-Templates, Task-Processing mit Locking) — existing
 - ✓ Vorlagen-System Basis (docxtemplater, Platzhalter-Befüllung) — existing
 - ✓ Volltextsuche via Meilisearch — existing
 - ✓ Command Palette (Cmd+K) — existing
@@ -35,111 +35,89 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - ✓ Dokumentstatus-Workflow (ENTWURF → ZUR_PRUEFUNG → FREIGEGEBEN → VERSENDET) — existing
 - ✓ KI-Kennzeichnung an Dokumenten ("KI" + "nicht freigegeben" Badges) — existing
 
+**Infrastructure (v3.4 Phase 1):**
+- ✓ Redis 7 + BullMQ Worker-Prozess in Docker Compose — v3.4
+- ✓ Custom server.ts mit Socket.IO WebSocket auf Port 3000 — v3.4
+- ✓ Graceful Shutdown für Worker (laufende Jobs abschließen) — v3.4
+- ✓ Stirling-PDF Docker-Sidecar für OCR + PDF-Tools — v3.4
+
+**Fristen & Kalender (v3.4 Phase 2 + 2.1):**
+- ✓ BGB §§187-193 Fristberechnung (Ereignisfrist, Beginnfrist, Monatsende-Überlauf, 50+ Tests) — v3.4
+- ✓ Feiertagskalender pro Bundesland mit §193 BGB Wochenende/Feiertag-Verschiebung — v3.4
+- ✓ Vorfristen-Erinnerungen (7/3/1 Tag) mit BullMQ Cron-Job — v3.4
+- ✓ Tagesübersicht + Quick-Actions + Dashboard-Widget — v3.4
+- ✓ 5-stufige Prioritäten (Sehr niedrig → Dringend) — v3.4
+
+**Dokumente & Vorlagen (v3.4 Phase 2 + 2.2):**
+- ✓ WOPI-Protokoll stabil (Laden/Speichern, Co-Editing, document.key Versionierung) — v3.4
+- ✓ Track Changes, Kommentare, Versionierung in OnlyOffice — v3.4
+- ✓ Vorlagen-System mit Platzhalter-Befüllung (mandant.name, akte.aktenzeichen etc.) — v3.4
+- ✓ Briefkopf-Verwaltung (Logo + Kanzleidaten, Formular-Modus) — v3.4
+- ✓ PDF-Export mit Kanzlei-Briefkopf — v3.4
+- ✓ Vorlagenkategorien + Freie Ordnerstruktur — v3.4
+- ✓ Ordner-Schemata für Akten (Standard-Ordner pro Akte, admin-verwaltbar) — v3.4
+
+**E-Mail (v3.4 Phase 3 + 3.1):**
+- ✓ IMAP-Sync mit IDLE für eingehende E-Mails in Echtzeit — v3.4
+- ✓ Shared Kanzlei-Postfach + per-User Mailboxen — v3.4
+- ✓ Inbox-Seite mit Filtern (veraktet/unveraktet, Akte, Verantwortlicher) — v3.4
+- ✓ E-Mail-Detailansicht (Header, Body, Anhänge) — v3.4
+- ✓ E-Mail verakten (Auto-Suggest, One-Click, Anhänge ins DMS) — v3.4
+- ✓ Compose-View mit Rich-Text, DMS-Anhänge, Akte-Verknüpfung, SMTP — v3.4
+- ✓ Ticket aus E-Mail erstellen — v3.4
+- ✓ Akte Tab "E-Mails" — v3.4
+
+**Dokument-Pipeline (v3.4 Phase 4 + 4.1):**
+- ✓ Auto-OCR bei PDF-Upload (Stirling-PDF, skip wenn bereits durchsuchbar) — v3.4
+- ✓ OCR-Status speichern + Badge + manueller Retry — v3.4
+- ✓ OCR-Ergebnis in Meilisearch indiziert — v3.4
+- ✓ PDF-Preview im Browser (react-pdf, Navigation, Zoom, Download) — v3.4
+- ✓ Dokument-Detailseite (Metadaten, Versionen, Status, Tags, Audit-Historie) — v3.4
+- ✓ RAG-Pipeline: Paragraph-Chunking, Ollama Embedding, pgvector Storage — v3.4
+
+**Finanzen (v3.4 Phase 5):**
+- ✓ RVG-Berechnung (KostBRaeG 2025, Anrechnung, PKH, 50+ Tests) — v3.4
+- ✓ Rechnungen (Nummernkreis, Status-Flow, §14 UStG, PDF mit Briefkopf) — v3.4
+- ✓ E-Rechnung: XRechnung CII + ZUGFeRD PDF/A-3 — v3.4
+- ✓ Aktenkonto mit Fremdgeld-Compliance (5-Werktage, 15k Anderkonto) — v3.4
+- ✓ DATEV CSV-Export (Buchungsstapel) — v3.4
+- ✓ SEPA pain.001 + pain.008 — v3.4
+- ✓ Banking-Import CSV + CAMT053 mit semi-automatischer Zuordnung — v3.4
+- ✓ Zeiterfassung (Timer + manuell + Akte-Auto-Start) — v3.4
+
+**KI / OpenClaw (v3.4 Phase 6):**
+- ✓ Multi-Provider AI (Ollama/OpenAI/Anthropic) via Vercel AI SDK v4 — v3.4
+- ✓ Akten-spezifischer Document Chat mit RAG, Quellennachweisen, Konfidenz — v3.4
+- ✓ Proaktive Helena-Agentin (E-Mail/Dokument-Scan, Aktionsvorschläge) — v3.4
+- ✓ Auto-Fristenerkennung aus Schriftsätzen → Kalender-ENTWURF — v3.4
+- ✓ Auto-Beteiligte-Erkennung aus Dokumenten → Vorschlag — v3.4
+- ✓ KI-Entwurf-Workflow: Jedes KI-Ergebnis = ENTWURF, explizite Freigabe — v3.4
+- ✓ Chat-Verlauf speichern (pro User + pro Akte) — v3.4
+- ✓ Token-Usage-Tracking pro User/Akte + Admin-Dashboard — v3.4
+- ✓ AI-Runner: Idempotenz + Retry + Rate-Limits — v3.4
+- ✓ Quellennachweise bei KI-Antworten (Dokument + Absatz) — v3.4
+
+**beA (v3.4 Phase 6):**
+- ✓ beA-Posteingang (Empfangen + Auto-Akte-Zuordnung) — v3.4
+- ✓ beA-Postausgang (Senden mit Dokumentenanhang) — v3.4
+- ✓ eEB (Elektronisches Empfangsbekenntnis) — v3.4
+- ✓ Prüfprotokoll anzeigen/archivieren — v3.4
+- ✓ Safe-ID-Verwaltung an Kontakten — v3.4
+- ✓ XJustiz-Parser + Viewer — v3.4
+
+**Rollen & Sicherheit (v3.4 Phase 7 + 8 + 9):**
+- ✓ Akten-Zugriff: Persönlich + Gruppen/Dezernate + Admin-Override — v3.4
+- ✓ SEKRETARIAT als eingeschränkter Sachbearbeiter (kein Freigeben) — v3.4
+- ✓ 4-Rollen-System (ADMIN, ANWALT, SACHBEARBEITER, SEKRETARIAT) — v3.4
+- ✓ Systemweiter Audit-Trail (Admin-Ansicht + pro Akte + CSV/PDF-Export) — v3.4
+- ✓ DSGVO: Anonymisierung, Auskunftsrecht PDF, 10-Jahres-Aufbewahrung — v3.4
+- ✓ Health-Checks (App/Worker/Redis/Ollama) + Email-Alerts — v3.4
+- ✓ Versand-Gate (ENTWURF-Dokumente können nicht versendet werden) — v3.4
+- ✓ RBAC-Enforcement auf allen API-Routes (Finance, Dashboard, KI, beA) — v3.4
+
 ### Active
 
-<!-- Current scope. Building toward these. -->
-
-**AI/OpenClaw — KI-Rechtsanwaltsfachangestellte:**
-- [ ] OpenClaw als proaktive KI-Agentin in der Software (erkennt Handlungsbedarf, erstellt Auto-Entwürfe)
-- [ ] Globaler KI-Chat (aktenübergreifende Suche und Fragen via RAG)
-- [ ] Akten-spezifischer Document Chat (Fragen an Dokumente einer Akte)
-- [ ] RAG-Pipeline: Embedding-Storage, Chunking (DOCX/PDF/Text), Embedding-Job, Retrieval-API
-- [ ] Multi-Provider AI (Ollama/Mistral lokal + OpenAI + Anthropic als Cloud-Option)
-- [ ] Automatische Fristenerkennung aus Schriftsätzen (legt Fristen als Entwurf im Kalender an)
-- [ ] Automatische Beteiligte-Erkennung aus Dokumenten
-- [ ] Fallzusammenfassung (Timeline + Key Facts pro Akte)
-- [ ] AI-Runner: Idempotenz (pro Ticket+Tag max. 1 Ergebnis/Tag)
-- [ ] AI-Runner: Retry (max 2) + Tag `ai:error` bei Fail
-- [ ] AI-Runner: Endpoint `/api/openclaw/process` nur ADMIN + Rate-Limit
-- [ ] Token-Usage-Tracking pro User/Akte + Kontingent-Management
-- [ ] Chat-Verlauf speichern (AiConversation/ChatNachricht)
-
-**OnlyOffice — Vollständige Textverarbeitung:**
-- [ ] WOPI-Protokoll stabil implementieren (Laden/Speichern zuverlässig)
-- [ ] Vorlagensystem mit Platzhalter-Befüllung ({{mandant.name}}, {{akte.aktenzeichen}} etc.)
-- [ ] Echtzeit-Collaboration (mehrere Nutzer gleichzeitig)
-- [ ] PDF-Export (mit Kanzlei-Briefkopf)
-- [ ] Briefkopf-Bearbeitung direkt in OnlyOffice
-- [ ] Track Changes, Kommentare, Versionierung
-
-**Vorlagen & Briefkopf:**
-- [ ] Freie Ordnerstruktur für Vorlagen (User kann Ordner selbst anlegen/verwalten)
-- [ ] Briefkopf-Verwaltung (Logo + Kanzleidaten, bearbeitbar in OnlyOffice)
-- [ ] Vorlagenkategorien: Schriftsätze, Klageschriften, Vollmachten, Mahnungen etc.
-
-**Akten-Ordnerstruktur:**
-- [ ] Ordner-Schemata in Einstellungen definierbar (Standard-Ordner pro Akte)
-- [ ] Anwalt/Sachbearbeiter können weitere Ordner frei anlegen
-- [ ] Verschachtelte Ordnerstruktur innerhalb einer Akte
-
-**Falldatenblätter pro Rechtsgebiet:**
-- [ ] Arbeitsrecht (Kündigungsschutz, Abfindung, Elternzeit, Vertragsprüfung)
-- [ ] Familienrecht (Scheidung, Unterhalt, Sorgerecht, Zugewinn)
-- [ ] Verkehrsrecht (Unfallschaden, Bußgeld, Fahrverbot, Schadensregulierung)
-- [ ] Miet-/Immobilienrecht (Kündigung, Mietminderung, Räumung, Eigenbedarf)
-- [ ] Strafrecht (Ermittlungsverfahren, Hauptverhandlung, Bewährung)
-
-**E-Mail — Vollständiger Client:**
-- [ ] IMAP-Sync mit Real-Time (IMAP IDLE) für eingehende E-Mails
-- [ ] Shared Kanzlei-Postfach + per-User Mailboxen
-- [ ] Inbox-Seite (Liste, Pagination, Filter: veraktet/unveraktet, Akte, Verantwortlicher)
-- [ ] E-Mail-Detailansicht (Header, Body, Anhänge)
-- [ ] E-Mail verakten (Akte zuordnen, Anhänge ins DMS)
-- [ ] Ticket aus E-Mail erstellen (Prefill Titel/Beschreibung)
-- [ ] Compose-View (An, CC, Betreff, Rich-Text, Akte-Verknüpfung)
-- [ ] SMTP-Versand
-- [ ] Akte: Tab "E-Mails" (veraktete Mails)
-
-**Internes Messaging — Hybrid:**
-- [ ] Akten-bezogene Diskussionen (Case Threads)
-- [ ] Allgemeine Kanäle (Kanzlei-weit)
-- [ ] Thread-Liste (Inbox) mit Filtern
-- [ ] Chat-View mit Infinite-Scroll
-- [ ] Composer (Markdown-lite, Attachments, @Mention-Picker)
-- [ ] @Mentions (User, Role) + In-App-Benachrichtigungen
-- [ ] Message-Actions (Antworten, Zitieren, Link kopieren, Task erzeugen)
-- [ ] Dokument verlinken (Picker, Card/Preview)
-- [ ] Berechtigungen (Sichtbarkeit pro Kanzlei/Akte)
-
-**Kalender & Fristen:**
-- [ ] Fristenberechnung nach §§ 187-193 BGB (Wochenende/Feiertag-Verschiebung)
-- [ ] Feiertagskalender pro Bundesland (konfigurierbar, Standard: NRW)
-- [ ] Prioritäten: 5 Stufen (Sehr niedrig, Niedrig, Normal, Hoch, Dringend)
-- [ ] Frist-Erinnerungen (7, 3, 1 Tag vorher) + Vorfrist
-- [ ] Tagesübersicht (heute/überfällig) + Quick-Actions
-- [ ] Dashboard-Widget: Fällige Fristen heute/diese Woche
-- [ ] CalDAV-Sync (bidirektional mit externen Kalendern)
-
-**Dokument-Pipeline & PDF-Tools (Stirling-PDF):**
-- [ ] Stirling-PDF Docker-Service integrieren
-- [ ] Auto-OCR bei Upload (nur wenn PDF nicht bereits durchsuchbar)
-- [ ] OCR-Queue/Worker (async, retries, backoff)
-- [ ] OCR-Status speichern + anzeigen (Badge + manueller Retry)
-- [ ] OCR-Ergebnis in Meilisearch indizieren
-- [ ] Dokument-Detailseite (Metadaten, Versionen, Status, Tags, Historie)
-- [ ] PDF-Preview im Browser (Viewer mit Navigation, Zoom, Download)
-- [ ] Actions-Bar (Umbenennen, Verschieben, Tags, Statuswechsel, PDF-Export)
-- [ ] PDF Merge, Split, Reorder/Rotate, Compress, Extract, Watermark, Redact, Convert to PDF
-
-**Finanzen:**
-- [ ] Rechnungen: DB-Model, Nummernkreis, atomare Vergabe, UI, PDF-Rendering, Statusflow
-- [ ] RVG: Voll-automatische Berechnung (Streitwert → Gebührenvorschlag mit VV-Nummern)
-- [ ] Mahnwesen: Mahnstufen, Mahnlauf, Mahn-PDF
-- [ ] E-Rechnung: XRechnung + ZUGFeRD Export
-- [ ] Aktenkonto: Buchungen (Einnahme/Ausgabe/Fremdgeld/Auslage), Saldo, Beleg-Verknüpfung
-- [ ] Banking-Import: CSV + CAMT053
-- [ ] Banking-Zuordnung (Rechnung/Akte) + Übernahme als Buchungen
-- [ ] DATEV: CSV-Export (Buchungsstapel)
-- [ ] SEPA: pain.001 (Überweisungen) + pain.008 (Lastschriften)
-- [ ] Zeiterfassung: Timer + manuelle Einträge + Auswertung
-
-**beA-Integration (Interface Only):**
-- [ ] Posteingang: beA-Nachrichten empfangen + automatisch Akten zuordnen
-- [ ] Postausgang: Nachrichten aus Akte senden (mit Dokumentenanhang)
-- [ ] eEB (Elektronisches Empfangsbekenntnis)
-- [ ] Prüfprotokoll anzeigen/archivieren
-- [ ] Safe-ID-Verwaltung an Kontakten
-- [ ] XJustiz-Parser + Viewer
+<!-- Next milestone scope (v2). To be refined with /gsd:new-milestone. -->
 
 **Mandantenportal:**
 - [ ] Freigegebene Dokumente einsehen/herunterladen
@@ -148,21 +126,31 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - [ ] Eigene Unterlagen hochladen
 - [ ] Authentifizierung: Einladungslink + Passwort
 
-**Rollen & Rechte:**
-- [ ] Akten-Zugriff: Persönlich + Gruppen/Dezernate + Admin-Override
-- [ ] SEKRETARIAT als eingeschränkter Sachbearbeiter (kein Freigeben)
-- [ ] PRAKTIKANT: Nur Lesen + Entwürfe erstellen (zugewiesene Akten)
-- [ ] Systemweiter Audit-Trail (Wer hat wann was geändert — Admin-Ansicht + pro Akte)
+**Internes Messaging:**
+- [ ] Akten-bezogene Diskussionen (Case Threads)
+- [ ] Allgemeine Kanäle (Kanzlei-weit)
+- [ ] @Mentions + In-App-Benachrichtigungen
 
-**Glass UI Migration (verbleibend):**
+**Mahnwesen:**
+- [ ] Mahnstufen, Mahnlauf, Mahn-PDF
+
+**Fallzusammenfassung:**
+- [ ] Timeline + Key Facts pro Akte (KI-generiert)
+
+**Globaler KI-Chat:**
+- [ ] Aktenübergreifende Suche und Fragen via RAG
+
+**CalDAV-Sync:**
+- [ ] Bidirektionaler Sync mit externen Kalendern
+
+**PDF-Tools (Stirling-PDF):**
+- [ ] Merge, Split, Reorder/Rotate, Compress, Watermark, Redact
+
+**Falldatenblätter pro Rechtsgebiet:**
+- [ ] Arbeitsrecht, Familienrecht, Verkehrsrecht, Miet-/Immobilienrecht, Strafrecht
+
+**Glass UI Migration:**
 - [ ] Verbleibende Seiten auf Glass-Komponenten migrieren
-- [ ] Lightmode-Farbkonfiguration in Einstellungen
-
-**Sicherheit & Compliance:**
-- [ ] Versand-Gate Tests (Dokumentstatus-Transitionen, RBAC)
-- [ ] Rate-Limits für OpenClaw-Endpunkte
-- [ ] DSGVO: Löschkonzept, Auskunftsrecht, Einwilligungsmanagement
-- [ ] Observability: Health-Checks (App/Ollama/OpenClaw) + strukturierte Logs
 
 **Sonstiges:**
 - [ ] VoIP: Sipgate Anrufjournal + Zuordnung
@@ -171,25 +159,25 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Out of Scope
 
-<!-- Explicit boundaries. Includes reasoning to prevent re-adding. -->
+<!-- Explicit boundaries with reasoning. -->
 
-- Native Mobile App — Web-first, responsive reicht; native kommt frühestens nach MVP
+- Native Mobile App — Web-first, responsive reicht; native kommt frühestens nach v2
 - Desktop-Client — Widerspricht Browser-Only-Prinzip
 - Zwangsvollstreckung — Eigenes Modul, nach MVP als Erweiterung
-- Kanzlei-übergreifende Mandats-Teilung — Zu komplex, nicht in v1
-- beA Live-Integration — Kein Testumgebung-Zugang; Interface/UI wird vorbereitet
+- Kanzlei-übergreifende Mandats-Teilung — Zu komplex
+- beA native Integration (ohne bea.expert) — OSCI/Java-Komplexität; €10/Monat vernachlässigbar
 - Eigenes Buchhaltungsmodul (FiBu) — DATEV-Export deckt Steuerberater-Schnittstelle ab
-- Bidirektionaler IMAP-Sync (Flags/Löschen zurück zum Mailserver) — Erst nach stabilem Read-Sync
+- Bidirektionaler IMAP-Sync (Flags/Löschen zurück) — One-Way-Import korrekt; Flags zurück = fragil
+- KI Auto-Versand — Absolute No-Go per BRAK 2025 + BRAO
+- Offline Mode — Real-time ist Core Value
 
 ## Context
 
-- **Kanzlei Baumfalk** (Dortmund) ist Auftraggeber und erster Nutzer
-- Bestehende Kanzlei-Software (j-lawyer.org, RA-MICRO, Advoware) als Referenz für Feature-Parität
-- Brownfield-Projekt: Signifikante bestehende Codebasis mit ~30 Prisma-Models, funktionierender Auth, Akten/Kontakte/Tickets/Dokumente UI
-- Glass/Liquid-Glass UI-Design größtenteils implementiert
-- OnlyOffice Docker läuft, aber WOPI, Templates, Collaboration, PDF-Export brauchen grundlegende Überarbeitung
-- AI-Service Grundstruktur vorhanden (Ollama-Client, Prompt-Templates, Task-Locking), aber RAG und Multi-Provider fehlen
-- Deutsche UI-Sprache, englische Code-Kommentare
+Shipped v3.4 with 90,375 LOC TypeScript across 461 files.
+Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS, shadcn/ui, PostgreSQL 16 + Prisma (60+ Models), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/OpenAI/Anthropic), bea.expert.
+Docker Compose deployment with 7 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice).
+All 64 v1 requirements verified across 7 audit cycles.
+Minor tech debt: Bull Board PUT stub, Briefkopf OnlyOffice editing deferred, bea.expert library requires commercial registration.
 
 ## Constraints
 
@@ -205,21 +193,25 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Ollama + Mistral 7B als Standard-LLM | Self-hosted, keine Datenabflüsse, DSGVO-konform | — Pending |
-| Multi-Provider von Anfang an | Flexibilität für Cloud-LLMs wenn gewünscht (OpenAI, Anthropic) | — Pending |
-| OnlyOffice statt TipTap | Native DOCX-Unterstützung, Collaboration, Track Changes | ⚠️ Revisit (WOPI-Probleme) |
-| IMAP IDLE statt Polling | Echtzeit-E-Mail-Empfang, professionelle UX | — Pending |
-| Briefkopf-Bearbeitung in OnlyOffice | Kein eigener Designer nötig, nutzt bestehende Textverarbeitung | — Pending |
-| Freie Vorlagen-Ordner (kein fixes Schema) | Maximale Flexibilität für verschiedene Kanzlei-Workflows | — Pending |
-| Ordner-Schemata für Akten + frei erweiterbar | Konsistente Grundstruktur + Flexibilität pro Akte | — Pending |
-| 5-stufige Prioritäten (Sehr niedrig → Dringend) | Feinere Steuerung bei Fristen/Wiedervorlagen | — Pending |
-| Hybrid-Messaging (Akte + allgemein) | Beides gebraucht: case-spezifisch + Kanzlei-weit | — Pending |
-| Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten nötig | — Pending |
-| DATEV CSV-Export | Am verbreitetsten, deckt die meisten Steuerberater ab | — Pending |
-| XRechnung + ZUGFeRD beides | Pflicht seit 01.01.2025 B2B; Gerichte brauchen XRechnung, Firmen ZUGFeRD | — Pending |
-| SEPA pain.001 + pain.008 | Überweisungen + Lastschriften abdecken | — Pending |
-| CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen (Google, Outlook) | — Pending |
-| Shared + per-User Mailboxen | Kanzlei-Posteingang + individuelle Accounts | — Pending |
+| Ollama + Mistral 7B als Standard-LLM | Self-hosted, keine Datenabflüsse, DSGVO-konform | ✓ Good — Multi-provider with Ollama default |
+| Multi-Provider via AI SDK v4 | Flexibilität für Cloud-LLMs (OpenAI, Anthropic) | ✓ Good — Provider factory with runtime switching |
+| OnlyOffice statt TipTap | Native DOCX-Unterstützung, Collaboration, Track Changes | ✓ Good — WOPI rebuilt, co-editing stable |
+| IMAP IDLE statt Polling | Echtzeit-E-Mail-Empfang, professionelle UX | ✓ Good — ImapFlow with reconnection strategy |
+| Briefkopf-Bearbeitung in OnlyOffice | Kein eigener Designer nötig | ⚠️ Revisit — Form mode works, OnlyOffice editing deferred |
+| Freie Vorlagen-Ordner (kein fixes Schema) | Maximale Flexibilität für Kanzlei-Workflows | ✓ Good |
+| Ordner-Schemata für Akten + frei erweiterbar | Konsistente Grundstruktur + Flexibilität | ✓ Good — Per-Sachgebiet defaults with global fallback |
+| 5-stufige Prioritäten (Sehr niedrig → Dringend) | Feinere Steuerung bei Fristen/Wiedervorlagen | ✓ Good |
+| DATEV CSV-Export | Am verbreitetsten, deckt meisten Steuerberater ab | ✓ Good — EXTF_ format implemented |
+| XRechnung + ZUGFeRD beides | Pflicht seit 01.01.2025 B2B | ✓ Good — Hand-built CII XML + pdf-lib embedding |
+| SEPA pain.001 + pain.008 | Überweisungen + Lastschriften | ✓ Good — sepa.js XML generation |
+| Shared + per-User Mailboxen | Kanzlei-Posteingang + individuelle Accounts | ✓ Good — Multi-mailbox with IDLE per mailbox |
+| 4-Rollen statt 5 (PRAKTIKANT entfernt) | PRAKTIKANT-Rolle redundant, SACHBEARBEITER deckt ab | ✓ Good — Simplified RBAC |
+| Hand-built CII XML statt @e-invoice-eu/core | Bibliothek zu komplex, Hand-Build gibt volle EN16931-Kontrolle | ✓ Good |
+| Non-fatal Versand-Gate | Document status failure sollte Send nie blockieren | ✓ Good — try-catch wrapper |
+| Helena als proaktive Agentin | KI-Differentiator: scannt automatisch, schlägt vor, erstellt nie auto | ✓ Good — Suggestions feed with ENTWURF enforcement |
+| Hybrid-Messaging (Akte + allgemein) | Beides gebraucht: case-spezifisch + Kanzlei-weit | — Pending (v2) |
+| Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | — Pending (v2) |
+| CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending (v2) |
 
 ---
-*Last updated: 2026-02-24 after initialization*
+*Last updated: 2026-02-25 after v3.4 milestone*

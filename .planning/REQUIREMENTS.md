@@ -215,9 +215,9 @@
 | REQ-KI-011 | Phase 6 | Complete |
 | REQ-KI-012 | Phase 6 | Complete |
 | REQ-BA-001 | Phase 6 | Complete |
-| REQ-BA-002 | Phase 6 | Pending |
-| REQ-BA-003 | Phase 6 | Pending |
-| REQ-BA-004 | Phase 6 | Pending |
+| REQ-BA-002 | Phase 6 | Complete |
+| REQ-BA-003 | Phase 6 | Complete |
+| REQ-BA-004 | Phase 6 | Complete |
 | REQ-BA-005 | Phase 6 | Complete |
 | REQ-BA-006 | Phase 6 | Complete |
 | REQ-RS-001 | Phase 7 | Pending |

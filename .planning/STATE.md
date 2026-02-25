@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 6 of 7 (AI Features + beA)
-Plan: 4 of 5 in current phase (4 complete)
-Status: Executing Phase 6
-Last activity: 2026-02-25 -- Plan 06-04 completed (beA Foundation Layer)
+Plan: 5 of 5 in current phase (5 complete)
+Status: Phase 6 COMPLETE
+Last activity: 2026-02-25 -- Plan 06-05 completed (beA UI Layer)
 
-Progress: [███████████████████████████] 97%
+Progress: [████████████████████████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 26
-- Average duration: 7.6 min
-- Total execution time: 3.4 hours
+- Total plans completed: 27
+- Average duration: 7.8 min
+- Total execution time: 3.8 hours
 
 **By Phase:**
 
@@ -38,7 +38,7 @@ Progress: [███████████████████████
 | 5 - Financial Module | 5/6 | 44 min | 8.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-01 (7 min), 06-02 (12 min), 06-03 (16 min), 06-02b (8 min), 06-04 (8 min)
+- Last 5 plans: 06-02 (12 min), 06-03 (16 min), 06-02b (8 min), 06-04 (8 min), 06-05 (24 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -72,6 +72,7 @@ Progress: [███████████████████████
 | Phase 06 P03 | 16min | 2 tasks | 19 files |
 | Phase 06 P02 | 8min | 2 tasks | 16 files |
 | Phase 06 P04 | 8min | 2 tasks | 9 files |
+| Phase 06 P05 | 24min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -233,6 +234,14 @@ Recent decisions affecting current work:
 - [06-04]: Internal AZ regex requires 4-5 digits before slash to avoid false positives with court AZ format
 - [06-04]: vi.resetAllMocks() in beforeEach (not clearAllMocks) to properly reset mockResolvedValue defaults
 
+- [06-05]: beA login dialog with software token (.p12/.pfx) file upload and PIN in browser
+- [06-05]: beA inbox syncs from bea.expert API to database on page load, displays from DB
+- [06-05]: eEB acknowledgment two-step: browser-side bea.expert call then server-side DB record
+- [06-05]: XJustiz viewer with collapsible sections for Grunddaten, Beteiligte, Instanzen, Termine
+- [06-05]: SAFE-ID autocomplete from Kontakt.beaSafeId for compose form
+- [06-05]: Auto-assignment and Helena AI scan triggered on POST /api/bea/messages
+- [06-05]: 409 Conflict for duplicate nachrichtenId supports idempotent sync
+
 ### Pending Todos
 
 None yet.
@@ -244,5 +253,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 06-04-PLAN.md (beA Foundation Layer)
-Resume file: .planning/phases/06-ai-features-bea/06-04-SUMMARY.md
+Stopped at: Completed 06-05-PLAN.md (beA UI Layer) -- Phase 6 COMPLETE
+Resume file: .planning/phases/06-ai-features-bea/06-05-SUMMARY.md

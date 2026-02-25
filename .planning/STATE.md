@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 8 - Integration Hardening
+**Current focus:** Phase 9 - Final Integration Wiring + Tech Debt (COMPLETE)
 
 ## Current Position
 
-Phase: 8 of 8 (Integration Hardening)
-Plan: 3 of 3 in current phase (3 complete)
-Status: Phase 8 COMPLETE
-Last activity: 2026-02-25 -- Plan 08-03 completed (Versand-Gate + beA Audit + Pruefprotokoll)
+Phase: 9 of 9 (Final Integration Wiring + Tech Debt)
+Plan: 1 of 1 in current phase (1 complete)
+Status: Phase 9 COMPLETE
+Last activity: 2026-02-25 -- Plan 09-01 completed (markDokumenteVersendet wiring + tech debt cleanup)
 
 Progress: [██████████████████████████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 33
-- Average duration: 7.5 min
-- Total execution time: 4.5 hours
+- Total plans completed: 34
+- Average duration: 7.4 min
+- Total execution time: 4.55 hours
 
 **By Phase:**
 
@@ -39,8 +39,10 @@ Progress: [███████████████████████
 
 | 7 - Rollen, Sicherheit, Compliance, Observability | 3/3 | 23 min | 7.7 min |
 
+| 9 - Final Integration Wiring + Tech Debt | 1/1 | 3 min | 3 min |
+
 **Recent Trend:**
-- Last 5 plans: 07-03 (3 min), 08-01 (5 min), 08-02 (8 min), 08-03 (8 min)
+- Last 5 plans: 08-01 (5 min), 08-02 (8 min), 08-03 (8 min), 09-01 (3 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -81,6 +83,7 @@ Progress: [███████████████████████
 | Phase 08 P01 | 5min | 2 tasks | 10 files |
 | Phase 08 P02 | 8min | 2 tasks | 9 files |
 | Phase 08 P03 | 8min | 2 tasks | 10 files |
+| Phase 09 P01 | 3min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -279,6 +282,9 @@ Recent decisions affecting current work:
 - [08-03]: BEA_POSTFACH_GEWECHSELT registered for future multi-postbox UI
 - [08-03]: Versand-Gate pattern: checkDokumenteFreigegeben() before any send operation
 
+- [09-01]: Non-fatal markDokumenteVersendet: wrapped in try-catch so document status failure never blocks email/beA send
+- [09-01]: PDFRawStream.of confirmed as false alarm by research and tsc --noEmit (no code change needed)
+
 ### Pending Todos
 
 None yet.
@@ -290,5 +296,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 08-03-PLAN.md (Phase 8 complete -- all integration hardening plans executed)
-Resume file: .planning/phases/08-integration-hardening/08-03-SUMMARY.md
+Stopped at: Completed 09-01-PLAN.md (Phase 9 complete -- all integration gaps closed and tech debt resolved)
+Resume file: .planning/phases/09-final-integration-wiring-tech-debt/09-01-SUMMARY.md

@@ -220,11 +220,11 @@ Plans:
   3. Admin can view the full system-wide Audit-Trail (who/when/what) with filtering, and per-Akte audit history is visible on the case detail page
   4. DSGVO compliance is operational: data deletion workflow, Auskunftsrecht export, and Einwilligungsmanagement are functional
   5. Health check endpoints report status of App, Worker, Redis, Ollama, and all Docker services; structured logging is enabled for production troubleshooting
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: RBAC enforcement (Akten-Zugriff, SEKRETARIAT, PRAKTIKANT permissions)
-- [ ] 07-02: Audit-Trail UI + DSGVO compliance + Observability
+- [ ] 07-01-PLAN.md -- RBAC Foundation + Enforcement: Dezernat/AdminOverride schema, rbac.ts helpers, retrofit all API routes with access checks, sidebar role filtering, Dezernat management UI, Rollen-Matrix page
+- [ ] 07-02-PLAN.md -- Audit-Trail UI + DSGVO Compliance + Observability: system-wide audit timeline, per-Akte Historie enhancement, CSV/PDF export, DSGVO anonymization workflow, Auskunftsrecht PDF, extended health checks, email alerts
 
 ## Progress
 

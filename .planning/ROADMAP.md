@@ -122,7 +122,7 @@ Phases execute in numeric order: 10 -> 11 -> 12 -> 13 -> 14
 | 7. Rollen/Sicherheit/Compliance | v3.4 | 3/3 | Complete | 2026-02-25 |
 | 8. Integration Hardening | v3.4 | 3/3 | Complete | 2026-02-25 |
 | 9. Final Integration + Tech Debt | v3.4 | 1/1 | Complete | 2026-02-25 |
-| 10. Docker Build Fix | v3.5 | 0/? | Not started | - |
+| 10. Docker Build Fix | 1/2 | In Progress|  | - |
 | 11. Glass UI Migration | v3.5 | 0/? | Not started | - |
 | 12. Falldatenblaetter | v3.5 | 0/? | Not started | - |
 | 13. BI-Dashboard | v3.5 | 0/? | Not started | - |

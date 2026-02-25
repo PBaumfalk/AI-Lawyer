@@ -9,7 +9,7 @@ Requirements for v3.5 Production Ready. Each maps to roadmap phases.
 
 ### Docker / Build
 
-- [ ] **BUILD-01**: Docker production build kompiliert fehlerfrei (kein webpack-Fehler in Financial Module)
+- [x] **BUILD-01**: Docker production build kompiliert fehlerfrei (kein webpack-Fehler in Financial Module)
 - [ ] **BUILD-02**: Docker Compose `docker compose up` startet alle Services erfolgreich (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice)
 
 ### Glass UI
@@ -99,7 +99,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUILD-01 | Phase 10 | Pending |
+| BUILD-01 | Phase 10 | Complete |
 | BUILD-02 | Phase 10 | Pending |
 | UI-01 | Phase 11 | Pending |
 | UI-02 | Phase 11 | Pending |

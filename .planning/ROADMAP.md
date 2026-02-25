@@ -21,7 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Document Pipeline (OCR + RAG Ingestion)** - Stirling-PDF, auto-OCR, PDF preview, document detail page, chunking, embedding, pgvector storage (completed 2026-02-24)
 - [ ] **Phase 4.1: Wire Akte Real-Time + Email Compose + Admin Pipeline** - Socket.IO akte room join, Neue E-Mail button, admin pipeline dashboard (INSERTED — gap closure)
 - [x] **Phase 5: Financial Module** - RVG calculation, invoicing, Aktenkonto, Fremdgeld compliance, E-Rechnung, DATEV, SEPA, banking import, Zeiterfassung (completed 2026-02-24)
-- [ ] **Phase 6: AI Features + beA** - Multi-provider AI, RAG retrieval, document chat, proactive agent, deadline recognition, beA integration via bea.expert
+- [x] **Phase 6: AI Features + beA** - Multi-provider AI, RAG retrieval, document chat, proactive agent, deadline recognition, beA integration via bea.expert (completed 2026-02-25)
 - [ ] **Phase 7: Rollen/Sicherheit + Compliance + Observability** - RBAC enforcement, Audit-Trail UI, DSGVO compliance, health checks, structured logs
 
 ## Phase Details
@@ -242,7 +242,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 ->
 | 4. Document Pipeline (OCR + RAG Ingestion) | 0/3 | Complete    | 2026-02-24 |
 | 4.1 Wire Akte Real-Time + Email Compose + Admin Pipeline | 0/1 | Not started | - |
 | 5. Financial Module | 0/6 | Complete    | 2026-02-24 |
-| 6. AI Features + beA | 0/5 | Not started | - |
+| 6. AI Features + beA | 0/5 | Complete    | 2026-02-25 |
 | 7. Rollen/Sicherheit + Compliance + Observability | 0/2 | Not started | - |
 
 ## Coverage Matrix

@@ -9,6 +9,8 @@ const adminNavigation = [
   { name: "Job-Monitor", href: "/admin/jobs" },
   { name: "System", href: "/admin/system" },
   { name: "Pipeline", href: "/admin/pipeline" },
+  { name: "Dezernate", href: "/admin/dezernate" },
+  { name: "Rollen", href: "/admin/rollen" },
   { name: "Audit-Trail", href: "/admin/audit-trail" },
   { name: "DSGVO", href: "/admin/dsgvo" },
   { name: "Einstellungen", href: "/admin/settings" },

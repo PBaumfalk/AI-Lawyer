@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateAktenzeichen } from "@/lib/aktenzeichen";
 import { logAuditEvent } from "@/lib/audit";
+import { requireAuth, requirePermission, buildAkteAccessFilter } from "@/lib/rbac";
 import { z } from "zod";
 
 const createAkteSchema = z.object({
@@ -19,12 +19,11 @@ const createAkteSchema = z.object({
   notizen: z.string().optional(),
 });
 
-// GET /api/akten — list cases
+// GET /api/akten -- list cases (filtered by RBAC access)
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  const result = await requireAuth();
+  if (result.error) return result.error;
+  const { session } = result;
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
@@ -32,14 +31,25 @@ export async function GET(request: NextRequest) {
   const take = Math.min(parseInt(searchParams.get("take") ?? "50"), 100);
   const skip = parseInt(searchParams.get("skip") ?? "0");
 
-  const where: any = {};
+  // Build access filter based on user role
+  const accessFilter = buildAkteAccessFilter(session.user.id, session.user.role);
+
+  const where: any = { ...accessFilter };
   if (status) where.status = status;
   if (search) {
-    where.OR = [
+    // Merge search OR with existing access OR
+    const searchOR = [
       { aktenzeichen: { contains: search, mode: "insensitive" } },
       { kurzrubrum: { contains: search, mode: "insensitive" } },
       { wegen: { contains: search, mode: "insensitive" } },
     ];
+    if (where.OR) {
+      // Access filter has OR (non-ADMIN) -- use AND to combine
+      where.AND = [{ OR: where.OR }, { OR: searchOR }];
+      delete where.OR;
+    } else {
+      where.OR = searchOR;
+    }
   }
 
   const [akten, total] = await Promise.all([
@@ -67,12 +77,12 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ akten, total });
 }
 
-// POST /api/akten — create new case
+// POST /api/akten -- create new case
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  // PRAKTIKANT cannot create Akten
+  const result = await requirePermission("canCreateAkte");
+  if (result.error) return result.error;
+  const { session } = result;
 
   const body = await request.json();
   const parsed = createAkteSchema.safeParse(body);
@@ -84,14 +94,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const aktenzeichen = await generateAktenzeichen();
   const userId = session.user.id;
-  const userRole = (session.user as any).role;
-  const kanzleiId = (session.user as any).kanzleiId;
+  const userRole = session.user.role;
+  const kanzleiId = session.user.kanzleiId;
 
   const akte = await prisma.akte.create({
     data: {
-      aktenzeichen,
+      aktenzeichen: await generateAktenzeichen(),
       kurzrubrum: parsed.data.kurzrubrum,
       wegen: parsed.data.wegen || null,
       sachgebiet: parsed.data.sachgebiet as any,

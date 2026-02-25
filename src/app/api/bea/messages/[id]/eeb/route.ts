@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireRole } from "@/lib/rbac";
 
-// ─── POST /api/bea/messages/[id]/eeb ────────────────────────────────────────
+// --- POST /api/bea/messages/[id]/eeb ---
 // Records the eEB (elektronisches Empfangsbekenntnis) acknowledgment.
 // The actual eEB call to bea.expert happens client-side.
 // This route validates and persists the result.
@@ -11,19 +11,9 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
-
-  // RBAC: Only ANWALT can acknowledge eEB
-  const role = (session.user as any).role;
-  if (role !== "ANWALT") {
-    return NextResponse.json(
-      { error: "Nur Anwaelte koennen Empfangsbekenntnisse bestaetigen" },
-      { status: 403 }
-    );
-  }
+  // RBAC: Only ANWALT or ADMIN can acknowledge eEB
+  const result = await requireRole("ANWALT", "ADMIN");
+  if (result.error) return result.error;
 
   const { id } = await params;
 

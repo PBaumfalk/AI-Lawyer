@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { autoAssignToAkte } from "@/lib/bea/auto-assign";
+import { requirePermission } from "@/lib/rbac";
 import { z } from "zod";
 
 // ─── Validation ──────────────────────────────────────────────────────────────
@@ -14,10 +14,9 @@ const autoAssignSchema = z.object({
 // Manually trigger auto-assignment for a beA message.
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  // RBAC: beA auto-assign requires canReadBeA (blocks PRAKTIKANT)
+  const authResult = await requirePermission("canReadBeA");
+  if (authResult.error) return authResult.error;
 
   const body = await request.json();
   const parsed = autoAssignSchema.safeParse(body);
@@ -44,7 +43,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Nachricht nicht gefunden" }, { status: 404 });
   }
 
-  const result = await autoAssignToAkte({
+  const assignResult = await autoAssignToAkte({
     betreff: nachricht.betreff,
     absender: nachricht.absender,
     inhalt: nachricht.inhalt,
@@ -52,19 +51,19 @@ export async function POST(request: NextRequest) {
   });
 
   // Update the message with the assignment result
-  if (result.akteId) {
+  if (assignResult.akteId) {
     await prisma.beaNachricht.update({
       where: { id: nachricht.id },
       data: {
-        akteId: result.akteId,
-        status: result.confidence === "SICHER" ? "ZUGEORDNET" : undefined,
+        akteId: assignResult.akteId,
+        status: assignResult.confidence === "SICHER" ? "ZUGEORDNET" : undefined,
       },
     });
   }
 
   return NextResponse.json({
-    akteId: result.akteId,
-    confidence: result.confidence,
-    reason: result.reason,
+    akteId: assignResult.akteId,
+    confidence: assignResult.confidence,
+    reason: assignResult.reason,
   });
 }

@@ -1,25 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadFile, generateStorageKey } from "@/lib/storage";
 import { logAuditEvent } from "@/lib/audit";
 import { indexDokument } from "@/lib/meilisearch";
 import { ocrQueue, previewQueue } from "@/lib/queue/queues";
+import { requireAkteAccess } from "@/lib/rbac";
 import type { OcrJobData, PreviewJobData } from "@/lib/ocr/types";
 
 /**
- * GET /api/akten/[id]/dokumente — list documents for a case
+ * GET /api/akten/[id]/dokumente -- list documents for a case
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
-
   const { id } = await params;
+
+  // RBAC: check Akte access (read)
+  const access = await requireAkteAccess(id);
+  if (access.error) return access.error;
 
   const { searchParams } = new URL(request.url);
   const ordner = searchParams.get("ordner");
@@ -63,7 +62,7 @@ export async function GET(
 }
 
 /**
- * POST /api/akten/[id]/dokumente — upload document(s) to a case
+ * POST /api/akten/[id]/dokumente -- upload document(s) to a case
  * Accepts multipart/form-data with:
  *   - file: The file(s) to upload
  *   - ordner: Optional folder name
@@ -73,13 +72,13 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
-
   const { id: akteId } = await params;
-  const userId = session.user.id!;
+
+  // RBAC: check Akte access with edit permission (PRAKTIKANT blocked from uploads)
+  const access = await requireAkteAccess(akteId, { requireEdit: true });
+  if (access.error) return access.error;
+  const { session } = access;
+  const userId = session.user.id;
 
   // Verify case exists
   const akte = await prisma.akte.findUnique({ where: { id: akteId } });

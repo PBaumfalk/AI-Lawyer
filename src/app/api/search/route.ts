@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { searchDokumente } from "@/lib/meilisearch";
+import { requireAuth } from "@/lib/rbac";
 
 /**
  * SearchResult shape returned to the client.
@@ -43,10 +43,8 @@ export interface SearchResult {
  *   offset       - pagination offset (default 0)
  */
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  const result = await requireAuth();
+  if (result.error) return result.error;
 
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") ?? "";

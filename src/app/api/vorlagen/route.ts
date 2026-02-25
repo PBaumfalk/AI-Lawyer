@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadFile } from "@/lib/storage";
 import { extractPlatzhalterFromDocx } from "@/lib/vorlagen";
+import { requireAuth } from "@/lib/rbac";
 
 /**
  * GET /api/vorlagen -- list all templates
@@ -10,13 +10,9 @@ import { extractPlatzhalterFromDocx } from "@/lib/vorlagen";
  * Sorting: favorites first, then by kategorie + name
  */
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json(
-      { error: "Nicht authentifiziert" },
-      { status: 401 }
-    );
-  }
+  const result = await requireAuth();
+  if (result.error) return result.error;
+  const { session } = result;
 
   const { searchParams } = new URL(request.url);
   const kategorie = searchParams.get("kategorie");
@@ -59,12 +55,12 @@ export async function GET(request: NextRequest) {
   });
 
   // Add isFavorit flag for the current user
-  const result = sorted.map((v) => ({
+  const vorlagenWithFav = sorted.map((v) => ({
     ...v,
     isFavorit: v.favoritenVon.includes(userId),
   }));
 
-  return NextResponse.json({ vorlagen: result });
+  return NextResponse.json({ vorlagen: vorlagenWithFav });
 }
 
 /**
@@ -78,13 +74,9 @@ export async function GET(request: NextRequest) {
  *   - customFelder: JSON string of custom field definitions
  */
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json(
-      { error: "Nicht authentifiziert" },
-      { status: 401 }
-    );
-  }
+  const postResult = await requireAuth();
+  if (postResult.error) return postResult.error;
+  const session = postResult.session;
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;

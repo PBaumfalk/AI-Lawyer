@@ -1,22 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getDownloadUrl, deleteFile, getFileStream } from "@/lib/storage";
 import { logAuditEvent } from "@/lib/audit";
 import { removeDokumentFromIndex, indexDokument } from "@/lib/meilisearch";
+import { requireAuth, requirePermission, requireAkteAccess } from "@/lib/rbac";
 
 /**
- * GET /api/dokumente/[id] — get document info + pre-signed download URL
- * ?download=true — returns the actual file stream
+ * GET /api/dokumente/[id] -- get document info + pre-signed download URL
+ * ?download=true -- returns the actual file stream
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
 
   const { id } = await params;
   const { searchParams } = new URL(request.url);
@@ -42,6 +40,10 @@ export async function GET(
     if (!dokument) {
       return NextResponse.json({ error: "Dokument nicht gefunden" }, { status: 404 });
     }
+
+    // RBAC: check access to the parent Akte
+    const access = await requireAkteAccess(dokument.akteId);
+    if (access.error) return access.error;
 
     // Count DocumentChunks to show AI-indexed status
     const chunkCount = await prisma.documentChunk.count({
@@ -89,6 +91,10 @@ export async function GET(
     return NextResponse.json({ error: "Dokument nicht gefunden" }, { status: 404 });
   }
 
+  // RBAC: check access to the parent Akte
+  const access = await requireAkteAccess(dokument.akteId);
+  if (access.error) return access.error;
+
   if (download) {
     try {
       const stream = await getFileStream(dokument.dateipfad);
@@ -124,16 +130,15 @@ export async function GET(
 }
 
 /**
- * PATCH /api/dokumente/[id] — update document metadata
+ * PATCH /api/dokumente/[id] -- update document metadata
  */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { session } = authResult;
 
   const { id } = await params;
   const body = await request.json();
@@ -143,41 +148,37 @@ export async function PATCH(
     return NextResponse.json({ error: "Dokument nicht gefunden" }, { status: 404 });
   }
 
+  // RBAC: check access to the parent Akte with edit permission
+  const access = await requireAkteAccess(dokument.akteId, { requireEdit: true });
+  if (access.error) return access.error;
+
   const updateData: any = {};
   if (body.name !== undefined) updateData.name = body.name;
   if (body.ordner !== undefined) updateData.ordner = body.ordner || null;
   if (body.tags !== undefined) updateData.tags = body.tags;
 
-  // Status transitions (human users only, not for VERSENDET — that's via send endpoints)
+  // Status transitions (human users only, not for VERSENDET -- that's via send endpoints)
   if (body.status !== undefined) {
-    const userRole = (session.user as any).role;
     const currentStatus = dokument.status;
     const targetStatus = body.status;
 
-    // Role-based access control for status transitions
-    // FREIGEGEBEN requires ADMIN, ANWALT, or SACHBEARBEITER
-    const FREIGABE_ROLES = ["ADMIN", "ANWALT", "SACHBEARBEITER"];
-
     if (targetStatus === "VERSENDET") {
       return NextResponse.json(
-        { error: "Status 'VERSENDET' kann nur über Versand-Endpoints gesetzt werden." },
+        { error: "Status 'VERSENDET' kann nur ueber Versand-Endpoints gesetzt werden." },
         { status: 403 }
       );
     }
 
-    if (targetStatus === "FREIGEGEBEN" && !FREIGABE_ROLES.includes(userRole)) {
-      return NextResponse.json(
-        { error: "Nur Anwälte, Sachbearbeiter oder Administratoren dürfen Dokumente freigeben." },
-        { status: 403 }
-      );
+    // RBAC: Freigeben requires canFreigeben permission
+    if (targetStatus === "FREIGEGEBEN") {
+      const permResult = await requirePermission("canFreigeben");
+      if (permResult.error) return permResult.error;
     }
 
-    // Revoking approval also requires FREIGABE_ROLES
-    if (currentStatus === "FREIGEGEBEN" && targetStatus !== "FREIGEGEBEN" && !FREIGABE_ROLES.includes(userRole)) {
-      return NextResponse.json(
-        { error: "Nur Anwälte, Sachbearbeiter oder Administratoren dürfen eine Freigabe widerrufen." },
-        { status: 403 }
-      );
+    // Revoking approval also requires canFreigeben
+    if (currentStatus === "FREIGEGEBEN" && targetStatus !== "FREIGEGEBEN") {
+      const permResult = await requirePermission("canFreigeben");
+      if (permResult.error) return permResult.error;
     }
 
     const allowedTransitions: Record<string, string[]> = {
@@ -190,7 +191,7 @@ export async function PATCH(
     const allowed = allowedTransitions[currentStatus] ?? [];
     if (!allowed.includes(targetStatus)) {
       return NextResponse.json(
-        { error: `Statusänderung von '${currentStatus}' zu '${targetStatus}' ist nicht erlaubt.` },
+        { error: `Statusaenderung von '${currentStatus}' zu '${targetStatus}' ist nicht erlaubt.` },
         { status: 400 }
       );
     }
@@ -205,7 +206,7 @@ export async function PATCH(
       currentStatus === "FREIGEGEBEN" &&
       targetStatus !== "FREIGEGEBEN"
     ) {
-      // Revoke approval — clear metadata
+      // Revoke approval -- clear metadata
       updateData.freigegebenDurchId = null;
       updateData.freigegebenAm = null;
     }
@@ -225,7 +226,7 @@ export async function PATCH(
   if (body.status !== undefined && body.status !== dokument.status) {
     const statusLabels: Record<string, string> = {
       ENTWURF: "Entwurf",
-      ZUR_PRUEFUNG: "Zur Prüfung",
+      ZUR_PRUEFUNG: "Zur Pruefung",
       FREIGEGEBEN: "Freigegeben",
       VERSENDET: "Versendet",
     };
@@ -262,16 +263,16 @@ export async function PATCH(
 }
 
 /**
- * DELETE /api/dokumente/[id] — delete a document
+ * DELETE /api/dokumente/[id] -- delete a document
  */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  // RBAC: require canLoeschen permission (blocks SEKRETARIAT and PRAKTIKANT)
+  const permResult = await requirePermission("canLoeschen");
+  if (permResult.error) return permResult.error;
+  const { session } = permResult;
 
   const { id } = await params;
 
@@ -279,6 +280,10 @@ export async function DELETE(
   if (!dokument) {
     return NextResponse.json({ error: "Dokument nicht gefunden" }, { status: 404 });
   }
+
+  // RBAC: check access to the parent Akte
+  const access = await requireAkteAccess(dokument.akteId);
+  if (access.error) return access.error;
 
   // Delete from storage
   try {

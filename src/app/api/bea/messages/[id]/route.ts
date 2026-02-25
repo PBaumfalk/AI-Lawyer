@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { requirePermission } from "@/lib/rbac";
 
-// ─── Validation ──────────────────────────────────────────────────────────────
+// --- Validation ---
 
 const patchSchema = z.object({
   akteId: z.string().nullable().optional(),
@@ -11,16 +11,15 @@ const patchSchema = z.object({
   eebStatus: z.string().optional(),
 });
 
-// ─── GET /api/bea/messages/[id] ──────────────────────────────────────────────
+// --- GET /api/bea/messages/[id] ---
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  // RBAC: reading beA requires canReadBeA (blocks PRAKTIKANT)
+  const result = await requirePermission("canReadBeA");
+  if (result.error) return result.error;
 
   const { id } = await params;
 
@@ -40,16 +39,15 @@ export async function GET(
   return NextResponse.json(nachricht);
 }
 
-// ─── PATCH /api/bea/messages/[id] ────────────────────────────────────────────
+// --- PATCH /api/bea/messages/[id] ---
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  // RBAC: modifying beA messages requires canSendBeA (ANWALT+)
+  const result = await requirePermission("canSendBeA");
+  if (result.error) return result.error;
 
   const { id } = await params;
   const body = await request.json();

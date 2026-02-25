@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAuditEvent, computeChanges } from "@/lib/audit";
+import { requireAkteAccess, requirePermission } from "@/lib/rbac";
 import { z } from "zod";
 
 const updateAkteSchema = z.object({
@@ -25,12 +25,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
-
   const { id } = await params;
+
+  // RBAC: check Akte access (returns 404 if unauthorized)
+  const access = await requireAkteAccess(id);
+  if (access.error) return access.error;
 
   const akte = await prisma.akte.findUnique({
     where: { id },
@@ -66,7 +65,7 @@ export async function GET(
   });
 
   if (!akte) {
-    return NextResponse.json({ error: "Akte nicht gefunden" }, { status: 404 });
+    return NextResponse.json({ error: "Nicht gefunden" }, { status: 404 });
   }
 
   return NextResponse.json(akte);
@@ -77,12 +76,13 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
-
   const { id } = await params;
+
+  // RBAC: check Akte access with edit permission
+  const access = await requireAkteAccess(id, { requireEdit: true });
+  if (access.error) return access.error;
+  const { session } = access;
+
   const body = await request.json();
   const parsed = updateAkteSchema.safeParse(body);
 
@@ -101,7 +101,7 @@ export async function PATCH(
     },
   });
   if (!existing) {
-    return NextResponse.json({ error: "Akte nicht gefunden" }, { status: 404 });
+    return NextResponse.json({ error: "Nicht gefunden" }, { status: 404 });
   }
 
   const data: any = { ...parsed.data };
@@ -155,10 +155,10 @@ export async function PATCH(
       aktion: "NOTIZ_GEAENDERT",
       details: {
         vorher: existing.notizen
-          ? (existing.notizen.length > 80 ? existing.notizen.substring(0, 80) + "…" : existing.notizen)
+          ? (existing.notizen.length > 80 ? existing.notizen.substring(0, 80) + "..." : existing.notizen)
           : null,
         nachher: parsed.data.notizen
-          ? (parsed.data.notizen.length > 80 ? parsed.data.notizen.substring(0, 80) + "…" : parsed.data.notizen)
+          ? (parsed.data.notizen.length > 80 ? parsed.data.notizen.substring(0, 80) + "..." : parsed.data.notizen)
           : null,
       },
     });
@@ -170,7 +170,7 @@ export async function PATCH(
       userId,
       akteId: id,
       aktion: "AKTE_BEARBEITET",
-      details: { aenderungen: [{ feld: "Falldaten", feldKey: "falldaten", alt: "—", neu: "aktualisiert" }] },
+      details: { aenderungen: [{ feld: "Falldaten", feldKey: "falldaten", alt: "---", neu: "aktualisiert" }] },
     });
   }
 

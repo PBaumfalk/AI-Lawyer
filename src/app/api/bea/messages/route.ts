@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { autoAssignToAkte } from "@/lib/bea/auto-assign";
 import { parseXJustiz } from "@/lib/xjustiz/parser";
 import { aiScanQueue } from "@/lib/queue/queues";
+import { requirePermission } from "@/lib/rbac";
 
-// ─── Validation ──────────────────────────────────────────────────────────────
+// --- Validation ---
 
 const createBeaMessageSchema = z.object({
   nachrichtenId: z.string().optional(),
@@ -25,13 +25,12 @@ const createBeaMessageSchema = z.object({
   xjustizXml: z.string().optional(),
 });
 
-// ─── GET /api/bea/messages ───────────────────────────────────────────────────
+// --- GET /api/bea/messages ---
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  // RBAC: reading beA requires canReadBeA (blocks PRAKTIKANT)
+  const result = await requirePermission("canReadBeA");
+  if (result.error) return result.error;
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
@@ -74,13 +73,12 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ nachrichten, total });
 }
 
-// ─── POST /api/bea/messages ──────────────────────────────────────────────────
+// --- POST /api/bea/messages ---
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  // RBAC: sending beA messages requires canSendBeA (only ANWALT+)
+  const result = await requirePermission("canSendBeA");
+  if (result.error) return result.error;
 
   const body = await request.json();
   const parsed = createBeaMessageSchema.safeParse(body);

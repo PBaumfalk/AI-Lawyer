@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
+import { requireAuth, buildAkteAccessFilter } from "@/lib/rbac";
 import { z } from "zod";
 
 const createKalenderSchema = z.object({
@@ -34,12 +34,11 @@ const createKalenderSchema = z.object({
   hauptfristId: z.string().nullable().optional(),
 });
 
-// GET /api/kalender -- list calendar entries with enhanced filters
+// GET /api/kalender -- list calendar entries filtered by Akte access
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  const result = await requireAuth();
+  if (result.error) return result.error;
+  const { session } = result;
 
   const { searchParams } = new URL(request.url);
   const von = searchParams.get("von");
@@ -52,6 +51,16 @@ export async function GET(request: NextRequest) {
   const istNotfrist = searchParams.get("istNotfrist");
 
   const where: any = {};
+
+  // RBAC: filter calendar entries by accessible Akten
+  const accessFilter = buildAkteAccessFilter(session.user.id, session.user.role);
+  if (Object.keys(accessFilter).length > 0) {
+    // Non-admin: only see entries linked to accessible Akten, or entries with no Akte
+    where.OR = [
+      { akteId: null }, // Personal entries without Akte
+      { akte: accessFilter },
+    ];
+  }
 
   // Date range filter
   if (von || bis) {
@@ -112,10 +121,9 @@ export async function GET(request: NextRequest) {
 
 // POST /api/kalender -- create new calendar entry with enhanced fields
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
+  const result = await requireAuth();
+  if (result.error) return result.error;
+  const { session } = result;
 
   const body = await request.json();
   const parsed = createKalenderSchema.safeParse(body);

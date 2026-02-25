@@ -34,7 +34,7 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
 
 **Milestone Goal:** Die bestehende Software produktionsreif machen -- Docker Build fixen, visuell konsistente Glass UI, Falldatenblatt-Framework, BI-Dashboard-KPIs und Daten-Export.
 
-- [ ] **Phase 10: Docker Build Fix** - Webpack-Fehler beheben, production Docker Build lauffaehig machen
+- [x] **Phase 10: Docker Build Fix** - Webpack-Fehler beheben, production Docker Build lauffaehig machen -- completed 2026-02-25
 - [ ] **Phase 11: Glass UI Migration** - Verbleibende Seiten auf Glass-Komponenten migrieren
 - [ ] **Phase 12: Falldatenblaetter** - Generisches Framework fuer Rechtsgebiet-spezifische Felder
 - [ ] **Phase 13: BI-Dashboard** - KPI-Kacheln fuer Kanzlei-Kennzahlen auf der Dashboard-Seite
@@ -51,8 +51,8 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
   2. `docker compose up` starts all 8 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice) and they pass health checks
   3. The application is reachable in the browser at localhost and login works in the Docker-built production image
 **Plans**: 2 plans
-- [ ] 10-01-PLAN.md -- Fix Next.js production build (logger, next.config, Dockerfile)
-- [ ] 10-02-PLAN.md -- Harden Docker entrypoint and verify full stack
+- [x] 10-01-PLAN.md -- Fix Next.js production build (logger, next.config, Dockerfile)
+- [x] 10-02-PLAN.md -- Harden Docker entrypoint and verify full stack
 
 ### Phase 11: Glass UI Migration
 **Goal**: Every user-facing page uses the Glass design system for visual consistency
@@ -122,7 +122,7 @@ Phases execute in numeric order: 10 -> 11 -> 12 -> 13 -> 14
 | 7. Rollen/Sicherheit/Compliance | v3.4 | 3/3 | Complete | 2026-02-25 |
 | 8. Integration Hardening | v3.4 | 3/3 | Complete | 2026-02-25 |
 | 9. Final Integration + Tech Debt | v3.4 | 1/1 | Complete | 2026-02-25 |
-| 10. Docker Build Fix | 1/2 | In Progress|  | - |
+| 10. Docker Build Fix | v3.5 | 2/2 | Complete | 2026-02-25 |
 | 11. Glass UI Migration | v3.5 | 0/? | Not started | - |
 | 12. Falldatenblaetter | v3.5 | 0/? | Not started | - |
 | 13. BI-Dashboard | v3.5 | 0/? | Not started | - |

@@ -4,9 +4,9 @@
 // PATCH: Unlock a period (ADMIN only)
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
+import { requireAuth, requireRole } from '@/lib/rbac';
 import { z } from 'zod';
 
 const lockSchema = z.object({
@@ -23,12 +23,11 @@ const unlockSchema = z.object({
 // ─── GET /api/finanzen/buchungsperioden ──────────────────────────────────────
 
 export async function GET(_request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { session } = authResult;
 
-  const kanzleiId = (session.user as any).kanzleiId;
+  const kanzleiId = session.user.kanzleiId;
   if (!kanzleiId) {
     return NextResponse.json({ error: 'Keine Kanzlei zugeordnet' }, { status: 400 });
   }
@@ -88,20 +87,11 @@ export async function GET(_request: NextRequest) {
 // Lock a period (set status = GESPERRT)
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const roleResult = await requireRole('ADMIN');
+  if (roleResult.error) return roleResult.error;
+  const { session } = roleResult;
 
-  const userRole = (session.user as any).role;
-  if (userRole !== 'ADMIN') {
-    return NextResponse.json(
-      { error: 'Keine Berechtigung. Nur Administratoren koennen Perioden sperren.' },
-      { status: 403 },
-    );
-  }
-
-  const kanzleiId = (session.user as any).kanzleiId;
+  const kanzleiId = session.user.kanzleiId;
   if (!kanzleiId) {
     return NextResponse.json({ error: 'Keine Kanzlei zugeordnet' }, { status: 400 });
   }
@@ -122,7 +112,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { jahr, monat } = parsed.data;
-  const userId = session.user.id!;
+  const userId = session.user.id;
 
   try {
     // Enforce sequential closing: earlier periods must be GESPERRT
@@ -191,20 +181,11 @@ export async function POST(request: NextRequest) {
 // Unlock a period (set status = OFFEN)
 
 export async function PATCH(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const roleResult = await requireRole('ADMIN');
+  if (roleResult.error) return roleResult.error;
+  const { session } = roleResult;
 
-  const userRole = (session.user as any).role;
-  if (userRole !== 'ADMIN') {
-    return NextResponse.json(
-      { error: 'Keine Berechtigung. Nur Administratoren koennen Perioden entsperren.' },
-      { status: 403 },
-    );
-  }
-
-  const kanzleiId = (session.user as any).kanzleiId;
+  const kanzleiId = session.user.kanzleiId;
   if (!kanzleiId) {
     return NextResponse.json({ error: 'Keine Kanzlei zugeordnet' }, { status: 400 });
   }
@@ -225,7 +206,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const { jahr, monat } = parsed.data;
-  const userId = session.user.id!;
+  const userId = session.user.id;
 
   try {
     const periode = await prisma.buchungsperiode.findUnique({

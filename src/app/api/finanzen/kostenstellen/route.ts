@@ -5,9 +5,9 @@
 // DELETE: Deactivate Kostenstelle (never hard delete)
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
+import { requireAuth, requireRole } from '@/lib/rbac';
 import { z } from 'zod';
 
 const createSchema = z.object({
@@ -27,12 +27,11 @@ const updateSchema = z.object({
 // ─── GET /api/finanzen/kostenstellen ─────────────────────────────────────────
 
 export async function GET(_request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { session } = authResult;
 
-  const kanzleiId = (session.user as any).kanzleiId;
+  const kanzleiId = session.user.kanzleiId;
   if (!kanzleiId) {
     return NextResponse.json({ error: 'Keine Kanzlei zugeordnet' }, { status: 400 });
   }
@@ -70,20 +69,11 @@ export async function GET(_request: NextRequest) {
 // ─── POST /api/finanzen/kostenstellen ────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const roleResult = await requireRole('ADMIN');
+  if (roleResult.error) return roleResult.error;
+  const { session } = roleResult;
 
-  const userRole = (session.user as any).role;
-  if (userRole !== 'ADMIN') {
-    return NextResponse.json(
-      { error: 'Keine Berechtigung. Nur Administratoren koennen Kostenstellen erstellen.' },
-      { status: 403 },
-    );
-  }
-
-  const kanzleiId = (session.user as any).kanzleiId;
+  const kanzleiId = session.user.kanzleiId;
   if (!kanzleiId) {
     return NextResponse.json({ error: 'Keine Kanzlei zugeordnet' }, { status: 400 });
   }
@@ -104,7 +94,7 @@ export async function POST(request: NextRequest) {
   }
 
   const data = parsed.data;
-  const userId = session.user.id!;
+  const userId = session.user.id;
 
   try {
     const kostenstelle = await prisma.kostenstelle.create({
@@ -138,18 +128,9 @@ export async function POST(request: NextRequest) {
 // ─── PATCH /api/finanzen/kostenstellen ───────────────────────────────────────
 
 export async function PATCH(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
-
-  const userRole = (session.user as any).role;
-  if (userRole !== 'ADMIN') {
-    return NextResponse.json(
-      { error: 'Keine Berechtigung. Nur Administratoren koennen Kostenstellen bearbeiten.' },
-      { status: 403 },
-    );
-  }
+  const roleResult = await requireRole('ADMIN');
+  if (roleResult.error) return roleResult.error;
+  const { session } = roleResult;
 
   let body: unknown;
   try {
@@ -167,7 +148,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const { id, ...updateFields } = parsed.data;
-  const userId = session.user.id!;
+  const userId = session.user.id;
 
   try {
     const existing = await prisma.kostenstelle.findUnique({
@@ -212,18 +193,9 @@ export async function PATCH(request: NextRequest) {
 // Deactivates the Kostenstelle (soft delete). Never hard-deletes if bookings reference it.
 
 export async function DELETE(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
-
-  const userRole = (session.user as any).role;
-  if (userRole !== 'ADMIN') {
-    return NextResponse.json(
-      { error: 'Keine Berechtigung. Nur Administratoren koennen Kostenstellen deaktivieren.' },
-      { status: 403 },
-    );
-  }
+  const roleResult = await requireRole('ADMIN');
+  if (roleResult.error) return roleResult.error;
+  const { session } = roleResult;
 
   const url = new URL(request.url);
   const id = url.searchParams.get('id');
@@ -232,7 +204,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'ID Parameter fehlt' }, { status: 400 });
   }
 
-  const userId = session.user.id!;
+  const userId = session.user.id;
 
   try {
     const existing = await prisma.kostenstelle.findUnique({

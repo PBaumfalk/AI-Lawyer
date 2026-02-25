@@ -3,9 +3,9 @@
 // POST: Create invoice with atomic Rechnungsnummer and SS 14 UStG validation
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
+import { requireAuth, requireAkteAccess, buildAkteAccessFilter } from '@/lib/rbac';
 import { getNextInvoiceNumber } from '@/lib/finance/invoice/nummernkreis';
 import { z } from 'zod';
 import type { InvoicePosition, UstSummary } from '@/lib/finance/invoice/types';
@@ -35,10 +35,9 @@ const createInvoiceSchema = z.object({
 // ─── GET /api/finanzen/rechnungen ────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { session } = authResult;
 
   const { searchParams } = request.nextUrl;
   const status = searchParams.get('status');
@@ -51,22 +50,38 @@ export async function GET(request: NextRequest) {
   const take = parseInt(searchParams.get('take') ?? '50', 10);
 
   try {
-    // Build filter conditions
+    // Determine access scope: ADMIN always kanzleiweit, ANWALT if canSeeKanzleiFinanzen
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canSeeKanzleiFinanzen: true },
+    });
+    const showKanzleiweit =
+      session.user.role === 'ADMIN' ||
+      (session.user.role === 'ANWALT' && user?.canSeeKanzleiFinanzen);
+    const akteAccessFilter = showKanzleiweit
+      ? {}
+      : buildAkteAccessFilter(session.user.id, session.user.role);
+
+    // Build filter conditions with RBAC access filter
     const where: Record<string, any> = {};
+
+    // Apply Akte-level access filter (merge with mandant filter if present)
+    if (mandantId) {
+      where.akte = {
+        ...akteAccessFilter,
+        beteiligte: {
+          some: { kontaktId: mandantId, rolle: 'MANDANT' },
+        },
+      };
+    } else if (Object.keys(akteAccessFilter).length > 0) {
+      where.akte = akteAccessFilter;
+    }
 
     if (status) {
       where.status = status;
     }
     if (akteId) {
       where.akteId = akteId;
-    }
-    if (mandantId) {
-      // Filter by Mandant (via Akte.beteiligte)
-      where.akte = {
-        beteiligte: {
-          some: { kontaktId: mandantId, rolle: 'MANDANT' },
-        },
-      };
     }
     if (dateFrom || dateTo) {
       where.rechnungsdatum = {};
@@ -105,20 +120,30 @@ export async function GET(request: NextRequest) {
       prisma.rechnung.count({ where }),
     ]);
 
-    // Summary stats
-    const [stats] = await Promise.all([
+    // Summary stats -- reuse same access-scoped where for aggregates
+    const statsWhere: Record<string, any> = {
+      ...where,
+      status: { in: ['GESTELLT', 'MAHNUNG'] },
+    };
+
+    const [stats, ueberfaelligCount, gesamtUmsatzAgg] = await Promise.all([
       prisma.rechnung.aggregate({
         _sum: { betragNetto: true },
-        where: { status: { in: ['GESTELLT', 'MAHNUNG'] } },
+        where: statsWhere,
+      }),
+      prisma.rechnung.count({
+        where: {
+          ...where,
+          faelligAm: { lt: new Date() },
+          status: { in: ['GESTELLT', 'MAHNUNG'] },
+        },
+      }),
+      // gesamtUmsatz: sum of BEZAHLT invoices
+      prisma.rechnung.aggregate({
+        _sum: { betragNetto: true },
+        where: { ...where, status: 'BEZAHLT' },
       }),
     ]);
-
-    const ueberfaelligCount = await prisma.rechnung.count({
-      where: {
-        faelligAm: { lt: new Date() },
-        status: { in: ['GESTELLT', 'MAHNUNG'] },
-      },
-    });
 
     // Format Mandant name from Akte beteiligte
     const formatted = rechnungen.map((r) => {
@@ -140,6 +165,12 @@ export async function GET(request: NextRequest) {
       total,
       skip,
       take,
+      // Provide both 'stats' and 'summary' keys for frontend compatibility
+      stats: {
+        offeneForderungen: stats._sum.betragNetto?.toNumber() ?? 0,
+        ueberfaellig: ueberfaelligCount,
+        gesamtUmsatz: gesamtUmsatzAgg._sum.betragNetto?.toNumber() ?? 0,
+      },
       summary: {
         offeneForderungen: stats._sum.betragNetto?.toNumber() ?? 0,
         ueberfaelligCount,
@@ -157,12 +188,11 @@ export async function GET(request: NextRequest) {
 // ─── POST /api/finanzen/rechnungen ───────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { session } = authResult;
 
-  const userId = session.user.id!;
+  const userId = session.user.id;
 
   let body: unknown;
   try {
@@ -182,6 +212,10 @@ export async function POST(request: NextRequest) {
   const data = parsed.data;
 
   try {
+    // Verify user has access to the referenced Akte
+    const akteAccess = await requireAkteAccess(data.akteId);
+    if (akteAccess.error) return akteAccess.error;
+
     // Verify Akte exists and has Mandant
     const akte = await prisma.akte.findUnique({
       where: { id: data.akteId },

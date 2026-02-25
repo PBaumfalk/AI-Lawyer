@@ -4,8 +4,8 @@
 // PATCH: Update entry (only if not abgerechnet)
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { requireAuth, requireAkteAccess, buildAkteAccessFilter } from '@/lib/rbac';
 import { z } from 'zod';
 
 const querySchema = z.object({
@@ -41,10 +41,9 @@ const updateSchema = z.object({
 // ─── GET /api/finanzen/zeiterfassung ─────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { session } = authResult;
 
   const url = new URL(request.url);
   const parsed = querySchema.safeParse(Object.fromEntries(url.searchParams));
@@ -59,7 +58,23 @@ export async function GET(request: NextRequest) {
   const { akteId, userId, von, bis, kategorie, abrechenbar, abgerechnet, seite, limit } = parsed.data;
 
   try {
+    // Determine access scope
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canSeeKanzleiFinanzen: true },
+    });
+    const showKanzleiweit =
+      session.user.role === 'ADMIN' ||
+      (session.user.role === 'ANWALT' && user?.canSeeKanzleiFinanzen);
+    const akteAccessFilter = showKanzleiweit
+      ? {}
+      : buildAkteAccessFilter(session.user.id, session.user.role);
+
     const where: Record<string, any> = {};
+    // Apply Akte-level access filter
+    if (Object.keys(akteAccessFilter).length > 0) {
+      where.akte = akteAccessFilter;
+    }
     if (akteId) where.akteId = akteId;
     if (userId) where.userId = userId;
     if (kategorie) where.kategorie = kategorie;
@@ -87,7 +102,7 @@ export async function GET(request: NextRequest) {
       prisma.zeiterfassung.count({ where }),
     ]);
 
-    // Calculate summary stats
+    // Calculate summary stats (reuse same access-scoped where)
     const allEntries = await prisma.zeiterfassung.findMany({
       where,
       select: { dauer: true, abrechenbar: true, stundensatz: true },
@@ -151,10 +166,9 @@ export async function GET(request: NextRequest) {
 // ─── POST /api/finanzen/zeiterfassung ────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { session } = authResult;
 
   try {
     const body = await request.json();
@@ -169,18 +183,9 @@ export async function POST(request: NextRequest) {
 
     const { akteId, datum, dauer, beschreibung, stundensatz, kategorie, abrechenbar } = parsed.data;
 
-    // Validate Akte exists
-    const akte = await prisma.akte.findUnique({
-      where: { id: akteId },
-      select: { id: true },
-    });
-
-    if (!akte) {
-      return NextResponse.json(
-        { error: 'Akte nicht gefunden' },
-        { status: 404 },
-      );
-    }
+    // Verify user has access to the Akte
+    const akteAccess = await requireAkteAccess(akteId);
+    if (akteAccess.error) return akteAccess.error;
 
     // Get default Stundensatz if not provided
     let resolvedStundensatz = stundensatz;
@@ -238,10 +243,8 @@ export async function POST(request: NextRequest) {
 // ─── PATCH /api/finanzen/zeiterfassung ───────────────────────────────────────
 
 export async function PATCH(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
 
   try {
     const body = await request.json();
@@ -267,6 +270,10 @@ export async function PATCH(request: NextRequest) {
         { status: 404 },
       );
     }
+
+    // Verify user has access to the entry's Akte
+    const akteAccess = await requireAkteAccess(existing.akteId);
+    if (akteAccess.error) return akteAccess.error;
 
     if (existing.abgerechnet) {
       return NextResponse.json(

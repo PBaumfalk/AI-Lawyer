@@ -2,8 +2,8 @@
 // GET: List all bookings across cases with filters, pagination, and summary stats
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { requireAuth, buildAkteAccessFilter } from '@/lib/rbac';
 import { z } from 'zod';
 import { BuchungsTyp, KontoTyp } from '@prisma/client';
 
@@ -21,10 +21,9 @@ const querySchema = z.object({
 // ─── GET /api/finanzen/aktenkonto ────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { session } = authResult;
 
   const url = new URL(request.url);
   const parsed = querySchema.safeParse(Object.fromEntries(url.searchParams));
@@ -39,8 +38,23 @@ export async function GET(request: NextRequest) {
   const { akteId, buchungstyp, konto, kostenstelle, von, bis, seite, limit } = parsed.data;
 
   try {
-    // Build where clause
+    // Determine access scope
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canSeeKanzleiFinanzen: true },
+    });
+    const showKanzleiweit =
+      session.user.role === 'ADMIN' ||
+      (session.user.role === 'ANWALT' && user?.canSeeKanzleiFinanzen);
+    const akteAccessFilter = showKanzleiweit
+      ? {}
+      : buildAkteAccessFilter(session.user.id, session.user.role);
+
+    // Build where clause with RBAC access filter
     const where: Record<string, any> = {};
+    if (Object.keys(akteAccessFilter).length > 0) {
+      where.akte = akteAccessFilter;
+    }
     if (akteId) where.akteId = akteId;
     if (buchungstyp) where.buchungstyp = buchungstyp;
     if (konto) where.konto = konto;
@@ -95,6 +109,33 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Fremdgeld alerts: find Akten where Fremdgeld balance is critical
+    const fremdgeldAlerts: Array<{ akteId: string; aktenzeichen: string; fremdgeldSaldo: number; warnung: string }> = [];
+    if (fremdgeld !== 0) {
+      // Group Fremdgeld bookings by Akte to identify per-case alerts
+      const fremdgeldByAkte = new Map<string, { sum: number; aktenzeichen: string }>();
+      const fremdgeldBuchungen = await prisma.aktenKontoBuchung.findMany({
+        where: { ...where, buchungstyp: BuchungsTyp.FREMDGELD },
+        select: { akteId: true, betrag: true, akte: { select: { aktenzeichen: true } } },
+      });
+      for (const fb of fremdgeldBuchungen) {
+        const existing = fremdgeldByAkte.get(fb.akteId) ?? { sum: 0, aktenzeichen: fb.akte.aktenzeichen };
+        existing.sum += fb.betrag.toNumber();
+        fremdgeldByAkte.set(fb.akteId, existing);
+      }
+      for (const [aId, data] of Array.from(fremdgeldByAkte.entries())) {
+        const saldo = Math.round(data.sum * 100) / 100;
+        if (saldo < 0) {
+          fremdgeldAlerts.push({
+            akteId: aId,
+            aktenzeichen: data.aktenzeichen,
+            fremdgeldSaldo: saldo,
+            warnung: 'Negatives Fremdgeld-Saldo',
+          });
+        }
+      }
+    }
+
     return NextResponse.json({
       buchungen: buchungen.map((b) => ({
         ...b,
@@ -108,6 +149,7 @@ export async function GET(request: NextRequest) {
         fremdgeld: Math.round(fremdgeld * 100) / 100,
         auslagen: Math.round(Math.abs(auslagen) * 100) / 100,
       },
+      fremdgeldAlerts,
       pagination: {
         seite,
         limit,

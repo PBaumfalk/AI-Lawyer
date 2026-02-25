@@ -4,9 +4,9 @@
 // DELETE: Only ENTWURF invoices
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
+import { requireAuth, requireAkteAccess } from '@/lib/rbac';
 import { transitionInvoiceStatus } from '@/lib/finance/invoice/status-machine';
 import { autoBookFromInvoice } from '@/lib/finance/aktenkonto/booking';
 import { z } from 'zod';
@@ -40,10 +40,8 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
 
   const { id } = await params;
 
@@ -89,6 +87,10 @@ export async function GET(
       return NextResponse.json({ error: 'Rechnung nicht gefunden' }, { status: 404 });
     }
 
+    // Verify user has access to the invoice's Akte
+    const akteAccess = await requireAkteAccess(rechnung.akte.id);
+    if (akteAccess.error) return akteAccess.error;
+
     // Calculate restBetrag from teilzahlungen
     const gezahlt = rechnung.teilzahlungen.reduce(
       (sum, tz) => sum + tz.betrag.toNumber(),
@@ -124,13 +126,12 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { session } = authResult;
 
   const { id } = await params;
-  const userId = session.user.id!;
+  const userId = session.user.id;
 
   let body: unknown;
   try {
@@ -162,6 +163,7 @@ export async function PATCH(
         include: {
           akte: {
             select: {
+              id: true,
               kanzlei: { select: { stornoPattern: true } },
             },
           },
@@ -171,6 +173,10 @@ export async function PATCH(
       if (!rechnung) {
         return NextResponse.json({ error: 'Rechnung nicht gefunden' }, { status: 404 });
       }
+
+      // Verify user has access to the invoice's Akte
+      const akteAccess = await requireAkteAccess(rechnung.akte.id);
+      if (akteAccess.error) return akteAccess.error;
 
       const stornoPattern = rechnung.akte.kanzlei?.stornoPattern ?? undefined;
 
@@ -220,6 +226,10 @@ export async function PATCH(
     if (!rechnung) {
       return NextResponse.json({ error: 'Rechnung nicht gefunden' }, { status: 404 });
     }
+
+    // Verify user has access to the invoice's Akte
+    const editAkteAccess = await requireAkteAccess(rechnung.akteId);
+    if (editAkteAccess.error) return editAkteAccess.error;
 
     if (rechnung.status !== 'ENTWURF') {
       return NextResponse.json(
@@ -300,13 +310,12 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { session } = authResult;
 
   const { id } = await params;
-  const userId = session.user.id!;
+  const userId = session.user.id;
 
   try {
     const rechnung = await prisma.rechnung.findUnique({ where: { id } });
@@ -314,6 +323,10 @@ export async function DELETE(
     if (!rechnung) {
       return NextResponse.json({ error: 'Rechnung nicht gefunden' }, { status: 404 });
     }
+
+    // Verify user has access to the invoice's Akte
+    const deleteAkteAccess = await requireAkteAccess(rechnung.akteId);
+    if (deleteAkteAccess.error) return deleteAkteAccess.error;
 
     if (rechnung.status !== 'ENTWURF') {
       return NextResponse.json(

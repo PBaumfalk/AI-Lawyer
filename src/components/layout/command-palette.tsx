@@ -14,10 +14,17 @@ import {
   Loader2,
   Calculator,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const quickActions = [
+  {
+    group: "KI",
+    items: [
+      { name: "Helena fragen", href: "__helena__", icon: Sparkles },
+    ],
+  },
   {
     group: "Navigation",
     items: [
@@ -132,6 +139,12 @@ export function CommandPalette({ onFristenRechner }: CommandPaletteProps = {}) {
     handleClose();
     if (href === "__fristenrechner__") {
       onFristenRechner?.();
+      return;
+    }
+    if (href === "__helena__") {
+      // Navigate to Helena chat with current search query as pre-filled text
+      const q = query.trim();
+      router.push(q ? `/ki-chat?q=${encodeURIComponent(q)}` : "/ki-chat");
       return;
     }
     router.push(href);

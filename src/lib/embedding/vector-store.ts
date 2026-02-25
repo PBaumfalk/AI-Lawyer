@@ -41,96 +41,154 @@ export async function deleteChunks(dokumentId: string): Promise<void> {
 
 // ─── Search ──────────────────────────────────────────────────────────────────
 
-interface SearchResult {
+export interface SearchResult {
   content: string;
   dokumentId: string;
   dokumentName: string;
+  akteAktenzeichen: string;
+  akteBeschreibung: string;
   score: number;
   chunkIndex: number;
 }
 
+interface SearchOptions {
+  /** Case ID to scope search (required if crossAkte is false) */
+  akteId?: string;
+  /** Maximum number of results (default 10) */
+  limit?: number;
+  /** Filter by model version (optional, for safe upgrades) */
+  modelVersion?: string;
+  /** Search across all Akten the user has access to */
+  crossAkte?: boolean;
+  /** User ID for RBAC filtering in cross-Akte mode */
+  userId?: string;
+}
+
 /**
- * Find the most similar chunks to a query embedding within a case.
+ * Find the most similar chunks to a query embedding.
  * Uses cosine similarity via pgvector's <=> operator.
  *
+ * Supports single-Akte mode (default) and cross-Akte mode
+ * where results are filtered by Akten the user is assigned to.
+ *
  * @param queryEmbedding - The query vector
- * @param akteId - Case ID to scope search
- * @param limit - Max results (default 10)
- * @param modelVersion - Filter by model version (optional, for safe upgrades)
+ * @param opts - Search options including akteId, limit, crossAkte, userId
  */
 export async function searchSimilar(
   queryEmbedding: number[],
-  akteId: string,
-  limit = 10,
-  modelVersion?: string
+  opts: SearchOptions
 ): Promise<SearchResult[]> {
+  const { akteId, limit = 10, modelVersion, crossAkte = false, userId } = opts;
   const vectorSql = pgvector.toSql(queryEmbedding);
 
-  // Build the query based on whether model version filter is provided
-  if (modelVersion) {
-    const rows = await prisma.$queryRaw<
-      {
-        content: string;
-        dokument_id: string;
-        dokument_name: string;
-        score: number;
-        chunk_index: number;
-      }[]
-    >`
+  type RawRow = {
+    content: string;
+    dokument_id: string;
+    dokument_name: string;
+    akte_aktenzeichen: string;
+    akte_beschreibung: string;
+    score: number;
+    chunk_index: number;
+  };
+
+  const mapRow = (r: RawRow): SearchResult => ({
+    content: r.content,
+    dokumentId: r.dokument_id,
+    dokumentName: r.dokument_name,
+    akteAktenzeichen: r.akte_aktenzeichen ?? "",
+    akteBeschreibung: r.akte_beschreibung ?? "",
+    score: Number(r.score),
+    chunkIndex: r.chunk_index,
+  });
+
+  if (crossAkte && userId) {
+    // Cross-Akte: search all chunks from Akten the user is assigned to
+    // (either as anwalt or sachbearbeiter)
+    if (modelVersion) {
+      const rows = await prisma.$queryRaw<RawRow[]>`
+        SELECT
+          dc.content,
+          dc.dokument_id,
+          d.name AS dokument_name,
+          a.aktenzeichen AS akte_aktenzeichen,
+          a.kurzrubrum AS akte_beschreibung,
+          1 - (dc.embedding <=> ${vectorSql}::vector) AS score,
+          dc.chunk_index
+        FROM document_chunks dc
+        JOIN dokumente d ON d.id = dc.dokument_id
+        JOIN akten a ON a.id = d.akte_id
+        WHERE (a.anwalt_id = ${userId} OR a.sachbearbeiter_id = ${userId})
+          AND dc.model_version = ${modelVersion}
+          AND dc.embedding IS NOT NULL
+        ORDER BY dc.embedding <=> ${vectorSql}::vector ASC
+        LIMIT ${limit}
+      `;
+      return rows.map(mapRow);
+    }
+
+    const rows = await prisma.$queryRaw<RawRow[]>`
       SELECT
         dc.content,
         dc.dokument_id,
         d.name AS dokument_name,
+        a.aktenzeichen AS akte_aktenzeichen,
+        a.kurzrubrum AS akte_beschreibung,
         1 - (dc.embedding <=> ${vectorSql}::vector) AS score,
         dc.chunk_index
       FROM document_chunks dc
       JOIN dokumente d ON d.id = dc.dokument_id
+      JOIN akten a ON a.id = d.akte_id
+      WHERE (a.anwalt_id = ${userId} OR a.sachbearbeiter_id = ${userId})
+        AND dc.embedding IS NOT NULL
+      ORDER BY dc.embedding <=> ${vectorSql}::vector ASC
+      LIMIT ${limit}
+    `;
+    return rows.map(mapRow);
+  }
+
+  // Single-Akte mode (original behavior)
+  if (!akteId) return [];
+
+  if (modelVersion) {
+    const rows = await prisma.$queryRaw<RawRow[]>`
+      SELECT
+        dc.content,
+        dc.dokument_id,
+        d.name AS dokument_name,
+        a.aktenzeichen AS akte_aktenzeichen,
+        a.kurzrubrum AS akte_beschreibung,
+        1 - (dc.embedding <=> ${vectorSql}::vector) AS score,
+        dc.chunk_index
+      FROM document_chunks dc
+      JOIN dokumente d ON d.id = dc.dokument_id
+      JOIN akten a ON a.id = d.akte_id
       WHERE d.akte_id = ${akteId}
         AND dc.model_version = ${modelVersion}
         AND dc.embedding IS NOT NULL
       ORDER BY dc.embedding <=> ${vectorSql}::vector ASC
       LIMIT ${limit}
     `;
-
-    return rows.map((r) => ({
-      content: r.content,
-      dokumentId: r.dokument_id,
-      dokumentName: r.dokument_name,
-      score: Number(r.score),
-      chunkIndex: r.chunk_index,
-    }));
+    return rows.map(mapRow);
   }
 
-  const rows = await prisma.$queryRaw<
-    {
-      content: string;
-      dokument_id: string;
-      dokument_name: string;
-      score: number;
-      chunk_index: number;
-    }[]
-  >`
+  const rows = await prisma.$queryRaw<RawRow[]>`
     SELECT
       dc.content,
       dc.dokument_id,
       d.name AS dokument_name,
+      a.aktenzeichen AS akte_aktenzeichen,
+      a.kurzrubrum AS akte_beschreibung,
       1 - (dc.embedding <=> ${vectorSql}::vector) AS score,
       dc.chunk_index
     FROM document_chunks dc
     JOIN dokumente d ON d.id = dc.dokument_id
+    JOIN akten a ON a.id = d.akte_id
     WHERE d.akte_id = ${akteId}
       AND dc.embedding IS NOT NULL
     ORDER BY dc.embedding <=> ${vectorSql}::vector ASC
     LIMIT ${limit}
   `;
-
-  return rows.map((r) => ({
-    content: r.content,
-    dokumentId: r.dokument_id,
-    dokumentName: r.dokument_name,
-    score: Number(r.score),
-    chunkIndex: r.chunk_index,
-  }));
+  return rows.map(mapRow);
 }
 
 // ─── Stats ───────────────────────────────────────────────────────────────────

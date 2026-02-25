@@ -13,10 +13,10 @@ function buildTransport(): pino.TransportSingleOptions | pino.TransportMultiOpti
     };
   }
 
-  // During next build SSR prerendering, skip file transport to avoid
-  // EACCES errors when /var/log/ai-lawyer does not exist at build time
+  // During next build SSR prerendering, skip ALL transports to avoid
+  // EACCES errors and worker thread issues in webpack-bundled context
   if (process.env.NEXT_PHASE === "phase-production-build") {
-    return { target: "pino/file", options: { destination: 1 } };
+    return undefined;
   }
 
   // Production runtime: stdout + file rotation via pino-roll

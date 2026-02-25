@@ -8,10 +8,12 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  serverExternalPackages: [
-    "bullmq", "ioredis", "pino", "pino-roll", "pino-pretty",
-    "pdf-parse", "imapflow", "nodemailer", "@prisma/client",
-  ],
+  experimental: {
+    serverComponentsExternalPackages: [
+      "bullmq", "ioredis", "pino", "pino-roll", "pino-pretty",
+      "pdf-parse", "imapflow", "nodemailer", "@prisma/client",
+    ],
+  },
 
   async headers() {
     return [

@@ -30,6 +30,7 @@ services:
       ONLYOFFICE_SECRET: dev-onlyoffice-secret
       APP_INTERNAL_URL: http://app:3000
       STIRLING_PDF_URL: http://stirling-pdf:8080
+      OLLAMA_URL: http://ollama:11434
       LOG_LEVEL: info
       LOG_FILE_PATH: /var/log/ai-lawyer/app
     depends_on:
@@ -40,6 +41,8 @@ services:
       minio:
         condition: service_healthy
       meilisearch:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
     volumes:
       - app_logs:/var/log/ai-lawyer
@@ -82,6 +85,8 @@ services:
       redis:
         condition: service_healthy
       app:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
     volumes:
       - worker_logs:/var/log/ai-lawyer
@@ -225,12 +230,11 @@ services:
     volumes:
       - languagetool_ngrams:/ngrams
 
-  # ─── Ollama (optional — activate with: docker compose --profile ai up) ──────
+  # ─── Ollama (local LLM inference) ───────────────────────────────────────────
   ollama:
     image: ollama/ollama:latest
     container_name: ailawyer-ollama
     restart: unless-stopped
-    profiles: ["ai"]
     ports:
       - "11434:11434"
     environment:
@@ -241,6 +245,12 @@ services:
       resources:
         limits:
           memory: 8g
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   pgdata:

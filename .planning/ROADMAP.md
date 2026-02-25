@@ -243,7 +243,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 ->
 | 4.1 Wire Akte Real-Time + Email Compose + Admin Pipeline | 0/1 | Not started | - |
 | 5. Financial Module | 0/6 | Complete    | 2026-02-24 |
 | 6. AI Features + beA | 0/5 | Complete    | 2026-02-25 |
-| 7. Rollen/Sicherheit + Compliance + Observability | 0/2 | Not started | - |
+| 7. Rollen/Sicherheit + Compliance + Observability | 1/2 | In Progress | - |
 
 ## Coverage Matrix
 

@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 7 - Rollen, Sicherheit, Compliance, Observability
+**Current focus:** Phase 8 - Integration Hardening
 
 ## Current Position
 
-Phase: 7 of 7 (Rollen, Sicherheit, Compliance, Observability)
-Plan: 3 of 3 in current phase (3 complete)
-Status: Phase 7 COMPLETE (including gap closure)
-Last activity: 2026-02-25 -- Plan 07-03 completed (Admin Override UI + Dezernat Akte Assignment gap closure)
+Phase: 8 of 8 (Integration Hardening)
+Plan: 1 of 3 in current phase (1 complete)
+Status: Executing Phase 8
+Last activity: 2026-02-25 -- Plan 08-01 completed (Remove PRAKTIKANT role + add canSeeKanzleiFinanzen)
 
-Progress: [████████████████████████████] 100%
+Progress: [█████████████████████████████░] 97%
 
 ## Performance Metrics
 
@@ -78,6 +78,7 @@ Progress: [███████████████████████
 | Phase 07 P02 | 10min | 2 tasks | 18 files |
 | Phase 07 P01 | 15min | 2 tasks | 38 files |
 | Phase 07 P03 | 3min | 2 tasks | 5 files |
+| Phase 08 P01 | 5min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -259,6 +260,11 @@ Recent decisions affecting current work:
 - [07-03]: Fetch full Dezernat detail from /api/admin/dezernate/{id} on edit open for accurate akten state
 - [07-03]: Track originalAktenIds separately for correct addAkten/removeAkten diff computation
 
+- [08-01]: PRAKTIKANT users converted to SACHBEARBEITER in migration (safe default role)
+- [08-01]: canSeeKanzleiFinanzen toggle only available for ANWALT role in admin UI
+- [08-01]: Optimistic UI with full state revert on error for finance toggle
+- [08-01]: beA routes left untouched (Plan 08-03 scope)
+
 ### Pending Todos
 
 None yet.
@@ -270,5 +276,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 07-03-PLAN.md (Phase 7 gap closure complete -- all verification gaps closed)
-Resume file: .planning/phases/07-rollen-sicherheit-compliance-observability/07-03-SUMMARY.md
+Stopped at: Completed 08-01-PLAN.md
+Resume file: .planning/phases/08-integration-hardening/08-01-SUMMARY.md

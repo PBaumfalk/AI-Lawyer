@@ -16,7 +16,6 @@ enum UserRole {
   ANWALT
   SACHBEARBEITER
   SEKRETARIAT
-  PRAKTIKANT
 }
 
 enum KontaktTyp {
@@ -382,8 +381,11 @@ model User {
   helenaSuggestions   HelenaSuggestion[]
 
   // RBAC: Dezernat membership and Admin-Override
-  dezernate           Dezernat[]       @relation("DezernatMitglieder")
-  adminOverrides      AdminOverride[]  @relation("AdminOverrides")
+  dezernate              Dezernat[]       @relation("DezernatMitglieder")
+  adminOverrides         AdminOverride[]  @relation("AdminOverrides")
+
+  // Per-user kanzlei-wide finance visibility (only relevant for ANWALT role)
+  canSeeKanzleiFinanzen  Boolean          @default(false)
 
   @@map("users")
 }

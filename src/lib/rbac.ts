@@ -63,17 +63,6 @@ export const PERMISSIONS: Record<UserRole, PermissionSet> = {
     canCreateAkte: true,
     canEditAkte: true,
   },
-  PRAKTIKANT: {
-    canFreigeben: false,
-    canLoeschen: false,
-    canSendBeA: false,
-    canReadBeA: false,
-    canUseKI: false,
-    canAccessAdmin: false,
-    canAccessEinstellungen: false,
-    canCreateAkte: false,
-    canEditAkte: false,
-  },
 };
 
 // ─── Auth Helper Types ──────────────────────────────────────────────────────
@@ -196,16 +185,6 @@ export async function requireAkteAccess(
   const userId = session.user.id;
   const role = session.user.role;
 
-  // PRAKTIKANT cannot edit (only read and create Entwuerfe)
-  if (options?.requireEdit && role === "PRAKTIKANT") {
-    return {
-      error: NextResponse.json(
-        { error: "Nicht gefunden" },
-        { status: 404 }
-      ),
-    };
-  }
-
   // Fetch Akte with assignment info
   const akte = await prisma.akte.findUnique({
     where: { id: akteId },
@@ -302,7 +281,6 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   ANWALT: "Anwalt/Anwaeltin",
   SACHBEARBEITER: "Sachbearbeiter/in",
   SEKRETARIAT: "Sekretariat",
-  PRAKTIKANT: "Praktikant/in",
 };
 
 export const PERMISSION_LABELS: Record<keyof PermissionSet, string> = {

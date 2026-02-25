@@ -20,11 +20,22 @@ until node -e "
 done
 echo "==> PostgreSQL is ready"
 
-echo "==> Running Prisma db push (schema sync)..."
-node node_modules/prisma/build/index.js db push --skip-generate
+echo "==> Running Prisma migrate deploy..."
+node node_modules/prisma/build/index.js migrate deploy
 
-echo "==> Running Prisma db seed..."
-node node_modules/tsx/dist/cli.mjs prisma/seed.ts || echo "    Seed skipped (may already exist)"
+echo "==> Checking if database needs seeding..."
+NEEDS_SEED=$(node -e "
+  const { PrismaClient } = require('@prisma/client');
+  const p = new PrismaClient();
+  p.user.count().then(c => { console.log(c === 0 ? 'yes' : 'no'); p.\$disconnect(); }).catch(() => { console.log('yes'); p.\$disconnect(); });
+" 2>/dev/null)
 
-echo "==> Starting custom server..."
-exec node dist-server/index.js
+if [ "$NEEDS_SEED" = "yes" ]; then
+  echo "==> Running Prisma seed (first run)..."
+  node node_modules/tsx/dist/cli.mjs prisma/seed.ts || echo "    Seed failed (non-fatal)"
+else
+  echo "==> Database already seeded, skipping"
+fi
+
+echo "==> Starting: $@"
+exec "$@"

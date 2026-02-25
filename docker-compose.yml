@@ -1,5 +1,7 @@
 services:
-  # ─── Next.js Application ─────────────────────────────────────────────────────
+  # Default credentials after seed: admin@kanzlei-baumfalk.de / password123
+
+  # ─── Next.js Application (Custom Server + Socket.IO) ─────────────────────────
   app:
     build: .
     container_name: ailawyer-app
@@ -7,6 +9,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      NODE_ENV: production
       DATABASE_URL: postgresql://ailawyer:ailawyer@db:5432/ailawyer?schema=public
       NEXTAUTH_URL: http://localhost:3000
       NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
@@ -27,6 +30,8 @@ services:
       ONLYOFFICE_SECRET: dev-onlyoffice-secret
       APP_INTERNAL_URL: http://app:3000
       STIRLING_PDF_URL: http://stirling-pdf:8080
+      LOG_LEVEL: info
+      LOG_FILE_PATH: /var/log/ai-lawyer/app
     depends_on:
       db:
         condition: service_healthy
@@ -36,30 +41,14 @@ services:
         condition: service_healthy
       meilisearch:
         condition: service_healthy
-      onlyoffice:
-        condition: service_healthy
+    volumes:
+      - app_logs:/var/log/ai-lawyer
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
-
-  # ─── Redis (job queues + Socket.IO adapter + pub/sub) ─────────────────────────
-  redis:
-    image: redis:7-alpine
-    container_name: ailawyer-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory-policy noeviction --save 60 1000
-    ports:
-      - "6379:6379"
-    volumes:
-      - redisdata:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
   # ─── BullMQ Worker Process ────────────────────────────────────────────────────
   worker:
@@ -70,10 +59,8 @@ services:
     stop_grace_period: 30s
     environment:
       NODE_ENV: production
-      REDIS_URL: redis://redis:6379
       DATABASE_URL: postgresql://ailawyer:ailawyer@db:5432/ailawyer?schema=public
-      LOG_LEVEL: info
-      LOG_FILE_PATH: /var/log/ai-lawyer/worker
+      REDIS_URL: redis://redis:6379
       NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
       EMAIL_ENCRYPTION_KEY: dev-email-encryption-key-change-in-production-32chars
       MINIO_ENDPOINT: minio
@@ -86,19 +73,20 @@ services:
       MEILISEARCH_API_KEY: ailawyer-meili-key
       STIRLING_PDF_URL: http://stirling-pdf:8080
       OLLAMA_URL: http://ollama:11434
+      LOG_LEVEL: info
+      LOG_FILE_PATH: /var/log/ai-lawyer/worker
+      WORKER_CONCURRENCY: "5"
     depends_on:
-      redis:
-        condition: service_healthy
       db:
         condition: service_healthy
-      app:
+      redis:
         condition: service_healthy
-      stirling-pdf:
+      app:
         condition: service_healthy
     volumes:
       - worker_logs:/var/log/ai-lawyer
 
-  # ─── PostgreSQL with pgvector ───────────────────────────────────────────────
+  # ─── PostgreSQL 16 + pgvector ────────────────────────────────────────────────
   db:
     image: pgvector/pgvector:pg16
     container_name: ailawyer-db
@@ -117,7 +105,23 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── MinIO (S3-compatible file storage) ─────────────────────────────────────
+  # ─── Redis (BullMQ + Socket.IO adapter) ──────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ailawyer-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory-policy noeviction --save 60 1000
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ─── MinIO (S3-compatible file storage) ──────────────────────────────────────
   minio:
     image: minio/minio:latest
     container_name: ailawyer-minio
@@ -127,8 +131,8 @@ services:
       MINIO_ROOT_USER: ailawyer
       MINIO_ROOT_PASSWORD: ailawyer123
     ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # Console
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - miniodata:/data
     healthcheck:
@@ -137,58 +141,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── ONLYOFFICE Document Server (browser-based office suite) ────────────────
-  onlyoffice:
-    image: onlyoffice/documentserver:latest
-    container_name: ailawyer-onlyoffice
-    restart: unless-stopped
-    environment:
-      JWT_ENABLED: "true"
-      JWT_SECRET: "dev-onlyoffice-secret"
-      JWT_HEADER: "Authorization"
-      JWT_IN_BODY: "true"
-      ALLOW_PRIVATE_IP_ADDRESS: "true"
-      ALLOW_META_IP_ADDRESS: "true"
-    ports:
-      - "8080:80"
-    volumes:
-      - onlyoffice_data:/var/www/onlyoffice/Data
-      - onlyoffice_log:/var/log/onlyoffice
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/healthcheck"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  # ─── Stirling-PDF (OCR + document conversion) ──────────────────────────────
-  stirling-pdf:
-    image: stirlingtools/stirling-pdf:latest
-    container_name: ailawyer-stirling-pdf
-    restart: unless-stopped
-    ports:
-      - "8081:8080"
-    environment:
-      DOCKER_ENABLE_SECURITY: "false"
-      SYSTEM_DEFAULTLOCALE: de-DE
-      SYSTEM_MAXFILESIZE: 100
-      TESSERACT_LANGS: deu,eng
-    volumes:
-      - stirling_configs:/configs
-      - stirling_logs:/logs
-      - stirling_tessdata:/usr/share/tessdata
-    deploy:
-      resources:
-        limits:
-          memory: 4g
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/info/status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
-  # ─── Meilisearch (full-text search) ─────────────────────────────────────────
+  # ─── Meilisearch (full-text search) ──────────────────────────────────────────
   meilisearch:
     image: getmeili/meilisearch:v1.11
     container_name: ailawyer-meilisearch
@@ -206,7 +159,58 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── LanguageTool (optional: spell/grammar check for German) ──────────────────
+  # ─── OnlyOffice Document Server ──────────────────────────────────────────────
+  onlyoffice:
+    image: onlyoffice/documentserver:latest
+    container_name: ailawyer-onlyoffice
+    restart: unless-stopped
+    environment:
+      JWT_ENABLED: "true"
+      JWT_SECRET: dev-onlyoffice-secret
+      JWT_HEADER: Authorization
+      JWT_IN_BODY: "true"
+      ALLOW_PRIVATE_IP_ADDRESS: "true"
+      ALLOW_META_IP_ADDRESS: "true"
+    ports:
+      - "8080:80"
+    volumes:
+      - onlyoffice_data:/var/www/onlyoffice/Data
+      - onlyoffice_log:/var/log/onlyoffice
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/healthcheck"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ─── Stirling-PDF (OCR + document conversion) ───────────────────────────────
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:latest
+    container_name: ailawyer-stirling-pdf
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      DOCKER_ENABLE_SECURITY: "false"
+      SYSTEM_DEFAULTLOCALE: de-DE
+      SYSTEM_MAXFILESIZE: "100"
+      TESSERACT_LANGS: deu,eng
+    volumes:
+      - stirling_configs:/configs
+      - stirling_logs:/logs
+      - stirling_tessdata:/usr/share/tessdata
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/info/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ─── LanguageTool (optional — activate with: docker compose --profile full up)
   languagetool:
     image: erikvl87/languagetool:latest
     container_name: ailawyer-languagetool
@@ -221,7 +225,7 @@ services:
     volumes:
       - languagetool_ngrams:/ngrams
 
-  # ─── Ollama (optional: local LLM inference) ─────────────────────────────────
+  # ─── Ollama (optional — activate with: docker compose --profile ai up) ──────
   ollama:
     image: ollama/ollama:latest
     container_name: ailawyer-ollama
@@ -229,10 +233,10 @@ services:
     profiles: ["ai"]
     ports:
       - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
     environment:
       OLLAMA_HOST: "0.0.0.0"
+    volumes:
+      - ollama_data:/root/.ollama
     deploy:
       resources:
         limits:
@@ -245,9 +249,10 @@ volumes:
   meilidata:
   onlyoffice_data:
   onlyoffice_log:
+  app_logs:
   worker_logs:
-  languagetool_ngrams:
   stirling_configs:
   stirling_logs:
   stirling_tessdata:
+  languagetool_ngrams:
   ollama_data:

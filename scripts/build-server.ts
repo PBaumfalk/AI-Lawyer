@@ -9,12 +9,13 @@ async function buildServer() {
     outfile: path.resolve("dist-server/index.js"),
     bundle: true,
     platform: "node",
-    target: "node18",
+    target: "node20",
     format: "esm",
     // Externals: loaded from node_modules at runtime
-    external: ["next", "sharp", "@prisma/client"],
+    // pino + transports must be external — pino spawns worker threads that need separate files
+    external: ["next", "sharp", "@prisma/client", "pino", "pino-roll", "pino-pretty", "pino/file"],
     banner: {
-      js: 'import { createRequire } from "module"; const require = createRequire(import.meta.url);',
+      js: 'import { createRequire } from "module"; import { fileURLToPath as __fileURLToPath } from "url"; import { dirname as __dirnameFn } from "path"; const require = createRequire(import.meta.url); const __filename = __fileURLToPath(import.meta.url); const __dirname = __dirnameFn(__filename);',
     },
     // Resolve @/* path alias
     alias: {

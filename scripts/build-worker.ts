@@ -9,12 +9,13 @@ async function buildWorker() {
     outfile: path.resolve("dist-worker/index.js"),
     bundle: true,
     platform: "node",
-    target: "node18",
+    target: "node20",
     format: "esm",
     // Worker only needs @prisma/client external (no next, no sharp)
-    external: ["@prisma/client"],
+    // pino + transports must be external — pino spawns worker threads that need separate files
+    external: ["@prisma/client", "pino", "pino-roll", "pino-pretty", "pino/file"],
     banner: {
-      js: 'import { createRequire } from "module"; const require = createRequire(import.meta.url);',
+      js: 'import { createRequire } from "module"; import { fileURLToPath as __fileURLToPath } from "url"; import { dirname as __dirnameFn } from "path"; const require = createRequire(import.meta.url); const __filename = __fileURLToPath(import.meta.url); const __dirname = __dirnameFn(__filename);',
     },
     // Resolve @/* path alias
     alias: {

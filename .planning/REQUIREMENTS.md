@@ -1,7 +1,7 @@
 # Requirements: AI-Lawyer
 
 **Defined:** 2026-02-25
-**Core Value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine proaktive KI-Agentin aktenübergreifend lernt, automatisch Entwürfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
+**Core Value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
 
 ## v1 Requirements
 
@@ -18,7 +18,7 @@ Requirements for v3.5 Production Ready. Each maps to roadmap phases.
 - [ ] **UI-02**: Alle Formular-Seiten (Akte anlegen, Kontakt anlegen, Einstellungen) verwenden konsistentes Glass-Styling
 - [ ] **UI-03**: Alle Listen-/Tabellen-Seiten (Akten, Kontakte, Dokumente, E-Mails) verwenden Glass-Panels
 
-### Falldatenblätter
+### Falldatenblaetter
 
 - [ ] **FD-01**: Admin kann Rechtsgebiet-spezifische Felder als Schema definieren (Name, Typ, Pflicht/Optional)
 - [ ] **FD-02**: Beim Anlegen/Bearbeiten einer Akte werden die Felder des zugeordneten Rechtsgebiets angezeigt
@@ -29,9 +29,9 @@ Requirements for v3.5 Production Ready. Each maps to roadmap phases.
 
 - [ ] **BI-01**: KPI-Kachel: Neue Akten pro Monat (aktueller Monat + Trend)
 - [ ] **BI-02**: KPI-Kachel: Offene Posten (Summe unbezahlter Rechnungen)
-- [ ] **BI-03**: KPI-Kachel: Fällige Fristen (nächste 7 Tage)
+- [ ] **BI-03**: KPI-Kachel: Faellige Fristen (naechste 7 Tage)
 - [ ] **BI-04**: KPI-Kachel: Umsatz pro Monat (aktueller Monat)
-- [ ] **BI-05**: Dashboard-Seite mit allen KPI-Kacheln, RBAC-geschützt (nur ADMIN + ANWALT)
+- [ ] **BI-05**: Dashboard-Seite mit allen KPI-Kacheln, RBAC-geschuetzt (nur ADMIN + ANWALT)
 
 ### Export
 
@@ -55,7 +55,7 @@ Deferred to future release. Not in current roadmap.
 ### Internes Messaging
 
 - **MSG-01**: Akten-bezogene Diskussionen (Case Threads)
-- **MSG-02**: Allgemeine Kanäle (Kanzlei-weit)
+- **MSG-02**: Allgemeine Kanaele (Kanzlei-weit)
 - **MSG-03**: @Mentions + In-App-Benachrichtigungen
 
 ### Mahnwesen
@@ -65,7 +65,7 @@ Deferred to future release. Not in current roadmap.
 ### KI-Erweiterung
 
 - **KI-01**: Timeline + Key Facts pro Akte (KI-generiert)
-- **KI-02**: Aktenübergreifende Suche und Fragen via RAG
+- **KI-02**: Aktenuebergreifende Suche und Fragen via RAG
 
 ### CalDAV
 
@@ -81,17 +81,17 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Feature | Reason |
 |---------|--------|
-| Native Mobile App | Web-first, responsive reicht; native kommt frühestens nach v2 |
+| Native Mobile App | Web-first, responsive reicht; native kommt fruehestens nach v2 |
 | Desktop-Client | Widerspricht Browser-Only-Prinzip |
 | Zwangsvollstreckung | Eigenes Modul, nach MVP als Erweiterung |
-| Kanzlei-übergreifende Mandats-Teilung | Zu komplex |
-| beA native Integration (ohne bea.expert) | OSCI/Java-Komplexität; €10/Monat vernachlässigbar |
+| Kanzlei-uebergreifende Mandats-Teilung | Zu komplex |
+| beA native Integration (ohne bea.expert) | OSCI/Java-Komplexitaet; 10 EUR/Monat vernachlaessigbar |
 | Eigenes Buchhaltungsmodul (FiBu) | DATEV-Export deckt Steuerberater-Schnittstelle ab |
-| Bidirektionaler IMAP-Sync | One-Way-Import korrekt; Flags zurück = fragil |
+| Bidirektionaler IMAP-Sync | One-Way-Import korrekt; Flags zurueck = fragil |
 | KI Auto-Versand | Absolute No-Go per BRAK 2025 + BRAO |
 | Offline Mode | Real-time ist Core Value |
 | VoIP/Sipgate | Nicht in v3.5 scope |
-| Interaktive Charts/Trends | Nur Standard-KPI-Kacheln in v3.5, Charts kommen später |
+| Interaktive Charts/Trends | Nur Standard-KPI-Kacheln in v3.5, Charts kommen spaeter |
 
 ## Traceability
 
@@ -99,30 +99,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUILD-01 | — | Pending |
-| BUILD-02 | — | Pending |
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| UI-03 | — | Pending |
-| FD-01 | — | Pending |
-| FD-02 | — | Pending |
-| FD-03 | — | Pending |
-| FD-04 | — | Pending |
-| BI-01 | — | Pending |
-| BI-02 | — | Pending |
-| BI-03 | — | Pending |
-| BI-04 | — | Pending |
-| BI-05 | — | Pending |
-| EXP-01 | — | Pending |
-| EXP-02 | — | Pending |
-| EXP-03 | — | Pending |
-| EXP-04 | — | Pending |
+| BUILD-01 | Phase 10 | Pending |
+| BUILD-02 | Phase 10 | Pending |
+| UI-01 | Phase 11 | Pending |
+| UI-02 | Phase 11 | Pending |
+| UI-03 | Phase 11 | Pending |
+| FD-01 | Phase 12 | Pending |
+| FD-02 | Phase 12 | Pending |
+| FD-03 | Phase 12 | Pending |
+| FD-04 | Phase 12 | Pending |
+| BI-01 | Phase 13 | Pending |
+| BI-02 | Phase 13 | Pending |
+| BI-03 | Phase 13 | Pending |
+| BI-04 | Phase 13 | Pending |
+| BI-05 | Phase 13 | Pending |
+| EXP-01 | Phase 14 | Pending |
+| EXP-02 | Phase 14 | Pending |
+| EXP-03 | Phase 14 | Pending |
+| EXP-04 | Phase 14 | Pending |
 
 **Coverage:**
 - v1 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18 ⚠️
+- Mapped to phases: 18
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-25*
-*Last updated: 2026-02-25 after initial definition*
+*Last updated: 2026-02-25 after roadmap creation*

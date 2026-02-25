@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 6 of 7 (AI Features + beA)
-Plan: 3 of 5 in current phase (3 complete)
+Plan: 4 of 5 in current phase (4 complete)
 Status: Executing Phase 6
-Last activity: 2026-02-25 -- Plan 06-03 completed (Helena Proactive Scanning)
+Last activity: 2026-02-25 -- Plan 06-04 completed (beA Foundation Layer)
 
-Progress: [██████████████████████████] 96%
+Progress: [███████████████████████████] 97%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 25
+- Total plans completed: 26
 - Average duration: 7.6 min
-- Total execution time: 3.3 hours
+- Total execution time: 3.4 hours
 
 **By Phase:**
 
@@ -38,7 +38,7 @@ Progress: [███████████████████████
 | 5 - Financial Module | 5/6 | 44 min | 8.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-01 (12 min), 05-02 (9 min), 05-03 (7 min), 05-04 (6 min), 05-05 (10 min)
+- Last 5 plans: 06-01 (7 min), 06-02 (12 min), 06-03 (16 min), 06-02b (8 min), 06-04 (8 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -71,6 +71,7 @@ Progress: [███████████████████████
 | Phase 06 P02 | 12min | 2 tasks | 15 files |
 | Phase 06 P03 | 16min | 2 tasks | 19 files |
 | Phase 06 P02 | 8min | 2 tasks | 16 files |
+| Phase 06 P04 | 8min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -224,6 +225,14 @@ Recent decisions affecting current work:
 - [Phase 06]: X-Sources response header for source citations metadata alongside stream
 - [Phase 06]: Conversation RBAC: owner access + Akte assignment for shared links
 
+- [06-04]: bea.expert library loaded via dynamic import pattern (CDN/vendor/npm) -- npm package not publicly available
+- [06-04]: BeaSession keys stored only in memory (never localStorage) -- page refresh requires re-auth
+- [06-04]: 30-minute inactivity timeout for beA session with user activity tracking
+- [06-04]: XJustiz parser uses removeNSPrefix for version-agnostic parsing across 3.4.1-3.5.1
+- [06-04]: Auto-assignment confidence: SICHER (single AZ match), WAHRSCHEINLICH (SAFE-ID/court ref), UNSICHER (no match)
+- [06-04]: Internal AZ regex requires 4-5 digits before slash to avoid false positives with court AZ format
+- [06-04]: vi.resetAllMocks() in beforeEach (not clearAllMocks) to properly reset mockResolvedValue defaults
+
 ### Pending Todos
 
 None yet.
@@ -235,5 +244,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 06-03-PLAN.md (Helena Proactive Scanning)
-Resume file: .planning/phases/06-ai-features-bea/06-03-SUMMARY.md
+Stopped at: Completed 06-04-PLAN.md (beA Foundation Layer)
+Resume file: .planning/phases/06-ai-features-bea/06-04-SUMMARY.md

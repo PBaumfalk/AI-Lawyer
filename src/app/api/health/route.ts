@@ -6,6 +6,10 @@ import { auth } from "@/lib/auth";
 import { checkOllama, checkStirlingPdf } from "@/lib/health/checks";
 import { checkAndAlertHealthStatus } from "@/lib/health/alerts";
 
+// Force dynamic rendering -- health checks connect to external services
+// and must not be statically generated during next build
+export const dynamic = "force-dynamic";
+
 interface ServiceStatus {
   status: "healthy" | "unhealthy";
   latency?: number;

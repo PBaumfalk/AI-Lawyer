@@ -13,7 +13,13 @@ function buildTransport(): pino.TransportSingleOptions | pino.TransportMultiOpti
     };
   }
 
-  // Production: multi-transport — stdout + file rotation via pino-roll
+  // During next build SSR prerendering, skip file transport to avoid
+  // EACCES errors when /var/log/ai-lawyer does not exist at build time
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return { target: "pino/file", options: { destination: 1 } };
+  }
+
+  // Production runtime: stdout + file rotation via pino-roll
   const logFilePath =
     process.env.LOG_FILE_PATH || "/var/log/ai-lawyer/app";
 

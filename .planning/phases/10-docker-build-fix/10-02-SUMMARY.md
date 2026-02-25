@@ -53,20 +53,22 @@ completed: 2026-02-25
 ## Accomplishments
 - docker-entrypoint.sh uses `prisma migrate deploy` instead of unsafe `db push`
 - Seed is conditional — only runs when no users exist in the database
-- All 8 Docker services (app, worker, db, redis, minio, meilisearch, onlyoffice, stirling-pdf) start and reach healthy status
+- All 9 Docker services (app, worker, db, redis, minio, meilisearch, onlyoffice, stirling-pdf, ollama) start and reach healthy status
 - Application reachable at http://localhost:3000 with working login (admin@kanzlei-baumfalk.de / password123)
 - Health endpoint at /api/health responds correctly for Docker healthcheck
 
 ## Task Commits
 
 1. **Task 1: Harden docker-entrypoint.sh and docker-compose.yml** — `ffd2767` (feat)
-2. **Task 2: Fix runtime crashes and healthcheck** — this session (fix)
+2. **Task 2: Fix runtime crashes and healthcheck** — multiple commits (fix)
    - Added `date-fns` to Dockerfile COPY commands (pino-roll transitive dependency)
    - Changed healthcheck from `localhost` to `127.0.0.1` (Alpine IPv6 resolution issue)
+   - Made Ollama a core service (removed `profiles: ["ai"]`), added healthcheck
+   - Added `OLLAMA_URL` to app env, `depends_on: ollama` to app and worker
 
 ## Files Modified
 - `docker-entrypoint.sh` — Production-safe entrypoint with migrate deploy and conditional seed
-- `docker-compose.yml` — Healthcheck uses 127.0.0.1 instead of localhost
+- `docker-compose.yml` — Healthcheck uses 127.0.0.1; Ollama promoted to core service with healthcheck; OLLAMA_URL added to app
 - `Dockerfile` — Added `COPY --from=builder /app/node_modules/date-fns ./node_modules/date-fns`
 
 ## Issues Encountered
@@ -80,6 +82,16 @@ completed: 2026-02-25
 - **Symptom:** `wget: can't connect to remote host: Connection refused` — app listens on 0.0.0.0:3000 but healthcheck fails
 - **Root cause:** Alpine's wget resolves `localhost` to `::1` (IPv6), but Next.js standalone binds only to `0.0.0.0` (IPv4)
 - **Fix:** Changed healthcheck URL from `http://localhost:3000/api/health` to `http://127.0.0.1:3000/api/health`
+
+### 3. Ollama was optional (profile service) but is a core dependency
+- **Symptom:** Health endpoint returned `degraded` because Ollama wasn't running
+- **Root cause:** Ollama was configured with `profiles: ["ai"]` and only started with `docker compose --profile ai up`
+- **Fix:** Removed profile, added healthcheck (`ollama list`), added `OLLAMA_URL` to app env, added `depends_on` to app and worker
+
+### 4. Worker not rebuilt after Dockerfile fix
+- **Symptom:** Worker hung silently at startup — no "Worker started" in logs
+- **Root cause:** Worker uses same Dockerfile but `docker compose up -d` only rebuilt the app, not the worker; worker image still missing `date-fns`
+- **Fix:** Explicit `docker compose build worker` to rebuild with updated Dockerfile
 
 ## Human Verification
 

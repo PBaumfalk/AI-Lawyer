@@ -32,7 +32,7 @@ The phase goal is fully achieved. The Docker build completes, all 8 services sta
 | # | Must-Have | Status | Evidence |
 |---|-----------|--------|----------|
 | 1 | `docker compose build` completes successfully | PASS | Build exits 0, image created |
-| 2 | All 8 services reach healthy state | PASS | `docker compose ps` shows all healthy |
+| 2 | All 9 services reach healthy state (incl. Ollama) | PASS | `docker compose ps` shows all healthy |
 | 3 | Application reachable at localhost:3000 | PASS | Returns HTML, redirects to login |
 | 4 | Login works with seeded credentials | PASS | User confirmed login successful |
 | 5 | Entrypoint uses `prisma migrate deploy` | PASS | `grep "migrate deploy" docker-entrypoint.sh` |
@@ -41,7 +41,7 @@ The phase goal is fully achieved. The Docker build completes, all 8 services sta
 ## Plans Completed
 
 - **Plan 01 (Build Fix):** Next.js build completes with exit 0, pino logger build-safe, hardened next.config.mjs
-- **Plan 02 (Runtime):** All services healthy, entrypoint production-safe, date-fns dependency + healthcheck IPv4 fixed
+- **Plan 02 (Runtime):** All 9 services healthy (incl. Ollama as core), entrypoint production-safe, date-fns dependency + healthcheck IPv4 fixed, worker rebuilt
 
 ## Issues Resolved During Phase
 
@@ -49,6 +49,8 @@ The phase goal is fully achieved. The Docker build completes, all 8 services sta
 2. Health route hung during static generation — fixed with force-dynamic
 3. Missing date-fns in Docker image — fixed by adding COPY to Dockerfile
 4. Healthcheck connection refused on Alpine — fixed by using 127.0.0.1 instead of localhost
+5. Ollama misconfigured as optional profile service — promoted to core with healthcheck
+6. Worker not rebuilt after Dockerfile fix — explicit rebuild required
 
 ---
 *Phase: 10-docker-build-fix*

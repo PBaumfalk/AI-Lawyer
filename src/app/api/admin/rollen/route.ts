@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole, PERMISSIONS, ROLE_LABELS, PERMISSION_LABELS } from "@/lib/rbac";
 import type { UserRole } from "@prisma/client";
+import { z } from "zod";
 
 // GET /api/admin/rollen -- returns PERMISSIONS matrix and per-user data
 export async function GET() {
@@ -9,7 +10,7 @@ export async function GET() {
   if (result.error) return result.error;
 
   // Build permission matrix for display
-  const roles: UserRole[] = ["ADMIN", "ANWALT", "SACHBEARBEITER", "SEKRETARIAT", "PRAKTIKANT"];
+  const roles: UserRole[] = ["ADMIN", "ANWALT", "SACHBEARBEITER", "SEKRETARIAT"];
   const permissionKeys = Object.keys(PERMISSIONS.ADMIN) as Array<keyof typeof PERMISSIONS.ADMIN>;
 
   const matrix = roles.map((role) => ({
@@ -28,6 +29,7 @@ export async function GET() {
       name: true,
       email: true,
       role: true,
+      canSeeKanzleiFinanzen: true,
       aktenAlsAnwalt: {
         select: { id: true, aktenzeichen: true, kurzrubrum: true },
         take: 100,
@@ -102,6 +104,7 @@ export async function GET() {
       role: user.role,
       roleLabel: ROLE_LABELS[user.role],
       permissions: PERMISSIONS[user.role],
+      canSeeKanzleiFinanzen: user.canSeeKanzleiFinanzen,
       accessibleAkten: Array.from(aktenMap.values()).map((entry) => ({
         id: entry.akte.id,
         aktenzeichen: entry.akte.aktenzeichen,
@@ -117,4 +120,57 @@ export async function GET() {
     roleLabels: ROLE_LABELS,
     users: userOverview,
   });
+}
+
+// PATCH /api/admin/rollen -- toggle canSeeKanzleiFinanzen for a user
+const patchSchema = z.object({
+  userId: z.string().min(1),
+  canSeeKanzleiFinanzen: z.boolean(),
+});
+
+export async function PATCH(request: NextRequest) {
+  const result = await requireRole("ADMIN");
+  if (result.error) return result.error;
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Ungueltiger Request-Body" }, { status: 400 });
+  }
+
+  const parsed = patchSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validierungsfehler", details: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  const { userId, canSeeKanzleiFinanzen } = parsed.data;
+
+  // Verify user exists and is ANWALT (only ANWALTs can have this flag)
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true, name: true },
+  });
+
+  if (!user) {
+    return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
+  }
+
+  if (user.role !== "ANWALT") {
+    return NextResponse.json(
+      { error: "Kanzleiweite Finanzen ist nur fuer Anwaelte verfuegbar" },
+      { status: 400 },
+    );
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: { canSeeKanzleiFinanzen },
+    select: { id: true, canSeeKanzleiFinanzen: true },
+  });
+
+  return NextResponse.json(updated);
 }

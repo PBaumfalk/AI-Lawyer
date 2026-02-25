@@ -74,7 +74,7 @@ export async function POST(
 ) {
   const { id: akteId } = await params;
 
-  // RBAC: check Akte access with edit permission (PRAKTIKANT blocked from uploads)
+  // RBAC: check Akte access with edit permission
   const access = await requireAkteAccess(akteId, { requireEdit: true });
   if (access.error) return access.error;
   const { session } = access;

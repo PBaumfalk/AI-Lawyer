@@ -47,25 +47,15 @@ const navigation: NavItem[] = [
   { name: "Dokumente", href: "/dokumente", icon: FileText },
   { name: "E-Mails", href: "/email", icon: Mail },
   { name: "Tickets", href: "/tickets", icon: TicketCheck },
-  {
-    name: "Helena",
-    href: "/ki-chat",
-    icon: Sparkles,
-    hideForRoles: ["PRAKTIKANT"],
-  },
+  { name: "Helena", href: "/ki-chat", icon: Sparkles },
   { name: "Finanzen", href: "/finanzen", icon: Wallet },
-  {
-    name: "beA",
-    href: "/bea",
-    icon: Shield,
-    hideForRoles: ["PRAKTIKANT"],
-  },
+  { name: "beA", href: "/bea", icon: Shield },
   { name: "Nachrichten", href: "/nachrichten", icon: MessageSquare },
   {
     name: "Einstellungen",
     href: "/einstellungen",
     icon: Settings,
-    hideForRoles: ["PRAKTIKANT", "SEKRETARIAT"],
+    hideForRoles: ["SEKRETARIAT"],
   },
 ];
 

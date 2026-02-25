@@ -7,7 +7,7 @@ import { requirePermission } from "@/lib/rbac";
  * Supports filters: akteId, datum (today/7tage/30tage), q (search text)
  */
 export async function GET(req: NextRequest) {
-  // RBAC: PRAKTIKANT cannot access KI features
+  // RBAC: KI access requires canUseKI permission (all roles have this)
   const result = await requirePermission("canUseKI");
   if (result.error) return result.error;
 

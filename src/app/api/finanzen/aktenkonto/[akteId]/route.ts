@@ -3,8 +3,8 @@
 // POST: Create manual booking with RBAC
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { requireAkteAccess } from '@/lib/rbac';
 import { z } from 'zod';
 import { BuchungsTyp, KontoTyp } from '@prisma/client';
 import { createBooking } from '@/lib/finance/aktenkonto/booking';
@@ -33,12 +33,12 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ akteId: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
-
   const { akteId } = await params;
+
+  // Verify user has access to this Akte (returns 404 if not)
+  const akteAccess = await requireAkteAccess(akteId);
+  if (akteAccess.error) return akteAccess.error;
+
   const url = new URL(request.url);
   const parsed = querySchema.safeParse(Object.fromEntries(url.searchParams));
 
@@ -50,7 +50,7 @@ export async function GET(
   }
 
   try {
-    // Verify the Akte exists
+    // Akte existence already verified by requireAkteAccess
     const akte = await prisma.akte.findUnique({
       where: { id: akteId },
       select: { id: true, aktenzeichen: true, kurzrubrum: true },
@@ -109,22 +109,15 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ akteId: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
-  }
-
   const { akteId } = await params;
-  const userId = session.user.id!;
-  const userRole = (session.user as any).role;
 
-  // RBAC: PRAKTIKANT is read-only
-  if (userRole === 'PRAKTIKANT') {
-    return NextResponse.json(
-      { error: 'Keine Berechtigung. Praktikanten haben nur Lesezugriff.' },
-      { status: 403 },
-    );
-  }
+  // Verify user has access to this Akte (returns 404 if not)
+  const akteAccess = await requireAkteAccess(akteId);
+  if (akteAccess.error) return akteAccess.error;
+  const { session } = akteAccess;
+
+  const userId = session.user.id;
+  const userRole = session.user.role;
 
   let body: unknown;
   try {
@@ -152,16 +145,6 @@ export async function POST(
   }
 
   try {
-    // Verify the Akte exists
-    const akte = await prisma.akte.findUnique({
-      where: { id: akteId },
-      select: { id: true },
-    });
-
-    if (!akte) {
-      return NextResponse.json({ error: 'Akte nicht gefunden' }, { status: 404 });
-    }
-
     // Create booking within a transaction
     const buchung = await prisma.$transaction(async (tx) => {
       return createBooking(tx, {

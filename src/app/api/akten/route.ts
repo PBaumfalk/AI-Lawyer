@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/akten -- create new case
 export async function POST(request: NextRequest) {
-  // PRAKTIKANT cannot create Akten
+  // RBAC: require canCreateAkte permission
   const result = await requirePermission("canCreateAkte");
   if (result.error) return result.error;
   const { session } = result;

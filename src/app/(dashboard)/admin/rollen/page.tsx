@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check, X, ShieldCheck, ChevronDown } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Check, X, ShieldCheck, ChevronDown, Wallet } from "lucide-react";
 
 interface PermissionMatrix {
   role: string;
@@ -16,6 +16,7 @@ interface UserOverview {
   role: string;
   roleLabel: string;
   permissions: Record<string, boolean>;
+  canSeeKanzleiFinanzen: boolean;
   accessibleAkten: {
     id: string;
     aktenzeichen: string;
@@ -74,6 +75,51 @@ export default function RollenPage() {
     : [];
 
   const selectedUser = data.users.find((u) => u.id === selectedUserId);
+
+  // Toggle canSeeKanzleiFinanzen via PATCH
+  const handleToggleFinanzen = useCallback(async (userId: string, newValue: boolean) => {
+    // Optimistic update
+    setData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        users: prev.users.map((u) =>
+          u.id === userId ? { ...u, canSeeKanzleiFinanzen: newValue } : u
+        ),
+      };
+    });
+
+    try {
+      const res = await fetch("/api/admin/rollen", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, canSeeKanzleiFinanzen: newValue }),
+      });
+      if (!res.ok) {
+        // Revert on error
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            users: prev.users.map((u) =>
+              u.id === userId ? { ...u, canSeeKanzleiFinanzen: !newValue } : u
+            ),
+          };
+        });
+      }
+    } catch {
+      // Revert on error
+      setData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          users: prev.users.map((u) =>
+            u.id === userId ? { ...u, canSeeKanzleiFinanzen: !newValue } : u
+          ),
+        };
+      });
+    }
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -166,12 +212,25 @@ export default function RollenPage() {
                 <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold">
                   {selectedUser.name.charAt(0).toUpperCase()}
                 </div>
-                <div>
+                <div className="flex-1">
                   <div className="font-medium">{selectedUser.name}</div>
                   <div className="text-sm text-muted-foreground">
                     {selectedUser.email} -- {selectedUser.roleLabel}
                   </div>
                 </div>
+                {/* canSeeKanzleiFinanzen toggle -- only visible for ANWALT users */}
+                {selectedUser.role === "ANWALT" && (
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <Wallet className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">Kanzleiweite Finanzen</span>
+                    <input
+                      type="checkbox"
+                      checked={selectedUser.canSeeKanzleiFinanzen}
+                      onChange={(e) => handleToggleFinanzen(selectedUser.id, e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                    />
+                  </label>
+                )}
               </div>
             </div>
 

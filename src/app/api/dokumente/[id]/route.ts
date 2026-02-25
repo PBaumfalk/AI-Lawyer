@@ -269,7 +269,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // RBAC: require canLoeschen permission (blocks SEKRETARIAT and PRAKTIKANT)
+  // RBAC: require canLoeschen permission (blocks SEKRETARIAT)
   const permResult = await requirePermission("canLoeschen");
   if (permResult.error) return permResult.error;
   const { session } = permResult;

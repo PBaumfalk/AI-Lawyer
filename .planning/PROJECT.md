@@ -117,7 +117,36 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- Next milestone scope (v2). To be refined with /gsd:new-milestone. -->
+<!-- v3.5 Production Ready scope -->
+
+**Docker Build Fix:**
+- [ ] Webpack-Fehler in Financial Module beheben
+- [ ] Production Docker Build lauffähig
+
+**Glass UI Migration:**
+- [ ] Verbleibende Seiten auf Glass-Komponenten migrieren
+
+**Falldatenblätter:**
+- [ ] Generisches Framework für Rechtsgebiet-spezifische Felder (Konfiguration, nicht hart codiert)
+
+**BI-Dashboard:**
+- [ ] Standard-KPI-Kacheln (Neue Akten/Monat, offene Posten, fällige Fristen, Umsatz/Monat)
+
+**Export:**
+- [ ] CSV + XLSX Export für Akten, Kontakte, Finanzdaten
+
+## Current Milestone: v3.5 Production Ready
+
+**Goal:** Die bestehende Software produktionsreif machen — Docker Build fixen, visuell konsistente Glass UI, Falldatenblatt-Framework, BI-Dashboard-KPIs und Daten-Export.
+
+**Target features:**
+- Docker Build Fix (webpack errors in financial module)
+- Glass UI Migration (remaining pages)
+- Falldatenblätter (generic framework, configurable per Rechtsgebiet)
+- BI-Dashboard (KPI tiles: Akten/Monat, offene Posten, Fristen, Umsatz)
+- CSV/XLSX Export
+
+## Future (post v3.5)
 
 **Mandantenportal:**
 - [ ] Freigegebene Dokumente einsehen/herunterladen
@@ -146,16 +175,8 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 **PDF-Tools (Stirling-PDF):**
 - [ ] Merge, Split, Reorder/Rotate, Compress, Watermark, Redact
 
-**Falldatenblätter pro Rechtsgebiet:**
-- [ ] Arbeitsrecht, Familienrecht, Verkehrsrecht, Miet-/Immobilienrecht, Strafrecht
-
-**Glass UI Migration:**
-- [ ] Verbleibende Seiten auf Glass-Komponenten migrieren
-
 **Sonstiges:**
 - [ ] VoIP: Sipgate Anrufjournal + Zuordnung
-- [ ] BI: Dashboard-Kacheln (Akten/Monat, offene Posten, Fristen)
-- [ ] Export: CSV + XLSX
 
 ### Out of Scope
 
@@ -214,4 +235,4 @@ Minor tech debt: Bull Board PUT stub, Briefkopf OnlyOffice editing deferred, bea
 | CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending (v2) |
 
 ---
-*Last updated: 2026-02-25 after v3.4 milestone*
+*Last updated: 2026-02-25 after v3.5 milestone start*

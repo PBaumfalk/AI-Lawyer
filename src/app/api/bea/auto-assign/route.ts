@@ -14,7 +14,7 @@ const autoAssignSchema = z.object({
 // Manually trigger auto-assignment for a beA message.
 
 export async function POST(request: NextRequest) {
-  // RBAC: beA auto-assign requires canReadBeA (blocks PRAKTIKANT)
+  // RBAC: beA auto-assign requires canReadBeA permission
   const authResult = await requirePermission("canReadBeA");
   if (authResult.error) return authResult.error;
 

@@ -32,6 +32,7 @@ interface DokumentAttachment {
   name: string;
   mimeType: string;
   dateipfad: string;
+  status?: string;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -148,6 +149,7 @@ export function BeaCompose() {
           safeIdAbsender: session.safeId,
           safeIdEmpfaenger: recipientSafeId,
           gesendetAm: new Date().toISOString(),
+          dokumentIds: attachments.map((a) => a.id), // Versand-Gate check on server
         }),
       });
 
@@ -384,7 +386,7 @@ export function BeaCompose() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Nur freigegebene Dokumente koennen angehaengt werden.
+              Noch keine Dokumente angehaengt. Nur freigegebene Dokumente koennen versendet werden.
             </p>
           )}
         </div>
@@ -436,6 +438,7 @@ export function BeaCompose() {
           }}
           onClose={() => setShowDocPicker(false)}
           akteId={akteId}
+          existingIds={attachments.map((a) => a.id)}
         />
       )}
     </div>
@@ -525,27 +528,30 @@ function AkteSelector({
 }
 
 // ─── Document Picker ─────────────────────────────────────────────────────────
-// Only shows FREIGEGEBEN documents (enforced via versand-gate pattern)
+// Shows ALL documents; ENTWURF/ZUR_PRUEFUNG greyed out with Quick-Release button
 
 function DocumentPicker({
   onSelect,
   onClose,
   akteId,
+  existingIds,
 }: {
   onSelect: (doc: DokumentAttachment) => void;
   onClose: () => void;
   akteId: string | null;
+  existingIds: string[];
 }) {
   const [search, setSearch] = useState("");
-  const [docs, setDocs] = useState<DokumentAttachment[]>([]);
+  const [docs, setDocs] = useState<(DokumentAttachment & { status: string })[]>([]);
   const [loading, setLoading] = useState(false);
+  const [releasing, setReleasing] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
     const timer = setTimeout(async () => {
       try {
-        // Fetch only FREIGEGEBEN documents
-        const params = new URLSearchParams({ status: "FREIGEGEBEN", take: "20" });
+        // Fetch ALL documents (not just FREIGEGEBEN) to show ENTWURF greyed out
+        const params = new URLSearchParams({ take: "30" });
         if (akteId) params.set("akteId", akteId);
         if (search) params.set("q", search);
 
@@ -558,6 +564,7 @@ function DocumentPicker({
               name: d.name,
               mimeType: d.mimeType,
               dateipfad: d.dateipfad,
+              status: d.status,
             }))
           );
         }
@@ -569,6 +576,25 @@ function DocumentPicker({
     return () => clearTimeout(timer);
   }, [search, akteId]);
 
+  async function handleQuickRelease(docId: string) {
+    setReleasing(docId);
+    try {
+      const res = await fetch(`/api/dokumente/${docId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "FREIGEGEBEN" }),
+      });
+      if (res.ok) {
+        setDocs((prev) =>
+          prev.map((d) => (d.id === docId ? { ...d, status: "FREIGEGEBEN" } : d))
+        );
+      }
+    } catch {
+      // Ignore
+    }
+    setReleasing(null);
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="glass rounded-xl p-6 w-full max-w-lg space-y-4 shadow-xl">
@@ -576,7 +602,7 @@ function DocumentPicker({
           Dokument anhaengen
         </h3>
         <p className="text-sm text-muted-foreground">
-          Nur freigegebene Dokumente koennen angehaengt werden.
+          Nur freigegebene Dokumente koennen angehaengt werden. Nicht freigegebene Dokumente koennen hier direkt freigegeben werden.
         </p>
 
         <div className="relative">
@@ -598,20 +624,67 @@ function DocumentPicker({
             </div>
           ) : docs.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Keine freigegebenen Dokumente gefunden.
+              Keine Dokumente gefunden.
             </p>
           ) : (
-            docs.map((doc) => (
-              <button
-                key={doc.id}
-                onClick={() => onSelect(doc)}
-                className="w-full text-left rounded-lg px-3 py-2 hover:bg-muted transition-colors flex items-center gap-2"
-              >
-                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span className="text-sm text-foreground truncate">{doc.name}</span>
-                <span className="text-xs text-muted-foreground ml-auto">{doc.mimeType}</span>
-              </button>
-            ))
+            docs.map((doc) => {
+              const isFreigegeben = doc.status === "FREIGEGEBEN" || doc.status === "VERSENDET";
+              const isEntwurf = doc.status === "ENTWURF" || doc.status === "ZUR_PRUEFUNG";
+              const isAlreadyAdded = existingIds.includes(doc.id);
+
+              return (
+                <div
+                  key={doc.id}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-2 ${
+                    isEntwurf
+                      ? "opacity-50 cursor-not-allowed"
+                      : isAlreadyAdded
+                      ? "opacity-40"
+                      : "hover:bg-muted cursor-pointer"
+                  } transition-colors`}
+                  onClick={() => {
+                    if (isFreigegeben && !isAlreadyAdded) {
+                      onSelect({
+                        id: doc.id,
+                        name: doc.name,
+                        mimeType: doc.mimeType,
+                        dateipfad: doc.dateipfad,
+                      });
+                    }
+                  }}
+                >
+                  <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm text-foreground truncate flex-1">{doc.name}</span>
+                  {isEntwurf && (
+                    <>
+                      <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 flex-shrink-0">
+                        Noch nicht freigegeben
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuickRelease(doc.id);
+                        }}
+                        disabled={releasing === doc.id}
+                        className="text-xs text-brand hover:underline flex items-center gap-1 flex-shrink-0 disabled:opacity-50"
+                      >
+                        {releasing === doc.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-3 h-3" />
+                        )}
+                        Freigeben
+                      </button>
+                    </>
+                  )}
+                  {isAlreadyAdded && (
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      Angehaengt
+                    </span>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
 

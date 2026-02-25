@@ -17,7 +17,7 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // RBAC: reading beA requires canReadBeA (blocks PRAKTIKANT)
+  // RBAC: reading beA requires canReadBeA permission
   const result = await requirePermission("canReadBeA");
   if (result.error) return result.error;
 

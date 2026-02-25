@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
 import { emailSendQueue } from "@/lib/queue/queues";
+import { checkDokumenteFreigegeben } from "@/lib/versand-gate";
 
 const sendSchema = z.object({
   kontoId: z.string().cuid("Ungültige Konto-ID"),
@@ -61,6 +62,25 @@ export async function POST(req: NextRequest) {
 
   if (!konto) {
     return Response.json({ error: "E-Mail-Konto nicht gefunden" }, { status: 404 });
+  }
+
+  // Versand-Gate: check that all DMS attachments are FREIGEGEBEN
+  // DMS attachments use the format "dms-{dokumentId}", direct uploads use "upload-{random}"
+  const dmsIds = data.anhaenge
+    .filter((a) => a.startsWith("dms-"))
+    .map((a) => a.replace(/^dms-/, ""));
+
+  if (dmsIds.length > 0) {
+    const check = await checkDokumenteFreigegeben(dmsIds);
+    if (!check.ok) {
+      return Response.json(
+        {
+          error: "Nicht freigegebene Dokumente koennen nicht versendet werden",
+          details: check.errors,
+        },
+        { status: 400 }
+      );
+    }
   }
 
   // Calculate delay

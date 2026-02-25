@@ -5,6 +5,8 @@ import { autoAssignToAkte } from "@/lib/bea/auto-assign";
 import { parseXJustiz } from "@/lib/xjustiz/parser";
 import { aiScanQueue } from "@/lib/queue/queues";
 import { requirePermission } from "@/lib/rbac";
+import { checkDokumenteFreigegeben } from "@/lib/versand-gate";
+import { logAuditEvent } from "@/lib/audit";
 
 // --- Validation ---
 
@@ -19,6 +21,7 @@ const createBeaMessageSchema = z.object({
   safeIdEmpfaenger: z.string().optional(),
   pruefprotokoll: z.any().optional(),
   anhaenge: z.any().optional(),
+  dokumentIds: z.array(z.string()).optional(), // DMS document IDs for Versand-Gate check
   empfangenAm: z.string().optional(),
   gesendetAm: z.string().optional(),
   eebErforderlich: z.boolean().optional(),
@@ -28,7 +31,7 @@ const createBeaMessageSchema = z.object({
 // --- GET /api/bea/messages ---
 
 export async function GET(request: NextRequest) {
-  // RBAC: reading beA requires canReadBeA (blocks PRAKTIKANT)
+  // RBAC: reading beA requires canReadBeA permission
   const result = await requirePermission("canReadBeA");
   if (result.error) return result.error;
 
@@ -91,6 +94,20 @@ export async function POST(request: NextRequest) {
   }
 
   const data = parsed.data;
+
+  // Versand-Gate: check that all attached DMS documents are FREIGEGEBEN
+  if (data.dokumentIds && data.dokumentIds.length > 0) {
+    const check = await checkDokumenteFreigegeben(data.dokumentIds);
+    if (!check.ok) {
+      return NextResponse.json(
+        {
+          error: "Nicht freigegebene Dokumente koennen nicht versendet werden",
+          details: check.errors,
+        },
+        { status: 400 }
+      );
+    }
+  }
 
   // Check for duplicate nachrichtenId
   if (data.nachrichtenId) {
@@ -193,6 +210,22 @@ export async function POST(request: NextRequest) {
       // Non-fatal: don't fail message creation if scan enqueue fails
     }
   }
+
+  // Audit log: beA message sent or received
+  const isOutgoing = data.status === "GESENDET";
+  logAuditEvent({
+    userId: result.session!.user.id,
+    akteId: nachricht.akteId,
+    aktion: (isOutgoing ? "BEA_NACHRICHT_GESENDET" : "BEA_NACHRICHT_EMPFANGEN") as any,
+    details: {
+      nachrichtId: nachricht.id,
+      betreff: data.betreff,
+      empfaengerSafeId: data.safeIdEmpfaenger || null,
+      anhaengeAnzahl: Array.isArray(data.anhaenge) ? data.anhaenge.length : 0,
+      nachrichtenTyp: "NORMAL",
+      ergebnis: "ERFOLG",
+    },
+  }).catch(() => {});
 
   return NextResponse.json(
     {

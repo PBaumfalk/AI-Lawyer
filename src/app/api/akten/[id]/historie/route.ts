@@ -20,7 +20,8 @@ export async function GET(
 
   const where: any = { akteId };
   if (aktion) {
-    where.aktion = aktion;
+    const aktionen = aktion.split(",").map((s: string) => s.trim()).filter(Boolean);
+    where.aktion = aktionen.length === 1 ? aktionen[0] : { in: aktionen };
   }
 
   const logs = await prisma.auditLog.findMany({

@@ -220,11 +220,12 @@ Plans:
   3. Admin can view the full system-wide Audit-Trail (who/when/what) with filtering, and per-Akte audit history is visible on the case detail page
   4. DSGVO compliance is operational: data deletion workflow, Auskunftsrecht export, and Einwilligungsmanagement are functional
   5. Health check endpoints report status of App, Worker, Redis, Ollama, and all Docker services; structured logging is enabled for production troubleshooting
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 07-01-PLAN.md -- RBAC Foundation + Enforcement: Dezernat/AdminOverride schema, rbac.ts helpers, retrofit all API routes with access checks, sidebar role filtering, Dezernat management UI, Rollen-Matrix page
-- [ ] 07-02-PLAN.md -- Audit-Trail UI + DSGVO Compliance + Observability: system-wide audit timeline, per-Akte Historie enhancement, CSV/PDF export, DSGVO anonymization workflow, Auskunftsrecht PDF, extended health checks, email alerts
+- [x] 07-01-PLAN.md -- RBAC Foundation + Enforcement: Dezernat/AdminOverride schema, rbac.ts helpers, retrofit all API routes with access checks, sidebar role filtering, Dezernat management UI, Rollen-Matrix page
+- [x] 07-02-PLAN.md -- Audit-Trail UI + DSGVO Compliance + Observability: system-wide audit timeline, per-Akte Historie enhancement, CSV/PDF export, DSGVO anonymization workflow, Auskunftsrecht PDF, extended health checks, email alerts
+- [ ] 07-03-PLAN.md -- Gap closure: Admin Override UI (Zugriff uebernehmen button on Akte detail) + Dezernat Akte multi-select assignment
 
 ## Progress
 
@@ -243,7 +244,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 3 -> 3.1 -> 4 -> 4.1 ->
 | 4.1 Wire Akte Real-Time + Email Compose + Admin Pipeline | 0/1 | Not started | - |
 | 5. Financial Module | 0/6 | Complete    | 2026-02-24 |
 | 6. AI Features + beA | 0/5 | Complete    | 2026-02-25 |
-| 7. Rollen/Sicherheit + Compliance + Observability | 1/2 | In Progress | - |
+| 7. Rollen/Sicherheit + Compliance + Observability | 2/3 | In Progress | - |
 
 ## Coverage Matrix
 

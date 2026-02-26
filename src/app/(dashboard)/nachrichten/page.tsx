@@ -1,8 +1,10 @@
+import { GlassPanel } from "@/components/ui/glass-panel";
+
 export default function NachrichtenPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Nachrichten
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -10,11 +12,11 @@ export default function NachrichtenPage() {
         </p>
       </div>
 
-      <div className="glass rounded-xl p-12 text-center">
+      <GlassPanel elevation="panel" className="p-12 text-center">
         <p className="text-muted-foreground">
           Das Nachrichtenmodul befindet sich in Entwicklung (Phase 2).
         </p>
-      </div>
+      </GlassPanel>
     </div>
   );
 }

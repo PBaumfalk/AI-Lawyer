@@ -16,7 +16,7 @@ function RechnerContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           RVG-Rechner
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -39,7 +39,7 @@ export default function RechnerPage() {
       fallback={
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-heading text-foreground">
+            <h1 className="text-2xl font-semibold text-foreground">
               RVG-Rechner
             </h1>
             <p className="text-muted-foreground mt-1">Laden...</p>

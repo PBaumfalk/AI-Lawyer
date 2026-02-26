@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { BeaMessageDetail } from "@/components/bea/bea-message-detail";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 interface BeaDetailPageProps {
   params: Promise<{ id: string }>;
@@ -25,12 +26,12 @@ export default async function BeaDetailPage({ params }: BeaDetailPageProps) {
   if (!nachricht) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-heading text-foreground">Nachricht nicht gefunden</h1>
-        <div className="glass rounded-xl p-12 text-center">
+        <h1 className="text-2xl font-semibold text-foreground">Nachricht nicht gefunden</h1>
+        <GlassPanel elevation="panel" className="p-12 text-center">
           <p className="text-muted-foreground">
             Die angeforderte beA-Nachricht konnte nicht gefunden werden.
           </p>
-        </div>
+        </GlassPanel>
       </div>
     );
   }

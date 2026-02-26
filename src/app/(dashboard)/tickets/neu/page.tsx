@@ -11,6 +11,7 @@ import { Select } from "@/components/ui/select";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { TicketTagInput } from "@/components/tickets/ticket-tag-input";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 interface UserOption {
   id: string;
@@ -98,12 +99,13 @@ export default function NeuesTicketPage() {
         >
           <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-muted-foreground" />
         </Link>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Neues Ticket
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass rounded-xl p-6 space-y-5">
+      <GlassPanel elevation="panel" className="p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Titel */}
         <div className="space-y-2">
           <Label htmlFor="titel">Titel *</Label>
@@ -210,6 +212,7 @@ export default function NeuesTicketPage() {
           </Link>
         </div>
       </form>
+      </GlassPanel>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { Search, BookOpen } from "lucide-react";
 import { AktenkontoLedger } from "@/components/finanzen/aktenkonto-ledger";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 interface AkteSearchResult {
   id: string;
@@ -52,14 +53,14 @@ export default function AktenkontoPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-heading text-foreground">Aktenkonto</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Aktenkonto</h1>
         <p className="text-muted-foreground mt-1">
           Buchungen, Salden und Fremdgeld-Compliance je Akte
         </p>
       </div>
 
       {/* Akte selector */}
-      <div className="glass rounded-xl p-6">
+      <GlassPanel elevation="panel" className="p-6">
         <label className="block text-sm font-medium text-foreground mb-2">
           Akte auswaehlen
         </label>
@@ -81,13 +82,13 @@ export default function AktenkontoPage() {
               }
             }}
             placeholder="Aktenzeichen oder Mandant suchen..."
-            className="w-full h-12 pl-10 pr-4 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            className="glass-input w-full h-12 pl-10 pr-4 text-sm rounded-lg focus:outline-none"
           />
         </div>
 
         {/* Search results dropdown */}
         {results.length > 0 && !selectedAkte && (
-          <div className="mt-2 rounded-lg border border-border bg-background shadow-lg max-h-64 overflow-y-auto">
+          <div className="mt-2 rounded-xl glass-panel max-h-64 overflow-y-auto">
             {results.map((akte) => (
               <button
                 key={akte.id}
@@ -114,7 +115,7 @@ export default function AktenkontoPage() {
         {searching && (
           <p className="mt-2 text-xs text-muted-foreground">Suche...</p>
         )}
-      </div>
+      </GlassPanel>
 
       {/* Aktenkonto ledger */}
       {selectedAkte ? (
@@ -123,12 +124,12 @@ export default function AktenkontoPage() {
           aktenzeichen={selectedAkte.aktenzeichen}
         />
       ) : (
-        <div className="glass rounded-xl p-12 text-center">
+        <GlassPanel elevation="panel" className="p-12 text-center">
           <BookOpen className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
           <p className="text-muted-foreground">
             Bitte waehlen Sie eine Akte aus, um das Aktenkonto anzuzeigen.
           </p>
-        </div>
+        </GlassPanel>
       )}
     </div>
   );

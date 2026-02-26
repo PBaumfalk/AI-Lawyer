@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function SuchePage() {
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <Suspense fallback={<SearchPageSkeleton />}>
         <SearchPage />
       </Suspense>
@@ -19,17 +19,17 @@ export default function SuchePage() {
 
 function SearchPageSkeleton() {
   return (
-    <div className="space-y-6 animate-pulse">
+    <div className="space-y-6">
       <div className="space-y-2">
-        <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-48" />
-        <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-72" />
+        <div className="h-8 glass-shimmer rounded w-48" />
+        <div className="h-4 glass-shimmer rounded w-72" />
       </div>
-      <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+      <div className="h-12 glass-shimmer rounded-xl" />
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="h-24 bg-slate-100 dark:bg-slate-800 rounded-lg"
+            className="h-24 glass-shimmer rounded-xl"
           />
         ))}
       </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
+import { GlassPanel } from "@/components/ui/glass-panel";
 import {
   Ticket,
   FolderOpen,
@@ -158,7 +159,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             Tickets
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -189,7 +190,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
 
       {/* Table */}
       {tickets.length === 0 ? (
-        <div className="glass rounded-xl p-12 text-center">
+        <GlassPanel elevation="panel" className="p-12 text-center">
           <Ticket className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
           <p className="text-muted-foreground mb-4">
             {q || status || prioritaet || tag || faelligkeit || akteId
@@ -201,9 +202,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
               <Button>Erstes Ticket anlegen</Button>
             </Link>
           )}
-        </div>
+        </GlassPanel>
       ) : (
-        <div className="glass rounded-xl overflow-hidden">
+        <GlassPanel elevation="panel" className="overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10 dark:border-white/[0.06]">
@@ -342,7 +343,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
               })}
             </tbody>
           </table>
-        </div>
+        </GlassPanel>
       )}
     </div>
   );

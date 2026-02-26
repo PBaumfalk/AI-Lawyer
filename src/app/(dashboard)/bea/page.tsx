@@ -4,6 +4,7 @@ import { BeaSessionProvider, useBeaSession } from "@/lib/bea/session";
 import { BeaInbox } from "@/components/bea/bea-inbox";
 import { useSession } from "next-auth/react";
 import { useState, useRef } from "react";
+import { GlassPanel } from "@/components/ui/glass-panel";
 import {
   Shield,
   Upload,
@@ -38,7 +39,7 @@ function BeaPageContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading text-foreground">beA</h1>
+          <h1 className="text-2xl font-semibold text-foreground">beA</h1>
           <p className="text-muted-foreground mt-1">
             Besonderes elektronisches Anwaltspostfach
           </p>
@@ -100,19 +101,19 @@ function BeaLoginForm({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-heading text-foreground">beA</h1>
+        <h1 className="text-2xl font-semibold text-foreground">beA</h1>
         <p className="text-muted-foreground mt-1">
           Besonderes elektronisches Anwaltspostfach
         </p>
       </div>
 
       <div className="max-w-md mx-auto">
-        <div className="glass rounded-xl p-8 space-y-6">
+        <GlassPanel elevation="panel" className="p-8 space-y-6">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand/10 mb-4">
               <Shield className="h-8 w-8 text-brand" />
             </div>
-            <h2 className="text-lg font-heading text-foreground">
+            <h2 className="text-lg font-semibold text-foreground">
               beA-Anmeldung
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
@@ -154,7 +155,7 @@ function BeaLoginForm({
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
                 placeholder="Ihre beA-PIN eingeben"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand/50"
+                className="glass-input w-full rounded-lg px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none"
                 disabled={isLoading}
               />
             </div>
@@ -188,7 +189,7 @@ function BeaLoginForm({
             Die Authentifizierung erfolgt vollstaendig im Browser.
             Ihre Schluessel verlassen niemals dieses Geraet.
           </p>
-        </div>
+        </GlassPanel>
       </div>
     </div>
   );

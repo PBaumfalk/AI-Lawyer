@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { GlassKpiCard } from "@/components/ui/glass-kpi-card";
+import { GlassPanel } from "@/components/ui/glass-panel";
 import {
   TrendingUp,
   AlertTriangle,
@@ -89,7 +90,7 @@ export default function FinanzenPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Finanzen
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -130,14 +131,14 @@ export default function FinanzenPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="glass rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">
+      <GlassPanel elevation="panel" className="p-6">
+        <h2 className="text-base font-semibold text-foreground mb-4">
           Schnellaktionen
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Link
             href="/finanzen/rechner"
-            className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-3 p-4 rounded-xl glass-card hover:glass-panel transition-all"
           >
             <div className="w-10 h-10 rounded-lg bg-blue-500/15 flex items-center justify-center">
               <Calculator className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -152,7 +153,7 @@ export default function FinanzenPage() {
 
           <Link
             href="/finanzen/rechnungen"
-            className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-3 p-4 rounded-xl glass-card hover:glass-panel transition-all"
           >
             <div className="w-10 h-10 rounded-lg bg-emerald-500/15 flex items-center justify-center">
               <Receipt className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -167,7 +168,7 @@ export default function FinanzenPage() {
 
           <Link
             href="/finanzen/aktenkonto"
-            className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-3 p-4 rounded-xl glass-card hover:glass-panel transition-all"
           >
             <div className="w-10 h-10 rounded-lg bg-amber-500/15 flex items-center justify-center">
               <Building2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -180,7 +181,7 @@ export default function FinanzenPage() {
             </div>
           </Link>
         </div>
-      </div>
+      </GlassPanel>
     </div>
   );
 }

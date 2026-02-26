@@ -81,7 +81,9 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-None.
+1 todo pending.
+
+- **Improve Helena RAG pipeline with hybrid search and reranking** (area: api) — Hybrid Search (Meilisearch + pgvector), Cross-Encoder Reranking, Parent-Child Chunking. Datei: .planning/todos/pending/2026-02-26-improve-helena-rag-pipeline-with-hybrid-search-and-reranking.md
 
 ### Blockers/Concerns
 

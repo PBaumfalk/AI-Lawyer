@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { deleteFile, uploadFile, getDownloadUrl } from "@/lib/storage";
+import { deleteFile, uploadFile, getDownloadUrl, getFileStream } from "@/lib/storage";
+import { generateBriefkopfDocx, BriefkopfData } from "@/lib/briefkopf";
 
 /**
  * GET /api/briefkopf/[id] -- get a single Briefkopf
@@ -91,16 +92,20 @@ export async function PUT(
     }
   }
 
-  // Upload new logo if provided
+  // Upload new logo if provided; keep buffer for DOCX regeneration
   const logo = formData.get("logo") as File | null;
+  let newLogoBuffer: Buffer | null = null;
+  let newLogoMime: string | null = null;
+
   if (logo) {
-    const logoBuffer = Buffer.from(await logo.arrayBuffer());
+    newLogoBuffer = Buffer.from(await logo.arrayBuffer());
+    newLogoMime = logo.type;
     const timestamp = Date.now();
     const sanitized = logo.name
       .replace(/[^a-zA-Z0-9._-]/g, "_")
       .replace(/_+/g, "_");
     const logoUrl = `briefkoepfe/logos/${timestamp}_${sanitized}`;
-    await uploadFile(logoUrl, logoBuffer, logo.type, logo.size);
+    await uploadFile(logoUrl, newLogoBuffer, logo.type, newLogoBuffer.length);
 
     // Delete old logo
     if (briefkopf.logoUrl) {
@@ -113,7 +118,7 @@ export async function PUT(
     updateData.logoUrl = logoUrl;
   }
 
-  // Upload new DOCX if provided
+  // Upload new DOCX if provided; otherwise auto-generate if no custom DOCX exists
   const docx = formData.get("docx") as File | null;
   if (docx) {
     const docxBuffer = Buffer.from(await docx.arrayBuffer());
@@ -122,7 +127,7 @@ export async function PUT(
       .replace(/[^a-zA-Z0-9._-]/g, "_")
       .replace(/_+/g, "_");
     const dateipfad = `briefkoepfe/vorlagen/${timestamp}_${sanitized}`;
-    await uploadFile(dateipfad, docxBuffer, docx.type, docx.size);
+    await uploadFile(dateipfad, docxBuffer, docx.type, docxBuffer.length);
 
     // Delete old DOCX
     if (briefkopf.dateipfad) {
@@ -133,6 +138,111 @@ export async function PUT(
       }
     }
     updateData.dateipfad = dateipfad;
+  } else if (
+    !briefkopf.dateipfad ||
+    briefkopf.dateipfad.endsWith("_generated.docx")
+  ) {
+    // Auto-regenerate: no manual DOCX exists or the existing one was itself auto-generated
+    // Resolve logo buffer: prefer newly uploaded, fall back to existing MinIO logo
+    let logoBuffer: Buffer | null = newLogoBuffer;
+    let logoMime: string | null = newLogoMime;
+
+    if (!logoBuffer) {
+      const existingLogoUrl = updateData.logoUrl ?? briefkopf.logoUrl;
+      if (existingLogoUrl) {
+        try {
+          const stream = await getFileStream(existingLogoUrl as string);
+          if (stream) {
+            const chunks: Buffer[] = [];
+            for await (const chunk of stream as AsyncIterable<Uint8Array>) {
+              chunks.push(Buffer.from(chunk));
+            }
+            logoBuffer = Buffer.concat(chunks);
+            // Infer MIME from stored path extension
+            const ext = (existingLogoUrl as string).split(".").pop()?.toLowerCase() ?? "";
+            const extMimeMap: Record<string, string> = {
+              png: "image/png",
+              jpg: "image/jpeg",
+              jpeg: "image/jpeg",
+              gif: "image/gif",
+              webp: "image/webp",
+            };
+            logoMime = extMimeMap[ext] ?? "image/png";
+          }
+        } catch {
+          // Logo unavailable — generate without it
+          logoBuffer = null;
+          logoMime = null;
+        }
+      }
+    }
+
+    // Build merged fields (prefer formData values over existing DB values)
+    const mergedFields: BriefkopfData = {
+      kanzleiName:
+        (updateData.kanzleiName !== undefined
+          ? updateData.kanzleiName
+          : briefkopf.kanzleiName) ?? null,
+      adresse:
+        (updateData.adresse !== undefined
+          ? updateData.adresse
+          : briefkopf.adresse) ?? null,
+      telefon:
+        (updateData.telefon !== undefined
+          ? updateData.telefon
+          : briefkopf.telefon) ?? null,
+      fax:
+        (updateData.fax !== undefined ? updateData.fax : briefkopf.fax) ?? null,
+      email:
+        (updateData.email !== undefined
+          ? updateData.email
+          : briefkopf.email) ?? null,
+      website:
+        (updateData.website !== undefined
+          ? updateData.website
+          : briefkopf.website) ?? null,
+      steuernr:
+        (updateData.steuernr !== undefined
+          ? updateData.steuernr
+          : briefkopf.steuernr) ?? null,
+      ustIdNr:
+        (updateData.ustIdNr !== undefined
+          ? updateData.ustIdNr
+          : briefkopf.ustIdNr) ?? null,
+      iban:
+        (updateData.iban !== undefined ? updateData.iban : briefkopf.iban) ??
+        null,
+      bic:
+        (updateData.bic !== undefined ? updateData.bic : briefkopf.bic) ?? null,
+      bankName:
+        (updateData.bankName !== undefined
+          ? updateData.bankName
+          : briefkopf.bankName) ?? null,
+      braoInfo:
+        (updateData.braoInfo !== undefined
+          ? updateData.braoInfo
+          : briefkopf.braoInfo) ?? null,
+    };
+
+    const generated = generateBriefkopfDocx(mergedFields, logoBuffer, logoMime);
+    const timestamp = Date.now();
+    const newDateipfad = `briefkoepfe/vorlagen/${timestamp}_generated.docx`;
+    await uploadFile(
+      newDateipfad,
+      generated,
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      generated.length
+    );
+
+    // Delete old auto-generated DOCX
+    if (briefkopf.dateipfad) {
+      try {
+        await deleteFile(briefkopf.dateipfad);
+      } catch {
+        // Continue
+      }
+    }
+    updateData.dateipfad = newDateipfad;
   }
 
   try {

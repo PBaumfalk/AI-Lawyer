@@ -17,6 +17,320 @@ import {
   rewriteOnlyOfficeUrl,
 } from "@/lib/onlyoffice";
 
+// ─── DOCX Generator ─────────────────────────────────────────────────────────
+
+/** Map image MIME type to file extension for DOCX media folder. */
+function mimeToExt(mimeType: string): string | null {
+  const map: Record<string, string> = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/gif": "gif",
+    "image/webp": "webp",
+    "image/bmp": "bmp",
+    "image/tiff": "tiff",
+  };
+  return map[mimeType.split(";")[0].toLowerCase().trim()] ?? null;
+}
+
+/** XML-escape a string for use in text content. */
+function xmlEsc(s: string | null | undefined): string {
+  return (s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/**
+ * Generate a minimal DOCX buffer with a styled header and footer,
+ * built from structured Briefkopf fields.
+ *
+ * The generated DOCX can be passed directly to applyBriefkopfToDocx.
+ *
+ * Layout:
+ *   Header: [Logo paragraph?] | KanzleiName (bold 14pt blue) | Adresse | Tel/Fax | Email/Web
+ *   Footer: IBAN BIC Bank Steuernr [TAB→right] Seite {PAGE}
+ *           [braoInfo line?]
+ */
+export function generateBriefkopfDocx(
+  data: BriefkopfData,
+  logoBuffer?: Buffer | null,
+  logoMimeType?: string | null
+): Buffer {
+  const zip = new PizZip();
+
+  const logoExt = logoMimeType ? mimeToExt(logoMimeType) : null;
+  const hasLogo = !!(logoBuffer && logoExt);
+
+  // ── [Content_Types].xml ─────────────────────────────────────────────────
+  const logoDefaultEntry =
+    hasLogo && logoExt
+      ? `\n  <Default Extension="${logoExt}" ContentType="${(logoMimeType ?? "image/png").split(";")[0].trim()}"/>`
+      : "";
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>${logoDefaultEntry}
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+  <Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>
+  <Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>
+</Types>`;
+
+  // ── _rels/.rels ──────────────────────────────────────────────────────────
+  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+  // ── word/document.xml ───────────────────────────────────────────────────
+  // Minimal body: one empty paragraph + sectPr referencing header/footer
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <w:body>
+    <w:p><w:pPr><w:pStyle w:val="Normal"/></w:pPr></w:p>
+    <w:sectPr>
+      <w:headerReference w:type="default" r:id="rId2"/>
+      <w:footerReference w:type="default" r:id="rId3"/>
+      <w:pgSz w:w="11906" w:h="16838"/>
+      <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1800" w:header="708" w:footer="708" w:gutter="0"/>
+    </w:sectPr>
+  </w:body>
+</w:document>`;
+
+  // ── word/_rels/document.xml.rels ─────────────────────────────────────────
+  const documentRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>
+</Relationships>`;
+
+  // ── word/styles.xml ──────────────────────────────────────────────────────
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults>
+    <w:rPrDefault>
+      <w:rPr>
+        <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>
+        <w:sz w:val="20"/>
+        <w:szCs w:val="20"/>
+      </w:rPr>
+    </w:rPrDefault>
+  </w:docDefaults>
+  <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+    <w:name w:val="Normal"/>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Header">
+    <w:name w:val="header"/>
+    <w:basedOn w:val="Normal"/>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Footer">
+    <w:name w:val="footer"/>
+    <w:basedOn w:val="Normal"/>
+  </w:style>
+</w:styles>`;
+
+  // ── word/header1.xml ─────────────────────────────────────────────────────
+  const hdrParas: string[] = [];
+
+  // Logo paragraph (inline drawing, 3cm × 1.5cm = 1080000 × 540000 EMU)
+  if (hasLogo) {
+    hdrParas.push(
+      `<w:p>` +
+        `<w:pPr><w:jc w:val="left"/></w:pPr>` +
+        `<w:r><w:drawing>` +
+        `<wp:inline distT="0" distB="0" distL="0" distR="0" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
+        `<wp:extent cx="1080000" cy="540000"/>` +
+        `<wp:effectExtent l="0" t="0" r="0" b="0"/>` +
+        `<wp:docPr id="1" name="Logo"/>` +
+        `<wp:cNvGraphicFramePr>` +
+        `<a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>` +
+        `</wp:cNvGraphicFramePr>` +
+        `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">` +
+        `<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+        `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+        `<pic:nvPicPr>` +
+        `<pic:cNvPr id="1" name="Logo"/><pic:cNvPicPr/>` +
+        `</pic:nvPicPr>` +
+        `<pic:blipFill>` +
+        `<a:blip r:embed="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>` +
+        `<a:stretch><a:fillRect/></a:stretch>` +
+        `</pic:blipFill>` +
+        `<pic:spPr>` +
+        `<a:xfrm><a:off x="0" y="0"/><a:ext cx="1080000" cy="540000"/></a:xfrm>` +
+        `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>` +
+        `</pic:spPr>` +
+        `</pic:pic>` +
+        `</a:graphicData>` +
+        `</a:graphic>` +
+        `</wp:inline>` +
+        `</w:drawing></w:r>` +
+        `</w:p>`
+    );
+  }
+
+  // Kanzleiname — bold, 14pt (28 half-pt), brand blue #1D4ED8
+  if (data.kanzleiName) {
+    hdrParas.push(
+      `<w:p>` +
+        `<w:pPr><w:jc w:val="center"/></w:pPr>` +
+        `<w:r><w:rPr><w:b/><w:color w:val="1D4ED8"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr>` +
+        `<w:t>${xmlEsc(data.kanzleiName)}</w:t></w:r>` +
+        `</w:p>`
+    );
+  }
+
+  // Adresse
+  if (data.adresse) {
+    hdrParas.push(
+      `<w:p>` +
+        `<w:pPr><w:jc w:val="center"/></w:pPr>` +
+        `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>` +
+        `<w:t>${xmlEsc(data.adresse)}</w:t></w:r>` +
+        `</w:p>`
+    );
+  }
+
+  // Tel | Fax
+  const telFaxLine = [
+    data.telefon ? `Tel: ${data.telefon}` : null,
+    data.fax ? `Fax: ${data.fax}` : null,
+  ]
+    .filter(Boolean)
+    .join("  |  ");
+  if (telFaxLine) {
+    hdrParas.push(
+      `<w:p>` +
+        `<w:pPr><w:jc w:val="center"/></w:pPr>` +
+        `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>` +
+        `<w:t>${xmlEsc(telFaxLine)}</w:t></w:r>` +
+        `</w:p>`
+    );
+  }
+
+  // E-Mail | Web
+  const emailWebLine = [
+    data.email ? `E-Mail: ${data.email}` : null,
+    data.website ? `Web: ${data.website}` : null,
+  ]
+    .filter(Boolean)
+    .join("  |  ");
+  if (emailWebLine) {
+    hdrParas.push(
+      `<w:p>` +
+        `<w:pPr><w:jc w:val="center"/></w:pPr>` +
+        `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>` +
+        `<w:t>${xmlEsc(emailWebLine)}</w:t></w:r>` +
+        `</w:p>`
+    );
+  }
+
+  // Fallback: header must have at least one paragraph
+  if (hdrParas.length === 0) {
+    hdrParas.push(`<w:p><w:pPr><w:pStyle w:val="Header"/></w:pPr></w:p>`);
+  }
+
+  // Bottom border on the last header paragraph
+  const borderAttr =
+    `<w:pBdr>` +
+    `<w:bottom w:val="single" w:sz="4" w:space="1" w:color="auto"/>` +
+    `</w:pBdr>`;
+  const lastHdr = hdrParas[hdrParas.length - 1];
+  hdrParas[hdrParas.length - 1] = lastHdr.includes("<w:pPr>")
+    ? lastHdr.replace("<w:pPr>", `<w:pPr>${borderAttr}`)
+    : lastHdr.replace("<w:p>", `<w:p><w:pPr>${borderAttr}</w:pPr>`);
+
+  const headerXml =
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
+    `<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"\n` +
+    `       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n` +
+    hdrParas.join("\n") +
+    `\n</w:hdr>`;
+
+  // ── word/footer1.xml ─────────────────────────────────────────────────────
+  // Tab stop at right margin for page number (content width: 11906 - 1800 - 1440 = 8666 twips)
+  const rightTabPos = 8666;
+  const ftrParas: string[] = [];
+
+  const leftFooter = [
+    data.iban ? `IBAN: ${data.iban}` : null,
+    data.bic ? `BIC: ${data.bic}` : null,
+    data.bankName || null,
+    data.steuernr ? `St.-Nr.: ${data.steuernr}` : null,
+    data.ustIdNr ? `USt-IdNr: ${data.ustIdNr}` : null,
+  ]
+    .filter(Boolean)
+    .join("  |  ");
+
+  // Page-number field runs (begin / instrText / separate / cached "1" / end)
+  const pageField =
+    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r>` +
+    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r>` +
+    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r>` +
+    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t>1</w:t></w:r>` +
+    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r>`;
+
+  ftrParas.push(
+    `<w:p>` +
+      `<w:pPr>` +
+      `<w:pStyle w:val="Footer"/>` +
+      `<w:tabs><w:tab w:val="right" w:pos="${rightTabPos}"/></w:tabs>` +
+      `</w:pPr>` +
+      (leftFooter
+        ? `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>` +
+          `<w:t xml:space="preserve">${xmlEsc(leftFooter)}</w:t></w:r>` +
+          `<w:r><w:tab/></w:r>`
+        : `<w:r><w:tab/></w:r>`) +
+      `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>` +
+      `<w:t xml:space="preserve">Seite </w:t></w:r>` +
+      pageField +
+      `</w:p>`
+  );
+
+  // Optional braoInfo line (7pt = 14 half-pt)
+  if (data.braoInfo) {
+    ftrParas.push(
+      `<w:p>` +
+        `<w:pPr><w:pStyle w:val="Footer"/><w:jc w:val="left"/></w:pPr>` +
+        `<w:r><w:rPr><w:sz w:val="14"/><w:szCs w:val="14"/></w:rPr>` +
+        `<w:t>${xmlEsc(data.braoInfo)}</w:t></w:r>` +
+        `</w:p>`
+    );
+  }
+
+  const footerXml =
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
+    `<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"\n` +
+    `       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n` +
+    ftrParas.join("\n") +
+    `\n</w:ftr>`;
+
+  // ── Assemble ZIP ─────────────────────────────────────────────────────────
+  zip.file("[Content_Types].xml", contentTypes);
+  zip.file("_rels/.rels", rootRels);
+  zip.file("word/document.xml", documentXml);
+  zip.file("word/_rels/document.xml.rels", documentRels);
+  zip.file("word/styles.xml", stylesXml);
+  zip.file("word/header1.xml", headerXml);
+  zip.file("word/footer1.xml", footerXml);
+
+  if (hasLogo && logoBuffer) {
+    zip.file(`word/media/logo.${logoExt}`, logoBuffer);
+    zip.file(
+      "word/_rels/header1.xml.rels",
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
+        `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n` +
+        `  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/logo.${logoExt}"/>\n` +
+        `</Relationships>`
+    );
+  }
+
+  return zip.generate({ type: "nodebuffer", compression: "DEFLATE" }) as Buffer;
+}
+
 const APP_INTERNAL_URL =
   process.env.APP_INTERNAL_URL ?? "http://host.docker.internal:3000";
 const ONLYOFFICE_SECRET = process.env.ONLYOFFICE_SECRET ?? "";

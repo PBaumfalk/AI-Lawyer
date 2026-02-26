@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadFile } from "@/lib/storage";
+import { generateBriefkopfDocx, BriefkopfData } from "@/lib/briefkopf";
 
 /**
  * GET /api/briefkopf -- list all Briefkoepfe
@@ -57,20 +58,21 @@ export async function POST(request: NextRequest) {
 
   try {
     let logoUrl: string | null = null;
+    let logoBuffer: Buffer | null = null;
     let dateipfad: string | null = null;
 
-    // Upload logo if provided
+    // Upload logo if provided — keep buffer for DOCX generation
     if (logo) {
-      const logoBuffer = Buffer.from(await logo.arrayBuffer());
+      logoBuffer = Buffer.from(await logo.arrayBuffer());
       const timestamp = Date.now();
       const sanitized = logo.name
         .replace(/[^a-zA-Z0-9._-]/g, "_")
         .replace(/_+/g, "_");
       logoUrl = `briefkoepfe/logos/${timestamp}_${sanitized}`;
-      await uploadFile(logoUrl, logoBuffer, logo.type, logo.size);
+      await uploadFile(logoUrl, logoBuffer, logo.type, logoBuffer.length);
     }
 
-    // Upload DOCX template if provided
+    // Upload DOCX template if provided; otherwise auto-generate from fields
     if (docx) {
       const docxBuffer = Buffer.from(await docx.arrayBuffer());
       const timestamp = Date.now();
@@ -78,7 +80,32 @@ export async function POST(request: NextRequest) {
         .replace(/[^a-zA-Z0-9._-]/g, "_")
         .replace(/_+/g, "_");
       dateipfad = `briefkoepfe/vorlagen/${timestamp}_${sanitized}`;
-      await uploadFile(docxBuffer.length > 0 ? dateipfad : dateipfad, docxBuffer, docx.type, docx.size);
+      await uploadFile(dateipfad, docxBuffer, docx.type, docxBuffer.length);
+    } else {
+      // Auto-generate DOCX from text fields
+      const fields: BriefkopfData = {
+        kanzleiName: (formData.get("kanzleiName") as string) || null,
+        adresse: (formData.get("adresse") as string) || null,
+        telefon: (formData.get("telefon") as string) || null,
+        fax: (formData.get("fax") as string) || null,
+        email: (formData.get("email") as string) || null,
+        website: (formData.get("website") as string) || null,
+        steuernr: (formData.get("steuernr") as string) || null,
+        ustIdNr: (formData.get("ustIdNr") as string) || null,
+        iban: (formData.get("iban") as string) || null,
+        bic: (formData.get("bic") as string) || null,
+        bankName: (formData.get("bankName") as string) || null,
+        braoInfo: (formData.get("braoInfo") as string) || null,
+      };
+      const generated = generateBriefkopfDocx(fields, logoBuffer, logo?.type ?? null);
+      const timestamp = Date.now();
+      dateipfad = `briefkoepfe/vorlagen/${timestamp}_generated.docx`;
+      await uploadFile(
+        dateipfad,
+        generated,
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        generated.length
+      );
     }
 
     // If setting as default, unset all others

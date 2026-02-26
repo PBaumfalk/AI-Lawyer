@@ -13,7 +13,7 @@ async function buildWorker() {
     format: "esm",
     // Worker only needs @prisma/client external (no next, no sharp)
     // pino + transports must be external — pino spawns worker threads that need separate files
-    external: ["@prisma/client", "pino", "pino-roll", "pino-pretty", "pino/file"],
+    external: ["@prisma/client", "pino", "pino-roll", "pino-pretty", "pino/file", "pdf-parse"],
     banner: {
       js: 'import { createRequire } from "module"; import { fileURLToPath as __fileURLToPath } from "url"; import { dirname as __dirnameFn } from "path"; const require = createRequire(import.meta.url); const __filename = __fileURLToPath(import.meta.url); const __dirname = __dirnameFn(__filename);',
     },

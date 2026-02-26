@@ -70,6 +70,9 @@ COPY --from=builder /app/node_modules/thread-stream ./node_modules/thread-stream
 COPY --from=builder /app/node_modules/safe-stable-stringify ./node_modules/safe-stable-stringify
 COPY --from=builder /app/node_modules/date-fns ./node_modules/date-fns
 
+# Copy pdf-parse (external in esbuild worker bundle — needed for OCR text extraction)
+COPY --from=builder /app/node_modules/pdf-parse ./node_modules/pdf-parse
+
 # Copy seed dependencies (tsx needs esbuild + get-tsconfig at runtime)
 COPY --from=builder /app/node_modules/tsx ./node_modules/tsx
 COPY --from=builder /app/node_modules/esbuild ./node_modules/esbuild

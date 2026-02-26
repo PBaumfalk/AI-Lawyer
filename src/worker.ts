@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
-import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob } from "@/lib/queue/queues";
+import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, ocrQueue } from "@/lib/queue/queues";
 import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.processor";
 import { processFristReminders } from "@/workers/processors/frist-reminder";
 import { initializeDefaults, getSettingTyped } from "@/lib/settings/service";
@@ -634,6 +634,42 @@ async function startup() {
     }
   } catch (err) {
     log.warn({ err }, "Failed to register AI jobs (non-fatal)");
+  }
+
+  // Re-queue documents that previously failed OCR (e.g. due to Stirling-PDF being unavailable).
+  // Resets FEHLGESCHLAGEN → AUSSTEHEND and enqueues a fresh OCR job.
+  try {
+    const failedDocs = await prisma.dokument.findMany({
+      where: { ocrStatus: "FEHLGESCHLAGEN" },
+      select: { id: true, akteId: true, storagePfad: true, mimeType: true, name: true },
+    });
+
+    if (failedDocs.length > 0) {
+      log.info({ count: failedDocs.length }, "Re-queuing previously failed OCR jobs");
+
+      for (const doc of failedDocs) {
+        await prisma.dokument.update({
+          where: { id: doc.id },
+          data: { ocrStatus: "AUSSTEHEND", ocrFehler: null },
+        });
+
+        await ocrQueue.add(
+          "ocr-document",
+          {
+            dokumentId: doc.id,
+            akteId: doc.akteId,
+            storagePath: doc.storagePfad,
+            mimeType: doc.mimeType,
+            fileName: doc.name,
+          },
+          { attempts: 3, backoff: { type: "exponential", delay: 10000 } }
+        );
+      }
+
+      log.info({ count: failedDocs.length }, "Failed OCR jobs re-queued successfully");
+    }
+  } catch (err) {
+    log.warn({ err }, "Failed to re-queue failed OCR jobs (non-fatal)");
   }
 
   // Start IMAP connections for all active mailboxes

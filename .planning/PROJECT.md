@@ -115,38 +115,32 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - ✓ Versand-Gate (ENTWURF-Dokumente können nicht versendet werden) — v3.4
 - ✓ RBAC-Enforcement auf allen API-Routes (Finance, Dashboard, KI, beA) — v3.4
 
+**Docker Build (v3.5 Phase 10):**
+- ✓ Webpack-Fehler in Financial Module behoben — v3.5
+- ✓ Production Docker Build lauffähig (alle 9 Services healthy) — v3.5
+
+**Glass UI (v3.5 Phase 11):**
+- ✓ oklch Design-Token-System (4 Glass-Tier, Gradient-Mesh, Dark Mode) — v3.5
+- ✓ Animiertes Glass-Sidebar (Motion/React v11, backdrop-blur-xl, Dark-Mode-Toggle) — v3.5
+- ✓ Glass-Komponentenbibliothek (GlassCard, GlassPanel, GlassKpiCard, glass-input, glass-shimmer) — v3.5
+- ✓ Alle 26 Dashboard-Seiten auf Glass-Design migriert — v3.5
+
 ### Active
 
-<!-- v3.5 Production Ready scope -->
-
-**Docker Build Fix:**
-- [ ] Webpack-Fehler in Financial Module beheben
-- [ ] Production Docker Build lauffähig
-
-**Glass UI Migration:**
-- [ ] Verbleibende Seiten auf Glass-Komponenten migrieren
+<!-- v3.6 scope — deferred from v3.5 -->
 
 **Falldatenblätter:**
 - [ ] Generisches Framework für Rechtsgebiet-spezifische Felder (Konfiguration, nicht hart codiert)
+- [ ] Mindestens 3 Beispiel-Schemata (Arbeitsrecht, Familienrecht, Verkehrsrecht)
 
 **BI-Dashboard:**
 - [ ] Standard-KPI-Kacheln (Neue Akten/Monat, offene Posten, fällige Fristen, Umsatz/Monat)
+- [ ] RBAC-geschützt (nur ADMIN + ANWALT)
 
 **Export:**
 - [ ] CSV + XLSX Export für Akten, Kontakte, Finanzdaten
 
-## Current Milestone: v3.5 Production Ready
-
-**Goal:** Die bestehende Software produktionsreif machen — Docker Build fixen, visuell konsistente Glass UI, Falldatenblatt-Framework, BI-Dashboard-KPIs und Daten-Export.
-
-**Target features:**
-- Docker Build Fix (webpack errors in financial module)
-- Glass UI Migration (remaining pages)
-- Falldatenblätter (generic framework, configurable per Rechtsgebiet)
-- BI-Dashboard (KPI tiles: Akten/Monat, offene Posten, Fristen, Umsatz)
-- CSV/XLSX Export
-
-## Future (post v3.5)
+## Future (post v3.6)
 
 **Mandantenportal:**
 - [ ] Freigegebene Dokumente einsehen/herunterladen
@@ -194,11 +188,11 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ## Context
 
-Shipped v3.4 with 90,375 LOC TypeScript across 461 files.
-Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS, shadcn/ui, PostgreSQL 16 + Prisma (60+ Models), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/OpenAI/Anthropic), bea.expert.
-Docker Compose deployment with 7 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice).
-All 64 v1 requirements verified across 7 audit cycles.
-Minor tech debt: Bull Board PUT stub, Briefkopf OnlyOffice editing deferred, bea.expert library requires commercial registration.
+Shipped v3.5 with ~91,300 LOC TypeScript (234 files changed, +26,707/-1,020 lines in v3.5).
+Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (60+ Models), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11.
+Docker Compose deployment with 9 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice, ollama).
+All BUILD and Glass UI requirements satisfied. FD/BI/EXP deferred to v3.6.
+Minor tech debt: 62× font-heading in sub-components, 77× .glass alias in sub-components (both non-blocking), Briefkopf OnlyOffice editing deferred, bea.expert library requires commercial registration.
 
 ## Constraints
 
@@ -230,9 +224,15 @@ Minor tech debt: Bull Board PUT stub, Briefkopf OnlyOffice editing deferred, bea
 | Hand-built CII XML statt @e-invoice-eu/core | Bibliothek zu komplex, Hand-Build gibt volle EN16931-Kontrolle | ✓ Good |
 | Non-fatal Versand-Gate | Document status failure sollte Send nie blockieren | ✓ Good — try-catch wrapper |
 | Helena als proaktive Agentin | KI-Differentiator: scannt automatisch, schlägt vor, erstellt nie auto | ✓ Good — Suggestions feed with ENTWURF enforcement |
-| Hybrid-Messaging (Akte + allgemein) | Beides gebraucht: case-spezifisch + Kanzlei-weit | — Pending (v2) |
-| Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | — Pending (v2) |
-| CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending (v2) |
+| oklch + 4 Glass-Tiers (v3.5) | Konsistentes Design-Token-System, Dark Mode, Apple Sequoia-Ästhetik | ✓ Good — globals.css token foundation, keine CSS-Variablen-Konflikte |
+| Motion/React v11 (v3.5) | Spring-Physics-Animationen, accessible (prefers-reduced-motion) | ✓ Good — sidebar, modals, buttons, count-up KPIs |
+| var(--glass-*) statt opacity patterns (v3.5) | Design-Token-Konsistenz über alle Komponenten | ✓ Good — glass-border-color, glass-bg canonical tokens |
+| Inter statt DM Serif Display (v3.5) | SF Pro Display → Inter → system-ui Stack, moderner, schneller | ✓ Good — keine custom font loading, system-native feel |
+| qwen3.5:35b als Ollama-Standard (v3.5) | Deutlich besser als mistral:7b für Legal-Domain | ✓ Good — GPU-required but justified |
+| NEXT_PHASE Build-Flag (v3.5) | Verhindert pino-roll File-Transport bei SSR-Build-Zeit | ✓ Good — clean production builds |
+| Hybrid-Messaging (Akte + allgemein) | Beides gebraucht: case-spezifisch + Kanzlei-weit | — Pending (v3.6+) |
+| Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | — Pending (v3.6+) |
+| CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending (v3.6+) |
 
 ---
-*Last updated: 2026-02-25 after v3.5 milestone start*
+*Last updated: 2026-02-26 after v3.5 milestone*

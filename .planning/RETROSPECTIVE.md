@@ -53,6 +53,51 @@
 
 ---
 
+## Milestone: v3.5 — Production Ready
+
+**Shipped:** 2026-02-26
+**Phases:** 2 (10–11) | **Plans:** 10 | **Files changed:** 234 | **+26,707 / -1,020 lines**
+
+### What Was Built
+- Docker production build fully fixed — Next.js compiles clean, all 9 services healthy (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice, ollama)
+- Complete oklch design token foundation — 4 glass blur tiers (8/16/24/40px), gradient mesh background, macOS scrollbars, full dark mode CSS structure
+- Motion/React v11 spring physics — animated glass sidebar (backdrop-blur-xl), modal entry, button spring, count-up KPI animations; prefers-reduced-motion guards
+- Glass component library — GlassCard (variants), GlassPanel (4 elevation tiers), GlassKpiCard, glass-input form primitives, glass-shimmer skeleton
+- All 26 dashboard pages migrated to glass design — 0 `font-heading` in page files, all UI/form/list success criteria satisfied
+
+### What Worked
+- **Extreme velocity:** 10 plans across 234 files in ~4 min average/plan — glass design system was well-scoped and incremental
+- **Design-token-first approach:** Defining oklch variables and glass-* utility classes in globals.css before migrating components made page migrations mechanical
+- **Wave-based page migration:** Grouping pages by domain (dashboard, akten, kontakte, email, finanzen, admin) with one plan per domain kept each plan focused
+- **Gap-closure Plan 07:** Catching remaining pages (KalenderListe, 3 admin/email pages) in a dedicated gap plan before archiving = clean slate
+- **Motion/React types compatible with React 19:** The @ts-expect-error approach was unnecessary — motion v12.34.3 types are fully compatible
+
+### What Was Inefficient
+- **Phase 11 had 7 plans (not 6):** The gap-closure Plan 07 was needed despite thorough initial planning. Two deferred pages (admin/system, admin/settings) slipped through the SC7 check.
+- **10-03 was very dense:** Gap closure phase combining vector-store fix + Docker rebuild + OnlyOffice URL + Stirling-PDF security + Ollama integration in one plan. Should have been 2 plans.
+- **Scope reduction happened mid-milestone:** Phases 12-14 (FD, BI, Export) were planned but removed. Better to scope down at requirements time, not after planning.
+
+### Patterns Established
+- **oklch everywhere:** Color tokens use `oklch(L% C H)` syntax; Tailwind references `var(--token-name)` not `hsl(var(--token-name))`
+- **Glass elevation model:** 4 tiers (subtle/default/elevated/overlay) map to blur levels (8/16/24/40px) and opacity levels
+- **GlassKpiCard with count-up:** `useCountUp` hook with Motion number animation — reusable KPI display pattern
+- **NEXT_PHASE build-flag:** Detect SSR build-time vs runtime to skip file transports in pino-roll
+- **127.0.0.1 in Alpine healthchecks:** `localhost` resolves to IPv6 in Alpine; use explicit IPv4 address
+
+### Key Lessons
+1. **Scope decisions should happen at requirements time.** Removing Phases 12-14 mid-milestone created audit noise (13 orphaned requirements). Decide scope before planning phases.
+2. **Glass design systems are highly iterative.** Expect 10–15% more pages to need migration than initially scoped. Build a gap-closure plan into every UI milestone.
+3. **NEXT_PHASE flag pattern is reusable.** Any module that uses file I/O at module-load-time needs a build-time guard. Document this pattern for future heavy server modules.
+4. **Docker healthchecks need IPv4 explicit.** Alpine's `localhost` → IPv6 gotcha affects all future Docker Alpine services. Use `127.0.0.1` everywhere.
+5. **Motion/React v11 + React 19 is safe.** Don't add @ts-expect-error preemptively for upstream type mismatches — check actual type signatures first.
+
+### Cost Observations
+- Model mix: ~30% opus (complex migrations), ~60% sonnet (page-by-page migration), ~10% haiku (verification)
+- Sessions: ~5 sessions across 2 days
+- Notable: ~4 min/plan average — design-token-first approach made page migration very predictable
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -60,15 +105,19 @@
 | Milestone | Sessions | Phases | Plans | Key Change |
 |-----------|----------|--------|-------|------------|
 | v3.4 | ~15 | 13 | 38 | First milestone with GSD workflow; gap-closure phases proved effective |
+| v3.5 | ~5 | 2 | 10 | Design-token-first approach; scope reduction should happen at requirements time |
 
 ### Cumulative Quality
 
 | Milestone | Tests | Requirements | Audit Cycles | Tech Debt Items |
 |-----------|-------|-------------|-------------|-----------------|
 | v3.4 | 207+ (Frist + RVG) | 64/64 | 7 | 5 (non-blocking) |
+| v3.5 | 207+ (unchanged) | 5/18 shipped (13 deferred) | 1 | 2 (font-heading, .glass alias — non-blocking) |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. Plan integration wiring explicitly — gap-closure phases are effective but reactive
 2. Audit incrementally rather than only at milestone boundary
 3. Prisma schema as source of truth scales well across 60+ models
+4. Scope decisions belong at requirements time — mid-milestone removals create audit noise
+5. Design-token-first: define tokens before migrating components — makes page migrations mechanical

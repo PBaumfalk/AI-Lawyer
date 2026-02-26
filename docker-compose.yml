@@ -11,7 +11,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://ailawyer:ailawyer@db:5432/ailawyer?schema=public
-      NEXTAUTH_URL: http://${SERVER_HOST:-localhost}:3000
+      NEXTAUTH_URL: http://localhost:3000
       NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
       AUTH_TRUST_HOST: "true"
       REDIS_URL: redis://redis:6379
@@ -21,11 +21,11 @@ services:
       MINIO_SECRET_KEY: ailawyer123
       MINIO_BUCKET: dokumente
       MINIO_USE_SSL: "false"
-      MINIO_PUBLIC_URL: http://${SERVER_HOST:-localhost}:9000
+      MINIO_PUBLIC_URL: http://localhost:9000
       MEILISEARCH_URL: http://meilisearch:7700
       MEILISEARCH_API_KEY: ailawyer-meili-key
       EMAIL_ENCRYPTION_KEY: dev-email-encryption-key-change-in-production-32chars
-      ONLYOFFICE_URL: http://${SERVER_HOST:-localhost}:8080
+      ONLYOFFICE_URL: http://localhost:8080
       ONLYOFFICE_INTERNAL_URL: http://onlyoffice:80
       ONLYOFFICE_SECRET: dev-onlyoffice-secret
       APP_INTERNAL_URL: http://app:3000

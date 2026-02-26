@@ -18,6 +18,39 @@ const APP_INTERNAL_URL =
 export { ONLYOFFICE_URL, ONLYOFFICE_INTERNAL_URL };
 
 /**
+ * Resolve the public OnlyOffice URL for the browser.
+ *
+ * Fire & Forget: if ONLYOFFICE_URL points to localhost, the hostname is
+ * derived from the incoming request headers so the URL is always correct
+ * regardless of the server's IP — no SERVER_HOST config required.
+ *
+ * Falls back to the explicit ONLYOFFICE_URL if it's already a non-localhost
+ * address (e.g. a custom domain override).
+ */
+export function resolvePublicOnlyOfficeUrl(requestHeaders: Headers): string {
+  const configured = new URL(ONLYOFFICE_URL);
+
+  // Explicit non-localhost override — use as-is
+  if (
+    configured.hostname !== "localhost" &&
+    configured.hostname !== "127.0.0.1"
+  ) {
+    return ONLYOFFICE_URL;
+  }
+
+  // Derive hostname from request (works for any server IP without config)
+  const forwardedHost = requestHeaders.get("x-forwarded-host");
+  const host = requestHeaders.get("host") ?? "localhost";
+  const rawHost = forwardedHost ?? host;
+  const proto = requestHeaders.get("x-forwarded-proto") ?? "http";
+  // Strip port from host header, keep OnlyOffice's own port
+  const hostname = rawHost.split(":")[0];
+  const port = configured.port || "8080";
+
+  return `${proto}://${hostname}:${port}`;
+}
+
+/**
  * Rewrite a URL returned by ONLYOFFICE (e.g. saved file URL in callbacks,
  * converted file URL) so that it's reachable from the app container.
  * ONLYOFFICE may return URLs with its own internal hostname (e.g. http://localhost/...)

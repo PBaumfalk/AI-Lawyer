@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { buildEditorConfig, ONLYOFFICE_URL } from "@/lib/onlyoffice";
+import { buildEditorConfig, resolvePublicOnlyOfficeUrl } from "@/lib/onlyoffice";
 
 /**
  * GET /api/onlyoffice/config/[dokumentId] -- returns ONLYOFFICE editor configuration.
@@ -50,13 +50,15 @@ export async function GET(
       mode,
     });
 
+    const onlyofficeUrl = resolvePublicOnlyOfficeUrl(request.headers);
+
     console.log(
-      `[ONLYOFFICE] Config for ${dokument.name}: key=${config.document.key}, mode=${config.editorConfig.mode}, status=${dokument.status}, url=${ONLYOFFICE_URL}`
+      `[ONLYOFFICE] Config for ${dokument.name}: key=${config.document.key}, mode=${config.editorConfig.mode}, status=${dokument.status}, url=${onlyofficeUrl}`
     );
 
     return NextResponse.json({
       config,
-      onlyofficeUrl: ONLYOFFICE_URL,
+      onlyofficeUrl,
       dokumentStatus: dokument.status,
     });
   } catch (err: unknown) {

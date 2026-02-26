@@ -77,13 +77,12 @@ export async function POST(req: NextRequest) {
           beteiligte: { include: { kontakt: true } },
           dokumente: {
             orderBy: { createdAt: "desc" },
-            take: 50,
+            take: 20,
             select: {
               id: true,
               name: true,
               mimeType: true,
               ocrStatus: true,
-              ocrText: true,
               ordner: true,
               tags: true,
               createdAt: true,
@@ -132,11 +131,24 @@ export async function POST(req: NextRequest) {
                 .join("\n")
             : "- (keine anstehenden Fristen/Termine)";
 
-        // Build document listing with OCR text snippets
-        // Limit total context to ~12000 chars to avoid token overflow
-        const MAX_DOC_CONTEXT_CHARS = 12000;
-        let docContextChars = 0;
+        // Load OCR text snippets separately — only for completed docs, truncated in DB
+        // Uses raw SQL to avoid loading full ocrText blobs into memory
+        const ocrDocIds = akte.dokumente
+          .filter((d) => d.ocrStatus === "ABGESCHLOSSEN")
+          .slice(0, 5)
+          .map((d) => d.id);
 
+        const ocrSnippets = new Map<string, string>();
+        if (ocrDocIds.length > 0) {
+          const snippetRows = await prisma.$queryRaw<
+            { id: string; snippet: string }[]
+          >`SELECT id, LEFT("ocrText", 500) as snippet FROM "Dokument" WHERE id = ANY(${ocrDocIds}) AND "ocrText" IS NOT NULL`;
+          for (const row of snippetRows) {
+            if (row.snippet) ocrSnippets.set(row.id, row.snippet.trim());
+          }
+        }
+
+        // Build document listing
         const dokumenteLines =
           akte.dokumente.length > 0
             ? akte.dokumente
@@ -153,14 +165,9 @@ export async function POST(req: NextRequest) {
                   const tagStr = d.tags.length > 0 ? ` Tags: ${d.tags.join(", ")}` : "";
                   let line = `- ${d.name} (${d.mimeType}, ${ocrLabel})${folder}${tagStr}`;
 
-                  // Include OCR text snippet if available and within budget
-                  if (d.ocrText && docContextChars < MAX_DOC_CONTEXT_CHARS) {
-                    const remaining = MAX_DOC_CONTEXT_CHARS - docContextChars;
-                    const snippet = d.ocrText.slice(0, Math.min(1500, remaining)).trim();
-                    if (snippet.length > 0) {
-                      line += `\n  Textauszug: ${snippet}${d.ocrText.length > snippet.length ? " [...]" : ""}`;
-                      docContextChars += snippet.length;
-                    }
+                  const snippet = ocrSnippets.get(d.id);
+                  if (snippet) {
+                    line += `\n  Textauszug: ${snippet} [...]`;
                   }
 
                   return line;

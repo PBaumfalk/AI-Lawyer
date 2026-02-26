@@ -35,7 +35,7 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
 **Milestone Goal:** Die bestehende Software produktionsreif machen -- Docker Build fixen, visuell konsistente Glass UI, Falldatenblatt-Framework, BI-Dashboard-KPIs und Daten-Export.
 
 - [ ] **Phase 10: Docker Build Fix** - Webpack-Fehler beheben, production Docker Build lauffaehig machen -- gap closure in progress
-- [ ] **Phase 11: Glass UI Migration** - Verbleibende Seiten auf Glass-Komponenten migrieren
+- [ ] **Phase 11: Glass UI Migration** - Komplettes Redesign auf Apple Sequoia-Style Liquid Glass Design System
 - [ ] **Phase 12: Falldatenblaetter** - Generisches Framework fuer Rechtsgebiet-spezifische Felder
 - [ ] **Phase 13: BI-Dashboard** - KPI-Kacheln fuer Kanzlei-Kennzahlen auf der Dashboard-Seite
 - [ ] **Phase 14: Export** - CSV- und XLSX-Export fuer Akten, Kontakte und Finanzdaten
@@ -56,15 +56,32 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
 - [ ] 10-03-PLAN.md -- Gap closure: Fix vector-store column names + rebuild Docker image
 
 ### Phase 11: Glass UI Migration
-**Goal**: Every user-facing page uses the Glass design system for visual consistency
+**Goal**: Complete redesign to Apple Sequoia-style liquid glass design system — new token foundation, dark mode, Motion/React animations, glass sidebar, and consistent application across all pages
 **Depends on**: Phase 10 (stable build needed to verify UI changes)
 **Requirements**: UI-01, UI-02, UI-03
+**Design Reference**: /Users/patrickbaumfalk/Projekte/GVZ-Claude (glass component library to adopt)
+**Key Decisions** (confirmed 2026-02-26):
+  - Sidebar: Glass sidebar (backdrop-blur-xl, oklch transparent) — replaces dark Slate-900
+  - Fonts: SF Pro Display → Inter → system-ui stack — replaces DM Serif Display / DM Sans
+  - Animations: Motion/React v11 spring physics — replaces CSS transitions only
+  - Theme: Full Light/Dark mode with .dark class strategy — new capability
+  - Colors: Keep brand blue oklch(45% 0.2 260), adopt oklch throughout
+  - Glass levels: 4 blur tiers (8px input, 16px card, 24px panel, 40px modal/sidebar)
 **Success Criteria** (what must be TRUE):
-  1. All dashboard-level pages (Akten-Liste, Kontakte-Liste, Dokumente-Liste, E-Mail-Inbox, Kalender, KI-Entwuerfe, Tickets) use glass-card, glass-panel, or glass-kpi-card components
-  2. All form pages (Akte anlegen/bearbeiten, Kontakt anlegen/bearbeiten, Einstellungen) use consistent Glass-styled inputs, labels, and panels
-  3. All list/table pages render data inside Glass-Panels with consistent spacing, borders, and backdrop styling
-  4. No page in the main navigation uses raw div/card elements that break the Glass design language
-**Plans**: TBD
+  1. Design token system upgraded: globals.css uses oklch variables, 4 glass utility tiers, gradient mesh background, macOS scrollbars, dark mode CSS structure
+  2. Motion/React installed and used for sidebar collapse, modal entry, button interactions, toast entry
+  3. Sidebar migrated to glass-sidebar (transparent, backdrop-blur-xl) with dark mode toggle button
+  4. All dashboard-level pages (Akten-Liste, Kontakte-Liste, Dokumente-Liste, E-Mail-Inbox, Kalender, KI-Entwuerfe, Tickets) use upgraded glass components
+  5. All form pages use consistent glass-input styled inputs, labels, and glass-panel containers
+  6. Dark mode toggle works app-wide; both modes look intentional and polished
+  7. No page uses raw div/card that breaks the glass design language
+**Plans**: 6 plans
+- [ ] 11-01-PLAN.md -- Foundation: globals.css oklch tokens, 4 glass tiers, ThemeProvider, Prisma theme field, Motion/React install
+- [ ] 11-02-PLAN.md -- Layout shell: glass sidebar with Motion animation, dark mode toggle, profile chip, glass header
+- [ ] 11-03-PLAN.md -- Core components: glass-card/kpi-card/panel upgrades, Button Motion spring, glass-input form primitives, skeleton shimmer
+- [ ] 11-04-PLAN.md -- Dashboard + Akten pages: glass-panel sections, stagger list animation, form wrappers
+- [ ] 11-05-PLAN.md -- Kontakte + Dokumente + Email + KI pages: glass-panel containers, consistent form styling
+- [ ] 11-06-PLAN.md -- Finanzen + Kalender + Tickets + beA + Admin + Settings pages: full coverage sweep
 
 ### Phase 12: Falldatenblaetter
 **Goal**: Admins can define per-Rechtsgebiet field schemas, and those fields appear dynamically on Akte forms and detail pages
@@ -124,10 +141,10 @@ Phases execute in numeric order: 10 -> 11 -> 12 -> 13 -> 14
 | 8. Integration Hardening | v3.4 | 3/3 | Complete | 2026-02-25 |
 | 9. Final Integration + Tech Debt | v3.4 | 1/1 | Complete | 2026-02-25 |
 | 10. Docker Build Fix | v3.5 | 2/3 | In Progress | 2026-02-25 |
-| 11. Glass UI Migration | v3.5 | 0/? | Not started | - |
+| 11. Glass UI Migration | v3.5 | 0/6 | Not started | - |
 | 12. Falldatenblaetter | v3.5 | 0/? | Not started | - |
 | 13. BI-Dashboard | v3.5 | 0/? | Not started | - |
 | 14. Export | v3.5 | 0/? | Not started | - |
 
 ---
-*Last updated: 2026-02-25 after v3.5 roadmap creation*
+*Last updated: 2026-02-26 after Phase 11 planning*

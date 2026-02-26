@@ -16,6 +16,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Copy pdfjs worker to public/ (avoids Terser import.meta error)
+# pdfjs-dist version in package.json MUST match what react-pdf expects (pinned to 5.4.296).
+# A version mismatch between worker and library causes silent PDF load failures in the browser.
 RUN mkdir -p public && cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs
 
 # Generate Prisma client (needs dummy DATABASE_URL since .env is excluded)

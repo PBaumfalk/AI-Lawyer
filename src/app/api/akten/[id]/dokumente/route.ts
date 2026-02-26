@@ -180,7 +180,9 @@ export async function POST(
           mimeType: dokument.mimeType,
           fileName: file.name,
         };
-        await ocrQueue.add("ocr-document", ocrJobData).catch(() => {});
+        await ocrQueue.add("ocr-document", ocrJobData).catch((err) => {
+          console.error(`[UPLOAD] Failed to enqueue OCR job for ${dokument.id}:`, err);
+        });
 
         // For non-PDF files, also enqueue preview generation
         if (file.type !== "application/pdf") {
@@ -191,7 +193,9 @@ export async function POST(
             fileName: file.name,
             akteId,
           };
-          await previewQueue.add("generate-preview", previewJobData).catch(() => {});
+          await previewQueue.add("generate-preview", previewJobData).catch((err) => {
+            console.error(`[UPLOAD] Failed to enqueue preview job for ${dokument.id}:`, err);
+          });
         }
       }
 

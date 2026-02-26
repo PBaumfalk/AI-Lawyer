@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 11 of 14 (Glass UI Migration)
-Plan: 5 of 6 completed
-Status: In progress
-Last activity: 2026-02-26 -- Completed Plan 05 (Kontakte, Dokumente, Email, KI Pages Glass Migration)
+Plan: 6 of 6 completed
+Status: Phase complete
+Last activity: 2026-02-26 -- Completed Plan 06 (Final Glass UI Coverage - all remaining pages)
 
-Progress: [########################░░░░░░] 71%
+Progress: [###########################░░░] 78%
 
 ## Performance Metrics
 
@@ -28,7 +28,7 @@ Progress: [########################░░░░░░] 71%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 10. Docker Build Fix | 3/3 | ~60min | ~20min |
-| 11. Glass UI Migration | 5/6 | ~15min | ~3min |
+| 11. Glass UI Migration | 6/6 | ~24min | ~4min |
 | 12. Falldatenblaetter | 0/? | - | - |
 | 13. BI-Dashboard | 0/? | - | - |
 | 14. Export | 0/? | - | - |
@@ -62,6 +62,10 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 - [11-05] Email dialog overlays use GlassPanel elevation=elevated — elevated tier appropriate for modal overlays
 - [11-05] var(--glass-border-color) replaces border-white/10 opacity patterns — design token consistency
 - [11-05] ki-entwuerfe/page.tsx already redirects to /ki-chat — no migration needed
+- [11-06] GlassKpiCard icon prop accepts ReactNode not React.ElementType — call sites pass <Icon className='w-5 h-5' /> JSX
+- [11-06] admin/system/page.tsx and admin/settings/page.tsx replace Card+CardHeader+CardContent with GlassPanel + manual border-b dividers
+- [11-06] admin/pipeline/page.tsx QueueCard component refactored from Card to GlassCard — same visual hierarchy, glass-consistent
+- [11-06] glass-shimmer replaces animate-pulse bg-slate-* skeleton patterns in suche/page.tsx
 
 - [10-01] Use NEXT_PHASE env var to detect build-time SSR and skip pino-roll file transport
 - [10-01] Add force-dynamic to health route to prevent static generation timeout on Redis
@@ -86,4 +90,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 11-05-PLAN.md (Kontakte, Dokumente, Email, KI Pages Glass Migration)
+Stopped at: Completed 11-06-PLAN.md (Final Glass UI Coverage — Phase 11 complete)

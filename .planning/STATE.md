@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 11 of 14 (Glass UI Migration)
-Plan: 1 of 6 completed
+Plan: 2 of 6 completed
 Status: In progress
-Last activity: 2026-02-26 -- Completed Plan 01 (Glass UI Foundation)
+Last activity: 2026-02-26 -- Completed Plan 02 (Layout Shell Glass Migration)
 
-Progress: [######░░░░░░░░░░░░░░░░░░░░░░░░] 20%
+Progress: [############░░░░░░░░░░░░░░░░░░] 33%
 
 ## Performance Metrics
 
@@ -28,7 +28,7 @@ Progress: [######░░░░░░░░░░░░░░░░░░░░░
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 10. Docker Build Fix | 3/3 | ~60min | ~20min |
-| 11. Glass UI Migration | 1/6 | ~3min | ~3min |
+| 11. Glass UI Migration | 2/6 | ~6min | ~3min |
 | 12. Falldatenblaetter | 0/? | - | - |
 | 13. BI-Dashboard | 0/? | - | - |
 | 14. Export | 0/? | - | - |
@@ -49,6 +49,8 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 - [11-01] Tailwind color references use raw var(--*) instead of hsl(var(--*)) — required for oklch CSS variable values to work correctly
 - [11-01] UserSettings model created as separate table (not field on User) — extensible for future per-user settings
 - [11-01] prisma db push deferred until Docker DB is running; schema validated, client generated
+- [11-02] motion@12.34.3 types are compatible with React 19 — removed @ts-expect-error directives that would have caused TS2578 errors
+- [11-02] Active nav item: oklch(45% 0.2 260/0.15) bg + 2px left border — brand-blue indicator pattern established
 
 - [10-01] Use NEXT_PHASE env var to detect build-time SSR and skip pino-roll file transport
 - [10-01] Add force-dynamic to health route to prevent static generation timeout on Redis
@@ -73,4 +75,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 11-01-PLAN.md (Glass UI Foundation)
+Stopped at: Completed 11-02-PLAN.md (Layout Shell Glass Migration)

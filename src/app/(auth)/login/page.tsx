@@ -102,9 +102,6 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Kanzlei Baumfalk &middot; Dortmund
-        </p>
       </div>
     </div>
   );

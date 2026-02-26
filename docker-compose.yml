@@ -190,7 +190,7 @@ services:
 
   # ─── Stirling-PDF (OCR + document conversion) ───────────────────────────────
   stirling-pdf:
-    image: stirlingtools/stirling-pdf:latest
+    image: stirlingtools/stirling-pdf:latest-fat
     container_name: ailawyer-stirling-pdf
     restart: unless-stopped
     ports:

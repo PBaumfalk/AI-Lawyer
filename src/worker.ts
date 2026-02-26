@@ -641,7 +641,7 @@ async function startup() {
   try {
     const failedDocs = await prisma.dokument.findMany({
       where: { ocrStatus: "FEHLGESCHLAGEN" },
-      select: { id: true, akteId: true, storagePfad: true, mimeType: true, name: true },
+      select: { id: true, akteId: true, dateipfad: true, mimeType: true, name: true },
     });
 
     if (failedDocs.length > 0) {
@@ -658,7 +658,7 @@ async function startup() {
           {
             dokumentId: doc.id,
             akteId: doc.akteId,
-            storagePath: doc.storagePfad,
+            storagePath: doc.dateipfad,
             mimeType: doc.mimeType,
             fileName: doc.name,
           },

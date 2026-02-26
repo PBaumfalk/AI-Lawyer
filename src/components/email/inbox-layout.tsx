@@ -102,7 +102,7 @@ export function InboxLayout() {
     <>
       <ResizablePanelGroup
         orientation="horizontal"
-        autoSaveId="email-inbox-layout"
+        autoSaveId="email-inbox-v2"
         className="h-full"
       >
         {/* Left: Folder Tree */}

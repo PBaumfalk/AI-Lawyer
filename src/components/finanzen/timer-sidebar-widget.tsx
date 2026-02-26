@@ -126,7 +126,7 @@ export function TimerSidebarWidget() {
 
   return (
     <div className="mx-2 mb-2">
-      <div className="rounded-lg bg-white/[0.06] p-3 space-y-2">
+      <div className="rounded-lg bg-black/[0.04] dark:bg-white/[0.06] p-3 space-y-2">
         {/* Header */}
         <div className="flex items-center gap-2">
           {/* Pulsing green dot */}
@@ -134,14 +134,14 @@ export function TimerSidebarWidget() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
           </span>
-          <span className="text-xs text-slate-300 truncate flex-1">
+          <span className="text-xs text-muted-foreground truncate flex-1">
             {timer.aktenzeichen}
           </span>
         </div>
 
         {/* Elapsed time */}
         <div className="flex items-center justify-between">
-          <span className="text-lg font-mono font-semibold text-white tabular-nums">
+          <span className="text-lg font-mono font-semibold text-foreground tabular-nums">
             {elapsed}
           </span>
           <button
@@ -168,8 +168,8 @@ export function TimerSidebarWidget() {
 
         {/* Stop form for Stundenhonorar */}
         {showStopForm && (
-          <div className="space-y-2 pt-2 border-t border-white/[0.06]">
-            <label className="block text-xs text-slate-400">
+          <div className="space-y-2 pt-2 border-t border-border/50">
+            <label className="block text-xs text-muted-foreground">
               {isStundenhonorar
                 ? "Taetigkeit (Pflichtangabe)"
                 : "Taetigkeit (optional)"}
@@ -179,7 +179,7 @@ export function TimerSidebarWidget() {
               value={beschreibung}
               onChange={(e) => setBeschreibung(e.target.value)}
               placeholder="Was wurde gemacht?"
-              className="w-full h-8 px-2 text-xs rounded bg-white/[0.08] border border-white/[0.1] text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full h-8 px-2 text-xs rounded bg-black/[0.04] dark:bg-white/[0.08] border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
               autoFocus
             />
             <div className="flex gap-1.5">
@@ -197,7 +197,7 @@ export function TimerSidebarWidget() {
                   setShowStopForm(false);
                   setBeschreibung("");
                 }}
-                className="px-2 py-1 rounded text-xs text-slate-400 hover:text-white transition-colors"
+                className="px-2 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Abbrechen
               </button>

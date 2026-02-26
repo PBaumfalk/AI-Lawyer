@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, Play, Square, Plus, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 interface TimeEntry {
   id: string;
@@ -47,6 +47,14 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Timer state
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerAkteId, setTimerAkteId] = useState<string | null>(null);
+  const [timerElapsed, setTimerElapsed] = useState("00:00:00");
+  const [timerStartzeit, setTimerStartzeit] = useState<string | null>(null);
+  const [timerLoading, setTimerLoading] = useState(false);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // New entry form
   const [showForm, setShowForm] = useState(false);
   const [newDauer, setNewDauer] = useState("");
@@ -72,6 +80,83 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
   }, [akteId, page]);
 
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
+
+  // Fetch active timer
+  const fetchTimer = useCallback(async () => {
+    try {
+      const res = await fetch("/api/finanzen/zeiterfassung/timer");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.timer) {
+          setTimerRunning(true);
+          setTimerAkteId(data.timer.akteId);
+          setTimerStartzeit(data.timer.startzeit);
+        } else {
+          setTimerRunning(false);
+          setTimerAkteId(null);
+          setTimerStartzeit(null);
+        }
+      }
+    } catch { /* */ }
+  }, []);
+
+  useEffect(() => { fetchTimer(); }, [fetchTimer]);
+
+  // Tick elapsed time
+  useEffect(() => {
+    if (timerRunning && timerStartzeit && timerAkteId === akteId) {
+      const tick = () => {
+        const start = new Date(timerStartzeit).getTime();
+        const diff = Math.max(0, Math.floor((Date.now() - start) / 1000));
+        const h = Math.floor(diff / 3600);
+        const m = Math.floor((diff % 3600) / 60);
+        const s = diff % 60;
+        setTimerElapsed(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+      };
+      tick();
+      timerIntervalRef.current = setInterval(tick, 1000);
+      return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
+    } else {
+      setTimerElapsed("00:00:00");
+    }
+  }, [timerRunning, timerStartzeit, timerAkteId, akteId]);
+
+  const handleStartTimer = async () => {
+    setTimerLoading(true);
+    try {
+      const res = await fetch("/api/finanzen/zeiterfassung/timer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ akteId }),
+      });
+      if (res.ok) {
+        await fetchTimer();
+      }
+    } catch { /* */ } finally {
+      setTimerLoading(false);
+    }
+  };
+
+  const handleStopTimer = async () => {
+    setTimerLoading(true);
+    try {
+      const res = await fetch("/api/finanzen/zeiterfassung/timer", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (res.ok) {
+        setTimerRunning(false);
+        setTimerAkteId(null);
+        setTimerStartzeit(null);
+        await fetchEntries();
+      }
+    } catch { /* */ } finally {
+      setTimerLoading(false);
+    }
+  };
+
+  const isTimerForThisAkte = timerRunning && timerAkteId === akteId;
 
   const handleCreate = async () => {
     if (!newDauer || !newBeschreibung.trim()) return;
@@ -121,7 +206,40 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
       )}
 
       {/* Actions */}
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        {/* Timer */}
+        <div className="flex items-center gap-3">
+          {isTimerForThisAkte ? (
+            <>
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+              </span>
+              <span className="text-lg font-mono font-semibold tabular-nums">{timerElapsed}</span>
+              <button
+                type="button"
+                onClick={handleStopTimer}
+                disabled={timerLoading}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors disabled:opacity-50"
+              >
+                {timerLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Square className="w-4 h-4" />}
+                Stop
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={handleStartTimer}
+              disabled={timerLoading || (timerRunning && timerAkteId !== akteId)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 transition-colors disabled:opacity-50"
+              title={timerRunning && timerAkteId !== akteId ? "Timer laeuft bereits fuer eine andere Akte" : undefined}
+            >
+              {timerLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              Timer starten
+            </button>
+          )}
+        </div>
+
         <button
           type="button"
           onClick={() => setShowForm(true)}

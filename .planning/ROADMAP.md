@@ -66,7 +66,10 @@ See: `milestones/v3.5-ROADMAP.md` for full phase details.
   2. Bestehende DocumentChunk-Zeilen haben chunkType = STANDALONE — kein NULL-Zustand, keine broken Retrieval-JOINs
   3. HNSW-Index auf embedding-Spalte jeder neuen Chunk-Tabelle existiert — `EXPLAIN ANALYZE` zeigt Index-Scan, keinen Seq-Scan
   4. Prisma-Client ist generiert — TypeScript kennt alle neuen Models ohne Laufzeitfehler
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 12-01-PLAN.md — Schema changes (5 new models + DocumentChunk extension) + Prisma migration + HNSW indexes
 
 ### Phase 13: Hybrid Search + Reranking
 **Goal**: Helenas Retrieval kombiniert BM25 und Vector-Suche via RRF und reranked mit Cross-Encoder — messbar bessere Antwortqualität bei bestehenden Akten-Dokumenten, bevor neue Wissensquellen befüllt werden
@@ -143,7 +146,7 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. RAG Schema Foundation | v0.1 | 0/TBD | Not started | - |
+| 12. RAG Schema Foundation | v0.1 | 0/1 | Planning done | - |
 | 13. Hybrid Search + Reranking | v0.1 | 0/TBD | Not started | - |
 | 14. Gesetze-RAG | v0.1 | 0/TBD | Not started | - |
 | 15. Normen-Verknüpfung in Akte | v0.1 | 0/TBD | Not started | - |

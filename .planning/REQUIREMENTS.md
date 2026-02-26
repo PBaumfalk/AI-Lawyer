@@ -75,32 +75,32 @@ Explicitly excluded for v0.1.
 
 ## Traceability
 
-Welche Phasen welche Anforderungen abdecken. Wird durch Roadmapper befüllt.
+Welche Phasen welche Anforderungen abdecken.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RAGQ-01 | TBD | Pending |
-| RAGQ-02 | TBD | Pending |
-| RAGQ-03 | TBD | Pending |
-| GESETZ-01 | TBD | Pending |
-| GESETZ-02 | TBD | Pending |
-| GESETZ-03 | TBD | Pending |
-| GESETZ-04 | TBD | Pending |
-| URTEIL-01 | TBD | Pending |
-| URTEIL-02 | TBD | Pending |
-| URTEIL-03 | TBD | Pending |
-| URTEIL-04 | TBD | Pending |
-| ARBW-01 | TBD | Pending |
-| ARBW-02 | TBD | Pending |
-| ARBW-03 | TBD | Pending |
-| ARBW-04 | TBD | Pending |
-| ARBW-05 | TBD | Pending |
+| RAGQ-01 | Phase 13 | Pending |
+| RAGQ-02 | Phase 12 | Pending |
+| RAGQ-03 | Phase 13 | Pending |
+| GESETZ-01 | Phase 14 | Pending |
+| GESETZ-02 | Phase 14 | Pending |
+| GESETZ-03 | Phase 14 | Pending |
+| GESETZ-04 | Phase 15 | Pending |
+| URTEIL-01 | Phase 17 | Pending |
+| URTEIL-02 | Phase 17 | Pending |
+| URTEIL-03 | Phase 16 | Pending |
+| URTEIL-04 | Phase 17 | Pending |
+| ARBW-01 | Phase 18 | Pending |
+| ARBW-02 | Phase 18 | Pending |
+| ARBW-03 | Phase 16 | Pending |
+| ARBW-04 | Phase 18 | Pending |
+| ARBW-05 | Phase 18 | Pending |
 
 **Coverage:**
 - v1 requirements: 16 total
-- Mapped to phases: 0 (TBD — roadmapper fills this)
-- Unmapped: 16
+- Mapped to phases: 16
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-02-27 after research synthesis*
+*Last updated: 2026-02-27 — traceability filled by roadmapper*

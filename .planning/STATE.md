@@ -3,69 +3,80 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Helena RAG
 status: in_progress
-last_updated: "2026-02-26T00:00:00.000Z"
+last_updated: "2026-02-27T00:00:00.000Z"
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 10
-  completed_plans: 10
+  total_phases: 7
+  completed_phases: 0
+  total_plans: TBD
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-26)
+See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Gesetze + Urteile + Arbeitswissen + Hybrid Search/Reranking
+**Current focus:** v0.1 Helena RAG — Phase 12 (RAG Schema Foundation) ready to plan
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-26 — Milestone v0.1 started
+Phase: 12 of 18 (RAG Schema Foundation)
+Plan: — of TBD
+Status: Ready to plan
+Last activity: 2026-02-27 — Roadmap created, 7 phases derived from 16 v1 requirements
 
-Progress: [##############################] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 38 (v3.4) + 10 (v3.5) = 48 total
+- Total plans completed: 48 (v3.4: 38 + v3.5: 10)
+- Average duration: see milestone archives
 - Total execution time: see milestones/v3.4-ROADMAP.md + milestones/v3.5-ROADMAP.md
 
-**By Phase (v3.5):**
+**By Phase (v0.1 — not started):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 10. Docker Build Fix | 3/3 | ~60min | ~20min |
-| 11. Glass UI Migration | 7/7 | ~27min | ~4min |
+| 12. RAG Schema Foundation | 0/TBD | - | - |
+| 13. Hybrid Search + Reranking | 0/TBD | - | - |
+| 14. Gesetze-RAG | 0/TBD | - | - |
+| 15. Normen-Verknüpfung in Akte | 0/TBD | - | - |
+| 16. PII-Filter | 0/TBD | - | - |
+| 17. Urteile-RAG | 0/TBD | - | - |
+| 18. Muster-RAG + Admin Upload UI | 0/TBD | - | - |
 
 ## Accumulated Context
 
 ### Decisions
 
 All v3.5 decisions archived in PROJECT.md Key Decisions table.
-See: milestones/v3.5-ROADMAP.md for full decision log.
+
+Recent decisions affecting v0.1:
+- qwen3.5:35b als Ollama-Standard — validiert fuer LLM-as-reranker (Option A); Qwen3-Reranker-4B (Option B) availability unverified, nicht verwenden
+- DSGVO-Gate ist non-negotiable: PII-Filter muss standalone acceptance-getestet sein BEVOR Urteile oder Muster in pgvector/Meilisearch indiziert werden
 
 ### Pending Todos
 
-7 todos pending — likely candidates for v3.6.
-
-- **Improve Helena RAG pipeline with hybrid search and reranking** (area: api) — Hybrid Search (Meilisearch + pgvector), Cross-Encoder Reranking, Parent-Child Chunking. Datei: .planning/todos/pending/2026-02-26-improve-helena-rag-pipeline-with-hybrid-search-and-reranking.md
-- **Gesetze-RAG für Helena und Normen-Verknüpfung an Akten** (area: api) — .planning/todos/pending/2026-02-26-gesetze-rag-f-r-helena-und-normen-verkn-pfung-an-akten.md
-- **Urteile-RAG für Helena mit PII-Filter und Quellen-Ingestion** (area: api) — .planning/todos/pending/2026-02-26-urteile-rag-f-r-helena-mit-pii-filter-und-quellen-ingestion.md
-- **Arbeitswissen-RAG für Helena — Formulare, Muster, Kosten, ERV** (area: api) — .planning/todos/pending/2026-02-26-arbeitswissen-rag-f-r-helena-formulare-muster-kosten-erv.md
-- **Falldatenblaetter per-Rechtsgebiet Feldschemas** (area: general) — Admin-UI fuer Feldschemas, dynamisches Rendering in Akte-Formular, Prisma-Modell. Datei: .planning/todos/pending/2026-02-26-falldatenblaetter-per-rechtsgebiet-feldschemas.md
-- **BI-Dashboard Geschaeftskennzahlen** (area: ui) — KPI-Tiles fuer Neue Akten, Offene Posten, Faellige Fristen, Umsatz; nur ADMIN/ANWALT. Datei: .planning/todos/pending/2026-02-26-bi-dashboard-geschaeftskennzahlen.md
-- **Export CSV XLSX Akten Kontakte Finanzen** (area: ui) — CSV/XLSX-Export fuer Akten, Kontakte, Rechnungen mit UTF-8 BOM. Datei: .planning/todos/pending/2026-02-26-export-csv-xlsx-akten-kontakte-finanzen.md
+7 todos pending — 4 sind in v0.1 Roadmap aufgenommen, 3 fuer spaeter:
+- RAG pipeline hybrid search (Phase 13) — in Scope
+- Gesetze-RAG (Phasen 14-15) — in Scope
+- Urteile-RAG (Phasen 16-17) — in Scope
+- Arbeitswissen-RAG (Phase 18) — in Scope
+- Falldatenblaetter — deferred to post-v0.1
+- BI-Dashboard — deferred to post-v0.1
+- Export CSV/XLSX — deferred to post-v0.1
 
 ### Blockers/Concerns
 
-None.
+- Phase 13 (Reranking): Cross-encoder P95-Latenz muss BEVOR Live-Wiring benchmarked werden. Wenn P95 > 3s: erst RRF-only shippen, Reranking als Feature-Flag nachliefern.
+- Phase 17 (Urteile): BMJ HTML-Selektoren (article.result, div.dokument-meta) muessen live verifiziert werden vor Scraper-Bau. robots.txt-Check erforderlich.
+- Phase 16 (PII): qwen3.5:35b NER-Qualitaet auf echten deutschen Gerichtsentscheidungen (BAG/BGH Arbeitsrecht + Mietrecht) muss empirisch validiert werden — Few-Shot-Beispiele aus echten Urteilen, nicht synthetisch.
 
 ## Session Continuity
 
-Last session: 2026-02-26
-Stopped at: v0.1 milestone started — requirements defined, roadmap pending
+Last session: 2026-02-27
+Stopped at: Roadmap created — 7 phases, 16/16 requirements mapped. Ready to plan Phase 12.
+Resume file: None

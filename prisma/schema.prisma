@@ -387,7 +387,19 @@ model User {
   // Per-user kanzlei-wide finance visibility (only relevant for ANWALT role)
   canSeeKanzleiFinanzen  Boolean          @default(false)
 
+  // Settings
+  settings               UserSettings?
+
   @@map("users")
+}
+
+model UserSettings {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme  String @default("system")
+
+  @@map("user_settings")
 }
 
 model UrlaubZeitraum {

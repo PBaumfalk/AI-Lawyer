@@ -77,41 +77,61 @@ const ONLYOFFICE_EDITABLE = new Set([
 
 export function PreviewDialog({ dokument, open, onClose, onEdit }: PreviewDialogProps) {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewStatus, setPreviewStatus] = useState<"ready" | "generating" | null>(null);
   const [textContent, setTextContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open || !dokument) {
       setDownloadUrl(null);
+      setPreviewUrl(null);
+      setPreviewStatus(null);
       setTextContent(null);
       return;
     }
 
     setLoading(true);
-    fetch(`/api/dokumente/${dokument.id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setDownloadUrl(data.downloadUrl ?? null);
 
-        // For text files, fetch content for preview
-        if (
-          dokument.mimeType.startsWith("text/") ||
-          dokument.mimeType === "application/json"
-        ) {
-          return fetch(`/api/dokumente/${dokument.id}?download=true`)
-            .then((r) => r.text())
-            .then((text) => setTextContent(text));
-        }
-      })
-      .catch(() => {
-        setDownloadUrl(null);
-      })
-      .finally(() => setLoading(false));
+    const fetches: Promise<void>[] = [
+      // Download URL for open/download buttons
+      fetch(`/api/dokumente/${dokument.id}`)
+        .then((r) => r.json())
+        .then((data) => setDownloadUrl(data.downloadUrl ?? null))
+        .catch(() => setDownloadUrl(null)),
+
+      // Preview URL (PDF original, DOCX→PDF, or 202 generating)
+      fetch(`/api/dokumente/${dokument.id}/preview`)
+        .then((r) => r.json())
+        .then((data) => {
+          setPreviewUrl(data.url ?? null);
+          setPreviewStatus(data.status ?? null);
+        })
+        .catch(() => {
+          setPreviewUrl(null);
+          setPreviewStatus(null);
+        }),
+    ];
+
+    // For text files, also fetch raw content
+    if (
+      dokument.mimeType.startsWith("text/") ||
+      dokument.mimeType === "application/json"
+    ) {
+      fetches.push(
+        fetch(`/api/dokumente/${dokument.id}?download=true`)
+          .then((r) => r.text())
+          .then((text) => setTextContent(text))
+          .catch(() => {})
+      );
+    }
+
+    Promise.all(fetches).finally(() => setLoading(false));
   }, [open, dokument]);
 
   if (!open || !dokument) return null;
 
-  const canPreview = isPreviewable(dokument.mimeType);
+  const canPreview = isPreviewable(dokument.mimeType) || !!previewUrl;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -210,10 +230,16 @@ export function PreviewDialog({ dokument, open, onClose, onEdit }: PreviewDialog
             <div className="flex items-center justify-center h-96">
               <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
             </div>
-          ) : canPreview && downloadUrl ? (
+          ) : previewStatus === "generating" && !isPreviewable(dokument.mimeType) ? (
+            <div className="flex flex-col items-center justify-center h-96 gap-3">
+              <Loader2 className="w-10 h-10 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-500">Vorschau wird generiert…</p>
+            </div>
+          ) : canPreview && (previewUrl ?? downloadUrl) ? (
             <PreviewContent
               mimeType={dokument.mimeType}
               downloadUrl={downloadUrl}
+              previewUrl={previewUrl}
               textContent={textContent}
               name={dokument.name}
             />
@@ -247,25 +273,31 @@ export function PreviewDialog({ dokument, open, onClose, onEdit }: PreviewDialog
 function PreviewContent({
   mimeType,
   downloadUrl,
+  previewUrl,
   textContent,
   name,
 }: {
   mimeType: string;
-  downloadUrl: string;
+  downloadUrl: string | null;
+  previewUrl: string | null;
   textContent: string | null;
   name: string;
 }) {
-  if (mimeType === "application/pdf") {
+  // Use previewUrl (PDF) for PDFs and office/unknown types that have a generated preview
+  // Images are shown directly via <img> even if a PDF preview exists
+  const iframeSrc = previewUrl && !mimeType.startsWith("image/") ? previewUrl : null;
+
+  if (iframeSrc) {
     return (
       <iframe
-        src={downloadUrl}
+        src={iframeSrc}
         className="w-full h-[70vh]"
         title={`Vorschau: ${name}`}
       />
     );
   }
 
-  if (mimeType.startsWith("image/")) {
+  if (mimeType.startsWith("image/") && downloadUrl) {
     return (
       <div className="flex items-center justify-center p-4 h-[70vh]">
         {/* eslint-disable-next-line @next/next/no-img-element */}

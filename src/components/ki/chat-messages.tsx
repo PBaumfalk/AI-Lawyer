@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import type { Message } from "@ai-sdk/react";
+import type { UIMessage } from "@ai-sdk/react";
 import { Bot, User, Copy, Link2, FileDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SourceCitations, type SourceData } from "@/components/ki/source-citations";
@@ -9,7 +9,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 interface ChatMessagesProps {
-  messages: Message[];
+  messages: UIMessage[];
   isLoading: boolean;
   sources: SourceData[];
   conversationId: string | null;

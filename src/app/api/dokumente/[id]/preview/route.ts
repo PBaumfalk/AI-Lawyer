@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getDownloadUrl } from "@/lib/storage";
 
 /**
  * GET /api/dokumente/[id]/preview -- Get a PDF preview URL for the document.
  *
- * - PDF files: returns presigned URL of the original file.
- * - Non-PDF with previewPfad: returns presigned URL for the generated PDF preview.
- * - Non-PDF without previewPfad: returns 202 (preview still generating).
+ * Returns proxy URLs (Next.js streams from MinIO internally).
+ * Browser never talks to MinIO directly.
+ *
+ * - PDF files: returns /api/dokumente/[id]?inline=true
+ * - Non-PDF with previewPfad: returns /api/dokumente/[id]?preview=true
+ * - Non-PDF without previewPfad: returns 202 (preview still generating)
  */
 export async function GET(
   _request: NextRequest,
@@ -26,12 +28,7 @@ export async function GET(
 
   const dokument = await prisma.dokument.findUnique({
     where: { id },
-    select: {
-      id: true,
-      dateipfad: true,
-      mimeType: true,
-      previewPfad: true,
-    },
+    select: { id: true, mimeType: true, previewPfad: true },
   });
 
   if (!dokument) {
@@ -41,30 +38,20 @@ export async function GET(
     );
   }
 
-  // PDF files -- serve the original
+  // PDF files -- proxy through Next.js inline
   if (dokument.mimeType === "application/pdf") {
-    try {
-      const url = await getDownloadUrl(dokument.dateipfad);
-      return NextResponse.json({ url, status: "ready" });
-    } catch {
-      return NextResponse.json(
-        { error: "Datei konnte nicht geladen werden" },
-        { status: 500 }
-      );
-    }
+    return NextResponse.json({
+      url: `/api/dokumente/${id}?inline=true`,
+      status: "ready",
+    });
   }
 
-  // Non-PDF with a generated preview
+  // Non-PDF with a generated preview -- proxy preview PDF inline
   if (dokument.previewPfad) {
-    try {
-      const url = await getDownloadUrl(dokument.previewPfad);
-      return NextResponse.json({ url, status: "ready" });
-    } catch {
-      return NextResponse.json(
-        { error: "Preview konnte nicht geladen werden" },
-        { status: 500 }
-      );
-    }
+    return NextResponse.json({
+      url: `/api/dokumente/${id}?preview=true`,
+      status: "ready",
+    });
   }
 
   // Non-PDF without preview yet -- still generating

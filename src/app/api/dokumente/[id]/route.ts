@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getDownloadUrl, deleteFile, getFileStream } from "@/lib/storage";
+import { deleteFile, getFileStream } from "@/lib/storage";
 import { logAuditEvent } from "@/lib/audit";
 import { removeDokumentFromIndex, indexDokument } from "@/lib/meilisearch";
 import { requireAuth, requirePermission, requireAkteAccess } from "@/lib/rbac";
@@ -19,6 +19,10 @@ export async function GET(
   const { id } = await params;
   const { searchParams } = new URL(request.url);
   const download = searchParams.get("download") === "true";
+  // ?inline=true -- stream original file inline (for PDF viewer in browser)
+  const inline = searchParams.get("inline") === "true";
+  // ?preview=true -- stream previewPfad inline (converted PDF for DOCX/images)
+  const previewFile = searchParams.get("preview") === "true";
 
   // ?detail=true returns full document with relations for document detail page
   const detail = searchParams.get("detail") === "true";
@@ -50,24 +54,14 @@ export async function GET(
       where: { dokumentId: id },
     });
 
-    // Generate presigned URLs
-    let downloadUrl: string | null = null;
+    // Generate proxy URLs (browser always talks to Next.js, not MinIO directly)
+    const downloadUrl = `/api/dokumente/${id}?download=true`;
     let previewUrl: string | null = null;
-    try {
-      downloadUrl = await getDownloadUrl(dokument.dateipfad);
-    } catch {
-      // Storage may be unavailable
-    }
 
-    // For non-PDF files, use previewPfad if available
     if (dokument.mimeType === "application/pdf") {
-      previewUrl = downloadUrl;
+      previewUrl = `/api/dokumente/${id}?inline=true`;
     } else if (dokument.previewPfad) {
-      try {
-        previewUrl = await getDownloadUrl(dokument.previewPfad);
-      } catch {
-        // Preview not available
-      }
+      previewUrl = `/api/dokumente/${id}?preview=true`;
     }
 
     return NextResponse.json({
@@ -102,7 +96,6 @@ export async function GET(
         return NextResponse.json({ error: "Datei nicht gefunden im Speicher" }, { status: 404 });
       }
 
-      // Convert to web ReadableStream
       const webStream = stream.transformToWebStream();
 
       return new NextResponse(webStream as any, {
@@ -112,7 +105,7 @@ export async function GET(
           "Content-Length": String(dokument.groesse),
         },
       });
-    } catch (err: any) {
+    } catch {
       return NextResponse.json(
         { error: "Datei konnte nicht geladen werden" },
         { status: 500 }
@@ -120,13 +113,59 @@ export async function GET(
     }
   }
 
-  // Return metadata + pre-signed URL
-  try {
-    const url = await getDownloadUrl(dokument.dateipfad);
-    return NextResponse.json({ ...dokument, downloadUrl: url });
-  } catch {
-    return NextResponse.json({ ...dokument, downloadUrl: null });
+  // Inline streaming (no attachment header) -- for PDF viewer in browser
+  if (inline) {
+    try {
+      const stream = await getFileStream(dokument.dateipfad);
+      if (!stream) {
+        return NextResponse.json({ error: "Datei nicht gefunden im Speicher" }, { status: 404 });
+      }
+      const webStream = stream.transformToWebStream();
+      return new NextResponse(webStream as any, {
+        headers: {
+          "Content-Type": dokument.mimeType,
+          "Content-Disposition": `inline; filename="${encodeURIComponent(dokument.name)}"`,
+          "Content-Length": String(dokument.groesse),
+        },
+      });
+    } catch {
+      return NextResponse.json(
+        { error: "Datei konnte nicht geladen werden" },
+        { status: 500 }
+      );
+    }
   }
+
+  // Preview PDF streaming -- serves the generated previewPfad (DOCX/image converted to PDF)
+  if (previewFile) {
+    if (!dokument.previewPfad) {
+      return NextResponse.json({ error: "Keine Vorschau verfuegbar" }, { status: 404 });
+    }
+    try {
+      const stream = await getFileStream(dokument.previewPfad);
+      if (!stream) {
+        return NextResponse.json({ error: "Vorschau nicht gefunden im Speicher" }, { status: 404 });
+      }
+      const webStream = stream.transformToWebStream();
+      return new NextResponse(webStream as any, {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="${encodeURIComponent(dokument.name)}.pdf"`,
+        },
+      });
+    } catch {
+      return NextResponse.json(
+        { error: "Vorschau konnte nicht geladen werden" },
+        { status: 500 }
+      );
+    }
+  }
+
+  // Return metadata + proxy download URL
+  return NextResponse.json({
+    ...dokument,
+    downloadUrl: `/api/dokumente/${id}?download=true`,
+  });
 }
 
 /**

@@ -283,6 +283,21 @@ enum MandatsKategorie {
   SONSTIGE
 }
 
+// ─── RAG Enums ───────────────────────────────────────────────────────────────
+
+enum ChunkType {
+  STANDALONE
+  PARENT
+  CHILD
+}
+
+enum MusterNerStatus {
+  PENDING_NER
+  NER_RUNNING
+  INDEXED
+  REJECTED_PII_DETECTED
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Kanzlei {
@@ -389,6 +404,10 @@ model User {
 
   // Settings
   settings               UserSettings?
+
+  // Phase 12: RAG relations
+  akteNormen    AkteNorm[] @relation("AkteNormUser")
+  musterUploads Muster[]   @relation("MusterUploads")
 
   @@map("users")
 }
@@ -707,6 +726,9 @@ model Akte {
   dezernate           Dezernat[]       @relation("DezernatAkten")
   adminOverrides      AdminOverride[]
 
+  // Phase 12: RAG relations
+  normen  AkteNorm[]
+
   @@index([status])
   @@index([anwaltId])
   @@index([sachgebiet])
@@ -917,18 +939,113 @@ model DokumentVersion {
 // ─── Document Chunks (for RAG embeddings) ───────────────────────────────────
 
 model DocumentChunk {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   dokumentId   String
-  dokument     Dokument @relation(fields: [dokumentId], references: [id], onDelete: Cascade)
+  dokument     Dokument  @relation(fields: [dokumentId], references: [id], onDelete: Cascade)
   chunkIndex   Int
-  content      String   @db.Text
+  content      String    @db.Text
   embedding    Unsupported("vector(1024)")?
   modelVersion String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
+  // Phase 12: Parent-child chunking
+  chunkType     ChunkType   @default(STANDALONE)
+  parentChunkId String?
+  parentChunk   DocumentChunk?  @relation("DocumentChunkParent", fields: [parentChunkId], references: [id], onDelete: SetNull)
+  childChunks   DocumentChunk[] @relation("DocumentChunkParent")
 
   @@unique([dokumentId, chunkIndex])
   @@index([dokumentId])
+  @@index([parentChunkId])
   @@map("document_chunks")
+}
+
+// ─── RAG Schema Foundation (Phase 12) ────────────────────────────────────────
+
+model LawChunk {
+  id            String    @id @default(cuid())
+  gesetzKuerzel String
+  paragraphNr   String
+  titel         String
+  content       String    @db.Text
+  parentContent String?   @db.Text
+  embedding     Unsupported("vector(1024)")?
+  modelVersion  String
+  syncedAt      DateTime  @default(now())
+  sourceUrl     String?
+
+  @@index([gesetzKuerzel])
+  @@index([paragraphNr])
+  @@map("law_chunks")
+}
+
+model UrteilChunk {
+  id            String    @id @default(cuid())
+  aktenzeichen  String
+  gericht       String
+  datum         DateTime
+  rechtsgebiet  String?
+  content       String    @db.Text
+  parentContent String?   @db.Text
+  embedding     Unsupported("vector(1024)")?
+  modelVersion  String
+  sourceUrl     String    @unique
+  piiFiltered   Boolean   @default(false)
+  ingestedAt    DateTime  @default(now())
+
+  @@index([gericht])
+  @@index([datum])
+  @@index([rechtsgebiet])
+  @@map("urteil_chunks")
+}
+
+model Muster {
+  id           String          @id @default(cuid())
+  name         String
+  kategorie    String
+  beschreibung String?         @db.Text
+  minioKey     String
+  mimeType     String
+  nerStatus    MusterNerStatus @default(PENDING_NER)
+  uploadedById String
+  uploadedBy   User            @relation("MusterUploads", fields: [uploadedById], references: [id])
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  chunks       MusterChunk[]
+
+  @@index([nerStatus])
+  @@map("muster")
+}
+
+model MusterChunk {
+  id            String    @id @default(cuid())
+  musterId      String
+  muster        Muster    @relation(fields: [musterId], references: [id], onDelete: Cascade)
+  chunkIndex    Int
+  content       String    @db.Text
+  parentContent String?   @db.Text
+  embedding     Unsupported("vector(1024)")?
+  modelVersion  String
+  createdAt     DateTime  @default(now())
+
+  @@unique([musterId, chunkIndex])
+  @@index([musterId])
+  @@map("muster_chunks")
+}
+
+model AkteNorm {
+  id            String   @id @default(cuid())
+  akteId        String
+  akte          Akte     @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  gesetzKuerzel String
+  paragraphNr   String
+  anmerkung     String?  @db.Text
+  addedById     String
+  addedBy       User     @relation("AkteNormUser", fields: [addedById], references: [id])
+  createdAt     DateTime @default(now())
+
+  @@unique([akteId, gesetzKuerzel, paragraphNr])
+  @@index([akteId])
+  @@map("akte_normen")
 }
 
 // ─── Dokument-Tag-Kategorien ────────────────────────────────────────────────

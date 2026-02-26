@@ -14,9 +14,9 @@ Requirements for v3.5 Production Ready. Each maps to roadmap phases.
 
 ### Glass UI
 
-- [ ] **UI-01**: Alle Dashboard-Seiten verwenden Glass-Komponenten (glass-card, glass-panel, glass-kpi-card)
-- [ ] **UI-02**: Alle Formular-Seiten (Akte anlegen, Kontakt anlegen, Einstellungen) verwenden konsistentes Glass-Styling
-- [ ] **UI-03**: Alle Listen-/Tabellen-Seiten (Akten, Kontakte, Dokumente, E-Mails) verwenden Glass-Panels
+- [x] **UI-01**: Alle Dashboard-Seiten verwenden Glass-Komponenten (glass-card, glass-panel, glass-kpi-card)
+- [x] **UI-02**: Alle Formular-Seiten (Akte anlegen, Kontakt anlegen, Einstellungen) verwenden konsistentes Glass-Styling
+- [x] **UI-03**: Alle Listen-/Tabellen-Seiten (Akten, Kontakte, Dokumente, E-Mails) verwenden Glass-Panels
 
 ### Falldatenblaetter
 
@@ -101,9 +101,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | BUILD-01 | Phase 10 | Complete |
 | BUILD-02 | Phase 10 | Pending |
-| UI-01 | Phase 11 | Pending |
-| UI-02 | Phase 11 | Pending |
-| UI-03 | Phase 11 | Pending |
+| UI-01 | Phase 11 | Complete |
+| UI-02 | Phase 11 | Complete |
+| UI-03 | Phase 11 | Complete |
 | FD-01 | Phase 12 | Pending |
 | FD-02 | Phase 12 | Pending |
 | FD-03 | Phase 12 | Pending |

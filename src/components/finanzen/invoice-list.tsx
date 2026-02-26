@@ -198,25 +198,25 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
           <GlassKpiCard
             title="Gesamtumsatz"
             value={formatEuro(stats.gesamtUmsatz)}
-            icon={TrendingUp}
+            icon={<TrendingUp className="w-5 h-5" />}
             color="emerald"
           />
           <GlassKpiCard
             title="Offene Forderungen"
             value={formatEuro(stats.offeneForderungen)}
-            icon={Banknote}
+            icon={<Banknote className="w-5 h-5" />}
             color="blue"
           />
           <GlassKpiCard
             title="Ueberfaellig"
             value={String(stats.ueberfaellig)}
-            icon={Clock}
+            icon={<Clock className="w-5 h-5" />}
             color={stats.ueberfaellig > 0 ? "amber" : "emerald"}
           />
           <GlassKpiCard
             title="Stornoquote"
             value={`${stats.stornoquote.toFixed(1)}%`}
-            icon={XCircle}
+            icon={<XCircle className="w-5 h-5" />}
             color={stats.stornoquote > 5 ? "rose" : "emerald"}
           />
         </div>

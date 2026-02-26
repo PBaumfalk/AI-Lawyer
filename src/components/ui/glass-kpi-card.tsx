@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 interface GlassKpiCardProps {
   title: string;
   value: string | number;
-  icon: React.ElementType;
+  icon: React.ReactNode;
   color?: "blue" | "amber" | "rose" | "emerald";
   className?: string;
   /** When true, renders a glass-shimmer skeleton placeholder instead of content */
@@ -24,7 +24,7 @@ const iconBg: Record<string, string> = {
 export function GlassKpiCard({
   title,
   value,
-  icon: Icon,
+  icon,
   color = "blue",
   className,
   skeleton = false,
@@ -67,7 +67,7 @@ export function GlassKpiCard({
             iconBg[color]
           )}
         >
-          <Icon className="w-5 h-5" />
+          {icon}
         </div>
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>

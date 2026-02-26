@@ -243,25 +243,25 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
           <GlassKpiCard
             title="Saldo"
             value={formatEuroFromRaw(saldo.gesamtSaldo)}
-            icon={Banknote}
+            icon={<Banknote className="w-5 h-5" />}
             color={saldo.gesamtSaldo >= 0 ? "emerald" : "rose"}
           />
           <GlassKpiCard
             title="Fremdgeld"
             value={formatEuroFromRaw(saldo.fremdgeld)}
-            icon={Landmark}
+            icon={<Landmark className="w-5 h-5" />}
             color="blue"
           />
           <GlassKpiCard
             title="Offene Forderungen"
             value={formatEuroFromRaw(saldo.offeneForderungen)}
-            icon={FileText}
+            icon={<FileText className="w-5 h-5" />}
             color="amber"
           />
           <GlassKpiCard
             title="Auslagen"
             value={formatEuroFromRaw(Math.abs(saldo.auslagen))}
-            icon={Wallet}
+            icon={<Wallet className="w-5 h-5" />}
             color="rose"
           />
         </div>

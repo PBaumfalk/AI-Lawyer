@@ -113,25 +113,25 @@ export default async function DashboardPage() {
           <GlassKpiCard
             title="Offene Akten"
             value={offeneAkten}
-            icon={FolderOpen}
+            icon={<FolderOpen className="w-5 h-5" />}
             color="blue"
           />
           <GlassKpiCard
             title="Fristen heute"
             value={fristenHeute}
-            icon={Clock}
+            icon={<Clock className="w-5 h-5" />}
             color="amber"
           />
           <GlassKpiCard
             title="Überfällige Fristen"
             value={ueberfaelligeFristen}
-            icon={AlertTriangle}
+            icon={<AlertTriangle className="w-5 h-5" />}
             color="rose"
           />
           <GlassKpiCard
             title="Erledigt (30 Tage)"
             value={erledigteAufgaben}
-            icon={CheckCircle2}
+            icon={<CheckCircle2 className="w-5 h-5" />}
             color="emerald"
           />
         </div>

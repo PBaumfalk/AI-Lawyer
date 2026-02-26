@@ -111,7 +111,7 @@ export function InboxLayout() {
           defaultSize={20}
           minSize={15}
           maxSize={30}
-          className="bg-slate-50 dark:bg-slate-900/50"
+          className="glass-card rounded-l-2xl overflow-hidden"
         >
           <FolderTree
             selectedKontoId={emailStore.selectedKontoId}

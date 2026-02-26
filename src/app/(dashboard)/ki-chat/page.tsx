@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { HelenaTab } from "./helena-tab";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 /**
  * /ki-chat page — Helena AI assistant with Chat and Vorschlaege tabs.
@@ -21,7 +22,7 @@ export default async function KiChatPage({ searchParams }: KiChatPageProps) {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="px-6 pt-6 pb-2">
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Helena KI-Assistentin
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -31,7 +32,7 @@ export default async function KiChatPage({ searchParams }: KiChatPageProps) {
 
       {/* Tab content */}
       <div className="flex-1 overflow-hidden px-6 pb-6">
-        <Suspense fallback={<div className="animate-pulse h-96 glass rounded-xl" />}>
+        <Suspense fallback={<GlassPanel elevation="panel" className="h-96" />}>
           <HelenaTab
             initialAkteId={akteId}
             initialQuery={q}

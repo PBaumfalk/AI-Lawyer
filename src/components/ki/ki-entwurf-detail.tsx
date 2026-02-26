@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 interface EntwurfData {
   id: string;
@@ -117,7 +118,7 @@ export function KiEntwurfDetail({ entwurf }: KiEntwurfDetailProps) {
           <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-muted-foreground" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-heading text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             KI-Entwurf
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -138,7 +139,7 @@ export function KiEntwurfDetail({ entwurf }: KiEntwurfDetailProps) {
       </div>
 
       {/* Metadata */}
-      <div className="glass rounded-xl p-6">
+      <GlassPanel elevation="panel" className="p-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">
@@ -176,20 +177,20 @@ export function KiEntwurfDetail({ entwurf }: KiEntwurfDetailProps) {
             </span>
           </div>
         </div>
-      </div>
+      </GlassPanel>
 
       {/* Content */}
-      <div className="glass rounded-xl p-6">
+      <GlassPanel elevation="elevated" className="p-6">
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
           Inhalt
         </h2>
         <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
           {entwurf.nachricht}
         </div>
-      </div>
+      </GlassPanel>
 
       {/* Actions */}
-      <div className="glass rounded-xl p-6">
+      <GlassPanel elevation="panel" className="p-6">
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
           Aktionen
         </h2>
@@ -211,7 +212,7 @@ export function KiEntwurfDetail({ entwurf }: KiEntwurfDetailProps) {
             Als Aktennotiz speichern
           </Button>
         </div>
-      </div>
+      </GlassPanel>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { GlassPanel } from "@/components/ui/glass-panel";
 import {
   ArrowLeft,
   ArrowDownLeft,
@@ -220,7 +221,7 @@ export function EmailDetailView({ email, akten }: EmailDetailViewProps) {
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-heading text-foreground truncate">
+          <h1 className="text-xl font-semibold text-foreground truncate">
             {email.betreff || "(Kein Betreff)"}
           </h1>
           <div className="flex items-center gap-2 mt-1">
@@ -301,9 +302,9 @@ export function EmailDetailView({ email, akten }: EmailDetailViewProps) {
       </div>
 
       {/* Email content card */}
-      <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08] overflow-hidden">
+      <GlassPanel elevation="panel" className="overflow-hidden">
         {/* Email header info */}
-        <div className="px-6 py-4 border-b border-white/10 dark:border-white/[0.06] space-y-3">
+        <div className="px-6 py-4 border-b border-[var(--glass-border-color)] space-y-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/40 flex items-center justify-center flex-shrink-0">
@@ -368,7 +369,7 @@ export function EmailDetailView({ email, akten }: EmailDetailViewProps) {
 
         {/* Attachments */}
         {email.anhangDokumentIds.length > 0 && (
-          <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="px-6 py-4 border-t border-[var(--glass-border-color)]">
             <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
               Anhänge ({email.anhangDokumentIds.length})
             </p>
@@ -376,7 +377,7 @@ export function EmailDetailView({ email, akten }: EmailDetailViewProps) {
               {email.anhangDokumentIds.map((docId) => (
                 <div
                   key={docId}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-sm"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass-input text-sm"
                 >
                   <Paperclip className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-foreground/80">
@@ -387,7 +388,7 @@ export function EmailDetailView({ email, akten }: EmailDetailViewProps) {
             </div>
           </div>
         )}
-      </div>
+      </GlassPanel>
 
       {/* Verakten Dialog */}
       {showVeraktenDialog && (
@@ -461,9 +462,9 @@ function VeraktenDialog({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08] w-full max-w-lg shadow-xl">
-        <div className="px-6 py-4 border-b border-white/20 dark:border-white/[0.08] flex items-center justify-between">
-          <h2 className="text-lg font-heading text-foreground">
+      <GlassPanel elevation="elevated" className="w-full max-w-lg shadow-xl">
+        <div className="px-6 py-4 border-b border-[var(--glass-border-color)] flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">
             E-Mail verakten
           </h2>
           <button
@@ -528,7 +529,7 @@ function VeraktenDialog({
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-white/20 dark:border-white/[0.08] flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-[var(--glass-border-color)] flex justify-end gap-3">
           <Button variant="outline" onClick={onClose}>
             Abbrechen
           </Button>
@@ -539,7 +540,7 @@ function VeraktenDialog({
             {loading ? "Wird zugeordnet…" : "Verakten"}
           </Button>
         </div>
-      </div>
+      </GlassPanel>
     </div>
   );
 }
@@ -589,9 +590,9 @@ function TicketDialog({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08] w-full max-w-lg shadow-xl">
-        <div className="px-6 py-4 border-b border-white/20 dark:border-white/[0.08] flex items-center justify-between">
-          <h2 className="text-lg font-heading text-foreground">
+      <GlassPanel elevation="elevated" className="w-full max-w-lg shadow-xl">
+        <div className="px-6 py-4 border-b border-[var(--glass-border-color)] flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">
             Ticket aus E-Mail erstellen
           </h2>
           <button
@@ -622,7 +623,7 @@ function TicketDialog({
               value={beschreibung}
               onChange={(e) => setBeschreibung(e.target.value)}
               rows={4}
-              className="w-full rounded-md border border-white/20 dark:border-white/[0.08] bg-white dark:bg-slate-800 px-3 py-2 text-sm text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600"
+              className="glass-input w-full rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
               placeholder="Beschreibung..."
             />
           </div>
@@ -655,7 +656,7 @@ function TicketDialog({
           </div>
 
           {email.akte && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg glass-input">
               <FolderOpen className="w-4 h-4 text-slate-400" />
               <span className="text-sm text-foreground/80">
                 Akte: {email.akte.aktenzeichen} – {email.akte.kurzrubrum}
@@ -664,7 +665,7 @@ function TicketDialog({
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-white/20 dark:border-white/[0.08] flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-[var(--glass-border-color)] flex justify-end gap-3">
           <Button variant="outline" onClick={onClose}>
             Abbrechen
           </Button>
@@ -672,7 +673,7 @@ function TicketDialog({
             {loading ? "Wird erstellt…" : "Ticket erstellen"}
           </Button>
         </div>
-      </div>
+      </GlassPanel>
     </div>
   );
 }

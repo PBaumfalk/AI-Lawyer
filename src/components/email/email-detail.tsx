@@ -287,7 +287,7 @@ export function EmailDetail({
   // Loading
   if (loading) {
     return (
-      <div className="flex flex-col h-full bg-white dark:bg-slate-950">
+      <div className="flex flex-col h-full glass-panel rounded-r-2xl">
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
         </div>
@@ -320,11 +320,11 @@ export function EmailDetail({
   );
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-950">
+    <div className="flex flex-col h-full glass-panel rounded-r-2xl">
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-4">
           {/* Subject */}
-          <h2 className="text-lg font-heading text-foreground leading-tight">
+          <h2 className="text-lg font-semibold text-foreground leading-tight">
             {email.betreff || "(Kein Betreff)"}
           </h2>
 
@@ -578,7 +578,7 @@ function AttachmentChip({
       href={attachment.downloadUrl ?? "#"}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 group"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md glass-input hover:opacity-80 transition-opacity group"
       title={`${attachment.dateiname} (${formatFileSize(attachment.groesse)})`}
     >
       <Icon className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />

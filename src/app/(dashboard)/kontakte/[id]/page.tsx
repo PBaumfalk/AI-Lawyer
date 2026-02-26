@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { GlassPanel } from "@/components/ui/glass-panel";
 import {
   ChevronLeft,
   User,
@@ -107,7 +108,7 @@ export default async function KontaktDetailPage({
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-heading text-foreground">
+              <h1 className="text-2xl font-semibold text-foreground">
                 {displayName}
               </h1>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -144,8 +145,8 @@ export default async function KontaktDetailPage({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
             <div className="lg:col-span-2 space-y-6">
               {/* Contact info */}
-              <div className="glass rounded-xl p-6 space-y-4">
-                <h3 className="font-heading text-lg text-foreground">Kontaktdaten</h3>
+              <GlassPanel elevation="panel" className="p-6 space-y-4">
+                <h3 className="font-semibold text-lg text-foreground">Kontaktdaten</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {kontakt.email && <InfoItem icon={Mail} label="E-Mail" value={kontakt.email} href={`mailto:${kontakt.email}`} />}
                   {kontakt.email2 && <InfoItem icon={Mail} label="E-Mail 2" value={kontakt.email2} href={`mailto:${kontakt.email2}`} />}
@@ -158,12 +159,12 @@ export default async function KontaktDetailPage({
                 {kontakt.bevorzugteKontaktart && (
                   <p className="text-xs text-muted-foreground">Bevorzugte Kontaktart: {kontaktartLabels[kontakt.bevorzugteKontaktart] ?? kontakt.bevorzugteKontaktart}</p>
                 )}
-              </div>
+              </GlassPanel>
 
               {/* Extended identity (natural person) */}
               {kontakt.typ === "NATUERLICH" && (kontakt.geburtsname || kontakt.geburtsort || kontakt.beruf || kontakt.familienstand) && (
-                <div className="glass rounded-xl p-6 space-y-3">
-                  <h3 className="font-heading text-lg text-foreground">Erweiterte Personendaten</h3>
+                <GlassPanel elevation="panel" className="p-6 space-y-3">
+                  <h3 className="font-semibold text-lg text-foreground">Erweiterte Personendaten</h3>
                   <dl className="space-y-3">
                     {kontakt.geburtsname && <DetailRow label="Geburtsname" value={kontakt.geburtsname} />}
                     {kontakt.geburtsort && <DetailRow label="Geburtsort" value={kontakt.geburtsort} />}
@@ -173,13 +174,13 @@ export default async function KontaktDetailPage({
                     {kontakt.beruf && <DetailRow label="Beruf" value={kontakt.beruf} />}
                     {kontakt.branche && <DetailRow label="Branche" value={kontakt.branche} />}
                   </dl>
-                </div>
+                </GlassPanel>
               )}
 
               {/* Extended identity (legal entity) */}
               {kontakt.typ === "JURISTISCH" && (kontakt.kurzname || kontakt.registerart || kontakt.registernummer) && (
-                <div className="glass rounded-xl p-6 space-y-3">
-                  <h3 className="font-heading text-lg text-foreground">Registerdaten</h3>
+                <GlassPanel elevation="panel" className="p-6 space-y-3">
+                  <h3 className="font-semibold text-lg text-foreground">Registerdaten</h3>
                   <dl className="space-y-3">
                     {kontakt.kurzname && <DetailRow label="Kurzname" value={kontakt.kurzname} />}
                     {kontakt.registerart && <DetailRow label="Registerart" value={kontakt.registerart} />}
@@ -187,15 +188,15 @@ export default async function KontaktDetailPage({
                     {kontakt.registergericht && <DetailRow label="Registergericht" value={kontakt.registergericht} />}
                     {kontakt.gruendungsdatum && <DetailRow label="Gründungsdatum" value={new Date(kontakt.gruendungsdatum).toLocaleDateString("de-DE")} />}
                   </dl>
-                </div>
+                </GlassPanel>
               )}
 
               {/* Notes */}
               {kontakt.notizen && (
-                <div className="glass rounded-xl p-6 space-y-3">
-                  <h3 className="font-heading text-lg text-foreground">Notizen</h3>
+                <GlassPanel elevation="panel" className="p-6 space-y-3">
+                  <h3 className="font-semibold text-lg text-foreground">Notizen</h3>
                   <p className="text-sm text-foreground/80 whitespace-pre-wrap">{kontakt.notizen}</p>
-                </div>
+                </GlassPanel>
               )}
             </div>
 
@@ -203,19 +204,19 @@ export default async function KontaktDetailPage({
             <div className="space-y-6">
               {/* Tags */}
               {kontakt.tags.length > 0 && (
-                <div className="glass rounded-xl p-6 space-y-3">
-                  <h3 className="font-heading text-sm text-foreground flex items-center gap-2">
+                <GlassPanel elevation="panel" className="p-6 space-y-3">
+                  <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
                     <Tag className="w-4 h-4 text-muted-foreground" /> Tags
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {kontakt.tags.map((tag) => <Badge key={tag} variant="muted">{tag}</Badge>)}
                   </div>
-                </div>
+                </GlassPanel>
               )}
 
               {/* Metadata */}
-              <div className="glass rounded-xl p-6 space-y-3">
-                <h3 className="font-heading text-sm text-foreground">Metadaten</h3>
+              <GlassPanel elevation="panel" className="p-6 space-y-3">
+                <h3 className="font-semibold text-sm text-foreground">Metadaten</h3>
                 <dl className="space-y-2 text-xs">
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Erstellt</dt>
@@ -244,12 +245,12 @@ export default async function KontaktDetailPage({
                     </div>
                   )}
                 </dl>
-              </div>
+              </GlassPanel>
 
               {/* Einwilligungen */}
               {(kontakt.einwilligungEmail || kontakt.einwilligungNewsletter || kontakt.einwilligungAi) && (
-                <div className="glass rounded-xl p-6 space-y-3">
-                  <h3 className="font-heading text-sm text-foreground flex items-center gap-2">
+                <GlassPanel elevation="panel" className="p-6 space-y-3">
+                  <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
                     <Settings className="w-4 h-4 text-muted-foreground" /> Einwilligungen
                   </h3>
                   <div className="space-y-1 text-xs">
@@ -257,7 +258,7 @@ export default async function KontaktDetailPage({
                     {kontakt.einwilligungNewsletter && <p className="text-emerald-600">Newsletter</p>}
                     {kontakt.einwilligungAi && <p className="text-emerald-600">KI-Verarbeitung</p>}
                   </div>
-                </div>
+                </GlassPanel>
               )}
             </div>
           </div>
@@ -270,7 +271,7 @@ export default async function KontaktDetailPage({
               <EmptyState text="Noch keine Adressen hinterlegt." />
             ) : (
               kontakt.adressen.map((a) => (
-                <div key={a.id} className="glass rounded-xl p-5 flex items-start gap-3">
+                <GlassPanel key={a.id} elevation="panel" className="p-5 flex items-start gap-3">
                   <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -282,12 +283,12 @@ export default async function KontaktDetailPage({
                     <p className="text-sm text-foreground/80">{[a.plz, a.ort].filter(Boolean).join(" ")}</p>
                     {a.land && a.land !== "Deutschland" && <p className="text-xs text-muted-foreground">{a.land}</p>}
                   </div>
-                </div>
+                </GlassPanel>
               ))
             )}
             {/* Legacy address */}
             {(kontakt.strasse || kontakt.ort) && kontakt.adressen.length === 0 && (
-              <div className="glass rounded-xl p-5">
+              <GlassPanel elevation="panel" className="p-5">
                 <div className="flex items-start gap-3">
                   <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
@@ -297,7 +298,7 @@ export default async function KontaktDetailPage({
                     {kontakt.land && kontakt.land !== "Deutschland" && <p className="text-xs text-muted-foreground">{kontakt.land}</p>}
                   </div>
                 </div>
-              </div>
+              </GlassPanel>
             )}
           </div>
         </TabsContent>
@@ -306,8 +307,8 @@ export default async function KontaktDetailPage({
         <TabsContent value="rechtliches">
           <div className="mt-4 space-y-6">
             {(kontakt.beaSafeId || kontakt.aktenzeichen || kontakt.steuernr || kontakt.ustIdNr || kontakt.finanzamt) && (
-              <div className="glass rounded-xl p-6 space-y-3">
-                <h3 className="font-heading text-lg text-foreground">Kennungen & Steuer</h3>
+              <GlassPanel elevation="panel" className="p-6 space-y-3">
+                <h3 className="font-semibold text-lg text-foreground">Kennungen & Steuer</h3>
                 <dl className="space-y-3">
                   {kontakt.beaSafeId && <DetailRow label="beA Safe-ID" value={kontakt.beaSafeId} mono />}
                   {kontakt.aktenzeichen && <DetailRow label="Aktenzeichen (fremd)" value={kontakt.aktenzeichen} mono />}
@@ -315,28 +316,28 @@ export default async function KontaktDetailPage({
                   {kontakt.ustIdNr && <DetailRow label="USt-IdNr." value={kontakt.ustIdNr} mono />}
                   {kontakt.finanzamt && <DetailRow label="Finanzamt" value={kontakt.finanzamt} />}
                 </dl>
-              </div>
+              </GlassPanel>
             )}
             {(kontakt.iban || kontakt.bic || kontakt.kontoinhaber) && (
-              <div className="glass rounded-xl p-6 space-y-3">
-                <h3 className="font-heading text-lg text-foreground">Bankverbindung</h3>
+              <GlassPanel elevation="panel" className="p-6 space-y-3">
+                <h3 className="font-semibold text-lg text-foreground">Bankverbindung</h3>
                 <dl className="space-y-3">
                   {kontakt.iban && <DetailRow label="IBAN" value={kontakt.iban} mono />}
                   {kontakt.bic && <DetailRow label="BIC" value={kontakt.bic} mono />}
                   {kontakt.kontoinhaber && <DetailRow label="Kontoinhaber" value={kontakt.kontoinhaber} />}
                   {kontakt.bonitaetseinschaetzung && <DetailRow label="Bonität" value={kontakt.bonitaetseinschaetzung} />}
                 </dl>
-              </div>
+              </GlassPanel>
             )}
             {(kontakt.minderjaehrig || kontakt.unterBetreuung || kontakt.geschaeftsunfaehig) && (
-              <div className="glass rounded-xl p-6 space-y-3">
-                <h3 className="font-heading text-lg text-foreground">Rechtlicher Status</h3>
+              <GlassPanel elevation="panel" className="p-6 space-y-3">
+                <h3 className="font-semibold text-lg text-foreground">Rechtlicher Status</h3>
                 <div className="space-y-1">
                   {kontakt.minderjaehrig && <Badge variant="warning">Minderjährig</Badge>}
                   {kontakt.unterBetreuung && <Badge variant="warning">Unter Betreuung</Badge>}
                   {kontakt.geschaeftsunfaehig && <Badge variant="danger">Geschäftsunfähig</Badge>}
                 </div>
-              </div>
+              </GlassPanel>
             )}
           </div>
         </TabsContent>
@@ -344,8 +345,8 @@ export default async function KontaktDetailPage({
         {/* Tab: KYC & Vollmachten */}
         <TabsContent value="kyc">
           <div className="mt-4 space-y-6">
-            <div className="glass rounded-xl p-6 space-y-4">
-              <h3 className="font-heading text-lg text-foreground flex items-center gap-2">
+            <GlassPanel elevation="panel" className="p-6 space-y-4">
+              <h3 className="font-semibold text-lg text-foreground flex items-center gap-2">
                 <Shield className="w-5 h-5 text-muted-foreground" /> Identitätsprüfungen
               </h3>
               {kontakt.identitaetsPruefungen.length === 0 ? (
@@ -364,10 +365,10 @@ export default async function KontaktDetailPage({
                   </div>
                 ))
               )}
-            </div>
+            </GlassPanel>
 
-            <div className="glass rounded-xl p-6 space-y-4">
-              <h3 className="font-heading text-lg text-foreground">Vollmachten</h3>
+            <GlassPanel elevation="panel" className="p-6 space-y-4">
+              <h3 className="font-semibold text-lg text-foreground">Vollmachten</h3>
               {kontakt.vollmachtenAlsGeber.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Keine Vollmachten vorhanden.</p>
               ) : (
@@ -384,15 +385,15 @@ export default async function KontaktDetailPage({
                   </div>
                 ))
               )}
-            </div>
+            </GlassPanel>
           </div>
         </TabsContent>
 
         {/* Tab: Dokumente */}
         <TabsContent value="dokumente">
           <div className="mt-4 space-y-6">
-            <div className="glass rounded-xl p-6 space-y-4">
-              <h3 className="font-heading text-lg text-foreground flex items-center gap-2">
+            <GlassPanel elevation="panel" className="p-6 space-y-4">
+              <h3 className="font-semibold text-lg text-foreground flex items-center gap-2">
                 <FileText className="w-5 h-5 text-muted-foreground" /> Kontakt-Dokumente
               </h3>
               {kontakt.kontaktDokumente.length === 0 ? (
@@ -411,11 +412,11 @@ export default async function KontaktDetailPage({
                   </div>
                 ))
               )}
-            </div>
+            </GlassPanel>
 
             {allBeziehungen.length > 0 && (
-              <div className="glass rounded-xl p-6 space-y-4">
-                <h3 className="font-heading text-lg text-foreground flex items-center gap-2">
+              <GlassPanel elevation="panel" className="p-6 space-y-4">
+                <h3 className="font-semibold text-lg text-foreground flex items-center gap-2">
                   <Link2 className="w-5 h-5 text-muted-foreground" /> Beziehungen
                 </h3>
                 {allBeziehungen.map((b) => (
@@ -432,7 +433,7 @@ export default async function KontaktDetailPage({
                     </div>
                   </div>
                 ))}
-              </div>
+              </GlassPanel>
             )}
           </div>
         </TabsContent>
@@ -440,8 +441,8 @@ export default async function KontaktDetailPage({
         {/* Tab: Akten */}
         <TabsContent value="akten">
           <div className="mt-4">
-            <div className="glass rounded-xl p-6 space-y-3">
-              <h3 className="font-heading text-lg text-foreground flex items-center gap-2">
+            <GlassPanel elevation="panel" className="p-6 space-y-3">
+              <h3 className="font-semibold text-lg text-foreground flex items-center gap-2">
                 <FileText className="w-5 h-5 text-muted-foreground" /> Akten ({kontakt.beteiligte.length})
               </h3>
               {kontakt.beteiligte.length === 0 ? (
@@ -468,7 +469,7 @@ export default async function KontaktDetailPage({
                   ))}
                 </div>
               )}
-            </div>
+            </GlassPanel>
           </div>
         </TabsContent>
       </Tabs>
@@ -564,9 +565,9 @@ function formatFileSize(bytes: number) {
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="glass rounded-xl p-8 text-center">
+    <GlassPanel elevation="panel" className="p-8 text-center">
       <p className="text-sm text-muted-foreground">{text}</p>
-    </div>
+    </GlassPanel>
   );
 }
 

@@ -5,6 +5,7 @@ import { User, Building2 } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { KontakteSearchBar } from "@/components/kontakte/kontakte-search-bar";
 import { KontakteToolbar } from "@/components/kontakte/kontakte-toolbar";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 interface KontaktePageProps {
   searchParams: Promise<{ q?: string; typ?: string; tag?: string }>;
@@ -57,11 +58,11 @@ export default async function KontaktePage({
   const availableTags = Array.from(tagSet).sort();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             Kontakte
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -82,7 +83,7 @@ export default async function KontaktePage({
 
       {/* Table */}
       {kontakte.length === 0 ? (
-        <div className="glass rounded-xl p-12 text-center">
+        <GlassPanel elevation="panel" className="p-12 text-center">
           <p className="text-slate-400 mb-4">
             {q || tag
               ? "Keine Kontakte für diese Suche gefunden."
@@ -93,12 +94,12 @@ export default async function KontaktePage({
               <Button>Ersten Kontakt anlegen</Button>
             </Link>
           )}
-        </div>
+        </GlassPanel>
       ) : (
-        <div className="glass rounded-xl overflow-hidden">
+        <GlassPanel elevation="panel" className="overflow-hidden rounded-xl">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/10 dark:border-white/[0.06]">
+              <tr className="border-b border-[var(--glass-border-color)]">
                 <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-3">
                   Typ
                 </th>
@@ -119,8 +120,8 @@ export default async function KontaktePage({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10 dark:divide-white/[0.04]">
-              {kontakte.map((kontakt) => {
+            <tbody className="divide-y divide-[var(--glass-border-color)]">
+              {kontakte.map((kontakt, idx) => {
                 const displayName =
                   kontakt.typ === "NATUERLICH"
                     ? `${kontakt.vorname ?? ""} ${kontakt.nachname ?? ""}`.trim()
@@ -129,7 +130,8 @@ export default async function KontaktePage({
                 return (
                   <tr
                     key={kontakt.id}
-                    className="hover:bg-white/30 dark:hover:bg-white/[0.05] transition-colors"
+                    className={`hover:bg-white/30 dark:hover:bg-white/[0.05] transition-colors${idx < 10 ? " list-item-in" : ""}`}
+                    style={idx < 10 ? { animationDelay: `${idx * 50}ms` } : undefined}
                   >
                     <td className="px-6 py-4">
                       <div className="w-8 h-8 rounded-full bg-white/20 dark:bg-white/[0.06] flex items-center justify-center">
@@ -198,7 +200,7 @@ export default async function KontaktePage({
               })}
             </tbody>
           </table>
-        </div>
+        </GlassPanel>
       )}
     </div>
   );

@@ -265,53 +265,65 @@ export function KontaktForm({ kontakt, mode, customFieldDefs = [] }: KontaktForm
         </TabsList>
 
         <TabsContent value="stammdaten">
-          <KontaktFormStammdaten typ={typ} setTyp={setTyp} form={form} updateField={updateField} />
+          <div className="glass-card rounded-xl p-5 space-y-4">
+            <KontaktFormStammdaten typ={typ} setTyp={setTyp} form={form} updateField={updateField} />
+          </div>
         </TabsContent>
 
         <TabsContent value="adressen">
-          <KontaktFormAdressen
-            kontaktId={kontakt?.id}
-            form={form}
-            updateField={updateField}
-            adressen={adressen}
-            onAdressenChange={setAdressen}
-          />
+          <div className="glass-card rounded-xl p-5 space-y-4">
+            <KontaktFormAdressen
+              kontaktId={kontakt?.id}
+              form={form}
+              updateField={updateField}
+              adressen={adressen}
+              onAdressenChange={setAdressen}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="rechtliches">
-          <KontaktFormRechtliches form={form} updateField={updateField} />
+          <div className="glass-card rounded-xl p-5 space-y-4">
+            <KontaktFormRechtliches form={form} updateField={updateField} />
+          </div>
         </TabsContent>
 
         <TabsContent value="kyc">
-          <KontaktFormKyc
-            kontaktId={kontakt?.id}
-            kycPruefungen={kycPruefungen}
-            onKycChange={setKycPruefungen}
-            vollmachten={vollmachten}
-            onVollmachtenChange={setVollmachten}
-          />
+          <div className="glass-card rounded-xl p-5 space-y-4">
+            <KontaktFormKyc
+              kontaktId={kontakt?.id}
+              kycPruefungen={kycPruefungen}
+              onKycChange={setKycPruefungen}
+              vollmachten={vollmachten}
+              onVollmachtenChange={setVollmachten}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="dokumente">
-          <KontaktFormDokumente
-            kontaktId={kontakt?.id}
-            dokumente={kontaktDokumente}
-            onDokumenteChange={setKontaktDokumente}
-            beziehungen={beziehungen}
-            onBeziehungenChange={setBeziehungen}
-          />
+          <div className="glass-card rounded-xl p-5 space-y-4">
+            <KontaktFormDokumente
+              kontaktId={kontakt?.id}
+              dokumente={kontaktDokumente}
+              onDokumenteChange={setKontaktDokumente}
+              beziehungen={beziehungen}
+              onBeziehungenChange={setBeziehungen}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="intern">
-          <KontaktFormIntern
-            form={form}
-            updateField={updateField}
-            tags={tags}
-            setTags={setTags}
-            customFieldDefs={customFieldDefs}
-            customFields={customFields}
-            setCustomFields={setCustomFields}
-          />
+          <div className="glass-card rounded-xl p-5 space-y-4">
+            <KontaktFormIntern
+              form={form}
+              updateField={updateField}
+              tags={tags}
+              setTags={setTags}
+              customFieldDefs={customFieldDefs}
+              customFields={customFields}
+              setCustomFields={setCustomFields}
+            />
+          </div>
         </TabsContent>
       </Tabs>
 

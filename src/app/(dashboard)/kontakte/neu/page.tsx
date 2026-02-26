@@ -28,7 +28,7 @@ export default async function NeuerKontaktPage() {
           <ChevronLeft className="w-4 h-4 mr-1" />
           Zurück zur Übersicht
         </Link>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Neuer Kontakt
         </h1>
         <p className="text-muted-foreground mt-1">

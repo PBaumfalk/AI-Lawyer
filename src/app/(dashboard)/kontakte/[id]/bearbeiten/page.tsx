@@ -64,7 +64,7 @@ export default async function KontaktBearbeitenPage({
           <ChevronLeft className="w-4 h-4 mr-1" />
           Zurück zu {displayName}
         </Link>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Kontakt bearbeiten
         </h1>
         <p className="text-muted-foreground mt-1">

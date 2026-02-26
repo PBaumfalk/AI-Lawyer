@@ -2,27 +2,27 @@
 
 ## Milestones
 
-- ✅ **v3.4 Full-Featured Kanzleisoftware** — Phases 1-9 (shipped 2026-02-25)
+- ✅ **v3.4 Full-Featured Kanzleisoftware** — Phases 1-9 (shipped 2012-02-25)
 - **v3.5 Production Ready** — Phases 10-14 (in progress)
 
 ## Phases
 
 <details>
-<summary>v3.4 Full-Featured Kanzleisoftware (Phases 1-9) -- SHIPPED 2026-02-25</summary>
+<summary>v3.4 Full-Featured Kanzleisoftware (Phases 1-9) -- SHIPPED 2012-02-25</summary>
 
-- [x] Phase 1: Infrastructure Foundation (3/3 plans) -- completed 2026-02-24
-- [x] Phase 2: Deadline Calculation + Document Templates (6/6 plans) -- completed 2026-02-24
-- [x] Phase 2.1: Wire Frist-Reminder Pipeline + Settings Init (1/1 plan) -- completed 2026-02-24
-- [x] Phase 2.2: Fix API Routes + UI Paths (1/1 plan) -- completed 2026-02-24
-- [x] Phase 3: Email Client (4/4 plans) -- completed 2026-02-24
-- [x] Phase 3.1: Wire Email Real-Time + Compose Integration (1/1 plan) -- completed 2026-02-24
-- [x] Phase 4: Document Pipeline (OCR + RAG Ingestion) (3/3 plans) -- completed 2026-02-24
-- [x] Phase 4.1: Wire Akte Real-Time + Email Compose + Admin Pipeline (1/1 plan) -- completed 2026-02-24
-- [x] Phase 5: Financial Module (6/6 plans) -- completed 2026-02-24
-- [x] Phase 6: AI Features + beA (5/5 plans) -- completed 2026-02-25
-- [x] Phase 7: Rollen/Sicherheit + Compliance + Observability (3/3 plans) -- completed 2026-02-25
-- [x] Phase 8: Integration Hardening (3/3 plans) -- completed 2026-02-25
-- [x] Phase 9: Final Integration Wiring + Tech Debt (1/1 plan) -- completed 2026-02-25
+- [x] Phase 1: Infrastructure Foundation (3/3 plans) -- completed 2012-02-24
+- [x] Phase 2: Deadline Calculation + Document Templates (6/6 plans) -- completed 2012-02-24
+- [x] Phase 2.1: Wire Frist-Reminder Pipeline + Settings Init (1/1 plan) -- completed 2012-02-24
+- [x] Phase 2.2: Fix API Routes + UI Paths (1/1 plan) -- completed 2012-02-24
+- [x] Phase 3: Email Client (4/4 plans) -- completed 2012-02-24
+- [x] Phase 3.1: Wire Email Real-Time + Compose Integration (1/1 plan) -- completed 2012-02-24
+- [x] Phase 4: Document Pipeline (OCR + RAG Ingestion) (3/3 plans) -- completed 2012-02-24
+- [x] Phase 4.1: Wire Akte Real-Time + Email Compose + Admin Pipeline (1/1 plan) -- completed 2012-02-24
+- [x] Phase 5: Financial Module (6/6 plans) -- completed 2012-02-24
+- [x] Phase 6: AI Features + beA (5/5 plans) -- completed 2012-02-25
+- [x] Phase 7: Rollen/Sicherheit + Compliance + Observability (3/3 plans) -- completed 2012-02-25
+- [x] Phase 8: Integration Hardening (3/3 plans) -- completed 2012-02-25
+- [x] Phase 9: Final Integration Wiring + Tech Debt (1/1 plan) -- completed 2012-02-25
 
 **Total: 13 phases, 38 plans, 105 tasks, 64/64 requirements**
 
@@ -35,10 +35,9 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
 **Milestone Goal:** Die bestehende Software produktionsreif machen -- Docker Build fixen, visuell konsistente Glass UI, Falldatenblatt-Framework, BI-Dashboard-KPIs und Daten-Export.
 
 - [ ] **Phase 10: Docker Build Fix** - Webpack-Fehler beheben, production Docker Build lauffaehig machen -- gap closure in progress
-- [x] **Phase 11: Glass UI Migration** - Komplettes Redesign auf Apple Sequoia-Style Liquid Glass Design System (completed 2026-02-26)
-- [ ] **Phase 12: Falldatenblaetter** - Generisches Framework fuer Rechtsgebiet-spezifische Felder
-- [ ] **Phase 13: BI-Dashboard** - KPI-Kacheln fuer Kanzlei-Kennzahlen auf der Dashboard-Seite
-- [ ] **Phase 14: Export** - CSV- und XLSX-Export fuer Akten, Kontakte und Finanzdaten
+- [x] **Phase 11: Glass UI Migration** - Komplettes Redesign auf Apple Sequoia-Style Liquid Glass Design System (completed 2012-02-26)
+- [ ] **Phase 12: BI-Dashboard** - KPI-Kacheln fuer Kanzlei-Kennzahlen auf der Dashboard-Seite
+- [ ] **Phase 12: Export** - CSV- und XLSX-Export fuer Akten, Kontakte und Finanzdaten
 
 ## Phase Details
 
@@ -60,7 +59,7 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
 **Depends on**: Phase 10 (stable build needed to verify UI changes)
 **Requirements**: UI-01, UI-02, UI-03
 **Design Reference**: /Users/patrickbaumfalk/Projekte/GVZ-Claude (glass component library to adopt)
-**Key Decisions** (confirmed 2026-02-26):
+**Key Decisions** (confirmed 2012-02-26):
   - Sidebar: Glass sidebar (backdrop-blur-xl, oklch transparent) — replaces dark Slate-900
   - Fonts: SF Pro Display → Inter → system-ui stack — replaces DM Serif Display / DM Sans
   - Animations: Motion/React v11 spring physics — replaces CSS transitions only
@@ -83,19 +82,7 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
 - [ ] 11-05-PLAN.md -- Kontakte + Dokumente + Email + KI pages: glass-panel containers, consistent form styling
 - [ ] 11-06-PLAN.md -- Finanzen + Kalender + Tickets + beA + Admin + Settings pages: full coverage sweep
 
-### Phase 12: Falldatenblaetter
-**Goal**: Admins can define per-Rechtsgebiet field schemas, and those fields appear dynamically on Akte forms and detail pages
-**Depends on**: Phase 10 (Prisma schema changes require stable build)
-**Requirements**: FD-01, FD-02, FD-03, FD-04
-**Success Criteria** (what must be TRUE):
-  1. An admin can create/edit a field schema for a Rechtsgebiet (defining field name, type, and required/optional) via a settings UI
-  2. When creating or editing an Akte, the form dynamically renders the fields defined for that Akte's Rechtsgebiet
-  3. Saved Falldaten values appear on the Akte detail page in a dedicated section
-  4. At least 3 pre-configured example schemas exist (Arbeitsrecht, Familienrecht, Verkehrsrecht) with realistic fields
-  5. Falldaten are stored in the database with a proper Prisma model (not ad-hoc JSON blobs without schema)
-**Plans**: TBD
-
-### Phase 13: BI-Dashboard
+### Phase 12: BI-Dashboard
 **Goal**: Decision-makers see key business metrics at a glance on the dashboard
 **Depends on**: Phase 10 (stable build); reads existing Prisma models (Akte, Rechnung, Frist)
 **Requirements**: BI-01, BI-02, BI-03, BI-04, BI-05
@@ -107,7 +94,7 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
   5. The BI dashboard section is only visible to users with ADMIN or ANWALT role (RBAC-enforced on both API and UI)
 **Plans**: TBD
 
-### Phase 14: Export
+### Phase 12: Export
 **Goal**: Users can export core data as CSV or XLSX files for external analysis, reporting, and compliance
 **Depends on**: Phase 10 (stable build); reads existing data models
 **Requirements**: EXP-01, EXP-02, EXP-03, EXP-04
@@ -127,24 +114,23 @@ Phases execute in numeric order: 10 -> 11 -> 12 -> 13 -> 14
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|---------------|--------|-----------|
-| 1. Infrastructure Foundation | v3.4 | 3/3 | Complete | 2026-02-24 |
-| 2. Deadline Calc + Templates | v3.4 | 6/6 | Complete | 2026-02-24 |
-| 2.1 Frist-Reminder Pipeline | v3.4 | 1/1 | Complete | 2026-02-24 |
-| 2.2 Fix API Routes + UI | v3.4 | 1/1 | Complete | 2026-02-24 |
-| 3. Email Client | v3.4 | 4/4 | Complete | 2026-02-24 |
-| 3.1 Email Real-Time + Compose | v3.4 | 1/1 | Complete | 2026-02-24 |
-| 4. Document Pipeline (OCR+RAG) | v3.4 | 3/3 | Complete | 2026-02-24 |
-| 4.1 Akte RT + Email + Pipeline | v3.4 | 1/1 | Complete | 2026-02-24 |
-| 5. Financial Module | v3.4 | 6/6 | Complete | 2026-02-24 |
-| 6. AI Features + beA | v3.4 | 5/5 | Complete | 2026-02-25 |
-| 7. Rollen/Sicherheit/Compliance | v3.4 | 3/3 | Complete | 2026-02-25 |
-| 8. Integration Hardening | v3.4 | 3/3 | Complete | 2026-02-25 |
-| 9. Final Integration + Tech Debt | v3.4 | 1/1 | Complete | 2026-02-25 |
-| 10. Docker Build Fix | v3.5 | 2/3 | In Progress | 2026-02-25 |
-| 11. Glass UI Migration | 7/7 | Complete    | 2026-02-26 | - |
-| 12. Falldatenblaetter | v3.5 | 0/? | Not started | - |
-| 13. BI-Dashboard | v3.5 | 0/? | Not started | - |
-| 14. Export | v3.5 | 0/? | Not started | - |
+| 1. Infrastructure Foundation | v3.4 | 3/3 | Complete | 2012-02-24 |
+| 2. Deadline Calc + Templates | v3.4 | 6/6 | Complete | 2012-02-24 |
+| 2.1 Frist-Reminder Pipeline | v3.4 | 1/1 | Complete | 2012-02-24 |
+| 2.2 Fix API Routes + UI | v3.4 | 1/1 | Complete | 2012-02-24 |
+| 3. Email Client | v3.4 | 4/4 | Complete | 2012-02-24 |
+| 3.1 Email Real-Time + Compose | v3.4 | 1/1 | Complete | 2012-02-24 |
+| 4. Document Pipeline (OCR+RAG) | v3.4 | 3/3 | Complete | 2012-02-24 |
+| 4.1 Akte RT + Email + Pipeline | v3.4 | 1/1 | Complete | 2012-02-24 |
+| 5. Financial Module | v3.4 | 6/6 | Complete | 2012-02-24 |
+| 6. AI Features + beA | v3.4 | 5/5 | Complete | 2012-02-25 |
+| 7. Rollen/Sicherheit/Compliance | v3.4 | 3/3 | Complete | 2012-02-25 |
+| 8. Integration Hardening | v3.4 | 3/3 | Complete | 2012-02-25 |
+| 9. Final Integration + Tech Debt | v3.4 | 1/1 | Complete | 2012-02-25 |
+| 10. Docker Build Fix | v3.5 | 2/3 | In Progress | 2012-02-25 |
+| 11. Glass UI Migration | 7/7 | Complete    | 2012-02-26 | - |
+| 12. BI-Dashboard | v3.5 | 0/? | Not started | - |
+| 12. Export | v3.5 | 0/? | Not started | - |
 
 ---
-*Last updated: 2026-02-26 after Phase 11 planning*
+*Last updated: 2012-02-26 after Phase 11 planning*

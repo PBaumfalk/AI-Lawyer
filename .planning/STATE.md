@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 11 of 14 (Glass UI Migration)
-Plan: 3 of 6 completed
+Plan: 4 of 6 completed
 Status: In progress
-Last activity: 2026-02-26 -- Completed Plan 03 (Glass UI Primitives)
+Last activity: 2026-02-26 -- Completed Plan 04 (Dashboard + Akten Glass Migration)
 
-Progress: [################░░░░░░░░░░░░░░] 50%
+Progress: [####################░░░░░░░░░░] 57%
 
 ## Performance Metrics
 
@@ -55,6 +55,9 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 - [11-03] @ts-expect-error retained on motion.button — motion v11 + React 19 ButtonHTMLAttributes mismatch is upstream issue, runtime correct
 - [11-03] Glass form control pattern: glass-input class replaces border/bg-background in all Input/Textarea/Select
 - [11-03] Skeleton uses glass-shimmer class (not animate-pulse bg-muted) — consistent with glass design system
+- [11-04] CSS keyframe stagger chosen over Motion stagger for server components — avoids use-client on server pages
+- [11-04] prefers-reduced-motion guard wraps list-item-in at media-query level (not inline) — consistent accessibility approach
+- [11-04] font-heading eliminated across dashboard + akten subsystem — replaced with font-semibold (system font)
 
 - [10-01] Use NEXT_PHASE env var to detect build-time SSR and skip pino-roll file transport
 - [10-01] Add force-dynamic to health route to prevent static generation timeout on Redis
@@ -79,4 +82,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 11-03-PLAN.md (Glass UI Primitives)
+Stopped at: Completed 11-04-PLAN.md (Dashboard + Akten Glass Migration)

@@ -120,7 +120,7 @@ export default function AdminAuditTrailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold">Audit-Trail</h1>
+          <h1 className="text-2xl font-semibold">Audit-Trail</h1>
           <p className="text-muted-foreground text-sm mt-1">
             System-weite Aktivitaeten und Aenderungshistorie
           </p>

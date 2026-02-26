@@ -175,7 +175,7 @@ export default function AdminDsgvoPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-heading font-bold">DSGVO-Verwaltung</h1>
+        <h1 className="text-2xl font-semibold">DSGVO-Verwaltung</h1>
         <p className="text-muted-foreground text-sm mt-1">
           Datenauskunft, Loeschkonzept und Anonymisierung
         </p>

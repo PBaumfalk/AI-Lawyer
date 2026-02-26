@@ -101,7 +101,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
           <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-muted-foreground" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-heading text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             E-Mail-Tickets
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -121,7 +121,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
 
       {/* Ticket list */}
       {tickets.length === 0 ? (
-        <div className="glass rounded-xl p-12 text-center">
+        <div className="glass-card rounded-xl p-12 text-center">
           <Ticket className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
           <p className="text-muted-foreground">
             {q || status
@@ -130,7 +130,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
           </p>
         </div>
       ) : (
-        <div className="glass rounded-xl overflow-hidden">
+        <div className="glass-card rounded-xl overflow-hidden">
           <div className="divide-y divide-white/10 dark:divide-white/[0.04]">
             {tickets.map((ticket) => {
               const StatusIcon = statusIcons[ticket.status] ?? Clock;

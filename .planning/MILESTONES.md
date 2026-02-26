@@ -34,3 +34,39 @@
 
 ---
 
+
+## v3.5 Production Ready (Shipped: 2026-02-26)
+
+**Delivered:** Docker production build fixed and complete Apple Sequoia-style Glass UI migration — all 9 services running healthy in Docker, entire frontend redesigned to liquid glass aesthetic with oklch design tokens, Motion/React animations, and full dark mode support.
+
+**Phases:** 2 (10–11)
+**Plans:** 10 completed
+**Files changed:** 234 | **Insertions:** 26,707 | **Deletions:** 1,020
+**Lines of Code:** ~91,300 LOC TypeScript
+**Timeline:** 2026-02-25 → 2026-02-26 (2 days)
+**Git range:** `fix(10-01)` → `feat(11-07)`
+
+**Key accomplishments:**
+1. Docker production build fixed — Next.js compiles clean, pino-roll build-safe, hardened next.config.mjs
+2. All 9 Docker services run healthy — production entrypoint (prisma migrate deploy + conditional seed), IPv4 Alpine healthchecks, date-fns Docker copy, Ollama as core service
+3. Complete oklch glass design system — 4 blur tiers (8px/16px/24px/40px), gradient mesh background, macOS scrollbars, full dark mode CSS token structure
+4. Animated glass sidebar — Motion/React v11 spring physics, backdrop-blur-xl, dark mode toggle, profile chip; all with prefers-reduced-motion support
+5. Glass component library — GlassCard (variants), GlassPanel (elevation tiers), GlassKpiCard (count-up animation), glass-input primitives, glass-shimmer skeleton, Button motion spring
+6. All 26 dashboard pages migrated to glass design — 0 `font-heading` in any page file, UI/form/list requirements all satisfied
+
+**Known Gaps (intentionally deferred to TODO):**
+- FD-01–FD-04: Falldatenblaetter per-Rechtsgebiet Feldschemas
+- BI-01–BI-05: BI-Dashboard KPI-Kacheln
+- EXP-01–EXP-04: CSV/XLSX Export für Akten, Kontakte, Finanzen
+
+**Tech debt (non-blocking):**
+- 62× `font-heading` in sub-components (dialogs, tab components) — outside page-scope SC
+- 77× `.glass` alias in sub-components — renders correctly via @apply glass-card
+
+**Archives:**
+- `milestones/v3.5-ROADMAP.md`
+- `milestones/v3.5-REQUIREMENTS.md`
+- `milestones/v3.5-MILESTONE-AUDIT.md`
+
+---
+

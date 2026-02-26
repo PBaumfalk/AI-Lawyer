@@ -39,6 +39,14 @@ Progress: [######░░░░░░░░░░░░░░░░░░░░░
 
 All v3.4 decisions archived in PROJECT.md Key Decisions table.
 
+**Phase 11 Design Decisions (2026-02-26):**
+- [11] Sidebar: Glass sidebar (backdrop-blur-xl transparent) — replaces Slate-900
+- [11] Fonts: SF Pro Display → Inter → system-ui — replaces DM Serif Display / DM Sans
+- [11] Animations: Motion/React v11 spring physics — adds to CSS transitions
+- [11] Dark Mode: Full Light/Dark with .dark class strategy — new capability
+- [11] Glass tiers: 4 blur levels (8px / 16px / 24px / 40px)
+- [11] Design reference: /Users/patrickbaumfalk/Projekte/GVZ-Claude
+
 - [10-01] Use NEXT_PHASE env var to detect build-time SSR and skip pino-roll file transport
 - [10-01] Add force-dynamic to health route to prevent static generation timeout on Redis
 - [10-02] Use 127.0.0.1 in Alpine Docker healthchecks (localhost resolves to IPv6)
@@ -62,4 +70,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Phase 10 fully complete (incl. 10-03 gap closure). Ready for Phase 11 planning.
+Stopped at: Phase 11 context gathered, CONTEXT.md written. Ready to run /gsd:plan-phase 11.

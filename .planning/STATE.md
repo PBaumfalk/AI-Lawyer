@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Production Ready
 status: unknown
-last_updated: "2026-02-26T22:17:40.876Z"
+last_updated: "2026-02-26T22:19:15.838Z"
 progress:
   total_phases: 2
   completed_phases: 2
@@ -18,7 +18,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v3.5 Production Ready -- Phase 11 complete, next: Phase 12 (Export)
+**Current focus:** v3.5 Production Ready -- Phase 11 complete, Milestone bereit zum Abschluss
 
 ## Current Position
 
@@ -27,7 +27,7 @@ Plan: 7 of 7 completed
 Status: Phase complete (all SC satisfied including SC4 and SC7)
 Last activity: 2026-02-26 -- Completed Plan 07 (Gap Closure - KalenderListe + 3 deferred admin/email pages)
 
-Progress: [###########################░░░] 78%
+Progress: [##############################] 100%
 
 ## Performance Metrics
 
@@ -42,7 +42,6 @@ Progress: [###########################░░░] 78%
 |-------|-------|-------|----------|
 | 10. Docker Build Fix | 3/3 | ~60min | ~20min |
 | 11. Glass UI Migration | 7/7 | ~27min | ~4min |
-| 12. Export | 0/? | - | - |
 
 ## Accumulated Context
 
@@ -93,7 +92,7 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-6 todos pending.
+7 todos pending.
 
 - **Improve Helena RAG pipeline with hybrid search and reranking** (area: api) — Hybrid Search (Meilisearch + pgvector), Cross-Encoder Reranking, Parent-Child Chunking. Datei: .planning/todos/pending/2026-02-26-improve-helena-rag-pipeline-with-hybrid-search-and-reranking.md
 - **Gesetze-RAG für Helena und Normen-Verknüpfung an Akten** (area: api) — .planning/todos/pending/2026-02-26-gesetze-rag-f-r-helena-und-normen-verkn-pfung-an-akten.md
@@ -101,6 +100,7 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 - **Arbeitswissen-RAG für Helena — Formulare, Muster, Kosten, ERV** (area: api) — .planning/todos/pending/2026-02-26-arbeitswissen-rag-f-r-helena-formulare-muster-kosten-erv.md
 - **Falldatenblaetter per-Rechtsgebiet Feldschemas** (area: general) — Admin-UI für Feldschemas, dynamisches Rendering in Akte-Formular, Prisma-Modell. Datei: .planning/todos/pending/2026-02-26-falldatenblaetter-per-rechtsgebiet-feldschemas.md
 - **BI-Dashboard Geschaeftskennzahlen** (area: ui) — KPI-Tiles für Neue Akten, Offene Posten, Fällige Fristen, Umsatz; nur ADMIN/ANWALT. Datei: .planning/todos/pending/2026-02-26-bi-dashboard-geschaeftskennzahlen.md
+- **Export CSV XLSX Akten Kontakte Finanzen** (area: ui) — CSV/XLSX-Export für Akten, Kontakte, Rechnungen mit UTF-8 BOM. Datei: .planning/todos/pending/2026-02-26-export-csv-xlsx-akten-kontakte-finanzen.md
 
 ### Blockers/Concerns
 
@@ -109,4 +109,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Session resumed — removed Phase 12 (Falldatenblaetter) to TODO, renumbered BI-Dashboard → Phase 12, Export → Phase 13
+Stopped at: Removed all future phases to TODO — v3.5 Milestone vollständig (Phase 11 complete), bereit für /gsd:complete-milestone

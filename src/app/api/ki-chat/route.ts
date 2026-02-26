@@ -30,7 +30,7 @@ Wenn Akten-Dokumente als Quellen bereitgestellt werden, beziehe dich konkret auf
 Erfinde KEINE konkreten Falldetails, Namen, Daten oder Fakten, die nicht in den bereitgestellten Quellen stehen — allgemeines juristisches Wissen darfst du immer einbringen.
 Beende deine Antwort mit: "Hinweis: Dieser Assistent ersetzt keine anwaltliche Pruefung."`;
 
-const NO_SOURCES_INSTRUCTION = `\n\nHinweis fuer diese Antwort: Es wurden keine passenden Dokumente in den Akten gefunden. Antworte trotzdem mit deinem allgemeinen juristischen Wissen und weise kurz darauf hin, dass kein Akten-Kontext verfuegbar ist.`;
+const NO_SOURCES_INSTRUCTION = `\n\nHinweis fuer diese Antwort: Die semantische Suche hat keine passenden Dokument-Passagen gefunden. Falls im AKTEN-KONTEXT Dokumente mit Textauszuegen aufgelistet sind, nutze diese Informationen. Ansonsten antworte mit deinem allgemeinen juristischen Wissen und weise kurz darauf hin, dass keine detaillierten Dokumentinhalte verfuegbar sind.`;
 
 const LOW_CONFIDENCE_INSTRUCTION = `\n\nHinweis fuer diese Antwort: Die gefundenen Dokumente haben nur geringe Relevanz zur Frage. Antworte primaer mit deinem Fachwissen und erwaehne die vorhandenen Dokumente nur wenn sie wirklich relevant sind.`;
 
@@ -75,6 +75,20 @@ export async function POST(req: NextRequest) {
         where: { id: akteId },
         include: {
           beteiligte: { include: { kontakt: true } },
+          dokumente: {
+            orderBy: { createdAt: "desc" },
+            take: 50,
+            select: {
+              id: true,
+              name: true,
+              mimeType: true,
+              ocrStatus: true,
+              ocrText: true,
+              ordner: true,
+              tags: true,
+              createdAt: true,
+            },
+          },
           kalenderEintraege: {
             where: { erledigt: false, datum: { gte: new Date() } },
             orderBy: { datum: "asc" },
@@ -118,6 +132,42 @@ export async function POST(req: NextRequest) {
                 .join("\n")
             : "- (keine anstehenden Fristen/Termine)";
 
+        // Build document listing with OCR text snippets
+        // Limit total context to ~12000 chars to avoid token overflow
+        const MAX_DOC_CONTEXT_CHARS = 12000;
+        let docContextChars = 0;
+
+        const dokumenteLines =
+          akte.dokumente.length > 0
+            ? akte.dokumente
+                .map((d) => {
+                  const ocrLabel =
+                    d.ocrStatus === "ABGESCHLOSSEN"
+                      ? "OCR OK"
+                      : d.ocrStatus === "IN_BEARBEITUNG"
+                        ? "OCR laeuft"
+                        : d.ocrStatus === "FEHLGESCHLAGEN"
+                          ? "OCR fehlgeschlagen"
+                          : "OCR ausstehend";
+                  const folder = d.ordner ? ` [${d.ordner}]` : "";
+                  const tagStr = d.tags.length > 0 ? ` Tags: ${d.tags.join(", ")}` : "";
+                  let line = `- ${d.name} (${d.mimeType}, ${ocrLabel})${folder}${tagStr}`;
+
+                  // Include OCR text snippet if available and within budget
+                  if (d.ocrText && docContextChars < MAX_DOC_CONTEXT_CHARS) {
+                    const remaining = MAX_DOC_CONTEXT_CHARS - docContextChars;
+                    const snippet = d.ocrText.slice(0, Math.min(1500, remaining)).trim();
+                    if (snippet.length > 0) {
+                      line += `\n  Textauszug: ${snippet}${d.ocrText.length > snippet.length ? " [...]" : ""}`;
+                      docContextChars += snippet.length;
+                    }
+                  }
+
+                  return line;
+                })
+                .join("\n")
+            : "- (keine Dokumente vorhanden)";
+
         aktenKontextBlock = `\n\n--- AKTEN-KONTEXT ---
 Aktenzeichen: ${akte.aktenzeichen}
 Rubrum: ${akte.kurzrubrum}
@@ -128,7 +178,10 @@ Status: ${akte.status}
 Beteiligte:
 ${beteiligteLines}
 
-Anstehende Fristen/Termine (nächste 10):
+Dokumente in dieser Akte (${akte.dokumente.length}):
+${dokumenteLines}
+
+Anstehende Fristen/Termine (naechste 10):
 ${terminLines}
 --- ENDE AKTEN-KONTEXT ---`;
       }

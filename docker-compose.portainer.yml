@@ -1,7 +1,30 @@
-services:
-  # Default credentials after seed: admin@kanzlei.de / password123
+# ─── AI-Lawyer — Portainer Stack ─────────────────────────────────────────────
+#
+# Deployment via Portainer → Stacks → "Add Stack" → "Repository"
+#   Repository URL:  https://github.com/PBaumfalk/AI-Lawyer
+#   Compose path:    docker-compose.portainer.yml
+#
+# Pflicht-Variablen (unter "Environment variables" in Portainer setzen):
+#   NEXTAUTH_URL          z.B. https://ailawyer.meinserver.de
+#   NEXTAUTH_SECRET       zufälliger String ≥ 32 Zeichen (openssl rand -base64 32)
+#   EMAIL_ENCRYPTION_KEY  zufälliger Hex-String 64 Zeichen (openssl rand -hex 32)
+#   ONLYOFFICE_SECRET     zufälliger String (openssl rand -base64 24)
+#
+# Optionale Variablen für externe KI-Anbieter:
+#   OPENAI_API_KEY        OpenAI API-Key (leer = Ollama wird verwendet)
+#   ANTHROPIC_API_KEY     Anthropic API-Key
+#   AI_PROVIDER           openai | anthropic | ollama  (default: ollama)
+#   AI_MODEL              z.B. gpt-4o | mistral:7b
+#
+# Default credentials after seed:
+#   admin@kanzlei.de          / password123  (ADMIN)
+#   anwalt@kanzlei.de         / password123  (ANWALT)
+#   sachbearbeiter@kanzlei.de / password123  (SACHBEARBEITER)
+# ─────────────────────────────────────────────────────────────────────────────
 
-  # ─── Next.js Application (Custom Server + Socket.IO) ─────────────────────────
+services:
+
+  # ─── Next.js Application ───────────────────────────────────────────────────
   app:
     build: .
     container_name: ailawyer-app
@@ -10,28 +33,32 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://ailawyer:ailawyer@db:5432/ailawyer?schema=public
-      NEXTAUTH_URL: http://localhost:3000
-      NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
+      DATABASE_URL: postgresql://ailawyer:${POSTGRES_PASSWORD:-ailawyer}@db:5432/ailawyer?schema=public
+      NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL is required}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required}
       AUTH_TRUST_HOST: "true"
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: "9000"
-      MINIO_ACCESS_KEY: ailawyer
-      MINIO_SECRET_KEY: ailawyer123
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-ailawyer}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-ailawyer123}
       MINIO_BUCKET: dokumente
       MINIO_USE_SSL: "false"
-      MINIO_PUBLIC_URL: http://localhost:9000
+      MINIO_PUBLIC_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       MEILISEARCH_URL: http://meilisearch:7700
-      MEILISEARCH_API_KEY: ailawyer-meili-key
-      EMAIL_ENCRYPTION_KEY: dev-email-encryption-key-change-in-production-32chars
-      ONLYOFFICE_URL: http://localhost:8080
+      MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY:-ailawyer-meili-key}
+      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY:?EMAIL_ENCRYPTION_KEY is required}
+      ONLYOFFICE_URL: ${NEXTAUTH_URL:-http://localhost:3000}:8080
       ONLYOFFICE_INTERNAL_URL: http://onlyoffice:80
-      ONLYOFFICE_SECRET: dev-onlyoffice-secret
+      ONLYOFFICE_SECRET: ${ONLYOFFICE_SECRET:-}
       APP_INTERNAL_URL: http://app:3000
       STIRLING_PDF_URL: http://stirling-pdf:8080
       OLLAMA_URL: http://ollama:11434
-      LOG_LEVEL: info
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_PROVIDER: ${AI_PROVIDER:-ollama}
+      AI_MODEL: ${AI_MODEL:-mistral:7b}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       LOG_FILE_PATH: /var/log/ai-lawyer/app
     depends_on:
       db:
@@ -53,7 +80,7 @@ services:
       retries: 3
       start_period: 60s
 
-  # ─── BullMQ Worker Process ────────────────────────────────────────────────────
+  # ─── BullMQ Worker ─────────────────────────────────────────────────────────
   worker:
     build: .
     container_name: ailawyer-worker
@@ -62,23 +89,23 @@ services:
     stop_grace_period: 30s
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://ailawyer:ailawyer@db:5432/ailawyer?schema=public
+      DATABASE_URL: postgresql://ailawyer:${POSTGRES_PASSWORD:-ailawyer}@db:5432/ailawyer?schema=public
       REDIS_URL: redis://redis:6379
-      NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
-      EMAIL_ENCRYPTION_KEY: dev-email-encryption-key-change-in-production-32chars
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required}
+      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY:?EMAIL_ENCRYPTION_KEY is required}
       MINIO_ENDPOINT: minio
       MINIO_PORT: "9000"
-      MINIO_ACCESS_KEY: ailawyer
-      MINIO_SECRET_KEY: ailawyer123
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-ailawyer}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-ailawyer123}
       MINIO_BUCKET: dokumente
       MINIO_USE_SSL: "false"
       MEILISEARCH_URL: http://meilisearch:7700
-      MEILISEARCH_API_KEY: ailawyer-meili-key
+      MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY:-ailawyer-meili-key}
       STIRLING_PDF_URL: http://stirling-pdf:8080
       OLLAMA_URL: http://ollama:11434
-      LOG_LEVEL: info
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       LOG_FILE_PATH: /var/log/ai-lawyer/worker
-      WORKER_CONCURRENCY: "5"
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-5}
     depends_on:
       db:
         condition: service_healthy
@@ -91,14 +118,14 @@ services:
     volumes:
       - worker_logs:/var/log/ai-lawyer
 
-  # ─── PostgreSQL 16 + pgvector ────────────────────────────────────────────────
+  # ─── PostgreSQL 16 + pgvector ───────────────────────────────────────────────
   db:
     image: pgvector/pgvector:pg16
     container_name: ailawyer-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ailawyer
-      POSTGRES_PASSWORD: ailawyer
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ailawyer}
       POSTGRES_DB: ailawyer
     ports:
       - "5432:5432"
@@ -110,14 +137,12 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── Redis (BullMQ + Socket.IO adapter) ──────────────────────────────────────
+  # ─── Redis ──────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: ailawyer-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory-policy noeviction --save 60 1000
-    ports:
-      - "6379:6379"
     volumes:
       - redisdata:/data
     healthcheck:
@@ -126,17 +151,16 @@ services:
       timeout: 3s
       retries: 5
 
-  # ─── MinIO (S3-compatible file storage) ──────────────────────────────────────
+  # ─── MinIO ──────────────────────────────────────────────────────────────────
   minio:
     image: minio/minio:latest
     container_name: ailawyer-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ailawyer
-      MINIO_ROOT_PASSWORD: ailawyer123
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-ailawyer}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-ailawyer123}
     ports:
-      - "9000:9000"
       - "9001:9001"
     volumes:
       - miniodata:/data
@@ -146,16 +170,14 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── Meilisearch (full-text search) ──────────────────────────────────────────
+  # ─── Meilisearch ────────────────────────────────────────────────────────────
   meilisearch:
     image: getmeili/meilisearch:v1.11
     container_name: ailawyer-meilisearch
     restart: unless-stopped
     environment:
-      MEILI_MASTER_KEY: ailawyer-meili-key
-      MEILI_ENV: development
-    ports:
-      - "7700:7700"
+      MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY:-ailawyer-meili-key}
+      MEILI_ENV: production
     volumes:
       - meilidata:/meili_data
     healthcheck:
@@ -164,14 +186,14 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── OnlyOffice Document Server ──────────────────────────────────────────────
+  # ─── OnlyOffice ─────────────────────────────────────────────────────────────
   onlyoffice:
     image: onlyoffice/documentserver:latest
     container_name: ailawyer-onlyoffice
     restart: unless-stopped
     environment:
       JWT_ENABLED: "true"
-      JWT_SECRET: dev-onlyoffice-secret
+      JWT_SECRET: ${ONLYOFFICE_SECRET:-changeme}
       JWT_HEADER: Authorization
       JWT_IN_BODY: "true"
       ALLOW_PRIVATE_IP_ADDRESS: "true"
@@ -188,13 +210,11 @@ services:
       retries: 5
       start_period: 60s
 
-  # ─── Stirling-PDF (OCR + document conversion) ───────────────────────────────
+  # ─── Stirling-PDF ───────────────────────────────────────────────────────────
   stirling-pdf:
     image: stirlingtools/stirling-pdf:latest
     container_name: ailawyer-stirling-pdf
     restart: unless-stopped
-    ports:
-      - "8081:8080"
     environment:
       DOCKER_ENABLE_SECURITY: "false"
       SYSTEM_DEFAULTLOCALE: de-DE
@@ -215,28 +235,11 @@ services:
       retries: 3
       start_period: 60s
 
-  # ─── LanguageTool (optional — activate with: docker compose --profile full up)
-  languagetool:
-    image: erikvl87/languagetool:latest
-    container_name: ailawyer-languagetool
-    restart: unless-stopped
-    profiles: ["full"]
-    ports:
-      - "8010:8010"
-    environment:
-      Java_Xms: 512m
-      Java_Xmx: 1g
-      langtool_languageModel: /ngrams
-    volumes:
-      - languagetool_ngrams:/ngrams
-
-  # ─── Ollama (local LLM inference) ───────────────────────────────────────────
+  # ─── Ollama ─────────────────────────────────────────────────────────────────
   ollama:
     image: ollama/ollama:latest
     container_name: ailawyer-ollama
     restart: unless-stopped
-    ports:
-      - "11434:11434"
     environment:
       OLLAMA_HOST: "0.0.0.0"
     volumes:
@@ -264,5 +267,4 @@ volumes:
   stirling_configs:
   stirling_logs:
   stirling_tessdata:
-  languagetool_ngrams:
   ollama_data:

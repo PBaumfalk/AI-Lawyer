@@ -6,6 +6,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
@@ -13,6 +14,7 @@ ok()   { echo -e "${GREEN}✓${NC} $1"; }
 info() { echo -e "${BLUE}→${NC} $1"; }
 warn() { echo -e "${YELLOW}!${NC} $1"; }
 fail() { echo -e "${RED}✗ $1${NC}"; exit 1; }
+ask()  { echo -e "${CYAN}?${NC} $1"; }
 
 echo ""
 echo -e "${BOLD}AI-Lawyer Setup${NC}"
@@ -35,44 +37,7 @@ ok "Docker daemon running"
 
 echo ""
 
-# ─── .env ─────────────────────────────────────────────────────────────────────
-if [ -f ".env" ]; then
-  warn ".env already exists — skipping. Edit it manually if needed."
-else
-  info "Creating .env from .env.example..."
-  cp .env.example .env
-
-  # Generate NEXTAUTH_SECRET
-  if command -v openssl >/dev/null 2>&1; then
-    SECRET=$(openssl rand -base64 32)
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-      sed -i '' "s|your-secret-here-change-in-production|${SECRET}|g" .env
-    else
-      sed -i "s|your-secret-here-change-in-production|${SECRET}|g" .env
-    fi
-    ok "NEXTAUTH_SECRET generated"
-  else
-    warn "openssl not found — NEXTAUTH_SECRET not auto-generated. Set it manually in .env"
-  fi
-
-  # Generate EMAIL_ENCRYPTION_KEY
-  if command -v openssl >/dev/null 2>&1; then
-    ENC_KEY=$(openssl rand -hex 32)
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-      sed -i '' "s|your-random-32-char-encryption-key-here|${ENC_KEY}|g" .env
-    else
-      sed -i "s|your-random-32-char-encryption-key-here|${ENC_KEY}|g" .env
-    fi
-    ok "EMAIL_ENCRYPTION_KEY generated"
-  fi
-
-  ok ".env created"
-fi
-
-echo ""
-
 # ─── Disk space ───────────────────────────────────────────────────────────────
-info "Checking available disk space..."
 AVAILABLE_GB=$(df -BG . | awk 'NR==2 {gsub("G",""); print $4}')
 if [ "$AVAILABLE_GB" -lt 15 ]; then
   warn "Less than 15 GB free (${AVAILABLE_GB} GB). Docker images + Ollama model require ~15-20 GB."
@@ -82,8 +47,112 @@ fi
 
 echo ""
 
+# ─── Interactive configuration ────────────────────────────────────────────────
+if [ -f ".env" ]; then
+  warn ".env already exists."
+  ask "Overwrite and reconfigure? [y/N]"
+  read -r OVERWRITE
+  if [[ ! "$OVERWRITE" =~ ^[Yy]$ ]]; then
+    echo ""
+    info "Keeping existing .env — skipping configuration."
+    echo ""
+    SKIP_CONFIG=true
+  fi
+fi
+
+if [ "$SKIP_CONFIG" != "true" ]; then
+  echo -e "${BOLD}Configuration${NC}"
+  echo "──────────────────────────────────────"
+  echo ""
+
+  # App URL
+  ask "App URL (default: http://localhost:3000):"
+  read -r INPUT_URL
+  APP_URL="${INPUT_URL:-http://localhost:3000}"
+  ok "App URL: $APP_URL"
+  echo ""
+
+  # AI Provider
+  echo -e "  AI provider:"
+  echo -e "  ${BOLD}1)${NC} Ollama (local, kostenlos, kein API-Key nötig) ${GREEN}[empfohlen]${NC}"
+  echo -e "  ${BOLD}2)${NC} OpenAI (GPT-4o, benötigt API-Key)"
+  echo -e "  ${BOLD}3)${NC} Anthropic (Claude, benötigt API-Key)"
+  ask "Wahl [1/2/3] (default: 1):"
+  read -r AI_CHOICE
+
+  case "$AI_CHOICE" in
+    2)
+      AI_PROVIDER="openai"
+      AI_MODEL="gpt-4o"
+      ask "OpenAI API-Key (sk-...):"
+      read -r OPENAI_KEY
+      [ -z "$OPENAI_KEY" ] && warn "Kein API-Key eingegeben — kann später in .env gesetzt werden."
+      ;;
+    3)
+      AI_PROVIDER="anthropic"
+      AI_MODEL="claude-sonnet-4-6"
+      ask "Anthropic API-Key (sk-ant-...):"
+      read -r ANTHROPIC_KEY
+      [ -z "$ANTHROPIC_KEY" ] && warn "Kein API-Key eingegeben — kann später in .env gesetzt werden."
+      ;;
+    *)
+      AI_PROVIDER="ollama"
+      AI_MODEL="mistral:7b"
+      ;;
+  esac
+  ok "AI Provider: $AI_PROVIDER ($AI_MODEL)"
+  echo ""
+
+  # Generate secrets
+  if command -v openssl >/dev/null 2>&1; then
+    NEXTAUTH_SECRET=$(openssl rand -base64 32)
+    EMAIL_ENC_KEY=$(openssl rand -hex 32)
+    ONLYOFFICE_SECRET=$(openssl rand -base64 24 | tr -d '/+=')
+  else
+    warn "openssl nicht gefunden — Secrets werden als Platzhalter gesetzt. Bitte manuell in .env ändern."
+    NEXTAUTH_SECRET="change-me-$(date +%s)"
+    EMAIL_ENC_KEY="change-me-$(date +%s)-32charkey-placeholder"
+    ONLYOFFICE_SECRET="change-me-onlyoffice"
+  fi
+
+  # Write .env
+  cp .env.example .env
+
+  SED_CMD="sed -i"
+  [[ "$OSTYPE" == "darwin"* ]] && SED_CMD="sed -i ''"
+
+  $SED_CMD "s|NEXTAUTH_URL=.*|NEXTAUTH_URL=\"${APP_URL}\"|" .env
+  $SED_CMD "s|your-secret-here-change-in-production|${NEXTAUTH_SECRET}|" .env
+  $SED_CMD "s|your-random-32-char-encryption-key-here|${EMAIL_ENC_KEY}|" .env
+  $SED_CMD "s|your-onlyoffice-secret|${ONLYOFFICE_SECRET}|" .env
+  $SED_CMD "s|^AI_PROVIDER=.*|AI_PROVIDER=\"${AI_PROVIDER}\"|" .env
+  $SED_CMD "s|^AI_MODEL=.*|AI_MODEL=\"${AI_MODEL}\"|" .env
+
+  [ -n "$OPENAI_KEY" ]    && $SED_CMD "s|OPENAI_API_KEY=.*|OPENAI_API_KEY=\"${OPENAI_KEY}\"|" .env
+  [ -n "$ANTHROPIC_KEY" ] && $SED_CMD "s|ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=\"${ANTHROPIC_KEY}\"|" .env
+
+  ok ".env erstellt"
+  echo ""
+fi
+
+# ─── Summary before building ──────────────────────────────────────────────────
+echo -e "${BOLD}Bereit zum Starten${NC}"
+echo "──────────────────────────────────────"
+echo -e "  URL:         ${APP_URL:-$(grep NEXTAUTH_URL .env | cut -d'"' -f2)}"
+echo -e "  AI Provider: ${AI_PROVIDER:-$(grep ^AI_PROVIDER .env | cut -d'"' -f2)}"
+echo ""
+ask "Jetzt bauen und starten? [Y/n]"
+read -r CONFIRM
+if [[ "$CONFIRM" =~ ^[Nn]$ ]]; then
+  echo ""
+  info "Abgebrochen. Starte manuell mit: docker compose up -d"
+  exit 0
+fi
+
+echo ""
+
 # ─── Build & Start ────────────────────────────────────────────────────────────
-info "Building Docker images (this may take 5-10 minutes on first run)..."
+info "Building Docker images (erster Build dauert 5-10 Minuten)..."
 docker compose build
 
 echo ""
@@ -93,7 +162,7 @@ docker compose up -d
 echo ""
 
 # ─── Wait for app ─────────────────────────────────────────────────────────────
-info "Waiting for app to become healthy..."
+info "Warte auf App-Healthcheck..."
 ATTEMPTS=0
 MAX_ATTEMPTS=60
 
@@ -103,31 +172,35 @@ while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
     break
   fi
   ATTEMPTS=$((ATTEMPTS + 1))
-  printf "\r  Waiting... (%ds)" $((ATTEMPTS * 5))
+  printf "\r  %ds..." $((ATTEMPTS * 5))
   sleep 5
 done
 
 echo ""
 
 if [ "$STATUS" = "healthy" ]; then
-  ok "App is healthy"
+  ok "App ist healthy"
 else
-  warn "App health check timed out. Check logs: docker compose logs app"
+  warn "Healthcheck-Timeout. Logs prüfen: docker compose logs app"
 fi
 
 echo ""
 
-# ─── Summary ──────────────────────────────────────────────────────────────────
-echo -e "${BOLD}Setup complete.${NC}"
+# ─── Done ─────────────────────────────────────────────────────────────────────
+FINAL_URL=$(grep NEXTAUTH_URL .env | cut -d'"' -f2 | head -1)
+[ -z "$FINAL_URL" ] && FINAL_URL="http://localhost:3000"
+
+echo -e "${BOLD}Fertig.${NC}"
 echo ""
-echo -e "  App:           ${GREEN}http://localhost:3000${NC}"
-echo -e "  MinIO Console: http://localhost:9001"
-echo -e "  OnlyOffice:    http://localhost:8080"
+echo -e "  App:           ${GREEN}${FINAL_URL}${NC}"
+echo -e "  MinIO Console: ${FINAL_URL%:*}:9001"
 echo ""
-echo -e "  Login:    ${BOLD}admin@kanzlei-baumfalk.de${NC}"
-echo -e "  Passwort: ${BOLD}password123${NC}"
+echo -e "  ${BOLD}Zugangsdaten${NC}"
+echo -e "  admin@kanzlei.de          → ADMIN"
+echo -e "  anwalt@kanzlei.de         → ANWALT"
+echo -e "  sachbearbeiter@kanzlei.de → SACHBEARBEITER"
+echo -e "  Passwort: ${BOLD}password123${NC} (bitte nach Login ändern)"
 echo ""
-echo -e "${YELLOW}Hinweis:${NC} Ollama lädt das Sprachmodell (mistral:7b) beim ersten Start herunter."
-echo -e "         Das kann je nach Verbindung 5-15 Minuten dauern."
+echo -e "${YELLOW}Hinweis:${NC} Ollama lädt mistral:7b beim ersten Start herunter (5-15 Min)."
 echo -e "         Fortschritt: ${BOLD}docker compose logs -f ollama${NC}"
 echo ""

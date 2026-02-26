@@ -26,10 +26,10 @@ async function main() {
   const passwordHash = await bcrypt.hash("password123", 12);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@kanzlei-baumfalk.de" },
+    where: { email: "admin@kanzlei.de" },
     update: {},
     create: {
-      email: "admin@kanzlei-baumfalk.de",
+      email: "admin@kanzlei.de",
       name: "Patrick Baumfalk",
       passwordHash,
       role: UserRole.ADMIN,
@@ -39,10 +39,10 @@ async function main() {
   });
 
   const anwalt = await prisma.user.upsert({
-    where: { email: "anwalt@kanzlei-baumfalk.de" },
+    where: { email: "anwalt@kanzlei.de" },
     update: {},
     create: {
-      email: "anwalt@kanzlei-baumfalk.de",
+      email: "anwalt@kanzlei.de",
       name: "Dr. Maria Schmidt",
       passwordHash,
       role: UserRole.ANWALT,
@@ -52,10 +52,10 @@ async function main() {
   });
 
   const sachbearbeiter = await prisma.user.upsert({
-    where: { email: "sachbearbeiter@kanzlei-baumfalk.de" },
+    where: { email: "sachbearbeiter@kanzlei.de" },
     update: {},
     create: {
-      email: "sachbearbeiter@kanzlei-baumfalk.de",
+      email: "sachbearbeiter@kanzlei.de",
       name: "Anna Meier",
       passwordHash,
       role: UserRole.SACHBEARBEITER,
@@ -355,7 +355,7 @@ async function main() {
   console.log(`   - 1 Akte mit 3 Beteiligten`);
   console.log(`   - 2 Kalendereintraege (Frist + Termin)`);
   console.log(`   - 7 E-Mails (Beispiel-Posteingang)`);
-  console.log(`\n   Login: admin@kanzlei-baumfalk.de / password123`);
+  console.log(`\n   Login: admin@kanzlei.de / password123`);
 }
 
 main()

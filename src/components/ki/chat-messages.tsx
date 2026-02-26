@@ -76,12 +76,14 @@ export function ChatMessages({
       content: m.content,
       sources: m.sources,
     })),
-    ...messages.map((m) => ({
-      id: m.id,
-      role: m.role as "user" | "assistant",
-      content: typeof m.content === "string" ? m.content : "",
-      sources: undefined as SourceData[] | undefined,
-    })),
+    ...messages
+      .filter((m) => !(isLoading && m.role === "assistant" && !m.content))
+      .map((m) => ({
+        id: m.id,
+        role: m.role as "user" | "assistant",
+        content: typeof m.content === "string" ? m.content : "",
+        sources: undefined as SourceData[] | undefined,
+      })),
   ];
 
   // Empty state

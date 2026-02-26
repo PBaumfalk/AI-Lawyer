@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { GlassKpiCard } from "@/components/ui/glass-kpi-card";
 import { GlassCard } from "@/components/ui/glass-card";
+import { GlassPanel } from "@/components/ui/glass-panel";
 import { Tagesuebersicht } from "@/components/fristen/tagesuebersicht";
 
 export default async function DashboardPage() {
@@ -98,7 +99,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Willkommen, {session?.user?.name?.split(" ")[0]}
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -107,132 +108,146 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <GlassKpiCard
-          title="Offene Akten"
-          value={offeneAkten}
-          icon={FolderOpen}
-          color="blue"
-        />
-        <GlassKpiCard
-          title="Fristen heute"
-          value={fristenHeute}
-          icon={Clock}
-          color="amber"
-        />
-        <GlassKpiCard
-          title="Überfällige Fristen"
-          value={ueberfaelligeFristen}
-          icon={AlertTriangle}
-          color="rose"
-        />
-        <GlassKpiCard
-          title="Erledigt (30 Tage)"
-          value={erledigteAufgaben}
-          icon={CheckCircle2}
-          color="emerald"
-        />
-      </div>
+      <section className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <GlassKpiCard
+            title="Offene Akten"
+            value={offeneAkten}
+            icon={FolderOpen}
+            color="blue"
+          />
+          <GlassKpiCard
+            title="Fristen heute"
+            value={fristenHeute}
+            icon={Clock}
+            color="amber"
+          />
+          <GlassKpiCard
+            title="Überfällige Fristen"
+            value={ueberfaelligeFristen}
+            icon={AlertTriangle}
+            color="rose"
+          />
+          <GlassKpiCard
+            title="Erledigt (30 Tage)"
+            value={erledigteAufgaben}
+            icon={CheckCircle2}
+            color="emerald"
+          />
+        </div>
+      </section>
 
-      {/* Tagesuebersicht -- the first thing an attorney checks */}
-      <Tagesuebersicht />
+      {/* Tagesuebersicht -- wrapped in GlassPanel */}
+      <GlassPanel elevation="panel">
+        <Tagesuebersicht />
+      </GlassPanel>
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Cases */}
-        <GlassCard className="p-6">
-          <h2 className="text-lg font-heading text-foreground mb-4">
-            Zuletzt bearbeitete Akten
-          </h2>
-          {letzteAkten.length === 0 ? (
-            <div className="text-sm text-muted-foreground py-8 text-center">
-              Noch keine Akten vorhanden.
-              <br />
-              <Link
-                href="/akten/neu"
-                className="text-brand-600 hover:underline mt-1 inline-block"
-              >
-                Erste Akte anlegen
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {letzteAkten.map((akte) => (
+        <GlassCard className="p-0">
+          <div className="px-6 py-4 border-b border-[var(--glass-border-color)]">
+            <h2 className="text-lg font-semibold text-foreground">
+              Zuletzt bearbeitete Akten
+            </h2>
+          </div>
+          <div className="p-6">
+            {letzteAkten.length === 0 ? (
+              <div className="text-sm text-muted-foreground py-8 text-center">
+                Noch keine Akten vorhanden.
+                <br />
                 <Link
-                  key={akte.id}
-                  href={`/akten/${akte.id}`}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-white/30 dark:hover:bg-white/[0.05] transition-colors -mx-1"
+                  href="/akten/neu"
+                  className="text-brand-600 hover:underline mt-1 inline-block"
                 >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-brand-600">
-                        {akte.aktenzeichen}
-                      </span>
-                      <span
-                        className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusColor[akte.status] ?? ""}`}
-                      >
-                        {akte.status}
-                      </span>
-                    </div>
-                    <p className="text-sm font-medium text-foreground truncate mt-0.5">
-                      {akte.kurzrubrum}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {akte.anwalt?.name ?? "Kein Anwalt"} &middot;{" "}
-                      {akte._count.dokumente} Dok. &middot;{" "}
-                      {akte._count.kalenderEintraege} Termine
-                    </p>
-                  </div>
+                  Erste Akte anlegen
                 </Link>
-              ))}
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {letzteAkten.map((akte, i) => (
+                  <Link
+                    key={akte.id}
+                    href={`/akten/${akte.id}`}
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-white/30 dark:hover:bg-white/[0.05] transition-colors -mx-1 list-item-in"
+                    style={i < 10 ? { animationDelay: `${i * 50}ms` } : undefined}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-brand-600">
+                          {akte.aktenzeichen}
+                        </span>
+                        <span
+                          className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusColor[akte.status] ?? ""}`}
+                        >
+                          {akte.status}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground truncate mt-0.5">
+                        {akte.kurzrubrum}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {akte.anwalt?.name ?? "Kein Anwalt"} &middot;{" "}
+                        {akte._count.dokumente} Dok. &middot;{" "}
+                        {akte._count.kalenderEintraege} Termine
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </GlassCard>
 
         {/* Upcoming Deadlines */}
-        <GlassCard className="p-6">
-          <h2 className="text-lg font-heading text-foreground mb-4">
-            Anstehende Fristen & Termine
-          </h2>
-          {anstehendeFristen.length === 0 ? (
-            <div className="text-sm text-muted-foreground py-8 text-center">
-              Keine anstehenden Fristen oder Termine.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {anstehendeFristen.map((eintrag) => (
-                <div
-                  key={eintrag.id}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/30 dark:hover:bg-white/[0.05] transition-colors -mx-1"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${typColor[eintrag.typ] ?? ""}`}
-                      >
-                        {eintrag.typ}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(eintrag.datum).toLocaleDateString("de-DE", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </div>
-                    <p className="text-sm font-medium text-foreground mt-0.5">
-                      {eintrag.titel}
-                    </p>
-                    {eintrag.akte && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {eintrag.akte.aktenzeichen} – {eintrag.akte.kurzrubrum}
+        <GlassCard className="p-0">
+          <div className="px-6 py-4 border-b border-[var(--glass-border-color)]">
+            <h2 className="text-lg font-semibold text-foreground">
+              Anstehende Fristen &amp; Termine
+            </h2>
+          </div>
+          <div className="p-6">
+            {anstehendeFristen.length === 0 ? (
+              <div className="text-sm text-muted-foreground py-8 text-center">
+                Keine anstehenden Fristen oder Termine.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {anstehendeFristen.map((eintrag, i) => (
+                  <div
+                    key={eintrag.id}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/30 dark:hover:bg-white/[0.05] transition-colors -mx-1 list-item-in"
+                    style={i < 10 ? { animationDelay: `${i * 50}ms` } : undefined}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${typColor[eintrag.typ] ?? ""}`}
+                        >
+                          {eintrag.typ}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(eintrag.datum).toLocaleDateString("de-DE", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground mt-0.5">
+                        {eintrag.titel}
                       </p>
-                    )}
+                      {eintrag.akte && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {eintrag.akte.aktenzeichen} – {eintrag.akte.kurzrubrum}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </GlassCard>
       </div>
     </div>

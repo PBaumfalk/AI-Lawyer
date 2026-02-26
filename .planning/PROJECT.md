@@ -127,20 +127,46 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- v0.1 scope — deferred from v3.5 -->
+<!-- v0.1 scope — Helena RAG-Erweiterung -->
 
-**Falldatenblätter:**
-- [ ] Generisches Framework für Rechtsgebiet-spezifische Felder (Konfiguration, nicht hart codiert)
-- [ ] Mindestens 3 Beispiel-Schemata (Arbeitsrecht, Familienrecht, Verkehrsrecht)
+**RAG Pipeline Quality:**
+- [ ] Hybrid Search (Meilisearch BM25 + pgvector via RRF)
+- [ ] Parent-Child Chunking (500-Token Embedding, 2.000-Token Prompt)
+- [ ] Cross-Encoder Reranking via Ollama
 
-**BI-Dashboard:**
-- [ ] Standard-KPI-Kacheln (Neue Akten/Monat, offene Posten, fällige Fristen, Umsatz/Monat)
-- [ ] RBAC-geschützt (nur ADMIN + ANWALT)
+**Gesetze-RAG:**
+- [ ] bundestag/gesetze in law_chunks (täglich sync)
+- [ ] Helena retrievet Normen automatisch bei Rechtsfragen
+- [ ] Normen-Verknüpfung in Akte-UI
 
-**Export:**
-- [ ] CSV + XLSX Export für Akten, Kontakte, Finanzdaten
+**Urteile-RAG:**
+- [ ] BMJ Rechtsprechung-im-Internet in urteil_chunks
+- [ ] NER PII-Filter via Ollama
+- [ ] BAG RSS-Feed (Arbeitsrecht)
+- [ ] Helena zitiert Urteile mit Quellennachweis
 
-## Future (post v3.6)
+**Arbeitswissen-RAG:**
+- [ ] Amtliche Formulare in muster_chunks
+- [ ] Admin-Upload UI (MinIO, nie Git)
+- [ ] PII-Anonymisierung kanzlei-eigener Muster
+- [ ] Helena erstellt Schriftsatz-Entwürfe
+
+## Current Milestone: v0.1 Helena RAG
+
+**Goal:** Helena mit drei Wissensquellen ausstatten — Gesetze, Urteile, Schriftsatzmuster — und die RAG-Pipeline durch Hybrid Search, Parent-Child Chunking und Cross-Encoder Reranking auf NotebookLM-Qualität heben.
+
+**Target features:**
+- Hybrid Search + Reranking für alle Helena-Retrievals
+- Gesetze-RAG (bundestag/gesetze, tägl. Sync, Normen-Verknüpfung in Akte)
+- Urteile-RAG (BMJ, NER PII-Filter via Ollama, BAG RSS, Quellennachweis)
+- Arbeitswissen-RAG (amtliche Formulare + kanzlei-eigene Muster in MinIO)
+
+## Future (post v0.1)
+
+**Falldatenblätter, BI-Dashboard, Export (aus v3.5 TODOs):**
+- [ ] Rechtsgebiet-spezifische Feldschemas (Admin-UI + dynamisches Formular)
+- [ ] KPI-Kacheln (Neue Akten, offene Posten, Fristen, Umsatz)
+- [ ] CSV/XLSX Export für Akten, Kontakte, Finanzdaten
 
 **Mandantenportal:**
 - [ ] Freigegebene Dokumente einsehen/herunterladen
@@ -235,4 +261,4 @@ Minor tech debt: 62× font-heading in sub-components, 77× .glass alias in sub-c
 | CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending (v3.6+) |
 
 ---
-*Last updated: 2026-02-26 after v3.5 milestone*
+*Last updated: 2026-02-26 after v0.1 milestone start*

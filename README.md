@@ -184,4 +184,4 @@ npm run lint          # ESLint
 
 ## Lizenz
 
-Proprietär — Kanzlei Baumfalk, Dortmund. Alle Rechte vorbehalten.
+[MIT License](LICENSE) — Copyright (c) 2026 Patrick Baumfalk

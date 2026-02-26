@@ -148,7 +148,7 @@ export function ChatLayout({
         {/* Messages area */}
         <div className="flex-1 overflow-hidden">
           <ChatMessages
-            key={`${selectedConversationId ?? "new"}-${refreshKey}`}
+            key={selectedConversationId ?? "new"}
             akteId={selectedAkteId}
             conversationId={selectedConversationId}
             crossAkte={crossAkte}

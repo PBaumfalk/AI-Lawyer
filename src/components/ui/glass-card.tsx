@@ -1,21 +1,29 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 
-interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Use heavier glass backdrop (more opaque) */
+export interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Visual variant: default (16px blur) or elevated (40px blur) */
+  variant?: "default" | "elevated";
+  /** @deprecated Use variant="elevated" instead */
   heavy?: boolean;
 }
 
 export function GlassCard({
   className,
+  variant,
   heavy,
   children,
   ...props
 }: GlassCardProps) {
+  // backward-compat: heavy prop maps to elevated variant
+  const resolvedVariant = variant ?? (heavy ? "elevated" : "default");
+
   return (
     <div
       className={cn(
         "rounded-xl",
-        heavy ? "glass-heavy" : "glass",
+        resolvedVariant === "elevated" ? "glass-panel-elevated" : "glass-card",
         className
       )}
       {...props}

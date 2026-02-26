@@ -63,6 +63,81 @@ export async function POST(req: NextRequest) {
     return new Response("Keine Nachrichten", { status: 400 });
   }
 
+  // ---------------------------------------------------------------------------
+  // Fetch structured Akte data for context (when akteId is provided)
+  // ---------------------------------------------------------------------------
+
+  let aktenKontextBlock = "";
+
+  if (akteId) {
+    try {
+      const akte = await prisma.akte.findUnique({
+        where: { id: akteId },
+        include: {
+          beteiligte: { include: { kontakt: true } },
+          kalenderEintraege: {
+            where: { erledigt: false, datum: { gte: new Date() } },
+            orderBy: { datum: "asc" },
+            take: 10,
+          },
+        },
+      });
+
+      if (akte) {
+        const formatBeteiligter = (b: {
+          rolle: string;
+          kontakt: {
+            vorname?: string | null;
+            nachname?: string | null;
+            firma?: string | null;
+          };
+        }) => {
+          const name =
+            b.kontakt.firma ??
+            [b.kontakt.vorname, b.kontakt.nachname].filter(Boolean).join(" ") ??
+            "Unbekannt";
+          return `- ${name} (${b.rolle})`;
+        };
+
+        const beteiligteLines =
+          akte.beteiligte.length > 0
+            ? akte.beteiligte.map(formatBeteiligter).join("\n")
+            : "- (keine Beteiligten erfasst)";
+
+        const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+
+        const terminLines =
+          akte.kalenderEintraege.length > 0
+            ? akte.kalenderEintraege
+                .map((e) => {
+                  const flags = [e.typ, e.istNotfrist ? "NOTFRIST" : null]
+                    .filter(Boolean)
+                    .join(", ");
+                  return `- ${formatDate(e.datum)}: ${e.titel} (${flags})`;
+                })
+                .join("\n")
+            : "- (keine anstehenden Fristen/Termine)";
+
+        aktenKontextBlock = `\n\n--- AKTEN-KONTEXT ---
+Aktenzeichen: ${akte.aktenzeichen}
+Rubrum: ${akte.kurzrubrum}
+Wegen: ${akte.wegen ?? "—"}
+Sachgebiet: ${akte.sachgebiet}
+Status: ${akte.status}
+
+Beteiligte:
+${beteiligteLines}
+
+Anstehende Fristen/Termine (nächste 10):
+${terminLines}
+--- ENDE AKTEN-KONTEXT ---`;
+      }
+    } catch (err) {
+      // Non-fatal — continue without structured context
+      console.error("[ki-chat] Akte context fetch failed:", err);
+    }
+  }
+
   // Get the last user message for RAG retrieval
   const lastUserMessage = [...messages]
     .reverse()
@@ -111,7 +186,7 @@ export async function POST(req: NextRequest) {
   // Build system prompt with sources
   // ---------------------------------------------------------------------------
 
-  let systemPrompt = SYSTEM_PROMPT_BASE;
+  let systemPrompt = SYSTEM_PROMPT_BASE + aktenKontextBlock;
 
   if (confidenceFlag === "none") {
     systemPrompt += NO_SOURCES_INSTRUCTION;

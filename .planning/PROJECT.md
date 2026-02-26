@@ -127,7 +127,7 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- v3.6 scope — deferred from v3.5 -->
+<!-- v0.1 scope — deferred from v3.5 -->
 
 **Falldatenblätter:**
 - [ ] Generisches Framework für Rechtsgebiet-spezifische Felder (Konfiguration, nicht hart codiert)

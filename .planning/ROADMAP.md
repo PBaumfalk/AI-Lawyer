@@ -4,7 +4,7 @@
 
 - ✅ **v3.4 Full-Featured Kanzleisoftware** — Phases 1-9 (shipped 2026-02-25)
 - ✅ **v3.5 Production Ready** — Phases 10-11 (shipped 2026-02-26)
-- 📋 **v3.6** — TBD
+- 📋 **v0.1** — TBD
 
 ## Phases
 
@@ -43,7 +43,7 @@ See: `milestones/v3.5-ROADMAP.md` for full phase details.
 
 </details>
 
-### 📋 v3.6 (Planned)
+### 📋 v0.1 (Planned)
 
 - [ ] **Phase 12: Falldatenblätter** — Rechtsgebiet-spezifische Feldschemas, Admin-UI, dynamisches Formular
 - [ ] **Phase 13: BI-Dashboard** — KPI-Kacheln (Akten/Monat, offene Posten, Fristen, Umsatz), ADMIN+ANWALT only

@@ -18,7 +18,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v3.5 SHIPPED — next milestone v3.6 (Falldatenblaetter, BI-Dashboard, Export)
+**Current focus:** v3.5 SHIPPED — next milestone v0.1 (Falldatenblaetter, BI-Dashboard, Export)
 
 ## Current Position
 
@@ -67,4 +67,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: v3.5 milestone complete — archived, tagged, committed. Ready for /gsd:new-milestone v3.6
+Stopped at: v3.5 milestone complete — archived, tagged, committed. Ready for /gsd:new-milestone v0.1

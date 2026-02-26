@@ -18,11 +18,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v3.5 Production Ready -- Phase 11: Glass UI Migration (gap closure complete)
+**Current focus:** v3.5 Production Ready -- Phase 11 complete, next: Phase 12 (BI-Dashboard)
 
 ## Current Position
 
-Phase: 11 of 13 (Glass UI Migration)
+Phase: 11 of 12 (Glass UI Migration)
 Plan: 7 of 7 completed
 Status: Phase complete (all SC satisfied including SC4 and SC7)
 Last activity: 2026-02-26 -- Completed Plan 07 (Gap Closure - KalenderListe + 3 deferred admin/email pages)
@@ -42,9 +42,8 @@ Progress: [###########################░░░] 78%
 |-------|-------|-------|----------|
 | 10. Docker Build Fix | 3/3 | ~60min | ~20min |
 | 11. Glass UI Migration | 7/7 | ~27min | ~4min |
-| 12. Falldatenblaetter | 0/? | - | - |
-| 13. BI-Dashboard | 0/? | - | - |
-| 14. Export | 0/? | - | - |
+| 12. BI-Dashboard | 0/? | - | - |
+| 13. Export | 0/? | - | - |
 
 ## Accumulated Context
 
@@ -110,4 +109,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 11-07-PLAN.md (Gap Closure — Phase 11 fully complete, all SC satisfied)
+Stopped at: Session resumed — removed Phase 12 (Falldatenblaetter) to TODO, renumbered BI-Dashboard → Phase 12, Export → Phase 13

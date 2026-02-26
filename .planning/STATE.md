@@ -18,7 +18,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v3.5 Production Ready -- Phase 11 complete, next: Phase 12 (BI-Dashboard)
+**Current focus:** v3.5 Production Ready -- Phase 11 complete, next: Phase 12 (Export)
 
 ## Current Position
 
@@ -42,8 +42,7 @@ Progress: [###########################░░░] 78%
 |-------|-------|-------|----------|
 | 10. Docker Build Fix | 3/3 | ~60min | ~20min |
 | 11. Glass UI Migration | 7/7 | ~27min | ~4min |
-| 12. BI-Dashboard | 0/? | - | - |
-| 13. Export | 0/? | - | - |
+| 12. Export | 0/? | - | - |
 
 ## Accumulated Context
 
@@ -94,13 +93,14 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-5 todos pending.
+6 todos pending.
 
 - **Improve Helena RAG pipeline with hybrid search and reranking** (area: api) — Hybrid Search (Meilisearch + pgvector), Cross-Encoder Reranking, Parent-Child Chunking. Datei: .planning/todos/pending/2026-02-26-improve-helena-rag-pipeline-with-hybrid-search-and-reranking.md
 - **Gesetze-RAG für Helena und Normen-Verknüpfung an Akten** (area: api) — .planning/todos/pending/2026-02-26-gesetze-rag-f-r-helena-und-normen-verkn-pfung-an-akten.md
 - **Urteile-RAG für Helena mit PII-Filter und Quellen-Ingestion** (area: api) — .planning/todos/pending/2026-02-26-urteile-rag-f-r-helena-mit-pii-filter-und-quellen-ingestion.md
 - **Arbeitswissen-RAG für Helena — Formulare, Muster, Kosten, ERV** (area: api) — .planning/todos/pending/2026-02-26-arbeitswissen-rag-f-r-helena-formulare-muster-kosten-erv.md
 - **Falldatenblaetter per-Rechtsgebiet Feldschemas** (area: general) — Admin-UI für Feldschemas, dynamisches Rendering in Akte-Formular, Prisma-Modell. Datei: .planning/todos/pending/2026-02-26-falldatenblaetter-per-rechtsgebiet-feldschemas.md
+- **BI-Dashboard Geschaeftskennzahlen** (area: ui) — KPI-Tiles für Neue Akten, Offene Posten, Fällige Fristen, Umsatz; nur ADMIN/ANWALT. Datei: .planning/todos/pending/2026-02-26-bi-dashboard-geschaeftskennzahlen.md
 
 ### Blockers/Concerns
 

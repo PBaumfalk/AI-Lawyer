@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v3.5 Production Ready -- Phase 11: Glass UI Migration
+**Current focus:** v3.5 Production Ready -- Phase 11: Glass UI Migration (gap closure complete)
 
 ## Current Position
 
 Phase: 11 of 14 (Glass UI Migration)
-Plan: 6 of 6 completed
-Status: Phase complete
-Last activity: 2026-02-26 -- Completed Plan 06 (Final Glass UI Coverage - all remaining pages)
+Plan: 7 of 7 completed
+Status: Phase complete (all SC satisfied including SC4 and SC7)
+Last activity: 2026-02-26 -- Completed Plan 07 (Gap Closure - KalenderListe + 3 deferred admin/email pages)
 
 Progress: [###########################░░░] 78%
 
@@ -28,7 +28,7 @@ Progress: [###########################░░░] 78%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 10. Docker Build Fix | 3/3 | ~60min | ~20min |
-| 11. Glass UI Migration | 6/6 | ~24min | ~4min |
+| 11. Glass UI Migration | 7/7 | ~27min | ~4min |
 | 12. Falldatenblaetter | 0/? | - | - |
 | 13. BI-Dashboard | 0/? | - | - |
 | 14. Export | 0/? | - | - |
@@ -66,6 +66,7 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 - [11-06] admin/system/page.tsx and admin/settings/page.tsx replace Card+CardHeader+CardContent with GlassPanel + manual border-b dividers
 - [11-06] admin/pipeline/page.tsx QueueCard component refactored from Card to GlassCard — same visual hierarchy, glass-consistent
 - [11-06] glass-shimmer replaces animate-pulse bg-slate-* skeleton patterns in suche/page.tsx
+- [11-07] Gap closure: glass-card canonical class (not .glass alias) confirmed in KalenderListe and email/tickets; font-semibold canonical heading weight confirmed across all 7 plans
 
 - [10-01] Use NEXT_PHASE env var to detect build-time SSR and skip pino-roll file transport
 - [10-01] Add force-dynamic to health route to prevent static generation timeout on Redis
@@ -92,4 +93,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 11-06-PLAN.md (Final Glass UI Coverage — Phase 11 complete)
+Stopped at: Completed 11-07-PLAN.md (Gap Closure — Phase 11 fully complete, all SC satisfied)

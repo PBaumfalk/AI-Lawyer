@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 interface TagKategorie {
   id: string;
@@ -180,7 +181,7 @@ export default function DokumentTagsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Dokument-Tags
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -189,8 +190,8 @@ export default function DokumentTagsPage() {
       </div>
 
       {/* Tag list */}
-      <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08]">
-        <div className="p-4 border-b border-white/10 dark:border-white/[0.04] flex items-center justify-between">
+      <GlassPanel elevation="panel" className="overflow-hidden">
+        <div className="p-4 border-b border-[var(--glass-border-color)] flex items-center justify-between">
           <h2 className="text-sm font-medium text-foreground flex items-center gap-2">
             <Tag className="w-4 h-4" />
             Tag-Kategorien ({tags.length})
@@ -207,7 +208,7 @@ export default function DokumentTagsPage() {
 
         {/* Add form */}
         {showAddForm && (
-          <div className="p-4 border-b border-white/10 dark:border-white/[0.04] bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="p-4 border-b border-[var(--glass-border-color)] glass-card rounded-none">
             <div className="flex items-center gap-3">
               <input
                 type="color"
@@ -252,11 +253,11 @@ export default function DokumentTagsPage() {
 
         {/* Tag rows */}
         {tags.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-400">
+          <div className="p-8 text-center text-sm text-muted-foreground">
             Keine Tags vorhanden. Erstellen Sie den ersten Tag.
           </div>
         ) : (
-          <div className="divide-y divide-white/10 dark:divide-white/[0.04]">
+          <div className="divide-y divide-[var(--glass-border-color)]">
             {tags.map((tag) => (
               <div
                 key={tag.id}
@@ -347,7 +348,7 @@ export default function DokumentTagsPage() {
             ))}
           </div>
         )}
-      </div>
+      </GlassPanel>
     </div>
   );
 }

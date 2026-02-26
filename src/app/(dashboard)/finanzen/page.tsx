@@ -105,7 +105,7 @@ export default function FinanzenPage() {
           <GlassKpiCard
             title="Gesamtumsatz"
             value={loading ? "..." : formatEuro(summary.gesamtUmsatz)}
-            icon={TrendingUp}
+            icon={<TrendingUp className="w-5 h-5" />}
             color="emerald"
           />
         )}
@@ -113,19 +113,19 @@ export default function FinanzenPage() {
         <GlassKpiCard
           title="Offene Forderungen"
           value={loading ? "..." : formatEuro(summary.offeneForderungen)}
-          icon={Banknote}
+          icon={<Banknote className="w-5 h-5" />}
           color="blue"
         />
         <GlassKpiCard
           title="Ueberfaellige Rechnungen"
           value={loading ? "..." : String(summary.ueberfaelligeRechnungen)}
-          icon={Clock}
+          icon={<Clock className="w-5 h-5" />}
           color={summary.ueberfaelligeRechnungen > 0 ? "amber" : "emerald"}
         />
         <GlassKpiCard
           title="Fremdgeld-Warnungen"
           value={loading ? "..." : String(summary.fremdgeldWarnungen)}
-          icon={AlertTriangle}
+          icon={<AlertTriangle className="w-5 h-5" />}
           color={summary.fremdgeldWarnungen > 0 ? "rose" : "emerald"}
         />
       </div>

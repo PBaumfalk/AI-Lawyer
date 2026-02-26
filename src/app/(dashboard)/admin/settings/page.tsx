@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -9,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Save, Info } from "lucide-react";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 interface SettingItem {
   id: string;
@@ -100,7 +100,7 @@ export default function AdminSettingsPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-heading font-bold">Einstellungen</h1>
+        <h1 className="text-2xl font-semibold font-bold">Einstellungen</h1>
         <p className="text-muted-foreground text-sm mt-1">
           Laufzeit-Konfiguration ohne Neustart aendern
         </p>
@@ -117,11 +117,11 @@ export default function AdminSettingsPage() {
 
       {/* Settings groups */}
       {groups.map((group) => (
-        <Card key={group.category}>
-          <CardHeader>
-            <CardTitle className="text-lg">{group.label}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+        <GlassPanel key={group.category} elevation="panel" className="overflow-hidden">
+          <div className="px-6 py-4 border-b border-[var(--glass-border-color)]">
+            <h2 className="text-base font-semibold text-foreground">{group.label}</h2>
+          </div>
+          <div className="p-6 space-y-6">
             {group.settings.map((setting) => (
               <SettingField
                 key={setting.key}
@@ -132,8 +132,8 @@ export default function AdminSettingsPage() {
                 isSaving={saving[setting.key] || false}
               />
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </GlassPanel>
       ))}
 
       {groups.length === 0 && (

@@ -16,6 +16,8 @@ import {
   Pause,
   Timer,
 } from "lucide-react";
+import { GlassPanel } from "@/components/ui/glass-panel";
+import { GlassCard } from "@/components/ui/glass-card";
 
 interface QueueCounts {
   active: number;
@@ -144,7 +146,7 @@ export default function AdminJobsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold">Job-Monitor</h1>
+          <h1 className="text-2xl font-semibold font-bold">Job-Monitor</h1>
           <p className="text-muted-foreground text-sm mt-1">
             BullMQ Job-Queues ueberwachen und verwalten
           </p>
@@ -172,16 +174,16 @@ export default function AdminJobsPage() {
           const Icon = config.icon;
           const count = totalCounts[key as keyof typeof totalCounts] || 0;
           return (
-            <div
+            <GlassCard
               key={key}
-              className={`rounded-lg border p-3 ${config.color}`}
+              className={`p-3 ${config.color}`}
             >
               <div className="flex items-center gap-2 mb-1">
                 <Icon className="w-4 h-4" />
                 <span className="text-xs font-medium">{config.label}</span>
               </div>
               <p className="text-2xl font-bold">{count}</p>
-            </div>
+            </GlassCard>
           );
         })}
       </div>
@@ -189,9 +191,10 @@ export default function AdminJobsPage() {
       {/* Queue list */}
       <div className="space-y-3">
         {queues.map((queue) => (
-          <div
+          <GlassPanel
             key={queue.name}
-            className="rounded-lg border border-border/50 bg-card"
+            elevation="panel"
+            className="overflow-hidden"
           >
             {/* Queue header */}
             <button
@@ -233,7 +236,7 @@ export default function AdminJobsPage() {
 
             {/* Expanded queue details */}
             {expandedQueue === queue.name && (
-              <div className="border-t border-border/50 p-4 space-y-4">
+              <div className="border-t border-[var(--glass-border-color)] p-4 space-y-4">
                 {/* Status filter tabs */}
                 <div className="flex items-center gap-2 flex-wrap">
                   {Object.entries(statusConfig).map(([key, config]) => (
@@ -315,7 +318,7 @@ export default function AdminJobsPage() {
                 )}
               </div>
             )}
-          </div>
+          </GlassPanel>
         ))}
 
         {!loading && queues.length === 0 && (

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Check, X, ShieldCheck, ChevronDown, Wallet } from "lucide-react";
+import { GlassPanel } from "@/components/ui/glass-panel";
+import { GlassCard } from "@/components/ui/glass-card";
 
 interface PermissionMatrix {
   role: string;
@@ -125,7 +127,7 @@ export default function RollenPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+        <h1 className="text-2xl font-semibold font-bold flex items-center gap-2">
           <ShieldCheck className="w-6 h-6 text-brand-600" />
           Rollen und Berechtigungen
         </h1>
@@ -138,7 +140,7 @@ export default function RollenPage() {
       {/* Permission Matrix Table */}
       <div>
         <h2 className="text-lg font-semibold mb-3">Berechtigungsmatrix</h2>
-        <div className="overflow-x-auto border rounded-lg">
+        <GlassPanel elevation="panel" className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/50">
@@ -178,7 +180,7 @@ export default function RollenPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </GlassPanel>
       </div>
 
       {/* Per-User Overview */}
@@ -207,7 +209,7 @@ export default function RollenPage() {
         {selectedUser && (
           <div className="space-y-4">
             {/* User info card */}
-            <div className="border rounded-lg p-4 bg-card">
+            <GlassCard className="p-4">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold">
                   {selectedUser.name.charAt(0).toUpperCase()}
@@ -232,11 +234,11 @@ export default function RollenPage() {
                   </label>
                 )}
               </div>
-            </div>
+            </GlassCard>
 
             {/* Accessible Akten */}
             {selectedUser.accessibleAkten.length > 0 ? (
-              <div className="border rounded-lg overflow-hidden">
+              <GlassPanel elevation="panel" className="overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/50">
@@ -276,13 +278,13 @@ export default function RollenPage() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </GlassPanel>
             ) : (
-              <div className="text-center py-8 border rounded-lg text-muted-foreground">
+              <GlassPanel elevation="panel" className="p-8 text-center text-muted-foreground">
                 {selectedUser.role === "ADMIN"
                   ? "Administratoren haben Zugriff auf alle Akten."
                   : "Dieser Benutzer hat keinen Zugriff auf spezifische Akten."}
-              </div>
+              </GlassPanel>
             )}
           </div>
         )}

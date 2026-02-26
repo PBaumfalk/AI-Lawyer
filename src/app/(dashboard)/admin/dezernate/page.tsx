@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { Building2, Plus, Users, FolderOpen, Trash2, Pencil, ShieldAlert, ShieldOff } from "lucide-react";
 import { DezernatDialog } from "@/components/admin/dezernat-dialog";
+import { GlassPanel } from "@/components/ui/glass-panel";
+import { GlassCard } from "@/components/ui/glass-card";
 
 interface Dezernat {
   id: string;
@@ -103,7 +105,7 @@ export default function DezernatePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold">Dezernate</h1>
+          <h1 className="text-2xl font-semibold font-bold">Dezernate</h1>
           <p className="text-muted-foreground mt-1">
             Dezernate verwalten -- Gruppen von Nutzern mit gemeinsamem Aktenzugriff
           </p>
@@ -120,19 +122,19 @@ export default function DezernatePage() {
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">Lade Dezernate...</div>
       ) : dezernate.length === 0 ? (
-        <div className="text-center py-12 border border-dashed rounded-lg">
+        <GlassPanel elevation="panel" className="p-12 text-center">
           <Building2 className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
           <h3 className="font-medium text-lg">Keine Dezernate vorhanden</h3>
           <p className="text-muted-foreground mt-1">
             Erstellen Sie ein Dezernat, um Nutzern gruppenbasierten Aktenzugriff zu ermoeglichen.
           </p>
-        </div>
+        </GlassPanel>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {dezernate.map((dezernat) => (
-            <div
+            <GlassCard
               key={dezernat.id}
-              className="border rounded-lg p-5 hover:shadow-md transition-shadow bg-card"
+              className="p-5"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -191,7 +193,7 @@ export default function DezernatePage() {
                   )}
                 </div>
               )}
-            </div>
+            </GlassCard>
           ))}
         </div>
       )}
@@ -205,7 +207,7 @@ export default function DezernatePage() {
 
       {/* Active Admin Overrides Section */}
       <div className="mt-8 space-y-4">
-        <h2 className="text-xl font-heading font-bold">
+        <h2 className="text-xl font-semibold font-bold">
           Aktive Admin-Zugriffsueberschreibungen
         </h2>
         {overridesLoading ? (
@@ -213,14 +215,14 @@ export default function DezernatePage() {
             Lade Ueberschreibungen...
           </div>
         ) : overrides.length === 0 ? (
-          <div className="text-center py-8 border border-dashed rounded-lg">
+          <GlassPanel elevation="panel" className="p-8 text-center">
             <ShieldAlert className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
             <p className="text-sm text-muted-foreground">
               Keine aktiven Zugriffsueberschreibungen vorhanden
             </p>
-          </div>
+          </GlassPanel>
         ) : (
-          <div className="border rounded-lg overflow-hidden">
+          <GlassPanel elevation="panel" className="overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/50 text-left">
@@ -266,7 +268,7 @@ export default function DezernatePage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </GlassPanel>
         )}
       </div>
     </div>

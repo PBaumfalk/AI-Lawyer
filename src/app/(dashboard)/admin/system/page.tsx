@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
+import { GlassPanel } from "@/components/ui/glass-panel";
+import { GlassCard } from "@/components/ui/glass-card";
 import {
   RefreshCw,
   Database,
@@ -178,7 +179,7 @@ export default function AdminSystemPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold">System-Status</h1>
+          <h1 className="text-2xl font-semibold font-bold">System-Status</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Service-Verfuegbarkeit und Systemprotokoll
           </p>
@@ -254,44 +255,42 @@ export default function AdminSystemPage() {
             const isHealthy = service.status === "healthy";
 
             return (
-              <Card key={name}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`p-2 rounded-lg ${
-                          isHealthy
-                            ? "bg-emerald-50 text-emerald-600"
-                            : "bg-rose-50 text-rose-600"
-                        }`}
-                      >
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{config.label}</p>
-                        {service.error && (
-                          <p className="text-xs text-rose-500 mt-0.5 max-w-[200px] truncate">
-                            {service.error}
-                          </p>
-                        )}
-                      </div>
+              <GlassCard key={name} className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-2 rounded-lg ${
+                        isHealthy
+                          ? "bg-emerald-500/10 text-emerald-600"
+                          : "bg-rose-500/10 text-rose-600"
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      {service.latency !== undefined && (
-                        <span className="text-xs text-muted-foreground">
-                          {service.latency}ms
-                        </span>
+                    <div>
+                      <p className="font-medium text-sm">{config.label}</p>
+                      {service.error && (
+                        <p className="text-xs text-rose-500 mt-0.5 max-w-[200px] truncate">
+                          {service.error}
+                        </p>
                       )}
-                      <div
-                        className={`w-3 h-3 rounded-full ${
-                          isHealthy ? "bg-emerald-500" : "bg-rose-500"
-                        }`}
-                        title={isHealthy ? "Gesund" : "Nicht erreichbar"}
-                      />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex items-center gap-2">
+                    {service.latency !== undefined && (
+                      <span className="text-xs text-muted-foreground">
+                        {service.latency}ms
+                      </span>
+                    )}
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        isHealthy ? "bg-emerald-500" : "bg-rose-500"
+                      }`}
+                      title={isHealthy ? "Gesund" : "Nicht erreichbar"}
+                    />
+                  </div>
+                </div>
+              </GlassCard>
             );
           })}
       </div>
@@ -300,10 +299,10 @@ export default function AdminSystemPage() {
       <AuditDashboardWidget />
 
       {/* Log viewer section */}
-      <Card>
-        <CardHeader>
+      <GlassPanel elevation="panel" className="overflow-hidden">
+        <div className="p-4 border-b border-[var(--glass-border-color)]">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Systemprotokoll</CardTitle>
+            <h2 className="text-base font-semibold text-foreground">Systemprotokoll</h2>
             <div className="flex items-center gap-4">
               {/* Level filter */}
               <div className="flex items-center gap-2">
@@ -367,8 +366,8 @@ export default function AdminSystemPage() {
               </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-4">
           {logsMessage && logs.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
               {logsMessage}
@@ -376,12 +375,12 @@ export default function AdminSystemPage() {
           )}
 
           {logs.length > 0 ? (
-            <ScrollArea className="h-[500px] rounded-md border border-border/50">
+            <ScrollArea className="h-[500px] rounded-xl glass-card">
               <div className="font-mono text-xs space-y-0.5 p-3">
                 {logs.map((entry, i) => (
                   <div
                     key={i}
-                    className="flex items-start gap-2 py-1 px-2 hover:bg-muted/30 rounded"
+                    className="flex items-start gap-2 py-1 px-2 hover:bg-white/20 dark:hover:bg-white/[0.04] rounded"
                   >
                     <span className="text-muted-foreground whitespace-nowrap shrink-0">
                       {formatTimestamp(entry.timestamp)}
@@ -396,7 +395,7 @@ export default function AdminSystemPage() {
                     </Badge>
                     <Badge
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0 shrink-0 bg-slate-50 border-slate-200"
+                      className="text-[10px] px-1.5 py-0 shrink-0"
                     >
                       {entry.module}
                     </Badge>
@@ -414,8 +413,8 @@ export default function AdminSystemPage() {
               </p>
             )
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </GlassPanel>
     </div>
   );
 }

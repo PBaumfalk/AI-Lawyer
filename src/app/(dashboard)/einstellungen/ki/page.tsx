@@ -13,6 +13,7 @@ import {
   Clock,
   BarChart3,
 } from "lucide-react";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -284,7 +285,7 @@ export default function KiEinstellungenPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           KI-Einstellungen
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -325,8 +326,8 @@ export default function KiEinstellungenPage() {
       )}
 
       {/* Provider Configuration */}
-      <div className="glass rounded-xl p-6">
-        <h2 className="text-lg font-heading text-foreground mb-4 flex items-center gap-2">
+      <GlassPanel elevation="panel" className="p-6">
+        <h2 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
           <Bot className="w-5 h-5" />
           Provider-Konfiguration
         </h2>
@@ -340,7 +341,7 @@ export default function KiEinstellungenPage() {
             <select
               value={provider}
               onChange={(e) => handleProviderChange(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="glass-input w-full rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none"
             >
               {PROVIDER_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -365,7 +366,7 @@ export default function KiEinstellungenPage() {
                     ? "sk-..."
                     : "sk-ant-..."
                 }
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                className="glass-input w-full rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
               />
             </div>
           )}
@@ -379,7 +380,7 @@ export default function KiEinstellungenPage() {
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="glass-input w-full rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none"
             />
             <p className="text-xs text-muted-foreground mt-1">
               {provider === "ollama"
@@ -400,7 +401,7 @@ export default function KiEinstellungenPage() {
                 type="text"
                 value={ollamaUrl}
                 onChange={(e) => setOllamaUrl(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                className="glass-input w-full rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none"
               />
             </div>
           )}
@@ -441,11 +442,11 @@ export default function KiEinstellungenPage() {
             )}
           </div>
         </div>
-      </div>
+      </GlassPanel>
 
       {/* Feature Toggles */}
-      <div className="glass rounded-xl p-6">
-        <h2 className="text-lg font-heading text-foreground mb-4 flex items-center gap-2">
+      <GlassPanel elevation="panel" className="p-6">
+        <h2 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
           <Clock className="w-5 h-5" />
           Automatisierung
         </h2>
@@ -461,7 +462,7 @@ export default function KiEinstellungenPage() {
               value={monthlyBudget}
               onChange={(e) => setMonthlyBudget(e.target.value)}
               min={0}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="glass-input w-full rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none"
             />
             <p className="text-xs text-muted-foreground mt-1">
               0 = unbegrenzt. Bei Erreichen des Budgets wird Helena pausiert.
@@ -526,17 +527,17 @@ export default function KiEinstellungenPage() {
                 type="time"
                 value={briefingTime}
                 onChange={(e) => setBriefingTime(e.target.value)}
-                className="w-48 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                className="glass-input w-48 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none"
               />
             </div>
           )}
         </div>
-      </div>
+      </GlassPanel>
 
       {/* Token Usage */}
-      <div className="glass rounded-xl p-6">
+      <GlassPanel elevation="panel" className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-heading text-foreground flex items-center gap-2">
+          <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
             Token-Verbrauch
           </h2>
@@ -665,7 +666,7 @@ export default function KiEinstellungenPage() {
             Lade Verbrauchsdaten...
           </p>
         )}
-      </div>
+      </GlassPanel>
 
       {/* Save button */}
       <div className="flex items-center gap-3">

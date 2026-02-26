@@ -8,6 +8,7 @@ import { MailboxList } from "@/components/email/mailbox-config/mailbox-list";
 import { SignatureEditor } from "@/components/email/mailbox-config/signature-editor";
 import { SyncDashboard } from "@/components/email/mailbox-config/sync-dashboard";
 import { UserAssignment } from "@/components/email/mailbox-config/user-assignment";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 export default function EmailEinstellungenPage() {
   const router = useRouter();
@@ -60,7 +61,7 @@ export default function EmailEinstellungenPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           E-Mail-Einstellungen
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -89,14 +90,14 @@ export default function EmailEinstellungenPage() {
         </TabsList>
 
         <TabsContent value="postfaecher">
-          <div className="glass rounded-xl p-6">
+          <GlassPanel elevation="panel" className="p-6">
             <MailboxList />
-          </div>
+          </GlassPanel>
         </TabsContent>
 
         <TabsContent value="signatur">
-          <div className="glass rounded-xl p-6">
-            <h2 className="text-lg font-heading text-foreground mb-4">
+          <GlassPanel elevation="panel" className="p-6">
+            <h2 className="text-base font-semibold text-foreground mb-4">
               Kanzlei-Signatur
             </h2>
             <p className="text-sm text-muted-foreground mb-4">
@@ -104,25 +105,25 @@ export default function EmailEinstellungenPage() {
               automatisch durch die Benutzerdaten jedes Mitarbeiters ersetzt.
             </p>
             <SignatureEditor kontoId={kanzleiKontoId} />
-          </div>
+          </GlassPanel>
         </TabsContent>
 
         <TabsContent value="sync-status">
-          <div className="glass rounded-xl p-6">
-            <h2 className="text-lg font-heading text-foreground mb-4">
+          <GlassPanel elevation="panel" className="p-6">
+            <h2 className="text-base font-semibold text-foreground mb-4">
               Sync-Status
             </h2>
             <SyncDashboard />
-          </div>
+          </GlassPanel>
         </TabsContent>
 
         <TabsContent value="zuweisung">
-          <div className="glass rounded-xl p-6">
-            <h2 className="text-lg font-heading text-foreground mb-4">
+          <GlassPanel elevation="panel" className="p-6">
+            <h2 className="text-base font-semibold text-foreground mb-4">
               Benutzer-Zuweisung
             </h2>
             <UserAssignment />
-          </div>
+          </GlassPanel>
         </TabsContent>
       </Tabs>
     </div>

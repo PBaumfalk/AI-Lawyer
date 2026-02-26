@@ -17,7 +17,7 @@ export default async function VorlagenPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-heading text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Dokumentvorlagen
         </h1>
         <p className="text-muted-foreground mt-1">

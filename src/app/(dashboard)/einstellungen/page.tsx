@@ -22,6 +22,7 @@ import { VorlagenTab } from "@/components/einstellungen/vorlagen-tab";
 import { BriefkopfTab } from "@/components/einstellungen/briefkopf-tab";
 import { OrdnerSchemataTab } from "@/components/einstellungen/ordner-schemata-tab";
 import { BenachrichtigungenTab } from "@/components/einstellungen/benachrichtigungen-tab";
+import { GlassCard } from "@/components/ui/glass-card";
 
 export default function EinstellungenPage() {
   const [session, setSession] = useState<any>(null);
@@ -78,7 +79,7 @@ export default function EinstellungenPage() {
 
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-heading text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             Einstellungen
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -139,8 +140,8 @@ export default function EinstellungenPage() {
           <TabsContent value="allgemein">
             <div className="space-y-6">
               {/* User info */}
-              <div className="glass rounded-xl p-6">
-                <h2 className="text-lg font-heading text-foreground mb-4">
+              <GlassCard className="p-6">
+                <h2 className="text-base font-semibold text-foreground mb-4">
                   Benutzer
                 </h2>
                 <div className="space-y-3 text-sm">
@@ -163,11 +164,11 @@ export default function EinstellungenPage() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </GlassCard>
 
               {/* Quick links */}
-              <div className="glass rounded-xl p-6">
-                <h2 className="text-lg font-heading text-foreground mb-4">
+              <GlassCard className="p-6">
+                <h2 className="text-base font-semibold text-foreground mb-4">
                   Verwaltung
                 </h2>
                 <div className="space-y-1">
@@ -187,7 +188,7 @@ export default function EinstellungenPage() {
                     <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
                   </Link>
                 </div>
-              </div>
+              </GlassCard>
             </div>
           </TabsContent>
 

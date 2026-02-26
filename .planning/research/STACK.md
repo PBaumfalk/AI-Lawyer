@@ -1,407 +1,528 @@
-# Stack Research: New Capabilities for AI-Lawyer
+# Stack Research
 
-**Domain:** AI-First Kanzleisoftware (Legal Practice Management) -- Subsequent Milestone
-**Researched:** 2026-02-24
-**Confidence:** MEDIUM-HIGH (most libraries verified via npm, some niche German finance libs are young)
+**Domain:** Legal RAG Enhancement — Hybrid Search, Cross-Encoder Reranking, Legal Data Ingestion, NER PII Filter (Helena v0.1 Milestone)
+**Researched:** 2026-02-26
+**Confidence:** MEDIUM-HIGH (core algorithms verified via official sources; Ollama reranking is emerging 2025 pattern, flagged separately)
 
-> This document covers ONLY the libraries/services to ADD to the existing stack.
-> The existing stack (Next.js 14, Prisma, PostgreSQL 16, MinIO, Meilisearch, OnlyOffice, NextAuth v5, shadcn/ui) is NOT repeated here.
-
----
-
-## 1. Email: IMAP Client + SMTP Send
-
-### Core Technologies
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **imapflow** | 1.2.10 | IMAP client with IDLE support | Modern async/await API, automatic IDLE on inactivity, built-in mailbox locking, handles reconnection. From the creator of Nodemailer (Andris Reinman). The only actively maintained IMAP client for Node.js that is production-quality. | HIGH |
-| **nodemailer** | 8.0.1 | SMTP email sending | De facto standard for Node.js email. Zero runtime deps, DKIM signing, OAuth2. No real alternative exists. | HIGH |
-| **mailparser** | 3.9.3 | Parse MIME email messages | Also by Andris Reinman. Streaming parser handles 100MB+ messages. Extracts headers, body (text/html), attachments as structured objects. Pairs naturally with ImapFlow. | HIGH |
-| **sanitize-html** | 2.17.1 | Sanitize HTML email body | ImapFlow/mailparser do NOT sanitize HTML. Displaying raw email HTML without sanitization = XSS vulnerability. Required for any email display. | HIGH |
-| **html-to-text** | 9.0.5 | Convert HTML emails to plain text | For email previews/snippets in inbox list, search indexing, and cases where HTML rendering is not desired. | MEDIUM |
-
-### Why This Combination
-
-ImapFlow + mailparser + nodemailer form a cohesive ecosystem from the same author (Andris Reinman / Nodemailer project). ImapFlow handles IMAP IDLE natively -- IDLE starts automatically on connection inactivity unless `disableAutoIdle` is set. This means real-time email notifications come out of the box without custom IDLE management.
-
-**Architecture note:** ImapFlow needs a persistent connection, which means a background worker/service -- NOT an API route. The IMAP connection must run in a separate Node.js process or a long-lived server-side singleton, not inside Next.js API routes which are short-lived.
-
-### Alternatives Considered
-
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| imapflow | node-imap | Unmaintained (last update 2019), callback-based API, manual IDLE handling required |
-| imapflow | imap-simple | Wrapper around node-imap -- inherits all its problems plus adds abstraction overhead |
-| mailparser | mailparser-mit | Fork with MIT license, but less maintained than original |
+> This document covers ONLY libraries to ADD for the Helena RAG milestone.
+> The existing validated stack (Next.js 14, Prisma, PostgreSQL 16+pgvector, MinIO, Meilisearch, OnlyOffice, NextAuth v5, BullMQ+Redis, Vercel AI SDK v4, LangChain textsplitters, Ollama qwen3.5:35b) is NOT repeated here.
 
 ---
 
-## 2. Multi-Provider LLM Abstraction
+## Existing RAG Code to Extend (Not Replace)
 
-### Core Technologies
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **ai** (Vercel AI SDK) | ^4.3.19 | Core AI SDK -- streaming, tool calling, structured output | Unified API across all LLM providers. `generateText()`, `streamText()`, `generateObject()` work identically regardless of provider. React hooks (`useChat`, `useCompletion`) for frontend. Node >= 18 compatible. | HIGH |
-| **@ai-sdk/openai** | ^1.3.24 | OpenAI provider | Official provider. Supports GPT-4o, o1, embeddings. Works with AI SDK v4. | HIGH |
-| **@ai-sdk/anthropic** | ^1.2.12 | Anthropic provider | Official provider. Supports Claude 3.5/4, tool use. Works with AI SDK v4. | HIGH |
-| **ollama-ai-provider** | ^1.2.0 | Ollama provider (local LLM) | Community provider for AI SDK v4 compatibility. Supports chat + embeddings via Ollama API. | MEDIUM |
-
-### CRITICAL: Why AI SDK v4, NOT v6
-
-The project uses **zod 3.23.8**. AI SDK v6 requires `zod ^3.25.76 || ^4.1.8` -- a breaking change that would cascade through every form validation, every API route, and every schema in the existing codebase. AI SDK v4:
-
-- Requires `zod ^3.23.8` (exactly what the project has)
-- Requires `react ^18` (what the project has)
-- Requires `node >= 18` (what the project has)
-- Is still actively maintained (v4.3.19 is recent)
-- Has all features needed: streaming, tool calling, structured output, provider registry
-
-Upgrading to v6 is possible later when the project is ready for a zod major version bump, but it is NOT required for any of the planned features.
-
-**Provider version alignment:**
-- AI SDK v4 uses `@ai-sdk/openai` v1.x and `@ai-sdk/anthropic` v1.x
-- AI SDK v6 uses `@ai-sdk/openai` v3.x and `@ai-sdk/anthropic` v3.x
-- `ollama-ai-provider` v1.2.0 works with AI SDK v4
-- `ai-sdk-ollama` v3.7.1 requires AI SDK v6 (NOT compatible with v4)
-
-### Alternatives Considered
-
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| Vercel AI SDK v4 | LangChain.js | Heavier abstraction, more complexity than needed for provider switching. LangChain is better for complex chains/agents but overkill for the provider abstraction layer. Use LangChain only for text splitting (see RAG section). |
-| Vercel AI SDK v4 | Direct fetch to each API | No streaming abstraction, no unified tool calling, duplicated error handling per provider. Defeats the purpose of multi-provider. |
-| Vercel AI SDK v4 | Vercel AI SDK v6 | Requires zod >= 3.25.76 -- breaking change for entire codebase. Not worth the migration risk for no functional gain. |
+| File | Current State | Extension Needed |
+|------|--------------|-----------------|
+| `src/lib/embedding/embedder.ts` | Ollama `/api/embed` with `multilingual-e5-large-instruct` (1024-dim) | Add query embedding for hybrid search |
+| `src/lib/embedding/chunker.ts` | `RecursiveCharacterTextSplitter` 1000-char/200-overlap | Add parent (2000-char) + child (500-char) splitters |
+| `src/lib/embedding/vector-store.ts` | `searchSimilar()` cosine via pgvector raw SQL | Add `hybridSearch()` that fuses pgvector + Meilisearch results |
+| `src/app/api/ki-chat/route.ts` | top-10 cosine retrieval, direct to prompt | Add RRF fusion + optional reranking before prompt construction |
+| `prisma/schema.prisma` | `DocumentChunk` model (no parent-child) | Add `chunkType`, `parentChunkId` to `DocumentChunk`; add `LawChunk`, `UrteilChunk`, `MusterChunk` tables |
 
 ---
 
-## 3. RAG Pipeline (Embeddings, Chunking, Vector Search)
+## 1. Hybrid Search — Reciprocal Rank Fusion (RRF)
 
-### Core Technologies
+**No new npm library needed.** RRF is a 15-line pure TypeScript function with zero dependencies. The algorithm (Cormack et al. 2009, k=60) is mathematically stable and universally applied — Elasticsearch, OpenSearch, and Azure AI Search all use k=60 as default.
 
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **pgvector** (npm) | 0.2.1 | pgvector client for Node.js | Lightweight wrapper for pgvector SQL operations. The project already has PostgreSQL 16 + pgvector extension in Docker. This npm package provides `toSql()` / `fromSql()` for vector serialization. | HIGH |
-| **@langchain/textsplitters** | 1.0.1 | Text chunking for documents | RecursiveCharacterTextSplitter is the gold standard for RAG chunking. Handles markdown, code, plain text with configurable chunk size/overlap. No need to reinvent this. | HIGH |
-| **@langchain/core** | 1.1.27 | LangChain core (dependency of textsplitters) | Required peer dependency. Also provides Document class used throughout the pipeline. | HIGH |
-| Vercel AI SDK embeddings | (via ai + providers) | Generate embeddings | `embed()` and `embedMany()` from AI SDK. Use OpenAI `text-embedding-3-small` or Ollama embeddings. No additional package needed beyond the AI SDK providers above. | HIGH |
-
-### RAG Architecture with Existing Stack
-
-The project already has pgvector in Docker. The RAG pipeline does NOT need a separate vector database:
-
-1. **Chunking:** `@langchain/textsplitters` splits DOCX/PDF text into chunks
-2. **Embedding:** AI SDK `embed()` with OpenAI or Ollama generates vectors
-3. **Storage:** Prisma + raw SQL with `pgvector` npm package for vector operations
-4. **Retrieval:** Cosine similarity search via `pgvector` `<=>` operator in raw SQL through Prisma `$queryRaw`
-
-**Why NOT use LangChain for the full pipeline:** LangChain's retrieval chains add unnecessary abstraction. The AI SDK already handles LLM calls. Use LangChain ONLY for text splitting, which is genuinely the best implementation available. Everything else (embedding, storage, retrieval, generation) is simpler with direct AI SDK + Prisma + raw SQL.
-
-### Chunking Strategy Recommendation
-
-For legal documents:
-- **Chunk size:** 512 tokens (legal texts are dense; smaller chunks improve precision)
-- **Overlap:** 64 tokens (preserve context at boundaries)
-- **Splitter:** `RecursiveCharacterTextSplitter` with separators optimized for legal text (paragraph breaks, section headers, sentence boundaries)
-
-### Text Extraction (for PDF/DOCX before chunking)
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| Stirling-PDF API | (Docker service) | Extract text from PDFs, OCR scanned documents | Already planned as Docker service. Use its `/api/v1/convert/pdf/text` endpoint for text extraction. Handles OCR for scanned documents. | MEDIUM |
-| **docxtemplater** (already installed) | 3.68.2 | Extract text from DOCX | Already in the project for template processing. Can extract raw text from DOCX for chunking. | HIGH |
-
-### Alternatives Considered
-
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| pgvector + Prisma raw SQL | Pinecone/Weaviate/Qdrant | External services violate self-hosted requirement. pgvector is already deployed. |
-| @langchain/textsplitters | Custom chunking | RecursiveCharacterTextSplitter handles edge cases (Unicode, mixed content) that take weeks to get right manually |
-| AI SDK embed() | OpenAI SDK directly | Would bypass the multi-provider abstraction. AI SDK embed() works with any provider. |
-
----
-
-## 4. CalDAV Sync (Bidirectional)
-
-### Core Technologies
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **tsdav** | 2.1.8 | CalDAV/CardDAV/WebDAV client | Written in TypeScript. Supports RFC 6578 WebDAV sync + basic sync fallback. CRUD for calendars/events. Works with Google Calendar, iCloud, Nextcloud, any CalDAV server. Most actively maintained CalDAV client for Node.js (published 3 days ago). | MEDIUM |
-| **ical.js** | 2.2.1 | iCalendar (RFC 5545) parsing/generation | Parses and generates VCALENDAR/VEVENT/VTODO. Required because tsdav returns raw iCalendar data that needs parsing into structured objects. From the Mozilla Calendar project (Thunderbird/Lightning). | MEDIUM |
-
-### Architecture Note
-
-CalDAV sync is bidirectional and conflict-prone:
-- Use ETag-based change detection (tsdav supports this)
-- Store sync tokens (`ctag`, `etag`) per calendar in Prisma
-- Implement last-write-wins or prompt-user conflict resolution
-- Run sync as a background job (cron-based, not real-time -- CalDAV is not designed for real-time)
-
-### Alternatives Considered
-
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| tsdav | ts-caldav | Newer but less proven. Only 1 contributor. tsdav is forked by Cal.com and battle-tested. |
-| tsdav | dav (lambdabaa) | Callback-based, last updated 2017. No TypeScript types. |
-| tsdav | cdav-library (Nextcloud) | Nextcloud-specific, not general-purpose. |
-
----
-
-## 5. E-Rechnung (XRechnung + ZUGFeRD)
-
-### Core Technologies
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **@e-invoice-eu/core** | 2.3.1 | Generate XRechnung and ZUGFeRD e-invoices | Full EN16931 conformance. Supports XRECHNUNG-CII, XRECHNUNG-UBL, Factur-X/ZUGFeRD. TypeScript-native with full type definitions. Generates XML from JSON input -- perfect for server-side invoice generation. Actively maintained (v2.3.1 is recent). | MEDIUM |
-
-### Important Limitations and Workarounds
-
-**ZUGFeRD PDF embedding:** @e-invoice-eu/core generates the XML, but embedding it into a PDF/A-3 requires additional tooling. Options:
-1. Use Stirling-PDF to attach the XML to an existing invoice PDF (via its API)
-2. Use `pdf-lib` (1.17.1) to manipulate PDFs and attach the XML as an embedded file
-3. For ZUGFeRD EXTENDED/COMFORT profiles, the XML must be embedded in a PDF/A-3B compliant file
-
-**XRechnung standalone:** XRechnung is pure XML (UBL or CII format). No PDF embedding needed. Send the XML directly to the recipient.
-
-**Legal requirement since 01.01.2025:** All B2B invoices in Germany must be receivable as e-invoices. Sending obligation has transition periods through 2027.
-
-### Alternatives Considered
-
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| @e-invoice-eu/core | node-zugferd | Still beta (0.1.1-beta.1). Limited to ZUGFeRD -- no XRechnung UBL support. |
-| @e-invoice-eu/core | horstoeko/zugferd | PHP library, not usable in Node.js. |
-| @e-invoice-eu/core | RechnungsAPI (SaaS) | External API dependency violates self-hosted-first constraint. |
-
----
-
-## 6. SEPA (pain.001 + pain.008)
-
-### Core Technologies
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **sepa** (kewisch/sepa.js) | 2.1.0 | Generate SEPA XML for credit transfers and direct debits | Supports pain.001.001.09 (credit transfers/Ueberweisungen) and pain.008.001.08 (direct debits/Lastschriften). Works in Node.js and browser. Pure JavaScript, no native deps. Most established SEPA library in the npm ecosystem. | MEDIUM |
-
-### Usage Pattern
+**Implementation — write to `src/lib/search/rrf.ts`:**
 
 ```typescript
-import SEPA from 'sepa';
+/**
+ * Reciprocal Rank Fusion — merges two ranked result lists.
+ * k=60 is the standard regularization constant (Cormack et al. 2009).
+ * Each item scores 1/(k + rank). Sum across all lists.
+ */
+export function reciprocalRankFusion<T extends { id: string }>(
+  lists: T[][],
+  k = 60
+): (T & { rrfScore: number })[] {
+  const scores = new Map<string, number>();
+  const items = new Map<string, T>();
 
-// Credit Transfer (pain.001)
-const doc = new SEPA.Document('pain.001.001.09');
-doc.grpHdr.id = 'XMPL.20240101.TR0';
-doc.grpHdr.created = new Date();
-const info = doc.createPaymentInfo();
-info.requestedExecutionDate = new Date();
-info.debtorIBAN = 'DE89370400440532013000';
-info.debtorBIC = 'COBADEFFXXX';
-const tx = info.createTransaction();
-tx.creditorName = 'Max Mustermann';
-tx.creditorIBAN = 'DE02120300000000202051';
-tx.amount = 145.32;
-tx.remittanceInfo = 'Rechnung RE-2024-001';
-console.log(doc.toString());
+  for (const list of lists) {
+    for (const [rank, item] of list.entries()) {
+      scores.set(item.id, (scores.get(item.id) ?? 0) + 1 / (k + rank + 1));
+      if (!items.has(item.id)) items.set(item.id, item);
+    }
+  }
+
+  return [...scores.entries()]
+    .sort(([, a], [, b]) => b - a)
+    .map(([id, rrfScore]) => ({ ...items.get(id)!, rrfScore }));
+}
 ```
 
-### Caveat
-
-The sepa package was last published ~3 years ago. The SEPA XML formats (pain.001.001.09, pain.008.001.08) are stable ISO 20022 standards that do not change frequently. The library works correctly for current SEPA requirements. However, monitor for any new SEPA regulatory changes.
-
-### Alternatives Considered
-
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| sepa (kewisch) | sepa-xml | Version 0.6.0, less feature-complete, fewer supported pain format versions |
-| sepa (kewisch) | Custom XML generation | SEPA XML has strict validation rules. Reimplementing is error-prone and unnecessary. |
-
----
-
-## 7. Stirling-PDF Integration (OCR, Merge, Split)
-
-### Core Technologies
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **Stirling-PDF** (Docker) | latest | PDF operations: OCR, merge, split, compress, rotate, convert, watermark | REST API via Swagger. Runs as Docker container alongside the existing stack. No npm package needed -- integrate via HTTP fetch calls to the Stirling-PDF API. Auth via `X-API-KEY` header. | HIGH |
-
-### Integration Pattern
-
-Stirling-PDF is NOT an npm package. It is a Docker service with a REST API:
-
-```yaml
-# docker-compose.yml addition
-stirling-pdf:
-  image: stirlingtools/stirling-pdf:latest
-  ports:
-    - "8081:8080"
-  environment:
-    - DOCKER_ENABLE_SECURITY=true
-    - SECURITY_ENABLELOGIN=false
-    - SECURITY_APIKEY=your-api-key
-  volumes:
-    - stirling_data:/usr/share/tessdata
-```
-
-**Key API endpoints** (via native `fetch()`, no SDK needed):
-- `POST /api/v1/security/auto-ocr` -- OCR with auto-detection
-- `POST /api/v1/general/merge-pdfs` -- Merge multiple PDFs
-- `POST /api/v1/general/split-pdf-by-pages` -- Split PDF
-- `POST /api/v1/general/compress-pdf` -- Compress
-- `POST /api/v1/convert/pdf/text` -- Extract text (for RAG pipeline)
-- `POST /api/v1/security/add-watermark` -- Watermark
-- `POST /api/v1/general/rotate-pdf` -- Rotate pages
-
-**Note:** Not all Stirling-PDF features are API-accessible. The Swagger docs at `/swagger-ui/index.html` on the running instance are the authoritative endpoint list.
-
-### Alternatives Considered
-
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| Stirling-PDF (Docker) | pdf-lib + tesseract.js | Would need separate OCR, separate merge, separate split logic. Stirling-PDF bundles all PDF operations in one service. |
-| Stirling-PDF (Docker) | Apache PDFBox | Java-based, would need a JVM sidecar. Stirling-PDF is already a wrapper around PDFBox + LibreOffice. |
-| Stirling-PDF (Docker) | Gotenberg | Less PDF manipulation features. Good for HTML-to-PDF but not for OCR/merge/split. |
-
----
-
-## 8. Internal Messaging (WebSocket / Real-Time)
-
-### Core Technologies
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **socket.io** | 4.8.3 | Real-time bidirectional communication (server) | Automatic reconnection, room-based messaging (perfect for case threads + channels), fallback to long-polling, binary support for attachments. Explicit Next.js integration guide from Socket.IO docs. | HIGH |
-| **socket.io-client** | 4.8.3 | Client-side Socket.IO | Paired with server. React-friendly. | HIGH |
-
-### Architecture: Socket.IO with Next.js
-
-Next.js API routes are stateless and short-lived. WebSocket connections are long-lived. This architectural mismatch requires one of two patterns:
-
-**Recommended: Custom HTTP server alongside Next.js**
+**Integration point in `ki-chat/route.ts`:**
 
 ```typescript
-// server.ts -- runs alongside Next.js
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import next from 'next';
+// Run both retrievals in parallel
+const [vectorResults, bm25Results] = await Promise.all([
+  searchSimilar(queryEmbedding, { akteId, limit: 20 }),
+  meilisearch.index('documents').search(lastUserMessage, { limit: 20 }),
+]);
 
-const app = next({ dev: process.env.NODE_ENV !== 'production' });
-const handler = app.getRequestHandler();
-const httpServer = createServer(handler);
-const io = new Server(httpServer, { cors: { origin: '*' } });
+// Normalize Meilisearch results to have an `id` field matching chunk ID
+const fused = reciprocalRankFusion([
+  vectorResults.map(r => ({ ...r, id: r.dokumentId + ':' + r.chunkIndex })),
+  bm25Chunks, // resolved from Meilisearch doc IDs to chunk IDs
+], 60);
 
-io.on('connection', (socket) => {
-  socket.on('join-case', (caseId) => socket.join(`case:${caseId}`));
-  socket.on('message', (data) => io.to(`case:${data.caseId}`).emit('message', data));
-});
-
-httpServer.listen(3000);
+const topChunks = fused.slice(0, 10); // pass top-10 to prompt
 ```
 
-This replaces the default `next start` with a custom server that wraps Next.js AND Socket.IO on the same port.
-
-**Room structure:**
-- `case:{akteId}` -- case-specific discussion threads
-- `channel:{channelId}` -- general channels
-- `user:{userId}` -- direct notifications
-
-### Alternatives Considered
-
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| Socket.IO | ws (raw WebSocket) | No automatic reconnection, no rooms, no fallback transport, no built-in namespacing. More code for less reliability. |
-| Socket.IO | Pusher/Ably | External SaaS. Violates self-hosted-first. |
-| Socket.IO | Server-Sent Events (SSE) | Unidirectional (server-to-client only). Messaging requires bidirectional. |
-| Socket.IO | Liveblocks/PartyKit | External services. Not self-hosted. |
+**Meilisearch → chunk ID resolution:** Meilisearch indexes documents (not chunks). After getting document IDs from Meilisearch BM25, fetch their most-relevant chunks via a second pgvector query scoped to those document IDs. This keeps both lists on the same granularity (chunk level) for RRF.
 
 ---
 
-## 9. Mandantenportal (Client Portal with Separate Auth)
+## 2. Cross-Encoder Reranking via Ollama
 
-### Core Technologies
+**No dedicated npm package — use Ollama REST API directly** (`/api/generate` already used in the codebase).
 
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **NextAuth.js v5** (already installed) | 5.0.0-beta.25 | Authentication for client portal | Extend the existing auth system with a separate `MANDANT` role. Use JWT session with `tenantType` claim to distinguish internal users from portal users. No additional auth library needed. | HIGH |
+**Two viable approaches, ordered by recommendation:**
 
-### Architecture: NOT a Separate App
+### Option A (Recommended): LLM-as-reranker with `qwen3.5:35b` (already running)
 
-The Mandantenportal should be a **route group within the same Next.js app**, not a separate deployment:
+Uses the existing model to score query-document relevance pairs. No additional model pull needed.
 
+```typescript
+// src/lib/search/reranker.ts
+const RERANK_PROMPT = (query: string, passage: string) =>
+  `Bewerte die Relevanz des Textes für die Anfrage.
+Antworte NUR mit einer Zahl zwischen 0.0 und 1.0. Nichts sonst.
+
+Anfrage: ${query}
+Text: ${passage.slice(0, 600)}
+Relevanz:`;
+
+export async function rerankChunks(
+  query: string,
+  candidates: Array<{ id: string; content: string }>,
+  topK = 5
+): Promise<Array<{ id: string; content: string; rerankScore: number }>> {
+  const scored = await Promise.all(
+    candidates.map(async (c) => {
+      const res = await fetch(`${OLLAMA_URL}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: process.env.OLLAMA_MODEL ?? 'qwen3.5:35b',
+          prompt: RERANK_PROMPT(query, c.content),
+          stream: false,
+          options: { temperature: 0, num_predict: 5 },
+        }),
+      });
+      const data = await res.json() as { response: string };
+      const score = parseFloat(data.response.trim()) || 0;
+      return { ...c, rerankScore: Math.min(1, Math.max(0, score)) };
+    })
+  );
+  return scored.sort((a, b) => b.rerankScore - a.rerankScore).slice(0, topK);
+}
 ```
-src/app/
-  (dashboard)/     -- Internal users (ADMIN, ANWALT, etc.)
-  (portal)/        -- Mandanten (client portal)
-  api/portal/      -- Portal-specific API routes
-```
 
-**Why same app, not separate:**
-- Shared Prisma schema and database
-- Shared MinIO for document access
-- Shared NextAuth (just different role checks)
-- No cross-origin complexity
-- One Docker container, not two
+**Latency:** ~200-400ms per candidate on GPU. Apply only on RRF top-20, return top-5. Run `Promise.all` in parallel — total latency ~400ms (not 20×400ms) if GPU handles concurrent requests.
 
-**Auth differentiation:**
-- Internal users: login at `/login` with existing credentials
-- Mandanten: login at `/portal/login` with invitation token + password
-- JWT contains `role: 'MANDANT'` + `mandantId` for filtering
-- Middleware checks route group and role match
+### Option B (Alternative): `qwen3-reranker:1.5b` dedicated reranker model
 
-**No additional npm packages needed** -- this is purely an architectural/routing concern using existing NextAuth v5 + Prisma.
-
----
-
-## Supporting Libraries (Cross-Cutting)
-
-| Library | Version | Purpose | When to Use | Confidence |
-|---------|---------|---------|-------------|------------|
-| **pdf-lib** | 1.17.1 | PDF manipulation in pure JS | Embedding ZUGFeRD XML into PDF/A, generating simple PDF documents, modifying PDF metadata. Lighter than Stirling-PDF for simple operations. | MEDIUM |
-| **ical.js** | 2.2.1 | iCalendar parsing/generation | Paired with tsdav for CalDAV sync. Converts between VCALENDAR format and JS objects. | MEDIUM |
-| **pgvector** | 0.2.1 | pgvector helper for Node.js | Vector serialization for RAG pipeline. `toSql()` / `fromSql()` for embedding vectors. | HIGH |
-
----
-
-## Installation
+Ollama added support for Qwen3 reranker models in mid-2025. Smaller and faster than 35b for reranking.
 
 ```bash
-# Email
-npm install imapflow nodemailer mailparser sanitize-html html-to-text
-
-# AI / LLM (use exact v4.x range to avoid v6 auto-upgrade)
-npm install ai@^4.3.19 @ai-sdk/openai@^1.3.24 @ai-sdk/anthropic@^1.2.12 ollama-ai-provider@^1.2.0
-
-# RAG Pipeline
-npm install @langchain/textsplitters@^1.0.1 @langchain/core@^1.1.27 pgvector@^0.2.1
-
-# CalDAV
-npm install tsdav@^2.1.8 ical.js@^2.2.1
-
-# E-Rechnung
-npm install @e-invoice-eu/core@^2.3.1
-
-# SEPA
-npm install sepa@^2.1.0
-
-# Real-Time Messaging
-npm install socket.io@^4.8.3 socket.io-client@^4.8.3
-
-# Supporting
-npm install pdf-lib@^1.17.1
-
-# Type definitions (dev)
-npm install -D @types/nodemailer @types/sanitize-html @types/html-to-text
+ollama pull qwen3-reranker:1.5b
 ```
 
-**Docker Compose additions (no npm):**
+Uses same `qwen3.5:35b` REST pattern but with a dedicated model. Requires testing whether model is available in the Ollama library for the current Ollama version.
+
+**Confidence for Option B:** LOW — depends on Ollama version and whether `qwen3-reranker` is available. Option A is safe and battle-tested.
+
+### Option C (Fallback): Skip reranking, use RRF only
+
+RRF alone provides 60-70% of the quality improvement over pure cosine retrieval. If GPU is constrained or latency is unacceptable, skip reranking and return RRF top-5 directly to the prompt.
+
+---
+
+## 3. Parent-Child Chunking
+
+**No new library.** Extend existing `@langchain/textsplitters` (already installed) and Prisma schema.
+
+**Prisma schema changes to `document_chunks` + new `ChunkType` enum:**
+
+```prisma
+enum ChunkType {
+  PARENT
+  CHILD
+}
+
+model DocumentChunk {
+  id             String     @id @default(cuid())
+  dokumentId     String
+  dokument       Dokument   @relation(fields: [dokumentId], references: [id], onDelete: Cascade)
+  chunkIndex     Int
+  content        String     @db.Text
+  embedding      Unsupported("vector(1024)")?
+  modelVersion   String
+  createdAt      DateTime   @default(now())
+  // Parent-child fields (new):
+  chunkType      ChunkType  @default(CHILD)
+  parentChunkId  String?
+  parentChunk    DocumentChunk?  @relation("ParentChild", fields: [parentChunkId], references: [id])
+  childChunks    DocumentChunk[] @relation("ParentChild")
+
+  @@unique([dokumentId, chunkIndex])
+  @@index([dokumentId])
+  @@index([parentChunkId])
+  @@map("document_chunks")
+}
+```
+
+**Chunking strategy — extend `chunker.ts`:**
+
+```typescript
+// Parent: 2000 chars (~500 tokens) — stored for prompt context, NOT embedded
+export function createParentSplitter(): RecursiveCharacterTextSplitter {
+  return new RecursiveCharacterTextSplitter({
+    chunkSize: 2000,
+    chunkOverlap: 100,
+    separators: GERMAN_LEGAL_SEPARATORS,
+  });
+}
+
+// Child: 500 chars (~125 tokens) — embedded, used for retrieval
+export function createChildSplitter(): RecursiveCharacterTextSplitter {
+  return new RecursiveCharacterTextSplitter({
+    chunkSize: 500,
+    chunkOverlap: 50,
+    separators: GERMAN_LEGAL_SEPARATORS,
+  });
+}
+```
+
+**Query-time behavior:** Retrieve top-K child chunks (via hybrid search + reranking). Then fetch their parent chunks via `parentChunkId` for the LLM prompt. The child chunk gives precise semantic match; the parent chunk gives the LLM full paragraph context.
+
+**Update to `insertChunks()` in `vector-store.ts`:** Accept parent/child structure, store parent (no embedding), then store children with `parentChunkId` FK.
+
+---
+
+## 4. Gesetze Ingestion — bundestag/gesetze GitHub
+
+**Format confirmed via direct inspection:** All German federal laws as Markdown files (`.md`), organized in `a/`–`z/` subdirectories. Source: `https://github.com/bundestag/gesetze`. Updates are pushed when Bundesgesetzblatt publishes changes (~weekly).
+
+**New library needed:**
+
+| Library | Version | Purpose | Why |
+|---------|---------|---------|-----|
+| `simple-git` | ^3.27.0 | Clone + incremental `git pull` of bundestag/gesetze in BullMQ worker | Thin wrapper over system git CLI. Zero native deps. Proven in Node.js workers. Alternatives (nodegit, isomorphic-git) are heavier or harder to maintain. |
+
+```bash
+npm install simple-git
+```
+
+**Implementation pattern (BullMQ job `gesetze-sync`):**
+
+```typescript
+import simpleGit from 'simple-git';
+import fs from 'fs/promises';
+import path from 'path';
+
+const REPO_PATH = '/data/gesetze'; // Docker volume mount
+
+export async function syncGesetze() {
+  const git = simpleGit();
+  try {
+    await fs.access(path.join(REPO_PATH, '.git'));
+    const result = await simpleGit(REPO_PATH).pull();
+    // result.summary.changes = list of changed files
+    return result.summary.changes; // only re-embed changed files
+  } catch {
+    // First run: clone shallow
+    await git.clone('https://github.com/bundestag/gesetze.git', REPO_PATH, ['--depth=1']);
+    return null; // signal full ingest on first run
+  }
+}
+```
+
+**Incremental sync:** `simple-git.pull()` returns changed file paths. Only re-chunk and re-embed changed `.md` files. Store last sync timestamp in a `sync_state` table keyed by `source = 'bundestag-gesetze'`.
+
+**No additional parsing library.** bundestag/gesetze is already Markdown. Use `fs.readFile` + existing `createChildSplitter()` + `createParentSplitter()` from the extended `chunker.ts`.
+
+**New Prisma table `law_chunks`** (separate from `document_chunks` to keep Kanzlei docs isolated from public law corpus):
+
+```prisma
+model LawChunk {
+  id            String   @id @default(cuid())
+  gesetzKuerzel String   // e.g. "BGB", "ZPO", "ArbGG"
+  paragraph     String   // e.g. "§ 823", "§ 1" — extracted from Markdown heading
+  content       String   @db.Text
+  parentContent String?  @db.Text  // parent chunk text for LLM prompt
+  embedding     Unsupported("vector(1024)")?
+  modelVersion  String
+  syncedAt      DateTime @default(now())
+  sourceUrl     String?  // gesetze-im-internet.de canonical URL
+
+  @@index([gesetzKuerzel])
+  @@index([paragraph])
+  @@map("law_chunks")
+}
+```
+
+**Docker Compose addition:** Mount a volume for the cloned repo:
+
 ```yaml
-stirling-pdf:
-  image: stirlingtools/stirling-pdf:latest
-  # ... (see section 7)
+volumes:
+  - gesetze_data:/data/gesetze
 ```
+
+Worker service needs git CLI (already available in Debian-based images). No Dockerfile change needed if base image has `git`.
+
+---
+
+## 5. Urteile Ingestion — BMJ Rechtsprechung-im-Internet
+
+**RSS feeds confirmed via official BMJ documentation:** Seven XML RSS feeds provide newest court decisions as headlines + links.
+
+| Court | Feed URL |
+|-------|---------|
+| BVerfG | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bverfg.xml` |
+| BGH | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bgh.xml` |
+| BVerwG | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bverwg.xml` |
+| BFH | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bfh.xml` |
+| BAG | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bag.xml` |
+| BSG | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bsg.xml` |
+| BPatG | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bpatg.xml` |
+
+**New libraries needed:**
+
+| Library | Version | Purpose | Why |
+|---------|---------|---------|-----|
+| `rss-parser` | ^3.13.0 | Parse BMJ XML RSS feeds | De-facto standard Node.js RSS parser, handles XML → JS objects, date normalization, custom feed fields. ~2M weekly downloads. |
+| `cheerio` | ^1.0.0 | Extract decision text from rechtsprechung-im-internet.de HTML pages | RSS items link to HTML pages containing the full decision text. Cheerio provides jQuery-like server-side HTML parsing — faster and lighter than Playwright/Puppeteer for simple DOM extraction. |
+
+```bash
+npm install rss-parser cheerio
+```
+
+**Implementation pattern (BullMQ job `urteil-fetch`):**
+
+```typescript
+import Parser from 'rss-parser';
+import { load } from 'cheerio';
+
+const parser = new Parser();
+
+export async function fetchNewUrteile(feedUrl: string, since: Date) {
+  const feed = await parser.parseURL(feedUrl);
+  const newItems = feed.items.filter(
+    item => item.pubDate && new Date(item.pubDate) > since
+  );
+
+  for (const item of newItems) {
+    const html = await fetch(item.link!).then(r => r.text());
+    const $ = load(html);
+    // BMJ decision pages wrap decision text in .docLayoutArea or similar
+    const text = $('.docLayoutArea').text() || $('body').text();
+    // → PII filter → chunk → embed → store in urteil_chunks
+  }
+}
+```
+
+**Important:** Do not re-fetch decisions already in `urteil_chunks`. Check `sourceUrl` uniqueness before inserting. Store last-fetched timestamp per court/feed in `sync_state`.
+
+**New Prisma table `urteil_chunks`:**
+
+```prisma
+model UrteilChunk {
+  id            String   @id @default(cuid())
+  aktenzeichen  String   // e.g. "8 AZR 123/24"
+  gericht       String   // "BAG", "BGH", "BVerfG" etc.
+  datum         DateTime
+  content       String   @db.Text
+  parentContent String?  @db.Text
+  embedding     Unsupported("vector(1024)")?
+  modelVersion  String
+  piiFiltered   Boolean  @default(false)
+  sourceUrl     String   @unique  // prevents re-fetching
+  fetchedAt     DateTime @default(now())
+
+  @@index([gericht])
+  @@index([aktenzeichen])
+  @@map("urteil_chunks")
+}
+```
+
+---
+
+## 6. NER PII Filter via Ollama
+
+**No new npm library.** Use Ollama `qwen3.5:35b` (already running) with a structured prompt. Hybrid approach: fast regex pre-pass for structured PII (phone, email, IBAN) + LLM NER pass for German names and addresses.
+
+**Implementation — write to `src/lib/pii/ner-filter.ts`:**
+
+```typescript
+const PII_PROMPT = (text: string) =>
+  `Du bist ein Datenschutzfilter fuer deutsche Gerichtsurteile.
+Ersetze alle personenbezogenen Daten von Privatpersonen durch Platzhalter.
+Regeln:
+- Vor-/Nachname einer Privatperson → [PERSON]
+- Strasse + Hausnummer → [ADRESSE]
+- Telefonnummer → [TEL]
+- E-Mail-Adresse → [EMAIL]
+- IBAN/Kontonummer → [KONTO]
+Behalte unveraendert: Richternamen, Gerichtsbezeichnungen, Firmennamen, Gesetzeszitate, Aktenzeichen.
+Antworte NUR mit dem anonymisierten Text, keine Erklaerungen.
+
+Text:
+${text.slice(0, 3000)}
+
+Anonymisierter Text:`;
+
+export async function filterPII(text: string): Promise<string> {
+  // Pass 1: fast regex for structured PII
+  let filtered = text
+    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]')
+    .replace(/\+?49[\s-]?\d{3,4}[\s-]?\d{3,}/g, '[TEL]')
+    .replace(/[A-Z]{2}\d{2}[\s]?[\dA-Z]{4,30}/g, '[KONTO]') // IBAN
+    .replace(/\b\d{8,}\b/g, '[KONTO]'); // long numeric strings (account numbers)
+
+  // Pass 2: LLM NER for names + addresses (3000-char chunks to stay in context)
+  try {
+    const res = await fetch(`${OLLAMA_URL}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: process.env.OLLAMA_MODEL ?? 'qwen3.5:35b',
+        prompt: PII_PROMPT(filtered),
+        stream: false,
+        options: { temperature: 0, num_predict: 2000 },
+      }),
+    });
+    const data = await res.json() as { response: string };
+    return data.response.trim() || filtered;
+  } catch {
+    // If LLM fails, regex-only filtering is still better than nothing
+    return filtered;
+  }
+}
+```
+
+**Performance note:** For batch Urteile ingestion, run `filterPII()` inside a separate low-priority BullMQ queue (`urteil-pii`). Mark `piiFiltered: false` on initial ingest. Block Helena retrieval of unfiltered chunks with `WHERE pii_filtered = true` in the query.
+
+**Why not `pii-paladin` npm:** Uses compromise.js/wink-nlp which have poor German language coverage and no legal-domain training. Not suitable for German court decisions.
+
+---
+
+## 7. Kanzlei-Muster Upload — DOCX + PDF to Markdown
+
+**PDF extraction:** `pdf-parse` is already in the stack (`^2.4.5`). No new library needed.
+
+**DOCX extraction:** Use `mammoth` (DOCX → HTML) + `turndown` (HTML → Markdown). Mammoth's built-in Markdown output is officially deprecated per their own documentation — the correct pipeline is always DOCX → HTML → Markdown.
+
+| Library | Version | Purpose | Why |
+|---------|---------|---------|-----|
+| `mammoth` | ^1.11.0 | DOCX to HTML | Only Node.js library that handles German Word documents reliably without requiring LibreOffice. Preserves paragraph/heading structure. Current version 1.11.0 (verified). |
+| `turndown` | ^7.2.2 | HTML to Markdown | Recommended follow-on to mammoth. Handles all HTML elements, configurable heading styles. Current version 7.2.2 (verified). |
+
+```bash
+npm install mammoth turndown
+npm install -D @types/turndown
+```
+
+**Implementation — write to `src/lib/ingestion/document-converter.ts`:**
+
+```typescript
+import mammoth from 'mammoth';
+import TurndownService from 'turndown';
+
+const turndown = new TurndownService({
+  headingStyle: 'atx',       // # ## ### headings
+  codeBlockStyle: 'fenced',  // ```code```
+});
+
+export async function docxToMarkdown(buffer: Buffer): Promise<string> {
+  const { value: html } = await mammoth.convertToHtml({ buffer });
+  return turndown.turndown(html);
+}
+
+export async function pdfToText(buffer: Buffer): Promise<string> {
+  // Dynamic import — pdf-parse uses require() internally, avoid SSR issues
+  const pdfParse = (await import('pdf-parse')).default;
+  const data = await pdfParse(buffer);
+  return data.text;
+}
+```
+
+**New Prisma table `muster_chunks`:**
+
+```prisma
+model MusterChunk {
+  id            String   @id @default(cuid())
+  name          String   // e.g. "Abmahnung Arbeitsrecht"
+  kategorie     String   // e.g. "Arbeitsrecht", "Mietrecht"
+  content       String   @db.Text
+  parentContent String?  @db.Text
+  embedding     Unsupported("vector(1024)")?
+  modelVersion  String
+  minioPath     String   // original file path in MinIO (source of truth)
+  uploadedById  String
+  uploadedAt    DateTime @default(now())
+  piiFiltered   Boolean  @default(false)
+
+  @@index([kategorie])
+  @@map("muster_chunks")
+}
+```
+
+---
+
+## Complete Installation Summary
+
+```bash
+# 5 new production packages total
+npm install simple-git rss-parser cheerio mammoth turndown
+
+# TypeScript types
+npm install -D @types/turndown
+```
+
+Everything else (RRF, parent-child chunking, LLM reranking, PII NER, PDF text extraction) uses existing stack components with zero new npm dependencies.
+
+---
+
+## Recommended Stack (New Libraries Only)
+
+### Core Technologies
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| `simple-git` | ^3.27.0 | Clone + incremental pull of bundestag/gesetze repo in BullMQ worker | Thin wrapper over system git CLI. Zero native binary deps. Proven in Node.js workers. `git.pull()` returns changed file list for incremental sync. |
+| `rss-parser` | ^3.13.0 | Parse BMJ XML RSS feeds for court decisions | De-facto standard. Handles XML parsing, RFC 822 date normalization, custom feed fields. ~2M weekly downloads. |
+| `cheerio` | ^1.0.0 | Extract decision text from rechtsprechung-im-internet.de HTML pages | jQuery-like server-side DOM parsing. Correct choice for simple HTML extraction — Playwright/Puppeteer would be massive overkill. |
+| `mammoth` | ^1.11.0 | DOCX to HTML for Kanzlei-Muster upload pipeline | Only reliable DOCX parser for Node.js without a LibreOffice sidecar. Preserves paragraph structure for German legal documents. |
+| `turndown` | ^7.2.2 | HTML to Markdown (after mammoth) | Mammoth's own Markdown output is officially deprecated. Turndown is the canonical follow-on step. |
+
+### Zero-Dependency Implementations (TypeScript Only)
+
+| Feature | Approach | File to Create |
+|---------|---------|----------------|
+| RRF hybrid fusion | 15-line pure TypeScript function | `src/lib/search/rrf.ts` |
+| Cross-encoder reranking | Ollama `/api/generate` REST call | `src/lib/search/reranker.ts` |
+| Parent-child chunking | Extended `@langchain/textsplitters` | Extend `src/lib/embedding/chunker.ts` |
+| PII NER filter | Regex pre-pass + Ollama LLM NER | `src/lib/pii/ner-filter.ts` |
+| DOCX/PDF conversion | mammoth + turndown + pdf-parse | `src/lib/ingestion/document-converter.ts` |
+
+---
+
+## Alternatives Considered
+
+| Recommended | Alternative | Why Not |
+|-------------|-------------|---------|
+| Hand-written RRF function | `rerank-ts` npm package | Adds a dependency for a formula that is 15 lines of TypeScript. Zero value over DIY. |
+| Ollama LLM reranking | Cohere Rerank API | Cloud dependency, DSGVO risk (data leaves the system), monthly cost. Violates self-hosted constraint. |
+| Ollama LLM reranking | Dedicated Python cross-encoder service | New Docker service + Python runtime. Violates no-new-services constraint. |
+| Ollama LLM NER for PII | `pii-paladin` npm | Uses compromise.js/wink-nlp with poor German coverage. Not legal-domain aware. |
+| `rss-parser` + `cheerio` for Urteile | BMJ bulk download / API | No official API exists. RSS feeds are the official documented mechanism (confirmed on BMJ site). |
+| `simple-git` for Gesetze | `isomorphic-git` | More complex for a simple clone+pull workflow. simple-git's pull summary with changed files is exactly what incremental sync needs. |
+| `simple-git` for Gesetze | `nodegit` | Native bindings that break on Node.js version upgrades. simple-git uses git CLI via child_process. |
+| `mammoth` + `turndown` | LibreOffice DOCX conversion | Requires a LibreOffice Docker sidecar — unnecessary operational complexity for DOCX → text extraction. |
 
 ---
 
@@ -409,66 +530,81 @@ stirling-pdf:
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| **ai@^6** (AI SDK v6) | Requires zod >= 3.25.76. Would force zod upgrade across entire codebase. | ai@^4.3.19 -- all needed features, compatible with current zod 3.23.8 |
-| **ai-sdk-ollama** (v3.x) | Requires AI SDK v6. Incompatible with v4. | ollama-ai-provider@^1.2.0 |
-| **node-imap** | Unmaintained since 2019. Callback-based. No async/await. | imapflow |
-| **LangChain.js for full RAG** | Overly complex abstraction for embedding/retrieval. Dozens of transitive deps. | LangChain ONLY for text splitting. AI SDK for embedding/generation. Prisma raw SQL for vector search. |
-| **Pinecone / Weaviate / Qdrant** | External vector databases. Violates self-hosted constraint. Adds operational complexity. | pgvector (already in the Docker stack) |
-| **node-zugferd** | Beta (0.1.1-beta.1). ZUGFeRD only, no XRechnung UBL. | @e-invoice-eu/core |
-| **ws** (raw WebSocket) | No rooms, no reconnection, no transport fallback. | socket.io |
-| **Separate Next.js app for portal** | Double deployment, shared-nothing DB access, CORS complexity. | Route groups in same app with role-based middleware |
+| Python NER libraries (spaCy, Flair, transformers) | Introduces Python runtime + new Docker service. Violates stack constraint. | Ollama `qwen3.5:35b` with structured NER prompt |
+| LangChain `ParentDocumentRetriever` | Python-only. The JS LangChain port lacks this retriever. | Hand-implement parent lookup in `vector-store.ts` |
+| Separate cross-encoder Docker service (HuggingFace TEI, Triton) | New service + GPU contention with Ollama. | Ollama reranking (Option A) or RRF-only (Option C) |
+| `playwright` / `puppeteer` for BMJ scraping | Requires Chromium, heavyweight, slow for simple HTML extraction | `cheerio` on raw `fetch()` response |
+| `wink-nlp` / `compromise.js` for German NER | Trained on English, minimal German legal vocabulary | Ollama LLM NER |
+| `nodegit` | Native bindings, complex build, breaks on Node.js upgrades | `simple-git` |
+| `docx2md` npm | Unmaintained. Last release 2020. | `mammoth` + `turndown` |
 
 ---
 
-## Version Compatibility Matrix
+## Stack Patterns by Variant
+
+**If GPU is constrained (slow reranking):**
+- Skip LLM reranking (Option C)
+- Return RRF top-5 directly to the prompt
+- RRF alone provides ~60-70% of quality improvement over baseline cosine-only
+
+**If bundestag/gesetze repo is too large for Docker volume:**
+- Use `git sparse-checkout` via simple-git to clone only relevant Rechtsgebiete:
+- `await simpleGit(REPO_PATH).raw(['sparse-checkout', 'set', 'a/arbgg', 'b/bgb', 'z/zpo'])`
+
+**If Ollama NER is too slow for batch Urteile ingestion:**
+- Use a separate low-priority BullMQ queue (`urteil-pii`) for PII filtering
+- Ingest first (mark `piiFiltered: false`), filter async
+- Block Helena retrieval of unfiltered chunks via `AND pii_filtered = true` in SQL
+
+**If parent-child chunking adds too much DB storage:**
+- Store `parentContent` as TEXT inline on each child chunk (denormalized)
+- Instead of FK to parent row — simpler retrieval, more storage
+- Avoids a second DB round-trip at query time
+
+---
+
+## Version Compatibility
 
 | Package | Compatible With | Notes |
-|---------|-----------------|-------|
-| ai@^4.3.19 | zod@^3.23.8, react@^18, node >= 18 | Current project stack is fully compatible |
-| @ai-sdk/openai@^1.3.24 | ai@^4.x, zod@^3.0.0 | v1.x line for AI SDK v4 |
-| @ai-sdk/anthropic@^1.2.12 | ai@^4.x, zod@^3.0.0 | v1.x line for AI SDK v4 |
-| ollama-ai-provider@^1.2.0 | ai@^4.x, zod@^3.0.0 | Works with AI SDK v4 (NOT v6) |
-| @langchain/textsplitters@^1.0.1 | @langchain/core@^1.1.x | Peer dependency |
-| socket.io@^4.8.3 | node >= 12 | Broadly compatible |
-| tsdav@^2.1.8 | node >= 16 | TypeScript native |
-| imapflow@^1.2.10 | node >= 14 | Async/await based |
+|---------|----------------|-------|
+| `simple-git@^3.27.0` | Node.js 16+ | Requires git CLI in Docker image. Debian-based images have git by default. |
+| `rss-parser@^3.13.0` | Node.js 14+ | No native deps. Works in Next.js API routes and BullMQ worker. |
+| `cheerio@^1.0.0` | Node.js 14+ | v1.0 stable (released 2023). Use `load()` API not `cheerio()` (the latter is removed in v1). |
+| `mammoth@^1.11.0` | Node.js 12+ | Accepts `{ buffer: Buffer }` — compatible with MinIO stream-to-buffer pattern already in use. |
+| `turndown@^7.2.2` | Node.js + Browser | Requires `@types/turndown` for TypeScript. No peer dependency issues. |
 
 ---
 
-## Docker Services Summary
+## Integration Points with Existing Code
 
-| Service | Image | Port | Purpose | New? |
-|---------|-------|------|---------|------|
-| stirling-pdf | stirlingtools/stirling-pdf:latest | 8081 | PDF OCR/merge/split/compress | NEW |
-| app | (custom) | 3000 | Next.js + Socket.IO (custom server) | MODIFIED (custom server for WebSocket) |
-
-All other Docker services (db, minio, meilisearch, onlyoffice, ollama) remain unchanged.
+| New Feature | Integrates With | Integration Notes |
+|-------------|----------------|------------------|
+| Hybrid Search (RRF) | `src/lib/embedding/vector-store.ts` + `meilisearch` client | Add `hybridSearch()` alongside existing `searchSimilar()`. Share the same Meilisearch client instance already configured in the app. |
+| Cross-Encoder Reranking | `src/app/api/ki-chat/route.ts` | Insert between RRF fusion and system prompt construction. Guard with `if (RERANKING_ENABLED)` env flag. |
+| Parent-Child Chunking | `src/lib/embedding/chunker.ts` + `src/lib/embedding/vector-store.ts` | Extend `insertChunks()` to accept `{ parent: ChunkData; children: ChunkData[] }`. Update OCR processor to call new signature. |
+| Gesetze Sync | BullMQ worker (`src/lib/queue/processors/`) | New processor `gesetze-sync.processor.ts`. Schedule daily via BullMQ cron (same pattern as `vorfristen-cron`). |
+| Urteile RSS Fetch | BullMQ worker | New processor `urteil-fetch.processor.ts`. Schedule daily per court. |
+| PII Filter | Called inside `urteil-fetch` processor | Sequential: fetch RSS → fetch HTML → extract text → PII filter → chunk → embed → insert `urteil_chunks`. |
+| Muster Upload | New API route `/api/admin/muster/upload` | MinIO upload (existing S3 client) + enqueue BullMQ job for conversion + chunking + embedding. |
+| Helena RAG retrieval | `src/app/api/ki-chat/route.ts` | Extend source selection: query `document_chunks`, `law_chunks`, `urteil_chunks`, `muster_chunks` in parallel. Merge results via RRF before reranking. |
 
 ---
 
 ## Sources
 
-- [imapflow npm](https://www.npmjs.com/package/imapflow) -- v1.2.10 verified via `npm view`
-- [ImapFlow documentation](https://imapflow.com/) -- IDLE behavior, API reference
-- [nodemailer](https://nodemailer.com/) -- v8.0.1 verified via `npm view`
-- [Vercel AI SDK docs](https://ai-sdk.dev/docs/introduction) -- Provider model, streaming API
-- [AI SDK 6 migration guide](https://ai-sdk.dev/docs/migration-guides/migration-guide-6-0) -- Breaking changes (zod requirement)
-- [AI SDK providers](https://ai-sdk.dev/docs/foundations/providers-and-models) -- Provider ecosystem
-- [ollama-ai-provider](https://github.com/sgomez/ollama-ai-provider) -- v1.2.0, AI SDK v4 compatible
-- [LangChain text splitters](https://js.langchain.com/v0.1/docs/modules/data_connection/document_transformers/) -- RecursiveCharacterTextSplitter
-- [pgvector npm](https://www.npmjs.com/package/pgvector) -- v0.2.1 verified
-- [tsdav](https://github.com/natelindev/tsdav) -- v2.1.8, CalDAV/CardDAV TypeScript client
-- [ical.js](https://www.npmjs.com/package/ical.js) -- v2.2.1, iCalendar parser
-- [@e-invoice-eu/core](https://github.com/gflohr/e-invoice-eu) -- v2.3.1, XRechnung + ZUGFeRD
-- [sepa.js](https://github.com/kewisch/sepa.js) -- v2.1.0, pain.001 + pain.008
-- [Stirling-PDF docs](https://docs.stirlingpdf.com/) -- REST API, Docker deployment
-- [Stirling-PDF GitHub](https://github.com/Stirling-Tools/Stirling-PDF) -- API capabilities
-- [Socket.IO + Next.js guide](https://socket.io/how-to/use-with-nextjs) -- Integration patterns
-- [socket.io npm](https://www.npmjs.com/package/socket.io) -- v4.8.3 verified
-- [mailparser](https://nodemailer.com/extras/mailparser) -- v3.9.3, MIME parsing
-- [sanitize-html npm](https://www.npmjs.com/package/sanitize-html) -- v2.17.1
-- [pdf-lib npm](https://www.npmjs.com/package/pdf-lib) -- v1.17.1
+- bundestag/gesetze repo format: https://github.com/bundestag/gesetze — direct inspection, Markdown format confirmed (HIGH confidence)
+- BMJ RSS feed URLs: https://www.rechtsprechung-im-internet.de/jportal/portal/page/bsjrsprod.psml?cmsuri=/technik/de/hilfe_1/bsjrsrss.jsp&riinav=3 — official BMJ documentation, all 7 feed URLs confirmed (HIGH confidence)
+- `simple-git` npm: https://www.npmjs.com/package/simple-git — v3.27.0, actively maintained (HIGH confidence)
+- `rss-parser` npm: https://www.npmjs.com/package/rss-parser — v3.13.0 confirmed (HIGH confidence)
+- `cheerio` npm: https://www.npmjs.com/package/cheerio — v1.0.0 stable release (HIGH confidence)
+- `mammoth` npm: https://www.npmjs.com/package/mammoth — v1.11.0 confirmed current (HIGH confidence)
+- `turndown` npm: https://www.npmjs.com/package/turndown — v7.2.2 confirmed current (HIGH confidence)
+- RRF algorithm (k=60): Cormack et al. 2009, validated via Elasticsearch RRF docs + multiple production implementations (HIGH confidence)
+- Mammoth Markdown deprecation: https://github.com/mwilliamson/mammoth.js — README explicitly states Markdown output is deprecated (HIGH confidence)
+- Ollama reranking with Qwen3: https://www.glukhov.org/post/2025/06/qwen3-embedding-qwen3-reranker-on-ollama/ — 2025 article, Go examples but REST API is identical (MEDIUM confidence)
+- Ollama LLM NER for PII: https://drezil.de/Writing/ner4all-case-study.html — local LLM NER case study, German legal specifics are extrapolation (MEDIUM confidence)
 
 ---
-*Stack research for: AI-Lawyer subsequent milestone capabilities*
-*Researched: 2026-02-24*
+
+*Stack research for: Helena RAG Enhancement — AI-Lawyer v0.1 milestone*
+*Researched: 2026-02-26*

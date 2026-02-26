@@ -1,399 +1,315 @@
-# Feature Research: German Kanzleisoftware (Milestone 2 Features)
+# Feature Research
 
-**Domain:** AI-First Legal Practice Management (Kanzleisoftware) -- Germany
-**Researched:** 2026-02-24
-**Confidence:** MEDIUM-HIGH (competitor analysis via public docs + official legal requirements verified)
+**Domain:** Legal RAG — Helena KI-Agentin v0.1 (Hybrid Search, Knowledge Sources, German Law UX)
+**Researched:** 2026-02-27
+**Confidence:** MEDIUM — pipeline patterns HIGH from multiple authoritative sources; German legal UX patterns MEDIUM from citation standards + court case evidence; cross-encoder German model availability LOW (needs verification)
 
-## Context
+---
 
-This research covers features being **added** to an existing MVP that already has: case management CRUD, contact management, document management with OnlyOffice, calendar/deadlines basic CRUD, ticket system, AI drafts workspace, and basic Ollama LLM integration.
+## Context: What Already Exists (Do Not Rebuild)
 
-The German Kanzleisoftware market is dominated by RA-MICRO (70,000+ workstations, market leader), AnNoText (Wolters Kluwer, deep feature set), Advoware (SMB focus), and newer cloud entrants like ActaPort and KanzLaw. Open-source alternative j-lawyer.org exists but has limited financial features.
+This is research for a SUBSEQUENT MILESTONE adding to an existing ~91,300-LOC codebase. The following is already shipped:
+
+- Helena proactive agent with document RAG (pgvector, multilingual-e5-large-instruct)
+- Current RAG: top-10 cosine similarity, 1000-char chunks → LLM prompt (no hybrid, no reranking)
+- Meilisearch full-text search (case documents already indexed)
+- Multi-provider AI (Ollama qwen3.5:35b / OpenAI / Anthropic) via Vercel AI SDK v4
+- BullMQ async processing pipeline with daily cron support
+- KI-Entwurf workflow: all AI output = ENTWURF status, human approval required before any action
+- Quellennachweise on AI answers (document + paragraph, already displayed)
+
+New features must integrate into this existing infrastructure — not replace it.
 
 ---
 
 ## Feature Landscape
 
-### Table Stakes (Users Expect These)
+### Category A: RAG Pipeline Quality (Internal — lawyers see better answers, not the mechanism)
 
-Features every serious Kanzleisoftware must have. Missing these means the product cannot replace incumbent tools like RA-MICRO or Advoware.
+#### Table Stakes
 
-| # | Feature | Why Expected | Complexity | Notes |
-|---|---------|--------------|------------|-------|
-| **EMAIL** | | | | |
-| E1 | IMAP inbox with case assignment (Verakten) | Every competitor has this. RA-MICRO's entire "E-Workflow" centers on routing emails to cases. Lawyers receive 50-100+ emails/day that must land in the correct electronic file. | HIGH | IMAP IDLE for real-time. Must handle shared + per-user mailboxes. HTML rendering, attachments. |
-| E2 | SMTP send from within the app | Cannot force lawyers to switch to external email client for sending. RA-MICRO, Advoware, AnNoText all have integrated send. | MEDIUM | Compose view with To/CC/BCC, rich text, file attachment from DMS, case linking. |
-| E3 | Email-to-case assignment (Veraktung) | Core workflow: every email must be assignable to a case file. This IS the email feature's raison d'etre for law firms. | MEDIUM | One-click assign, auto-suggest case from sender/subject, save attachments to DMS. |
-| **DOCUMENTS** | | | | |
-| D1 | Document template system with placeholders | Every competitor has this. RA-MICRO, AnNoText, Advoware all auto-fill templates with case/contact data. Lawyers create 20-50 documents/day from templates. | MEDIUM | {{mandant.name}}, {{akte.aktenzeichen}}, {{gegner.name}}, etc. Use docxtemplater (already partially exists). |
-| D2 | Letterhead (Briefkopf) management | Mandatory per BRAO -- law firm correspondence must include specific information (name, address, Fachanwaltsbezeichnung, Kammerzugehoerigkeit). Every competitor has letterhead auto-application. | MEDIUM | Logo + firm data configurable. Applied automatically to all outgoing documents. Editable in OnlyOffice. |
-| D3 | PDF export with letterhead | Standard output format for court submissions, client correspondence. All competitors support this. | LOW | OnlyOffice can export PDF. Need to ensure letterhead is embedded. |
-| **DEADLINES** | | | | |
-| F1 | BGB deadline calculation (SS 187-193) | **Legal requirement.** Missing a deadline = malpractice. Every Kanzleisoftware calculates deadlines automatically. Fristenversaeumnis is the #1 cause of attorney liability claims. | HIGH | Ereignisfrist vs. Beginnfrist, weekend/holiday extension per SS 193 BGB. Must be 100% correct. |
-| F2 | Holiday calendar per Bundesland | Deadlines shift based on state-specific holidays. SS 193 BGB requires Feiertag-aware calculation. Each Bundesland has different holidays. | LOW | Use `feiertagejs` npm package (4,891 weekly downloads, no deps, TypeScript). Default: NRW. |
-| F3 | Pre-deadline reminders (Vorfristen) | Standard practice: 7 days, 3 days, 1 day before deadline. Required by insurance and bar association best practices. All competitors have this. | LOW | Configurable reminder intervals. Notification to responsible attorney + Sachbearbeiter. |
-| **FINANCE** | | | | |
-| FI1 | RVG fee calculation | Core billing mechanism for German attorneys. Cannot bill clients without RVG calculation. All competitors have this built-in. RA-MICRO has deep VV-number-based fee selection. | HIGH | Streitwert to Gebuehr mapping per SS 13 RVG table. VV numbers: 3100 (Verfahrensgebuehr, 1.3x), 3104 (Terminsgebuehr, 1.2x), 1000/1003 (Einigungsgebuehr, 1.0x), 7002 (Postpauschale), Nr. 1008 (Mehrvertretungszuschlag). Must track KostBRaeG 2025 changes (6% increase from June 2025). |
-| FI2 | Invoice creation with PDF | Must generate proper Rechnungen with all legally required fields (SS 14 UStG). All competitors support this. | HIGH | Nummernkreis, atomare Vergabe, Rechnungsstatus-Flow (Entwurf -> Gestellt -> Bezahlt -> Storniert). |
-| FI3 | Aktenkonto (case account) | Tracks all financial movements per case: fees, expenses, Fremdgeld, Auslagen. **Legally required** per SS 43a Abs. 7 BRAO for Fremdgeld tracking. All competitors have this. | HIGH | Einnahme/Ausgabe/Fremdgeld/Auslage bookings. Saldo calculation. Beleg linking to DMS documents. |
-| FI4 | E-Rechnung (XRechnung + ZUGFeRD) | **Mandatory since 01.01.2025** for B2B receipt. Mandatory for sending from 2027 (transitional rules until end 2026 for paper). Courts require XRechnung. Companies prefer ZUGFeRD (hybrid PDF+XML). | HIGH | Use `@e-invoice-eu/core` or `node-zugferd` npm packages. Must support EN16931 standard. |
-| FI5 | DATEV CSV export | **De facto standard** for tax advisor data exchange. Nearly every German business uses DATEV-format for Steuerberater handoff. All competitors support this. | MEDIUM | Buchungsstapel CSV format. Well-documented DATEV format specification. |
-| **beA** | | | | |
-| B1 | beA message display and basic management | **Legal obligation** per SS 31a BRAO: every attorney must maintain a beA postbox and check it. Integration in Kanzleisoftware eliminates manual portal login. RA-MICRO, AnNoText, Advoware all have this. | HIGH | Use bea.expert REST API (~40 functions, EUR 10/month per mailbox). PostboxOverview, GetMessage, FolderOverview. Requires local software token management + encryption handling. |
-| **OCR/PDF** | | | | |
-| O1 | Auto-OCR on PDF upload | Table stakes for any modern DMS. Scanned court documents must be searchable. RA-MICRO, AnNoText do this automatically. | MEDIUM | Stirling-PDF Docker service with Tesseract. Async queue with retries. Only OCR if PDF not already searchable. German language tessdata. |
-| O2 | PDF preview in browser | Users must view documents without downloading. Standard in all competitors. | LOW | pdf.js viewer or similar. Navigation, zoom, download button. |
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Accurate §-number exact-match retrieval | Lawyers query "Was sagt § 626 BGB?" — pure semantic fails on exact statutory references | MEDIUM | Current cosine-only misses AZ lookups like "3 AZR 123/22"; BM25 via Meilisearch already exists |
+| Source attribution on every AI claim | BRAO §43a — lawyer must verify before using AI output; without source, output is unusable | LOW | Already partially shipped; must extend to new knowledge sources (law_chunks, urteil_chunks) |
+| "Nicht amtlich" disclaimer on cited norms | gesetze-im-internet.de uses this standard wording; lawyers recognize it as appropriate caveat | LOW | BMJV precedent: "Nicht amtlich konsolidiert. Maßgeblich ist die im BGBl. veröffentlichte Fassung." |
+| "Stand: [Datum]" on retrieved norm text | Lawyer must know if they are looking at current or outdated law text | LOW | Store sync_date on law_chunks; display alongside norm citation |
 
-### Differentiators (Competitive Advantage)
+#### Differentiators (Competitive Advantage)
 
-Features that set AI-Lawyer apart from incumbents. These are the "why switch" reasons.
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Hybrid Search (Meilisearch BM25 + pgvector via RRF) | Legal text has exact statutory references (§ 626 BGB, AZ 3 AZR 123/22) that pure semantic misses; hybrid catches both modes | MEDIUM | RRF merge function in retrieval service; alpha ≈ 0.4 (60% BM25 / 40% dense) as legal-domain starting point; tune with labeled validation queries |
+| Parent-Child Chunking (400-512 token child / 1500-2000 token parent) | Child retrieved with precision, parent returned to LLM for full context; prevents truncated §§ or Urteil sections | MEDIUM | Requires schema change (parent_chunk_id FK on doc_chunks + law_chunks + urteil_chunks); re-ingestion BullMQ job for existing documents |
+| Cross-Encoder Reranking via local model | +33-40% retrieval accuracy per research; adds 200-400ms — acceptable since LLM generation is already 2-8s | HIGH | Ollama cross-encoder availability as of early 2026 limited; may require direct HuggingFace HTTP inference; German multilingual model preferred over English ms-marco |
 
-| # | Feature | Value Proposition | Complexity | Notes |
-|---|---------|-------------------|------------|-------|
-| **AI AGENT** | | | | |
-| AI1 | Proactive AI agent ("OpenClaw") that suggests actions | **Primary differentiator.** No incumbent has this. AnNoText Expert AI and Legal Twin are reactive (user asks, AI answers). OpenClaw should PROACTIVELY scan new emails/documents and suggest: "Frist erkannt", "Antwort-Entwurf erstellt", "Neuer Beteiligter erkannt". 78% of German lawyers now use AI (2026), but none have a proactive agent embedded in their Kanzleisoftware. | VERY HIGH | RAG pipeline, multi-provider LLM, document chunking/embedding, proactive scanning of incoming emails + documents. Must NEVER auto-send anything -- always drafts requiring human approval. |
-| AI2 | Automatic deadline recognition from documents | Scans incoming Schriftsaetze/court letters, extracts deadlines, creates calendar drafts. No incumbent does this automatically. Gartner predicts 33% of enterprise software will have agentic AI by 2028 -- law firms are behind. | HIGH | NLP/LLM parsing of German legal documents. Pattern matching for "Frist von X Wochen", "bis zum DD.MM.YYYY", court summons dates. Always creates DRAFT entries (never auto-confirmed). |
-| AI3 | Case summary with timeline + key facts | One-click case overview. Saves 15-30 min per case when attorney needs to catch up. AnNoText Expert AI claims "85% faster" task completion. | HIGH | RAG over all case documents. Extract parties, claims, dates, amounts. Generate structured summary. |
-| AI4 | Document chat (per-case RAG) | Ask questions about documents within a case. "Was fordert der Gegner?" "Welche Fristen sind noch offen?" | HIGH | Embedding + retrieval per case. Vector store (pgvector already in stack). Context-aware responses. |
-| AI5 | Global legal chat (cross-case RAG) | Cross-case knowledge: "Wie haben wir in aehnlichen Faellen argumentiert?" "Gibt es Praezedenzen in unseren Akten?" | VERY HIGH | Cross-case embedding search. Privacy boundaries per user role. Much larger context management challenge. |
-| **CLIENT PORTAL** | | | | |
-| CP1 | Mandantenportal with document sharing | ActaPort launched this with Silberfluss partnership. Most incumbents do NOT have this yet -- it is emerging as a differentiator. Clients expect digital interaction (not fax/mail). | HIGH | Separate auth flow (invitation link + password). Read-only document access. Secure messaging. Upload capability. |
-| CP2 | Client self-service status view | Clients can see case status without calling the office. Reduces phone interruptions (major pain point per Keuthen AG research). | MEDIUM | Case status dashboard for clients. Limited to what attorney explicitly shares. |
-| **FINANCE ADVANCED** | | | | |
-| FI6 | SEPA payment file generation (pain.001 + pain.008) | Automates bank transfers and direct debits. Not all competitors have this -- many rely on manual banking. | MEDIUM | Use `sepa` or `sepa-xml` npm packages. Generate XML files for bank upload. |
-| FI7 | Banking import (CSV + CAMT053) | Import bank statements, match to invoices/cases. Saves hours of manual reconciliation. Advanced feature -- RA-MICRO has it, smaller competitors often don't. | MEDIUM | Use `camt-parser` npm package for CAMT053 XML. CSV parser for bank-specific formats. Semi-automatic matching (suggest, human confirms). |
-| FI8 | Mahnwesen (dunning process) | Automated payment reminders in stages (Mahnung 1, 2, 3). Reduces manual follow-up on unpaid invoices. | MEDIUM | Mahnstufen configuration. Auto-generate Mahn-PDFs from templates. Track per invoice. |
-| **MESSAGING** | | | | |
-| M1 | Case-bound internal threads | Replace scattered emails/Slack messages about cases. Context stays with the case. Not offered by most incumbents (they rely on external tools like Teams/Slack). | MEDIUM | Thread per case. @mentions. Notifications. Attachments. Link to documents in DMS. |
-| **PDF TOOLS** | | | | |
-| O3 | PDF merge, split, watermark, redact | Power-user tools that save time. Stirling-PDF provides all of these via API. Not all competitors offer in-app PDF manipulation. | MEDIUM | Stirling-PDF REST API. Expose key operations in UI: merge, split, reorder, rotate, compress, watermark, redact. |
+#### Anti-Features (Do Not Build)
 
-### Anti-Features (Commonly Requested, Often Problematic)
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| Cross-encoder via external Cohere/OpenAI Rerank API | Simplest path to quality reranking | Client data leaves premises → DSGVO violation; breaks self-hosted principle | Local Ollama or HuggingFace inference only |
+| LLM-as-Reranker (GPT-4 scoring each retrieved chunk) | Highest theoretical accuracy | 10-50x token cost per query; adds 3-8s latency; overkill when cross-encoder achieves 40% gain at fraction of cost | Cross-encoder is the right tradeoff |
+| Real-time norm fetch on every query (live Bundestag API) | Always-fresh law text | Latency-prohibitive; Bundestag API rate-limits at 25 concurrent; network failure blocks query | Daily BullMQ cron sync into law_chunks; show "Stand: [datum]" |
 
-Features that seem good but create problems. Explicitly decide NOT to build these.
+---
 
-| Anti-Feature | Why Requested | Why Problematic | Alternative |
-|--------------|---------------|-----------------|-------------|
-| Full FiBu (Finanzbuchhaltung) module | "We want everything in one system" | Enormously complex (GoBD compliance, Kontenrahmen, Bilanz). Every Kanzlei already has a Steuerberater using DATEV. Building FiBu is a multi-year effort that competes with DATEV, a billion-euro company. | DATEV CSV export covers the interface. Let Steuerberater handle FiBu in DATEV. |
-| Bidirectional IMAP sync (flags/delete back to mailserver) | "Keep email client and Kanzleisoftware in sync" | Extremely fragile. IMAP flag sync across clients causes conflicts, data loss, race conditions. RA-MICRO does not do this either -- they import and manage within. | One-way import. Emails are COPIED into the system. Original stays on mailserver untouched. |
-| beA live/direct integration (bypass bea.expert) | "No monthly API fees" | beA's native API requires JAVA Client Security, hardware token management, complex OSCI protocol. The bea.expert API abstracts all of this for EUR 10/month. Building native integration is months of work for marginal savings. | Use bea.expert REST API. EUR 10/month/mailbox is negligible vs development cost. |
-| Native mobile app | "Lawyers want mobile access" | Doubles frontend codebase. Responsive web covers 90% of mobile use cases. React Native/Flutter = separate team/skillset. App store approval delays. | Responsive web design. PWA if needed later. |
-| Full Zwangsvollstreckung module | "Complete legal workflow coverage" | Extremely specialized domain with its own forms, processes, timelines. Low-frequency for most law firms. | Defer to v2+. Focus on core mandate workflow first. |
-| Real-time collaborative editing everywhere | "Google Docs for everything" | OnlyOffice already handles document collaboration. Extending real-time to templates, forms, case notes adds massive complexity (CRDT, conflict resolution) for marginal benefit. | OnlyOffice for document collaboration. Simple locking for other editable resources. |
-| CalDAV bidirectional sync in v1 | "Sync with Google Calendar / Outlook" | CalDAV is notoriously flaky. Bidirectional sync = conflict resolution nightmares. Most Kanzleisoftware does NOT have this. | Export/subscribe (read-only CalDAV feed) first. Bidirectional only if demand proves real. |
-| AI auto-send (emails, documents) | "Full automation" | **Absolute no-go.** BRAO professional duty requires attorney oversight. AI-generated content sent without review = malpractice risk + ethical violation. BRAK's 2025 AI guidelines explicitly warn against this. | AI creates DRAFTS only. Human reviews and explicitly approves every outgoing communication. |
-| VoIP integration in core product | "Unified communications" | Telephony integration (SIP/VoIP) is a deep rabbit hole with hardware dependencies, carrier-specific quirks, echo cancellation, etc. Low value vs effort. | Simple Sipgate journal API import (just log calls). Actual VoIP stays in dedicated phone system. |
+### Category B: German Legal Knowledge Sources
+
+#### Table Stakes
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Gesetze-RAG (bundestag/gesetze → law_chunks) | Lawyers ask "Was sagt § X Y?" constantly; Helena answering from training data = hallucination risk | HIGH | bundestag/gesetze GitHub repo is public domain, actively maintained, XML format parseable by Absatz; daily BullMQ cron sync |
+| Urteile-RAG with NER PII-filter | Lawyers in Arbeitsrecht/Strafrecht need case law citations; BAG/BGH decisions must come from real sources, not LLM fabrication | HIGH | NER pass via Ollama required BEFORE embedding — DSGVO Art. 9 + BDSG §22 apply to names in decisions; Frankfurt court Sept 2025 case of fabricated BGH citations = live liability risk |
+| Arbeitswissen-RAG (amtliche Formulare + kanzlei-eigene Muster) | Kanzlei-specific workflow knowledge enables Helena to draft from actual firm templates rather than generic patterns | MEDIUM | Admin-upload UI to MinIO; PII-anonymization pass (remove real client names from old Schriftsätze used as Muster) before embedding |
+
+#### Differentiators
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Normen-Verknüpfung in Akte (pin §§ to a case) | Lawyer pins "§ 626 BGB" to a case → Helena automatically uses pinned norms as grounding context for this case's questions; prevents Helena from retrieving irrelevant norms | MEDIUM | New Prisma model AkteNorm; UI: search modal over law_chunks → one-click add; pinned norms injected into Helena system context per Akte |
+| Schriftsatz-Entwurf from Muster (Helena draft mode) | Helena produces structured Klageschrift sections from firm templates + Akte facts — saves 2-4 hours per draft | HIGH | Depends on seeded muster_chunks; output is ENTWURF with explicit placeholders; section-by-section outline safer than single-pass prose for Sachverhalt (hallucination risk) |
+| BAG RSS incremental sync for Arbeitsrecht | Latest BAG decisions ingested automatically; relevant for Kanzlei Baumfalk's Arbeitsrecht focus | LOW | RSS feed parsing in BullMQ cron; de-duplicate by AZ before embedding |
+
+#### Anti-Features
+
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| Full German case law mirror (juris/beck-online import) | Comprehensive coverage sounds valuable | Terabytes of data; commercial licensing required for juris/beck; PII at scale requires industrial NER; ingestion cost unrealistic for self-hosted | BMJ Rechtsprechung-im-Internet (public domain, manageable volume) is sufficient |
+| Auto-generated Schriftsatz sent to beA without review | Maximum automation | Absolute No-Go per BRAK 2025; BRAO §43 professional responsibility lies with Anwalt; Frankfurt court Sept 2025 found lawyer liable for AI-hallucinated BGH citations in submission | ENTWURF workflow already enforced; Anwalt must promote to FREIGEGEBEN before beA send |
+| §§ Knowledge Graph (Verweisketten, BGB→HGB→ZPO cross-refs) | Deep legal intelligence | Building + maintaining a full cross-reference graph is a separate multi-month project; not needed for basic norm retrieval | Normen-Verknüpfung in Akte covers the practical use case |
+| Real-time citation verification against live juris/beck API | Safety net for hallucinations | No public API; commercial licensing; breaks self-hosted principle | Retrieval-grounded-only citations from law_chunks/urteil_chunks; "Nicht amtlich" disclaimer for transparency |
+
+---
+
+### Category C: Legal UX — Citation Display and Workflow
+
+#### Table Stakes
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Norm display with § number, law abbreviation, Absatz text, Stand-datum | Standard legal reference format; lawyers recognize "§ 626 BGB Abs. 1" immediately | LOW | Display as structured card, not raw text; include Stand date |
+| Urteil citation with Gericht + AZ + Datum + Leitsatz snippet | NJW house style is the de facto German legal citation standard; Gericht abbreviation + Entscheidungsart + Datum + AZ | LOW | Format: "BAG, Urteil v. 25.04.2023 – 2 AZR 234/22"; AZ MUST be verbatim from retrieved chunk, never LLM-generated |
+| "KI-Treffer prüfen" warning on all retrieved legal sources | Lawyers have professional duty to verify (BRAO §43a); recent court cases show AI citation liability risk is real | LOW | Already have ENTWURF badge system; extend to citation cards |
+
+#### Differentiators
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| "Zur Akte hinzufügen" one-click from norm/Urteil card | Frictionless workflow: lawyer finds relevant § → one click → pinned to Akte; no copy-paste needed | LOW | Calls AkteNorm create endpoint; updates Normen widget in Akte detail |
+| Helena auto-suggest norms for Akte based on Rechtsgebiet | When lawyer opens Akte, Helena proactively suggests "Folgende Normen könnten relevant sein: § 626 BGB, § 1 KSchG" based on Rechtsgebiet field | MEDIUM | Triggered on Akte open; lightweight retrieval from law_chunks using Rechtsgebiet as query; not full RAG chain |
+| Structured Schriftsatz outline with explicit placeholders | Helena output has `[MANDANT_NAME]`, `[SACHVERHALT_DATUM]` etc. clearly marked — lawyer knows exactly what to fill in | LOW | Prompt engineering in Helena Schriftsatz mode; section headers matching ZPO §253 structure |
+
+#### Anti-Features
+
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| Auto-populate Sachverhalt section from Akte facts | Full automation appeals | Sachverhalt in a Schriftsatz is a curated legal narrative — LLM-generated facts can subtly misstate dates, amounts, party names; lawyer liability if wrong | Outline with bullet-point prompts + explicit placeholders; lawyer writes the narrative using Helena's structure |
+| Display raw Urteil full-text inline in chat | Complete information | Long Urteile (10-30 pages) destroy chat readability; overwhelming for lawyer | Leitsatz snippet + "Volltext" button linking to BMJ source URL |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[F1] Deadline Calculation (BGB SS 187-193)
-    +-- requires --> [F2] Holiday Calendar per Bundesland
-    +-- enhances --> [F3] Pre-deadline Reminders
-    +-- enhanced by --> [AI2] Auto Deadline Recognition
+[Hybrid Search RRF]
+    requires --> [Meilisearch BM25 results] (already exists)
+    requires --> [pgvector cosine results] (already exists)
+    requires --> [RRF merge function in retrieval service] (NEW)
 
-[E1] IMAP Inbox
-    +-- requires --> [E3] Email-to-Case Assignment (core workflow)
-    +-- enhanced by --> [E2] SMTP Send (compose from inbox)
-    +-- enhanced by --> [AI1] Proactive AI (scan incoming emails)
-    +-- enhanced by --> [AI2] Auto Deadline Recognition (from email attachments)
+[Parent-Child Chunking]
+    requires --> [Schema: parent_chunk_id on doc_chunks/law_chunks/urteil_chunks] (NEW Prisma model)
+    requires --> [Re-ingestion pipeline for existing documents] (NEW BullMQ job)
+    requires --> [Retrieval service: fetch parent after child match] (NEW)
 
-[D1] Document Templates
-    +-- requires --> [D2] Letterhead Management (templates need letterhead)
-    +-- enhanced by --> [D3] PDF Export (templates exported as PDF)
-    +-- enhanced by --> [FI2] Invoice PDF (invoices use template+letterhead)
+[Cross-Encoder Reranking]
+    requires --> [Hybrid Search — diverse candidate pool ≥20] (must come first)
+    requires --> [German multilingual cross-encoder model available locally] (NEEDS VERIFICATION)
 
-[FI1] RVG Calculation
-    +-- feeds into --> [FI2] Invoice Creation
-    +-- feeds into --> [FI3] Aktenkonto (calculated fees booked to case account)
+[Gesetze-RAG]
+    requires --> [bundestag/gesetze sync BullMQ cron] (NEW)
+    requires --> [law_chunks Prisma model] (NEW)
+    requires --> [XML parser for Absatz structure] (NEW)
+    requires --> [Embedding pipeline extended to law_chunks] (extends existing)
 
-[FI2] Invoice Creation
-    +-- requires --> [D2] Letterhead (invoices need firm header)
-    +-- requires --> [FI1] RVG Calculation (or manual fee entry)
-    +-- enhanced by --> [FI4] E-Rechnung (XRechnung/ZUGFeRD export)
-    +-- enhanced by --> [FI8] Mahnwesen (dunning unpaid invoices)
+[Urteile-RAG]
+    requires --> [BMJ scraper / BAG RSS parser] (NEW)
+    requires --> [NER PII-filter via Ollama BEFORE ingestion] (NEW — non-negotiable blocker)
+    requires --> [urteil_chunks Prisma model] (NEW)
 
-[FI3] Aktenkonto
-    +-- enhanced by --> [FI7] Banking Import (auto-match payments)
-    +-- enhanced by --> [FI5] DATEV Export (export bookings)
+[Arbeitswissen-RAG]
+    requires --> [Admin-Upload UI to MinIO] (NEW)
+    requires --> [muster_chunks Prisma model] (NEW)
+    requires --> [PII-anonymization pass on old Schriftsätze] (NEW)
 
-[B1] beA Integration
-    +-- enhanced by --> [E3] Email-to-Case (beA messages treated like emails)
-    +-- independent of --> email system (separate protocol via bea.expert API)
+[Normen-Verknüpfung in Akte]
+    requires --> [Gesetze-RAG] (law_chunks must be seeded for norm search)
+    requires --> [AkteNorm Prisma model] (NEW)
+    requires --> [Akte-Detail UI: Normen widget] (NEW)
 
-[O1] Auto-OCR
-    +-- feeds into --> Meilisearch Full-Text Index (already exists)
-    +-- enhanced by --> [AI1/AI4] AI features (OCR text enables AI to read scanned docs)
+[Helena auto-suggest Normen]
+    requires --> [Gesetze-RAG] (source data)
+    requires --> [Normen-Verknüpfung in Akte] (storage target)
 
-[CP1] Mandantenportal
-    +-- requires --> existing auth system (invitation-based)
-    +-- requires --> existing DMS (document sharing)
-    +-- enhanced by --> [M1] Case Threads (client can message attorney)
-
-[AI1] Proactive AI Agent
-    +-- requires --> RAG pipeline (embeddings, chunking, vector search)
-    +-- requires --> [O1] Auto-OCR (AI needs readable text)
-    +-- enhanced by --> [E1] Email Inbox (AI scans incoming emails)
-    +-- enhanced by --> [AI4] Document Chat (shared RAG infrastructure)
-
-[M1] Internal Messaging (Case Threads)
-    +-- independent module, but --
-    +-- enhanced by --> existing case management (thread per case)
-    +-- enhanced by --> existing DMS (link documents in messages)
+[Schriftsatz-Entwurf (Helena mode)]
+    requires --> [Arbeitswissen-RAG seeded with actual Muster] (NEW — cannot draft from empty)
+    requires --> [KI-Entwurf workflow] (already exists)
+    requires --> [Helena Schriftsatz-Modus prompt] (NEW)
 ```
 
 ### Dependency Notes
 
-- **Deadline calculation (F1) is foundational:** It has zero external dependencies (only needs holiday data) and enables both manual and AI-driven deadline management. Build early.
-- **Email (E1-E3) unlocks AI value:** The proactive AI agent becomes dramatically more useful when it can scan incoming emails. Email is both table stakes AND an AI enabler.
-- **RVG (FI1) gates invoicing:** Cannot create proper invoices without fee calculation. And invoices gate the entire financial workflow (Aktenkonto, Mahnwesen, DATEV, E-Rechnung).
-- **OCR (O1) gates AI on scanned documents:** Many court documents arrive as scanned PDFs. Without OCR, AI cannot read them. Build OCR before or alongside AI enhancements.
-- **Letterhead (D2) gates templates AND invoices:** Both document templates and invoice PDFs need the firm letterhead. Build letterhead management early.
+- **Hybrid Search is the foundation** — every knowledge source (Gesetze, Urteile, Muster) benefits from BM25+semantic fusion. Build before knowledge sources are seeded.
+- **Parent-Child Chunking is independent** of knowledge sources and can ship simultaneously — improves existing document RAG immediately.
+- **Cross-Encoder Reranking must come after Hybrid Search** — applying reranking to 10 cosine-only results wastes latency without sufficient candidate diversity.
+- **Urteile-RAG is blocked by NER PII-filter** — DSGVO requires pseudonymization before storing names from court decisions in pgvector. Do not ingest without this step.
+- **Schriftsatz-Entwurf requires seeded muster_chunks** — Helena cannot draft from an empty collection. Admin-upload UI must be operational and templates uploaded before this feature is useful.
+- **Normen-Verknüpfung blocks on Gesetze-RAG** — AkteNorm UI has no data to search without law_chunks populated.
 
 ---
 
-## MVP Definition (Milestone 2)
+## Technical Reference: Key Patterns
 
-### Launch With (Phase 1 of Milestone 2)
+### Hybrid Search RRF
 
-Foundation features that unblock everything else:
+**Formula:** `RRF_score(d) = Σ 1/(k + rank_i(d))` where k=60 (standard constant, recommended by Elasticsearch)
 
-- [x] **F1 + F2: Deadline calculation with holiday calendar** -- Zero malpractice tolerance. Highest legal risk if wrong. Low external dependencies. Build and test first.
-- [x] **D1 + D2 + D3: Templates + Letterhead + PDF export** -- Unblocks invoicing and daily document work. Already partially exists (docxtemplater).
-- [x] **O1 + O2: Auto-OCR + PDF preview** -- Unblocks AI features on scanned docs. Stirling-PDF Docker is straightforward.
-- [x] **E1 + E2 + E3: Full email client** -- Table stakes. Primary daily workflow for every law firm employee. Highest user-facing impact.
+**Weight for German legal text:** Start with alpha=0.4 (60% BM25, 40% dense). BM25 prioritized because exact statutory references (§ numbers, Aktenzeichen) must match precisely. Tune via labeled validation query set (10-20 representative queries from the firm).
 
-### Add After Foundation (Phase 2 of Milestone 2)
+**Implementation:** Meilisearch query returns ranked list A. pgvector query returns ranked list B. TypeScript RRF merge function in retrieval service. Feed merged top-N to LLM.
 
-Features that build on the foundation:
+**Expected improvement:** Legal hybrid search documented at 87% of user-relevant documents in top 10 vs. lower for single-modality. (Source: ragaboutit.com 2025)
 
-- [ ] **FI1 + FI2 + FI3: RVG + Invoicing + Aktenkonto** -- Complex but critical. Needs letterhead (D2) to be ready. Trigger: templates working, letterhead configured.
-- [ ] **FI4 + FI5: E-Rechnung + DATEV export** -- Legal requirement (E-Rechnung) and practical necessity (DATEV). Trigger: invoicing working.
-- [ ] **B1: beA interface** -- Legal obligation but can be deferred slightly because lawyers can still use beA web portal directly. Trigger: email system stable (similar UX patterns).
-- [ ] **AI1 + AI2 + AI4: Proactive AI + deadline recognition + document chat** -- Primary differentiator. Needs OCR + email to be functional. Trigger: email and OCR working.
+### Parent-Child Chunk Sizes for Legal Text
 
-### Add After Validation (Phase 3 of Milestone 2)
+| Chunk Type | Tokens | Use |
+|------------|--------|-----|
+| Child (embedding) | 400-512 | High-precision retrieval; maps to individual Absatz or sentence cluster |
+| Parent (LLM context) | 1500-2000 | Full §-Paragraph or Urteil-section; prevents truncated legal reasoning |
+| Overlap on child | 10-20% | Preserves cross-reference context at chunk boundaries |
 
-Features that extend the platform:
+Legal documents benefit from larger overlap to preserve cross-references (source: unstructured.io chunking guide 2025).
 
-- [ ] **CP1 + CP2: Mandantenportal** -- Differentiator but not blocking daily work. Trigger: core features stable, client demand validated.
-- [ ] **M1: Internal messaging** -- Nice to have. Most firms currently use Teams/Slack/Email. Trigger: enough users that internal coordination becomes a pain point.
-- [ ] **FI6 + FI7 + FI8: SEPA + Banking import + Mahnwesen** -- Advanced financial features. Trigger: basic invoicing heavily used.
-- [ ] **AI3 + AI5: Case summary + global legal chat** -- Advanced AI. Trigger: per-case AI validated and trusted.
-- [ ] **O3: Advanced PDF tools** -- Power user features. Trigger: OCR stable, user requests for merge/split.
+### Cross-Encoder Latency Budget
 
-### Future Consideration (v2+)
+| Stage | Latency |
+|-------|---------|
+| First-stage retrieval (hybrid) | 50-100ms |
+| Cross-encoder reranking (50-100 candidates) | 200-400ms |
+| LLM generation (qwen3.5:35b on GPU) | 2000-8000ms |
+| **Total overhead from reranking** | ~5-15% |
 
-- [ ] **CalDAV bidirectional sync** -- Only if client demand proves real.
-- [ ] **Zwangsvollstreckung module** -- Specialized, low priority.
-- [ ] **VoIP integration** -- Sipgate journal import only.
-- [ ] **Falldatenblaetter** -- Practice-area-specific case data sheets. Valuable but each Rechtsgebiet is a separate effort.
+Decision: Reranking overhead is acceptable given LLM generation dominates. Apply only after first-stage produces ≥20 diverse candidates.
+
+### German Legal Citation Formats
+
+**Norm (Gesetze):**
+```
+§ 626 BGB Abs. 1 — Fristlose Kündigung aus wichtigem Grund
+Stand: 01.01.2025 | Quelle: bundestag/gesetze (nicht amtlich)
+```
+
+**Urteil:**
+```
+BAG, Urteil v. 25.04.2023 – 2 AZR 234/22
+Bundesarbeitsgericht | Arbeitsrecht
+Leitsatz: [first 2 sentences verbatim from retrieved chunk]
+Quelle: rechtsprechung-im-internet.de
+```
+
+NJW (Neue Juristische Wochenschrift) house style is the de facto citation standard. Components: Gericht abbreviation + Entscheidungsart + Datum + Aktenzeichen. (Source: Wikipedia German legal citation; Harvard Law Library guide)
+
+### Klageschrift Section Structure (ZPO §253)
+
+Mandatory sections a complete Schriftsatz-Entwurf must address:
+1. **Rubrum** — Gericht, Parteien (Kläger/Beklagter + Bevollmächtigte), Streitwert
+2. **Anträge** — Hauptantrag + Hilfsanträge (precise wording matters for Rechtskraft)
+3. **Sachverhalt** — Chronological facts (DO NOT auto-generate; use structured outline + placeholders)
+4. **Rechtliche Würdigung** — §§ citations, subsumption, legal argument chain
+5. **Beweisangebote** — Evidence list (Zeugen, Urkunden, Sachverständige per §§ 284-294 ZPO)
+6. **Streitwertangabe** — For court fee calculation
+
+---
+
+## MVP Definition
+
+### v0.1 Launch With
+
+- [ ] **Hybrid Search RRF** — pipeline foundation; relatively self-contained; immediate quality improvement for existing document RAG
+- [ ] **Parent-Child Chunking** — highest ROI for existing documents; schema + re-ingestion job; independent of knowledge sources
+- [ ] **Gesetze-RAG** (bundestag/gesetze sync + law_chunks + embedding) — highest lawyer value; authoritative public-domain source; enables Normen-Verknüpfung
+- [ ] **Normen-Verknüpfung in Akte** — depends on Gesetze-RAG; concrete lawyer workflow (search → add → display in Akte)
+- [ ] **Urteile-RAG + NER PII-filter** — needed for Arbeitsrecht focus; NER-filter is non-negotiable before launch per DSGVO
+- [ ] **Arbeitswissen-RAG + Admin-Upload UI** — enables Schriftsatz-Entwurf; MinIO upload + muster_chunks pipeline
+
+### Add After Validation (v0.1.x)
+
+- [ ] **Cross-Encoder Reranking** — validate German model quality first; add after hybrid search is stable baseline
+- [ ] **Schriftsatz-Entwurf (Helena Schriftsatz-Modus)** — only useful after admin has seeded real firm templates
+- [ ] **BAG RSS incremental sync** — low effort add-on after BMJ static sync proven; incremental Arbeitsrecht coverage
+- [ ] **Helena auto-suggest Normen on Akte open** — UX polish; depends on Normen-Verknüpfung being used in practice first
+
+### Future Consideration (v0.2+)
+
+- [ ] **§§ Knowledge Graph / Verweisketten** — separate multi-month project; not needed for core use case
+- [ ] **Commercial legal DB integration (juris, beck-online)** — licensing cost + no public API; only if BMJ coverage proves insufficient
+- [ ] **Automated Sachverhalt generation** — requires higher LLM reliability than current state; revisit when hallucination rates demonstrably lower
 
 ---
 
 ## Feature Prioritization Matrix
 
-| Feature | User Value | Impl. Cost | Legal Requirement | Priority |
-|---------|------------|------------|-------------------|----------|
-| F1: Deadline calc (BGB) | CRITICAL | HIGH | YES (malpractice prevention) | **P0** |
-| F2: Holiday calendar | HIGH | LOW | YES (part of F1) | **P0** |
-| F3: Pre-deadline reminders | HIGH | LOW | Best practice | **P1** |
-| E1: IMAP inbox | CRITICAL | HIGH | No, but table stakes | **P1** |
-| E2: SMTP send | HIGH | MEDIUM | No, but table stakes | **P1** |
-| E3: Email-to-case | CRITICAL | MEDIUM | No, but table stakes | **P1** |
-| D1: Document templates | HIGH | MEDIUM | No, but table stakes | **P1** |
-| D2: Letterhead management | HIGH | MEDIUM | YES (BRAO) | **P1** |
-| D3: PDF export w/ letterhead | HIGH | LOW | Practical necessity | **P1** |
-| O1: Auto-OCR | HIGH | MEDIUM | No, but enables AI | **P1** |
-| O2: PDF preview | MEDIUM | LOW | No | **P1** |
-| FI1: RVG calculation | CRITICAL | HIGH | YES (billing basis) | **P1** |
-| FI2: Invoice creation | CRITICAL | HIGH | YES (SS 14 UStG) | **P1** |
-| FI3: Aktenkonto | HIGH | HIGH | YES (SS 43a BRAO for Fremdgeld) | **P1** |
-| FI4: E-Rechnung | HIGH | HIGH | YES (since 01.01.2025) | **P1** |
-| FI5: DATEV export | HIGH | MEDIUM | De facto standard | **P2** |
-| B1: beA integration | HIGH | HIGH | YES (SS 31a BRAO) | **P2** |
-| AI1: Proactive AI agent | VERY HIGH | VERY HIGH | No (differentiator) | **P2** |
-| AI2: Auto deadline recognition | HIGH | HIGH | No (differentiator) | **P2** |
-| AI4: Document chat | HIGH | HIGH | No (differentiator) | **P2** |
-| FI6: SEPA generation | MEDIUM | MEDIUM | No | **P2** |
-| FI7: Banking import | MEDIUM | MEDIUM | No | **P2** |
-| FI8: Mahnwesen | MEDIUM | MEDIUM | No | **P3** |
-| CP1: Mandantenportal | MEDIUM | HIGH | No (differentiator) | **P3** |
-| CP2: Client status view | MEDIUM | MEDIUM | No | **P3** |
-| M1: Case threads | MEDIUM | MEDIUM | No | **P3** |
-| AI3: Case summary | HIGH | HIGH | No (differentiator) | **P3** |
-| AI5: Global legal chat | HIGH | VERY HIGH | No (differentiator) | **P3** |
-| O3: Advanced PDF tools | LOW | MEDIUM | No | **P3** |
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| Hybrid Search RRF | HIGH | MEDIUM | P1 |
+| Parent-Child Chunking | HIGH | MEDIUM | P1 |
+| Gesetze-RAG (law_chunks + sync) | HIGH | HIGH | P1 |
+| Normen-Verknüpfung in Akte | HIGH | MEDIUM | P1 |
+| Urteile-RAG + NER PII-filter | HIGH | HIGH | P1 |
+| Arbeitswissen-RAG + Admin-Upload | MEDIUM | MEDIUM | P1 |
+| Cross-Encoder Reranking | MEDIUM | HIGH | P2 |
+| Schriftsatz-Entwurf (Helena mode) | HIGH | HIGH | P2 |
+| BAG RSS incremental sync | LOW | LOW | P2 |
+| Helena auto-suggest Normen | MEDIUM | LOW | P2 |
+| §§ Knowledge Graph | MEDIUM | VERY HIGH | P3 |
 
 **Priority key:**
-- **P0:** Legal requirement, build first, zero tolerance for errors
-- **P1:** Must have for this milestone, table stakes
-- **P2:** Should have, competitive advantage, add when P1 stable
-- **P3:** Nice to have, defer to later phases within milestone
+- P1: Must have for v0.1 launch
+- P2: Add when P1 stable and validated
+- P3: Future milestone
 
 ---
 
 ## Competitor Feature Analysis
 
-| Feature | RA-MICRO | AnNoText (Wolters Kluwer) | Advoware | ActaPort (Cloud) | j-lawyer.org (OSS) | Our Approach |
-|---------|----------|---------------------------|----------|-------------------|---------------------|--------------|
-| Email integration | Full E-Workflow (Posteingang/Postausgang), auto-sort, case assignment | Integrated email with case assignment | Email integration with case linking | Basic email | Basic email via plugin | IMAP IDLE + SMTP, shared + per-user mailboxes, Veraktung |
-| Document templates | Deep integration, RA-MICRO Designer, auto-fill from case/address data | Document automation with AI-assisted generation | Template system with placeholders | Template system | LibreOffice templates | docxtemplater + OnlyOffice, placeholder auto-fill, folder-based template organization |
-| Letterhead | RA-MICRO Briefkopf-Designer, auto-application | Integrated | Integrated | Integrated | Manual | OnlyOffice-editable letterhead, auto-applied to templates + invoices |
-| Deadline calculation | Full BGB SS 187-193, per-Bundesland holidays, Vorfrist | Full calculation | Full calculation | Basic | Basic | BGB-compliant calc with feiertagejs, configurable Vorfrist intervals |
-| RVG calculation | Deep VV-number selection, multi-table (pre/post KostBRaeG), XRechnung | Full RVG with automation | Full RVG, auto-updated per KostBRaeG | Basic | Basic | Full RVG table with VV numbers, KostBRaeG 2025 rates, Streitwert-to-fee mapping |
-| Aktenkonto | Full (Einnahmen/Ausgaben/Fremdgeld, FiBu I + II integration) | Full | Full | Basic | Limited | Bookings per case, Fremdgeld tracking, Beleg linking |
-| E-Rechnung | XRechnung + ZUGFeRD (since 2025 updates) | XRechnung (ZUGFeRD in progress) | Supported | Not yet | No | XRechnung + ZUGFeRD via @e-invoice-eu/core or node-zugferd |
-| DATEV export | Full integration | Full integration | Full integration | Limited | No | CSV Buchungsstapel export |
-| beA integration | Full (direct, no third-party API) | Full (integrated postbox) | Full (since v5) | Basic | Plugin | bea.expert REST API (EUR 10/month/mailbox). ~40 functions. |
-| Client portal | WebAkte (limited) | No native portal | No | Yes (with Silberfluss, new 2025) | No | Built-in portal with invitation auth, document sharing, secure messaging |
-| AI features | Basic (no proactive agent) | Expert AI (reactive, 85% faster claims) | Legal Twin (reactive) | JUPUS integration (intake automation) | None | **Proactive AI agent** (OpenClaw): auto-scans, suggests actions, creates drafts. Primary differentiator. |
-| Internal messaging | Postkorb (task routing, not chat) | No dedicated chat | No | No | No | Case-bound threads + general channels, @mentions, document linking |
-| OCR/PDF tools | Auto-OCR on scan | Integrated | Limited | Limited | No | Stirling-PDF Docker: auto-OCR + merge/split/watermark/redact |
-| SEPA | GiroCode on invoices | Supported | Supported | No | No | pain.001 + pain.008 XML generation via sepa.js |
-| Banking import | Yes | Yes | Yes | No | No | CSV + CAMT053 import, semi-automatic case matching |
+| Feature | Noxtua (DE sovereign AI) | LexisNexis / Westlaw | Beck-online KI | Helena (this project) |
+|---------|--------------------------|----------------------|----------------|----------------------|
+| Gesetze-RAG | Yes (proprietary corpus) | Yes (licensed) | Yes (licensed) | bundestag/gesetze public domain, self-hosted |
+| Urteil citation | Yes, with source links | Yes, verified corpus | Yes | BMJ public domain; strict retrieval-only (no hallucination) |
+| Schriftsatz drafting | Structured outline | Limited | No | Section-by-section ENTWURF with placeholders (ZPO §253 structure) |
+| Hybrid search | Unknown (proprietary) | Unknown | Unknown | RRF over Meilisearch + pgvector |
+| DSGVO compliance | EU sovereign, certified | US-based, complex DPAs | German servers | Self-hosted, zero data egress |
+| Hallucination safeguard | Disclaimer only | Disclaimer only | Disclaimer only | Retrieval-grounded-only citations + ENTWURF workflow |
+| Case file integration | Standalone tool | Standalone research | Standalone | Embedded in Akte — Normen pinned to specific cases |
+| Self-hosted | No (cloud) | No (cloud) | No (cloud) | Yes (Docker Compose) |
 
----
-
-## Key Findings by Feature Area
-
-### 1. Email Client (IMAP + SMTP)
-
-**Confidence: HIGH** (RA-MICRO docs verified, competitor pattern clear)
-
-Every serious Kanzleisoftware treats the email inbox as the primary workflow entry point. RA-MICRO's "Posteingang" is the central hub where all electronic correspondence (email, fax, scan, beA) arrives, gets a case number assigned, and routes to the responsible person's "Postkorb."
-
-**Critical capability:** "Veraktung" (case assignment) is THE feature. An email without a case assignment is useless in a law firm. Auto-suggestion of the case based on sender/subject/content should be a day-one feature.
-
-**Architecture note:** Shared Kanzlei-Postfach + per-user mailboxes is standard (confirmed by PROJECT.md). IMAP IDLE for real-time is the right call -- polling creates unacceptable delays for incoming court deadlines.
-
-### 2. Proactive AI Agent ("KI-Rechtsanwaltsfachangestellte")
-
-**Confidence: MEDIUM** (this is genuinely novel; no competitor has this exact concept)
-
-Current AI in German Kanzleisoftware is **reactive**: AnNoText Expert AI, Beck-Noxtua, Legal Twin, BEAMON AI -- all require the user to ask a question or trigger an action. Wolters Kluwer predicts "agentische KI" will transform legal workflows, and Gartner says 33% of enterprise software will have agentic AI by 2028.
-
-**What OpenClaw should do (in priority order):**
-1. **Deadline detection** from incoming documents/emails -> create calendar DRAFT
-2. **Party recognition** from documents -> suggest adding Beteiligte to case
-3. **Response drafts** for routine correspondence (Empfangsbekenntnis, Fristverlängerung)
-4. **Case status alerts** ("Frist in 3 Tagen, noch kein Schriftsatz erstellt")
-5. **Document classification** (incoming document -> suggest case + document type)
-6. **Per-case Q&A** (RAG over case documents)
-7. **Cross-case knowledge** (find similar cases, precedent arguments)
-
-**BRAK AI guidelines (2025):** AI may be used but attorney must always maintain oversight. AI-generated content must never be auto-sent. This aligns perfectly with the "drafts only" approach.
-
-### 3. Document Template System with Letterhead
-
-**Confidence: HIGH** (well-established pattern across all competitors)
-
-This is thoroughly solved domain. All competitors use placeholder-based templates. RA-MICRO uses a proprietary Briefkopf-Designer. AnNoText has document automation. Key placeholders needed: case data (Aktenzeichen, Rechtsgebiet, Streitwert), contact data (Name, Adresse, Anrede), firm data (Kanzleiname, Adresse, Bankverbindung, Fachanwaltsbezeichnungen).
-
-The existing docxtemplater integration is the right approach. OnlyOffice for letterhead editing avoids building a custom designer.
-
-### 4. Financial Features (RVG, Invoicing, Aktenkonto, DATEV, SEPA, E-Rechnung)
-
-**Confidence: HIGH** (legal requirements verified, RVG structure confirmed)
-
-This is the largest and most complex feature cluster. Key facts:
-
-- **RVG table (SS 13 RVG):** Progressive fee table. Streitwert brackets with base fees, multiplied by VV-specific rates (1.3x Verfahrensgebuehr, 1.2x Terminsgebuehr, etc.). Must handle KostBRaeG 2025 changes (6% increase, effective June 2025). The table has ~100 Streitwert brackets.
-- **E-Rechnung:** Mandatory receipt since 01.01.2025. Sending obligation phases in. XRechnung = pure XML (courts/government), ZUGFeRD = hybrid PDF+XML (B2B). Both must be supported.
-- **Aktenkonto:** Legal requirement for Fremdgeld tracking (SS 43a Abs. 7 BRAO). Mishandling Fremdgeld can lead to disbarment (SS 113, 114 BRAO). This is not optional.
-- **DATEV:** CSV Buchungsstapel format is the universal exchange format with tax advisors. Well-documented specification.
-- **SEPA:** `sepa.js` npm package handles pain.001 (credit transfers) and pain.008 (direct debits).
-
-### 5. Deadline Calculation (BGB SS 187-193)
-
-**Confidence: HIGH** (statutory rules, verified with legal sources)
-
-The calculation rules are deterministic and codifiable:
-
-- **SS 187 I BGB (Ereignisfrist):** Day of event does not count. Most common type.
-- **SS 187 II BGB (Beginnfrist):** Day of beginning counts. Rare.
-- **SS 188 BGB:** End date calculation (days, weeks, months, years).
-- **SS 193 BGB:** If deadline falls on Saturday, Sunday, or public holiday -> extends to next Werktag.
-- **SS 222 ZPO:** Court deadlines follow BGB rules.
-
-`feiertagejs` npm package (TypeScript, no dependencies, 4,891 weekly downloads) provides per-Bundesland holiday data.
-
-**CRITICAL:** This must be 100% correct. Fristenversaeumnis is the #1 cause of attorney malpractice claims in Germany. Unit tests for every edge case.
-
-### 6. Client Portal (Mandantenportal)
-
-**Confidence: MEDIUM** (emerging feature, ActaPort just launched theirs)
-
-This is NOT yet table stakes -- most incumbents (RA-MICRO, AnNoText, Advoware) do NOT have native client portals. ActaPort launched one in partnership with Silberfluss in 2025. jur|nodes offers one for Steuerberater.
-
-Building a Mandantenportal is a differentiator, not a requirement. But it is becoming expected -- clients increasingly want digital self-service. The proposed approach (invitation link + password, document viewing, secure messaging, status display) is sound and matches what ActaPort offers.
-
-### 7. Internal Messaging
-
-**Confidence: MEDIUM** (low priority based on market evidence)
-
-No major Kanzleisoftware has integrated chat. RA-MICRO has "Postkorb" (task/message routing), but it is a task queue, not a chat system. Most firms use Microsoft Teams, Slack, or email for internal communication.
-
-Building case-bound discussion threads is a genuinely useful differentiator (context stays with the case), but it is not blocking daily work. Prioritize lower than email and finance.
-
-### 8. beA Integration
-
-**Confidence: HIGH** (bea.expert API documented, pricing confirmed)
-
-The bea.expert REST API is the pragmatic choice. It provides ~40 functions, abstracts away the complex OSCI/JAVA/hardware-token infrastructure of native beA, and costs EUR 10/month per attorney mailbox. A JavaScript implementation exists on GitHub (though it was archived in May 2025 -- the API itself remains active).
-
-Key functions needed: PostboxOverview, GetMessage, SendMessage, eEBanswer (electronic acknowledgment of receipt), FolderOverview. Integration requires managing software tokens locally and handling message encryption/decryption.
-
-### 9. OCR/PDF Pipeline
-
-**Confidence: HIGH** (Stirling-PDF well-documented, Docker-ready)
-
-Stirling-PDF with Tesseract OCR is the right choice for self-hosted deployment. Three Docker image variants (Fat, Standard, Ultra-Lite). The Fat image includes OCR support with Tesseract. German language tessdata must be included.
-
-Pipeline: Upload -> check if already searchable -> if not, queue OCR job -> store result -> index in Meilisearch. The async queue with retries is essential because OCR can fail on corrupted PDFs.
+**Helena's differentiated position:** The combination of self-hosted (DSGVO) + retrieval-grounded-only citations (liability) + Normen pinned to Akte (workflow integration) + ENTWURF enforcement (professional duty) is unique. No competitor combines all four.
 
 ---
 
 ## Sources
 
-### Official Legal Sources (HIGH confidence)
-- [SS 187-193 BGB via gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__187.html)
-- [SS 43a BRAO (Fremdgeld obligation)](https://dejure.org/gesetze/BORA/4.html)
-- [E-Rechnungspflicht - Anwaltsblatt](https://anwaltsblatt.anwaltverein.de/de/themen/kanzlei-praxis/e-rechnungspflicht)
-- [RVG KostBRaeG 2025 - Anwaltsblatt](https://anwaltsblatt.anwaltverein.de/de/themen/recht-gesetz/rvg-kostbraeg-2025)
-- [BRAK AI Guidelines 2025](https://www.brak.de/newsroom/newsletter/nachrichten-aus-berlin/2025/ausgabe-1-2025-v-812025/kuenstliche-intelligenz-in-anwaltskanzleien-brak-veroeffentlicht-leitfaden/)
-
-### Competitor Documentation (MEDIUM-HIGH confidence)
-- [RA-MICRO Posteingang Wiki](https://onlinehilfen.ra-micro.de/index.php/Posteingang)
-- [RA-MICRO RVG Berechnung Wiki](https://onlinehilfen.ra-micro.de/index.php/RVG_Berechnung)
-- [RA-MICRO Briefkoepfe Wiki](https://onlinehilfen.ra-micro.de/index.php/Briefk%C3%B6pfe_und_Aktenvorbl%C3%A4tter)
-- [AnNoText beA Integration](https://www.wolterskluwer.com/de-de/solutions/annotext/mandatsmanagement/bea-kommunikation)
-- [AnNoText Document Automation](https://www.wolterskluwer.com/de-de/solutions/annotext/mandatsmanagement/document-automation)
-- [ActaPort Mandantenportal](https://www.actaport.de/update/actaport-und-silberfluss-ver%C3%B6ffentlichen-das-mandantenportal)
-- [j-lawyer.org](https://www.j-lawyer.org/)
-
-### Technical/API Sources (MEDIUM-HIGH confidence)
-- [bea.expert API](https://bea.expert/api/) -- REST API, ~40 functions, EUR 10/month/mailbox
-- [bea.expert JavaScript API (archived)](https://github.com/beaexpert/beA-API-Javascript)
-- [Stirling-PDF Docker docs](https://docs.stirlingpdf.com/Installation/Docker%20Install/)
-- [Stirling-PDF OCR docs](https://docs.stirlingpdf.com/Configuration/OCR/)
-- [feiertagejs npm](https://www.npmjs.com/package/feiertagejs) -- German holidays per Bundesland
-- [sepa.js npm](https://www.npmjs.com/package/sepa) -- SEPA XML generation
-- [node-zugferd GitHub](https://github.com/jslno/node-zugferd) -- ZUGFeRD PDF generation
-- [@e-invoice-eu/core npm](https://www.npmjs.com/package/@e-invoice-eu/core) -- XRechnung + ZUGFeRD
-- [camt-parser GitHub](https://github.com/oroce/camt-parser) -- CAMT053 bank statement parsing
-- [RVG Gebuehrentabelle 2025](https://www.gebuehren-portal.de/gebuehrentabelle)
-- [RVG Fristenrechner](https://www.gebuehren-portal.de/fristenrechner)
-
-### Market Analysis (MEDIUM confidence)
-- [Kanzleisoftware Vergleich 2025 - meetergo](https://meetergo.com/blog/juristische-software)
-- [KI Tools fuer Kanzleien 2026 - legal-tech-verzeichnis](https://legal-tech-verzeichnis.de/fachartikel/top-ki-tools-fuer-kanzleien-2026/)
-- [Wolters Kluwer KI 2026 Outlook](https://www.wolterskluwer.com/de-de/news/ki-auf-dem-rechtsmarkt-2026)
-- [Kanzlei-Software-Check Datengrundlage - Anwaltsblatt](https://anwaltsblatt.anwaltverein.de/de/apps/kanzlei-software-check/datengrundlage)
-- [Legalvisio interne Kommunikation](https://www.legalvisio.de/digitalisierung-kanzlei/interne-kommunikation/)
+- RRF formula and legal domain weight (alpha=0.4): [RAGAboutIt: Query-Aware Hybrid Retrieval](https://ragaboutit.com/beyond-basic-rag-building-query-aware-hybrid-retrieval-systems-that-scale/), [Elastic Hybrid Search Guide](https://www.elastic.co/what-is/hybrid-search), [Weaviate Hybrid Search Explained](https://weaviate.io/blog/hybrid-search-explained)
+- Parent-Child chunking sizes: [Databricks Ultimate Chunking Guide](https://community.databricks.com/t5/technical-blog/the-ultimate-guide-to-chunking-strategies-for-rag-applications/ba-p/113089), [Unstructured: Chunking for RAG best practices](https://unstructured.io/blog/chunking-for-rag-best-practices), [Seahorse: Parent-Child in LangChain](https://medium.com/@seahorse.technologies.sl/parent-child-chunking-in-langchain-for-advanced-rag-e7c37171995a)
+- Cross-encoder accuracy and latency: [Ailog: +40% Accuracy with Cross-Encoders](https://app.ailog.fr/en/blog/guides/reranking), [RAGAboutIt: Reranking Bottleneck](https://ragaboutit.com/the-reranking-bottleneck-why-your-rag-retriever-is-hiding-the-best-documents/), [ZeroEntropy: Reranking Model Guide 2026](https://www.zeroentropy.dev/articles/ultimate-guide-to-choosing-the-best-reranking-model-in-2025)
+- bundestag/gesetze source: [GitHub: bundestag/gesetze](https://github.com/bundestag/gesetze), [GitHub: bundestag/gesetze-tools](https://github.com/bundestag/gesetze-tools)
+- German legal citation standard: [Wikipedia: German legal citation](https://en.wikipedia.org/wiki/German_legal_citation), [Harvard Law Library: Finding German court decisions](https://asklib.law.harvard.edu/faq/115439)
+- AI hallucination liability in German courts: [jura.cc: KI-Fehlzitate vor Gericht](https://www.jura.cc/rechtstipps/ki-fehlzitate-vor-gericht-was-anwaeltinnen-und-anwaelte-jetzt-wissen-muessen/), [Library of Congress: Germany Regional Court AI Expert Report Inadmissible (Feb 2026)](https://www.loc.gov/item/global-legal-monitor/2026-02-04/germany-regional-court-rules-ai-generated-expert-report-inadmissible)
+- Legal RAG patterns and citation accuracy: [Harvard JOLT: RAG for legal work](https://jolt.law.harvard.edu/digest/retrieval-augmented-generation-rag-towards-a-promising-llm-architecture-for-legal-work), [Datategy: How Law Firms Use RAG](https://www.datategy.net/2025/04/14/how-law-firms-use-rag-to-boost-legal-research/)
+- Noxtua competitor: [Noxtua.com](https://www.noxtua.com/)
+- KI tools for German law firms: [nucamp.co: Top 10 AI Tools German Legal 2025](https://www.nucamp.co/blog/coding-bootcamp-germany-deu-legal-top-10-ai-tools-every-legal-professional-in-germany-should-know-in-2025)
 
 ---
-*Feature research for: AI-First Kanzleisoftware (German Legal Practice Management)*
-*Researched: 2026-02-24*
+
+*Feature research for: Helena RAG v0.1 — Hybrid Search + Legal Knowledge Sources + German Law UX*
+*Researched: 2026-02-27*

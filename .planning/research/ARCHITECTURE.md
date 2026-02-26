@@ -1,898 +1,680 @@
 # Architecture Research
 
-**Domain:** AI-First Kanzleisoftware -- Integrating 7 New Capabilities into Existing Monolith
-**Researched:** 2026-02-24
-**Confidence:** HIGH (current architecture well-understood, patterns verified with multiple sources)
+**Domain:** Legal RAG pipeline extension (Helena v0.1) — Next.js/Prisma/BullMQ/pgvector/Meilisearch
+**Researched:** 2026-02-26
+**Confidence:** HIGH (based on direct codebase inspection + established pgvector/BullMQ patterns)
 
-## Core Question
+---
 
-How should IMAP IDLE, RAG pipeline, real-time messaging, client portal, background jobs, CalDAV sync, and Stirling-PDF integrate into the existing Next.js monolith? What stays in-process, what becomes a sidecar, and what needs a separate worker?
+## Standard Architecture
 
-## Verdict: Hybrid Monolith + Worker + Sidecars
-
-The existing Next.js standalone monolith cannot handle long-running connections (IMAP IDLE, WebSocket, CalDAV sync) or CPU-heavy background processing (RAG embedding, OCR queue) within its standard request-response model. The architecture must evolve into three tiers:
-
-1. **Next.js App** -- stays as-is for UI, API routes, short-lived requests
-2. **Worker Process** -- new Node.js process for background jobs (BullMQ + Redis)
-3. **Sidecar Services** -- Stirling-PDF (existing Docker image), Redis (new)
-
-WebSocket and IMAP IDLE are integrated via a custom `server.ts` that wraps the Next.js standalone server, keeping the deployment as a single Docker container.
-
-## System Overview
+### System Overview
 
 ```
-                        Browser Clients              External Calendars
-                              |                            |
-                              v                            v
-                    +---------+----------+        +--------+--------+
-                    |   Next.js App      |        |  CalDAV Sync    |
-                    |   (Custom Server)  |        |  (in Worker)    |
-                    |                    |        +---------+-------+
-                    |  +- HTTP Routes    |                  |
-                    |  +- WebSocket IO   |                  |
-                    |  +- Auth (NextAuth)|                  |
-                    +---+----+-----------+                  |
-                        |    |                              |
-           +------------+    +----------+                   |
-           |                            |                   |
-           v                            v                   v
-  +--------+--------+         +--------+--------+  +-------+--------+
-  |   PostgreSQL    |         |     Redis       |  |   PostgreSQL   |
-  |   + pgvector    |         |   (Job Queue)   |  |   (shared)     |
-  +--------+--------+         +--------+--------+  +----------------+
-           |                            |
-           |                   +--------+--------+
-           |                   |   Worker Node   |
-           |                   |   (BullMQ)      |
-           |                   |                  |
-           |                   |  +- IMAP IDLE   |
-           |                   |  +- RAG Embed   |
-           |                   |  +- OCR Queue   |
-           |                   |  +- CalDAV Sync |
-           |                   |  +- AI Tasks    |
-           |                   +--------+--------+
-           |                            |
-           +----------------------------+
-           |                            |
-  +--------+--------+         +--------+--------+
-  |     MinIO       |         | Stirling-PDF    |
-  |   (S3 Storage)  |         | (REST API)      |
-  +-----------------+         +-----------------+
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Helena RAG Pipeline                          │
+├──────────────────────┬──────────────────────┬───────────────────────┤
+│   INGESTION WORKERS  │   RETRIEVAL ENGINE   │    HELENA CHAT UI     │
+│  (BullMQ background) │  (ki-chat route)     │  (existing front end) │
+│                      │                      │                       │
+│  gesetze-sync-job    │  hybrid-search.ts    │  /app/ki-chat         │
+│  urteil-ingestion    │  (RRF merger)        │  source citations     │
+│  muster-ingestion    │                      │  normen-badge         │
+│  pii-filter step     │  reranker.ts         │                       │
+│  embedding step      │  (cross-encoder)     │  /admin/muster        │
+│  meilisearch step    │                      │  (upload UI)          │
+└──────────┬───────────┴──────────┬───────────┴───────────────────────┘
+           │                      │
+┌──────────▼──────────────────────▼───────────────────────────────────┐
+│                          Data Layer                                  │
+├─────────────────────┬────────────────────┬──────────────────────────┤
+│  PostgreSQL 16       │   Meilisearch      │   MinIO S3               │
+│  (pgvector)         │                    │                           │
+│                      │                    │                           │
+│  document_chunks     │  idx: dokumente    │  bucket: dokumente        │
+│  law_chunks (NEW)    │  idx: gesetze(NEW) │  raw-gesetze/ (NEW)      │
+│  urteil_chunks (NEW) │  idx: urteile(NEW) │  raw-urteile/ (NEW)      │
+│  muster_chunks (NEW) │  idx: muster (NEW) │  muster/ (NEW)           │
+│  akte_normen (NEW)   │                    │                           │
+└─────────────────────┴────────────────────┴──────────────────────────┘
 ```
 
-## Component Responsibilities
-
-| Component | Responsibility | Communicates With | Deployment |
-|-----------|----------------|-------------------|------------|
-| **Next.js App** | UI rendering, REST API routes, WebSocket server, auth | PostgreSQL, Redis, MinIO, Meilisearch, Worker (via Redis) | Docker container (custom server.ts) |
-| **Worker Process** | Long-running jobs: IMAP IDLE, RAG embedding, OCR queue, CalDAV sync, AI tasks | PostgreSQL, Redis, MinIO, Meilisearch, Stirling-PDF, Ollama | Same Docker image, separate entrypoint |
-| **Redis** | Job queue (BullMQ), WebSocket pub/sub adapter, session cache | Next.js App, Worker | Docker container |
-| **Stirling-PDF** | PDF OCR, merge, split, convert, compress, watermark | Worker (via REST API) | Docker container (sidecar) |
-| **PostgreSQL + pgvector** | Relational data, vector embeddings for RAG | Next.js App, Worker | Docker container (existing) |
-| **Ollama** | LLM inference (embedding generation, text generation) | Worker, Next.js App (for chat) | Docker container or host process |
-
-## What Stays In The Monolith
-
-These capabilities fit naturally into Next.js API routes and require no architectural changes:
-
-| Capability | Why It Stays | Implementation |
-|------------|-------------|----------------|
-| **RAG retrieval** (query-time) | Short-lived request: embed query, cosine search, return results | API route calls pgvector via raw SQL |
-| **AI chat** (streaming) | Request-scoped streaming response | API route using Vercel AI SDK `streamText()` |
-| **Client portal auth** | Path-based multi-tenancy, same NextAuth with role check | Middleware + route group `/(portal)/` |
-| **Client portal UI** | Standard Next.js pages with restricted data access | Server components with portal session |
-| **Document status transitions** | CRUD operations | Existing API routes |
-| **Stirling-PDF API calls** (on-demand) | User-triggered, short-lived HTTP call to sidecar | API route proxies to Stirling-PDF |
-
-## What Needs The Worker Process
-
-These capabilities require persistent connections or long-running compute that would block or crash Next.js:
-
-| Capability | Why It Leaves | Worker Implementation |
-|------------|--------------|----------------------|
-| **IMAP IDLE** | Persistent TCP connection per mailbox, must survive request lifecycle | ImapFlow client per mailbox, reconnect on disconnect, emit events to Redis |
-| **RAG embedding** (ingestion) | CPU-heavy: chunk document, generate embeddings for every chunk, store vectors | BullMQ job: fetch from MinIO, chunk, embed via Ollama/OpenAI, insert pgvector |
-| **OCR queue** | Network I/O to Stirling-PDF, potentially minutes per large PDF | BullMQ job: send PDF to Stirling-PDF, wait for result, update MinIO + Meilisearch |
-| **CalDAV sync** | Periodic polling + bidirectional conflict resolution | BullMQ repeatable job: fetch remote, diff, merge, push changes |
-| **AI task processing** | LLM inference can take 10-60s, must not block API | BullMQ job: load context, call Ollama, store draft |
-| **Email sending** (SMTP) | Retry logic, rate limiting, attachment handling | BullMQ job: compose, send via SMTP, update status |
-
-## What Becomes a New Docker Service
-
-| Service | Why Separate | Notes |
-|---------|-------------|-------|
-| **Redis 7** | Required by BullMQ for job queue + Socket.IO adapter for multi-process pub/sub | Lightweight, ~50MB memory for this workload |
-| **Stirling-PDF** | Pre-built Docker image with Tesseract OCR, Java runtime -- too heavy to embed | Use `stirlingtools/stirling-pdf:latest-fat` for OCR support |
-
-Ollama is already assumed to run as a separate service (existing pattern).
-
-## Detailed Integration Patterns
-
-### Pattern 1: Custom Server for WebSocket (Next.js + Socket.IO)
-
-**What:** Replace the default Next.js standalone `server.js` with a custom `server.ts` that attaches a Socket.IO server to the same HTTP server.
-
-**Why:** Self-hosted Docker deployment means no serverless constraints. A custom server is the standard pattern for WebSocket support in Next.js on Docker.
-
-**Confidence:** HIGH -- verified with Socket.IO official docs, multiple production examples, and the existing `output: "standalone"` config already generates a `server.js` that can be replaced.
-
-**Trade-offs:**
-- Pro: Single port, single container, no extra service for WebSocket
-- Pro: Socket.IO handles reconnection, rooms (per-Akte channels), namespaces
-- Con: Loses automatic Next.js server optimizations (minor for self-hosted)
-- Con: Must use Redis adapter for Socket.IO if scaling to multiple app instances
-
-**Implementation:**
-
-```typescript
-// server.ts (replaces default standalone server.js)
-import { createServer } from "http";
-import { parse } from "url";
-import next from "next";
-import { Server as SocketIOServer } from "socket.io";
-import { createAdapter } from "@socket.io/redis-adapter";
-import { createClient } from "redis";
-
-const app = next({ dev: false, hostname: "0.0.0.0", port: 3000 });
-const handle = app.getRequestHandler();
-
-app.prepare().then(async () => {
-  const httpServer = createServer((req, res) => {
-    const parsedUrl = parse(req.url!, true);
-    handle(req, res, parsedUrl);
-  });
-
-  const io = new SocketIOServer(httpServer, {
-    path: "/api/socketio",
-    addTrailingSlash: false,
-  });
-
-  // Redis adapter for multi-instance support
-  const pubClient = createClient({ url: process.env.REDIS_URL });
-  const subClient = pubClient.duplicate();
-  await Promise.all([pubClient.connect(), subClient.connect()]);
-  io.adapter(createAdapter(pubClient, subClient));
-
-  // Auth middleware -- verify NextAuth JWT
-  io.use(async (socket, next) => {
-    const token = socket.handshake.auth.token;
-    // Verify JWT from NextAuth session
-    // Attach user/role to socket.data
-    next();
-  });
-
-  // Namespaces
-  const messaging = io.of("/messaging");
-  const notifications = io.of("/notifications");
-
-  httpServer.listen(3000, "0.0.0.0");
-});
-```
-
-**Dockerfile change:** Replace `exec node server.js` with `exec node server.js` (compile server.ts to server.js during build, copy to standalone output).
-
-### Pattern 2: BullMQ Worker Process (Shared Codebase, Separate Entrypoint)
-
-**What:** A single Worker process running from the same Docker image as the Next.js app, but with a different entrypoint (`node worker.js` instead of `node server.js`).
-
-**Why:** Shares Prisma client, lib code, type definitions. No code duplication. Single Docker image, two services in docker-compose.
-
-**Confidence:** HIGH -- BullMQ is the standard Node.js job queue (successor to Bull). Pattern of same-image-different-entrypoint is well-established in Docker.
-
-**Trade-offs:**
-- Pro: Code sharing via imports from `src/lib/`
-- Pro: Single build step, single Docker image
-- Pro: BullMQ handles retries, backoff, concurrency, rate limiting, job deduplication
-- Con: Worker failures do not affect the web app (good isolation)
-- Con: Requires Redis (acceptable trade-off for reliability)
-
-**Implementation:**
-
-```typescript
-// worker.ts (separate entrypoint)
-import { Worker, Queue } from "bullmq";
-import { Redis } from "ioredis";
-
-const connection = new Redis(process.env.REDIS_URL!);
-
-// Register job processors
-const emailSyncWorker = new Worker("email-sync", processEmailSync, {
-  connection, concurrency: 5,
-});
-
-const ragEmbedWorker = new Worker("rag-embed", processRagEmbed, {
-  connection, concurrency: 2, // CPU-bound, limit concurrency
-});
-
-const ocrWorker = new Worker("ocr", processOcr, {
-  connection, concurrency: 3,
-});
-
-const aiTaskWorker = new Worker("ai-tasks", processAiTask, {
-  connection, concurrency: 1, // Ollama is single-threaded
-});
-
-const caldavWorker = new Worker("caldav-sync", processCalDavSync, {
-  connection, concurrency: 1,
-});
-```
-
-**Docker Compose addition:**
-
-```yaml
-worker:
-  build: .
-  container_name: ailawyer-worker
-  restart: unless-stopped
-  entrypoint: ["node", "worker.js"]
-  environment:
-    DATABASE_URL: postgresql://ailawyer:ailawyer@db:5432/ailawyer
-    REDIS_URL: redis://redis:6379
-    # ... same env vars as app
-  depends_on:
-    - db
-    - redis
-    - stirling-pdf
-```
-
-### Pattern 3: IMAP IDLE as a Managed Connection Pool in Worker
-
-**What:** The Worker process maintains persistent IMAP connections (one per configured mailbox) using ImapFlow. New emails trigger a BullMQ job to process and store them.
-
-**Why:** IMAP IDLE requires a persistent TCP connection that stays open indefinitely. This is fundamentally incompatible with Next.js request-response lifecycle. ImapFlow is the modern, maintained IMAP library for Node.js with native IDLE support and async/await.
-
-**Confidence:** MEDIUM -- ImapFlow IDLE support is well-documented. Running persistent connections in a worker is standard practice. However, managing reconnection and multiple mailboxes simultaneously needs careful implementation.
-
-**Implementation:**
-
-```typescript
-// src/lib/email/imap-manager.ts
-import { ImapFlow } from "imapflow";
-import { Queue } from "bullmq";
-
-class ImapConnectionManager {
-  private connections = new Map<string, ImapFlow>();
-  private emailQueue: Queue;
-
-  async addMailbox(config: MailboxConfig) {
-    const client = new ImapFlow({
-      host: config.host,
-      port: config.port,
-      secure: config.tls,
-      auth: { user: config.user, pass: config.password },
-    });
-
-    await client.connect();
-    await client.mailboxOpen("INBOX");
-
-    // Listen for new emails via IDLE
-    client.on("exists", async (data) => {
-      // Enqueue job to fetch and process new messages
-      await this.emailQueue.add("fetch-new", {
-        mailboxId: config.id,
-        count: data.count,
-      });
-    });
-
-    // Handle disconnection with exponential backoff
-    client.on("close", () => {
-      this.reconnect(config);
-    });
-
-    this.connections.set(config.id, client);
-  }
-
-  private async reconnect(config: MailboxConfig) {
-    // Exponential backoff: 1s, 2s, 4s, 8s, max 60s
-  }
-}
-```
-
-**Data flow:**
-1. Worker starts -> loads mailbox configs from DB -> opens IMAP connections
-2. IMAP IDLE receives "new email" notification
-3. Worker enqueues `fetch-new` job in BullMQ
-4. Job processor fetches email, stores in DB, uploads attachments to MinIO
-5. Worker emits Socket.IO event via Redis pub/sub -> App pushes to browser
-6. Next.js API routes serve email list/detail from DB (no IMAP involvement)
-
-### Pattern 4: RAG Pipeline (Ingestion Worker + Query API Route)
-
-**What:** Split RAG into two halves: ingestion (heavy, async) runs in the Worker, retrieval (fast, sync) runs in Next.js API routes.
-
-**Why:** Embedding a 50-page document can take minutes (chunking + embedding each chunk). Retrieval is a single vector similarity query (~50ms).
-
-**Confidence:** HIGH -- pgvector with Prisma raw SQL is the established pattern. Vercel AI SDK provides `embedMany()` for batch embedding. Chunking is well-understood.
-
-**Ingestion flow (Worker):**
-1. Document uploaded via Next.js API -> stored in MinIO + DB
-2. API enqueues `rag-embed` job via BullMQ
-3. Worker fetches document from MinIO
-4. Extracts text (PDF via Stirling-PDF text extraction, DOCX via docxtemplater/mammoth)
-5. Chunks text (800 chars, 100 char overlap)
-6. Embeds chunks via Ollama `nomic-embed-text` or OpenAI `text-embedding-3-small`
-7. Stores embeddings in pgvector table linked to Dokument + Akte
-
-**Retrieval flow (API route):**
-```typescript
-// src/app/api/ai/rag/route.ts
-import { embed } from "ai";
-
-export async function POST(req: Request) {
-  const { query, akteId } = await req.json();
-
-  // Embed the query
-  const { embedding } = await embed({
-    model: embeddingModel,
-    value: query,
-  });
-
-  // Vector similarity search (raw SQL because Prisma lacks native pgvector)
-  const chunks = await prisma.$queryRaw`
-    SELECT content, "dokumentId",
-           1 - (embedding <=> ${embedding}::vector) as similarity
-    FROM "DocumentChunk"
-    WHERE "akteId" = ${akteId}
-      AND 1 - (embedding <=> ${embedding}::vector) > 0.5
-    ORDER BY similarity DESC
-    LIMIT 6
-  `;
-
-  return Response.json({ chunks });
-}
-```
-
-**Prisma schema addition:**
-```prisma
-model DocumentChunk {
-  id          String   @id @default(cuid())
-  content     String
-  chunkIndex  Int
-  // embedding stored via raw SQL (Prisma Unsupported type)
-  embedding   Unsupported("vector(1536)")?
-  dokumentId  String
-  dokument    Dokument @relation(fields: [dokumentId], references: [id])
-  akteId      String
-  akte        Akte     @relation(fields: [akteId], references: [id])
-  createdAt   DateTime @default(now())
-
-  @@index([akteId])
-  @@index([dokumentId])
-}
-```
-
-**Vector index (migration SQL):**
-```sql
-CREATE INDEX ON "DocumentChunk"
-  USING hnsw (embedding vector_cosine_ops)
-  WITH (m = 16, ef_construction = 64);
-```
-
-### Pattern 5: Client Portal as Path-Based Multi-Tenancy
-
-**What:** The Mandantenportal (client portal) lives under `/(portal)/portal/[...]` with its own layout, auth middleware, and restricted data access. It uses the same NextAuth but with a separate Credentials provider for Mandanten (clients).
-
-**Why:** Path-based tenancy is simpler than subdomain-based for a single-Kanzlei deployment. Same database, same app, just different routes and permissions.
-
-**Confidence:** HIGH -- Next.js official documentation recommends path-based multi-tenancy. NextAuth supports multiple providers.
-
-**Implementation:**
-
-```
-src/app/
-  (dashboard)/     # Internal (Anwalt, Sachbearbeiter, etc.)
-    layout.tsx     # RequireInternalAuth
-    akten/
-    kontakte/
-    ...
-  (portal)/        # External (Mandanten)
-    layout.tsx     # RequirePortalAuth
-    portal/
-      login/page.tsx
-      dashboard/page.tsx
-      akten/[id]/page.tsx      # Read-only case view
-      dokumente/page.tsx       # Download freigegebene docs
-      nachrichten/page.tsx     # Secure messaging
-      upload/page.tsx          # Upload own documents
-```
-
-**Auth layer:**
-```typescript
-// src/lib/auth.ts -- add portal provider
-providers: [
-  Credentials({ id: "internal", ... }),  // Existing: email + password
-  Credentials({ id: "portal", ... }),    // New: invitation token + password
-]
-
-// Middleware checks:
-// /(dashboard)/* -> session.user.role in [ADMIN, ANWALT, SACHBEARBEITER, ...]
-// /(portal)/*    -> session.user.role === "MANDANT"
-```
-
-**Data isolation:** API routes for `/(portal)` ONLY return data where the Mandant is a Beteiligter of the Akte, and documents have status `FREIGEGEBEN`.
-
-### Pattern 6: CalDAV Sync as Repeatable Worker Job
-
-**What:** A BullMQ repeatable job that runs every 5 minutes, syncing calendar entries between the internal calendar and external CalDAV servers (Google Calendar, Outlook).
-
-**Why:** CalDAV is a request-response protocol (no push), so periodic polling is required. The `tsdav` library provides TypeScript CalDAV client with sync support.
-
-**Confidence:** MEDIUM -- `tsdav` is the most maintained TypeScript CalDAV client. Bidirectional sync with conflict resolution is inherently complex.
-
-**Implementation:**
-```typescript
-// Worker job: caldav-sync
-const caldavSyncJob = new Worker("caldav-sync", async (job) => {
-  const { userId, calendarUrl, credentials } = job.data;
-  const client = new DAVClient({ serverUrl: calendarUrl, credentials });
-  await client.login();
-
-  // 1. Fetch remote changes since last sync token
-  const remote = await client.syncCalendars({ /* syncToken */ });
-
-  // 2. Fetch local changes since last sync
-  const local = await prisma.kalenderEintrag.findMany({
-    where: { userId, updatedAt: { gt: lastSync } },
-  });
-
-  // 3. Merge with conflict resolution (server wins for external changes)
-  // 4. Push local changes to remote
-  // 5. Pull remote changes to local
-  // 6. Store new sync token
-}, { connection });
-```
-
-### Pattern 7: Stirling-PDF as REST API Sidecar
-
-**What:** Stirling-PDF runs as a Docker container in the compose stack. The Worker calls its REST API for OCR, merge, split, and conversion operations.
-
-**Why:** Stirling-PDF bundles Tesseract OCR, LibreOffice, and Java -- far too heavy to embed in the Node.js container. Its REST API at `/api/v1/*` is well-documented.
-
-**Confidence:** HIGH -- Stirling-PDF is the most popular open-source PDF toolkit on GitHub (100k+ stars). REST API is stable and well-documented.
-
-**Docker Compose addition:**
-```yaml
-stirling-pdf:
-  image: stirlingtools/stirling-pdf:latest-fat   # -fat includes OCR/Tesseract
-  container_name: ailawyer-stirling
-  restart: unless-stopped
-  environment:
-    DOCKER_ENABLE_SECURITY: "false"
-    LANGS: "de_DE"
-  ports:
-    - "8081:8080"
-  volumes:
-    - stirling_data:/configs
-```
-
-**Worker integration:**
-```typescript
-// src/lib/pdf/stirling-client.ts
-export async function ocrPdf(pdfBuffer: Buffer, languages = "deu+eng"): Promise<Buffer> {
-  const form = new FormData();
-  form.append("fileInput", new Blob([pdfBuffer]), "document.pdf");
-  form.append("languages", languages);
-  form.append("ocrType", "skip-text");  // Only OCR if not already searchable
-  form.append("ocrRenderType", "hocr");
-
-  const response = await fetch(`${STIRLING_URL}/api/v1/misc/ocr-pdf`, {
-    method: "POST",
-    body: form,
-  });
-
-  return Buffer.from(await response.arrayBuffer());
-}
-```
-
-## Data Flow Summary
-
-### Email Ingestion Flow
-
-```
-Mailserver (IMAP)
-    |  [IMAP IDLE notification]
-    v
-Worker: ImapConnectionManager
-    |  [enqueue fetch-new job]
-    v
-Worker: BullMQ email-sync processor
-    |  [fetch email, parse headers/body/attachments]
-    v
-PostgreSQL (Email record) + MinIO (attachments)
-    |  [emit via Redis pub/sub]
-    v
-Next.js App: Socket.IO
-    |  [push to connected clients]
-    v
-Browser: Real-time inbox update
-```
-
-### Document Upload + AI Processing Flow
-
-```
-Browser: File Upload
-    |
-    v
-Next.js API: POST /api/akten/[id]/dokumente
-    |  [store file in MinIO, create DB record]
-    |  [enqueue rag-embed + ocr jobs]
-    v
-Redis: BullMQ queue
-    |
-    +--------> Worker: OCR job
-    |              |  [send to Stirling-PDF API]
-    |              |  [get searchable PDF back]
-    |              |  [update MinIO + Meilisearch]
-    |              v
-    |          Done (emit ocr-complete event)
-    |
-    +--------> Worker: RAG embed job
-                   |  [extract text from document]
-                   |  [chunk into ~800 char pieces]
-                   |  [embed via Ollama/OpenAI]
-                   |  [store vectors in pgvector]
-                   v
-               Done (document now searchable via RAG)
-```
-
-### Real-Time Messaging Flow
-
-```
-Browser A: Send message
-    |
-    v
-Next.js API: POST /api/messaging/[threadId]/messages
-    |  [validate, store in DB]
-    |  [emit to Socket.IO room via Redis adapter]
-    v
-Redis pub/sub
-    |
-    v
-Socket.IO server (all instances)
-    |  [broadcast to thread room subscribers]
-    v
-Browser B, C: Receive message in real-time
-```
-
-## Recommended Project Structure (New/Changed Files)
+### Component Responsibilities
+
+| Component | Responsibility | File Location |
+|-----------|----------------|---------------|
+| `embedder.ts` | Ollama embedding (existing, unchanged) | `src/lib/embedding/embedder.ts` |
+| `chunker.ts` | Parent-child chunking (MODIFY) | `src/lib/embedding/chunker.ts` |
+| `vector-store.ts` | pgvector CRUD (MODIFY to add new tables) | `src/lib/embedding/vector-store.ts` |
+| `hybrid-search.ts` | Meilisearch BM25 + pgvector merge via RRF (NEW) | `src/lib/embedding/hybrid-search.ts` |
+| `reranker.ts` | Cross-encoder reranking via Ollama (NEW) | `src/lib/embedding/reranker.ts` |
+| `pii-filter.ts` | NER PII detection via Ollama (NEW) | `src/lib/pii-filter/index.ts` |
+| `ki-chat/route.ts` | Orchestrate hybrid search + reranking (MODIFY) | `src/app/api/ki-chat/route.ts` |
+| `gesetze-sync-job` | GitHub sync for bundestag/gesetze (NEW) | `src/lib/queue/processors/gesetze.processor.ts` |
+| `urteil-ingestion-job` | BMJ scraping + BAG RSS + ingestion (NEW) | `src/lib/queue/processors/urteile.processor.ts` |
+| `muster-ingestion-job` | Admin upload to MinIO then embed (NEW) | `src/lib/queue/processors/muster.processor.ts` |
+| `akte-normen API` | Link norms to Akte (NEW) | `src/app/api/akten/[id]/normen/route.ts` |
+| `admin/muster` | Upload UI for Formulare/Muster (NEW) | `src/app/(dashboard)/admin/muster/page.tsx` |
+
+---
+
+## Recommended Project Structure
 
 ```
 src/
-├── app/
-│   ├── (dashboard)/          # Existing internal routes
-│   ├── (portal)/             # NEW: Client portal
-│   │   ├── layout.tsx        # Portal auth wrapper
-│   │   └── portal/
-│   │       ├── login/
-│   │       ├── dashboard/
-│   │       ├── akten/[id]/
-│   │       ├── dokumente/
-│   │       ├── nachrichten/
-│   │       └── upload/
-│   └── api/
-│       ├── ai/
-│       │   ├── chat/route.ts       # Streaming AI chat
-│       │   └── rag/route.ts        # RAG retrieval
-│       ├── email/                   # Email CRUD (reads from DB, not IMAP)
-│       │   ├── route.ts
-│       │   └── [id]/route.ts
-│       ├── messaging/               # Internal messaging CRUD
-│       │   ├── threads/route.ts
-│       │   └── [threadId]/messages/route.ts
-│       ├── portal/                  # Portal-specific API routes
-│       │   └── ...
-│       └── jobs/                    # Job management (admin)
-│           └── route.ts
 ├── lib/
-│   ├── ai/
-│   │   ├── ollama.ts               # Existing
-│   │   ├── embedding.ts            # NEW: Embedding generation
-│   │   ├── chunking.ts             # NEW: Document chunking
-│   │   └── rag.ts                  # NEW: RAG retrieval logic
-│   ├── email/
-│   │   ├── imap-manager.ts         # NEW: IMAP connection pool
-│   │   ├── smtp.ts                 # NEW: SMTP sending
-│   │   └── parser.ts               # NEW: Email parsing
-│   ├── jobs/
-│   │   ├── queues.ts               # NEW: BullMQ queue definitions
-│   │   ├── processors/
-│   │   │   ├── email-sync.ts
-│   │   │   ├── rag-embed.ts
-│   │   │   ├── ocr.ts
-│   │   │   ├── ai-task.ts
-│   │   │   └── caldav-sync.ts
-│   │   └── connection.ts           # NEW: Redis connection singleton
-│   ├── pdf/
-│   │   └── stirling-client.ts      # NEW: Stirling-PDF API client
-│   ├── caldav/
-│   │   └── sync.ts                 # NEW: CalDAV sync logic
-│   ├── messaging/
-│   │   └── service.ts              # NEW: Messaging business logic
-│   └── socket/
-│       ├── server.ts               # NEW: Socket.IO setup
-│       └── events.ts               # NEW: Event type definitions
-├── worker.ts                        # NEW: Worker entrypoint
-└── server.ts                        # NEW: Custom server (replaces standalone server.js)
+│   ├── embedding/
+│   │   ├── chunker.ts            # MODIFY: add createParentChildChunks()
+│   │   ├── embedder.ts           # NO CHANGE
+│   │   ├── vector-store.ts       # MODIFY: add insertLawChunks, insertUrteilChunks,
+│   │   │                         #          insertMusterChunks, searchAcross()
+│   │   ├── hybrid-search.ts      # NEW: RRF merger (Meilisearch + pgvector)
+│   │   └── reranker.ts           # NEW: cross-encoder via Ollama
+│   ├── pii-filter/
+│   │   └── index.ts              # NEW: NER entity detection via Ollama
+│   ├── gesetze/
+│   │   ├── github-sync.ts        # NEW: git clone/pull bundestag/gesetze
+│   │   └── parser.ts             # NEW: XML/Markdown to chunks
+│   ├── urteile/
+│   │   ├── bmj-scraper.ts        # NEW: BMJ Rechtsprechung HTTP scraper
+│   │   └── bag-rss.ts            # NEW: BAG RSS feed parser
+│   ├── muster/
+│   │   └── uploader.ts           # NEW: MinIO upload + queue enqueue helper
+│   ├── meilisearch.ts            # MODIFY: add law/urteil/muster index helpers
+│   └── queue/
+│       ├── queues.ts             # MODIFY: add 3 new queues + cron registrations
+│       └── processors/
+│           ├── embedding.processor.ts  # NO CHANGE
+│           ├── ocr.processor.ts        # NO CHANGE
+│           ├── gesetze.processor.ts    # NEW
+│           ├── urteile.processor.ts    # NEW
+│           └── muster.processor.ts     # NEW
+├── app/
+│   ├── api/
+│   │   ├── ki-chat/
+│   │   │   └── route.ts          # MODIFY: hybrid search + reranking
+│   │   ├── akten/[id]/normen/
+│   │   │   └── route.ts          # NEW: GET/POST/DELETE akte_normen
+│   │   └── admin/muster/
+│   │       └── route.ts          # NEW: POST upload to MinIO then queue
+│   └── (dashboard)/
+│       └── admin/
+│           └── muster/
+│               └── page.tsx      # NEW: admin upload UI
 ```
 
-## Build Order (Dependency-Based)
+---
 
-The capabilities have clear dependencies. Build in this order:
+## Architectural Patterns
 
-### Phase A: Infrastructure Foundation
+### Pattern 1: Parallel Ingestion Workers (Independent per Knowledge Type)
 
-**Build first:** Redis + BullMQ + Worker process
+**What:** Each of the three RAG knowledge types (Gesetze, Urteile, Muster) gets its own BullMQ queue and processor. They share the embedding infrastructure (`embedder.ts`, `vector-store.ts`) but are otherwise decoupled.
 
-Everything else depends on background job processing. Without the worker, there is no email sync, no RAG embedding, no OCR, no CalDAV.
+**When to use:** When ingestion sources have different triggers (cron vs. HTTP upload vs. RSS feed). Isolation means a BMJ scraper failure does not block Gesetze sync.
 
-**Deliverables:**
-- Redis added to docker-compose
-- BullMQ queue definitions + connection management
-- Worker entrypoint (`worker.ts`) with graceful shutdown
-- Custom `server.ts` for Next.js (WebSocket-ready, even if messaging comes later)
-- Admin API to view job status/retry failed jobs
+**Trade-offs:** Three separate processor files to maintain, but each is small (<200 LOC) and testable in isolation.
 
-**Dependencies:** None (foundation layer)
+**Example:**
+```typescript
+// src/lib/queue/queues.ts — add to existing file
+export const gesetzeSyncQueue = new Queue("gesetze-sync", {
+  connection: getQueueConnection(),
+  defaultJobOptions: { attempts: 3, backoff: { type: "custom" } },
+});
 
-### Phase B: Email System
+export const urteilIngestionQueue = new Queue("urteil-ingestion", {
+  connection: getQueueConnection(),
+  defaultJobOptions: { attempts: 3, backoff: { type: "custom" } },
+});
 
-**Build second:** IMAP IDLE + email storage + SMTP
+export const musterIngestionQueue = new Queue("muster-ingestion", {
+  connection: getQueueConnection(),
+  defaultJobOptions: { attempts: 2, backoff: { type: "custom" } },
+});
 
-Email is the highest-value feature for a law firm. It requires the worker (for IMAP IDLE connections) and the job queue (for email fetching).
+// Cron registration (daily at 2:00 AM, matching existing pattern)
+export async function registerGesetzeSyncJob(): Promise<void> {
+  await gesetzeSyncQueue.upsertJobScheduler(
+    "gesetze-sync-daily",
+    { pattern: "0 2 * * *", tz: "Europe/Berlin" },
+    { name: "sync-gesetze", data: {} }
+  );
+}
+```
 
-**Deliverables:**
-- ImapFlow connection manager in worker
-- Email DB models (EmailAccount, Email, EmailAttachment)
-- Email CRUD API routes (list, detail, search)
-- Email compose + SMTP send (via BullMQ job)
-- Email-to-Akte linking ("Veraktung")
-- Socket.IO notification for new emails
+### Pattern 2: Parent-Child Chunking with FK on document_chunks
 
-**Dependencies:** Phase A (worker + queue + WebSocket server)
+**What:** A "parent chunk" (~2000 tokens, full context for LLM prompt) stores full paragraphs. "Child chunks" (~500 tokens, for embedding/retrieval) reference the parent via `parentChunkId`. On retrieval, the child is matched by cosine similarity, but the parent content is passed to the LLM.
 
-### Phase C: Document Pipeline (Stirling-PDF + OCR)
+**When to use:** Required for all four chunk table types. The existing `document_chunks` table gets a new nullable `parentChunkId` self-reference. The three new tables include `parentContent` as a stored field (simpler than a FK join).
 
-**Build third:** PDF processing + OCR + Meilisearch indexing
+**Trade-offs:** Storing parentContent inline in law/urteil/muster tables avoids a JOIN at query time. Doubles storage per chunk row. Acceptable at kanzlei scale (<1M chunks total).
 
-Stirling-PDF is a sidecar with zero coupling to other new features. OCR results feed into Meilisearch (existing) and later into RAG.
+**Migration strategy:** Add `parentChunkId` to `document_chunks` via nullable ALTER TABLE. Existing rows keep `parentChunkId = NULL`. The next admin-triggered "Re-embed All" produces proper parent-child pairs. No data loss — existing chunks remain searchable during migration.
 
-**Deliverables:**
-- Stirling-PDF added to docker-compose
-- OCR queue processor in worker
-- Auto-OCR on PDF upload (skip if already searchable)
-- OCR status tracking in UI (badge + manual retry)
-- PDF merge/split/convert API routes (proxy to Stirling-PDF)
+**Example:**
+```typescript
+// src/lib/embedding/chunker.ts — new export alongside existing chunkDocument()
+export async function createParentChildChunks(text: string): Promise<{
+  parent: { content: string; index: number };
+  children: { content: string; index: number }[];
+}[]> {
+  // Parent splitter: 2000 chars, 400 overlap
+  const parentSplitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 2000, chunkOverlap: 400,
+    separators: GERMAN_LEGAL_SEPARATORS,
+  });
+  // Child splitter: 500 chars, 100 overlap
+  const childSplitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 500, chunkOverlap: 100,
+    separators: GERMAN_LEGAL_SEPARATORS,
+  });
 
-**Dependencies:** Phase A (worker + queue)
+  const parentTexts = await parentSplitter.splitText(text);
+  return Promise.all(parentTexts.map(async (parentContent, parentIdx) => {
+    const childTexts = await childSplitter.splitText(parentContent);
+    return {
+      parent: { content: parentContent, index: parentIdx },
+      children: childTexts.map((content, childIdx) => ({
+        content,
+        index: parentIdx * 1000 + childIdx, // unique global index
+      })),
+    };
+  }));
+}
+```
 
-### Phase D: RAG Pipeline
+### Pattern 3: Hybrid Search with Reciprocal Rank Fusion (RRF)
 
-**Build fourth:** Embedding + chunking + vector storage + retrieval
+**What:** Two retrieval paths run in parallel: Meilisearch BM25 (keyword/fuzzy) and pgvector cosine (semantic). Results are merged using RRF with k=60. The merged list is passed to the cross-encoder reranker.
 
-RAG ingestion depends on being able to extract text from documents (benefits from OCR in Phase C). RAG retrieval is independent.
+**When to use:** Always, for all Helena retrievals. RRF is robust: if one retriever returns poor results, the other compensates. No score threshold tuning needed across retriever types.
 
-**Deliverables:**
-- DocumentChunk model with pgvector column
-- Chunking logic (sentence-aware, 800 char, 100 overlap)
-- Embedding job processor (Ollama or OpenAI)
-- RAG retrieval API route
-- AI chat with RAG context injection
-- Re-embed on document update
+**Trade-offs:** Two network calls per query (Meilisearch + pgvector). At kanzlei scale both complete in <100ms, so total overhead is <200ms before reranking.
 
-**Dependencies:** Phase A (worker), Phase C (OCR for better text extraction)
+**Location:** New file `src/lib/embedding/hybrid-search.ts`. The `ki-chat/route.ts` calls `hybridSearch()` instead of the current `searchSimilar()` call.
 
-### Phase E: Real-Time Messaging
+**Example:**
+```typescript
+// src/lib/embedding/hybrid-search.ts
+function rrfMerge(
+  vectorResults: { id: string; rank: number }[],
+  bm25Results:   { id: string; rank: number }[],
+  k = 60
+): Map<string, number> {
+  const scores = new Map<string, number>();
+  for (const r of vectorResults) {
+    scores.set(r.id, (scores.get(r.id) ?? 0) + 1 / (k + r.rank));
+  }
+  for (const r of bm25Results) {
+    scores.set(r.id, (scores.get(r.id) ?? 0) + 1 / (k + r.rank));
+  }
+  return scores;
+}
 
-**Build fifth:** Internal messaging with WebSocket push
+export type SearchScope = "akte-only" | "law" | "full";
 
-Requires the Socket.IO server from Phase A. Messaging is self-contained after that.
+export async function hybridSearch(
+  query: string,
+  queryEmbedding: number[],
+  opts: { scope: SearchScope; akteId?: string; limit?: number }
+): Promise<HybridResult[]> {
+  const [vectorResults, bm25Results] = await Promise.all([
+    searchAcrossVectors(queryEmbedding, opts),
+    searchAcrossMeili(query, opts),
+  ]);
+  const merged = rrfMerge(
+    vectorResults.map((r, i) => ({ id: r.id, rank: i })),
+    bm25Results.map((r, i) => ({ id: r.id, rank: i }))
+  );
+  // Build HybridResult array sorted by RRF score
+  // ... (lookup content by id from vectorResults/bm25Results)
+}
+```
 
-**Deliverables:**
-- Thread/Message DB models
-- Case threads + general channels
-- Socket.IO rooms per thread
-- Composer with @mentions, markdown, attachments
-- In-app notifications via Socket.IO
+### Pattern 4: Cross-Encoder Reranking as Inline Async Step
 
-**Dependencies:** Phase A (WebSocket server)
+**What:** After hybrid search returns ~20 candidates, pass (query, chunk_content) pairs to Ollama with a reranking prompt. The model scores relevance 0-10 for each candidate. Sort by score, take top-5 for LLM context.
 
-### Phase F: Client Portal
+**When to use:** After hybrid search, before building the system prompt in `ki-chat/route.ts`. Inline async step, not a BullMQ job, because the user is waiting for a streaming response.
 
-**Build sixth:** Mandantenportal with separate auth
+**Trade-offs:** Adds 500-1500ms latency for 20 candidates at qwen3.5:35b speeds. Mitigate by running reranking in batches of 5 with `Promise.all`. If Ollama is slow, a 2-second timeout per candidate falls back to RRF order.
 
-Portal reads data that already exists (Akten, Dokumente, Nachrichten). It's a new presentation layer, not new infrastructure.
+**Location:** `src/lib/embedding/reranker.ts`. Called from `ki-chat/route.ts` between retrieval and prompt building.
 
-**Deliverables:**
-- Portal route group with restricted layout
-- Mandant credentials provider (invitation link + password)
-- Read-only case view, document download
-- Secure messaging (client <-> Anwalt)
-- Document upload
+**Example:**
+```typescript
+// src/lib/embedding/reranker.ts
+export async function rerankWithOllama(
+  query: string,
+  candidates: HybridResult[],
+  topK = 5
+): Promise<HybridResult[]> {
+  const RERANK_TIMEOUT_MS = 2000;
+  const scored = await Promise.all(
+    candidates.map(async (c) => {
+      try {
+        const score = await scoreRelevance(query, c.content, RERANK_TIMEOUT_MS);
+        return { ...c, rerankScore: score };
+      } catch {
+        // Timeout or Ollama error: fall back to RRF score scaled to 0-10
+        return { ...c, rerankScore: c.rrfScore * 10 };
+      }
+    })
+  );
+  return scored.sort((a, b) => b.rerankScore - a.rerankScore).slice(0, topK);
+}
+```
 
-**Dependencies:** Phase E (messaging, for client-lawyer communication)
+### Pattern 5: PII Filter as Pre-Storage Middleware in BullMQ Processor
 
-### Phase G: CalDAV Sync
+**What:** Before indexing any Urteil or Muster chunk into pgvector/Meilisearch, pass the text through `pii-filter/index.ts`. This calls Ollama with a NER prompt to detect names, addresses, IBAN, etc. Detected entities are replaced with `[PERSON]`, `[ADRESSE]`, `[IBAN]` tokens.
 
-**Build last:** Bidirectional calendar sync
+**When to use:** Only for Urteile (court rulings contain real party names) and kanzlei-eigene Muster. Official amtliche Formulare are already anonymized.
 
-Most complex sync logic, least urgent. Benefits from stable worker infrastructure.
+**Location:** `src/lib/pii-filter/index.ts`. Called inside `urteile.processor.ts` and `muster.processor.ts` before the embedding step.
 
-**Deliverables:**
-- CalDAV account configuration UI
-- tsdav-based sync processor
-- Conflict resolution (last-write-wins with manual override)
-- Sync status dashboard
+**Trade-offs:** One additional Ollama call per chunk during ingestion. Background BullMQ work so user-facing latency is unaffected. For batch ingestion of 1000+ Urteile, set BullMQ job `priority: 10` (low priority) to avoid starving other queues.
 
-**Dependencies:** Phase A (worker + queue), stable calendar system
+---
 
-## Anti-Patterns to Avoid
+## New Prisma Schema (Database Design)
 
-### Anti-Pattern 1: Running IMAP IDLE in Next.js API Routes
+### New Tables
 
-**What people do:** Open IMAP connections inside API route handlers or use `setInterval` in a global module.
-**Why it is wrong:** Next.js API routes are request-scoped. The connection dies when the response ends. Global side effects in modules are unreliable -- Next.js may restart, hot-reload, or run multiple instances.
-**Do this instead:** Run IMAP connections in a dedicated worker process that has a stable lifecycle independent of HTTP requests.
+```prisma
+// NEW: Gesetze chunks (bundestag/gesetze source)
+model LawChunk {
+  id             String   @id @default(cuid())
+  gesetzId       String   // e.g. "BGB", "ZPO", "StGB"
+  paragraphNr    String   // e.g. "§ 242", "§ 823 Abs. 1"
+  titel          String
+  content        String   @db.Text  // child chunk (~500 tokens)
+  parentContent  String?  @db.Text  // parent chunk (~2000 tokens, stored inline)
+  embedding      Unsupported("vector(1024)")?
+  modelVersion   String
+  syncedAt       DateTime @default(now())
+  sourceUrl      String?
 
-### Anti-Pattern 2: Polling for Real-Time Instead of WebSocket
+  @@index([gesetzId])
+  @@index([paragraphNr])
+  @@map("law_chunks")
+}
 
-**What people do:** Use `setInterval` + `fetch` on the client to check for new messages every 2 seconds.
-**Why it is wrong:** Creates unnecessary database load, wastes bandwidth, and introduces 0-2s latency on every message. With 10 users, that is 300 requests/minute for zero new data.
-**Do this instead:** Use Socket.IO with Redis adapter. Push events when state changes. Client subscribes to relevant rooms.
+// NEW: Urteile chunks (BMJ + BAG RSS source)
+model UrteilChunk {
+  id             String   @id @default(cuid())
+  aktenzeichen   String
+  gericht        String
+  datum          DateTime
+  rechtsgebiet   String?
+  content        String   @db.Text  // PII-filtered child chunk
+  parentContent  String?  @db.Text  // PII-filtered parent chunk
+  embedding      Unsupported("vector(1024)")?
+  modelVersion   String
+  sourceUrl      String?
+  piiFiltered    Boolean  @default(false)
+  ingestedAt     DateTime @default(now())
 
-### Anti-Pattern 3: Embedding Documents Synchronously in Upload API Route
+  @@index([gericht])
+  @@index([datum])
+  @@index([rechtsgebiet])
+  @@map("urteil_chunks")
+}
 
-**What people do:** When a document is uploaded, chunk and embed it in the same API route handler before returning the response.
-**Why it is wrong:** Embedding a 50-page document can take 30+ seconds. The user sees a spinner, the request may timeout, and concurrent uploads will exhaust the server.
-**Do this instead:** Return 201 immediately after MinIO upload. Enqueue a `rag-embed` job. Show "Embedding in progress" badge. Notify via Socket.IO when done.
+// NEW: Muster master record
+model Muster {
+  id             String        @id @default(cuid())
+  name           String
+  kategorie      String        // "Schriftsatz", "Formular", "Muster"
+  beschreibung   String?       @db.Text
+  minioKey       String        // path in MinIO bucket
+  mimeType       String
+  piiFiltered    Boolean       @default(false)
+  uploadedById   String
+  uploadedBy     User          @relation(fields: [uploadedById], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  chunks         MusterChunk[]
 
-### Anti-Pattern 4: Separate Docker Image for Worker
+  @@map("muster")
+}
 
-**What people do:** Create a completely separate project/image for the worker with its own Prisma setup and type definitions.
-**Why it is wrong:** Code duplication, type drift, double build times, version mismatches.
-**Do this instead:** Single Docker image, two entrypoints. Worker imports from `src/lib/` just like the app. Docker Compose runs two services from the same image with different commands.
+// NEW: Muster chunks
+model MusterChunk {
+  id             String     @id @default(cuid())
+  musterId       String
+  muster         Muster     @relation(fields: [musterId], references: [id], onDelete: Cascade)
+  chunkIndex     Int
+  content        String     @db.Text  // PII-filtered child chunk
+  parentContent  String?    @db.Text  // PII-filtered parent chunk
+  embedding      Unsupported("vector(1024)")?
+  modelVersion   String
+  createdAt      DateTime   @default(now())
 
-### Anti-Pattern 5: Client Portal as Separate Next.js App
+  @@unique([musterId, chunkIndex])
+  @@index([musterId])
+  @@map("muster_chunks")
+}
 
-**What people do:** Build the Mandantenportal as an entirely separate Next.js application with its own database connection.
-**Why it is wrong:** Data duplication, API duplication, deployment complexity. A separate app means maintaining two codebases that access the same data.
-**Do this instead:** Path-based multi-tenancy within the same app. Route groups `(dashboard)` and `(portal)` with different layouts and auth middleware. Shared Prisma client, shared components.
+// NEW: Normen-Verknuepfung (links law paragraphs to Akten)
+model AkteNorm {
+  id             String    @id @default(cuid())
+  akteId         String
+  akte           Akte      @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  gesetzId       String    // e.g. "BGB"
+  paragraphNr    String    // e.g. "§ 242"
+  anmerkung      String?   @db.Text
+  addedById      String
+  addedBy        User      @relation(fields: [addedById], references: [id])
+  createdAt      DateTime  @default(now())
 
-### Anti-Pattern 6: Using Prisma's ORM for Vector Operations
+  @@unique([akteId, gesetzId, paragraphNr])
+  @@index([akteId])
+  @@map("akte_normen")
+}
+```
 
-**What people do:** Try to use Prisma's standard query builder for cosine similarity, vector indexing, and embedding storage.
-**Why it is wrong:** Prisma does not have native vector type support as of 2025/2026. Using `Unsupported("vector(1536)")` means the column exists in the schema but all vector operations must use raw SQL.
-**Do this instead:** Use `Unsupported` type in schema for migration tracking. Use `$queryRaw` for all vector operations. Consider adding a thin wrapper function (`findSimilarChunks()`) in `src/lib/ai/rag.ts` that encapsulates the raw SQL.
+Also add `parentChunkId` to existing `DocumentChunk`:
+```prisma
+model DocumentChunk {
+  // ... existing fields unchanged ...
+  parentChunkId  String?        // NEW: nullable, no FK initially (add FK in follow-up migration)
+  isParent       Boolean        @default(false)  // NEW
+  // ... existing @@unique and @@index ...
+  @@index([parentChunkId])     // NEW
+}
+```
 
-## Scaling Considerations
+### Index Strategy (raw SQL migration after Prisma migration)
 
-| Concern | Current (1 Kanzlei, ~10 users) | Future (multiple Kanzleien, ~100 users) |
-|---------|--------------------------------|----------------------------------------|
-| WebSocket connections | Single Socket.IO instance, no adapter needed | Redis adapter already in place, add app replicas |
-| IMAP connections | ~5 mailboxes, single worker | Shard by mailbox across worker replicas |
-| RAG embeddings | Sequential processing fine | Increase worker concurrency, consider GPU-accelerated Ollama |
-| Job queue | Single Redis instance | Redis Sentinel or Cluster |
-| Database | Single PostgreSQL | Read replicas for portal queries |
-| Stirling-PDF | Single instance | Stateless, add replicas behind load balancer |
+```sql
+-- HNSW indexes for pgvector. Use HNSW not IVFFlat: no training required,
+-- works on empty table, consistent performance as data grows.
+CREATE INDEX law_chunks_embedding_hnsw
+  ON law_chunks USING hnsw (embedding vector_cosine_ops)
+  WITH (m = 16, ef_construction = 64);
 
-For the current single-Kanzlei deployment, a single instance of each component is sufficient. The architecture supports horizontal scaling without redesign.
+CREATE INDEX urteil_chunks_embedding_hnsw
+  ON urteil_chunks USING hnsw (embedding vector_cosine_ops)
+  WITH (m = 16, ef_construction = 64);
 
-## Integration Points Summary
+CREATE INDEX muster_chunks_embedding_hnsw
+  ON muster_chunks USING hnsw (embedding vector_cosine_ops)
+  WITH (m = 16, ef_construction = 64);
+```
 
-### External Services (Docker Compose)
+Add these as a raw SQL step inside a Prisma migration file after the table-creation migration has run.
 
-| Service | Protocol | Port | Auth | Notes |
-|---------|----------|------|------|-------|
-| PostgreSQL + pgvector | TCP/PostgreSQL | 5432 | User/password | Existing. Add pgvector extension if not already enabled |
-| Redis | TCP/Redis | 6379 | Optional password | NEW. Used by BullMQ + Socket.IO adapter |
-| MinIO | HTTP/S3 | 9000 | Access key/secret | Existing |
-| Meilisearch | HTTP/REST | 7700 | API key | Existing |
-| OnlyOffice | HTTP/WOPI | 80 | JWT | Existing |
-| Stirling-PDF | HTTP/REST | 8080 | API key (optional) | NEW. Fat image for OCR |
-| Ollama | HTTP/REST | 11434 | None | Existing (external) |
+---
 
-### Internal Boundaries
+## Data Flow
+
+### Ingestion Flow: Gesetze (bundestag/gesetze GitHub Repo)
+
+```
+BullMQ cron (daily 02:00)
+  gesetze.processor.ts
+    github-sync.ts: isomorphic-git pull bundestag/gesetze into /data/gesetze volume
+    parser.ts: XML/Markdown to { gesetzId, paragraphNr, titel, fullText }
+    chunker.ts: createParentChildChunks(fullText) -> { parent, children[] }
+    embedder.ts: generateEmbedding(child.content) for each child
+    vector-store.ts: insertLawChunks(gesetzId, paragraphNr, chunks)
+    meilisearch.ts: indexLawChunk({ id, gesetzId, paragraphNr, content })
+    (no PII filter: Gesetze are public, no personal data)
+```
+
+### Ingestion Flow: Urteile (BMJ + BAG RSS)
+
+```
+BullMQ cron (daily 03:00) + on-demand trigger
+  urteile.processor.ts
+    bmj-scraper.ts or bag-rss.ts: fetch HTML/XML (rate: 1 req/2s)
+    storage.ts: store raw HTML in MinIO at raw-urteile/{date}/{id}.html (audit)
+    parser: extract { aktenzeichen, gericht, datum, bodyText }
+    pii-filter/index.ts: Ollama NER -> redact names/addresses/IBAN
+    chunker.ts: createParentChildChunks(redactedText)
+    embedder.ts: generateEmbedding per child chunk
+    vector-store.ts: insertUrteilChunks(...)
+    meilisearch.ts: indexUrteilChunk(...)
+```
+
+### Ingestion Flow: Muster (Admin Upload)
+
+```
+Admin UI /admin/muster
+  POST /api/admin/muster (multipart/form-data)
+    storage.ts: upload to MinIO muster/{id}/{filename}
+    prisma: Muster.create({ status: PENDING })
+    musterIngestionQueue.add("ingest-muster", { musterId })
+    200 OK to UI (processing is async)
+
+muster.processor.ts (BullMQ worker picks up job)
+  storage.ts: fetch file from MinIO
+  (if PDF) ocrClient: Stirling-PDF OCR (reuse existing ocr pattern)
+  pii-filter/index.ts: redact PII
+  chunker.ts: createParentChildChunks(text)
+  embedder.ts: embed each child chunk
+  vector-store.ts: insertMusterChunks(musterId, ...)
+  meilisearch.ts: indexMusterChunk(...)
+  prisma: Muster.update({ status: INDEXED })
+```
+
+### Retrieval Flow: Helena Chat Query
+
+```
+POST /api/ki-chat
+  generateQueryEmbedding(query)             [existing embedder.ts, unchanged]
+  hybridSearch(query, queryEmbedding, scope) [NEW hybrid-search.ts]
+    parallel:
+      searchAcrossVectors(queryEmbedding, scope)   [modified vector-store.ts]
+      searchAcrossMeili(query, scope)              [modified meilisearch.ts]
+    rrfMerge(vectorResults, bm25Results) -> top-20 candidates
+  rerankWithOllama(query, candidates, topK=5)  [NEW reranker.ts, timeout 2s]
+  for each top result: use parentContent for LLM context (richer than child)
+  build systemPrompt with parentContent excerpts + source citations
+  streamText(model, systemPrompt, messages)   [existing Vercel AI SDK, unchanged]
+```
+
+### Normen-Verknuepfung Flow
+
+```
+[Auto-detection during AI scan]
+  ai-scan processor: extract "§ 242 BGB" style citations from document text
+  POST /api/akten/{id}/normen { gesetzId, paragraphNr }
+  prisma: AkteNorm.create(...)
+
+[Manual addition by user]
+  Akte detail page: user clicks "Norm hinzufuegen"
+  Search law_chunks for matching §
+  POST /api/akten/{id}/normen
+
+[Display]
+  GET /api/akten/{id}/normen
+  NormenCard component in akte detail sidebar
+  Click norm: modal shows law_chunks.parentContent for that §
+```
+
+---
+
+## Integration Points
+
+### New vs. Modified Components
+
+**MODIFIED (existing files with targeted changes):**
+
+| File | Change |
+|------|--------|
+| `src/lib/embedding/chunker.ts` | Add `createParentChildChunks()` function. Existing `chunkDocument()` unchanged. |
+| `src/lib/embedding/vector-store.ts` | Add `insertLawChunks()`, `insertUrteilChunks()`, `insertMusterChunks()`, `searchAcross()` (queries all four tables, scoped). Existing `insertChunks()`, `searchSimilar()`, `deleteChunks()` unchanged. |
+| `src/lib/meilisearch.ts` | Add `indexLawChunk()`, `indexUrteilChunk()`, `indexMusterChunk()`, `ensureNewIndexes()`, `searchAcross()`. Existing `searchDokumente()` and `indexDokument()` unchanged. |
+| `src/lib/queue/queues.ts` | Add `gesetzeSyncQueue`, `urteilIngestionQueue`, `musterIngestionQueue` and their cron registration functions. Add all three to `ALL_QUEUES` array. |
+| `src/app/api/ki-chat/route.ts` | Replace `searchSimilar()` call with `hybridSearch()`. Add `rerankWithOllama()` call. Use `parentContent` from results for system prompt. Source attribution now includes `sourceType` field. |
+| `prisma/schema.prisma` | Add `parentChunkId`/`isParent` to `DocumentChunk`. Add five new models: `LawChunk`, `UrteilChunk`, `Muster`, `MusterChunk`, `AkteNorm`. |
+
+**NEW (created from scratch):**
+
+| File | Purpose |
+|------|---------|
+| `src/lib/embedding/hybrid-search.ts` | RRF merger, unified search interface across all four RAG types with scope control |
+| `src/lib/embedding/reranker.ts` | Cross-encoder reranking via Ollama with per-candidate timeout fallback |
+| `src/lib/pii-filter/index.ts` | NER PII detection + entity redaction via Ollama |
+| `src/lib/gesetze/github-sync.ts` | isomorphic-git pull of bundestag/gesetze repo into Docker volume |
+| `src/lib/gesetze/parser.ts` | XML/Markdown law text parser producing structured chunks |
+| `src/lib/urteile/bmj-scraper.ts` | BMJ Rechtsprechung HTTP scraper with 1 req/2s rate limiting |
+| `src/lib/urteile/bag-rss.ts` | BAG RSS feed parser (rss-parser npm) |
+| `src/lib/muster/uploader.ts` | MinIO upload + musterIngestionQueue.add() helper |
+| `src/lib/queue/processors/gesetze.processor.ts` | BullMQ processor for Gesetze sync pipeline |
+| `src/lib/queue/processors/urteile.processor.ts` | BullMQ processor for Urteil ingestion with PII filter |
+| `src/lib/queue/processors/muster.processor.ts` | BullMQ processor for Muster ingestion with PII filter |
+| `src/app/api/akten/[id]/normen/route.ts` | GET/POST/DELETE for AkteNorm records |
+| `src/app/api/admin/muster/route.ts` | POST multipart upload to MinIO then enqueue |
+| `src/app/(dashboard)/admin/muster/page.tsx` | Admin upload UI with file table and status column |
+
+### External Service Integrations
+
+| Service | Integration Pattern | Notes |
+|---------|---------------------|-------|
+| GitHub (bundestag/gesetze) | `isomorphic-git` shallow clone into Docker volume `/data/gesetze` | Public repo, no token needed. Use `isomorphic-git` not `simple-git`: no git binary dependency in Docker image. First run: shallow clone (`depth: 1`). Subsequent runs: pull. |
+| BMJ Rechtsprechung | HTTP fetch + HTML parse with cheerio | Rate limit: 1 req/2s hard limit. Store raw HTML in MinIO `raw-urteile/` for audit trail. Check robots.txt on startup. |
+| BAG RSS Feed | Atom/RSS parse via `rss-parser` npm package | RSS gives metadata only; full text requires following each entry URL. Enqueue each entry as a separate `urteil-ingestion` BullMQ job to avoid long-running single job. |
+| Ollama (reranker) | POST `/api/chat` with structured rerank prompt | Model: qwen3.5:35b (existing). 2-second timeout per candidate. Response format: `{ "score": 7 }` extracted via regex. |
+| Ollama (PII filter) | POST `/api/chat` with NER prompt | Same model. Response format: array of `{ text, type, replacement }`. Falls back to unfiltered text on Ollama error (non-fatal, flagged in DB). |
+
+### Internal Module Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| Next.js App <-> Worker | Redis (BullMQ queues) | App enqueues jobs, worker processes them |
-| Worker -> App | Redis pub/sub (Socket.IO adapter) | Worker emits events, app broadcasts to clients |
-| Next.js App <-> Browser | HTTP + WebSocket (Socket.IO) | REST for CRUD, WebSocket for real-time |
-| Worker -> Stirling-PDF | HTTP REST API | Multipart form data, returns processed PDF |
-| Worker -> Ollama | HTTP REST API | Embedding generation, text completion |
-| Worker -> IMAP server | TCP (IMAP/TLS) | Persistent connection with IDLE |
-| Worker -> SMTP server | TCP (SMTP/TLS) | Per-message connection |
-| Worker -> CalDAV server | HTTP (CalDAV) | Periodic sync requests |
+| `ki-chat/route.ts` to `hybrid-search.ts` | Direct function call | `hybridSearch()` encapsulates both retrieval paths. `ki-chat` no longer calls `searchSimilar()` or `searchDokumente()` directly. |
+| `hybrid-search.ts` to `vector-store.ts` | Direct function call | `searchAcross()` in vector-store accepts `tables` scope parameter to query only relevant chunk tables. |
+| `hybrid-search.ts` to `meilisearch.ts` | Direct function call | New `searchAcross()` in meilisearch fans out to all relevant Meilisearch indexes based on scope. |
+| Worker entrypoint to new processors | Import + processor registration | The existing worker file registers processors per queue. Add three new `worker.registerQueue(gesetzeSyncQueue, processGesetzeSyncJob)` style registrations. |
+| `pii-filter/index.ts` to `urteile.processor.ts` / `muster.processor.ts` | Direct async function call | PII filter is a synchronous step within the processor, not a separate queue. Failure is non-fatal: log warning, set `piiFiltered: false` in DB, continue ingestion. |
+| `muster/uploader.ts` to `musterIngestionQueue` | `Queue.add()` | Upload API enqueues; processor picks up asynchronously. Upload API returns 200 with `{ status: "PENDING", musterId }`. |
 
-## Updated Docker Compose (Target State)
+---
 
-```yaml
-services:
-  app:
-    build: .
-    container_name: ailawyer-app
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      # ... existing env vars ...
-      REDIS_URL: redis://redis:6379
-      STIRLING_PDF_URL: http://stirling-pdf:8080
-    depends_on:
-      - db
-      - redis
-      - minio
-      - meilisearch
-      - onlyoffice
+## Suggested Build Order
 
-  worker:
-    build: .
-    container_name: ailawyer-worker
-    restart: unless-stopped
-    command: ["node", "worker.js"]    # Override default server.js
-    environment:
-      # Same DATABASE_URL, REDIS_URL, MINIO, MEILISEARCH, OLLAMA vars
-      STIRLING_PDF_URL: http://stirling-pdf:8080
-    depends_on:
-      - db
-      - redis
-      - minio
-      - stirling-pdf
+Rationale: database schema must exist before any code that writes to it; shared retrieval infrastructure (hybrid search) before ki-chat changes; simple Gesetze source before complex Urteile scraping; PII filter before Urteile because Urteile processor depends on it.
 
-  redis:
-    image: redis:7-alpine
-    container_name: ailawyer-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redisdata:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  stirling-pdf:
-    image: stirlingtools/stirling-pdf:latest-fat
-    container_name: ailawyer-stirling
-    restart: unless-stopped
-    environment:
-      DOCKER_ENABLE_SECURITY: "false"
-      LANGS: "de_DE"
-    ports:
-      - "8081:8080"
-    volumes:
-      - stirling_data:/configs
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/info/status"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
-  # ... existing db, minio, meilisearch, onlyoffice ...
-
-volumes:
-  # ... existing volumes ...
-  redisdata:
-  stirling_data:
 ```
+Phase 1 — Schema Foundation (enables everything else, no UI)
+  1a. prisma/schema.prisma: add parentChunkId + isParent to DocumentChunk
+  1b. prisma/schema.prisma: add LawChunk, UrteilChunk, Muster, MusterChunk, AkteNorm
+  1c. prisma migrate dev (safe — additive only, no existing data affected)
+  1d. Add raw SQL HNSW index migration file
+
+Phase 2 — Parent-Child Chunker (shared by all four RAG types)
+  2a. Modify chunker.ts: add createParentChildChunks()
+  2b. Modify vector-store.ts: add insertLawChunks(), insertUrteilChunks(), insertMusterChunks()
+  2c. Skeleton hybrid-search.ts (vector-only first, Meilisearch side added in Phase 3)
+  (Existing document_chunks embedding flow is untouched)
+
+Phase 3 — Hybrid Search + Reranking (improves existing chat immediately)
+  3a. Complete hybrid-search.ts (RRF, both retrieval paths, scope parameter)
+  3b. Modify meilisearch.ts: add searchAcross(), new index setup helpers
+  3c. Add reranker.ts
+  3d. Modify ki-chat/route.ts: wire hybridSearch() + rerankWithOllama()
+  (Existing document_chunks retrieval now upgraded, even before new knowledge types exist)
+
+Phase 4 — Gesetze RAG (simplest source, validates end-to-end pipeline)
+  4a. Add gesetze/github-sync.ts + gesetze/parser.ts
+  4b. Add queue/processors/gesetze.processor.ts
+  4c. Add gesetzeSyncQueue to queues.ts + registerGesetzeSyncJob()
+  4d. Register processor in worker entrypoint
+  4e. Manual trigger admin endpoint to run first sync
+  (End-to-end validated: GitHub -> parse -> chunk -> embed -> pgvector -> Meilisearch -> ki-chat)
+
+Phase 5 — PII Filter (prerequisite for Urteile and kanzlei-eigene Muster)
+  5a. Add pii-filter/index.ts with Ollama NER prompt
+  5b. Test with sample court ruling text (unit test with mocked Ollama)
+
+Phase 6 — Urteile RAG (most complex source)
+  6a. Add urteile/bmj-scraper.ts (rate limited, raw HTML to MinIO)
+  6b. Add urteile/bag-rss.ts
+  6c. Add queue/processors/urteile.processor.ts (includes PII filter step)
+  6d. Add urteilIngestionQueue to queues.ts + registerUrteilCronJob()
+  6e. Register processor in worker entrypoint
+
+Phase 7 — Muster RAG + Admin UI (user-facing)
+  7a. Add muster/uploader.ts
+  7b. Add queue/processors/muster.processor.ts
+  7c. Add musterIngestionQueue to queues.ts
+  7d. Add api/admin/muster/route.ts (multipart upload handler)
+  7e. Add admin/muster/page.tsx (shadcn/ui file input + data table with status column)
+  7f. Register processor in worker entrypoint
+
+Phase 8 — Normen-Verknuepfung in Akte (UI integration)
+  8a. Add api/akten/[id]/normen/route.ts
+  8b. Add NormenCard component in akte detail page (or sidebar panel)
+  8c. Extend AI scan processor: extract § citations -> auto-create AkteNorm records
+```
+
+---
+
+## Scaling Considerations
+
+| Scale | Architecture Adjustments |
+|-------|--------------------------|
+| Kanzlei (1-20 users, <100k chunks) | Current monolith fine. All workers in single BullMQ worker process. Meilisearch + pgvector on same Docker host. |
+| Mid (20-100 users, <1M chunks) | Tune HNSW `ef_construction` to 128. Add BullMQ concurrency limits per queue to prevent Ollama saturation during batch ingestion. |
+| Large (100+ users, >1M chunks) | Move pgvector to dedicated PostgreSQL instance. Consider a smaller dedicated embedding model on GPU-accelerated worker. Split Meilisearch indexes by Rechtsgebiet. |
+
+### Scaling Priorities
+
+1. **First bottleneck:** Ollama reranking latency. If qwen3.5:35b is too slow for reranking 20 candidates in 2 seconds, add a dedicated smaller model for reranking (e.g., a fine-tuned cross-encoder model served separately, or use cosine score directly for reranking as a fast fallback).
+2. **Second bottleneck:** HNSW search across four tables via UNION queries. Mitigate with the `scope` parameter in `searchAcross()`: akte-specific chat only searches `document_chunks`, global legal questions search all four. Avoids scanning 200k law_chunks for a factual document question.
+
+---
+
+## Anti-Patterns
+
+### Anti-Pattern 1: Synchronous PII Filter in the Upload API Route
+
+**What people do:** Call `pii-filter/index.ts` inside the POST /api/admin/muster handler before returning 200, so the admin waits for Ollama to process the whole document.
+
+**Why it's wrong:** PII filtering a multi-page document via Ollama takes 5-30 seconds. The API route would timeout. The file upload appears to hang or fail.
+
+**Do this instead:** Upload to MinIO immediately, enqueue `muster-ingestion` BullMQ job, return 200 with `{ status: "PENDING", musterId }`. The processor handles PII filter + embedding asynchronously. Admin UI polls `GET /api/admin/muster?status=PENDING` to show progress. Match the pattern already used for OCR jobs in the existing codebase.
+
+### Anti-Pattern 2: Embedding Full Law Paragraphs as Single Vectors
+
+**What people do:** Embed the entire content of `§ 823 BGB` (including all sub-paragraphs, Absatz 1, Absatz 2, special cases) as one 1024-dimensional vector.
+
+**Why it's wrong:** Long legal paragraphs exceed the ~512 token practical window of multilingual-e5-large-instruct. Cosine similarity quality degrades significantly for texts over 500 tokens. The embedding becomes a blurry average of many distinct legal concepts.
+
+**Do this instead:** Apply parent-child chunking. Children (~500 tokens) are the retrieval units with precise embeddings. The parent (~2000 tokens) stores the surrounding context and is passed to the LLM as the actual prompt context. Retrieval precision is maintained by the small child; LLM quality is maintained by the large parent.
+
+### Anti-Pattern 3: Querying All Four Chunk Tables for Every ki-chat Request
+
+**What people do:** Every `hybridSearch()` call always searches `document_chunks + law_chunks + urteil_chunks + muster_chunks` via UNION regardless of context.
+
+**Why it's wrong:** An akte-specific question "Wann wurde der Vertrag geschlossen?" should not search 200k Gesetze chunks. It adds latency and contaminates the top-20 candidates with irrelevant legal boilerplate, wasting the reranker's capacity.
+
+**Do this instead:** Use the `scope` parameter. `"akte-only"`: search only `document_chunks` for the given akteId. `"law"`: search `law_chunks + muster_chunks`. `"full"`: search all four. The ki-chat route sets scope based on the presence of `akteId` and query content signals (does the query contain Gesetze keywords like "§", "BGB", "Urteil"?).
+
+### Anti-Pattern 4: Committing the bundestag/gesetze Repo into the Docker Image
+
+**What people do:** Clone bundestag/gesetze in the Dockerfile RUN layer, baking 600MB of law text into every Docker image build.
+
+**Why it's wrong:** Images become multi-GB. Every `docker build` re-clones. Any law update requires a full image rebuild and redeploy. CI/CD pipeline breaks on large images.
+
+**Do this instead:** Mount a named Docker volume (`gesetze-data:/data/gesetze`). The BullMQ gesetze-sync cron job runs `isomorphic-git` pull into that volume path on schedule. The repo persists between container restarts and rebuilds. First ever run does a shallow clone (`depth: 1`), subsequent runs do incremental pulls.
+
+---
 
 ## Sources
 
-- [Socket.IO + Next.js official guide](https://socket.io/how-to/use-with-nextjs) -- HIGH confidence
-- [BullMQ official documentation](https://docs.bullmq.io/) -- HIGH confidence
-- [ImapFlow documentation](https://imapflow.com/) -- HIGH confidence
-- [Vercel AI SDK RAG guide](https://ai-sdk.dev/cookbook/guides/rag-chatbot) -- HIGH confidence
-- [Prisma pgvector discussion](https://github.com/prisma/prisma/discussions/18220) -- HIGH confidence
-- [Stirling-PDF documentation](https://docs.stirlingpdf.com/) -- HIGH confidence
-- [Next.js multi-tenant guide](https://nextjs.org/docs/app/guides/multi-tenant) -- HIGH confidence
-- [tsdav CalDAV client](https://github.com/natelindev/tsdav) -- MEDIUM confidence
-- [Next.js custom server docs](https://nextjs.org/docs/pages/guides/custom-server) -- HIGH confidence
-- [Next.js Docker standalone deployment](https://hmos.dev/en/nextjs-docker-standalone-and-custom-server) -- MEDIUM confidence
-- [Postgres RAG Stack blog](https://blogs.perficient.com/2025/07/17/postgres-typescript-rag-stack/) -- MEDIUM confidence
-- [BullMQ + Next.js integration](https://medium.com/@asanka_l/integrating-bullmq-with-nextjs-typescript-f41cca347ef8) -- MEDIUM confidence
+- Direct codebase inspection: `src/lib/embedding/embedder.ts`, `src/lib/embedding/chunker.ts`, `src/lib/embedding/vector-store.ts`, `src/lib/meilisearch.ts`, `src/lib/queue/queues.ts`, `src/lib/queue/processors/embedding.processor.ts`, `src/app/api/ki-chat/route.ts`, `prisma/schema.prisma`
+- pgvector HNSW index documentation: https://github.com/pgvector/pgvector — m=16, ef_construction=64 are the recommended defaults for datasets under 1M rows
+- Reciprocal Rank Fusion: Cormack, Clarke & Buettcher (2009) — k=60 is the empirically validated constant that prevents any single rank-1 result from dominating
+- BullMQ `upsertJobScheduler` pattern: matches existing usage in `src/lib/queue/queues.ts` (frist-reminder, ai-proactive, ai-briefing)
+- isomorphic-git: https://isomorphic-git.org — pure JavaScript git implementation, no binary dependency, works in Node.js Docker containers without git installed
+- Confidence: HIGH for integration architecture (all patterns verified against existing codebase conventions); MEDIUM for Ollama reranking latency numbers (hardware-dependent)
 
 ---
-*Architecture research for: AI-Lawyer integration of 7 new capabilities*
-*Researched: 2026-02-24*
+
+*Architecture research for: Helena RAG extension (v0.1) — Legal RAG integration into AI-Lawyer*
+*Researched: 2026-02-26*

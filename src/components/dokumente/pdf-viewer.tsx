@@ -26,11 +26,8 @@ import {
   ChevronsRight,
 } from "lucide-react";
 
-// Configure pdfjs worker
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+// Configure pdfjs worker — served from public/ to avoid Terser import.meta errors
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 interface PdfViewerProps {
   url: string;

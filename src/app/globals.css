@@ -1,0 +1,131 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=DM+Serif+Display&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 230 80% 52%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 230 80% 52%;
+    --radius: 0.625rem;
+
+    /* Risk / status colors */
+    --risk-low: 160 84% 39%;
+    --risk-medium: 43 96% 56%;
+    --risk-high: 350 89% 60%;
+
+    /* Glass tokens — light */
+    --glass-bg: 0 0% 100% / 0.55;
+    --glass-bg-heavy: 0 0% 100% / 0.72;
+    --glass-border: 0 0% 100% / 0.6;
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    --glass-shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.08);
+
+    /* Mesh gradient — light mode */
+    --mesh-1: oklch(95% 0.04 260);
+    --mesh-2: oklch(93% 0.03 220);
+    --mesh-3: oklch(96% 0.02 290);
+    --mesh-4: oklch(94% 0.03 200);
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 224 40% 9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 224 40% 9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 230 80% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 14%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 14%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 14%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 230 80% 60%;
+
+    /* Glass tokens — dark */
+    --glass-bg: 220 40% 10% / 0.50;
+    --glass-bg-heavy: 220 40% 10% / 0.68;
+    --glass-border: 220 30% 20% / 0.50;
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    --glass-shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.35);
+
+    /* Mesh gradient — dark mode */
+    --mesh-1: oklch(15% 0.04 260);
+    --mesh-2: oklch(12% 0.03 220);
+    --mesh-3: oklch(14% 0.02 290);
+    --mesh-4: oklch(13% 0.03 200);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+/* Mesh gradient background for main content area */
+@layer utilities {
+  .bg-mesh {
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 20%, var(--mesh-1), transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 10%, var(--mesh-2), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 50% 80%, var(--mesh-3), transparent 50%),
+      radial-gradient(ellipse 50% 70% at 90% 70%, var(--mesh-4), transparent 45%),
+      hsl(var(--background));
+  }
+
+  .glass {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-heavy {
+    background: hsl(var(--glass-bg-heavy));
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-lg {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--glass-shadow-lg);
+  }
+}

@@ -257,7 +257,6 @@ async function extractTextFromBuffer(pdfBuffer: Buffer): Promise<string> {
   // Use dynamic import for pdf-parse (if available) or basic extraction
   try {
     // Attempt to use pdf-parse for text extraction
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
     const result = await pdfParse(pdfBuffer);
     return result.text ?? "";

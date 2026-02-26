@@ -13,6 +13,27 @@ const nextConfig = {
       "bullmq", "ioredis", "pino", "pino-roll", "pino-pretty",
       "pdf-parse", "imapflow", "nodemailer", "@prisma/client",
     ],
+    // Turbopack: alias @napi-rs/canvas to empty module -- pdfjs-dist optional
+    // Node.js dependency that is not needed in the browser (client components)
+    turbo: {
+      resolveAlias: {
+        "@napi-rs/canvas": { browser: "./src/lib/empty-module.ts" },
+        canvas: { browser: "./src/lib/empty-module.ts" },
+      },
+    },
+  },
+
+  // Webpack: alias @napi-rs/canvas and canvas to empty module for client-side builds
+  // (pdfjs-dist optionally requires these for Node.js server-side rendering)
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        "@napi-rs/canvas": false,
+        canvas: false,
+      };
+    }
+    return config;
   },
 
   async headers() {

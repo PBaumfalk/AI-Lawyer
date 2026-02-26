@@ -129,6 +129,12 @@ export async function processOcrJob(job: Job<OcrJobData>): Promise<void> {
       // Upload OCR'd PDF back to MinIO (replace original)
       await uploadFile(storagePath, ocrResult, PDF_MIME, ocrResult.length);
 
+      // Update file size in database (OCR'd PDF may differ from original)
+      await prisma.dokument.update({
+        where: { id: dokumentId },
+        data: { groesse: ocrResult.length },
+      });
+
       // Extract text from OCR'd PDF (use the text layer added by Stirling)
       extractedText = await extractTextFromBuffer(ocrResult);
 
@@ -250,17 +256,26 @@ export async function processOcrJob(job: Job<OcrJobData>): Promise<void> {
 
 /**
  * Extract plain text from a PDF buffer.
- * Uses a basic approach to extract text content.
- * For production, consider pdf-parse or similar.
+ * Uses pdf-parse v2 (PDFParse class) for reliable text extraction.
  */
 async function extractTextFromBuffer(pdfBuffer: Buffer): Promise<string> {
-  // Use dynamic import for pdf-parse (if available) or basic extraction
   try {
-    // Attempt to use pdf-parse for text extraction
-    const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
-    const result = await pdfParse(pdfBuffer);
-    return result.text ?? "";
-  } catch {
+    // pdf-parse v2 exports { PDFParse } class instead of a default function
+    const { PDFParse } = require("pdf-parse") as {
+      PDFParse: new (opts: { data: Buffer }) => {
+        getText: () => Promise<{ text: string }>;
+        destroy: () => Promise<void>;
+      };
+    };
+    const parser = new PDFParse({ data: pdfBuffer });
+    try {
+      const result = await parser.getText();
+      return result.text ?? "";
+    } finally {
+      await parser.destroy().catch(() => {});
+    }
+  } catch (err) {
+    log.warn({ err: err instanceof Error ? err.message : String(err) }, "pdf-parse failed, using fallback text extraction");
     // Fallback: basic text extraction from PDF binary
     // This is a simplified approach; text between BT/ET markers
     const text = pdfBuffer.toString("latin1");

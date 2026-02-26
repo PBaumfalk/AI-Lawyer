@@ -344,11 +344,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
 
               {hasPdfPreview ? (
                 <PdfViewer
-                  url={
-                    dokument.mimeType === "application/pdf"
-                      ? dokument.downloadUrl ?? ""
-                      : dokument.previewUrl ?? ""
-                  }
+                  url={dokument.previewUrl ?? dokument.downloadUrl ?? ""}
                   className="flex-1"
                 />
               ) : (

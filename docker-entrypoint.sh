@@ -42,7 +42,7 @@ if echo "$@" | grep -q "dist-worker"; then
   OLLAMA_HOST="${OLLAMA_URL:-http://ollama:11434}"
   echo "==> Checking Ollama models..."
 
-  for MODEL_NAME in "mistral:7b" "blaifa/multilingual-e5-large-instruct"; do
+  for MODEL_NAME in "qwen3.5:35b" "blaifa/multilingual-e5-large-instruct"; do
     SHORT_NAME=$(echo "$MODEL_NAME" | cut -d: -f1 | sed 's|.*/||')
     HAS_MODEL=$(node -e "
       fetch('${OLLAMA_HOST}/api/tags').then(r => r.json()).then(d => {

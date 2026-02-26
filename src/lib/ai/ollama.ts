@@ -14,7 +14,7 @@ import { getModel, getProviderName, getModelName } from "./provider";
 // ---------------------------------------------------------------------------
 
 export const AI_DEFAULTS = {
-  model: "mistral:7b",
+  model: "qwen3.5:35b",
   numCtx: 32_768,
   temperature: 0.3,
   topP: 0.9,

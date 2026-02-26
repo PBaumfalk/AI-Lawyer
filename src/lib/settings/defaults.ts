@@ -117,7 +117,7 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
   },
   {
     key: "ai.provider.model",
-    value: "mistral:7b",
+    value: "qwen3.5:35b",
     type: "string",
     category: "ai",
     label: "KI-Modell",

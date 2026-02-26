@@ -97,7 +97,7 @@ if [ "$SKIP_CONFIG" != "true" ]; then
       ;;
     *)
       AI_PROVIDER="ollama"
-      AI_MODEL="mistral:7b"
+      AI_MODEL="qwen3.5:35b"
       ;;
   esac
   ok "AI Provider: $AI_PROVIDER ($AI_MODEL)"
@@ -201,6 +201,6 @@ echo -e "  anwalt@kanzlei.de         → ANWALT"
 echo -e "  sachbearbeiter@kanzlei.de → SACHBEARBEITER"
 echo -e "  Passwort: ${BOLD}password123${NC} (bitte nach Login ändern)"
 echo ""
-echo -e "${YELLOW}Hinweis:${NC} Ollama lädt mistral:7b beim ersten Start herunter (5-15 Min)."
+echo -e "${YELLOW}Hinweis:${NC} Ollama lädt qwen3.5:35b beim ersten Start herunter (5-15 Min)."
 echo -e "         Fortschritt: ${BOLD}docker compose logs -f ollama${NC}"
 echo ""

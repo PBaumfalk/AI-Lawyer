@@ -14,7 +14,7 @@
 #   OPENAI_API_KEY        OpenAI API-Key (leer = Ollama wird verwendet)
 #   ANTHROPIC_API_KEY     Anthropic API-Key
 #   AI_PROVIDER           openai | anthropic | ollama  (default: ollama)
-#   AI_MODEL              z.B. gpt-4o | mistral:7b
+#   AI_MODEL              z.B. gpt-4o | qwen3.5:35b
 #
 # Default credentials after seed:
 #   admin@kanzlei.de          / password123  (ADMIN)
@@ -57,7 +57,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       AI_PROVIDER: ${AI_PROVIDER:-ollama}
-      AI_MODEL: ${AI_MODEL:-mistral:7b}
+      AI_MODEL: ${AI_MODEL:-qwen3.5:35b}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       LOG_FILE_PATH: /var/log/ai-lawyer/app
     depends_on:

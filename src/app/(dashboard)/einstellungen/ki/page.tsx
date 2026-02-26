@@ -30,7 +30,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
 ];
 
 const DEFAULT_MODELS: Record<string, string> = {
-  ollama: "mistral:7b",
+  ollama: "qwen3.5:35b",
   openai: "gpt-4o",
   anthropic: "claude-sonnet-4-20250514",
 };
@@ -65,7 +65,7 @@ export default function KiEinstellungenPage() {
   // Provider config
   const [provider, setProvider] = useState("ollama");
   const [apiKey, setApiKey] = useState("");
-  const [model, setModel] = useState("mistral:7b");
+  const [model, setModel] = useState("qwen3.5:35b");
   const [ollamaUrl, setOllamaUrl] = useState("http://ollama:11434");
   const [monthlyBudget, setMonthlyBudget] = useState("0");
 
@@ -116,7 +116,7 @@ export default function KiEinstellungenPage() {
 
         setProvider(get("ai.provider", "ollama"));
         setApiKey(get("ai.provider.apiKey", ""));
-        setModel(get("ai.provider.model", "mistral:7b"));
+        setModel(get("ai.provider.model", "qwen3.5:35b"));
         setOllamaUrl(get("ai.ollama.url", "http://ollama:11434"));
         setMonthlyBudget(get("ai.monthly_budget", "0"));
         setScanEnabled(get("ai.scan_enabled", "true") === "true");
@@ -151,7 +151,7 @@ export default function KiEinstellungenPage() {
   // Auto-update model when provider changes
   const handleProviderChange = (newProvider: string) => {
     setProvider(newProvider);
-    setModel(DEFAULT_MODELS[newProvider] || "mistral:7b");
+    setModel(DEFAULT_MODELS[newProvider] || "qwen3.5:35b");
     setTestResult(null);
   };
 
@@ -383,7 +383,7 @@ export default function KiEinstellungenPage() {
             />
             <p className="text-xs text-muted-foreground mt-1">
               {provider === "ollama"
-                ? "z.B. mistral:7b, llama3:8b, codellama:13b"
+                ? "z.B. qwen3.5:35b, llama3:8b, codellama:13b"
                 : provider === "openai"
                 ? "z.B. gpt-4o, gpt-4o-mini, gpt-3.5-turbo"
                 : "z.B. claude-sonnet-4-20250514, claude-3-5-haiku-20241022"}

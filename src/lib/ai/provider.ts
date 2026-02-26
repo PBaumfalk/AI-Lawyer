@@ -37,7 +37,7 @@ export type AiProvider = (typeof PROVIDER_OPTIONS)[number]["value"];
 
 /** Default models per provider */
 export const DEFAULT_MODELS: Record<AiProvider, string> = {
-  ollama: "mistral:7b",
+  ollama: "qwen3.5:35b",
   openai: "gpt-4o",
   anthropic: "claude-sonnet-4-20250514",
 };
@@ -67,7 +67,7 @@ export async function getModel(): Promise<LanguageModel> {
   const apiKey = await getSettingTyped<string>("ai.provider.apiKey", "");
   const model = await getSettingTyped<string>(
     "ai.provider.model",
-    DEFAULT_MODELS[provider as AiProvider] ?? "mistral:7b"
+    DEFAULT_MODELS[provider as AiProvider] ?? "qwen3.5:35b"
   );
   const ollamaUrl = await getSettingTyped<string>(
     "ai.ollama.url",
@@ -114,7 +114,7 @@ export async function getModelName(): Promise<string> {
   const provider = await getSettingTyped<string>("ai.provider", "ollama");
   return getSettingTyped<string>(
     "ai.provider.model",
-    DEFAULT_MODELS[provider as AiProvider] ?? "mistral:7b"
+    DEFAULT_MODELS[provider as AiProvider] ?? "qwen3.5:35b"
   );
 }
 
@@ -148,7 +148,7 @@ export async function testProviderConnection(config?: {
       const modelName =
         config.model ||
         DEFAULT_MODELS[config.provider as AiProvider] ||
-        "mistral:7b";
+        "qwen3.5:35b";
 
       switch (config.provider) {
         case "openai":

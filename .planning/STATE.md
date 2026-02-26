@@ -27,7 +27,7 @@ Progress: [######░░░░░░░░░░░░░░░░░░░░░
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 10. Docker Build Fix | 2/2 | ~36min | ~18min |
+| 10. Docker Build Fix | 3/3 | ~60min | ~20min |
 | 11. Glass UI Migration | 0/? | - | - |
 | 12. Falldatenblaetter | 0/? | - | - |
 | 13. BI-Dashboard | 0/? | - | - |
@@ -43,6 +43,13 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 - [10-01] Add force-dynamic to health route to prevent static generation timeout on Redis
 - [10-02] Use 127.0.0.1 in Alpine Docker healthchecks (localhost resolves to IPv6)
 - [10-02] Copy date-fns into Docker runner stage (pino-roll transitive dependency)
+- [10-03] pdf-parse must be esbuild external + copied in Dockerfile runner stage
+- [10-03] useChat must live in parent layout component, not in leaf components
+- [10-03] OnlyOffice public URL auto-derived from request Host header
+- [10-03] Stirling-PDF requires SECURITY_ENABLELOGIN=false when security config volume exists
+- [10-03] Ollama requires explicit --gpus all flag in docker-compose
+- [10-03] qwen3.5:35b as default Ollama model (replaces mistral:7b)
+- [10-03] Helena answers with general legal knowledge even without RAG hits
 
 ### Pending Todos
 
@@ -54,5 +61,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Phase 10 complete, ready for Phase 11
+Last session: 2026-02-26
+Stopped at: Phase 10 fully complete (incl. 10-03 gap closure). Ready for Phase 11 planning.

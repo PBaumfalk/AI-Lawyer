@@ -36,8 +36,6 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
 
 - [ ] **Phase 10: Docker Build Fix** - Webpack-Fehler beheben, production Docker Build lauffaehig machen -- gap closure in progress
 - [x] **Phase 11: Glass UI Migration** - Komplettes Redesign auf Apple Sequoia-Style Liquid Glass Design System (completed 2012-02-26)
-- [ ] **Phase 12: BI-Dashboard** - KPI-Kacheln fuer Kanzlei-Kennzahlen auf der Dashboard-Seite
-- [ ] **Phase 12: Export** - CSV- und XLSX-Export fuer Akten, Kontakte und Finanzdaten
 
 ## Phase Details
 
@@ -82,18 +80,6 @@ See: `milestones/v3.4-ROADMAP.md` for full phase details.
 - [ ] 11-05-PLAN.md -- Kontakte + Dokumente + Email + KI pages: glass-panel containers, consistent form styling
 - [ ] 11-06-PLAN.md -- Finanzen + Kalender + Tickets + beA + Admin + Settings pages: full coverage sweep
 
-### Phase 12: BI-Dashboard
-**Goal**: Decision-makers see key business metrics at a glance on the dashboard
-**Depends on**: Phase 10 (stable build); reads existing Prisma models (Akte, Rechnung, Frist)
-**Requirements**: BI-01, BI-02, BI-03, BI-04, BI-05
-**Success Criteria** (what must be TRUE):
-  1. Dashboard shows a KPI tile for "Neue Akten pro Monat" with the current month count and a trend indicator vs. previous month
-  2. Dashboard shows a KPI tile for "Offene Posten" displaying the total sum of unpaid invoices
-  3. Dashboard shows a KPI tile for "Faellige Fristen" with the count of deadlines due in the next 7 days
-  4. Dashboard shows a KPI tile for "Umsatz pro Monat" with the current month revenue figure
-  5. The BI dashboard section is only visible to users with ADMIN or ANWALT role (RBAC-enforced on both API and UI)
-**Plans**: TBD
-
 ### Phase 12: Export
 **Goal**: Users can export core data as CSV or XLSX files for external analysis, reporting, and compliance
 **Depends on**: Phase 10 (stable build); reads existing data models
@@ -129,8 +115,6 @@ Phases execute in numeric order: 10 -> 11 -> 12 -> 13 -> 14
 | 9. Final Integration + Tech Debt | v3.4 | 1/1 | Complete | 2012-02-25 |
 | 10. Docker Build Fix | v3.5 | 2/3 | In Progress | 2012-02-25 |
 | 11. Glass UI Migration | 7/7 | Complete    | 2012-02-26 | - |
-| 12. BI-Dashboard | v3.5 | 0/? | Not started | - |
-| 12. Export | v3.5 | 0/? | Not started | - |
 
 ---
 *Last updated: 2012-02-26 after Phase 11 planning*

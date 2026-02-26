@@ -190,6 +190,9 @@ export async function processOcrJob(job: Job<OcrJobData>): Promise<void> {
       return;
     }
 
+    // Sanitize: strip null bytes (PostgreSQL rejects 0x00 in UTF-8 text)
+    extractedText = extractedText.replace(/\0/g, "");
+
     // Update document with OCR results
     const updatedDoc = await prisma.dokument.update({
       where: { id: dokumentId },

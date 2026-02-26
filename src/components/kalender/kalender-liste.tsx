@@ -212,7 +212,7 @@ export function KalenderListe() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             Kalender
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -276,7 +276,7 @@ export function KalenderListe() {
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
       ) : filteredEintraege.length === 0 ? (
-        <div className="glass rounded-xl p-12 text-center">
+        <div className="glass-card rounded-xl p-12 text-center">
           <p className="text-muted-foreground">Keine Kalendereinträge gefunden.</p>
         </div>
       ) : (
@@ -402,7 +402,7 @@ function KalenderEintragRow({
 
   return (
     <div
-      className={`glass rounded-xl p-4 flex items-center gap-4 group transition-colors hover:bg-white/30 dark:hover:bg-white/[0.05] ${
+      className={`glass-card rounded-xl p-4 flex items-center gap-4 group transition-colors hover:bg-white/30 dark:hover:bg-white/[0.05] ${
         isOverdue
           ? "border-rose-300 dark:border-rose-800"
           : isCompleted
@@ -506,7 +506,7 @@ function KalenderEintragRow({
 
         {contextMenuOpen && (
           <div
-            className="absolute right-0 top-full mt-1 z-20 w-48 glass rounded-lg shadow-lg py-1"
+            className="absolute right-0 top-full mt-1 z-20 w-48 glass-card rounded-lg shadow-lg py-1"
             onClick={(e) => e.stopPropagation()}
           >
             <button

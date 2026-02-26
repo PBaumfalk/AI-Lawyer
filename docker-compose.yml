@@ -88,6 +88,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_healthy
+      stirling-pdf:
+        condition: service_healthy
     volumes:
       - worker_logs:/var/log/ai-lawyer
 

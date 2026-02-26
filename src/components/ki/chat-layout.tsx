@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useChat } from "@ai-sdk/react";
 import { ConversationSidebar } from "@/components/ki/conversation-sidebar";
 import { ChatMessages } from "@/components/ki/chat-messages";
 import { ChatInput } from "@/components/ki/chat-input";
+import type { SourceData } from "@/components/ki/source-citations";
 import { PanelLeftClose, PanelLeft, Plus } from "lucide-react";
 
 interface ChatLayoutProps {
@@ -33,6 +35,48 @@ export function ChatLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [akten, setAkten] = useState<AkteOption[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [sources, setSources] = useState<SourceData[]>([]);
+  const initialQuerySentRef = useRef(false);
+
+  // Single shared useChat instance — owned here so both ChatInput and ChatMessages
+  // operate on the same message state and streaming response.
+  const { messages, append, isLoading, setMessages } = useChat({
+    api: "/api/ki-chat",
+    body: {
+      akteId: selectedAkteId,
+      conversationId: selectedConversationId,
+      crossAkte,
+    },
+    onResponse: (response) => {
+      const h = response.headers.get("X-Sources");
+      if (h) {
+        try {
+          setSources(JSON.parse(decodeURIComponent(h)));
+        } catch {
+          setSources([]);
+        }
+      }
+    },
+    onFinish: () => {
+      setRefreshKey((k) => k + 1);
+    },
+  });
+
+  // Reset messages + sources when switching to a different conversation
+  useEffect(() => {
+    setMessages([]);
+    setSources([]);
+  }, [selectedConversationId, setMessages]);
+
+  // Auto-send initialQuery (from Cmd+K or Fallzusammenfassung)
+  useEffect(() => {
+    if (initialQuery && !initialQuerySentRef.current && !selectedConversationId) {
+      initialQuerySentRef.current = true;
+      setTimeout(() => {
+        append({ role: "user", content: initialQuery });
+      }, 200);
+    }
+  }, [initialQuery, selectedConversationId, append]);
 
   // Fetch available Akten for the selector
   useEffect(() => {
@@ -44,7 +88,6 @@ export function ChatLayout({
       .catch(() => {});
   }, []);
 
-  // Handle Akte selection
   const handleAkteChange = useCallback((akteId: string | null) => {
     if (akteId === "__all__") {
       setSelectedAkteId(null);
@@ -55,13 +98,13 @@ export function ChatLayout({
     }
   }, []);
 
-  // Start a new chat
   const handleNewChat = useCallback(() => {
     setSelectedConversationId(null);
+    setMessages([]);
+    setSources([]);
     setRefreshKey((k) => k + 1);
-  }, []);
+  }, [setMessages]);
 
-  // Conversation selected from sidebar
   const handleSelectConversation = useCallback(
     (convId: string, akteId: string | null) => {
       setSelectedConversationId(convId);
@@ -72,11 +115,6 @@ export function ChatLayout({
     },
     []
   );
-
-  // Refresh conversation list after a message is sent
-  const handleMessageSent = useCallback(() => {
-    setRefreshKey((k) => k + 1);
-  }, []);
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -149,20 +187,17 @@ export function ChatLayout({
         <div className="flex-1 overflow-hidden">
           <ChatMessages
             key={selectedConversationId ?? "new"}
-            akteId={selectedAkteId}
+            messages={messages}
+            isLoading={isLoading}
+            sources={sources}
             conversationId={selectedConversationId}
-            crossAkte={crossAkte}
-            initialQuery={initialQuery}
-            onConversationCreated={handleMessageSent}
           />
         </div>
 
         {/* Input area */}
         <ChatInput
-          akteId={selectedAkteId}
-          conversationId={selectedConversationId}
-          crossAkte={crossAkte}
-          onMessageSent={handleMessageSent}
+          append={append}
+          isLoading={isLoading}
         />
       </div>
     </div>

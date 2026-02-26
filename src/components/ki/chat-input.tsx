@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useChat } from "@ai-sdk/react";
+import type { Message } from "@ai-sdk/react";
 import {
   Send,
   FileText,
@@ -13,11 +13,11 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+type AppendFn = (message: { role: "user"; content: string }) => Promise<string | null | undefined>;
+
 interface ChatInputProps {
-  akteId: string | null;
-  conversationId: string | null;
-  crossAkte: boolean;
-  onMessageSent?: () => void;
+  append: AppendFn;
+  isLoading: boolean;
 }
 
 const quickActions = [
@@ -43,27 +43,10 @@ const quickActions = [
   },
 ];
 
-export function ChatInput({
-  akteId,
-  conversationId,
-  crossAkte,
-  onMessageSent,
-}: ChatInputProps) {
+export function ChatInput({ append, isLoading }: ChatInputProps) {
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-
-  const { append, isLoading } = useChat({
-    api: "/api/ki-chat",
-    body: {
-      akteId,
-      conversationId,
-      crossAkte,
-    },
-    onFinish: () => {
-      onMessageSent?.();
-    },
-  });
 
   // Auto-resize textarea
   useEffect(() => {
@@ -77,19 +60,11 @@ export function ChatInput({
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || isLoading) return;
-
       setInputValue("");
-      // Dispatch a custom event so the ChatMessages component picks up the message
-      // The parent ChatLayout re-keys ChatMessages, so we use the shared useChat instance
-      // in ChatMessages instead. We post to the API directly here for a simpler approach.
-
       try {
-        await append({
-          role: "user",
-          content: trimmed,
-        });
+        await append({ role: "user", content: trimmed });
       } catch {
-        // Error handled by useChat
+        // Error handled by useChat in ChatLayout
       }
     },
     [isLoading, append]
@@ -105,22 +80,12 @@ export function ChatInput({
     [inputValue, handleSubmit]
   );
 
-  const handleQuickAction = useCallback(
-    (prompt: string) => {
-      handleSubmit(prompt);
-    },
-    [handleSubmit]
-  );
-
-  // Drag & drop zone (stub)
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
   }, []);
 
-  const handleDragLeave = useCallback(() => {
-    setIsDragOver(false);
-  }, []);
+  const handleDragLeave = useCallback(() => setIsDragOver(false), []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -150,7 +115,7 @@ export function ChatInput({
         {quickActions.map((action) => (
           <button
             key={action.label}
-            onClick={() => handleQuickAction(action.prompt)}
+            onClick={() => handleSubmit(action.prompt)}
             disabled={isLoading}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-white/20 dark:border-white/10 text-muted-foreground hover:text-foreground hover:border-brand-500/30 hover:bg-brand-500/5 transition-colors disabled:opacity-50"
           >
@@ -188,7 +153,6 @@ export function ChatInput({
         </button>
       </div>
 
-      {/* Drag indicator */}
       {isDragOver && (
         <p className="text-xs text-brand-600 dark:text-brand-400 mt-1.5 text-center">
           Dokument hier ablegen fuer sofortige Analyse

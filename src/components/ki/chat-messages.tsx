@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useChat } from "@ai-sdk/react";
+import type { Message } from "@ai-sdk/react";
 import { Bot, User, Copy, Link2, FileDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SourceCitations, type SourceData } from "@/components/ki/source-citations";
@@ -9,11 +9,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 interface ChatMessagesProps {
-  akteId: string | null;
+  messages: Message[];
+  isLoading: boolean;
+  sources: SourceData[];
   conversationId: string | null;
-  crossAkte: boolean;
-  initialQuery?: string;
-  onConversationCreated?: () => void;
 }
 
 interface StoredMessage {
@@ -24,53 +23,16 @@ interface StoredMessage {
 }
 
 export function ChatMessages({
-  akteId,
+  messages,
+  isLoading,
+  sources,
   conversationId,
-  crossAkte,
-  initialQuery,
-  onConversationCreated,
 }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [sources, setSources] = useState<SourceData[]>([]);
-  const [historicalMessages, setHistoricalMessages] = useState<
-    StoredMessage[]
-  >([]);
+  const [historicalMessages, setHistoricalMessages] = useState<StoredMessage[]>([]);
   const [copiedLink, setCopiedLink] = useState(false);
-  const hasInitialQuerySent = useRef(false);
 
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    setInput,
-    append,
-  } = useChat({
-    api: "/api/ki-chat",
-    body: {
-      akteId,
-      conversationId,
-      crossAkte,
-    },
-    onResponse: (response) => {
-      // Extract sources from custom header
-      const sourcesHeader = response.headers.get("X-Sources");
-      if (sourcesHeader) {
-        try {
-          const parsed = JSON.parse(decodeURIComponent(sourcesHeader));
-          setSources(parsed);
-        } catch {
-          setSources([]);
-        }
-      }
-    },
-    onFinish: () => {
-      onConversationCreated?.();
-    },
-  });
-
-  // Load existing conversation messages
+  // Load existing conversation messages from DB
   useEffect(() => {
     if (!conversationId) {
       setHistoricalMessages([]);
@@ -83,32 +45,12 @@ export function ChatMessages({
         return r.json();
       })
       .then((data) => {
-        const msgs = data.conversation?.messages ?? [];
-        setHistoricalMessages(msgs);
-
-        // Extract sources from the last assistant message
-        const lastAssistant = [...msgs]
-          .reverse()
-          .find((m: StoredMessage) => m.role === "assistant");
-        if (lastAssistant?.sources) {
-          setSources(lastAssistant.sources);
-        }
+        setHistoricalMessages(data.conversation?.messages ?? []);
       })
       .catch(() => {
         setHistoricalMessages([]);
       });
   }, [conversationId]);
-
-  // Auto-send initial query from Cmd+K or Fallzusammenfassung button
-  useEffect(() => {
-    if (initialQuery && !hasInitialQuerySent.current && !conversationId) {
-      hasInitialQuerySent.current = true;
-      // Small delay to allow component mount
-      setTimeout(() => {
-        append({ role: "user", content: initialQuery });
-      }, 200);
-    }
-  }, [initialQuery, conversationId, append]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -117,7 +59,6 @@ export function ChatMessages({
     }
   }, [messages, historicalMessages, isLoading]);
 
-  // Copy conversation link
   const handleCopyLink = useCallback(() => {
     if (!conversationId) return;
     const url = `${window.location.origin}/ki-chat?conversationId=${conversationId}`;
@@ -127,7 +68,7 @@ export function ChatMessages({
     });
   }, [conversationId]);
 
-  // Combine historical + live messages
+  // Combine historical (from DB) + live (from useChat) messages
   const allMessages = [
     ...historicalMessages.map((m, i) => ({
       id: `hist-${i}`,
@@ -138,10 +79,7 @@ export function ChatMessages({
     ...messages.map((m) => ({
       id: m.id,
       role: m.role as "user" | "assistant",
-      content:
-        typeof m.content === "string"
-          ? m.content
-          : "",
+      content: typeof m.content === "string" ? m.content : "",
       sources: undefined as SourceData[] | undefined,
     })),
   ];
@@ -159,8 +97,7 @@ export function ChatMessages({
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Ihre digitale Rechtsanwaltsfachangestellte. Stellen Sie mir eine
-            Frage zu Ihren Akten-Dokumenten. Ich durchsuche die relevanten
-            Unterlagen und antworte mit Quellenangaben.
+            Frage — zu Ihren Akten oder allgemein zu rechtlichen Themen.
           </p>
           <p className="text-xs text-muted-foreground mt-3 italic">
             Hinweis: Dieser Assistent ersetzt keine anwaltliche Pruefung.
@@ -172,7 +109,7 @@ export function ChatMessages({
 
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto px-4 py-4 space-y-4">
-      {/* Conversation header with link copy button */}
+      {/* Conversation link copy */}
       {conversationId && (
         <div className="flex justify-end">
           <button
@@ -189,19 +126,14 @@ export function ChatMessages({
       {allMessages.map((msg, idx) => {
         const isUser = msg.role === "user";
         const isLastAssistant =
-          !isUser &&
-          idx === allMessages.length - 1 &&
-          !isLoading;
+          !isUser && idx === allMessages.length - 1 && !isLoading;
 
         return (
           <div
             key={msg.id}
-            className={cn(
-              "flex gap-3",
-              isUser ? "justify-end" : "justify-start"
-            )}
+            className={cn("flex gap-3", isUser ? "justify-end" : "justify-start")}
           >
-            {/* Avatar */}
+            {/* Helena avatar */}
             {!isUser && (
               <div className="flex-shrink-0 mt-0.5">
                 <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
@@ -229,27 +161,21 @@ export function ChatMessages({
                 </div>
               )}
 
-              {/* Source citations for assistant messages */}
+              {/* Source citations */}
               {!isUser &&
-                (msg.sources ?? (isLastAssistant ? sources : [])).length >
-                  0 && (
+                (msg.sources ?? (isLastAssistant ? sources : [])).length > 0 && (
                   <div className="mt-3 pt-3 border-t border-white/10 dark:border-white/[0.06]">
                     <SourceCitations
-                      sources={
-                        msg.sources ??
-                        (isLastAssistant ? sources : [])
-                      }
+                      sources={msg.sources ?? (isLastAssistant ? sources : [])}
                     />
                   </div>
                 )}
 
-              {/* Action buttons for assistant messages */}
+              {/* Action buttons */}
               {!isUser && (
                 <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/10 dark:border-white/[0.06]">
                   <button
-                    onClick={() =>
-                      navigator.clipboard.writeText(msg.content)
-                    }
+                    onClick={() => navigator.clipboard.writeText(msg.content)}
                     className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-white/50 dark:hover:bg-white/[0.05]"
                     title="Kopieren"
                   >

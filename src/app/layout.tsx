@@ -18,7 +18,15 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           {children}
-          <Toaster position="bottom-right" richColors />
+          <Toaster
+            position="bottom-right"
+            richColors
+            toastOptions={{
+              classNames: {
+                toast: "glass-panel !border-[var(--glass-border-color)] !shadow-[var(--glass-shadow-lg)]",
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

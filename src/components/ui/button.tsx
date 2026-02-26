@@ -1,6 +1,9 @@
+"use client";
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -40,11 +43,26 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+    const prefersReducedMotion = useReducedMotion();
+
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        />
+      );
+    }
+
     return (
-      <Comp
+      // @ts-expect-error -- motion v11 + React 19 type mismatch (runtime works fine)
+      <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+        whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
         {...props}
       />
     );

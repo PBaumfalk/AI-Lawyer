@@ -12,11 +12,11 @@ export function Header() {
   }
 
   return (
-    <header className="h-16 glass-heavy border-b border-white/[0.08] dark:border-white/[0.06] flex items-center justify-between px-6">
+    <header className="sticky top-0 z-40 h-16 glass-panel border-b border-[var(--glass-border-color)] flex items-center justify-between px-6">
       {/* Search trigger */}
       <button
         onClick={openCommandPalette}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/40 dark:bg-white/[0.06] text-muted-foreground text-sm hover:bg-white/60 dark:hover:bg-white/[0.10] transition-colors w-72 border border-white/30 dark:border-white/[0.08]"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/40 dark:bg-white/[0.06] text-muted-foreground text-sm hover:bg-white/60 dark:hover:bg-white/[0.10] transition-colors w-72 border border-[var(--glass-border-color)]"
       >
         <Search className="w-4 h-4" />
         <span>Suchen...</span>
@@ -33,7 +33,7 @@ export function Header() {
         {/* User info */}
         {session?.user && (
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-sm font-medium shadow-md shadow-brand-600/20">
+            <div className="w-8 h-8 rounded-full bg-[oklch(45%_0.2_260)] flex items-center justify-center text-white text-sm font-medium shadow-md">
               {session.user.name
                 ?.split(" ")
                 .map((n) => n[0])

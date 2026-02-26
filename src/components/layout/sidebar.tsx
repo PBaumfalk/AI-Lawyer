@@ -25,10 +25,14 @@ import {
   Workflow,
   Building2,
   ShieldCheck,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { TimerSidebarWidget } from "@/components/finanzen/timer-sidebar-widget";
+import { useTheme } from "@/components/providers/theme-provider";
 import type { UserRole } from "@prisma/client";
 
 // Roles that should NOT see a given nav item
@@ -72,6 +76,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
+  const { resolvedTheme, setTheme } = useTheme();
+  const prefersReducedMotion = useReducedMotion();
   const userRole = (session?.user as any)?.role as UserRole | undefined;
   const isAdmin = userRole === "ADMIN";
 
@@ -85,42 +91,48 @@ export function Sidebar() {
   }, [userRole]);
 
   return (
-    <aside
+    <motion.aside
+      animate={{ width: collapsed ? 56 : 240 }}
+      transition={
+        prefersReducedMotion
+          ? { duration: 0 }
+          : { type: "spring", stiffness: 300, damping: 30 }
+      }
       className={cn(
-        "flex flex-col h-screen text-white transition-all duration-200",
-        "bg-slate-900/85 backdrop-blur-xl border-r border-white/[0.06]",
-        collapsed ? "w-16" : "w-64"
+        "glass-sidebar flex flex-col h-screen select-none overflow-hidden",
+        "text-[oklch(20%_0.01_250)] dark:text-[oklch(92%_0.005_250)]"
       )}
     >
-      {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-white/[0.06]">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex-shrink-0 w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center shadow-lg shadow-brand-600/25">
-            <Scale className="w-4 h-4 text-white" />
+      {/* Logo area */}
+      <div className="flex items-center gap-2 px-3 py-4">
+        <div className="flex items-center gap-2 px-2 py-1.5 rounded-[10px] bg-white/15 backdrop-blur-[8px] min-w-0">
+          <div className="flex-shrink-0 w-7 h-7 bg-[oklch(45%_0.2_260)] rounded-lg flex items-center justify-center shadow-lg">
+            <Scale className="w-3.5 h-3.5 text-white" />
           </div>
           {!collapsed && (
-            <span className="font-heading text-lg truncate">AI-Lawyer</span>
+            <motion.span
+              className="font-semibold text-sm truncate"
+              initial={prefersReducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+            >
+              AI-Lawyer
+            </motion.span>
           )}
         </div>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            "ml-auto p-1.5 rounded-md hover:bg-white/10 transition-colors",
-            collapsed && "ml-0 mt-0"
-          )}
+          className="ml-auto p-1.5 rounded-lg hover:bg-white/10 dark:hover:bg-white/5 transition-colors flex-shrink-0"
           aria-label={collapsed ? "Sidebar aufklappen" : "Sidebar einklappen"}
         >
           <ChevronLeft
-            className={cn(
-              "w-4 h-4 transition-transform",
-              collapsed && "rotate-180"
-            )}
+            className={cn("w-4 h-4 transition-transform", collapsed && "rotate-180")}
           />
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+      <nav className="flex-1 py-2 px-2 space-y-1 overflow-y-auto">
         {filteredNavigation.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
@@ -128,16 +140,25 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              title={collapsed ? item.name : undefined}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
                 isActive
-                  ? "bg-white/[0.12] text-white shadow-sm"
-                  : "text-slate-400 hover:bg-white/[0.07] hover:text-white"
+                  ? "bg-[oklch(45%_0.2_260/0.15)] text-[oklch(45%_0.2_260)] border-l-2 border-[oklch(45%_0.2_260)] -ml-[2px]"
+                  : "text-[oklch(40%_0.015_250)] dark:text-[oklch(65%_0.01_250)] hover:bg-white/5 dark:hover:bg-white/[0.03]"
               )}
-              title={collapsed ? item.name : undefined}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && <span>{item.name}</span>}
+              {!collapsed && (
+                <motion.span
+                  className="truncate"
+                  initial={prefersReducedMotion ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {item.name}
+                </motion.span>
+              )}
             </Link>
           );
         })}
@@ -146,9 +167,9 @@ export function Sidebar() {
       {/* Administration section -- ADMIN only */}
       {isAdmin && (
         <div className="px-2 pb-2">
-          <div className="border-t border-white/[0.06] pt-3 mb-1">
+          <div className="border-t border-[oklch(0%_0_0/0.08)] dark:border-[oklch(100%_0_0/0.06)] pt-3 mb-1">
             {!collapsed && (
-              <span className="px-3 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+              <span className="px-3 text-[10px] uppercase tracking-wider text-[oklch(60%_0.01_250)] dark:text-[oklch(50%_0.01_250)] font-semibold">
                 Administration
               </span>
             )}
@@ -161,16 +182,25 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  title={collapsed ? item.name : undefined}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
                     isActive
-                      ? "bg-white/[0.12] text-white shadow-sm"
-                      : "text-slate-400 hover:bg-white/[0.07] hover:text-white"
+                      ? "bg-[oklch(45%_0.2_260/0.15)] text-[oklch(45%_0.2_260)] border-l-2 border-[oklch(45%_0.2_260)] -ml-[2px]"
+                      : "text-[oklch(40%_0.015_250)] dark:text-[oklch(65%_0.01_250)] hover:bg-white/5 dark:hover:bg-white/[0.03]"
                   )}
-                  title={collapsed ? item.name : undefined}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && <span>{item.name}</span>}
+                  {!collapsed && (
+                    <motion.span
+                      className="truncate"
+                      initial={prefersReducedMotion ? false : { opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      {item.name}
+                    </motion.span>
+                  )}
                 </Link>
               );
             })}
@@ -179,19 +209,81 @@ export function Sidebar() {
       )}
 
       {/* Timer Widget */}
-      {!collapsed && <TimerSidebarWidget />}
+      {!collapsed && (
+        <div className="px-2 py-1">
+          <div className="rounded-xl glass-card px-3 py-2">
+            <TimerSidebarWidget />
+          </div>
+        </div>
+      )}
 
-      {/* User / Logout */}
-      <div className="border-t border-white/[0.06] p-2">
+      {/* Sidebar bottom — dark mode toggle + profile chip */}
+      <div className="border-t border-[oklch(0%_0_0/0.08)] dark:border-[oklch(100%_0_0/0.06)] p-2 space-y-1">
+        {/* Dark mode toggle */}
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-white/[0.07] hover:text-white transition-colors w-full"
-          title={collapsed ? "Abmelden" : undefined}
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 dark:hover:bg-white/5 transition-colors w-full"
+          title={collapsed ? (resolvedTheme === "dark" ? "Hell" : "Dunkel") : undefined}
         >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span>Abmelden</span>}
+          {resolvedTheme === "dark" ? (
+            <Sun className="w-5 h-5 flex-shrink-0" />
+          ) : (
+            <Moon className="w-5 h-5 flex-shrink-0" />
+          )}
+          {!collapsed && (
+            <motion.span
+              className="text-sm truncate"
+              initial={prefersReducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+            >
+              {resolvedTheme === "dark" ? "Heller Modus" : "Dunkler Modus"}
+            </motion.span>
+          )}
         </button>
+
+        {/* Profile chip */}
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg glass-card">
+          <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[oklch(45%_0.2_260)] flex items-center justify-center text-white text-xs font-semibold shadow-md">
+            {session?.user?.name
+              ?.split(" ")
+              .map((n: string) => n[0])
+              .join("")
+              .toUpperCase()
+              .slice(0, 2) ?? "?"}
+          </div>
+          {!collapsed && (
+            <>
+              <motion.div
+                className="flex-1 min-w-0"
+                initial={prefersReducedMotion ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.15 }}
+              >
+                <p className="text-sm font-medium truncate">
+                  {session?.user?.name ?? "Benutzer"}
+                </p>
+              </motion.div>
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="flex-shrink-0 p-1 rounded-md hover:bg-white/10 transition-colors"
+                aria-label="Abmelden"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </>
+          )}
+          {collapsed && (
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="w-full flex justify-center"
+              aria-label="Abmelden"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
-    </aside>
+    </motion.aside>
   );
 }

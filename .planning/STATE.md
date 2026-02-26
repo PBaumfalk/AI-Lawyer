@@ -95,9 +95,13 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-1 todo pending.
+5 todos pending.
 
 - **Improve Helena RAG pipeline with hybrid search and reranking** (area: api) — Hybrid Search (Meilisearch + pgvector), Cross-Encoder Reranking, Parent-Child Chunking. Datei: .planning/todos/pending/2026-02-26-improve-helena-rag-pipeline-with-hybrid-search-and-reranking.md
+- **Gesetze-RAG für Helena und Normen-Verknüpfung an Akten** (area: api) — .planning/todos/pending/2026-02-26-gesetze-rag-f-r-helena-und-normen-verkn-pfung-an-akten.md
+- **Urteile-RAG für Helena mit PII-Filter und Quellen-Ingestion** (area: api) — .planning/todos/pending/2026-02-26-urteile-rag-f-r-helena-mit-pii-filter-und-quellen-ingestion.md
+- **Arbeitswissen-RAG für Helena — Formulare, Muster, Kosten, ERV** (area: api) — .planning/todos/pending/2026-02-26-arbeitswissen-rag-f-r-helena-formulare-muster-kosten-erv.md
+- **Falldatenblaetter per-Rechtsgebiet Feldschemas** (area: general) — Admin-UI für Feldschemas, dynamisches Rendering in Akte-Formular, Prisma-Modell. Datei: .planning/todos/pending/2026-02-26-falldatenblaetter-per-rechtsgebiet-feldschemas.md
 
 ### Blockers/Concerns
 

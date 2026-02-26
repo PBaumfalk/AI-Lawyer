@@ -10,7 +10,7 @@ Requirements für v0.1 Helena RAG. Jede Anforderung mapped auf eine Roadmap-Phas
 ### RAG Pipeline Quality
 
 - [ ] **RAGQ-01**: Hybrid Search — Helenas Retrieval kombiniert Meilisearch BM25 und pgvector cosine via Reciprocal Rank Fusion (RRF, k=60) mit je N=50 Kandidaten pro Quelle
-- [ ] **RAGQ-02**: Parent-Child Chunking — Dokumente werden in 500-Token Kind-Chunks (Embedding/Retrieval) und 2.000-Token Parent-Chunks (LLM-Prompt-Kontext) aufgeteilt; bestehende document_chunks erhalten chunkType-Enum (STANDALONE/PARENT/CHILD)
+- [x] **RAGQ-02**: Parent-Child Chunking — Dokumente werden in 500-Token Kind-Chunks (Embedding/Retrieval) und 2.000-Token Parent-Chunks (LLM-Prompt-Kontext) aufgeteilt; bestehende document_chunks erhalten chunkType-Enum (STANDALONE/PARENT/CHILD)
 - [ ] **RAGQ-03**: Cross-Encoder Reranking — Top-50 RRF-Ergebnisse werden via Ollama auf Top-10 reranked; Fallback auf RRF-Reihenfolge wenn P95-Latenz > 3s oder Ollama-Fehler
 
 ### Gesetze-RAG
@@ -80,7 +80,7 @@ Welche Phasen welche Anforderungen abdecken.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | RAGQ-01 | Phase 13 | Pending |
-| RAGQ-02 | Phase 12 | Pending |
+| RAGQ-02 | Phase 12 | Complete |
 | RAGQ-03 | Phase 13 | Pending |
 | GESETZ-01 | Phase 14 | Pending |
 | GESETZ-02 | Phase 14 | Pending |

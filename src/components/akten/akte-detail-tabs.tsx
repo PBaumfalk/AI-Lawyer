@@ -191,8 +191,8 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
       <TabsContent value="uebersicht">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Case details */}
-          <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08] p-6 space-y-4">
-            <h3 className="font-heading text-lg text-foreground">
+          <div className="glass-card rounded-xl p-6 space-y-4">
+            <h3 className="font-semibold text-lg text-foreground">
               Aktendetails
             </h3>
             <dl className="space-y-3">
@@ -214,8 +214,8 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
 
           {/* Staff & notes */}
           <div className="space-y-6">
-            <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08] p-6 space-y-4">
-              <h3 className="font-heading text-lg text-foreground">
+            <div className="glass-card rounded-xl p-6 space-y-4">
+              <h3 className="font-semibold text-lg text-foreground">
                 Zuständigkeit
               </h3>
               <dl className="space-y-3">
@@ -229,8 +229,8 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
             </div>
 
             {akte.notizen && (
-              <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08] p-6 space-y-3">
-                <h3 className="font-heading text-lg text-foreground">
+              <div className="glass-card rounded-xl p-6 space-y-3">
+                <h3 className="font-semibold text-lg text-foreground">
                   Notizen
                 </h3>
                 <p className="text-sm text-foreground/80 whitespace-pre-wrap">
@@ -254,7 +254,7 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
               Beteiligten hinzufügen
             </Button>
           </div>
-          <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08]">
+          <div className="glass-card rounded-xl">
             {akte.beteiligte.length === 0 ? (
               <div className="p-12 text-center text-sm text-slate-400">
                 Noch keine Beteiligten zugewiesen.
@@ -535,7 +535,7 @@ function AkteHistorie({
       </div>
 
       {/* Timeline */}
-      <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08]">
+      <div className="glass-card rounded-xl">
         {logs.length === 0 ? (
           <div className="p-12 text-center text-sm text-slate-400">
             {loading ? (
@@ -790,7 +790,7 @@ function BeaPruefprotokoll({ akteId }: { akteId: string }) {
 
   if (entries.length === 0) {
     return (
-      <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08] p-12 text-center">
+      <div className="glass-card rounded-xl p-12 text-center">
         <Shield className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
         <p className="text-sm text-muted-foreground">
           Keine beA-Aktivitaeten fuer diese Akte.
@@ -805,7 +805,7 @@ function BeaPruefprotokoll({ akteId }: { akteId: string }) {
         Chronologisches Pruefprotokoll der beA-Kommunikation fuer diese Akte.
       </p>
 
-      <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08]">
+      <div className="glass-card rounded-xl">
         <div className="divide-y divide-white/10 dark:divide-white/[0.04]">
           {entries.map((entry) => {
             const Icon = beaAktionIcons[entry.aktion] ?? Shield;

@@ -138,7 +138,7 @@ function StatMini({
   value: number;
 }) {
   return (
-    <div className="glass rounded-xl px-4 py-3 flex items-center gap-3">
+    <div className="glass-card rounded-xl px-4 py-3 flex items-center gap-3">
       <Icon className="w-4 h-4 text-muted-foreground" />
       <div>
         <p className="text-lg font-semibold text-foreground">

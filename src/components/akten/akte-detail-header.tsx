@@ -57,7 +57,7 @@ export function AkteDetailHeader({ akte }: { akte: AkteHeaderData }) {
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-heading text-foreground">
+              <h1 className="text-2xl font-semibold text-foreground">
                 {akte.kurzrubrum}
               </h1>
               <Badge variant={statusBadge[akte.status] ?? "muted"}>

@@ -96,7 +96,7 @@ export default function NeueAktePage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-heading text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             Neue Akte anlegen
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -107,7 +107,7 @@ export default function NeueAktePage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="glass rounded-xl p-6 space-y-5">
+        <div className="glass-panel rounded-2xl p-6 space-y-5">
           {/* Kurzrubrum */}
           <div className="space-y-2">
             <Label htmlFor="kurzrubrum">

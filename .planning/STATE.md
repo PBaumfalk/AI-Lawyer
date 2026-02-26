@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 11 of 14 (Glass UI Migration)
-Plan: 4 of 6 completed
+Plan: 5 of 6 completed
 Status: In progress
-Last activity: 2026-02-26 -- Completed Plan 04 (Dashboard + Akten Glass Migration)
+Last activity: 2026-02-26 -- Completed Plan 05 (Kontakte, Dokumente, Email, KI Pages Glass Migration)
 
-Progress: [####################░░░░░░░░░░] 57%
+Progress: [########################░░░░░░] 71%
 
 ## Performance Metrics
 
@@ -28,7 +28,7 @@ Progress: [####################░░░░░░░░░░] 57%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 10. Docker Build Fix | 3/3 | ~60min | ~20min |
-| 11. Glass UI Migration | 3/6 | ~8min | ~3min |
+| 11. Glass UI Migration | 5/6 | ~15min | ~3min |
 | 12. Falldatenblaetter | 0/? | - | - |
 | 13. BI-Dashboard | 0/? | - | - |
 | 14. Export | 0/? | - | - |
@@ -58,6 +58,10 @@ All v3.4 decisions archived in PROJECT.md Key Decisions table.
 - [11-04] CSS keyframe stagger chosen over Motion stagger for server components — avoids use-client on server pages
 - [11-04] prefers-reduced-motion guard wraps list-item-in at media-query level (not inline) — consistent accessibility approach
 - [11-04] font-heading eliminated across dashboard + akten subsystem — replaced with font-semibold (system font)
+- [11-05] KontaktForm tab content uses glass-card CSS class (not GlassPanel component) — client component, lighter approach
+- [11-05] Email dialog overlays use GlassPanel elevation=elevated — elevated tier appropriate for modal overlays
+- [11-05] var(--glass-border-color) replaces border-white/10 opacity patterns — design token consistency
+- [11-05] ki-entwuerfe/page.tsx already redirects to /ki-chat — no migration needed
 
 - [10-01] Use NEXT_PHASE env var to detect build-time SSR and skip pino-roll file transport
 - [10-01] Add force-dynamic to health route to prevent static generation timeout on Redis
@@ -82,4 +86,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 11-04-PLAN.md (Dashboard + Akten Glass Migration)
+Stopped at: Completed 11-05-PLAN.md (Kontakte, Dokumente, Email, KI Pages Glass Migration)

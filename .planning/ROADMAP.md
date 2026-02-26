@@ -141,7 +141,7 @@ Phases execute in numeric order: 10 -> 11 -> 12 -> 13 -> 14
 | 8. Integration Hardening | v3.4 | 3/3 | Complete | 2026-02-25 |
 | 9. Final Integration + Tech Debt | v3.4 | 1/1 | Complete | 2026-02-25 |
 | 10. Docker Build Fix | v3.5 | 2/3 | In Progress | 2026-02-25 |
-| 11. Glass UI Migration | 4/6 | In Progress|  | - |
+| 11. Glass UI Migration | 5/6 | In Progress|  | - |
 | 12. Falldatenblaetter | v3.5 | 0/? | Not started | - |
 | 13. BI-Dashboard | v3.5 | 0/? | Not started | - |
 | 14. Export | v3.5 | 0/? | Not started | - |

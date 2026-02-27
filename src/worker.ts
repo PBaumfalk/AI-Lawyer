@@ -18,6 +18,7 @@ import { processScan, type AiScanJobData } from "@/lib/ai/scan-processor";
 import { processBriefing, type BriefingJobData } from "@/lib/ai/briefing-processor";
 import { processProactive, type ProactiveJobData } from "@/lib/ai/proactive-processor";
 import { processGesetzeSyncJob } from "@/lib/queue/processors/gesetze-sync.processor";
+import { processNerPiiJob, type NerPiiJobData, recoverStuckNerJobs } from "@/lib/queue/processors/ner-pii.processor";
 import { prisma } from "@/lib/db";
 
 const log = createLogger("worker");
@@ -564,6 +565,37 @@ gesetzeSyncWorker.on("error", (err) => {
 workers.push(gesetzeSyncWorker);
 log.info("[Worker] gesetze-sync processor registered");
 
+// ─── NER-PII Queue Worker ────────────────────────────────────────────────────
+
+const nerPiiWorker = new Worker<NerPiiJobData>(
+  "ner-pii",
+  async (job) => processNerPiiJob(job.data),
+  {
+    connection,
+    concurrency: 1, // Sequential Ollama calls — avoids GPU contention
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+nerPiiWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info({ jobId: job.id }, "NER PII job completed");
+});
+
+nerPiiWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error({ jobId: job?.id, err: err.message }, "NER PII job failed");
+});
+
+nerPiiWorker.on("error", (err) => {
+  log.error({ err }, "NER PII worker error");
+});
+
+workers.push(nerPiiWorker);
+log.info("[Worker] ner-pii processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -691,6 +723,13 @@ async function startup() {
     log.warn({ err }, "Failed to register Gesetze sync job (non-fatal)");
   }
 
+  // Recover any Muster rows stuck in NER_RUNNING from a previous crashed worker
+  try {
+    await recoverStuckNerJobs();
+  } catch (err) {
+    log.warn({ err }, "Failed to recover stuck NER jobs (non-fatal)");
+  }
+
   // Re-queue documents that previously failed OCR (e.g. due to Stirling-PDF being unavailable).
   // Resets FEHLGESCHLAGEN → AUSSTEHEND and enqueues a fresh OCR job.
   try {
@@ -740,7 +779,7 @@ async function startup() {
       queues: [
         "test", "frist-reminder", "email-send", "email-sync",
         "document-ocr", "document-preview", "document-embedding",
-        "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync",
+        "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync", "ner-pii",
       ],
       fristScanZeit: scanZeit,
     },

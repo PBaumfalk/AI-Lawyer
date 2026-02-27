@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
-import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, ocrQueue } from "@/lib/queue/queues";
+import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, ocrQueue } from "@/lib/queue/queues";
 import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.processor";
 import { processFristReminders } from "@/workers/processors/frist-reminder";
 import { initializeDefaults, getSettingTyped } from "@/lib/settings/service";
@@ -17,6 +17,7 @@ import type { OcrJobData, PreviewJobData, EmbeddingJobData } from "@/lib/ocr/typ
 import { processScan, type AiScanJobData } from "@/lib/ai/scan-processor";
 import { processBriefing, type BriefingJobData } from "@/lib/ai/briefing-processor";
 import { processProactive, type ProactiveJobData } from "@/lib/ai/proactive-processor";
+import { processGesetzeSyncJob } from "@/lib/queue/processors/gesetze-sync.processor";
 import { prisma } from "@/lib/db";
 
 const log = createLogger("worker");
@@ -517,6 +518,52 @@ aiProactiveWorker.on("error", (err) => {
 workers.push(aiProactiveWorker);
 log.info("[Worker] ai-proactive processor registered");
 
+// ─── Gesetze-Sync Queue Worker ──────────────────────────────────────────────
+
+const gesetzeSyncWorker = new Worker(
+  "gesetze-sync",
+  async () => processGesetzeSyncJob(),
+  {
+    connection,
+    concurrency: 1, // Sequential sync — avoids GitHub rate limit pressure and Ollama contention
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+gesetzeSyncWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, result: job.returnvalue },
+    "Gesetze sync completed"
+  );
+});
+
+gesetzeSyncWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, err: err.message, attemptsMade: job.attemptsMade },
+    "Gesetze sync failed"
+  );
+
+  if (job.attemptsMade >= (job.opts.attempts ?? 2)) {
+    socketEmitter.to("role:ADMIN").emit("notification", {
+      type: "job:failed",
+      title: "Gesetze-Sync fehlgeschlagen",
+      message: `Täglicher Gesetze-Sync fehlgeschlagen: ${err.message}`,
+      data: { jobId: job.id, queue: "gesetze-sync" },
+    });
+  }
+});
+
+gesetzeSyncWorker.on("error", (err) => {
+  log.error({ err }, "Gesetze sync worker error");
+});
+
+workers.push(gesetzeSyncWorker);
+log.info("[Worker] gesetze-sync processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -636,6 +683,14 @@ async function startup() {
     log.warn({ err }, "Failed to register AI jobs (non-fatal)");
   }
 
+  // Register daily Gesetze sync cron job
+  try {
+    await registerGesetzeSyncJob();
+    log.info("Gesetze sync job registered (02:00 Europe/Berlin daily)");
+  } catch (err) {
+    log.warn({ err }, "Failed to register Gesetze sync job (non-fatal)");
+  }
+
   // Re-queue documents that previously failed OCR (e.g. due to Stirling-PDF being unavailable).
   // Resets FEHLGESCHLAGEN → AUSSTEHEND and enqueues a fresh OCR job.
   try {
@@ -685,7 +740,7 @@ async function startup() {
       queues: [
         "test", "frist-reminder", "email-send", "email-sync",
         "document-ocr", "document-preview", "document-embedding",
-        "ai-scan", "ai-briefing", "ai-proactive",
+        "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync",
       ],
       fristScanZeit: scanZeit,
     },

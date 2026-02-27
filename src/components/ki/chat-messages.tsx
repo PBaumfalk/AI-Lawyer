@@ -41,12 +41,135 @@ function parseThinking(content: string): {
   return { thinking: null, thinkingComplete: false, response: content };
 }
 
+// ---------------------------------------------------------------------------
+// Parse <!--schriftsatz:{...}--> metadata from pipeline-injected messages
+// ---------------------------------------------------------------------------
+
+interface SchriftsatzMeta {
+  _schriftsatz?: boolean;
+  round?: number;
+  maxRounds?: number;
+  filledSlots?: Record<string, unknown>;
+  _conflict?: boolean;
+  pendingRueckfrage?: string;
+}
+
+function parseSchriftsatzMeta(content: string): {
+  isSchriftsatz: boolean;
+  meta: SchriftsatzMeta | null;
+  cleanContent: string;
+} {
+  const match = content.match(/<!--schriftsatz:([\s\S]*?)-->/);
+  if (!match) return { isSchriftsatz: false, meta: null, cleanContent: content };
+  try {
+    const meta = JSON.parse(match[1]) as SchriftsatzMeta;
+    const cleanContent = content.replace(/\n?<!--schriftsatz:[\s\S]*?-->/, "").trim();
+    return { isSchriftsatz: true, meta, cleanContent };
+  } catch {
+    return { isSchriftsatz: false, meta: null, cleanContent: content };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// RueckfrageMessage -- renders a pipeline Rueckfrage with round counter
+// and collapsible "Bisherige Angaben" section
+// ---------------------------------------------------------------------------
+
+function RueckfrageMessage({
+  text,
+  filledSlots,
+  round,
+  maxRounds,
+}: {
+  text: string;
+  filledSlots: Record<string, unknown>;
+  round: number;
+  maxRounds: number;
+}) {
+  const slotEntries = Object.entries(filledSlots).filter(([, v]) => v !== null);
+
+  return (
+    <div>
+      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1.5 prose-li:my-0.5">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+      </div>
+      <span className="text-xs text-muted-foreground ml-1">
+        ({round}/{maxRounds})
+      </span>
+      {slotEntries.length > 0 && (
+        <details className="mt-2 text-sm text-muted-foreground">
+          <summary className="cursor-pointer hover:text-foreground transition-colors">
+            Bisherige Angaben ({slotEntries.length})
+          </summary>
+          <ul className="mt-1.5 ml-4 list-disc space-y-0.5">
+            {slotEntries.map(([key, value]) => (
+              <li key={key}>
+                <span className="font-medium">{key}:</span>{" "}
+                {String(value)}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PendingReminderBanner -- proactive reminder for pending Rueckfrage
+// ---------------------------------------------------------------------------
+
+function PendingReminderBanner({
+  reminder,
+  onDismiss,
+}: {
+  reminder: {
+    rueckfrage: string;
+    round: number;
+    maxRounds: number;
+    filledSlots: Record<string, unknown>;
+  };
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="mx-4 mb-3 p-3 rounded-lg bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/30">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+            Offene Rueckfrage ({reminder.round}/{reminder.maxRounds})
+          </p>
+          <p className="text-sm text-amber-700 dark:text-amber-300">
+            {reminder.rueckfrage}
+          </p>
+        </div>
+        <button
+          onClick={onDismiss}
+          className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 px-2 py-1 rounded hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors whitespace-nowrap"
+        >
+          Verwerfen
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ChatMessages -- main component
+// ---------------------------------------------------------------------------
+
 interface ChatMessagesProps {
   messages: UIMessage[];
   isLoading: boolean;
   error?: Error | undefined;
   sources: SourceData[];
   conversationId: string | null;
+  pendingReminder?: {
+    rueckfrage: string;
+    round: number;
+    maxRounds: number;
+    filledSlots: Record<string, unknown>;
+  } | null;
+  onDismissPending?: () => void;
 }
 
 interface StoredMessage {
@@ -62,6 +185,8 @@ export function ChatMessages({
   error,
   sources,
   conversationId,
+  pendingReminder,
+  onDismissPending,
 }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [historicalMessages, setHistoricalMessages] = useState<StoredMessage[]>([]);
@@ -161,6 +286,14 @@ export function ChatMessages({
         </div>
       )}
 
+      {/* Proactive reminder for pending Rueckfrage */}
+      {pendingReminder && onDismissPending && (
+        <PendingReminderBanner
+          reminder={pendingReminder}
+          onDismiss={onDismissPending}
+        />
+      )}
+
       {allMessages.map((msg, idx) => {
         const isUser = msg.role === "user";
         const isLastAssistant =
@@ -193,7 +326,23 @@ export function ChatMessages({
                 <p className="whitespace-pre-wrap">{msg.content}</p>
               ) : (
                 (() => {
-                  const { thinking, thinkingComplete, response } = parseThinking(msg.content);
+                  // Check for Schriftsatz pipeline metadata in message
+                  const { isSchriftsatz, meta, cleanContent } = parseSchriftsatzMeta(msg.content);
+
+                  if (isSchriftsatz && meta?._schriftsatz) {
+                    return (
+                      <RueckfrageMessage
+                        text={cleanContent}
+                        filledSlots={meta.filledSlots ?? {}}
+                        round={meta.round ?? 1}
+                        maxRounds={meta.maxRounds ?? 5}
+                      />
+                    );
+                  }
+
+                  // Use cleanContent (metadata stripped) for normal rendering
+                  const contentForParsing = isSchriftsatz ? cleanContent : msg.content;
+                  const { thinking, thinkingComplete, response } = parseThinking(contentForParsing);
                   const isStreaming = isLoading && idx === allMessages.length - 1;
                   const isThinkingPhase = isStreaming && thinking !== null && !thinkingComplete;
 
@@ -272,7 +421,8 @@ export function ChatMessages({
                 <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/10 dark:border-white/[0.06]">
                   <button
                     onClick={() => {
-                      const { response } = parseThinking(msg.content);
+                      const { cleanContent: cleaned } = parseSchriftsatzMeta(msg.content);
+                      const { response } = parseThinking(cleaned);
                       navigator.clipboard.writeText(response);
                     }}
                     className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-white/50 dark:hover:bg-white/[0.05]"

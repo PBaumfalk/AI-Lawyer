@@ -36,7 +36,17 @@ export function ChatLayout({
   const [akten, setAkten] = useState<AkteOption[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [sources, setSources] = useState<SourceData[]>([]);
+  const [pendingReminder, setPendingReminder] = useState<{
+    rueckfrage: string;
+    round: number;
+    maxRounds: number;
+    filledSlots: Record<string, unknown>;
+  } | null>(null);
   const initialQuerySentRef = useRef(false);
+
+  // Ref to hold setMessages for use in custom fetch (avoids circular dependency).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setMessagesRef = useRef<(updater: any) => void>(null!);
 
   // Single shared useChat instance — owned here so both ChatInput and ChatMessages
   // operate on the same message state and streaming response.
@@ -46,6 +56,81 @@ export function ChatLayout({
       akteId: selectedAkteId,
       conversationId: selectedConversationId,
       crossAkte,
+    },
+    // Custom fetch intercepts non-streaming Schriftsatz pipeline JSON responses
+    // before useChat tries to parse them as streams (which would crash).
+    fetch: async (input, init) => {
+      const response = await globalThis.fetch(input, init);
+
+      const contentType = response.headers.get("Content-Type") ?? "";
+      if (contentType.includes("application/json")) {
+        const payload = await response.json();
+
+        if (payload.type?.startsWith("schriftsatz_")) {
+          // Handle pipeline response by injecting synthetic assistant message
+          const setter = setMessagesRef.current;
+          if (setter) {
+            if (payload.type === "schriftsatz_rueckfrage") {
+              const meta = JSON.stringify({
+                _schriftsatz: true,
+                round: payload.round,
+                maxRounds: payload.maxRounds,
+                filledSlots: payload.filledSlots,
+              });
+              setter((prev: any[]) => [
+                ...prev,
+                {
+                  id: `schriftsatz-${Date.now()}`,
+                  role: "assistant" as const,
+                  content: `${payload.rueckfrage}\n<!--schriftsatz:${meta}-->`,
+                  parts: [{ type: "text" as const, text: `${payload.rueckfrage}\n<!--schriftsatz:${meta}-->` }],
+                },
+              ]);
+            } else if (payload.type === "schriftsatz_complete" || payload.type === "schriftsatz_error") {
+              setter((prev: any[]) => [
+                ...prev,
+                {
+                  id: `schriftsatz-${Date.now()}`,
+                  role: "assistant" as const,
+                  content: payload.text,
+                  parts: [{ type: "text" as const, text: payload.text }],
+                },
+              ]);
+            } else if (payload.type === "schriftsatz_conflict") {
+              const meta = JSON.stringify({
+                _conflict: true,
+                pendingRueckfrage: payload.pendingRueckfrage,
+              });
+              setter((prev: any[]) => [
+                ...prev,
+                {
+                  id: `schriftsatz-${Date.now()}`,
+                  role: "assistant" as const,
+                  content: `${payload.text}\n<!--schriftsatz:${meta}-->`,
+                  parts: [{ type: "text" as const, text: payload.text }],
+                },
+              ]);
+            }
+          }
+
+          // Clear pending reminder since pipeline state changed
+          setPendingReminder(null);
+
+          // Return a fake empty stream so useChat does not crash
+          return new Response(
+            new ReadableStream({ start(controller) { controller.close(); } }),
+            { status: 200, headers: { "Content-Type": "text/event-stream" } },
+          );
+        }
+
+        // Not a pipeline response -- reconstruct the JSON response
+        return new Response(JSON.stringify(payload), {
+          status: response.status,
+          headers: response.headers,
+        });
+      }
+
+      return response;
     },
     onResponse: (response) => {
       const h = response.headers.get("X-Sources");
@@ -66,6 +151,9 @@ export function ChatLayout({
       console.error("[ki-chat] Request failed:", err.message);
     },
   });
+
+  // Keep the ref in sync with the latest setMessages
+  setMessagesRef.current = setMessages;
 
   // Derive isLoading from status for components that need a boolean
   const isLoading = status === "submitted" || status === "streaming";
@@ -95,6 +183,34 @@ export function ChatLayout({
       })
       .catch(() => {});
   }, []);
+
+  // Proactive reminder: check for pending Rueckfrage when Akte changes
+  useEffect(() => {
+    if (!selectedAkteId) {
+      setPendingReminder(null);
+      return;
+    }
+
+    fetch(`/api/ki-chat/pending?akteId=${selectedAkteId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.pending) {
+          setPendingReminder(data.pending);
+        } else {
+          setPendingReminder(null);
+        }
+      })
+      .catch(() => setPendingReminder(null));
+  }, [selectedAkteId]);
+
+  // Dismiss (Verwerfen) a pending Rueckfrage
+  const handleDismissPending = useCallback(async () => {
+    if (!selectedAkteId) return;
+    await fetch(`/api/ki-chat/pending?akteId=${selectedAkteId}`, {
+      method: "DELETE",
+    });
+    setPendingReminder(null);
+  }, [selectedAkteId]);
 
   const handleAkteChange = useCallback((akteId: string | null) => {
     if (akteId === "__all__") {
@@ -205,6 +321,8 @@ export function ChatLayout({
             error={error}
             sources={sources}
             conversationId={selectedConversationId}
+            pendingReminder={pendingReminder}
+            onDismissPending={handleDismissPending}
           />
         </div>
 

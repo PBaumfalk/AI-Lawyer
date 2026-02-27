@@ -22,6 +22,7 @@ import { processProactive, type ProactiveJobData } from "@/lib/ai/proactive-proc
 import { processGesetzeSyncJob } from "@/lib/queue/processors/gesetze-sync.processor";
 import { processNerPiiJob, type NerPiiJobData, recoverStuckNerJobs } from "@/lib/queue/processors/ner-pii.processor";
 import { processUrteileSyncJob } from "@/lib/queue/processors/urteile-sync.processor";
+import { processHelenaTask, type HelenaTaskJobData } from "@/lib/queue/processors/helena-task.processor";
 import { prisma } from "@/lib/db";
 
 const log = createLogger("worker");
@@ -666,6 +667,44 @@ musterIngestionWorker.on("error", (err) => {
 workers.push(musterIngestionWorker);
 log.info("[Worker] muster-ingestion processor registered");
 
+// ─── Helena-Task Queue Worker ───────────────────────────────────────────────
+
+const helenaTaskWorker = new Worker<HelenaTaskJobData>(
+  "helena-task",
+  async (job) => processHelenaTask(job),
+  {
+    connection,
+    concurrency: 1,         // Sequential: avoid Ollama GPU contention
+    lockDuration: 120_000,  // 2min lock -- LLM calls take 30-120s per step
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+helenaTaskWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, taskId: job.data.taskId },
+    "[Worker] helena-task job completed"
+  );
+});
+
+helenaTaskWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, taskId: job.data.taskId, err: err.message },
+    "[Worker] helena-task job failed"
+  );
+});
+
+helenaTaskWorker.on("error", (err) => {
+  log.error({ err }, "[Worker] helena-task worker error");
+});
+
+workers.push(helenaTaskWorker);
+log.info("[Worker] helena-task processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -808,6 +847,26 @@ async function startup() {
     log.warn({ err }, "Failed to recover stuck NER jobs (non-fatal)");
   }
 
+  // Recover any HelenaTask stuck in RUNNING from a previous crashed worker
+  try {
+    const stuckTasks = await prisma.helenaTask.updateMany({
+      where: { status: "RUNNING" },
+      data: {
+        status: "FAILED",
+        fehler: "Worker wurde neu gestartet — Task war noch in Bearbeitung",
+        completedAt: new Date(),
+      },
+    });
+    if (stuckTasks.count > 0) {
+      log.info(
+        { count: stuckTasks.count },
+        "Recovered stuck Helena tasks from previous worker crash"
+      );
+    }
+  } catch (err) {
+    log.warn({ err }, "Failed to recover stuck Helena tasks (non-fatal)");
+  }
+
   // Re-enqueue any INDEXED Muster that has 0 chunks (recovery for crashed ingestion jobs)
   try {
     await processMusterIngestPending();
@@ -872,7 +931,7 @@ async function startup() {
         "test", "frist-reminder", "email-send", "email-sync",
         "document-ocr", "document-preview", "document-embedding",
         "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync", "ner-pii",
-        "urteile-sync", "muster-ingestion",
+        "urteile-sync", "muster-ingestion", "helena-task",
       ],
       fristScanZeit: scanZeit,
     },

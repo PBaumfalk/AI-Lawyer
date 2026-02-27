@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { resolvePublicOnlyOfficeUrl } from "@/lib/onlyoffice";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { SocketProvider } from "@/components/socket-provider";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
@@ -23,12 +25,21 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  // Resolve OnlyOffice URL for preloading the editor SDK script
+  const headersList = await headers();
+  const onlyofficeUrl = resolvePublicOnlyOfficeUrl(headersList);
+  const ooApiScript = `${onlyofficeUrl}/web-apps/apps/api/documents/api.js`;
+
   // Provider hierarchy: SessionProvider > SocketProvider > NotificationProvider > UploadProvider
   return (
     <SessionProvider>
       <SocketProvider>
         <NotificationProvider>
           <UploadProvider>
+            {/* Preload OnlyOffice SDK — cuts ~5-15s off first editor open */}
+            <link rel="dns-prefetch" href={onlyofficeUrl} />
+            <link rel="preconnect" href={onlyofficeUrl} crossOrigin="anonymous" />
+            <link rel="preload" href={ooApiScript} as="script" crossOrigin="anonymous" />
             <div className="flex h-screen overflow-hidden">
               <Sidebar />
               <div className="flex flex-col flex-1 overflow-hidden">

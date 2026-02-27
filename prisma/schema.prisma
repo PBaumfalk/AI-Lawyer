@@ -394,6 +394,12 @@ model User {
   isSystem            Boolean   @default(false)
   tokenUsages         TokenUsage[]
   helenaSuggestions   HelenaSuggestion[]
+  // Helena Agent v0.2
+  helenaTasks          HelenaTask[]
+  helenaDraftsCreated  HelenaDraft[]    @relation("HelenaDraftUser")
+  helenaDraftsReviewed HelenaDraft[]    @relation("HelenaDraftReviewer")
+  helenaAlerts         HelenaAlert[]
+  aktenActivities      AktenActivity[]
 
   // RBAC: Dezernat membership and Admin-Override
   dezernate              Dezernat[]       @relation("DezernatMitglieder")
@@ -721,6 +727,12 @@ model Akte {
   emailVeraktungen    EmailVeraktung[]
   tokenUsages         TokenUsage[]
   helenaSuggestions   HelenaSuggestion[]
+  // Helena Agent v0.2
+  helenaTasks      HelenaTask[]
+  helenaDrafts     HelenaDraft[]
+  helenaAlerts     HelenaAlert[]
+  helenaMemory     HelenaMemory?    // One-to-one via @unique on akteId
+  activities       AktenActivity[]
 
   // RBAC: Dezernat membership and Admin-Override
   dezernate           Dezernat[]       @relation("DezernatAkten")
@@ -1814,4 +1826,173 @@ model HelenaSuggestion {
   @@index([userId, status, createdAt])
   @@index([akteId, typ, createdAt])
   @@map("helena_suggestions")
+}
+
+// --- Helena Agent v0.2: Enums ---
+
+enum HelenaTaskStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+  WAITING_APPROVAL
+  ABGEBROCHEN
+}
+
+enum HelenaDraftTyp {
+  DOKUMENT
+  FRIST
+  NOTIZ
+  ALERT
+}
+
+enum HelenaDraftStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EDITED
+}
+
+enum HelenaAlertTyp {
+  FRIST_KRITISCH
+  AKTE_INAKTIV
+  BETEILIGTE_FEHLEN
+  DOKUMENT_FEHLT
+  WIDERSPRUCH
+  NEUES_URTEIL
+}
+
+enum AktenActivityTyp {
+  DOKUMENT
+  FRIST
+  EMAIL
+  HELENA_DRAFT
+  HELENA_ALERT
+  NOTIZ
+  BETEILIGTE
+  STATUS_CHANGE
+}
+
+// --- Helena Agent v0.2: Models ---
+
+model HelenaTask {
+  id          String           @id @default(cuid())
+  akteId      String
+  akte        Akte             @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  userId      String           // User who created/triggered the task
+  user        User             @relation(fields: [userId], references: [id])
+
+  auftrag     String           @db.Text  // Natural language task description
+  status      HelenaTaskStatus @default(PENDING)
+  modus       String           @default("BACKGROUND") // INLINE | BACKGROUND
+  prioritaet  Int              @default(5)  // 1-10, higher = more urgent
+  steps       Json             @default("[]") // Agent trace: [{type: "thought"|"toolCall"|"toolResult"|"error", content, timestamp}]
+  ergebnis    String?          @db.Text  // Final result summary
+  fehler      String?          @db.Text  // Error message if FAILED
+
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Reverse relation for drafts created by this task
+  drafts      HelenaDraft[]
+
+  @@index([akteId, status])
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@map("helena_tasks")
+}
+
+model HelenaDraft {
+  id             String            @id @default(cuid())
+  akteId         String
+  akte           Akte              @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  userId         String            // User who requested/triggered the draft
+  user           User              @relation("HelenaDraftUser", fields: [userId], references: [id])
+
+  typ            HelenaDraftTyp
+  status         HelenaDraftStatus @default(PENDING)
+  titel          String
+  inhalt         String            @db.Text  // Draft content (markdown or structured)
+  meta           Json?             // Type-specific payload (dokumentId, fristData, etc.)
+  feedback       String?           @db.Text  // Rejection reason / edit notes
+
+  // Traceability: which task produced this draft
+  helenaTaskId   String?
+  helenaTask     HelenaTask?       @relation(fields: [helenaTaskId], references: [id])
+
+  // Review tracking
+  reviewedById   String?
+  reviewedBy     User?             @relation("HelenaDraftReviewer", fields: [reviewedById], references: [id])
+  reviewedAt     DateTime?
+
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([akteId, status])
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@map("helena_drafts")
+}
+
+model HelenaAlert {
+  id          String         @id @default(cuid())
+  akteId      String
+  akte        Akte           @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  userId      String         // Target user (Verantwortlicher of the Akte)
+  user        User           @relation(fields: [userId], references: [id])
+
+  typ         HelenaAlertTyp
+  titel       String
+  inhalt      String?        @db.Text  // Detailed alert description
+  severity    Int            @default(5)   // 1-10, higher = more severe
+  prioritaet  Int            @default(5)   // 1-10, higher = more urgent
+  meta        Json?          // Alert-specific payload (fristId, dokumentId, urteilId, etc.)
+
+  gelesen     Boolean        @default(false)
+  gelesenAt   DateTime?
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([akteId, typ])
+  @@index([userId, gelesen])
+  @@index([typ, createdAt])
+  @@map("helena_alerts")
+}
+
+model HelenaMemory {
+  id        String   @id @default(cuid())
+  akteId    String   @unique  // One memory per Akte (upsert pattern)
+  akte      Akte     @relation(fields: [akteId], references: [id], onDelete: Cascade)
+
+  // Structured JSON: { summary, risks, nextSteps, openQuestions, relevantNorms }
+  content   Json     @default("{}")
+  version   Int      @default(1)    // Incremented on refresh
+
+  lastRefreshedAt DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("helena_memories")
+}
+
+model AktenActivity {
+  id        String           @id @default(cuid())
+  akteId    String
+  akte      Akte             @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  userId    String?          // null = Helena/system-generated event
+  user      User?            @relation(fields: [userId], references: [id])
+
+  typ       AktenActivityTyp
+  titel     String
+  inhalt    String?          @db.Text
+  meta      Json?            // Event-specific payload (dokumentId, fristId, draftId, alertId, etc.)
+
+  createdAt DateTime         @default(now())
+
+  @@index([akteId, createdAt])
+  @@index([akteId, typ])
+  @@map("akten_activities")
 }

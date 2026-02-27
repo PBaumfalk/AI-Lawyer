@@ -171,6 +171,20 @@ export const musterIngestionQueue = new Queue("muster-ingestion", {
   },
 });
 
+/**
+ * Helena-Task queue for @Helena agent runs.
+ * attempts: 1 -- agent runs are NOT idempotent (no retry).
+ * 7-day complete retention for audit trail, 30-day fail retention for debugging.
+ */
+export const helenaTaskQueue = new Queue("helena-task", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    attempts: 1,
+    removeOnComplete: { age: 86_400 * 7 },   // 7 days
+    removeOnFail: { age: 86_400 * 30 },       // 30 days
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
 export const ALL_QUEUES: Queue[] = [
   testQueue,
@@ -187,6 +201,7 @@ export const ALL_QUEUES: Queue[] = [
   nerPiiQueue,
   urteileSyncQueue,
   musterIngestionQueue,
+  helenaTaskQueue,
 ];
 
 /**

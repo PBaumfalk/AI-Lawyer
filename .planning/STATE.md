@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-27T09:54:15.145Z"
+last_updated: "2026-02-27T10:48:21.621Z"
 progress:
-  total_phases: 9
+  total_phases: 10
   completed_phases: 8
-  total_plans: 26
-  completed_plans: 26
+  total_plans: 29
+  completed_plans: 27
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 17 (Urteile-RAG) COMPLETE — Phase 18 (Muster-RAG + Admin Upload UI) is next
+**Current focus:** v0.1 Helena RAG — Phase 18 (Muster-RAG + Admin Upload UI) Plan 01 complete — Plan 02 (Admin Upload UI + ingestion processor) is next
 
 ## Current Position
 
-Phase: 17 of 18 (Urteile-RAG) — COMPLETE
-Plan: 3 of 3 complete
-Status: Phase 17 Plan 03 complete — Chain E parallel Urteil retrieval + URTEILE-QUELLEN injection wired into ki-chat. Phase 18 (Muster-RAG + Admin Upload UI) is next.
-Last activity: 2026-02-27 — Phase 17 Plan 03 complete: Chain E (urteilChunksPromise), Promise.all[4], URTEILE-QUELLEN system prompt injection, anti-hallucination AZ instruction
+Phase: 18 of 18 (Muster-RAG + Admin Upload UI) — In Progress
+Plan: 1 of 3 complete
+Status: Phase 18 Plan 01 complete — Schema migration (isKanzleiEigen/kanzleiEigen), muster ingestion library (insertMusterChunks with content bypass, searchMusterChunks with 1.3x kanzlei boost), 6 amtliche Arbeitsrecht Formulare seeded idempotently. Plan 02 (Admin Upload UI + processMusterIngestionJob) is next.
+Last activity: 2026-02-27 — Phase 18 Plan 01 complete: Prisma migration, src/lib/muster/ingestion.ts, src/lib/muster/seed-amtliche.ts
 
-Progress: [█████░░░░░] ~56%
+Progress: [██████░░░░] ~60%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [█████░░░░░] ~56%
 | Phase 17-urteile-rag P01 | 3 | 2 tasks | 2 files |
 | Phase 17-urteile-rag P02 | ~2m | 2 tasks | 3 files |
 | Phase 17-urteile-rag P03 | 1 | 1 tasks | 1 files |
+| Phase 18-muster-rag-admin-upload-ui P01 | 5 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,9 @@ Recent decisions affecting v0.1:
 - [Phase 17-02]: pii_rejected GUIDs ARE added to guidCache (no NER re-run); error GUIDs NOT added (retry on next cron)
 - [Phase 17-03]: Chain E failure is non-fatal — catch returns [] so Helena responds without Urteile without crashing ki-chat
 - [Phase 17-03]: queryEmbeddingPromise shared between Chain B, D, and Chain E — single Ollama embedding call for all three chains (urteil_chunks reuses existing embedding)
+- [Phase 18-01]: insertMusterChunks optional content param: when provided, extractMusterFullText and MinIO are skipped entirely — seed path uses hardcoded templates
+- [Phase 18-01]: KANZLEI_BOOST=1.3 applied post-query in application code (not SQL) for simplicity; searchMusterChunks fetches limit*3 candidates before filter
+- [Phase 18-01]: seedAmtlicheFormulare uses nerStatus=INDEXED on synthetic Muster rows — hardcoded content needs no NER processing; idempotent via SystemSetting muster.amtliche_seed_version
 
 ### Pending Todos
 

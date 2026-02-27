@@ -29,10 +29,10 @@ Requirements für v0.1 Helena RAG. Jede Anforderung mapped auf eine Roadmap-Phas
 
 ### Arbeitswissen-RAG
 
-- [ ] **ARBW-01**: Amtliche Formulare (BMJ-Vordrucke, Arbeitsgerichts-Vordrucke, Mahnformulare) in eigene `muster_chunks`-Tabelle ingested; Platzhalter normiert (`{{KLAEGER_NAME}}`, `{{KUENDIGUNGSDATUM}}` etc.)
+- [x] **ARBW-01**: Amtliche Formulare (BMJ-Vordrucke, Arbeitsgerichts-Vordrucke, Mahnformulare) in eigene `muster_chunks`-Tabelle ingested; Platzhalter normiert (`{{KLAEGER_NAME}}`, `{{KUENDIGUNGSDATUM}}` etc.)
 - [ ] **ARBW-02**: Admin-UI unter `/admin/muster` für Upload kanzlei-eigener Schriftsatzmuster (DOCX/PDF → MinIO `muster-uploads/`, nie in Git); shadcn/ui Dateitabelle mit NER-Status-Spalte
 - [x] **ARBW-03**: PII-Anonymisierung vor Ingestion kanzlei-eigener Muster via Ollama NER (identisches Modul wie URTEIL-03); Status-Machine `PENDING_NER → NER_RUNNING → INDEXED | REJECTED_PII_DETECTED` — kein Bypass-Pfad (BRAO §43a)
-- [ ] **ARBW-04**: Kanzlei-eigene Muster erhalten höchsten Retrieval-Boost (über öffentliche Formulare); Schriftsatz-Relevanz-Score in Metadaten
+- [x] **ARBW-04**: Kanzlei-eigene Muster erhalten höchsten Retrieval-Boost (über öffentliche Formulare); Schriftsatz-Relevanz-Score in Metadaten
 - [ ] **ARBW-05**: Helena erstellt strukturierte Schriftsatz-Entwürfe (Rubrum, Anträge, Begründung mit Platzhaltern) aus muster_chunks + relevanten law_chunks + urteil_chunks + Akten-Kontext; Ausgabe immer als ENTWURF mit expliziten `{{PLATZHALTER}}`
 
 ## v2 Requirements
@@ -90,10 +90,10 @@ Welche Phasen welche Anforderungen abdecken.
 | URTEIL-02 | Phase 17 | Complete |
 | URTEIL-03 | Phase 16 | Complete |
 | URTEIL-04 | Phase 17 | Complete |
-| ARBW-01 | Phase 18 | Pending |
+| ARBW-01 | Phase 18 | Complete |
 | ARBW-02 | Phase 18 | Pending |
 | ARBW-03 | Phase 16 | Complete |
-| ARBW-04 | Phase 18 | Pending |
+| ARBW-04 | Phase 18 | Complete |
 | ARBW-05 | Phase 18 | Pending |
 
 **Coverage:**

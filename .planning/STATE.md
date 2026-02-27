@@ -24,8 +24,8 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 Phase: 24 of 26 (Scanner + Alerts)
 Plan: 0 of 2 in current phase
-Status: Phase 23.1 in progress (plan 1/3 complete)
-Last activity: 2026-02-27 — Completed 23.1-01 Wire Draft Notification in update-akte-rag
+Status: Phase 23.1 in progress (plan 2/3 complete)
+Last activity: 2026-02-27 — Completed 23.1-02 Multi-Turn Schriftsatz Rueckfragen Pipeline
 
 Progress: [███████░░░] 60%
 
@@ -108,6 +108,11 @@ Recent decisions affecting v0.2:
 - Auto-revise enqueue is non-blocking: failure logs but does not fail rejection
 - Undo window pattern: undoExpiresAt set on accept, checked on undo, 5s TTL
 
+- PendingSchriftsatz model with @@unique([userId, akteId]) for one pending pipeline per user per Akte
+- Lazy TTL check on read: auto-delete expired PendingSchriftsatz records when loaded
+- Fast keyword check for cancel intent (abbrechen/stop/cancel) -- no LLM round-trip needed
+- JSON type discriminator for Schriftsatz pipeline responses (schriftsatz_rueckfrage/complete/error/conflict)
+
 ### Pending Todos
 
 3 deferred from v0.1:
@@ -124,5 +129,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 23.1-01-PLAN.md (Wire Draft Notification in update-akte-rag)
-Resume file: .planning/phases/23.1-integration-wiring-fixes/23.1-01-SUMMARY.md
+Stopped at: Completed 23.1-02-PLAN.md (Multi-Turn Schriftsatz Rueckfragen)
+Resume file: .planning/phases/23.1-integration-wiring-fixes/23.1-02-SUMMARY.md

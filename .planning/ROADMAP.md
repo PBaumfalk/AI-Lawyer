@@ -112,7 +112,12 @@ Plans:
   2. Hinzugefügte Normen erscheinen als Chip-Liste in der Akte-Detailseite — per Klick öffnet sich die Normdetail-Ansicht
   3. Helenas Antworten im Akte-Kontext referenzieren pinned Normen bevorzugt — der System-Prompt enthält den Norm-Text der gepinnten §§
   4. Normen können aus der Akte entfernt werden — der System-Kontext aktualisiert sich sofort
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 15-01-PLAN.md — AkteNorm API routes: GET+POST /normen, GET /normen/search (ILIKE law_chunks), DELETE /normen/[normId]
+- [ ] 15-02-PLAN.md — ki-chat Chain A extension: pinned norm fetch + PINNED NORMEN system prompt block (highest priority)
+- [ ] 15-03-PLAN.md — NormenSection UI component (chip-list + search modal + detail sheet) + Akte detail page wiring
 
 ### Phase 16: PII-Filter
 **Goal**: Ein Ollama-NER-basierter PII-Filter ist implementiert und acceptance-getestet — Gerichtsentscheidungen und kanzlei-eigene Muster können DSGVO-konform indexiert werden
@@ -159,7 +164,7 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 | 12. RAG Schema Foundation | 1/1 | Complete    | 2026-02-26 | - |
 | 13. Hybrid Search + Reranking | 3/3 | Complete    | 2026-02-27 | - |
 | 14. Gesetze-RAG | 3/3 | Complete    | 2026-02-27 | - |
-| 15. Normen-Verknüpfung in Akte | v0.1 | 0/TBD | Not started | - |
+| 15. Normen-Verknüpfung in Akte | v0.1 | 0/3 | Not started | - |
 | 16. PII-Filter | v0.1 | 0/TBD | Not started | - |
 | 17. Urteile-RAG | v0.1 | 0/TBD | Not started | - |
 | 18. Muster-RAG + Admin Upload UI | v0.1 | 0/TBD | Not started | - |

@@ -149,7 +149,43 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- Next milestone scope — to be defined -->
+<!-- v0.2 Helena Agent scope -->
+
+**Agent-Core:**
+- [ ] Helena ReAct Agent-Loop mit Tool-Calling (max 20 Steps, Fallback bei Timeout)
+- [ ] Tool-Set: 9 Read-Tools (akte, dokumente, fristen, zeiterfassung, gesetze, urteile, muster, kosten_rules, alle_akten) + 5 Write-Tools (draft_dokument, draft_frist, notiz, alert, akte_rag_update)
+- [ ] Deterministic Orchestrator für Schriftsatz-Erstellung (Intent → Slot-Filling → RAG → Assembly → ERV-Validator)
+- [ ] Schriftsatz-Zwischenformat (SchriftsatzSchema) mit Rubrum, Anträge, Sachverhalt, Rechtliche Würdigung, Beweisangebote, Anlagen, Kosten
+
+**Task-System:**
+- [ ] @-Tagging: `@Helena [Aufgabe]` in Notiz/Kommentar-Feldern parsed Helena-Tasks
+- [ ] HelenaTask DB-Modell (PENDING → RUNNING → DONE/FAILED/WAITING_APPROVAL)
+- [ ] BullMQ Helena-Task-Queue mit Agent-Loop-Executor
+
+**Draft-Approval:**
+- [ ] HelenaDraft DB-Modell (PENDING → ACCEPTED/REJECTED/EDITED)
+- [ ] Draft-Anzeige in Akte-Feed (visuell markiert als "Helena-Entwurf")
+- [ ] Accept/Reject/Edit Workflow mit Feedback an Helena-Kontext
+
+**Proaktiver Scanner:**
+- [ ] Background-Scanner Cron (tägl.): Frist-Check, Inaktivitäts-Check, Anomalie-Check
+- [ ] Alert-System (FRIST_KRITISCH, AKTE_INAKTIV, BETEILIGTE_FEHLEN, DOKUMENT_FEHLT, WIDERSPRUCH, NEUES_URTEIL)
+- [ ] Alert-Center im Dashboard + Akte-Feed-Integration
+
+**Helena Memory:**
+- [ ] Per-Akte Kontext-Speicherung (Zusammenfassung, Risiken, nächste Schritte, offene Fragen)
+- [ ] Automatischer Memory-Refresh bei Akte-Zugriff
+
+**QA-Gates + Audit:**
+- [ ] Goldset-Testkatalog (≥20 Queries Arbeitsrecht)
+- [ ] Retrieval-Metriken (Recall@k, MRR, Halluzinationsrate)
+- [ ] Schriftsatz-Retrieval-Log (Audit-Trail: welche Chunks → welcher Entwurf)
+- [ ] Release-Gates (Score-Schwellen für Deploys)
+
+**UI:**
+- [ ] Akte-Detail Feed-Umbau (Activity Feed statt Tabs: Helena-Drafts, Alerts, Notizen, Events)
+- [ ] Composer im Feed (Notiz/Kommentar/Helena-Tag direkt im Feed)
+- [ ] Alert-Center Dashboard-Widget
 
 ## Future (post v0.1)
 
@@ -257,5 +293,22 @@ Minor tech debt: processUrteilNer() dead code in ner-pii.processor.ts, NER queue
 | seedAmtlicheFormulare() at worker startup (v0.1) | Idempotent via SystemSetting guard, avoids cron complexity for one-time seed | ✓ Good — content bypasses MinIO for hardcoded templates |
 | params Promise pattern in Next.js 15 (v0.1) | Sync params pattern caused 404s on DELETE/PATCH — await params required | ✓ Good — caught by integration checker, 2-line fix applied |
 
+## Current Milestone: v0.2 Helena Agent
+
+**Goal:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, @-Tagging Task-System, Draft-Approval-Workflow, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail. Akte-Detail wird zum Activity Feed.
+
+**Target features:**
+- ReAct Agent-Loop mit 14 Tools (9 read + 5 write)
+- Deterministic Schriftsatz-Orchestrator (Intent → Slot-Filling → RAG → Assembly)
+- @Helena Task-System (HelenaTask Queue)
+- Draft-Approval Workflow (HelenaDraft: accept/reject/edit)
+- Proaktiver Background-Scanner (Frist-Check, Inaktivität, Anomalien)
+- Alert-System (6 Typen) + Alert-Center
+- Helena Memory (per-Akte Kontext)
+- QA-Gates + Goldset + Retrieval-Metriken + Audit-Trail
+- Akte-Detail Feed-Umbau + Composer
+
+**LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
+
 ---
-*Last updated: 2026-02-27 after v0.1 milestone completion*
+*Last updated: 2026-02-27 after v0.2 milestone start*

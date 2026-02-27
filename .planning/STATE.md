@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-27T09:01:58.339Z"
+last_updated: "2026-02-27T09:42:42.651Z"
 progress:
-  total_phases: 8
+  total_phases: 9
   completed_phases: 7
-  total_plans: 23
-  completed_plans: 23
+  total_plans: 26
+  completed_plans: 24
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 16 (PII-Filter) COMPLETE — Phase 17 (Urteile-RAG) is next
+**Current focus:** v0.1 Helena RAG — Phase 17 (Urteile-RAG) in progress — Plan 01 complete
 
 ## Current Position
 
-Phase: 16 of 18 (PII-Filter) — COMPLETE
-Plan: 3 of 3 complete
-Status: Phase 16 Plan 03 complete — acceptance test suite (10 Urteil excerpts) created as DSGVO gate proof. Phase 16 fully done. Phase 17 Urteile-RAG is next.
-Last activity: 2026-02-27 — Phase 16 Plan 03 complete: tests/pii/ner-filter.acceptance.test.ts (10 excerpts, 5 hasPii:false / 5 hasPii:true, TypeScript clean)
+Phase: 17 of 18 (Urteile-RAG) — IN PROGRESS
+Plan: 1 of 3 complete
+Status: Phase 17 Plan 01 complete — Urteile-RAG core library created (rss-client.ts + ingestion.ts). Plans 02 (BullMQ processor) and 03 (ki-chat Chain E) are next.
+Last activity: 2026-02-27 — Phase 17 Plan 01 complete: src/lib/urteile/rss-client.ts + src/lib/urteile/ingestion.ts (TypeScript clean, piiFiltered=true gate verified)
 
-Progress: [████░░░░░░] ~20%
+Progress: [████░░░░░░] ~22%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [████░░░░░░] ~20%
 | Phase 16-pii-filter P01 | 2m | 2 tasks | 2 files |
 | Phase 16-pii-filter P02 | ~2m | 2 tasks | 3 files |
 | Phase 16-pii-filter P03 | 1 | 1 tasks | 1 files |
+| Phase 17-urteile-rag P01 | 3 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Recent decisions affecting v0.1:
 - [Phase 16-02]: processUrteilNer() throws Error on PII — Phase 17 caller skips ingestion; no DB write in processor — Phase 17 sets piiFiltered:true
 - [Phase 16-pii-filter]: /// <reference types="vitest/globals" /> in test file keeps vitest types scoped to tests without modifying tsconfig.json
 - [Phase 16-pii-filter]: Partial-match assertion added to forbiddenInPersons check — catches LLM edge case of appending city/country qualifiers to institution names
+- [Phase 17-urteile-rag]: parseAttributeValue (no trailing s) is the correct fast-xml-parser v5 X2jOptions property name — TypeScript caught the plan spec error
+- [Phase 17-urteile-rag]: Array.from(guids) instead of [...guids] for Set serialization — TS target lacks downlevelIteration; identical runtime behavior
+- [Phase 17-urteile-rag]: ingestUrteilItem never throws — AbortError from Ollama timeout caught, returns 'error'; processor must not mark GUID as seen on 'error' to enable retry on next cron
 
 ### Pending Todos
 
@@ -113,5 +117,5 @@ Recent decisions affecting v0.1:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 16 Plan 03 complete. Phase 16 PII-Filter fully done. tests/pii/ner-filter.acceptance.test.ts — 10 Urteil excerpts DSGVO gate proof. Phase 17 Urteile-RAG is next.
+Stopped at: Phase 17 Plan 01 complete. src/lib/urteile/rss-client.ts + ingestion.ts created. Phase 17 Plan 02 (BullMQ cron processor) is next.
 Resume file: None

@@ -23,7 +23,7 @@ Requirements für v0.1 Helena RAG. Jede Anforderung mapped auf eine Roadmap-Phas
 ### Urteile-RAG
 
 - [x] **URTEIL-01**: BMJ Rechtsprechung-im-Internet in eigene `urteil_chunks`-Tabelle ingested (alle 7 Bundesgerichts-RSS-Feeds: BGH, BAG, BVerwG, BFH, BSG, BPatG, BVerfG); HNSW-Index auf embedding-Spalte
-- [ ] **URTEIL-02**: BAG RSS-Feed als täglicher inkrementeller Update-Kanal für Arbeitsrecht-Entscheidungen
+- [x] **URTEIL-02**: BAG RSS-Feed als täglicher inkrementeller Update-Kanal für Arbeitsrecht-Entscheidungen
 - [x] **URTEIL-03**: NER-basierter PII-Filter via Ollama (5+ German-Legal-Few-Shot-Beispiele + Institution-Whitelist-Regex für Gerichtsnamen) — nur Urteile mit `pii_geprueft: true` werden indexiert
 - [ ] **URTEIL-04**: Helena zitiert Urteile immer mit Gericht + AZ + Datum + Leitsatz-Snippet + Quellenlink; AZ kommen ausschließlich aus `urteil_chunks.citation`-Metadaten (nie LLM-generiert)
 
@@ -87,7 +87,7 @@ Welche Phasen welche Anforderungen abdecken.
 | GESETZ-03 | Phase 14 | Complete |
 | GESETZ-04 | Phase 15 | Complete |
 | URTEIL-01 | Phase 17 | Complete |
-| URTEIL-02 | Phase 17 | Pending |
+| URTEIL-02 | Phase 17 | Complete |
 | URTEIL-03 | Phase 16 | Complete |
 | URTEIL-04 | Phase 17 | Pending |
 | ARBW-01 | Phase 18 | Pending |

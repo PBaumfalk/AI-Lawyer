@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 17 (Urteile-RAG) in progress — Plan 01 complete
+**Current focus:** v0.1 Helena RAG — Phase 17 (Urteile-RAG) in progress — Plans 01+02 complete
 
 ## Current Position
 
 Phase: 17 of 18 (Urteile-RAG) — IN PROGRESS
-Plan: 1 of 3 complete
-Status: Phase 17 Plan 01 complete — Urteile-RAG core library created (rss-client.ts + ingestion.ts). Plans 02 (BullMQ processor) and 03 (ki-chat Chain E) are next.
-Last activity: 2026-02-27 — Phase 17 Plan 01 complete: src/lib/urteile/rss-client.ts + src/lib/urteile/ingestion.ts (TypeScript clean, piiFiltered=true gate verified)
+Plan: 2 of 3 complete
+Status: Phase 17 Plan 02 complete — BullMQ processor + Queue + daily 03:00 cron wired. Plan 03 (ki-chat Chain E) is next.
+Last activity: 2026-02-27 — Phase 17 Plan 02 complete: processUrteileSyncJob, urteileSyncQueue, registerUrteileSyncJob, urteile-sync Worker registered in worker.ts
 
 Progress: [████░░░░░░] ~22%
 
@@ -53,6 +53,7 @@ Progress: [████░░░░░░] ~22%
 | Phase 16-pii-filter P02 | ~2m | 2 tasks | 3 files |
 | Phase 16-pii-filter P03 | 1 | 1 tasks | 1 files |
 | Phase 17-urteile-rag P01 | 3 | 2 tasks | 2 files |
+| Phase 17-urteile-rag P02 | ~2m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting v0.1:
 - [Phase 17-urteile-rag]: parseAttributeValue (no trailing s) is the correct fast-xml-parser v5 X2jOptions property name — TypeScript caught the plan spec error
 - [Phase 17-urteile-rag]: Array.from(guids) instead of [...guids] for Set serialization — TS target lacks downlevelIteration; identical runtime behavior
 - [Phase 17-urteile-rag]: ingestUrteilItem never throws — AbortError from Ollama timeout caught, returns 'error'; processor must not mark GUID as seen on 'error' to enable retry on next cron
+- [Phase 17-02]: urteileSyncQueue cron at 03:00 Europe/Berlin — one hour after gesetzeSyncJob at 02:00 to avoid simultaneous Ollama embedding calls
+- [Phase 17-02]: concurrency:1 for urteile-sync Worker — sequential sync avoids GPU contention during NER gate + embedding inside ingestUrteilItem
+- [Phase 17-02]: pii_rejected GUIDs ARE added to guidCache (no NER re-run); error GUIDs NOT added (retry on next cron)
 
 ### Pending Todos
 
@@ -117,5 +121,5 @@ Recent decisions affecting v0.1:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 17 Plan 01 complete. src/lib/urteile/rss-client.ts + ingestion.ts created. Phase 17 Plan 02 (BullMQ cron processor) is next.
+Stopped at: Phase 17 Plan 02 complete. processUrteileSyncJob + urteileSyncQueue + registerUrteileSyncJob wired. Phase 17 Plan 03 (ki-chat Chain E) is next.
 Resume file: None

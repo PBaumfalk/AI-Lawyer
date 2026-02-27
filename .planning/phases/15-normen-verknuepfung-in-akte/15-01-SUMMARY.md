@@ -126,6 +126,19 @@ None - no external service configuration required. Routes use existing DB tables
 - All three API endpoints ready for Plan 02 (ki-chat reads AkteNorm table) and Plan 03 (UI components)
 - No blockers
 
+## Self-Check: PASSED
+
+All 3 route files created and verified present:
+- src/app/api/akten/[id]/normen/route.ts — FOUND
+- src/app/api/akten/[id]/normen/search/route.ts — FOUND
+- src/app/api/akten/[id]/normen/[normId]/route.ts — FOUND
+
+Commits verified:
+- b0fe1c1 — FOUND (feat(15-01): add GET+POST handlers)
+- 1452c68 — FOUND (feat(15-01): add norm search + delete route handlers)
+
+TypeScript: 0 errors.
+
 ---
 *Phase: 15-normen-verknuepfung-in-akte*
 *Completed: 2026-02-27*

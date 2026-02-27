@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-27T06:57:24.294Z"
+last_updated: "2026-02-27T07:33:38.653Z"
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 5
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 20
+  completed_plans: 19
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 14 (Gesetze-RAG) — Plan 03 complete — Phase COMPLETE
+**Current focus:** v0.1 Helena RAG — Phase 15 (Normen-Verknuepfung in Akte) — Plan 02 complete
 
 ## Current Position
 
-Phase: 14 of 18 (Gesetze-RAG) — COMPLETE
-Plan: 3 of 3 complete
-Status: Phase 14 complete — all 3 plans done. Phase 15 (Normen-Verknuepfung in Akte) is next.
-Last activity: 2026-02-27 — Phase 14 Plan 03 complete: ki-chat Chain D law_chunks parallel retrieval with shared embedding
+Phase: 15 of 18 (Normen-Verknuepfung in Akte) — in progress
+Plan: 2 of 3 complete
+Status: Phase 15 Plan 02 complete — ki-chat Chain A extended with pinned normen injection. Phase 15 Plan 03 (if any) or Phase 16 (PII-Filter) is next.
+Last activity: 2026-02-27 — Phase 15 Plan 02 complete: ki-chat Chain A injects PINNED NORMEN block from AkteNorm into system prompt
 
 Progress: [██░░░░░░░░] ~10%
 
@@ -43,11 +43,12 @@ Progress: [██░░░░░░░░] ~10%
 | 12. RAG Schema Foundation | 1/1 | ~5m | 5m |
 | 13. Hybrid Search + Reranking | 3/3 | ~18m | 6m |
 | 14. Gesetze-RAG | 3/3 | ~4m | ~2m |
-| 15. Normen-Verknüpfung in Akte | 0/TBD | - | - |
+| 15. Normen-Verknüpfung in Akte | 2/3 | ~4m+~4m | ~4m |
 | 16. PII-Filter | 0/TBD | - | - |
 | 17. Urteile-RAG | 0/TBD | - | - |
 | 18. Muster-RAG + Admin Upload UI | 0/TBD | - | - |
 | Phase 14-gesetze-rag P02 | 2 | 2 tasks | 3 files |
+| Phase 15-normen-verknuepfung-in-akte P01 | 4 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,11 @@ Recent decisions affecting v0.1:
 - [Phase 14-03]: GESETZE-QUELLEN injected after ENDE QUELLEN — law context supplements document context; every Norm carries "nicht amtlich — Stand: [date] | Quelle: [url]"
 - [Phase 14-gesetze-rag]: [Phase 14-02]: gesetzeSyncWorker concurrency:1 — sequential sync avoids GitHub rate limit and Ollama contention for nightly cron
 - [Phase 14-gesetze-rag]: [Phase 14-02]: SHA cache saved once at end of full sync run — batch save avoids N Settings writes; failed-mid-sync Gesetze retry on next cron (idempotent)
+- [Phase 15-01]: NORM_VERKNUEPFT and NORM_ENTFERNT added to AuditAktion union type for type-safe audit logging in normen routes
+- [Phase 15-01]: POST validates law_chunk existence before creating AkteNorm — returns 404 if not found in DB, 409 if already pinned
+- [Phase 15-01]: Search route uses LEFT(content, 300) in raw ILIKE SQL to cap payload; minimum q.length < 2 guard prevents full-table scans
+- [Phase 15-02]: Chain A return type changed from Promise<string> to Promise<{ aktenKontextBlock, pinnedNormenBlock }> — pinned normen fetched inside Chain A, not a new Chain E; PINNED NORMEN injected before QUELLEN and GESETZE-QUELLEN
+- [Phase 15-02]: akteNorm.findMany + Promise.all(findFirst) pattern — cannot use Prisma include JOIN with LawChunk due to Unsupported(vector(1024)) column
 
 ### Pending Todos
 
@@ -94,5 +100,5 @@ Recent decisions affecting v0.1:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 14 Plan 03 complete. Phase 14 COMPLETE. Phase 15 (Normen-Verknuepfung in Akte) is next.
+Stopped at: Phase 15 Plan 02 complete. PINNED NORMEN injection into ki-chat system prompt done. Phase 15 Plan 03 or Phase 16 (PII-Filter) is next.
 Resume file: None

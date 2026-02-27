@@ -101,5 +101,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 21-02-PLAN.md (Helena Task API Routes and Worker Registration). Phase 21 complete (2/2 plans). Ready for Phase 22.
-Resume file: None
+Stopped at: Phase 22 context gathered. Ready for planning.
+Resume file: .planning/phases/22-deterministic-schriftsatz-orchestrator/22-CONTEXT.md

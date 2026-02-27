@@ -1,513 +1,704 @@
 # Stack Research
 
-**Domain:** Legal RAG Enhancement — Hybrid Search, Cross-Encoder Reranking, Legal Data Ingestion, NER PII Filter (Helena v0.1 Milestone)
-**Researched:** 2026-02-26
-**Confidence:** MEDIUM-HIGH (core algorithms verified via official sources; Ollama reranking is emerging 2025 pattern, flagged separately)
+**Domain:** Helena Agent v2 — Autonomous agent capabilities for AI-Lawyer (ReAct loop, deterministic orchestrator, @-tagging, draft-approval, background scanner, memory, alerts, QA-gates, activity feed)
+**Researched:** 2026-02-27
+**Confidence:** HIGH for core decisions (verified against official AI SDK docs, BullMQ docs, npm registry); MEDIUM for QA-gate patterns (academic + emerging practice)
 
-> This document covers ONLY libraries to ADD for the Helena RAG milestone.
-> The existing validated stack (Next.js 14, Prisma, PostgreSQL 16+pgvector, MinIO, Meilisearch, OnlyOffice, NextAuth v5, BullMQ+Redis, Vercel AI SDK v4, LangChain textsplitters, Ollama qwen3.5:35b) is NOT repeated here.
-
----
-
-## Existing RAG Code to Extend (Not Replace)
-
-| File | Current State | Extension Needed |
-|------|--------------|-----------------|
-| `src/lib/embedding/embedder.ts` | Ollama `/api/embed` with `multilingual-e5-large-instruct` (1024-dim) | Add query embedding for hybrid search |
-| `src/lib/embedding/chunker.ts` | `RecursiveCharacterTextSplitter` 1000-char/200-overlap | Add parent (2000-char) + child (500-char) splitters |
-| `src/lib/embedding/vector-store.ts` | `searchSimilar()` cosine via pgvector raw SQL | Add `hybridSearch()` that fuses pgvector + Meilisearch results |
-| `src/app/api/ki-chat/route.ts` | top-10 cosine retrieval, direct to prompt | Add RRF fusion + optional reranking before prompt construction |
-| `prisma/schema.prisma` | `DocumentChunk` model (no parent-child) | Add `chunkType`, `parentChunkId` to `DocumentChunk`; add `LawChunk`, `UrteilChunk`, `MusterChunk` tables |
+> This document covers ONLY libraries to ADD or decisions about what NOT to add for the Helena Agent v2 milestone.
+> The existing validated stack (Next.js 14+, Prisma, PostgreSQL 16+pgvector, MinIO, Meilisearch, BullMQ+Redis, Socket.IO, Vercel AI SDK v4, LangChain textsplitters, Ollama qwen3.5:35b, Zod v3) is NOT repeated here.
 
 ---
 
-## 1. Hybrid Search — Reciprocal Rank Fusion (RRF)
+## Critical Decision: AI SDK Version
 
-**No new npm library needed.** RRF is a 15-line pure TypeScript function with zero dependencies. The algorithm (Cormack et al. 2009, k=60) is mathematically stable and universally applied — Elasticsearch, OpenSearch, and Azure AI Search all use k=60 as default.
+### Stay on AI SDK v4 (`ai: ^4.3.19`) for this milestone
 
-**Implementation — write to `src/lib/search/rrf.ts`:**
+**Rationale:**
+
+The current AI SDK npm version is 6.x (as of 2026-02-27: `6.0.103`). Migrating from v4 to v5/v6 requires the following breaking changes across 8 files already using the SDK:
+
+| Breaking change | v4 | v5/v6 |
+|----------------|-----|--------|
+| Tool schema property | `parameters:` | `inputSchema:` |
+| Message types | `CoreMessage` | `ModelMessage` |
+| Message converter | `convertToCoreMessages()` | `convertToModelMessages()` |
+| Multi-step limit | `maxSteps:` | `stopWhen: stepCountIs(n)` |
+| Stream response helper | `toDataStreamResponse()` | `toUIMessageStreamResponse()` |
+| `useChat` input state | automatic | manual |
+
+Migrating this during a feature milestone introduces regression risk to the already-working RAG chat. The v4 API already supports everything needed for Helena Agent v2: `generateText` with `tools`, `generateObject` with Zod schemas, `streamText` for streaming. A separate tech-debt milestone (`v0.3-sdk-upgrade`) should handle this after v0.2 ships.
+
+**What this means for tool-calling code:** In v4, tools are defined with `parameters:` (Zod schema) and `execute:`. Do NOT use the v5/v6 `tool()` helper or `inputSchema:`. All new tool-calling code in this milestone uses the v4 API.
+
+---
+
+## 1. ReAct Agent Loop — No New Framework
+
+**Verdict: Build custom ReAct loop in TypeScript using existing `generateText` + `tools` from `ai@4.x`.**
+
+Do not add LangChain agents, CrewAI, AutoGen, or any agent framework. Reasons:
+
+- LangChain.js agents are a port of the Python library with incomplete coverage (e.g., `ParentDocumentRetriever` does not exist in JS)
+- LangChain agent abstractions add indirection without value for a known, bounded use case
+- The project already has `generateText` with tool-calling. A ReAct loop is 60–80 lines of TypeScript on top of it
+- Self-hosted constraint makes cloud agent frameworks (LangSmith, CrewAI Cloud) non-starters
+
+**Implementation pattern (write to `src/lib/helena/agent-loop.ts`):**
 
 ```typescript
-/**
- * Reciprocal Rank Fusion — merges two ranked result lists.
- * k=60 is the standard regularization constant (Cormack et al. 2009).
- * Each item scores 1/(k + rank). Sum across all lists.
- */
-export function reciprocalRankFusion<T extends { id: string }>(
-  lists: T[][],
-  k = 60
-): (T & { rrfScore: number })[] {
-  const scores = new Map<string, number>();
-  const items = new Map<string, T>();
+import { generateText } from "ai";
+import { z } from "zod";
+import { getModel } from "@/lib/ai/provider";
+import { wrapWithTracking } from "@/lib/ai/token-tracker";
 
-  for (const list of lists) {
-    for (const [rank, item] of list.entries()) {
-      scores.set(item.id, (scores.get(item.id) ?? 0) + 1 / (k + rank + 1));
-      if (!items.has(item.id)) items.set(item.id, item);
-    }
+const MAX_STEPS = 20; // hard ceiling, matches AI SDK v5+ default
+
+export interface AgentTool {
+  description: string;
+  parameters: z.ZodSchema;
+  execute: (args: unknown) => Promise<unknown>;
+}
+
+export async function runAgentLoop(
+  systemPrompt: string,
+  userMessage: string,
+  tools: Record<string, AgentTool>,
+  options: {
+    akteId?: string;
+    userId: string;
+    onStep?: (step: number, toolName: string, result: unknown) => Promise<void>;
   }
-
-  return [...scores.entries()]
-    .sort(([, a], [, b]) => b - a)
-    .map(([id, rrfScore]) => ({ ...items.get(id)!, rrfScore }));
-}
-```
-
-**Integration point in `ki-chat/route.ts`:**
-
-```typescript
-// Run both retrievals in parallel
-const [vectorResults, bm25Results] = await Promise.all([
-  searchSimilar(queryEmbedding, { akteId, limit: 20 }),
-  meilisearch.index('documents').search(lastUserMessage, { limit: 20 }),
-]);
-
-// Normalize Meilisearch results to have an `id` field matching chunk ID
-const fused = reciprocalRankFusion([
-  vectorResults.map(r => ({ ...r, id: r.dokumentId + ':' + r.chunkIndex })),
-  bm25Chunks, // resolved from Meilisearch doc IDs to chunk IDs
-], 60);
-
-const topChunks = fused.slice(0, 10); // pass top-10 to prompt
-```
-
-**Meilisearch → chunk ID resolution:** Meilisearch indexes documents (not chunks). After getting document IDs from Meilisearch BM25, fetch their most-relevant chunks via a second pgvector query scoped to those document IDs. This keeps both lists on the same granularity (chunk level) for RRF.
-
----
-
-## 2. Cross-Encoder Reranking via Ollama
-
-**No dedicated npm package — use Ollama REST API directly** (`/api/generate` already used in the codebase).
-
-**Two viable approaches, ordered by recommendation:**
-
-### Option A (Recommended): LLM-as-reranker with `qwen3.5:35b` (already running)
-
-Uses the existing model to score query-document relevance pairs. No additional model pull needed.
-
-```typescript
-// src/lib/search/reranker.ts
-const RERANK_PROMPT = (query: string, passage: string) =>
-  `Bewerte die Relevanz des Textes für die Anfrage.
-Antworte NUR mit einer Zahl zwischen 0.0 und 1.0. Nichts sonst.
-
-Anfrage: ${query}
-Text: ${passage.slice(0, 600)}
-Relevanz:`;
-
-export async function rerankChunks(
-  query: string,
-  candidates: Array<{ id: string; content: string }>,
-  topK = 5
-): Promise<Array<{ id: string; content: string; rerankScore: number }>> {
-  const scored = await Promise.all(
-    candidates.map(async (c) => {
-      const res = await fetch(`${OLLAMA_URL}/api/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: process.env.OLLAMA_MODEL ?? 'qwen3.5:35b',
-          prompt: RERANK_PROMPT(query, c.content),
-          stream: false,
-          options: { temperature: 0, num_predict: 5 },
-        }),
-      });
-      const data = await res.json() as { response: string };
-      const score = parseFloat(data.response.trim()) || 0;
-      return { ...c, rerankScore: Math.min(1, Math.max(0, score)) };
-    })
-  );
-  return scored.sort((a, b) => b.rerankScore - a.rerankScore).slice(0, topK);
-}
-```
-
-**Latency:** ~200-400ms per candidate on GPU. Apply only on RRF top-20, return top-5. Run `Promise.all` in parallel — total latency ~400ms (not 20×400ms) if GPU handles concurrent requests.
-
-### Option B (Alternative): `qwen3-reranker:1.5b` dedicated reranker model
-
-Ollama added support for Qwen3 reranker models in mid-2025. Smaller and faster than 35b for reranking.
-
-```bash
-ollama pull qwen3-reranker:1.5b
-```
-
-Uses same `qwen3.5:35b` REST pattern but with a dedicated model. Requires testing whether model is available in the Ollama library for the current Ollama version.
-
-**Confidence for Option B:** LOW — depends on Ollama version and whether `qwen3-reranker` is available. Option A is safe and battle-tested.
-
-### Option C (Fallback): Skip reranking, use RRF only
-
-RRF alone provides 60-70% of the quality improvement over pure cosine retrieval. If GPU is constrained or latency is unacceptable, skip reranking and return RRF top-5 directly to the prompt.
-
----
-
-## 3. Parent-Child Chunking
-
-**No new library.** Extend existing `@langchain/textsplitters` (already installed) and Prisma schema.
-
-**Prisma schema changes to `document_chunks` + new `ChunkType` enum:**
-
-```prisma
-enum ChunkType {
-  PARENT
-  CHILD
-}
-
-model DocumentChunk {
-  id             String     @id @default(cuid())
-  dokumentId     String
-  dokument       Dokument   @relation(fields: [dokumentId], references: [id], onDelete: Cascade)
-  chunkIndex     Int
-  content        String     @db.Text
-  embedding      Unsupported("vector(1024)")?
-  modelVersion   String
-  createdAt      DateTime   @default(now())
-  // Parent-child fields (new):
-  chunkType      ChunkType  @default(CHILD)
-  parentChunkId  String?
-  parentChunk    DocumentChunk?  @relation("ParentChild", fields: [parentChunkId], references: [id])
-  childChunks    DocumentChunk[] @relation("ParentChild")
-
-  @@unique([dokumentId, chunkIndex])
-  @@index([dokumentId])
-  @@index([parentChunkId])
-  @@map("document_chunks")
-}
-```
-
-**Chunking strategy — extend `chunker.ts`:**
-
-```typescript
-// Parent: 2000 chars (~500 tokens) — stored for prompt context, NOT embedded
-export function createParentSplitter(): RecursiveCharacterTextSplitter {
-  return new RecursiveCharacterTextSplitter({
-    chunkSize: 2000,
-    chunkOverlap: 100,
-    separators: GERMAN_LEGAL_SEPARATORS,
-  });
-}
-
-// Child: 500 chars (~125 tokens) — embedded, used for retrieval
-export function createChildSplitter(): RecursiveCharacterTextSplitter {
-  return new RecursiveCharacterTextSplitter({
-    chunkSize: 500,
-    chunkOverlap: 50,
-    separators: GERMAN_LEGAL_SEPARATORS,
-  });
-}
-```
-
-**Query-time behavior:** Retrieve top-K child chunks (via hybrid search + reranking). Then fetch their parent chunks via `parentChunkId` for the LLM prompt. The child chunk gives precise semantic match; the parent chunk gives the LLM full paragraph context.
-
-**Update to `insertChunks()` in `vector-store.ts`:** Accept parent/child structure, store parent (no embedding), then store children with `parentChunkId` FK.
-
----
-
-## 4. Gesetze Ingestion — bundestag/gesetze GitHub
-
-**Format confirmed via direct inspection:** All German federal laws as Markdown files (`.md`), organized in `a/`–`z/` subdirectories. Source: `https://github.com/bundestag/gesetze`. Updates are pushed when Bundesgesetzblatt publishes changes (~weekly).
-
-**New library needed:**
-
-| Library | Version | Purpose | Why |
-|---------|---------|---------|-----|
-| `simple-git` | ^3.27.0 | Clone + incremental `git pull` of bundestag/gesetze in BullMQ worker | Thin wrapper over system git CLI. Zero native deps. Proven in Node.js workers. Alternatives (nodegit, isomorphic-git) are heavier or harder to maintain. |
-
-```bash
-npm install simple-git
-```
-
-**Implementation pattern (BullMQ job `gesetze-sync`):**
-
-```typescript
-import simpleGit from 'simple-git';
-import fs from 'fs/promises';
-import path from 'path';
-
-const REPO_PATH = '/data/gesetze'; // Docker volume mount
-
-export async function syncGesetze() {
-  const git = simpleGit();
-  try {
-    await fs.access(path.join(REPO_PATH, '.git'));
-    const result = await simpleGit(REPO_PATH).pull();
-    // result.summary.changes = list of changed files
-    return result.summary.changes; // only re-embed changed files
-  } catch {
-    // First run: clone shallow
-    await git.clone('https://github.com/bundestag/gesetze.git', REPO_PATH, ['--depth=1']);
-    return null; // signal full ingest on first run
-  }
-}
-```
-
-**Incremental sync:** `simple-git.pull()` returns changed file paths. Only re-chunk and re-embed changed `.md` files. Store last sync timestamp in a `sync_state` table keyed by `source = 'bundestag-gesetze'`.
-
-**No additional parsing library.** bundestag/gesetze is already Markdown. Use `fs.readFile` + existing `createChildSplitter()` + `createParentSplitter()` from the extended `chunker.ts`.
-
-**New Prisma table `law_chunks`** (separate from `document_chunks` to keep Kanzlei docs isolated from public law corpus):
-
-```prisma
-model LawChunk {
-  id            String   @id @default(cuid())
-  gesetzKuerzel String   // e.g. "BGB", "ZPO", "ArbGG"
-  paragraph     String   // e.g. "§ 823", "§ 1" — extracted from Markdown heading
-  content       String   @db.Text
-  parentContent String?  @db.Text  // parent chunk text for LLM prompt
-  embedding     Unsupported("vector(1024)")?
-  modelVersion  String
-  syncedAt      DateTime @default(now())
-  sourceUrl     String?  // gesetze-im-internet.de canonical URL
-
-  @@index([gesetzKuerzel])
-  @@index([paragraph])
-  @@map("law_chunks")
-}
-```
-
-**Docker Compose addition:** Mount a volume for the cloned repo:
-
-```yaml
-volumes:
-  - gesetze_data:/data/gesetze
-```
-
-Worker service needs git CLI (already available in Debian-based images). No Dockerfile change needed if base image has `git`.
-
----
-
-## 5. Urteile Ingestion — BMJ Rechtsprechung-im-Internet
-
-**RSS feeds confirmed via official BMJ documentation:** Seven XML RSS feeds provide newest court decisions as headlines + links.
-
-| Court | Feed URL |
-|-------|---------|
-| BVerfG | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bverfg.xml` |
-| BGH | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bgh.xml` |
-| BVerwG | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bverwg.xml` |
-| BFH | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bfh.xml` |
-| BAG | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bag.xml` |
-| BSG | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bsg.xml` |
-| BPatG | `https://www.rechtsprechung-im-internet.de/jportal/docs/feed/bsjrs-bpatg.xml` |
-
-**New libraries needed:**
-
-| Library | Version | Purpose | Why |
-|---------|---------|---------|-----|
-| `rss-parser` | ^3.13.0 | Parse BMJ XML RSS feeds | De-facto standard Node.js RSS parser, handles XML → JS objects, date normalization, custom feed fields. ~2M weekly downloads. |
-| `cheerio` | ^1.0.0 | Extract decision text from rechtsprechung-im-internet.de HTML pages | RSS items link to HTML pages containing the full decision text. Cheerio provides jQuery-like server-side HTML parsing — faster and lighter than Playwright/Puppeteer for simple DOM extraction. |
-
-```bash
-npm install rss-parser cheerio
-```
-
-**Implementation pattern (BullMQ job `urteil-fetch`):**
-
-```typescript
-import Parser from 'rss-parser';
-import { load } from 'cheerio';
-
-const parser = new Parser();
-
-export async function fetchNewUrteile(feedUrl: string, since: Date) {
-  const feed = await parser.parseURL(feedUrl);
-  const newItems = feed.items.filter(
-    item => item.pubDate && new Date(item.pubDate) > since
-  );
-
-  for (const item of newItems) {
-    const html = await fetch(item.link!).then(r => r.text());
-    const $ = load(html);
-    // BMJ decision pages wrap decision text in .docLayoutArea or similar
-    const text = $('.docLayoutArea').text() || $('body').text();
-    // → PII filter → chunk → embed → store in urteil_chunks
-  }
-}
-```
-
-**Important:** Do not re-fetch decisions already in `urteil_chunks`. Check `sourceUrl` uniqueness before inserting. Store last-fetched timestamp per court/feed in `sync_state`.
-
-**New Prisma table `urteil_chunks`:**
-
-```prisma
-model UrteilChunk {
-  id            String   @id @default(cuid())
-  aktenzeichen  String   // e.g. "8 AZR 123/24"
-  gericht       String   // "BAG", "BGH", "BVerfG" etc.
-  datum         DateTime
-  content       String   @db.Text
-  parentContent String?  @db.Text
-  embedding     Unsupported("vector(1024)")?
-  modelVersion  String
-  piiFiltered   Boolean  @default(false)
-  sourceUrl     String   @unique  // prevents re-fetching
-  fetchedAt     DateTime @default(now())
-
-  @@index([gericht])
-  @@index([aktenzeichen])
-  @@map("urteil_chunks")
-}
-```
-
----
-
-## 6. NER PII Filter via Ollama
-
-**No new npm library.** Use Ollama `qwen3.5:35b` (already running) with a structured prompt. Hybrid approach: fast regex pre-pass for structured PII (phone, email, IBAN) + LLM NER pass for German names and addresses.
-
-**Implementation — write to `src/lib/pii/ner-filter.ts`:**
-
-```typescript
-const PII_PROMPT = (text: string) =>
-  `Du bist ein Datenschutzfilter fuer deutsche Gerichtsurteile.
-Ersetze alle personenbezogenen Daten von Privatpersonen durch Platzhalter.
-Regeln:
-- Vor-/Nachname einer Privatperson → [PERSON]
-- Strasse + Hausnummer → [ADRESSE]
-- Telefonnummer → [TEL]
-- E-Mail-Adresse → [EMAIL]
-- IBAN/Kontonummer → [KONTO]
-Behalte unveraendert: Richternamen, Gerichtsbezeichnungen, Firmennamen, Gesetzeszitate, Aktenzeichen.
-Antworte NUR mit dem anonymisierten Text, keine Erklaerungen.
-
-Text:
-${text.slice(0, 3000)}
-
-Anonymisierter Text:`;
-
-export async function filterPII(text: string): Promise<string> {
-  // Pass 1: fast regex for structured PII
-  let filtered = text
-    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]')
-    .replace(/\+?49[\s-]?\d{3,4}[\s-]?\d{3,}/g, '[TEL]')
-    .replace(/[A-Z]{2}\d{2}[\s]?[\dA-Z]{4,30}/g, '[KONTO]') // IBAN
-    .replace(/\b\d{8,}\b/g, '[KONTO]'); // long numeric strings (account numbers)
-
-  // Pass 2: LLM NER for names + addresses (3000-char chunks to stay in context)
-  try {
-    const res = await fetch(`${OLLAMA_URL}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: process.env.OLLAMA_MODEL ?? 'qwen3.5:35b',
-        prompt: PII_PROMPT(filtered),
-        stream: false,
-        options: { temperature: 0, num_predict: 2000 },
+): Promise<{ result: string; steps: number; toolCallHistory: Array<{ tool: string; args: unknown; result: unknown }> }> {
+  const messages: CoreMessage[] = [{ role: "user", content: userMessage }];
+  const history: Array<{ tool: string; args: unknown; result: unknown }> = [];
+  let stepCount = 0;
+
+  while (stepCount < MAX_STEPS) {
+    const response = await wrapWithTracking(
+      () => generateText({
+        model: getModel(),
+        system: systemPrompt,
+        messages,
+        tools: Object.fromEntries(
+          Object.entries(tools).map(([name, t]) => [name, { description: t.description, parameters: t.parameters }])
+        ),
+        maxTokens: 2048,
+        temperature: 0,
       }),
-    });
-    const data = await res.json() as { response: string };
-    return data.response.trim() || filtered;
-  } catch {
-    // If LLM fails, regex-only filtering is still better than nothing
-    return filtered;
+      { userId: options.userId, akteId: options.akteId, taskType: "agent-loop" }
+    );
+
+    // No tool calls — agent is done
+    if (!response.toolCalls || response.toolCalls.length === 0) {
+      return { result: response.text, steps: stepCount, toolCallHistory: history };
+    }
+
+    // Execute tool calls and append results
+    const toolResults: CoreMessage["content"] = [];
+    for (const call of response.toolCalls) {
+      const tool = tools[call.toolName];
+      if (!tool) throw new Error(`Unknown tool: ${call.toolName}`);
+
+      const result = await tool.execute(call.args);
+      history.push({ tool: call.toolName, args: call.args, result });
+      toolResults.push({ type: "tool-result", toolCallId: call.toolCallId, toolName: call.toolName, result: JSON.stringify(result) });
+
+      if (options.onStep) {
+        await options.onStep(stepCount, call.toolName, result);
+      }
+    }
+
+    // Append assistant response + tool results to conversation
+    messages.push({ role: "assistant", content: response.text + (response.toolCalls.length > 0 ? JSON.stringify(response.toolCalls) : "") });
+    messages.push({ role: "tool", content: toolResults });
+    stepCount++;
   }
+
+  // Fallback: hit max steps, return last text
+  const lastText = messages.filter(m => m.role === "assistant").pop();
+  return {
+    result: typeof lastText?.content === "string" ? lastText.content : "Agent loop reached maximum steps.",
+    steps: stepCount,
+    toolCallHistory: history,
+  };
 }
 ```
 
-**Performance note:** For batch Urteile ingestion, run `filterPII()` inside a separate low-priority BullMQ queue (`urteil-pii`). Mark `piiFiltered: false` on initial ingest. Block Helena retrieval of unfiltered chunks with `WHERE pii_filtered = true` in the query.
-
-**Why not `pii-paladin` npm:** Uses compromise.js/wink-nlp which have poor German language coverage and no legal-domain training. Not suitable for German court decisions.
+**Why this over AI SDK v5 `stopWhen`:** The codebase is on v4. This implementation gives identical semantics (stop on text without tool calls OR max steps) without requiring an SDK upgrade.
 
 ---
 
-## 7. Kanzlei-Muster Upload — DOCX + PDF to Markdown
+## 2. Structured Output — Existing `generateObject` + Zod v3
 
-**PDF extraction:** `pdf-parse` is already in the stack (`^2.4.5`). No new library needed.
+**No new library needed.** The project already uses `generateObject` with Zod schemas in `deadline-extractor.ts` and `party-extractor.ts`. The same pattern extends to all structured Helena outputs.
 
-**DOCX extraction:** Use `mammoth` (DOCX → HTML) + `turndown` (HTML → Markdown). Mammoth's built-in Markdown output is officially deprecated per their own documentation — the correct pipeline is always DOCX → HTML → Markdown.
-
-| Library | Version | Purpose | Why |
-|---------|---------|---------|-----|
-| `mammoth` | ^1.11.0 | DOCX to HTML | Only Node.js library that handles German Word documents reliably without requiring LibreOffice. Preserves paragraph/heading structure. Current version 1.11.0 (verified). |
-| `turndown` | ^7.2.2 | HTML to Markdown | Recommended follow-on to mammoth. Handles all HTML elements, configurable heading styles. Current version 7.2.2 (verified). |
-
-```bash
-npm install mammoth turndown
-npm install -D @types/turndown
-```
-
-**Implementation — write to `src/lib/ingestion/document-converter.ts`:**
+**Key schemas to define (write to `src/lib/helena/schemas/`):**
 
 ```typescript
-import mammoth from 'mammoth';
-import TurndownService from 'turndown';
-
-const turndown = new TurndownService({
-  headingStyle: 'atx',       // # ## ### headings
-  codeBlockStyle: 'fenced',  // ```code```
+// src/lib/helena/schemas/schriftsatz.schema.ts
+export const schriftsatzSchema = z.object({
+  titel: z.string().describe("Titel des Schriftsatzes"),
+  adressat: z.string().describe("Empfänger (Gericht/Partei)"),
+  einleitung: z.string().describe("Einleitungsabsatz"),
+  abschnitte: z.array(z.object({
+    ueberschrift: z.string(),
+    text: z.string(),
+    zitate: z.array(z.string()).describe("Gesetzeszitate und Urteilsverweise"),
+  })),
+  antrag: z.string().describe("Abschließender Antrag"),
+  anlagen: z.array(z.string()).describe("Liste der Anlagen"),
+  confidence: z.number().min(0).max(1),
 });
 
-export async function docxToMarkdown(buffer: Buffer): Promise<string> {
-  const { value: html } = await mammoth.convertToHtml({ buffer });
-  return turndown.turndown(html);
+// src/lib/helena/schemas/alert.schema.ts
+export const alertSchema = z.object({
+  type: z.enum(["FRIST_KRITISCH", "INAKTIVITAET", "ANOMALIE", "AUFGABE", "DOKUMENT", "SYSTEM"]),
+  titel: z.string(),
+  beschreibung: z.string(),
+  prioritaet: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+  akteId: z.string().nullable(),
+  dueDate: z.string().nullable(),
+});
+
+// src/lib/helena/schemas/qa-gate.schema.ts
+export const qaGateSchema = z.object({
+  passed: z.boolean(),
+  recallScore: z.number().min(0).max(1).describe("Recall@k: fraction of expected sources found"),
+  hallucinationRisk: z.enum(["LOW", "MEDIUM", "HIGH"]),
+  missingCitations: z.array(z.string()),
+  unsupportedClaims: z.array(z.string()),
+  verdict: z.string().describe("Short human-readable QA verdict"),
+});
+```
+
+**Do NOT upgrade to Zod v4 in this milestone.** The `ai@4.x` SDK accepts Zod v3 schemas directly. Upgrading to Zod v4 while staying on AI SDK v4 risks peer-dependency conflicts (the AI SDK v5 migration guide explicitly requires `zod@4.1.8+`). Wait for the SDK upgrade milestone.
+
+---
+
+## 3. BullMQ — Existing `bullmq@^5.70.1` with Step-Job Pattern
+
+**No library upgrade needed.** BullMQ 5.x already supports everything needed for agent background tasks.
+
+**Patterns to use:**
+
+### 3a. Agent Tasks as Step Jobs
+
+Long-running agent loops (Schriftsatz generation, background scanner) use BullMQ's step-job pattern to survive worker restarts:
+
+```typescript
+// src/lib/queue/processors/helena-agent.processor.ts
+enum AgentStep {
+  INIT = "INIT",
+  RETRIEVE = "RETRIEVE",
+  GENERATE = "GENERATE",
+  QA_GATE = "QA_GATE",
+  STORE_DRAFT = "STORE_DRAFT",
+  DONE = "DONE",
 }
 
-export async function pdfToText(buffer: Buffer): Promise<string> {
-  // Dynamic import — pdf-parse uses require() internally, avoid SSR issues
-  const pdfParse = (await import('pdf-parse')).default;
-  const data = await pdfParse(buffer);
-  return data.text;
+export async function helenaAgentProcessor(job: Job) {
+  let step: AgentStep = job.data.step ?? AgentStep.INIT;
+
+  while (step !== AgentStep.DONE) {
+    switch (step) {
+      case AgentStep.INIT: {
+        await job.updateData({ ...job.data, step: AgentStep.RETRIEVE });
+        step = AgentStep.RETRIEVE;
+        break;
+      }
+      case AgentStep.RETRIEVE: {
+        const chunks = await hybridSearch(job.data.query, job.data.akteId);
+        await job.updateData({ ...job.data, chunks, step: AgentStep.GENERATE });
+        step = AgentStep.GENERATE;
+        break;
+      }
+      case AgentStep.GENERATE: {
+        const draft = await runSchriftsatzOrchestrator(job.data);
+        await job.updateData({ ...job.data, draft, step: AgentStep.QA_GATE });
+        step = AgentStep.QA_GATE;
+        break;
+      }
+      case AgentStep.QA_GATE: {
+        const qa = await runQaGate(job.data.draft, job.data.chunks);
+        if (qa.hallucinationRisk === "HIGH") {
+          // Re-generate with explicit citation requirement
+          await job.updateData({ ...job.data, step: AgentStep.GENERATE, qaFeedback: qa });
+          step = AgentStep.GENERATE;
+          break;
+        }
+        await job.updateData({ ...job.data, qa, step: AgentStep.STORE_DRAFT });
+        step = AgentStep.STORE_DRAFT;
+        break;
+      }
+      case AgentStep.STORE_DRAFT: {
+        await storeDraftForApproval(job.data);
+        // Emit Socket.IO event for real-time UI update
+        await redisEmitter.emit("helena:draft-ready", { akteId: job.data.akteId, jobId: job.id });
+        await job.updateData({ ...job.data, step: AgentStep.DONE });
+        step = AgentStep.DONE;
+        break;
+      }
+    }
+  }
 }
 ```
 
-**New Prisma table `muster_chunks`:**
+**Key BullMQ behavior:** `job.updateData()` persists step state in Redis. If the worker crashes during `GENERATE`, on retry the job resumes from `GENERATE`, not from `INIT`. This is critical for expensive LLM calls.
+
+### 3b. @-Tagging as BullMQ Jobs
+
+```typescript
+// When user types "@Helena generate Abmahnung"
+await helenaQueue.add("agent-task", {
+  type: "SCHRIFTSATZ",
+  akteId,
+  userId,
+  prompt: extractedPrompt,
+  step: AgentStep.INIT,
+}, {
+  attempts: 3,
+  backoff: { type: "exponential", delay: 5000 },
+  removeOnComplete: 100,
+  removeOnFail: 50,
+});
+```
+
+### 3c. Nightly Background Scanner
+
+```typescript
+// Register in worker startup (src/lib/queue/worker.ts)
+await scannerQueue.add(
+  "nightly-scan",
+  { type: "FULL_SCAN" },
+  {
+    repeat: { pattern: "0 2 * * *" }, // 2 AM every night
+    jobId: "nightly-helena-scan",     // idempotent: only one scheduled job
+  }
+);
+```
+
+**Scanner checks to implement in `src/lib/queue/processors/scanner.processor.ts`:**
+1. Fristen within 7 days with no Wiedervorlage — emit `FRIST_KRITISCH` alert
+2. Akten with no activity for 30+ days — emit `INAKTIVITAET` alert
+3. Dokumente uploaded in last 24h without OCR completion — emit system alert
+4. RVG-Rechnungen overdue > 60 days — emit `ANOMALIE` alert
+5. @-Task mentions assigned to Helena with no response within 4h — emit `AUFGABE` alert
+6. New beA messages unprocessed for 24h — emit `DOKUMENT` alert
+
+**Separate queues for separation of concerns:**
+
+| Queue name | Purpose | Cron/Trigger |
+|------------|---------|--------------|
+| `helena-agent` | ReAct loop + Schriftsatz generation | On-demand (@-tag) |
+| `helena-scanner` | Nightly background scan | `0 2 * * *` |
+| `helena-pii` | Low-priority PII filtering (from v0.1) | After urteil-fetch |
+| existing queues | Unchanged | Unchanged |
+
+---
+
+## 4. Helena Memory — PostgreSQL + Prisma (No New Library)
+
+**No new library.** Implement memory as a Prisma table. Redis-based memory (e.g., `mem0`, `zep`) would require a new Docker service — violates self-hosted simplicity.
+
+**Prisma schema additions:**
 
 ```prisma
-model MusterChunk {
-  id            String   @id @default(cuid())
-  name          String   // e.g. "Abmahnung Arbeitsrecht"
-  kategorie     String   // e.g. "Arbeitsrecht", "Mietrecht"
-  content       String   @db.Text
-  parentContent String?  @db.Text
-  embedding     Unsupported("vector(1024)")?
-  modelVersion  String
-  minioPath     String   // original file path in MinIO (source of truth)
-  uploadedById  String
-  uploadedAt    DateTime @default(now())
-  piiFiltered   Boolean  @default(false)
+// Per-case agent memory: Helena's working knowledge of an Akte
+model HelenaMemory {
+  id        String   @id @default(cuid())
+  akteId    String
+  akte      Akte     @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  key       String   // e.g. "sachverhalt_summary", "bekannte_fristen", "mandant_ziele"
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 
-  @@index([kategorie])
-  @@map("muster_chunks")
+  @@unique([akteId, key])
+  @@index([akteId])
+  @@map("helena_memory")
+}
+
+// @-Tagging task system
+model HelenaTask {
+  id          String          @id @default(cuid())
+  akteId      String?
+  akte        Akte?           @relation(fields: [akteId], references: [id])
+  requestedBy String          // userId
+  type        HelenaTaskType
+  prompt      String          @db.Text
+  status      HelenaTaskStatus @default(PENDING)
+  jobId       String?         // BullMQ job ID
+  result      Json?           // Stored agent output
+  errorMsg    String?
+  createdAt   DateTime        @default(now())
+  completedAt DateTime?
+
+  @@index([akteId])
+  @@index([requestedBy])
+  @@index([status])
+  @@map("helena_tasks")
+}
+
+enum HelenaTaskType {
+  SCHRIFTSATZ
+  ANALYSE
+  ZUSAMMENFASSUNG
+  RECHERCHE
+  ENTWURF_KORREKTUR
+}
+
+enum HelenaTaskStatus {
+  PENDING
+  RUNNING
+  AWAITING_APPROVAL
+  APPROVED
+  REJECTED
+  FAILED
+}
+
+// Alert system
+model HelenaAlert {
+  id          String      @id @default(cuid())
+  akteId      String?
+  akte        Akte?       @relation(fields: [akteId], references: [id])
+  type        AlertType
+  titel       String
+  beschreibung String     @db.Text
+  prioritaet  AlertPriority @default(MEDIUM)
+  dismissed   Boolean     @default(false)
+  dismissedBy String?
+  dismissedAt DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([akteId])
+  @@index([dismissed])
+  @@index([type, prioritaet])
+  @@map("helena_alerts")
+}
+
+enum AlertType {
+  FRIST_KRITISCH
+  INAKTIVITAET
+  ANOMALIE
+  AUFGABE
+  DOKUMENT
+  SYSTEM
+}
+
+enum AlertPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 ```
+
+**Memory read/write pattern:**
+
+```typescript
+// src/lib/helena/memory.ts
+export async function getMemory(akteId: string): Promise<Record<string, string>> {
+  const entries = await prisma.helenaMemory.findMany({ where: { akteId } });
+  return Object.fromEntries(entries.map(e => [e.key, e.value]));
+}
+
+export async function setMemory(akteId: string, key: string, value: string): Promise<void> {
+  await prisma.helenaMemory.upsert({
+    where: { akteId_key: { akteId, key } },
+    update: { value },
+    create: { akteId, key, value },
+  });
+}
+```
+
+**Memory keys (standardized):**
+
+| Key | Content | Updated when |
+|-----|---------|-------------|
+| `sachverhalt_summary` | 2-3 sentence case summary | After each Schriftsatz generation |
+| `bekannte_fristen` | JSON array of key dates | After scanner runs |
+| `mandant_ziele` | Extracted client objectives | After initial document scan |
+| `letzte_aktion` | Last action taken by Helena | After each agent task completes |
+| `prozessstand` | Current procedural stage | After each Schriftsatz |
+
+---
+
+## 5. Deterministic Schriftsatz Orchestrator — No New Library
+
+**Pattern: Sequential `generateObject` calls with Zod schemas for each section. No agent loop for Schriftsatz — determinism is more important than flexibility here.**
+
+```typescript
+// src/lib/helena/schriftsatz-orchestrator.ts
+
+export async function orchestrateSchriftsatz(input: SchriftsatzInput): Promise<SchriftsatzDraft> {
+  // Step 1: Analyze case and determine applicable law (structured)
+  const rechtslage = await generateObject({
+    model: getModel(),
+    schema: rechtslageSchema,
+    prompt: buildRechtslagePrompt(input),
+  });
+
+  // Step 2: Retrieve relevant Normen + Urteile for identified legal basis
+  const quellen = await hybridSearch(rechtslage.object.hauptnormen.join(" "), input.akteId);
+
+  // Step 3: Draft each section deterministically
+  const abschnitte = await Promise.all(
+    rechtslage.object.gliederungspunkte.map(punkt =>
+      generateObject({
+        model: getModel(),
+        schema: abschnittSchema,
+        prompt: buildAbschnittPrompt(punkt, quellen, input),
+      })
+    )
+  );
+
+  // Step 4: Generate Antrag
+  const antrag = await generateObject({
+    model: getModel(),
+    schema: antragSchema,
+    prompt: buildAntragPrompt(abschnitte.map(a => a.object), input),
+  });
+
+  return assembleSchriftsatz(rechtslage.object, abschnitte, antrag.object);
+}
+```
+
+**Why not agent loop for Schriftsatz:** Legal briefs have a legally mandated structure (§ 253 ZPO, § 130 ZPO). Free-form agent exploration risks generating structurally invalid documents. Deterministic orchestration with defined sections guarantees format compliance. Use the agent loop only for open-ended research tasks.
+
+---
+
+## 6. QA-Gates — LLM-as-Judge + Citation Verification (No New Library)
+
+**Approach:** Self-consistency check via `generateObject` on the produced draft. No external QA library needed — the existing Ollama model running `qwen3.5:35b` serves as judge.
+
+**Three-gate pipeline (write to `src/lib/helena/qa-gate.ts`):**
+
+### Gate 1: Citation Recall@k
+
+Check whether the draft cites sources from the retrieved chunk set:
+
+```typescript
+export async function checkRecallAtK(
+  draft: string,
+  retrievedChunks: Array<{ id: string; content: string; gesetzKuerzel?: string; aktenzeichen?: string }>,
+  k = 5
+): Promise<{ recall: number; foundIds: string[]; missedIds: string[] }> {
+  const topK = retrievedChunks.slice(0, k);
+  const foundIds = topK.filter(chunk =>
+    draft.includes(chunk.gesetzKuerzel ?? "") ||
+    draft.includes(chunk.aktenzeichen ?? "") ||
+    draft.includes(chunk.content.slice(0, 50)) // first 50 chars as fingerprint
+  ).map(c => c.id);
+
+  return {
+    recall: foundIds.length / topK.length,
+    foundIds,
+    missedIds: topK.filter(c => !foundIds.includes(c.id)).map(c => c.id),
+  };
+}
+```
+
+### Gate 2: Hallucination Detection via LLM-as-Judge
+
+```typescript
+export async function checkHallucination(
+  draft: string,
+  sourceChunks: string[]
+): Promise<{ risk: "LOW" | "MEDIUM" | "HIGH"; unsupportedClaims: string[] }> {
+  const result = await generateObject({
+    model: getModel(),
+    schema: z.object({
+      unsupportedClaims: z.array(z.string()).describe("Behauptungen ohne Quellengrundlage"),
+      risk: z.enum(["LOW", "MEDIUM", "HIGH"]).describe("Gesamtrisiko für Halluzinationen"),
+    }),
+    system: `Du bist ein juristischer Qualitätsprüfer. Prüfe ob alle Behauptungen im Schriftsatz durch die bereitgestellten Quellen belegt sind.`,
+    prompt: `Quellen:\n${sourceChunks.slice(0, 5).join("\n---\n")}\n\nSchriftsatz:\n${draft.slice(0, 3000)}`,
+  });
+  return { risk: result.object.risk, unsupportedClaims: result.object.unsupportedClaims };
+}
+```
+
+### Gate 3: Format Compliance
+
+```typescript
+export async function checkFormatCompliance(draft: string, schriftsatzType: string): Promise<boolean> {
+  // Deterministic checks — no LLM needed
+  const hasAntrag = /^(Es wird beantragt|Ich beantrage|Wir beantragen)/m.test(draft);
+  const hasParteien = /Kläger|Beklagter|Antragsteller|Antragsgegner/i.test(draft);
+  const hasDatum = /\d{2}\.\d{2}\.\d{4}/.test(draft);
+  return hasAntrag && hasParteien && hasDatum;
+}
+```
+
+**Goldset evaluation (for QA regression testing):**
+
+Store golden test cases in Prisma — no separate evaluation framework:
+
+```prisma
+model HelenaGoldset {
+  id           String   @id @default(cuid())
+  taskType     HelenaTaskType
+  input        Json     // Prompt + context
+  expectedKeys String[] // Expected citations, legal norms
+  createdAt    DateTime @default(now())
+  @@map("helena_goldset")
+}
+```
+
+Run against goldset weekly via BullMQ cron. Compare `recall@k` over time. Alert via `HelenaAlert` if recall drops > 10% from baseline.
+
+---
+
+## 7. Draft-Approval Workflow — Existing Infrastructure
+
+**No new library.** The existing `Dokumentstatus` enum (`ENTWURF → ZUR_PRUEFUNG → FREIGEGEBEN → VERSENDET`) already implements the concept. Helena drafts should use `HelenaTaskStatus.AWAITING_APPROVAL` to gate output.
+
+**Pattern:**
+1. Helena generates draft → `HelenaTask.status = AWAITING_APPROVAL`, `KiDraft.status = ZUR_PRUEFUNG`
+2. Socket.IO event `helena:draft-ready` triggers real-time notification in UI
+3. User reviews in existing KI-Entwürfe-Workspace
+4. User approves → `KiDraft.status = FREIGEGEBEN`, `HelenaTask.status = APPROVED`
+5. User rejects with comment → `HelenaTask.status = REJECTED`, feedback stored in `HelenaTask.result`
+
+**Never auto-approve, never auto-send.** This is a hard constraint per BRAK 2025 + BRAO.
+
+---
+
+## 8. Activity Feed (Akte-Detail Feed-Umbau) — Existing Infrastructure
+
+**No new library.** Use the existing `AuditLog` + Socket.IO + PostgreSQL pattern.
+
+**New Prisma model for structured activity entries:**
+
+```prisma
+model AktenActivity {
+  id          String       @id @default(cuid())
+  akteId      String
+  akte        Akte         @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  type        ActivityType
+  actorId     String?      // userId or null for Helena/system
+  actorName   String?      // denormalized for display
+  description String       @db.Text
+  metadata    Json?        // type-specific payload
+  createdAt   DateTime     @default(now())
+
+  @@index([akteId, createdAt(sort: Desc)])
+  @@map("akten_activity")
+}
+
+enum ActivityType {
+  DOKUMENT_HOCHGELADEN
+  DOKUMENT_FREIGEGEBEN
+  FRIST_ANGELEGT
+  FRIST_ERREICHT
+  EMAIL_EMPFANGEN
+  EMAIL_VERSENDET
+  HELENA_ENTWURF
+  HELENA_ANALYSE
+  HELENA_ALERT
+  ZEITERFASSUNG
+  NOTIZ
+  STATUS_AENDERUNG
+}
+```
+
+**Real-time delivery:** When a new `AktenActivity` is written, emit `akte:activity` Socket.IO event to the akte's room. Client subscribes on akte detail page mount. No polling.
+
+---
+
+## 9. Alert Delivery — Socket.IO + Prisma (No New Library)
+
+**Pattern for the 6 alert types:**
+
+```typescript
+// src/lib/helena/alert-service.ts
+export async function createAlert(alert: {
+  akteId?: string;
+  type: AlertType;
+  titel: string;
+  beschreibung: string;
+  prioritaet: AlertPriority;
+}): Promise<HelenaAlert> {
+  const record = await prisma.helenaAlert.create({ data: alert });
+
+  // Real-time delivery via Socket.IO
+  if (alert.akteId) {
+    await redisEmitter.emit(`akte:${alert.akteId}:alert`, record);
+  }
+  // Also emit to global notifications channel
+  await redisEmitter.emit("helena:alert", record);
+
+  return record;
+}
+```
+
+Alerts are displayed in a dedicated **Helena Alerts** panel (new UI component) + as toast notifications via `sonner` (already in stack).
+
+---
+
+## 10. New Tool Definitions for Agent Loop
+
+Helena's ReAct agent needs these tools (all call existing internal APIs — no new external dependencies):
+
+| Tool name | Purpose | Calls |
+|-----------|---------|-------|
+| `search_law` | Retrieve relevant §§ from law_chunks | `hybridSearch()` on `law_chunks` |
+| `search_cases` | Retrieve relevant Urteile from urteil_chunks | `hybridSearch()` on `urteil_chunks` |
+| `search_templates` | Find Schriftsatz-Muster from muster_chunks | `hybridSearch()` on `muster_chunks` |
+| `search_akte` | Search case documents for context | `hybridSearch()` on `document_chunks` |
+| `calculate_deadline` | Compute BGB §§187-193 Frist | Existing `calculateFrist()` |
+| `get_akte_info` | Fetch Akte metadata (parties, status, Sachgebiet) | Prisma query |
+| `get_memory` | Read from HelenaMemory for this Akte | `getMemory()` |
+| `set_memory` | Persist insight to HelenaMemory | `setMemory()` |
+| `create_draft` | Store result as KI-Entwurf with ZUR_PRUEFUNG status | Prisma + MinIO |
+| `create_alert` | Create a HelenaAlert | `createAlert()` |
 
 ---
 
 ## Complete Installation Summary
 
 ```bash
-# 5 new production packages total
-npm install simple-git rss-parser cheerio mammoth turndown
+# Zero new production packages needed for Helena Agent v2 core features.
+# All capabilities built on:
+# - ai@^4.3.19 (existing — generateText + tools + generateObject)
+# - bullmq@^5.70.1 (existing — step jobs + cron)
+# - socket.io + @socket.io/redis-emitter (existing — real-time)
+# - zod@^3.23.8 (existing — structured output schemas)
+# - @prisma/client (existing — memory + alerts + activity feed)
 
-# TypeScript types
-npm install -D @types/turndown
+# Only if adding Goldset evaluation UI (optional, post v0.2):
+npm install @tanstack/react-table  # already in stack via @tanstack/react-virtual
 ```
 
-Everything else (RRF, parent-child chunking, LLM reranking, PII NER, PDF text extraction) uses existing stack components with zero new npm dependencies.
+**Total new npm packages: 0.**
 
 ---
 
-## Recommended Stack (New Libraries Only)
+## Recommended Stack (New Additions)
 
 ### Core Technologies
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| `simple-git` | ^3.27.0 | Clone + incremental pull of bundestag/gesetze repo in BullMQ worker | Thin wrapper over system git CLI. Zero native binary deps. Proven in Node.js workers. `git.pull()` returns changed file list for incremental sync. |
-| `rss-parser` | ^3.13.0 | Parse BMJ XML RSS feeds for court decisions | De-facto standard. Handles XML parsing, RFC 822 date normalization, custom feed fields. ~2M weekly downloads. |
-| `cheerio` | ^1.0.0 | Extract decision text from rechtsprechung-im-internet.de HTML pages | jQuery-like server-side DOM parsing. Correct choice for simple HTML extraction — Playwright/Puppeteer would be massive overkill. |
-| `mammoth` | ^1.11.0 | DOCX to HTML for Kanzlei-Muster upload pipeline | Only reliable DOCX parser for Node.js without a LibreOffice sidecar. Preserves paragraph structure for German legal documents. |
-| `turndown` | ^7.2.2 | HTML to Markdown (after mammoth) | Mammoth's own Markdown output is officially deprecated. Turndown is the canonical follow-on step. |
+| `ai` (Vercel AI SDK) | `^4.3.19` (STAY on v4) | `generateText` with tools for ReAct loop; `generateObject` for structured outputs | Already in stack. Upgrade to v5/v6 is a separate task — breaking changes risk existing RAG chat. v4 has full tool-calling and structured output needed for all agent features. |
+| `bullmq` | `^5.70.1` (existing) | Step-job pattern for agent tasks; cron for nightly scanner | Already in stack. Step-job pattern with `job.updateData()` provides restart-safe long-running agent execution. |
+| `zod` | `^3.23.8` (STAY on v3) | Structured output schemas for all Helena outputs | Already in stack. Do NOT upgrade to v4 — requires AI SDK v5+ peer dep. |
+| PostgreSQL + Prisma | existing | HelenaMemory, HelenaTask, HelenaAlert, AktenActivity tables | Best choice for relational + queryable agent state. No Redis-based memory store needed. |
+| Socket.IO + `@socket.io/redis-emitter` | existing | Real-time agent progress, draft-ready notifications, activity feed | Already configured. BullMQ worker emits; Next.js server delivers to client. Zero new setup. |
 
 ### Zero-Dependency Implementations (TypeScript Only)
 
 | Feature | Approach | File to Create |
 |---------|---------|----------------|
-| RRF hybrid fusion | 15-line pure TypeScript function | `src/lib/search/rrf.ts` |
-| Cross-encoder reranking | Ollama `/api/generate` REST call | `src/lib/search/reranker.ts` |
-| Parent-child chunking | Extended `@langchain/textsplitters` | Extend `src/lib/embedding/chunker.ts` |
-| PII NER filter | Regex pre-pass + Ollama LLM NER | `src/lib/pii/ner-filter.ts` |
-| DOCX/PDF conversion | mammoth + turndown + pdf-parse | `src/lib/ingestion/document-converter.ts` |
+| ReAct agent loop | Custom `while` loop on `generateText` + tools | `src/lib/helena/agent-loop.ts` |
+| Deterministic Schriftsatz orchestrator | Sequential `generateObject` calls | `src/lib/helena/schriftsatz-orchestrator.ts` |
+| Helena memory | Prisma `HelenaMemory` upserts | `src/lib/helena/memory.ts` |
+| Nightly scanner | BullMQ processor with cron `0 2 * * *` | `src/lib/queue/processors/scanner.processor.ts` |
+| Alert service | Prisma write + Socket.IO emit | `src/lib/helena/alert-service.ts` |
+| Citation Recall@k | String fingerprint matching | `src/lib/helena/qa-gate.ts` |
+| Hallucination detection | `generateObject` LLM-as-judge | `src/lib/helena/qa-gate.ts` |
+| Activity feed | Prisma `AktenActivity` + Socket.IO | `src/lib/helena/activity-service.ts` |
+| @-tagging handler | BullMQ job enqueue in API route | `src/app/api/helena/task/route.ts` |
 
 ---
 
@@ -515,14 +706,15 @@ Everything else (RRF, parent-child chunking, LLM reranking, PII NER, PDF text ex
 
 | Recommended | Alternative | Why Not |
 |-------------|-------------|---------|
-| Hand-written RRF function | `rerank-ts` npm package | Adds a dependency for a formula that is 15 lines of TypeScript. Zero value over DIY. |
-| Ollama LLM reranking | Cohere Rerank API | Cloud dependency, DSGVO risk (data leaves the system), monthly cost. Violates self-hosted constraint. |
-| Ollama LLM reranking | Dedicated Python cross-encoder service | New Docker service + Python runtime. Violates no-new-services constraint. |
-| Ollama LLM NER for PII | `pii-paladin` npm | Uses compromise.js/wink-nlp with poor German coverage. Not legal-domain aware. |
-| `rss-parser` + `cheerio` for Urteile | BMJ bulk download / API | No official API exists. RSS feeds are the official documented mechanism (confirmed on BMJ site). |
-| `simple-git` for Gesetze | `isomorphic-git` | More complex for a simple clone+pull workflow. simple-git's pull summary with changed files is exactly what incremental sync needs. |
-| `simple-git` for Gesetze | `nodegit` | Native bindings that break on Node.js version upgrades. simple-git uses git CLI via child_process. |
-| `mammoth` + `turndown` | LibreOffice DOCX conversion | Requires a LibreOffice Docker sidecar — unnecessary operational complexity for DOCX → text extraction. |
+| Custom ReAct loop (`generateText` + tools) | LangChain.js agents | LangChain JS is incomplete port of Python. No `ParentDocumentRetriever`. Abstractions add indirection for marginal gain. 60–80 LOC TypeScript is simpler and auditable. |
+| Custom ReAct loop | Vercel AI SDK v5/v6 `ToolLoopAgent` class | Requires AI SDK v5 migration (8 files, breaking changes). Not worth the risk mid-milestone. |
+| Custom ReAct loop | CrewAI, AutoGen, LangGraph | Python-native. JS ports are experimental or cloud-dependent. Violates self-hosted constraint. |
+| PostgreSQL + Prisma for memory | `mem0` (npm library) | mem0 adds a Python sidecar in practice. No stable self-hosted JS-native version. Overkill for per-case key-value store. |
+| PostgreSQL + Prisma for memory | `zep` (memory service) | New Docker service. Adds operational complexity. Standard Postgres table is auditable and SQL-queryable. |
+| LLM-as-judge for hallucination detection | HaluGate (Python) | Python-only, requires separate service. Our `generateObject` pattern achieves same result with existing Ollama. |
+| LLM-as-judge for hallucination detection | Self-Consistency (multiple generations) | 3-5x more Ollama token cost per check. LLM-as-judge is more targeted and cheaper for domain-specific legal content. |
+| Sequential `generateObject` for Schriftsatz | Free-form agent loop | Legal briefs have mandated structure (§ 253 ZPO). Agent loop risks structurally non-compliant output. Determinism > flexibility here. |
+| BullMQ step-job pattern | Direct async call in API route | Agent tasks can take 2-10 minutes. API routes timeout. BullMQ provides retry, progress, and restart safety. |
 
 ---
 
@@ -530,36 +722,41 @@ Everything else (RRF, parent-child chunking, LLM reranking, PII NER, PDF text ex
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| Python NER libraries (spaCy, Flair, transformers) | Introduces Python runtime + new Docker service. Violates stack constraint. | Ollama `qwen3.5:35b` with structured NER prompt |
-| LangChain `ParentDocumentRetriever` | Python-only. The JS LangChain port lacks this retriever. | Hand-implement parent lookup in `vector-store.ts` |
-| Separate cross-encoder Docker service (HuggingFace TEI, Triton) | New service + GPU contention with Ollama. | Ollama reranking (Option A) or RRF-only (Option C) |
-| `playwright` / `puppeteer` for BMJ scraping | Requires Chromium, heavyweight, slow for simple HTML extraction | `cheerio` on raw `fetch()` response |
-| `wink-nlp` / `compromise.js` for German NER | Trained on English, minimal German legal vocabulary | Ollama LLM NER |
-| `nodegit` | Native bindings, complex build, breaks on Node.js upgrades | `simple-git` |
-| `docx2md` npm | Unmaintained. Last release 2020. | `mammoth` + `turndown` |
+| LangChain.js agent classes | Incomplete JS port, adds LangChain complexity to a stack that only uses `@langchain/textsplitters` for one util function | Custom ReAct loop on Vercel AI SDK |
+| AI SDK v5/v6 in this milestone | 8 files have breaking API changes (`parameters` → `inputSchema`, `CoreMessage` → `ModelMessage`, etc.). Regression risk to RAG chat. | Stay on v4, add dedicated "SDK Upgrade" milestone |
+| Zod v4 in this milestone | Peer dep of AI SDK v5+. Upgrading Zod while staying on AI SDK v4 may cause type errors. | Stay on Zod v3 |
+| `mem0`, `zep`, or vector-based memory | New services, operational complexity, overkill for structured per-case key-value storage | Prisma `HelenaMemory` table |
+| OpenAI Assistants API | Cloud API, violates DSGVO self-hosted constraint | Local Ollama agent loop |
+| Separate evaluation framework (deepeval, ragas) | Python-only, adds new service. Ragas requires Python. deepeval requires Python. | Custom Recall@k + LLM-as-judge in TypeScript |
+| Separate activity-stream service | New Docker service for what is essentially a timestamped event table with Socket.IO delivery | Prisma `AktenActivity` + existing Socket.IO |
+| Polling for agent progress | Wastes resources, degrades UX. | Socket.IO `akte:progress` events from BullMQ worker via `@socket.io/redis-emitter` |
+| `node-schedule` or `node-cron` | Runs in app process, not worker. Doesn't survive worker restarts. | BullMQ repeatable jobs (already in use for `vorfristen-cron`) |
 
 ---
 
 ## Stack Patterns by Variant
 
-**If GPU is constrained (slow reranking):**
-- Skip LLM reranking (Option C)
-- Return RRF top-5 directly to the prompt
-- RRF alone provides ~60-70% of quality improvement over baseline cosine-only
+**If Ollama GPU is overloaded during peak hours:**
+- Agent loop runs in BullMQ worker (separate process from Next.js app)
+- Scanner tasks are low-priority — set `priority: 10` (lower = lower priority in BullMQ)
+- Helena tasks triggered by users are high-priority — set `priority: 1`
+- This prevents background scans from starving user-facing agent requests
 
-**If bundestag/gesetze repo is too large for Docker volume:**
-- Use `git sparse-checkout` via simple-git to clone only relevant Rechtsgebiete:
-- `await simpleGit(REPO_PATH).raw(['sparse-checkout', 'set', 'a/arbgg', 'b/bgb', 'z/zpo'])`
+**If a generated Schriftsatz fails QA Gate (HIGH hallucination risk):**
+- Re-run `GENERATE` step with explicit citation instruction in system prompt
+- Add `qaFeedback` to job data so orchestrator knows to be more conservative
+- After 2 failed QA gates, store draft as `ENTWURF` with warning flag — human must review
+- Never silently discard; always give user visibility
 
-**If Ollama NER is too slow for batch Urteile ingestion:**
-- Use a separate low-priority BullMQ queue (`urteil-pii`) for PII filtering
-- Ingest first (mark `piiFiltered: false`), filter async
-- Block Helena retrieval of unfiltered chunks via `AND pii_filtered = true` in SQL
+**If Ollama times out during agent loop:**
+- Catch error at tool-execution level in `runAgentLoop()`
+- BullMQ retries job with exponential backoff (`attempts: 3, backoff: exponential`)
+- After 3 failures, set `HelenaTask.status = FAILED`, create `HelenaAlert` of type `SYSTEM`
 
-**If parent-child chunking adds too much DB storage:**
-- Store `parentContent` as TEXT inline on each child chunk (denormalized)
-- Instead of FK to parent row — simpler retrieval, more storage
-- Avoids a second DB round-trip at query time
+**If memory grows too large (many Akten, many keys):**
+- Add soft limit: `getMemory()` returns only keys updated in last 90 days
+- Add hard limit: max 20 key-value pairs per Akte (prune oldest on insert)
+- Memory is optimization, not source of truth — Akte data in Prisma is always authoritative
 
 ---
 
@@ -567,44 +764,46 @@ Everything else (RRF, parent-child chunking, LLM reranking, PII NER, PDF text ex
 
 | Package | Compatible With | Notes |
 |---------|----------------|-------|
-| `simple-git@^3.27.0` | Node.js 16+ | Requires git CLI in Docker image. Debian-based images have git by default. |
-| `rss-parser@^3.13.0` | Node.js 14+ | No native deps. Works in Next.js API routes and BullMQ worker. |
-| `cheerio@^1.0.0` | Node.js 14+ | v1.0 stable (released 2023). Use `load()` API not `cheerio()` (the latter is removed in v1). |
-| `mammoth@^1.11.0` | Node.js 12+ | Accepts `{ buffer: Buffer }` — compatible with MinIO stream-to-buffer pattern already in use. |
-| `turndown@^7.2.2` | Node.js + Browser | Requires `@types/turndown` for TypeScript. No peer dependency issues. |
+| `ai@^4.3.19` | Zod `^3.x` | v4 uses `parameters:` for tools, `schema:` for `generateObject`. Do NOT mix with v5 patterns. |
+| `bullmq@^5.70.1` | Redis 7 | `job.updateData()` requires BullMQ 5+. Already in use. |
+| `zod@^3.23.8` | `ai@^4.x` | Stay on v3. v4 requires AI SDK v5+ peer dep. |
+| `@socket.io/redis-emitter@^5.1.0` | `socket.io@^4.8.3`, Redis 7 | Already in use for IMAP IDLE notifications. Same pattern for agent progress. |
 
 ---
 
-## Integration Points with Existing Code
+## Tech Debt: AI SDK Upgrade (Post v0.2)
 
-| New Feature | Integrates With | Integration Notes |
-|-------------|----------------|------------------|
-| Hybrid Search (RRF) | `src/lib/embedding/vector-store.ts` + `meilisearch` client | Add `hybridSearch()` alongside existing `searchSimilar()`. Share the same Meilisearch client instance already configured in the app. |
-| Cross-Encoder Reranking | `src/app/api/ki-chat/route.ts` | Insert between RRF fusion and system prompt construction. Guard with `if (RERANKING_ENABLED)` env flag. |
-| Parent-Child Chunking | `src/lib/embedding/chunker.ts` + `src/lib/embedding/vector-store.ts` | Extend `insertChunks()` to accept `{ parent: ChunkData; children: ChunkData[] }`. Update OCR processor to call new signature. |
-| Gesetze Sync | BullMQ worker (`src/lib/queue/processors/`) | New processor `gesetze-sync.processor.ts`. Schedule daily via BullMQ cron (same pattern as `vorfristen-cron`). |
-| Urteile RSS Fetch | BullMQ worker | New processor `urteil-fetch.processor.ts`. Schedule daily per court. |
-| PII Filter | Called inside `urteil-fetch` processor | Sequential: fetch RSS → fetch HTML → extract text → PII filter → chunk → embed → insert `urteil_chunks`. |
-| Muster Upload | New API route `/api/admin/muster/upload` | MinIO upload (existing S3 client) + enqueue BullMQ job for conversion + chunking + embedding. |
-| Helena RAG retrieval | `src/app/api/ki-chat/route.ts` | Extend source selection: query `document_chunks`, `law_chunks`, `urteil_chunks`, `muster_chunks` in parallel. Merge results via RRF before reranking. |
+When creating the `v0.3-sdk-upgrade` milestone, the following files need updates:
+
+| File | Change required |
+|------|----------------|
+| `src/app/api/ki-chat/route.ts` | `CoreMessage` → `ModelMessage`, `toDataStreamResponse()` → `toUIMessageStreamResponse()` |
+| `src/lib/ai/provider.ts` | `generateText` params unchanged, but check `maxTokens` → `maxOutputTokens` |
+| `src/lib/helena/agent-loop.ts` | `parameters:` → `inputSchema:` in tool definitions, `maxSteps` → `stopWhen: stepCountIs(20)` |
+| `src/lib/ai/deadline-extractor.ts` | `generateObject` — likely unchanged, `schema:` property is same in v5 |
+| `src/lib/ai/party-extractor.ts` | Same as deadline-extractor |
+| All new agent files in `src/lib/helena/` | Write v4-compatible now; codemod to v5 later with `npx @ai-sdk/codemod v5` |
+
+Run `npx @ai-sdk/codemod v5` then `npx @ai-sdk/codemod v6` to automate most of the migration.
 
 ---
 
 ## Sources
 
-- bundestag/gesetze repo format: https://github.com/bundestag/gesetze — direct inspection, Markdown format confirmed (HIGH confidence)
-- BMJ RSS feed URLs: https://www.rechtsprechung-im-internet.de/jportal/portal/page/bsjrsprod.psml?cmsuri=/technik/de/hilfe_1/bsjrsrss.jsp&riinav=3 — official BMJ documentation, all 7 feed URLs confirmed (HIGH confidence)
-- `simple-git` npm: https://www.npmjs.com/package/simple-git — v3.27.0, actively maintained (HIGH confidence)
-- `rss-parser` npm: https://www.npmjs.com/package/rss-parser — v3.13.0 confirmed (HIGH confidence)
-- `cheerio` npm: https://www.npmjs.com/package/cheerio — v1.0.0 stable release (HIGH confidence)
-- `mammoth` npm: https://www.npmjs.com/package/mammoth — v1.11.0 confirmed current (HIGH confidence)
-- `turndown` npm: https://www.npmjs.com/package/turndown — v7.2.2 confirmed current (HIGH confidence)
-- RRF algorithm (k=60): Cormack et al. 2009, validated via Elasticsearch RRF docs + multiple production implementations (HIGH confidence)
-- Mammoth Markdown deprecation: https://github.com/mwilliamson/mammoth.js — README explicitly states Markdown output is deprecated (HIGH confidence)
-- Ollama reranking with Qwen3: https://www.glukhov.org/post/2025/06/qwen3-embedding-qwen3-reranker-on-ollama/ — 2025 article, Go examples but REST API is identical (MEDIUM confidence)
-- Ollama LLM NER for PII: https://drezil.de/Writing/ner4all-case-study.html — local LLM NER case study, German legal specifics are extrapolation (MEDIUM confidence)
+- Vercel AI SDK tool calling documentation: https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling — tool definition with `parameters:` (v4) vs `inputSchema:` (v5+) confirmed (HIGH confidence)
+- AI SDK v4 to v5 migration guide: https://ai-sdk.dev/docs/migration-guides/migration-guide-5-0 — all breaking changes listed (HIGH confidence)
+- AI SDK v5 to v6 migration guide: https://ai-sdk.dev/docs/migration-guides/migration-guide-6-0 — v5→v6 is low-risk, v4→v5 is high-risk (HIGH confidence)
+- AI SDK 6 blog post: https://vercel.com/blog/ai-sdk-6 — `ToolLoopAgent` class, `stopWhen: stepCountIs(20)` default confirmed (HIGH confidence)
+- AI SDK loop control docs: https://ai-sdk.dev/docs/agents/loop-control — `stopWhen`, `prepareStep` confirmed (HIGH confidence)
+- npm `ai` version: `6.0.103` current (verified via `npm view ai version`, 2026-02-27) — project uses `^4.3.19` (HIGH confidence)
+- BullMQ step-job pattern: https://docs.bullmq.io/patterns/process-step-jobs — `job.updateData()`, `moveToDelayed()`, step enum pattern (HIGH confidence)
+- BullMQ long-running jobs: https://oneuptime.com/blog/post/2026-01-21-bullmq-long-running-jobs/view — checkpointing strategy (MEDIUM confidence)
+- Zod v3 vs v4 compatibility: https://zod.dev/v4/versioning — peer dep chain makes v4 upgrade tied to AI SDK v5 (HIGH confidence)
+- LangChain.js vs Vercel AI SDK comparison: https://strapi.io/blog/langchain-vs-vercel-ai-sdk-vs-openai-sdk-comparison-guide — confirmed LangChain JS is incomplete vs Python port (MEDIUM confidence)
+- Hallucination detection via LLM-as-judge: https://www.datadoghq.com/blog/ai/llm-hallucination-detection/ — production-validated approach (MEDIUM confidence)
+- Self-consistency detection (SelfCheckGPT): https://www.emergentmind.com/topics/self-consistency-based-hallucination-detection — academic basis for multi-pass checking (MEDIUM confidence; LLM-as-judge chosen for cost efficiency)
 
 ---
 
-*Stack research for: Helena RAG Enhancement — AI-Lawyer v0.1 milestone*
-*Researched: 2026-02-26*
+*Stack research for: Helena Agent v2 — AI-Lawyer autonomous agent capabilities*
+*Researched: 2026-02-27*

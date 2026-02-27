@@ -1,261 +1,281 @@
 # Pitfalls Research
 
-**Domain:** Legal RAG Addition — Hybrid Search, German Law Ingestion, NER PII Filter, Parent-Child Chunking added to existing AI-Lawyer (Node.js/Prisma/Meilisearch/pgvector/Ollama/BullMQ)
-**Researched:** 2026-02-26
-**Confidence:** MEDIUM-HIGH (stack-specific pitfalls from verified sources; BMJ scraping HTML specifics LOW from training data only)
+**Domain:** Helena Agent v2 — Autonomous Agent Capabilities added to existing AI-Lawyer (Next.js/Prisma/BullMQ/Ollama/Vercel AI SDK v4)
+**Researched:** 2026-02-27
+**Confidence:** MEDIUM-HIGH (agent-loop, BullMQ, Ollama tool-calling pitfalls from verified GitHub issues + official docs; BRAK/BRAO legal compliance from official BRAK PDF Dec 2024; DSGVO from EDPB 2025 opinion; hallucination rates from Stanford peer-reviewed study 2025)
 
-> This file covers pitfalls specific to the v0.1 Helena RAG milestone. For general Kanzleisoftware pitfalls (IMAP, WOPI, RVG, Fristen, etc.) see git history of this file (2026-02-24 version).
+> This file covers pitfalls specific to adding autonomous agent capabilities to an existing legal software system. For v0.1 Helena RAG pitfalls (hybrid search, German law ingestion, NER PII, parent-child chunking), see git history of this file (2026-02-26 version).
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: RRF Candidate Count Asymmetry — BM25 Drowning Vector Results
+### Pitfall 1: ReAct Agent Infinite Loop — No Iteration Cap or Exit Condition
 
 **What goes wrong:**
-Meilisearch returns 20 results by default. pgvector returns however many you ask for (e.g., 50). When these two unequal pools are merged with RRF (`1/(k + rank)` where k=60), the leg with more candidates dominates the fused ranking because there are simply more ranked positions to contribute scores from. German legal text makes this worse: Gesetze chunks contain highly repetitive statutory boilerplate ("gemäß § X Absatz Y") that inflates BM25 term-frequency scores. BM25 will surface the most-mentioned-paragraph, not the most legally relevant one.
+The ReAct agent loop (Reason → Act → Observe → Reason …) runs until a stop condition is met. Without an explicit iteration cap, two failure modes occur: (1) the agent calls the same tool repeatedly because the tool result does not satisfy the success condition it inferred from the system prompt, and (2) two tools form a circular dependency — Tool A's output triggers Tool B, Tool B's output triggers Tool A. At Ollama's qwen3.5:35b inference speed (~2s/call), a 30-iteration loop runs for 60 seconds undetected, consuming the BullMQ worker slot, blocking other jobs, and accumulating tokens.
 
 **Why it happens:**
-Developers implement RRF from the formula without auditing whether both retrieval legs produce equal candidate counts. The Meilisearch API default limit of 20 is never changed because the existing Meilisearch integration "works fine" for the current full-text search feature.
+Developers implement the core loop as `while (!finalAnswer) { step() }` without threading in a circuit breaker. The LLM is often inconsistent about emitting the "Final Answer" token that signals loop termination — especially under tool call hallucinations where qwen3.5:35b returns JSON as `content` instead of invoking the tool.
 
 **How to avoid:**
-- Retrieve exactly N candidates from both legs before fusion (e.g., top-50 from Meilisearch with `limit: 50`, top-50 from pgvector with `LIMIT 50`).
-- Implement RRF as a single PostgreSQL CTE, not as application-layer merging of two separate DB round-trips. This avoids the N+1 round-trip problem and keeps fusion atomic.
-- Use `k=60` (empirically validated across literature). Do not tune per-query — it generalizes poorly.
-- Log per-query: candidate count from each leg. Alert (Slack/email) when one leg returns fewer than 10 results.
+- Hard cap: `maxIterations: 10` on every agent executor instance. Never exceed 15 for any legal task.
+- Implement a **stall detector**: if the last N tool calls are identical (same tool name + same arguments), abort and return a partial result with an explanatory error to the user.
+- Track per-agent-run token consumption. Abort when `usedTokens > 8000` (Ollama context budget, leaving headroom for the final response).
+- Log every tool invocation with timestamps. Alert (Socket.IO event to admin dashboard) when any agent run exceeds 5 iterations — that is a signal of a design problem.
+- Use Vercel AI SDK `maxSteps` parameter (available in `generateText` / `streamText` with tool calls) as a second-layer hard stop independent of application logic.
 
 **Warning signs:**
-- Helena retrieves only Gesetze paragraphs for questions where client Akte documents should rank first.
-- Vector search returning 0 results for queries with clear semantic matches — pgvector HNSW index not built on new tables.
-- RRF result position 1 always matches BM25 position 1 regardless of semantic content — candidate count mismatch.
+- BullMQ active job count stays at maximum concurrency for minutes with no completion.
+- Same tool name appearing 3+ times consecutively in agent run logs.
+- Ollama GPU memory at 100% with no new requests being accepted — worker slot occupied by looping agent.
+- User-visible: Helena spinner runs for >30s on a query that should resolve in <10s.
 
-**Phase to address:** Phase 1 (Hybrid Search implementation). Write a 20-query gold-standard test set (mix of Akte questions + legal norm questions) and measure MRR before shipping.
+**Phase to address:** Phase 1 (ReAct agent foundation). Iteration cap and stall detector must be present before any tool is wired up.
 
 ---
 
-### Pitfall 2: Cross-Encoder Latency Explosion — 280ms × N Candidates = Unusable
+### Pitfall 2: Ollama qwen3.5:35b Tool Call Hallucination — JSON as Content, Not Tool Invocation
 
 **What goes wrong:**
-Calling Ollama for cross-encoder reranking on each candidate document individually results in sequential inference calls. At ~280ms per call (Qwen3-Reranker-4B on local GPU), reranking 20 candidates takes 5.6 seconds. `Promise.all` parallelization does not help: Ollama processes one request at a time internally, so parallel requests queue and produce the same wall-clock time while consuming more GPU memory. For a chat interface, >3s total latency kills the UX.
+Ollama's implementation of the tool-calling protocol for Qwen3 models is unstable as of early 2026. Documented failure modes (GitHub issues #11135, #11662): the model produces the correct JSON structure for a tool call but Ollama returns it as `message.content` (a string) instead of `message.tool_calls` (the structured array). The Vercel AI SDK sees no tool invocation, interprets the response as a final answer, and returns the raw JSON to the user. In a legal context, Helena appears to answer with a malformed JSON blob instead of the intended Schriftsatz draft or calendar entry.
+
+A second failure mode: after Ollama upgrade (observed in v0.9.2+), qwen3.5 selects the wrong tool — it identifies the correct tool in its reasoning trace but calls a different one. This is silent unless the called tool validates its arguments strictly.
 
 **Why it happens:**
-Reranking benchmarks report throughput (documents/sec) measured in batch, not end-to-end chat latency measured per user request. Developers copy benchmark numbers without accounting for Ollama's single-request concurrency model.
+Ollama's tool-calling parser for Qwen3 uses the model's native tool-call format, which conflicts with the OpenAI-compatible API format that Vercel AI SDK v4 expects. The mismatch is version-dependent and regressions are introduced without breaking changes in Ollama releases.
 
 **How to avoid:**
-- Cap cross-encoder input at 10 candidates (not 20 or 50). Worst case: 2.8s, which is borderline acceptable with streaming.
-- Implement a time budget: if cross-encoder does not complete within 2 seconds, fall back to RRF ordering and begin streaming the LLM response immediately.
-- Consider ONNX-exported reranker (`BAAI/bge-reranker-v2-m3`) run via `@xenova/transformers` in the BullMQ worker — CPU-side at ~80ms/doc, no Ollama overhead.
-- Stream LLM response tokens while reranking runs in background (decouple retrieval from generation in the pipeline architecture).
+- **Pin Ollama version** in Docker Compose. Do not use `latest` tag. Test tool calling after every Ollama version bump before shipping.
+- Implement a **response type guard** in the agent layer: after each LLM call, assert that if the model's reasoning trace mentions a tool name, a corresponding tool call must be present in the response. If not, log the discrepancy and re-issue the request with temperature=0.
+- Add **argument schema validation** (Zod) to every tool's `execute` function. If arguments do not match the schema, return a structured error to the agent loop rather than throwing — this gives the agent a chance to correct itself.
+- As fallback: if Ollama tool calls fail consistently in production, implement a **text-mode ReAct prompt** that extracts tool calls from raw text using regex (`Action: tool_name\nAction Input: {json}`). This is less elegant but more reliable.
+- Test tool calling with a dedicated smoke test that calls each registered tool through the full Ollama + Vercel AI SDK stack — not unit tests with mocked LLM responses.
 
 **Warning signs:**
-- Helena chat response time consistently >3s for legal questions with many matching chunks.
-- BullMQ queue depth growing — upstream reranking jobs not completing before the next request arrives.
-- Ollama GPU memory at 100% when 2+ users query simultaneously — sequential queuing with high per-call memory.
+- Agent run logs show `finalAnswer: true` with content matching a JSON schema — tool call returned as content.
+- Zod validation errors in tool `execute` functions with wrong argument types — wrong tool called.
+- `tool_calls` array empty in Ollama response logs despite model reasoning mentioning a tool name.
+- Ollama version in Docker Compose changed recently and tool-calling regression started.
 
-**Phase to address:** Phase 1 (Hybrid Search + Reranking). Benchmark latency with realistic candidate counts BEFORE integrating into the live chat endpoint. Set a hard threshold: P95 latency < 3s.
+**Phase to address:** Phase 1 (ReAct agent foundation + tool wiring). Smoke test suite for tool calling must pass before any agent feature goes to production.
 
 ---
 
-### Pitfall 3: Parent-Child Schema Migration Breaking Existing `document_chunks`
+### Pitfall 3: KI Auto-Send Bypass — ENTWURF Enforcement Gaps in Agent-Created Documents
 
 **What goes wrong:**
-The existing `document_chunks` table (from v3.4 RAG pipeline) stores flat paragraph chunks. Adding parent-child hierarchy by naively adding a nullable `parentChunkId` FK without a migration strategy for existing rows produces a mixed state: old chunks have `parentChunkId = NULL`, new chunks have populated FKs. The retrieval layer now assumes children always have a parent. Queries that JOIN to parent to get 2000-token context return NULL for all existing chunks. Result: Akte document search regresses for all pre-migration documents.
+The existing system has a send gate: `ENTWURF`-status documents cannot be dispatched via beA or SMTP. Helena Agent v2 creates documents programmatically via tools. If the tool that creates a document does not explicitly set `status: 'ENTWURF'` — or if it creates the document directly in the file system / MinIO without going through the Prisma document creation path — it may bypass the ENTWURF guard entirely. A document created by the agent with no `status` field defaults to `null`, which the send gate may not catch.
+
+BRAK Leitfaden KI-Einsatz (December 2024, §43 BRAO): "KI-Tools können unterstützen, die finale Kontrolle und rechtliche Bewertung müssen stets durch einen menschlichen Juristen erfolgen." An auto-sent document is a professional conduct violation — not a UX bug.
 
 **Why it happens:**
-Prisma schema changes are treated as additive ("just add a nullable field — existing data is fine"). The impact on the retrieval query logic is not considered until after deployment.
+Agent tools are implemented as service functions that call internal APIs or Prisma directly. The ENTWURF enforcement lives in the document creation endpoint (`POST /api/akten/[id]/dokumente`). Agent tools that bypass the HTTP layer also bypass the middleware enforcement. The agent's `createDraft` tool might call `prisma.dokument.create()` directly, forgetting `status: 'ENTWURF'` in the create payload.
 
 **How to avoid:**
-- Add a `chunkType` enum to `document_chunks`: `STANDALONE | PARENT | CHILD`. Write a Prisma migration that sets `chunkType = STANDALONE` for ALL existing rows BEFORE deploying new ingestion code.
-- Retrieval logic gates on `chunkType`: embed and search child chunks; fetch parent chunks to send to LLM. For `STANDALONE` chunks, content is both the embedding source and the LLM context.
-- Use `onDelete: SetNull` on the `parentChunkId` FK — never `Cascade` toward parents. Orphaned children become `STANDALONE` automatically, not deleted silently.
-- Verify migration: `SELECT COUNT(*) FROM document_chunks WHERE "chunkType" IS NULL` must return 0 after deploy.
-- Re-ingestion of existing documents should be a separate, optional BullMQ job — not forced on deploy.
+- All agent tools that create documents MUST go through the same HTTP endpoint as the UI (`POST /api/akten/[id]/dokumente`). Never call `prisma.dokument.create()` directly from a tool.
+- Add a **Prisma middleware** (using `prisma.$use`) that throws if any `dokument.create` or `dokument.update` call would result in `status = null`. This is a last-resort guard at the DB layer.
+- The send gate (`POST /api/akten/[id]/dokumente/[docId]/versenden`) must check `status === 'ENTWURF'` at the DB read, not trust the client payload. This already exists — verify it covers documents created by agents as well.
+- In the Activity Feed, every agent-created document must display the `KI`-badge and `Nicht freigegeben`-badge. Never suppress these badges programmatically.
+- Add an integration test: simulate agent creating a document → attempt to send via beA → assert 403 response.
 
 **Warning signs:**
-- Helena returns 500-token child chunks instead of 2000-token parent context — retrieval layer fetching children directly.
-- Retrieval quality drops immediately after migration deploy — mixed chunkType state.
-- Prisma migration fails with FK constraint violation during re-ingestion of existing documents — parent inserted after child.
+- Agent-created documents appearing in beA Postausgang without user approval.
+- `SELECT status FROM dokument WHERE "createdBy" = 'helena-agent'` returns any value other than `ENTWURF`.
+- Send gate logs showing successful dispatch of a document without a `FREIGEGEBEN` status — enforcement gap.
+- UI showing agent documents without the `KI` badge.
 
-**Phase to address:** Phase 1 (Parent-Child Chunking). Schema migration must be a separate PR from retrieval logic changes. Deploy migration → verify data → deploy retrieval changes.
+**Phase to address:** Phase 2 (Draft-creation tools). ENTWURF enforcement must be verified by integration test before shipping any tool that creates documents.
 
 ---
 
-### Pitfall 4: bundestag/gesetze — Markdown Repo is Derived, Not Authoritative; Encoding Bugs
+### Pitfall 4: Legal Hallucination — Wrong § References and Fabricated Aktenzeichen in Agent Drafts
 
 **What goes wrong:**
-The `bundestag/gesetze` GitHub repo stores laws as Markdown files converted from upstream BMJV XML. Two critical failure modes: (1) Developers clone the Markdown repo and treat it as authoritative, missing that it is a derived artifact from `gesetze-im-internet.de` XML and may lag weeks behind legal changes. (2) Full `git clone` of the repo (thousands of laws, full history) causes Docker build OOM kills. A third failure: XML text nodes from `gesetze-im-internet.de` are UTF-8 but if the XML parser defaults to Latin-1 or double-encodes, `§` (U+00A7) appears as `Â§` in the database.
+Stanford research (2025, peer-reviewed): leading legal AI tools hallucinate 17–33% of the time on legal queries even with RAG. Specific failure modes relevant to German law: (1) citing a real statute but wrong paragraph/absatz ("§ 823 BGB Abs. 3" — Abs. 3 does not exist in §823), (2) fabricating Aktenzeichen with plausible-but-wrong year or division ("BGH XII ZR 45/23" when the retrieved chunk contains "BGH XII ZR 45/22"), (3) mixing Gesetze versions — citing §-reference from a law that was amended after the retrieved chunk's indexing date.
+
+For a Schriftsatz agent that produces court-filing drafts, a single hallucinated citation can result in €2,500–€31,100 in sanctions (documented 2025 US cases; German disciplinary consequences under §43 BRAO are analogous).
 
 **Why it happens:**
-The GitHub repo looks like a convenient data source. Developers read the README, see "Bundesgesetze und -verordnungen," and proceed to `git clone`. The encoding issue happens because Node.js XML parsers default to UTF-8 but some BMJV XMLs declare `encoding="iso-8859-1"` in the XML prolog — the actual bytes are UTF-8 but the declaration says otherwise, causing parsers to mishandle it.
+LLMs interpolate from training data when retrieved context is ambiguous or incomplete. The model "knows" German law patterns from training and fills gaps rather than returning "unknown." Parent-child chunking mitigates this but does not eliminate it — if the chunk boundary falls mid-citation, the model generates the missing half from memory.
 
 **How to avoid:**
-- Do NOT clone the bundestag/gesetze Markdown repo in production. Use the BMJV XML feed directly: `https://www.gesetze-im-internet.de/Teilliste_mit_Aenderungen.xml` gives a table of all laws with last-modified dates. Fetch only changed law XMLs via `https://www.gesetze-im-internet.de/{abbreviation}/xml.zip`.
-- Parse XML using `fast-xml-parser` with `htmlEntities: true` and `ignoreAttributes: false` to capture `<norm builddate="">` metadata.
-- Force UTF-8 decoding regardless of XML prolog declaration: `Buffer.from(responseBuffer).toString('utf8')` before feeding to XML parser.
-- Encoding smoke test as the first step in the ingestion pipeline: `SELECT content FROM law_chunks WHERE content LIKE '%§%' LIMIT 1` must return actual `§`, not `Â§` or `?`.
-- Store the BMJV last-modified date per law in `law_chunks.lastModified` for idempotent daily sync.
+- System prompt hard constraint: "Zitiere ausschließlich §-Normen und Aktenzeichen, die wörtlich in den bereitgestellten Kontextblöcken erscheinen. Erfinde keine §-Nummern, Absatz-Nummern oder Aktenzeichen."
+- **Post-generation verification**: extract all §-references from the agent output using regex (`/§\s*\d+[a-z]?\s*(Abs\.\s*\d+)?/g`). For each, check: (a) does a `law_chunk` with this reference exist in the RAG index? (b) is the `gueltigBis` date still current? Flag mismatches in the UI as "Quellennachweis nicht verifiziert."
+- Extract Aktenzeichen from generated text and verify each against the `citation` metadata of retrieved `urteil_chunks`. If no match, render with a warning icon.
+- Mandatory disclaimer appended to every agent-generated legal draft: "Hinweis: KI-generierter Entwurf. Alle zitierten Normen und Entscheidungen sind vor Verwendung zu verifizieren." This is non-removable in the UI.
+- Restrict agent draft scope: Helena produces draft text for human editing, never final argumentation. System prompt must state this explicitly.
 
 **Warning signs:**
-- `§` appearing as `Â§` or `?` in `law_chunks.content` — encoding bug.
-- Law version returned by Helena is from 2020 for a law that was amended in 2024 — repo lag.
-- Docker build OOM when running `git clone bundestag/gesetze` in Dockerfile — use HTTP fetch per law instead.
-- `fast-xml-parser` throwing on BMJV XML — check if XMLs use HTML entities inside XML text nodes.
+- §-references in agent output not matching any indexed `law_chunks.normReference` field.
+- Aktenzeichen in agent output not matching any `urteil_chunks.citation` field.
+- Users reporting incorrect law citations upon manual review.
+- Agent producing §-references with "Abs." numbers that do not exist in the actual statute.
 
-**Phase to address:** Phase 2 (Gesetze-RAG ingestion). Encoding smoke test must be task 1. Daily sync via BullMQ cron, not git pull.
+**Phase to address:** Phase 2 (Schriftsatz-draft tool). Post-generation §-verification must be in the tool's `execute` function before shipping.
 
 ---
 
-### Pitfall 5: BMJ Rechtsprechung Scraping — Rate Limiting, HTML Fragility, and DSGVO Exposure
+### Pitfall 5: Context Window Overflow — Agent Accumulates Too Much History
 
 **What goes wrong:**
-`rechtsprechung-im-internet.de` (operated by the BMJ) allows crawling per robots.txt but has no published rate limit. Aggressive parallel fetching causes IP-level blocks within minutes of starting a bulk ingestion. HTML structure changes without versioned API — CSS selectors used for extraction break silently, producing empty or malformed `urteil_chunks`. Most critically: court decisions contain names of natural persons (Kläger, Beklagter) that courts anonymize inconsistently. Re-publishing identified persons in the RAG index creates DSGVO Article 5(1)(c) data minimization liability — even though the decisions are technically "public."
+A ReAct agent loop with tools passes the entire conversation history (system prompt + all prior reasoning steps + all tool results) to the LLM on every iteration. At Ollama qwen3.5:35b with a 32k context window, this exhausts the budget quickly: system prompt (~2k tokens) + RAG context (2–4 retrieved chunks × 2000 tokens = 4–8k tokens) + 5 reasoning steps × 500 tokens = ~14k tokens after 5 iterations. At iteration 8, the context exceeds 32k — Ollama silently truncates from the beginning, losing the original user intent and all early tool results. The model then produces nonsensical output or loops.
+
+"Lost in the middle" effect compounds this: even when content fits, LLMs weigh the beginning and end more heavily. Critical context injected in the middle of a long agent history is under-attended.
 
 **Why it happens:**
-Government legal databases are treated as freely scrapable because the content is public law. Developers assume court decisions are fully anonymized by courts (they are not — lower courts especially leave names in). DSGVO liability for re-processing public personal data is not widely understood.
+Developers build the initial agent loop by concatenating messages without a token budget. The first 10 test queries work fine (short tool results). The failure appears only when a tool returns a long document or the agent requires many steps for a complex legal task.
 
 **How to avoid:**
-- Rate limit to 1 request per 2 seconds with exponential backoff on 429/503. Implement as BullMQ job delay, not `setTimeout` in a loop.
-- Cache fetched HTML in MinIO before any processing — allows re-running NER with an improved prompt without re-scraping.
-- Parse court decision metadata (Gericht, Datum, Aktenzeichen, ECLI) from `<meta>` tags in the HTML `<head>`, not from body text — meta tags are structurally stable.
-- Run NER PII filter (see Pitfall 6) as a REQUIRED step before any text enters `urteil_chunks`. Raw HTML must never be directly indexed.
-- Add a schema validation step: assert that expected HTML elements (`article.result`, `div.dokument-meta`) exist in each fetched page. If not, log and skip — do not silently produce empty chunks.
-- Set `User-Agent: AI-Lawyer/1.0 Kanzlei-Baumfalk (+contact@kanzlei-baumfalk.de)` on all scraping requests.
+- Implement a **token budget manager**: before each LLM call, measure total tokens using `tiktoken` (or a rough char-to-token estimate: 4 chars ≈ 1 token for German). If projected tokens > 24k (75% of qwen3.5:35b 32k window), truncate the oldest tool result entries from the middle of history, preserving the first message (user intent) and the last 2 tool results (recent context).
+- Cap individual tool results: if a tool returns >2000 tokens, truncate and summarize: return the first 1500 tokens + "… [gekürzt, {N} weitere Zeichen]."
+- For background scanner agents (nightly jobs), process each Akte independently — never accumulate context across Akten. Each Akte scan is a fresh agent context.
+- Log token count at each agent step. Alert when any step's context exceeds 20k tokens.
 
 **Warning signs:**
-- HTTP 429 responses appearing in BullMQ job logs during bulk ingestion.
-- Court decisions with full names (e.g., "Familie Baumfalk" or "Johann M.") appearing in Helena's cited context — PII filter not running.
-- Ingestion producing chunks with only whitespace or HTML artifacts — HTML structure changed, selectors broken.
+- Agent output quality drops noticeably on queries requiring >6 tool calls.
+- Ollama returning shorter-than-expected responses on long agent runs — context truncation.
+- Agent "forgetting" the original user question in its final answer after many steps.
+- BullMQ job memory consumption growing linearly with agent iteration count.
 
-**Phase to address:** Phase 3 (Urteile-RAG ingestion). DSGVO compliance gate (NER PII filter) must be implemented and tested before any court decision reaches `urteil_chunks`.
+**Phase to address:** Phase 1 (agent foundation). Token budget manager must be part of the base agent executor, not a later addition.
 
 ---
 
-### Pitfall 6: Ollama NER PII Filter — False Positives Remove Legal Institutions, False Negatives Leak Names
+### Pitfall 6: Background Scanner Cost Explosion — Nightly LLM Scan Over All Akten
 
 **What goes wrong:**
-Prompting a general-purpose LLM for NER on German court decisions produces two simultaneous failure modes: (1) False positives — the model redacts institution names ("der Bundesgerichtshof," "die BaFin," "das Amtsgericht Dortmund") because the prompt does not distinguish `INSTITUTION` from `PERSON`. Result: Helena cites "laut [REDACTED] Urteil vom..." — legally useless. (2) False negatives — hyphenated surnames ("Müller-Schmidt"), abbreviated names ("J.M."), names embedded in compound legal terms ("Beklagten-Partei Frau X") survive unredacted. Both failures are dangerous: false positives destroy citation quality; false negatives create DSGVO liability.
+A nightly scanner that calls the LLM for each Akte in the database scales linearly with case count. At 200 Akten × 3 documents per Akte × 1500 tokens per document = 900k input tokens per night. At Ollama (free, GPU-bound) this is viable but occupies the GPU for hours, blocking interactive Helena use until 6am. If the kanzlei switches to cloud LLM (OpenAI gpt-4o-mini) for performance, 900k tokens/night at $0.15/1M tokens = $0.135/night — negligible. But if the scan accidentally sends full document content (not summaries) to a cloud LLM, and those documents contain Mandant personal data, this triggers a DSGVO data processor agreement breach — not a cost issue but a regulatory one.
+
+The second cost explosion: false positive alerts. If the scanner produces 50 alerts per night and each alert triggers an email + a BullMQ notification job, the signal-to-noise ratio collapses. Anwälte stop reading alerts within a week, defeating the purpose.
 
 **Why it happens:**
-NER prompts are typically written for English text using CoNLL-2003 entity categories (PER, ORG, LOC, MISC). German legal text has a rich taxonomy of institutional entities that must not be redacted. Without few-shot examples from German court decisions, the model has no basis to distinguish "Amtsgericht Köln" (court, do not redact) from "Frau Köhler" (person, redact).
+Developers implement the scanner as a BullMQ cron job that iterates all active Akten without scope filtering. The alert threshold is too low ("any change detected = alert"). The cloud LLM fallback is enabled globally, including for Akte document content.
 
 **How to avoid:**
-- Define explicit categories in the NER prompt: only redact `NATÜRLICHE_PERSON`. Explicitly exclude `GERICHT`, `BEHÖRDE`, `JURISTISCHE_PERSON`, `ANWALT_KANZLEI`, `PARTEI_BEZEICHNUNG` (e.g., "die Klägerin" without a name is fine).
-- Include at least 5 few-shot examples in the system prompt, taken from real German court decision formatting.
-- Post-process: after LLM NER, apply a whitelist regex that un-redacts known German court name patterns:
-  - `/(Bundesgerichtshof|Oberlandesgericht\s+\w+|Landgericht\s+\w+|Amtsgericht\s+\w+)/g`
-- Run NER as a BullMQ job (async). Store both the raw text AND the NER-filtered text in separate MinIO objects — allows re-running NER with an improved prompt without re-scraping.
-- Set BullMQ job `timeout: 60000` AND `AbortSignal` with 45s on the Ollama fetch call. Without this, a stalled qwen3.5:35b NER call on a long court decision (>5000 tokens) holds a worker slot indefinitely.
-- Acceptance test: run NER on 10 known court decisions. Verify: zero institution names redacted, zero full person names surviving.
+- **Scope filter**: scan only Akten with activity in the last 7 days (new documents, new emails, new calendar entries). Most legal cases are dormant — scanning them nightly is wasteful.
+- **Summary-only scan**: the scanner sends only the Akte metadata + a pre-computed 200-token summary (cached in the `akte_summary` table, updated on document change), not full document content to the LLM.
+- **DSGVO guard on cloud LLM**: the scanner must use Ollama only when processing content from `document_chunks` (client Akte data). Cloud LLM is permitted only for `law_chunks` and `urteil_chunks` (public data). Hard enforce this in the provider selection logic.
+- **Alert deduplication**: an alert for a given Akte+AlertType combination is suppressed if the same alert was sent within the last 48 hours.
+- **Alert throttle per run**: cap the nightly scanner at 10 alerts per run. Log the rest as "suppressed — over daily threshold." This forces alert quality to improve.
+- Monitor nightly scan duration via BullMQ job completion timestamps. Alert the admin if a nightly scan takes >2 hours — signals scope has grown too large.
 
 **Warning signs:**
-- "[REDACTED]" appearing in court names in Helena's cited sources — institution whitelist missing.
-- Full person names in `urteil_chunks.content` — NER not catching all patterns.
-- BullMQ NER jobs timing out — Ollama stalling on long documents, no timeout set.
-- NER jobs consuming 100% of one BullMQ worker slot for 10+ minutes — blocking other jobs.
+- Nightly BullMQ scan jobs occupying the worker from 2am–8am, blocking morning Helena queries.
+- Alert inbox volume growing faster than case count — threshold too low.
+- Ollama GPU memory at 100% at 6am when users start work — scanner not finished.
+- `SELECT COUNT(*) FROM helena_alerts WHERE "createdAt" > NOW() - INTERVAL '24h'` returns >50 — alert explosion.
 
-**Phase to address:** Phase 3 (Urteile-RAG ingestion). NER is a blocking gate — no court decision enters `urteil_chunks` without passing NER.
+**Phase to address:** Phase 3 (Background scanner). Scope filter and alert dedup must be designed before implementation. Monitor nightly runtime in staging before production deploy.
 
 ---
 
-### Pitfall 7: Kanzlei-Muster Upload — Unredacted Client Data Permanently in RAG Index
+### Pitfall 7: Agent Memory and DSGVO — Per-Case AI Summaries as Personal Data Processing
 
 **What goes wrong:**
-A staff member uploads a real Schriftsatz (e.g., a filed brief for Mandant Müller) as a Muster template. It contains real client names, addresses, case details, and IBAN. The MinIO upload succeeds immediately; the UI shows "Hochgeladen." If PII filtering is async and not a hard gate on indexing, the document lands in `muster_chunks` before NER completes. If the NER BullMQ job crashes silently (worker OOM, Ollama timeout), the unredacted document remains indexed permanently — a BRAO §43a Abs. 2 (Verschwiegenheitspflicht) violation.
+Helena's per-case AI summaries (`akte_summary` table) contain synthesized personal data: party names, claim amounts, procedural history, attorney assessments. Under DSGVO Art. 4(2), generating these summaries is "processing" of personal data. Three compliance failures: (1) No `Verarbeitungsverzeichnis` (Article 30 processing record) entry for AI summary generation. (2) Summaries persist beyond the case retention period (10-year GoBD obligation applies to case files; AI summaries are derivative — retention period is unclear). (3) A DSGVO Art. 15 data subject access request requires providing all stored data about a person, including AI-generated summaries that mention them — this is rarely implemented.
 
 **Why it happens:**
-Developers wire up: upload to MinIO → enqueue NER job → job indexes to pgvector. The gap is that the indexing step happens inside the NER job — but if the job crashes after indexing and before marking completion, or if another code path indexes on upload, the gate is bypassed.
+Developers treat AI summaries as ephemeral cache (not "real data"), so they do not apply the same compliance discipline as to primary case records. The summary is stored in PostgreSQL but excluded from the DSGVO anonymization tool that already handles `akte` and `kontakt` records.
 
 **How to avoid:**
-- Explicit status machine per Muster document: `PENDING_NER → NER_RUNNING → NER_COMPLETE → INDEXED | NER_FAILED | REJECTED_PII_DETECTED`.
-- The database record is created with status `PENDING_NER` on upload. Indexing to pgvector and Meilisearch ONLY happens in the state transition to `INDEXED`. No other code path inserts to `muster_chunks`.
-- If NER detects high-confidence PII (IBAN regex + full name + address in same document), set `REJECTED_PII_DETECTED` and notify the uploading admin via Socket.IO. Do NOT silently discard — the admin needs to know their upload was rejected.
-- Placeholder normalization: before indexing, run a regex pass to normalize Muster placeholders to a canonical form (`{{Mandant.Name}}`). Inconsistent placeholder formats (`{Mandant_Name}`, `[Mandant]`, `<<Mandant>>`) cause Helena to match on placeholder text instead of legal content.
-- Never-in-Git: add a pre-commit hook rejecting DOCX/PDF files committed to the repository. Muster files live exclusively in MinIO.
+- Add `akte_summary` to the Verarbeitungsverzeichnis with: purpose (legal case management), legal basis (Art. 6(1)(b) — contract performance), retention period (same as parent Akte, 10 years minimum for GoBD), and the Ollama-self-hosted processing note (no data leaves the premises).
+- Extend the existing DSGVO anonymization tool (already in the system) to cover `akte_summary`: when an Akte is anonymized or deleted, the corresponding summary must be anonymized or deleted.
+- Link `akte_summary.akteId` with `ON DELETE CASCADE` to ensure summaries are deleted when the parent Akte is deleted.
+- For the Art. 15 data subject access request PDF export (already implemented), query `akte_summary` for the data subject's Akten and include a section "KI-generierte Fallzusammenfassungen."
+- Stale summary detection: if a summary's `updatedAt` is >30 days older than the Akte's last `updatedAt`, mark it `STALE` and re-generate on next access — do not serve outdated summaries to the agent as context.
 
 **Warning signs:**
-- Admin uploads a DOCX and the UI shows "Indexiert" within 1 second — NER has not run (async job didn't fire or was bypassed).
-- Real client names appearing in Helena's Schriftsatz drafts from supposedly anonymized Muster.
-- `SELECT content FROM muster_chunks WHERE content LIKE '%IBAN%'` returns rows — IBAN in indexed content.
-- Admin UI showing only "Hochgeladen" status with no NER progress indicator — status machine not implemented.
+- `SELECT a.id FROM akte_summary a LEFT JOIN akte ak ON a."akteId" = ak.id WHERE ak."deletedAt" IS NOT NULL AND a.id IS NOT NULL` returns rows — summaries orphaned after Akte deletion.
+- DSGVO Auskunft PDF export does not include any AI summary content.
+- `akte_summary.updatedAt` timestamps months behind the Akte's last document upload.
+- No `Verarbeitungsverzeichnis` entry for "Helena AI Fallzusammenfassung."
 
-**Phase to address:** Phase 4 (Arbeitswissen-RAG / Muster Upload). Admin UI must expose NER status, not just upload status. DSGVO compliance audit before shipping.
+**Phase to address:** Phase 3 (Agent memory). DSGVO compliance for summaries must be addressed before the first summary is generated in production.
 
 ---
 
-### Pitfall 8: Helena Hallucinating Aktenzeichen Despite Real Citations in Context
+### Pitfall 8: BullMQ Agent Jobs — Stalled Jobs and Missing AbortSignal Propagation
 
 **What goes wrong:**
-Helena receives a real court decision as context (e.g., "BGH, Urteil vom 14.03.2023, Az. XII ZR 45/22") but generates a citation with a plausible-but-wrong Aktenzeichen ("Az. XII ZR 45/23" — year off by one, or "OLG Düsseldorf statt BGH"). German Aktenzeichen have structured formats (Roman numeral division, case type abbreviation, sequential number, year) that LLMs mimic from training data rather than copying verbatim from context. A hallucinated AZ is legally dangerous: it cannot be verified on juris or beck-online, makes the brief look unprofessional, and potentially cites a different case.
+BullMQ marks a job "stalled" when it does not call `job.updateProgress()` or complete within `stalledInterval` (default: 30s). A long-running agent job (e.g., a nightly Akte scan with 5 tool calls at ~3s each = 15s minimum, plus LLM inference) exceeds 30s without progress updates and gets re-queued. The same agent job then runs twice concurrently, creating duplicate alerts and duplicate document drafts.
+
+Second failure: when a BullMQ worker shuts down (Docker restart, graceful shutdown), active agent jobs receive a `SIGTERM`. Without an `AbortController` signal propagated to the in-flight Ollama call, the Ollama request completes after the worker exits, the response is lost, and the job is marked failed without partial results saved.
 
 **Why it happens:**
-LLMs interpolate between statistical patterns, not copy-paste from context. Chunking that splits the AZ header from the Leitsatz body means the AZ may not appear in the retrieved chunk at all, forcing the model to generate one from memory.
+BullMQ's `stalledInterval` is not configured for long-running jobs. The existing worker handles fast OCR jobs (30s typical) — the stalledInterval was set for those. Agent jobs are a different profile. `AbortSignal` propagation was added to Vercel AI SDK but is not wired to BullMQ's shutdown signal by default.
 
 **How to avoid:**
-- Extract Aktenzeichen at indexing time using regex and store in structured `citation` metadata on `urteil_chunks`: `/[A-Z][a-z]?\s+\d+\/\d{2}/` plus common prefixes (`Az.`, `Aktenzeichen`).
-- System prompt instruction: "Zitiere ausschließlich Aktenzeichen, die wörtlich in den bereitgestellten Kontextblöcken erscheinen. Erfinde keine Aktenzeichen."
-- Post-process Helena output: extract AZ patterns from generated text with regex, verify each against `urteil_chunks.citation` metadata of the retrieved chunks. Flag mismatches in the UI ("Quellennachweis konnte nicht verifiziert werden").
-- Chunking rule: never split at the metadata block of a court decision. Keep Gericht + Datum + AZ + ECLI + first 200 tokens of Leitsatz in a single chunk (even if it exceeds normal chunk size).
-- Automatic "nicht amtliche Leitsätze" disclaimer on all Helena Urteil summaries (BRAK requirement).
-
-**Warning signs:**
-- AZ in Helena output does not match any `urteil_chunks.citation` field for the retrieved chunks — hallucination detected.
-- Missing "nicht amtlich" label on Helena Urteil summaries in the UI.
-- Users reporting citations that return no results on external legal databases.
-
-**Phase to address:** All RAG phases. Citation integrity must be built into the retrieval prompt template and post-processing pipeline from the first Urteil-RAG task.
-
----
-
-### Pitfall 9: multilingual-e5 Embedding Quality Degradation for Formal German Legal Language
-
-**What goes wrong:**
-`multilingual-e5-large` was trained on Common Crawl and Wikipedia — not on formal German legal text. It handles conversational German well but struggles with: (1) archaic legal phrasing ("gemäß § 823 Abs. 1 BGB iVm § 31 BGB"), (2) unexpanded legal abbreviations ("iVm," "aF," "nF," "idF," "BVerwGE"), (3) Latin legal maxims common in German law ("exceptio doli," "in dubio pro reo"). Semantic search returns poor results: "Schadensersatz" and "Schmerzensgeld" treated as unrelated; "Kündigung" matches employment AND rental law equally with no domain signal.
-
-**Why it happens:**
-Developers pick the highest-quality available multilingual embedding model without benchmarking on the actual domain. Legal German is a specialized sublanguage that deviates significantly from the web text the model was trained on.
-
-**How to avoid:**
-- Abbreviation expansion pre-processing: before embedding, normalize common German legal abbreviations. Examples: "iVm" → "in Verbindung mit," "aF" → "alter Fassung," "nF" → "neuer Fassung." Store the expanded form in a separate `contentNormalized` column; embed `contentNormalized`, not raw `content`.
-- Evaluate `jina-embeddings-v3` (available via Ollama, context window 8192 tokens) against `multilingual-e5-large` on a 50-query German legal test set before committing to either for the new law/judgment chunks.
-- Hybrid search mitigates embedding weakness: BM25 excels at exact legal term matching (Aktenzeichen, paragraph citations, statute abbreviations). Ensure BM25 leg carries meaningful weight in RRF — do not downweight it in favor of pure vector search.
-- Add `rechtsgebiet`, `normReference`, `gericht` metadata fields to `law_chunks` and `urteil_chunks`. Helena pre-filters by these fields before semantic search — reduces embedding quality burden significantly.
-- Store the embedding model name and version with every vector row. When upgrading models, existing embeddings are invalid — mark them for re-processing, do not mix vectors from different model versions in the same similarity search.
-
-**Warning signs:**
-- Query "Schadensersatz Verkehrsunfall" returns Mietrecht paragraphs — domain confusion.
-- Query with exact Aktenzeichen string returns no pgvector results — expected; BM25 leg must handle this.
-- Retrieval MRR below 0.5 on gold-standard query set — time to re-evaluate embedding model choice.
-- `law_chunks.embedding` and `document_chunks.embedding` mixed in same pgvector query — model version mismatch possible.
-
-**Phase to address:** Phase 1 (before bulk ingestion of laws/Urteile). Validate embedding quality on a 50-law sample before triggering full Gesetze ingestion.
-
----
-
-### Pitfall 10: pgvector HNSW Index Missing on New Chunk Tables — Full-Table-Scan at Scale
-
-**What goes wrong:**
-The existing `document_chunks` table has an HNSW index (built in v3.4). New tables (`law_chunks`, `urteil_chunks`, `muster_chunks`) are added in Prisma schema migrations without explicitly creating HNSW indexes. Prisma does not automatically create HNSW indexes from the schema — they must be added as raw SQL in the migration file. Without the index, every vector similarity query is a full sequential scan. At 10,000+ law chunks, queries go from ~10ms to >30s, making the app appear frozen.
-
-**Why it happens:**
-Prisma schema does not support vector index creation natively (as of early 2026). Developers add the `embedding` column as `Unsupported("vector(1536)")` but forget to add the corresponding index creation as a raw SQL step in the migration file.
-
-**How to avoid:**
-- In every Prisma migration that adds an `embedding` column, add immediately after:
-  ```sql
-  CREATE INDEX CONCURRENTLY "law_chunks_embedding_hnsw_idx"
-  ON "law_chunks" USING hnsw ("embedding" vector_cosine_ops)
-  WITH (m = 16, ef_construction = 64);
+- Call `job.updateProgress()` inside the agent loop at every step iteration. This resets the stall timer.
+- Set `lockDuration: 120000` (2 minutes) on the BullMQ worker for the `helena-agent` queue specifically. This gives the job 2 minutes before it is considered stalled.
+- Wire `AbortController` to BullMQ's graceful shutdown:
+  ```typescript
+  const controller = new AbortController();
+  worker.on('closing', () => controller.abort());
+  // Pass controller.signal to streamText / generateText
   ```
-- Run `\d law_chunks` after migration to verify the index exists.
-- Add to the app health check: query each chunk table with a trivial vector similarity search and assert response time < 100ms. This catches missing indexes immediately.
-- Use `CREATE INDEX CONCURRENTLY` to avoid locking the table during index build — safe for production deploys.
+- On abort: save partial agent results to the job's `returnValue` before exiting so they can be inspected.
+- Use BullMQ's `removeOnComplete: { count: 1000 }` and `removeOnFail: { count: 500 }` to prevent Redis memory from filling with completed agent job payloads (agent jobs store large LLM conversations in `job.data`).
+- Set `concurrency: 1` for the `helena-agent` queue on the same Ollama GPU — parallel agent jobs compete for GPU memory and cause Ollama OOM errors.
 
 **Warning signs:**
-- First bulk ingestion of 2000+ laws takes minutes per query afterward.
-- `EXPLAIN ANALYZE` on a vector similarity query shows `Seq Scan` instead of `Index Scan using hnsw`.
-- Health check passes (table exists) but vector queries time out.
+- BullMQ dashboard showing the same agent job ID in "active" state twice — duplicate execution from stall recovery.
+- Duplicate calendar entries or duplicate alert emails for the same Akte — stalled job ran twice.
+- Redis memory growing steadily — large job payloads accumulating.
+- Worker restart causing Ollama to continue processing a request for a job that no longer has a waiting worker.
 
-**Phase to address:** Phase 2 (Gesetze-RAG ingestion). Index creation is task 1 of every new chunk table migration — not an afterthought.
+**Phase to address:** Phase 1 (BullMQ agent queue setup). Queue configuration must be separate from the existing OCR/email queues.
+
+---
+
+### Pitfall 9: Activity Feed Performance — N+1 Queries and Real-Time Flood
+
+**What goes wrong:**
+An Activity Feed that shows all agent actions across all Akten in real time creates two performance problems: (1) Database N+1: each activity event requires a separate query for the referenced entity (Akte name, document title, user name). With 50 events in the feed, this is 50+1 DB queries per page load. (2) Socket.IO event flood: a nightly scanner running on 200 Akten emits 200+ `helena:activity` events in rapid succession. Each connected browser client re-renders the feed 200 times, causing UI jank and potential React state update floods.
+
+**Why it happens:**
+Activity feeds are typically prototyped with a simple `activity.findMany()` + relation includes. The include-based approach in Prisma hides the fact that each included relation is a separate SQL query under the hood unless explicitly joined. Socket.IO events are emitted per-job-completion without batching.
+
+**How to avoid:**
+- Use a single Prisma query with explicit `include` for `akte`, `dokument`, `user` — Prisma will JOIN, not N+1, when using nested `include` correctly. Verify with `DEBUG=prisma:query` that the feed query issues ≤3 SQL statements.
+- Add a **composite index** on `(akteId, createdAt DESC)` on the `helena_activity` table for Akte-scoped feed queries.
+- Paginate the feed: default to 20 events, infinite scroll for more. Never load >100 events at once.
+- **Batch Socket.IO emissions**: the nightly scanner collects all events and emits a single `helena:activityBatch` event with an array after each Akte completes, not one event per action. The frontend processes the batch in one React state update.
+- **RBAC filter on Socket.IO**: a user must only receive `helena:activity` events for Akten they have read access to. Implement this via Socket.IO rooms keyed to Akte ID, not broadcast-to-all.
+- Add a `helena_activity.ttl` field and a weekly cleanup job: delete activity events older than 90 days. Legal audit-relevant actions go to `audit_log` (permanent), not `helena_activity` (transient UX).
+
+**Warning signs:**
+- `DEBUG=prisma:query` showing 51 SQL statements for loading a 50-event feed — N+1 present.
+- Browser DevTools showing 200 incoming Socket.IO frames within 10 seconds during a nightly scan — unthrottled emission.
+- Activity feed visibly re-rendering dozens of times per second during scanner runs — state update flood.
+- Redis memory spike during nightly scan — Socket.IO adapter broadcasting large event payloads.
+
+**Phase to address:** Phase 4 (Activity Feed). DB query plan must be verified before UI ships. Socket.IO batching must be in the scanner from day one.
+
+---
+
+### Pitfall 10: QA Evaluation — Goodhart's Law and Gold Set Bias
+
+**What goes wrong:**
+Building a QA evaluation set ("gold standard") of 50 Helena queries with expected answers to measure recall and precision. Three failure modes: (1) **Goodhart's Law**: once the gold set becomes the optimization target, prompt engineering over-fits to it. Helena achieves 90% recall on the gold set but regresses on real Anwalt queries that differ in phrasing. (2) **Gold set bias**: if the gold set is built from the same documents that were used to build the RAG index, the evaluation is circular. A query whose answer is in the index will score well regardless of retrieval quality. (3) **Metric mismatch**: optimizing for retrieval recall (does the correct chunk appear in the top-10?) does not measure whether the generated answer is legally correct. A chunk can be retrieved correctly but the LLM can still hallucinate the answer.
+
+**Why it happens:**
+QA evaluation for RAG is taken from IR (information retrieval) literature where "correct document retrieved" is the success metric. Legal AI needs a different metric: "legally accurate answer generated." These are different things and require different evaluation approaches.
+
+**How to avoid:**
+- **Separate gold set sources**: the gold set queries must reference documents NOT used to calibrate the ingestion pipeline. Use Akten from the previous 3 months that the developers have not read during development.
+- **Two-metric system**: measure (a) retrieval quality: MRR@10 on the gold set, and (b) answer quality: human review of generated answers by the Anwalt (or a legal practitioner), not the developer. Target: 100% of gold set answers reviewed by a non-developer.
+- **Adversarial queries**: include 10 queries where the correct answer is "Ich habe keine ausreichende Information, um das zu beantworten." Measure whether Helena hallucinates an answer (false positive) vs. correctly refusing.
+- **Rotate the gold set**: replace 20% of gold set queries each quarter with new queries from real Anwalt sessions. This prevents over-fitting.
+- **Separate evaluation from development**: the developer who implements a feature should not evaluate it on the gold set they built. Have the Anwalt (end user) run the evaluation.
+
+**Warning signs:**
+- Gold set recall metric improves consistently while real Anwalt satisfaction scores do not — over-fitting.
+- All gold set queries are in the same legal domain (e.g., all Arbeitsrecht) — domain bias.
+- No adversarial "I don't know" queries in the gold set — hallucination not measured.
+- Developer runs gold set evaluation after every prompt change — Goodhart's law in action.
+
+**Phase to address:** Phase 5 (QA evaluation framework). Gold set must be reviewed and approved by the Anwalt before any metric is used as a success criterion.
 
 ---
 
@@ -263,14 +283,14 @@ Prisma schema does not support vector index creation natively (as of early 2026)
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Flat chunks only (no parent-child), feed child directly to LLM | Faster to implement | Context truncation, poor answer quality for long legal arguments, cannot be retrofitted without re-ingestion | Never — implement parent-child from the start for new chunk tables |
-| RRF in application code (two Node.js DB round-trips, merge in JS) | Simpler initial code | 2× DB latency per query, fusion logic duplicated across multiple endpoints, hard to tune | Prototype only — move to SQL CTE before any production traffic |
-| NER prompt without few-shot German legal examples | Reuses existing generic prompt | High false positive rate on court/institution names, low false negative catch rate for German name patterns | Never for production — few-shot mandatory |
-| Indexing Muster immediately on MinIO upload (before NER) | Instant indexing feedback to admin | DSGVO violation, BRAO §43a breach if client data indexed | Never |
-| Cloning bundestag/gesetze Markdown repo as data source | Simple git pull for updates | Stale data (repo lags behind gesetze-im-internet.de), large git history causes Docker OOM, Markdown has idiosyncrasies | Prototype only |
-| Cross-encoder reranking on 50 candidates | Higher theoretical reranking quality | 14s latency per query at 280ms/doc — app becomes unusable | Never — hard cap at 10 candidates |
-| Embedding raw German legal text without abbreviation expansion | No preprocessing step needed | Poor semantic retrieval for abbreviation-heavy legal text | Only if benchmarks show no MRR improvement from expansion |
-| Separate pgvector queries per source type (Akte, Gesetze, Urteile, Muster) then merge in JS | Simple mental model | N×DB round-trips, fusion quality degrades without RRF, harder to weight sources | Only during initial development — unify into single hybrid query before production |
+| No iteration cap on ReAct loop | Simpler initial implementation | Infinite loops in production, BullMQ worker starvation | Never — iteration cap is day-one requirement |
+| Agent tools calling Prisma directly (bypassing HTTP API) | Less boilerplate | Bypasses middleware (ENTWURF guard, RBAC, audit logging) | Never for document-creating tools |
+| Global cloud LLM for all agent calls including Akte document content | Better answer quality | DSGVO data processor agreement required; client data to cloud provider | Only if a DSGVO-compliant DPA with provider is signed |
+| Nightly scan with no scope filter (all Akten) | Complete coverage | GPU occupied 4–8h nightly, blocks interactive use | Prototype only — add scope filter before production |
+| Gold set built from same documents as RAG index | Fast evaluation setup | Circular evaluation, metric does not reflect real quality | Prototype only — use separate held-out documents |
+| Single BullMQ concurrency for all queues (OCR + agent + email) | Simple queue setup | Agent jobs starve OCR/email processing; agent GPU + OCR GPU conflict | Never — separate concurrency settings per queue type |
+| Activity feed without RBAC Socket.IO room filter | Simpler socket logic | Users see other Anwälte's Akte activity — confidentiality breach | Never |
+| Agent memory (akte_summary) excluded from DSGVO anonymization | Less code to write | DSGVO Art. 17 right to erasure not honored | Never — include in anonymization from the start |
 
 ---
 
@@ -278,14 +298,13 @@ Prisma schema does not support vector index creation natively (as of early 2026)
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Meilisearch + pgvector RRF | Querying sequentially in Node.js then merging arrays | Implement as single PostgreSQL function or CTE. Alternatively: use Meilisearch as pre-filter for relevant `dokumentId`s, then do vector search `WHERE "dokumentId" = ANY($filtered_ids)` — reduces vector search space significantly |
-| Meilisearch freshness vs. pgvector | Wrapping Meilisearch index + pgvector insert in one "transaction" (they are NOT transactional) | Two-phase approach: write to Prisma/pgvector first (in DB transaction). Enqueue Meilisearch indexing as separate BullMQ job with retry. If Meilisearch job fails, chunk is searchable via vector but not BM25 — acceptable degradation |
-| Ollama cross-encoder reranking | Calling `/api/generate` with query+document, parsing relevance from text output | Use a dedicated reranker model that outputs a scalar score, not a chat response. Qwen3-Reranker-4B via Ollama's `/api/embed` endpoint with the correct reranker prompt template |
-| bundestag/gesetze XML parsing | `fast-xml-parser` default config on BMJV XMLs | Set `htmlEntities: true` (BMJV XMLs use HTML entities inside XML), `ignoreAttributes: false` (to capture `builddate` metadata), force UTF-8 regardless of XML prolog encoding declaration |
-| MinIO Muster storage | Storing only the raw DOCX, no processing state | Store: (1) raw DOCX at `muster/raw/{id}.docx`, (2) extracted plain text at `muster/text/{id}.txt`, (3) NER-filtered text at `muster/filtered/{id}.txt`. Use MinIO object tags (`pii-status: pending|clean|rejected`) to track NER state |
-| BullMQ NER jobs with Ollama | No timeout — stalled Ollama call holds worker slot indefinitely | Set BullMQ `timeout: 60000` on the job definition AND create `AbortController` with 45s signal for the Ollama fetch call. Log and mark job `NER_FAILED` on timeout; do not retry indefinitely |
-| Prisma migrations adding vector columns | Forgetting HNSW index in the migration SQL | Every migration adding `embedding Unsupported("vector(N)")` must include `CREATE INDEX CONCURRENTLY ... USING hnsw` as a raw SQL statement in the same migration file |
-| Existing `document_chunks` + new `law_chunks`/`urteil_chunks` in same pgvector query | Mixing embeddings from different models (multilingual-e5 for Akte docs, potentially jina-v3 for law chunks) | Never mix vectors from different embedding models in the same similarity search. Use separate queries per chunk type, then RRF-fuse. Or standardize on one embedding model for all chunk types from the start |
+| Vercel AI SDK v4 + Ollama tool calls | Trusting that Ollama returns tool calls in the correct format; not validating response structure | Always validate the response: check `response.toolCalls` array exists and is non-empty before processing. Fall back to text-mode ReAct if `toolCalls` is empty despite model reasoning about a tool |
+| BullMQ + long-running Ollama calls | Not propagating `AbortSignal` to Ollama fetch; job stalls on worker shutdown | Wire `AbortController` to both BullMQ `worker.on('closing')` and the `streamText`/`generateText` `abortSignal` parameter |
+| Socket.IO + Activity Feed RBAC | Broadcasting `helena:activity` events to all connected clients | Join clients to per-Akte Socket.IO rooms on login. Emit only to rooms the user belongs to based on their Akte access permissions |
+| BullMQ + agent job stall detection | Using the default `stalledInterval: 30000` for agent jobs that take >30s | Set `lockDuration: 120000` per-worker for the `helena-agent` queue. Call `job.updateProgress(step)` inside the agent loop on every iteration |
+| Prisma + agent-created documents | Agent tool calling `prisma.dokument.create()` directly | Agent tools must call the internal service function that enforces `status: 'ENTWURF'` and fires the audit log event, not raw Prisma |
+| DSGVO + akte_summary table | Treating AI summaries as non-personal-data cache | Include in Verarbeitungsverzeichnis, anonymization pipeline, and Art. 15 data subject access export |
+| Goodhart's Law + QA gold set | Using retrieval recall as the sole quality metric | Require human (Anwalt) review of generated answers as the primary quality gate; use retrieval MRR as a secondary signal only |
 
 ---
 
@@ -293,12 +312,12 @@ Prisma schema does not support vector index creation natively (as of early 2026)
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Embedding large parent chunks (2000 tokens) in pgvector | Embeddings truncated silently (multilingual-e5-large max = 512 tokens, jina-v3 = 8192) | ONLY embed child chunks (≤500 tokens). Parent chunks are never embedded — retrieved by FK join after child retrieval | Day 1 if parent chunks exceed model context window — truncation is silent, produces wrong embeddings |
-| N+1 fetch: one `SELECT parent FROM document_chunks WHERE id = $childParentId` per retrieved child | N child results → N DB round-trips for parent context | Single query: `SELECT c.*, p.content AS parentContent FROM document_chunks c LEFT JOIN document_chunks p ON c."parentChunkId" = p.id WHERE c.id = ANY($1)` | At >3 results per query — noticeable latency spike |
-| Sequential Ollama NER: `for doc of docs { await ollama.generate(doc) }` | BullMQ ingestion queue depth grows monotonically during bulk import | Use BullMQ `concurrency: 3` for NER worker, not sequential awaits within a single job | At >5 documents in a single ingestion batch |
-| Missing HNSW index on `law_chunks`, `urteil_chunks`, `muster_chunks` | Vector queries take >10s, app appears frozen | Add HNSW index in migration file. Verify with `EXPLAIN ANALYZE`. Add to health check. | At >5,000 chunks per table — queries go from 10ms to 30s+ |
-| Re-scraping rechtsprechung-im-internet.de on every ingestion run | IP block within 5 minutes of bulk re-run | Cache raw HTML in MinIO (`urteil/html/{id}.html`). Only re-scrape if `lastScraped` > 30 days old or if forced | First bulk ingestion attempt without caching |
-| Meilisearch re-indexing all chunks on attribute schema change | Full re-index causes search service downtime during heavy use | Add new filterable/searchable attributes as nullable first; use Meilisearch settings API to add attributes incrementally, not via full index deletion + re-creation | Any schema change without planning |
+| ReAct loop with no token budget | Agent quality degrades after 5+ iterations; final answer ignores early context | Token budget manager: truncate oldest tool results when approaching 75% of context window | At iteration 6+ with large tool results (>500 tokens each) |
+| Activity feed N+1 queries | Feed page load >2s; DB connection pool exhausted under moderate load | Single Prisma query with nested `include`; verify with `DEBUG=prisma:query` | At >20 events per feed load |
+| Nightly scanner over all Akten (no scope filter) | GPU occupied 4–8h; morning interactive use degraded | Scope to Akten with activity in last 7 days; summary-only scan | At >100 Akten in the database |
+| Agent job concurrency > 1 on single Ollama GPU | Ollama OOM errors; first job runs but second job fails immediately | `concurrency: 1` for `helena-agent` queue; secondary queue for lower-priority scans | Any time 2 agent jobs run simultaneously |
+| No progress calls in long agent jobs | BullMQ stall recovery re-queues job; duplicate execution | `job.updateProgress(stepN)` at each agent iteration | After 30s without progress update (BullMQ default stalledInterval) |
+| Socket.IO event flood during nightly scan | Browser client re-renders 200+ times; UI freeze for active users | Batch events; emit `helena:activityBatch` once per Akte, not per action | When nightly scan processes >20 Akten |
 
 ---
 
@@ -306,11 +325,12 @@ Prisma schema does not support vector index creation natively (as of early 2026)
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| Storing unredacted court decisions in `urteil_chunks` | DSGVO Art. 5(1)(c) data minimization violation — personal data of litigants stored beyond necessity | NER PII filter is a hard gate before any text enters `urteil_chunks`. Document NER as a technical-organizational measure in the Verarbeitungsverzeichnis |
-| Muster containing real client data indexed to RAG | BRAO §43a Abs. 2 (Verschwiegenheitspflicht) violation — attorney professional secrecy breach | Two-stage upload: MinIO store → PII gate → conditional index. Status machine with `PENDING_NER | INDEXED | REJECTED_PII_DETECTED`. No bypasses |
-| Mixing client Akte RAG context with public law context in cloud LLM calls | Client data sent to OpenAI/Anthropic when cloud provider is selected — DSGVO data processor agreement required, but `document_chunks` content should never leave the self-hosted environment | Separate retrieval paths: `document_chunks` (Akte-scoped, only Ollama) vs. `law_chunks`/`urteil_chunks` (public, can use cloud LLM). Guard: if provider is cloud AND query uses `document_chunks`, refuse and redirect to Ollama |
-| `law_chunks` and `urteil_chunks` accessible without RBAC filter | Public law content is fine to share, but the retrieval endpoint also touches `document_chunks` — a misconfigured JOIN or union leaks Akte documents to wrong user | Retrieval architecture must enforce Akte-scoped filtering on `document_chunks` at the SQL level (WHERE `"akteId" = $userAccessibleAkteIds`), not post-fetch in application code |
-| BMJ scraping without User-Agent identification | Potential ToS violation, IP block, bad actor classification | Always set descriptive User-Agent identifying the application and operator contact |
+| Cloud LLM receiving `document_chunks` content | DSGVO data processor agreement breach; client confidentiality under BRAO §43a | Hard enforce: if LLM provider is not Ollama AND query includes `document_chunks`, reject with error and redirect to Ollama |
+| Agent creating documents without `status: 'ENTWURF'` | KI-generierter Inhalt versendet ohne Anwaltskontrolle — BRAK 2024 KI-Leitfaden violation; BRAO §43 breach | Prisma middleware asserting `status = 'ENTWURF'` on every document create. Agent tools go through HTTP API, not raw Prisma |
+| Activity Feed without RBAC filter | User sees Akte activity from cases they have no access to — attorney-client confidentiality breach | Socket.IO room-based RBAC; verify room membership against Akte access permissions on every join |
+| akte_summary not covered by Art. 17 erasure | DSGVO right to erasure not honored for AI-generated summaries | `ON DELETE CASCADE` from `akte` to `akte_summary`; include in anonymization routine |
+| Stale agent memory used as context | Agent acts on outdated case summary — wrong §-deadlines, wrong party status, wrong case outcome | Staleness check: if `akte_summary.updatedAt < akte.updatedAt - 30 days`, mark stale and regenerate before using as context |
+| No audit log for agent actions | Cannot demonstrate to BRAK/Rechtsanwaltskammer which actions Helena took autonomously | Every agent tool invocation writes an `audit_log` entry with `actor: 'helena-agent'`, `action`, `akteId`, `timestamp`, and the tool's arguments |
 
 ---
 
@@ -318,28 +338,28 @@ Prisma schema does not support vector index creation natively (as of early 2026)
 
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-----------------|
-| No async status for Muster upload | Admin clicks upload, waits with no feedback, clicks again — duplicate uploads, both with unredacted data | Real-time status via Socket.IO: "Hochgeladen (1/3) → NER läuft (2/3) → Indexiert (3/3)" or "Abgelehnt — PII erkannt" |
-| Helena cites "Chunk ID a3f9b2c" instead of "§ 123 BGB Abs. 2" | Anwalt cannot verify the citation; loses trust in Helena entirely | Store norm reference ("§ 123 BGB") and Aktenzeichen ("BGH XII ZR 45/22") as structured metadata. Citation UI renders human-readable reference, not internal chunk ID |
-| Retrieval returning outdated Gesetze versions | Anwalt acts on superseded law text — professional liability | Store `gueltigBis` date on `law_chunks`. Filter out expired norms at query time: `WHERE "gueltigBis" IS NULL OR "gueltigBis" > NOW()` |
-| Cross-encoder latency shows as UI freeze | Anwalt thinks app crashed; hits back button, losing context | Always stream LLM response tokens as they arrive. Do not wait for full reranking + full response before showing anything. Show a "Helena denkt nach..." skeleton while retrieving |
-| No "nicht amtlich" disclaimer on Helena Urteil summaries | BRAK compliance violation; professional liability exposure | Automatic disclaimer appended to every Helena Urteil summary: "Hinweis: Nicht amtliche Zusammenfassung. Ohne Gewähr." Non-removable by user |
-| Muster search returning placeholder text ("{{Mandant.Name}}") as relevant matches | Helena drafts briefs with unfilled placeholder variable names instead of actual content | Normalize all placeholders to a canonical form at indexing time. Optionally exclude placeholder tokens from Meilisearch searchable attributes |
+| No disclaimer on agent-generated drafts | Anwalt may mistake agent draft for approved document; professional liability | Permanent "KI-Entwurf — nicht freigegeben" banner on every agent-created document; non-dismissable until Anwalt explicitly approves |
+| Agent running silently in background with no status | Anwalt does not know if Helena is working or stalled; opens a ticket "Is the system broken?" | Real-time progress indicator via Socket.IO: "Helena analysiert Akte ... (Schritt 3/5)" during agent execution |
+| Alert inbox flooded with false positives | Anwalt stops reading alerts within 3 days; important alerts missed | Alert deduplication + throttle (max 10/night). Allow Anwalt to set alert sensitivity per Rechtsgebiet |
+| Activity Feed showing helena-agent actions mixed with human actions without visual distinction | Anwalt cannot tell which actions were autonomous vs. human-initiated | Visual differentiation: helena-agent actions have a distinct robot icon + blue accent; human actions use standard user avatar |
+| Agent tool error returned as legal content | Anwalt receives a JSON error object or stack trace in the middle of a Schriftsatz draft | All agent tool errors must be caught and converted to user-readable German: "Helena konnte Dokument X nicht erstellen: [reason]" |
+| QA evaluation score shown to Anwalt as "Helena accuracy: 87%" | Anwalt trusts agent output without review; Goodhart metric misrepresents real quality | Never show internal evaluation metrics to end users. Show instead: "Quellennachweis: X von Y Zitaten verifiziert" — a transparent, per-response metric |
 
 ---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **Hybrid Search RRF:** Often missing equal candidate count from both legs — verify both Meilisearch and pgvector return exactly N=50 candidates before fusion, not Meilisearch default 20.
-- [ ] **Parent-Child Chunking:** Often missing the parent fetch on retrieval — verify by logging prompt token count: LLM must receive ~2000-token parent content, not ~500-token child content.
-- [ ] **Gesetze encoding:** Often missing UTF-8 validation — run `SELECT content FROM law_chunks WHERE content LIKE '%§%' LIMIT 1` and verify actual `§` character, not `Â§`.
-- [ ] **Gesetze freshness:** Often missing staleness detection — verify daily sync BullMQ cron fires and updates `lastModified` on changed laws. Check one law known to have changed recently.
-- [ ] **NER institution whitelist:** Often missing after adding few-shot examples — verify "Bundesgerichtshof," "Amtsgericht Köln," "BaFin" are NOT redacted in a sample court decision NER run.
-- [ ] **Muster PII gate:** Often missing the indexing lock — search `muster_chunks` immediately after upload: must return 0 results. Results should appear only after NER job completes successfully.
-- [ ] **Citation integrity:** Often missing post-generation verification — verify Helena's cited Aktenzeichen matches the `citation` metadata field of the retrieved `urteil_chunks` records, not a hallucinated variant.
-- [ ] **pgvector HNSW index:** Often missing on new tables — run `\d law_chunks` and verify HNSW index present. Run `EXPLAIN ANALYZE` on a vector query and verify `Index Scan` not `Seq Scan`.
-- [ ] **Ollama NER timeout:** Often missing — verify BullMQ NER job definition has `timeout: 60000` and that a stalled Ollama call does not hold a worker slot beyond 60s (test by artificially stalling Ollama).
-- [ ] **Embedding model consistency:** Often mixing — verify `SELECT DISTINCT "embeddingModel" FROM law_chunks` returns exactly one value matching the current production model name.
-- [ ] **DSGVO documentation:** Often missing Verarbeitungsverzeichnis entry for Urteile-RAG processing — verify that the NER PII filter is documented as a technical-organizational measure before going live.
+- [ ] **ReAct Loop Cap:** Often missing the stall detector — verify agent loop aborts on 3 consecutive identical tool calls, not just on `maxIterations`.
+- [ ] **Ollama Tool Call Format:** Often missing the response type guard — verify `response.toolCalls` is validated after every LLM call; deploy a smoke test that calls each tool through the full Ollama stack.
+- [ ] **ENTWURF Gate for Agent Documents:** Often missing the Prisma middleware guard — query `SELECT status FROM dokument WHERE "createdBy" = 'helena-agent'` and assert all rows have `status = 'ENTWURF'`.
+- [ ] **§-Reference Post-Verification:** Often missing — verify the agent's `execute` function runs regex extraction + `law_chunks.normReference` lookup on every generated draft before returning to the user.
+- [ ] **BullMQ AbortSignal Wiring:** Often missing — verify that stopping the Docker worker container causes the in-flight Ollama call to be cancelled (not continued until completion), confirmed by Ollama server logs.
+- [ ] **DSGVO akte_summary Coverage:** Often missing — verify `DELETE FROM akte WHERE id = $id` also deletes the corresponding `akte_summary` row (test with explicit cascade test).
+- [ ] **Activity Feed RBAC:** Often missing — verify that user B cannot receive `helena:activity` Socket.IO events for Akte that user B does not have read access to.
+- [ ] **Nightly Scanner Scope Filter:** Often missing — verify BullMQ cron job processes only Akten with `updatedAt > NOW() - INTERVAL '7 days'`; confirm with job logs showing Akte count processed.
+- [ ] **Alert Deduplication:** Often missing — trigger the same alert condition twice; verify only one alert email is sent within the 48h suppression window.
+- [ ] **Audit Log for Agent Actions:** Often missing — run an agent tool, then query `SELECT * FROM audit_log WHERE actor = 'helena-agent'` and verify the entry exists with correct `akteId` and `action`.
+- [ ] **Gold Set Independence:** Often missing — verify that gold set queries reference Akten from a date range not used during RAG index calibration.
 
 ---
 
@@ -347,15 +367,13 @@ Prisma schema does not support vector index creation natively (as of early 2026)
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Encoding bug (Umlauts mangled in `law_chunks`) | HIGH | Delete all `law_chunks` rows. Fix ingestion pipeline encoding. HNSW index rebuilds automatically on re-ingestion. Re-run daily sync for all laws. |
-| Unredacted client data found in `muster_chunks` | HIGH | Immediate: `DELETE FROM muster_chunks WHERE id IN (...)` AND delete from Meilisearch index. Audit: check all uploads since pipeline went live. Legal: assess DSGVO Art. 33 notification obligation. BRAO: assess professional secrecy breach. |
-| Hallucinated AZ found in production Helena citations | MEDIUM | Add post-generation AZ verification (regex + chunk metadata comparison) to existing endpoint — no re-ingestion needed. Ship fix same day. Add "Quellennachweis nicht verifiziert" flag to UI for unverifiable citations. |
-| Cross-encoder latency making app unusable (>5s P50) | MEDIUM | Feature flag: disable cross-encoder, fall back to RRF ordering immediately. Implement 10-candidate cap and ONNX-based reranker offline. Re-enable with capped candidate count. |
-| Parent-child retrieval returning child chunks directly | MEDIUM | SQL fix only: update retrieval query to JOIN parent. No re-ingestion needed if `parentChunkId` FKs are correctly populated. |
-| pgvector HNSW index missing on new table | LOW | `CREATE INDEX CONCURRENTLY` — runs without table lock. Takes ~5 minutes for 100k chunks. No app restart needed. |
-| Meilisearch out of sync with pgvector (failed indexing jobs) | LOW | Re-queue Meilisearch indexing BullMQ jobs scoped to affected `chunkId`s. No re-ingestion from source needed. |
-| BMJ IP block during bulk scraping | LOW | Reduce rate to 1 req/5s. Wait 24h for unblock. Use cached MinIO HTML for re-processing without re-scraping. |
-| NER false positive discovered (institution name redacted) | LOW | Update NER prompt + whitelist regex. Re-run NER BullMQ job against raw HTML in MinIO (no re-scraping). Re-index affected chunks only. |
+| Agent infinite loop fills BullMQ queue | MEDIUM | Emergency: set `concurrency: 0` on `helena-agent` worker to drain. Delete stuck jobs from BullMQ dashboard. Deploy iteration cap hotfix. Restore concurrency. |
+| Agent document sent without ENTWURF status | HIGH | Notify Anwalt immediately. Revoke document in beA if possible. Audit all agent-created documents since the bug was introduced. Patch Prisma middleware same day. Assess BRAO disciplinary exposure. |
+| Cloud LLM received Akte personal data | HIGH | Revoke API key immediately. Audit cloud provider logs for data exposure. Assess DSGVO Art. 33 72-hour breach notification obligation. Re-deploy with hard Ollama-only guard for Akte content. |
+| akte_summary contains data of deleted Akte | MEDIUM | `DELETE FROM akte_summary WHERE "akteId" NOT IN (SELECT id FROM akte)`. Add `ON DELETE CASCADE`. Assess if deleted subject's summary was served to the agent — if yes, DSGVO Art. 17 violation logged. |
+| Nightly scanner causes GPU starvation all morning | LOW | Temporarily disable scanner cron. Add scope filter (active Akten only). Re-enable with monitoring of nightly runtime. |
+| Activity Feed N+1 causing DB connection pool exhaustion | MEDIUM | Feature-flag: disable real-time feed, fall back to polling every 30s. Fix Prisma query to use nested include. Re-enable WebSocket feed after fix. |
+| Gold set over-fitted — Helena regresses on real queries | MEDIUM | Rebuild gold set from new Anwalt sessions. Revert prompt engineering changes made against old gold set. Re-run evaluation with new set. |
 
 ---
 
@@ -363,40 +381,37 @@ Prisma schema does not support vector index creation natively (as of early 2026)
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| RRF candidate count asymmetry | Phase 1: Hybrid Search | Gold-standard 20-query MRR test (MRR > 0.6), verify equal candidate counts in logs |
-| Cross-encoder latency explosion | Phase 1: Reranking | P95 end-to-end chat latency < 3s measured with 10 candidate cap |
-| Parent-child schema migration | Phase 1: Parent-Child Chunking | `SELECT COUNT(*) FROM document_chunks WHERE "chunkType" IS NULL = 0` after migration |
-| Embedding quality for German legal | Phase 1: before bulk ingestion | 50-query benchmark multilingual-e5 vs. alternative; MRR documented |
-| pgvector HNSW index missing | Phase 1 + all new table migrations | `EXPLAIN ANALYZE` shows `Index Scan`. Health check asserts < 100ms vector query |
-| bundestag/gesetze encoding + freshness | Phase 2: Gesetze-RAG | Encoding smoke test passes. Daily sync cron fires. One known-changed law verified current |
-| BMJ scraping compliance + HTML fragility | Phase 3: Urteile-RAG | Rate limit verified in logs. Schema validation step asserts expected HTML elements per page |
-| Ollama NER false positives/negatives | Phase 3: Urteile-RAG | Acceptance test: 10 known decisions, 0 institution names redacted, 0 full person names surviving |
-| Muster PII gate | Phase 4: Arbeitswissen-RAG | Upload-then-immediate-search returns 0 results. Socket.IO status events fire correctly |
-| Helena citation hallucination | All phases with Urteil context | Post-generation AZ regex verification runs on every Helena response containing an Urteil citation |
-| Unredacted client data mixing with public law in cloud LLM | Phase 1: Retrieval architecture | Integration test: cloud provider selected + Akte query → error returned, not forwarded to cloud |
+| Infinite ReAct loop | Phase 1: Agent foundation | Integration test: trigger tool that always returns "not done" → assert agent aborts at maxIterations |
+| Ollama tool call format | Phase 1: Ollama integration | Smoke test: each tool invoked via full Ollama stack in test environment |
+| ENTWURF bypass in agent tools | Phase 2: Document creation tools | Query `dokument WHERE "createdBy"='helena-agent'` after integration test; assert all ENTWURF |
+| Legal hallucination / §-reference | Phase 2: Schriftsatz draft tool | Post-generation §-verification runs on every test draft; 0 unverified references accepted |
+| Context window overflow | Phase 1: Agent foundation | Token budget manager tested with 10-step agent run containing large tool results |
+| Background scanner cost | Phase 3: Nightly scanner | Nightly runtime in staging < 90 minutes; alert count < 10 per run |
+| akte_summary DSGVO | Phase 3: Agent memory | Cascade delete test; Verarbeitungsverzeichnis entry created before first production summary |
+| BullMQ stalled agent jobs | Phase 1: Queue configuration | AbortSignal propagation test; stall timer set to 120s; progress calls verified in loop |
+| Activity Feed N+1 | Phase 4: Activity Feed UI | `DEBUG=prisma:query` shows ≤3 SQL statements for 20-event feed load |
+| QA gold set bias | Phase 5: QA evaluation | Gold set sources documented; Anwalt review of 100% of generated answers confirmed |
 
 ---
 
 ## Sources
 
-- [Advanced RAG: Reciprocal Rank Fusion (glaforge.dev, Feb 2026)](https://glaforge.dev/posts/2026/02/10/advanced-rag-understanding-reciprocal-rank-fusion-in-hybrid-search/)
-- [Azure AI Search Hybrid Search Scoring / RRF](https://learn.microsoft.com/en-us/azure/ai-search/hybrid-search-ranking)
-- [Better RAG with RRF and Hybrid Search — assembled.com](https://www.assembled.com/blog/better-rag-results-with-reciprocal-rank-fusion-and-hybrid-search)
-- [Reranking with Ollama and Qwen3 Reranker in Go (Medium, 2025)](https://medium.com/@rosgluk/reranking-documents-with-ollama-and-qwen3-reranker-model-in-go-6dc9c2fb5f0b)
-- [Ultimate Guide to Reranking Models — ZeroEntropy 2026](https://www.zeroentropy.dev/articles/ultimate-guide-to-choosing-the-best-reranking-model-in-2025)
-- [Cross-Encoder Reranking: +40% Accuracy — Ailog RAG](https://app.ailog.fr/en/blog/guides/reranking)
-- [Parent-Child Chunking in LangChain for Advanced RAG (Medium)](https://medium.com/@seahorse.technologies.sl/parent-child-chunking-in-langchain-for-advanced-rag-e7c37171995a)
-- [Chunking Strategies for RAG — Stack Overflow Blog (Dec 2024)](https://stackoverflow.blog/2024/12/27/breaking-up-is-hard-to-do-chunking-in-rag-applications/)
-- [bundestag/gesetze GitHub repo](https://github.com/bundestag/gesetze)
-- [bundestag/gesetze-tools GitHub repo](https://github.com/bundestag/gesetze-tools)
-- [Local LLM-Based NER with Ollama — drezil.de case study (2025)](https://drezil.de/Writing/ner4all-case-study.html)
-- [PII Masking — LlamaIndex official docs](https://docs.llamaindex.ai/en/stable/examples/node_postprocessor/PII/)
-- [Universal NER model on Ollama](https://ollama.com/zeffmuks/universal-ner)
-- [Web scraping legal compliance 2025 — browserless.io](https://www.browserless.io/blog/is-web-scraping-legal)
-- [Hamburg Court on AI scraping copyright Germany (2024) — Harte-Bavendamm](https://www.harte-bavendamm.de/en/ip-blog/landmark-decision-by-the-hamburg-regional-court-on-the-copyright-admissibility-of-data-scraping-for-training-ai-models)
-- Project context: `/Users/patrickbaumfalk/Projekte/AI-Lawyer/.planning/PROJECT.md` (AI-Lawyer v3.5 → v0.1 milestone)
+- [BRAK Leitfaden KI-Einsatz in der Kanzlei (December 2024, official PDF)](https://www.brak.de/fileadmin/service/publikationen/Handlungshinweise/BRAK_Leitfaden_mit_Hinweisen_zum_KI-Einsatz_Stand_12_2024.pdf)
+- [Stanford HAI: Hallucination-Free? Legal AI Tools Hallucinate 17–33% (2025, peer-reviewed)](https://law.stanford.edu/wp-content/uploads/2024/05/Legal_RAG_Hallucinations.pdf)
+- [Ollama Issue #11135: Qwen3 Tool Call Hallucination](https://github.com/ollama/ollama/issues/11135)
+- [Ollama Issue #11662: Issues calling tools with qwen3:32b](https://github.com/ollama/ollama/issues/11662)
+- [BullMQ Official Docs: Timeout Jobs](https://docs.bullmq.io/patterns/timeout-jobs)
+- [BullMQ Official Docs: Stalled Jobs](https://docs.bullmq.io/guide/workers/stalled-jobs)
+- [Vercel AI SDK: Stopping Streams + abortSignal](https://ai-sdk.dev/docs/advanced/stopping-streams)
+- [EDPB: AI Privacy Risks and Mitigations in LLMs (April 2025)](https://www.edpb.europa.eu/system/files/2025-04/ai-privacy-risks-and-mitigations-in-llms.pdf)
+- [IAPP: Engineering GDPR Compliance in Agentic AI (2025)](https://iapp.org/news/a/engineering-gdpr-compliance-in-the-age-of-agentic-ai)
+- [Redis: Context Window Overflow (2026)](https://redis.io/blog/context-window-overflow/)
+- [Factory.ai: The Context Window Problem — Scaling Agents Beyond Token Limits](https://factory.ai/news/context-window-problem)
+- [LangChain Forum: Tool-calling agent infinite loop patterns](https://community.latenode.com/t/tool-calling-agent-enters-infinite-loop-with-custom-function/34439)
+- [Goodhart's Law in AI Evaluation — Collinear AI (2025)](https://blog.collinear.ai/p/gaming-the-system-goodharts-law-exemplified-in-ai-leaderboard-controversy)
+- Project context: `/Users/patrickbaumfalk/Projekte/AI-Lawyer/.planning/PROJECT.md` (AI-Lawyer v3.5 + v0.1 Helena RAG milestone)
 
 ---
 
-*Pitfalls research for: Legal RAG addition to AI-Lawyer (Node.js/Prisma/Meilisearch/pgvector/Ollama/BullMQ)*
-*Researched: 2026-02-26*
+*Pitfalls research for: Helena Agent v2 — autonomous agent capabilities added to existing AI-Lawyer*
+*Researched: 2026-02-27*

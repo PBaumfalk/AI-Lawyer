@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { previewQueue } from "@/lib/queue/queues";
-import type { PreviewJobData } from "@/lib/ocr/types";
+import { uploadFile } from "@/lib/storage";
+import { convertDocumentToPdf, canConvertToPdf } from "@/lib/onlyoffice";
 
 /**
  * GET /api/dokumente/[id]/preview -- Get a PDF preview URL for the document.
@@ -64,13 +64,13 @@ export async function GET(
 }
 
 /**
- * POST /api/dokumente/[id]/preview -- Manually re-trigger preview generation.
+ * POST /api/dokumente/[id]/preview -- Generate PDF preview via OnlyOffice.
  *
- * Useful when:
- * - The original preview job failed (Stirling-PDF was down)
- * - The user wants to force regeneration
+ * Converts the document to PDF using OnlyOffice's Conversion API (synchronous,
+ * no worker/queue required). Stores the result in MinIO and updates previewPfad.
  *
- * Enqueues a new preview job to the BullMQ queue.
+ * This replaces the previous BullMQ + Stirling-PDF approach which required
+ * the worker container and Stirling-PDF Docker service to be running.
  */
 export async function POST(
   _request: NextRequest,
@@ -120,29 +120,47 @@ export async function POST(
     });
   }
 
-  // Enqueue preview generation job
-  try {
-    const previewJobData: PreviewJobData = {
-      dokumentId: dokument.id,
-      storagePath: dokument.dateipfad,
-      mimeType: dokument.mimeType,
-      fileName: dokument.name,
-      akteId: dokument.akteId,
-    };
+  // Check if this MIME type can be converted via OnlyOffice
+  if (!canConvertToPdf(dokument.mimeType)) {
+    return NextResponse.json(
+      { error: "Dieser Dateityp kann nicht in eine PDF-Vorschau konvertiert werden" },
+      { status: 422 }
+    );
+  }
 
-    await previewQueue.add("generate-preview", previewJobData, {
-      // Deduplicate: use dokumentId as jobId to avoid duplicate jobs
-      jobId: `preview-${dokument.id}-${Date.now()}`,
+  // Convert directly via OnlyOffice Conversion API (no worker needed)
+  try {
+    console.log(`[PREVIEW] Converting ${dokument.name} to PDF via OnlyOffice`);
+
+    const pdfBuffer = await convertDocumentToPdf(dokument.id, dokument.name);
+
+    if (!pdfBuffer) {
+      return NextResponse.json(
+        { error: "Konvertierung fehlgeschlagen. Ist OnlyOffice erreichbar?" },
+        { status: 502 }
+      );
+    }
+
+    // Store preview PDF in MinIO
+    const previewPath = `akten/${dokument.akteId}/previews/${dokument.id}.pdf`;
+    await uploadFile(previewPath, pdfBuffer, "application/pdf", pdfBuffer.length);
+
+    // Update document record with preview path
+    await prisma.dokument.update({
+      where: { id: dokument.id },
+      data: { previewPfad: previewPath },
     });
+
+    console.log(`[PREVIEW] Preview generated: ${previewPath} (${pdfBuffer.length} bytes)`);
 
     return NextResponse.json({
-      message: "Vorschau-Generierung gestartet",
-      status: "generating",
+      url: `/api/dokumente/${id}?preview=true`,
+      status: "ready",
     });
   } catch (err) {
-    console.error(`[PREVIEW] Failed to enqueue preview job for ${id}:`, err);
+    console.error(`[PREVIEW] Failed to generate preview for ${id}:`, err);
     return NextResponse.json(
-      { error: "Vorschau-Generierung konnte nicht gestartet werden" },
+      { error: "Vorschau-Generierung fehlgeschlagen" },
       { status: 500 }
     );
   }

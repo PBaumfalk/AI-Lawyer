@@ -3,9 +3,10 @@ import { prisma } from "@/lib/db";
 import { uploadFile, generateStorageKey } from "@/lib/storage";
 import { logAuditEvent } from "@/lib/audit";
 import { indexDokument } from "@/lib/meilisearch";
-import { ocrQueue, previewQueue } from "@/lib/queue/queues";
+import { ocrQueue } from "@/lib/queue/queues";
 import { requireAkteAccess } from "@/lib/rbac";
-import type { OcrJobData, PreviewJobData } from "@/lib/ocr/types";
+import { convertDocumentToPdf, canConvertToPdf } from "@/lib/onlyoffice";
+import type { OcrJobData } from "@/lib/ocr/types";
 
 /**
  * GET /api/akten/[id]/dokumente -- list documents for a case
@@ -184,18 +185,26 @@ export async function POST(
           console.error(`[UPLOAD] Failed to enqueue OCR job for ${dokument.id}:`, err);
         });
 
-        // For non-PDF files, also enqueue preview generation
-        if (file.type !== "application/pdf") {
-          const previewJobData: PreviewJobData = {
-            dokumentId: dokument.id,
-            storagePath: storageKey,
-            mimeType: dokument.mimeType,
-            fileName: file.name,
-            akteId,
-          };
-          await previewQueue.add("generate-preview", previewJobData).catch((err) => {
-            console.error(`[UPLOAD] Failed to enqueue preview job for ${dokument.id}:`, err);
-          });
+        // For non-PDF files convertible by OnlyOffice, generate preview inline (fire-and-forget).
+        // This replaces the previous BullMQ + Stirling-PDF approach.
+        if (file.type !== "application/pdf" && canConvertToPdf(file.type)) {
+          convertDocumentToPdf(dokument.id, file.name)
+            .then(async (pdfBuffer) => {
+              if (!pdfBuffer) {
+                console.warn(`[UPLOAD] Preview conversion returned null for ${dokument.id}`);
+                return;
+              }
+              const previewPath = `akten/${akteId}/previews/${dokument.id}.pdf`;
+              await uploadFile(previewPath, pdfBuffer, "application/pdf", pdfBuffer.length);
+              await prisma.dokument.update({
+                where: { id: dokument.id },
+                data: { previewPfad: previewPath },
+              });
+              console.log(`[UPLOAD] Preview generated for ${dokument.id}: ${previewPath}`);
+            })
+            .catch((err) => {
+              console.error(`[UPLOAD] Preview generation failed for ${dokument.id}:`, err);
+            });
         }
       }
 

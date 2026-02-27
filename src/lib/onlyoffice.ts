@@ -15,7 +15,7 @@ const ONLYOFFICE_SECRET = process.env.ONLYOFFICE_SECRET ?? "";
 const APP_INTERNAL_URL =
   process.env.APP_INTERNAL_URL ?? "http://host.docker.internal:3000";
 
-export { ONLYOFFICE_URL, ONLYOFFICE_INTERNAL_URL };
+export { ONLYOFFICE_URL, ONLYOFFICE_INTERNAL_URL, APP_INTERNAL_URL };
 
 /**
  * Resolve the public OnlyOffice URL for the browser.
@@ -301,4 +301,138 @@ export function buildEditorConfig({
     height: "100%",
     width: "100%",
   };
+}
+
+/**
+ * MIME types that OnlyOffice can convert to PDF.
+ * This is a subset of editable types -- images are NOT convertible via the
+ * Conversion API (they need a different approach).
+ */
+const CONVERTIBLE_TO_PDF = new Set([
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // docx
+  "application/msword", // doc
+  "application/vnd.oasis.opendocument.text", // odt
+  "application/rtf", // rtf
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // xlsx
+  "application/vnd.ms-excel", // xls
+  "application/vnd.oasis.opendocument.spreadsheet", // ods
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation", // pptx
+  "application/vnd.ms-powerpoint", // ppt
+  "application/vnd.oasis.opendocument.presentation", // odp
+]);
+
+/**
+ * Check if a MIME type can be converted to PDF via OnlyOffice.
+ */
+export function canConvertToPdf(mimeType: string): boolean {
+  return CONVERTIBLE_TO_PDF.has(mimeType);
+}
+
+/**
+ * Convert a document to PDF using the OnlyOffice Conversion API.
+ *
+ * This calls OnlyOffice's ConvertService.ashx directly (server-to-server),
+ * using the app's internal download endpoint so OnlyOffice can fetch the
+ * source file from MinIO via Next.js.
+ *
+ * @param dokumentId - The document ID (used to build download URL)
+ * @param fileName - Original filename (used to determine source file type)
+ * @returns PDF as Buffer, or null if conversion fails
+ */
+export async function convertDocumentToPdf(
+  dokumentId: string,
+  fileName: string
+): Promise<Buffer | null> {
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "docx";
+
+  // Build download URL accessible from OnlyOffice Docker container
+  const downloadUrl = `${APP_INTERNAL_URL}/api/onlyoffice/download/${dokumentId}`;
+
+  // Build conversion request payload
+  const conversionPayload: Record<string, unknown> = {
+    filetype: ext,
+    key: `preview_${dokumentId}_${Date.now()}`,
+    outputtype: "pdf",
+    title: fileName,
+    url: downloadUrl,
+  };
+
+  // Sign payload with JWT if OnlyOffice JWT is enabled
+  if (ONLYOFFICE_SECRET) {
+    try {
+      conversionPayload.token = signPayload(conversionPayload);
+    } catch (err) {
+      console.error("[convertDocumentToPdf] Failed to sign payload:", err);
+    }
+  }
+
+  try {
+    const converterUrl = `${ONLYOFFICE_INTERNAL_URL}/ConvertService.ashx`;
+    console.log(
+      `[convertDocumentToPdf] Converting ${fileName} (${ext} -> pdf), url=${converterUrl}`
+    );
+
+    let conversionResult: { endConvert: boolean; fileUrl?: string } | null =
+      null;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    // Poll for completion (OnlyOffice conversion can be async)
+    while (attempts < maxAttempts) {
+      attempts++;
+
+      const convResponse = await fetch(converterUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(conversionPayload),
+      });
+
+      if (!convResponse.ok) {
+        const errorText = await convResponse.text().catch(() => "Unknown");
+        console.error(
+          `[convertDocumentToPdf] API error ${convResponse.status}: ${errorText}`
+        );
+        return null;
+      }
+
+      conversionResult = await convResponse.json();
+
+      if (conversionResult?.endConvert && conversionResult.fileUrl) {
+        break;
+      }
+
+      if (!conversionResult?.endConvert) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+
+    if (!conversionResult?.fileUrl) {
+      console.error("[convertDocumentToPdf] No result after polling");
+      return null;
+    }
+
+    // Rewrite the file URL (OnlyOffice returns internal Docker URLs)
+    const fileUrl = rewriteOnlyOfficeUrl(conversionResult.fileUrl);
+    console.log(
+      `[convertDocumentToPdf] Result URL: original=${conversionResult.fileUrl}, rewritten=${fileUrl}`
+    );
+
+    // Download the converted PDF
+    const fileResponse = await fetch(fileUrl);
+    if (!fileResponse.ok) {
+      console.error(
+        `[convertDocumentToPdf] Failed to download converted file: ${fileResponse.status}`
+      );
+      return null;
+    }
+
+    const arrayBuffer = await fileResponse.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (err) {
+    console.error("[convertDocumentToPdf] Unexpected error:", err);
+    return null;
+  }
 }

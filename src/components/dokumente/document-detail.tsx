@@ -175,10 +175,12 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
     fetchDocument();
   }, [fetchDocument]);
 
-  // Poll for preview generation completion (non-PDF documents without a preview yet)
-  // Give up after 90 seconds of polling to avoid polling forever when the worker/Stirling-PDF is down.
+  // Poll for preview generation completion (non-PDF documents without a preview yet).
+  // Preview is generated via OnlyOffice conversion (fire-and-forget on upload).
+  // Give up after 60 seconds of polling to avoid polling forever if OnlyOffice is down.
   const [previewPollStart] = useState(() => Date.now());
   const [previewTimedOut, setPreviewTimedOut] = useState(false);
+  const [previewGenerating, setPreviewGenerating] = useState(false);
 
   const needsPreviewPoll =
     !!dokument &&
@@ -190,7 +192,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
   useEffect(() => {
     if (!needsPreviewPoll) return;
     const interval = setInterval(() => {
-      if (Date.now() - previewPollStart > 90_000) {
+      if (Date.now() - previewPollStart > 60_000) {
         setPreviewTimedOut(true);
         return;
       }
@@ -198,6 +200,30 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
     }, 3000);
     return () => clearInterval(interval);
   }, [needsPreviewPoll, fetchDocument, previewPollStart]);
+
+  // Trigger preview generation via OnlyOffice (synchronous API call)
+  const generatePreview = useCallback(async () => {
+    if (!dokument) return;
+    setPreviewGenerating(true);
+    setPreviewTimedOut(false);
+    try {
+      const res = await fetch(`/api/dokumente/${dokument.id}/preview`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (data.status === "ready") {
+        // Preview generated successfully, refresh document data
+        await fetchDocument();
+      } else if (!res.ok) {
+        console.error("[Preview] Generation failed:", data.error);
+        setPreviewTimedOut(true);
+      }
+    } catch {
+      setPreviewTimedOut(true);
+    } finally {
+      setPreviewGenerating(false);
+    }
+  }, [dokument, fetchDocument]);
 
   const handleRename = async () => {
     if (!renameValue.trim() || !dokument) return;
@@ -365,34 +391,19 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                       size="sm"
                       variant="outline"
                       className="text-xs text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700"
-                      onClick={async () => {
-                        // First check if preview is already ready
-                        try {
-                          const checkRes = await fetch(`/api/dokumente/${dokument.id}/preview`);
-                          const checkData = await checkRes.json();
-                          if (checkData.url) {
-                            fetchDocument();
-                            return;
-                          }
-                        } catch {
-                          // continue to re-trigger
-                        }
-                        // Re-trigger preview generation via POST
-                        try {
-                          await fetch(`/api/dokumente/${dokument.id}/preview`, {
-                            method: "POST",
-                          });
-                          // Reset timeout so polling restarts
-                          setPreviewTimedOut(false);
-                        } catch {
-                          // ignore
-                        }
-                      }}
+                      onClick={generatePreview}
+                      disabled={previewGenerating}
                     >
-                      <FileText className="w-3.5 h-3.5 mr-1" />
-                      {previewTimedOut
-                        ? "Vorschau erneut generieren"
-                        : `${getMimeLabel(dokument.mimeType)}-Datei - Vorschau als PDF`}
+                      {previewGenerating ? (
+                        <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                      ) : (
+                        <FileText className="w-3.5 h-3.5 mr-1" />
+                      )}
+                      {previewGenerating
+                        ? "Vorschau wird generiert..."
+                        : previewTimedOut
+                          ? "Vorschau erneut generieren"
+                          : `${getMimeLabel(dokument.mimeType)}-Datei - Vorschau als PDF`}
                     </Button>
                   )}
                   {hasPdfPreview && (
@@ -412,31 +423,36 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                 <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900">
                   <div className="text-center space-y-3">
                     <FileText className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600" />
-                    {dokument.previewPfad === null && !previewTimedOut && (
-                      <div className="space-y-1">
+                    {dokument.previewPfad === null && !previewTimedOut && !previewGenerating && (
+                      <div className="space-y-2">
                         <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" />
                         <p className="text-sm text-slate-500">
                           Vorschau wird generiert...
                         </p>
                       </div>
                     )}
-                    {dokument.previewPfad === null && previewTimedOut && (
+                    {previewGenerating && (
+                      <div className="space-y-2">
+                        <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
+                        <p className="text-sm text-blue-600 dark:text-blue-400">
+                          Vorschau wird ueber OnlyOffice generiert...
+                        </p>
+                      </div>
+                    )}
+                    {dokument.previewPfad === null && previewTimedOut && !previewGenerating && (
                       <div className="space-y-2">
                         <p className="text-sm text-slate-500">
-                          Vorschau konnte nicht generiert werden.
+                          Vorschau konnte nicht automatisch generiert werden.
                         </p>
                         <p className="text-xs text-slate-400">
-                          Stirling-PDF oder der Worker sind moeglicherweise nicht erreichbar.
+                          Klicken Sie auf den Button, um die Vorschau manuell zu generieren.
                         </p>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => {
-                            setPreviewTimedOut(false);
-                            fetchDocument();
-                          }}
+                          onClick={generatePreview}
                         >
-                          Erneut pruefen
+                          Vorschau generieren
                         </Button>
                       </div>
                     )}

@@ -192,6 +192,8 @@ export async function POST(req: NextRequest) {
     crossAkte?: boolean;
   };
 
+  console.log(`[ki-chat] POST received — akteId=${akteId ?? "NULL"}, conversationId=${conversationId ?? "NULL"}, crossAkte=${crossAkte}, messages=${messages?.length ?? 0}`);
+
   if (!messages || messages.length === 0) {
     return new Response("Keine Nachrichten", { status: 400 });
   }
@@ -233,7 +235,11 @@ export async function POST(req: NextRequest) {
 
   // Chain A: Fetch structured Akte data for context + pinned normen injection
   const akteContextPromise = (async (): Promise<{ aktenKontextBlock: string; pinnedNormenBlock: string }> => {
-    if (!akteId) return { aktenKontextBlock: "", pinnedNormenBlock: "" };
+    if (!akteId) {
+      console.log("[ki-chat] Chain A SKIPPED — no akteId");
+      return { aktenKontextBlock: "", pinnedNormenBlock: "" };
+    }
+    console.log(`[ki-chat] Chain A START — fetching akteId=${akteId}`);
     const tA = Date.now();
     try {
       const akte = await prisma.akte.findUnique({

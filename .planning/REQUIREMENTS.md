@@ -13,7 +13,7 @@
 - [x] **AGNT-04**: Helena-Agent läuft in zwei Modi: Inline (5-Step-Cap, HTTP-Request) für schnelle Chat-Interaktion und Background (20-Step-Cap, BullMQ-Worker) für komplexe Aufgaben
 - [x] **AGNT-05**: Ollama-Tool-Call-Response-Guard: Erkennt und korrigiert JSON-als-Content statt tool_calls (qwen3.5:35b Kompatibilität)
 - [x] **AGNT-06**: Token-Budget-Manager begrenzt LLM-Kontextverbrauch pro Agent-Run (kein Context-Window-Overflow)
-- [ ] **AGNT-07**: BullMQ Helena-Task-Queue mit lockDuration:120000 und job.updateProgress() pro Step (Anti-Stall)
+- [x] **AGNT-07**: BullMQ Helena-Task-Queue mit lockDuration:120000 und job.updateProgress() pro Step (Anti-Stall)
 
 ### Orchestrator (ORCH)
 
@@ -27,10 +27,10 @@
 
 ### Task-System (TASK)
 
-- [ ] **TASK-01**: @Helena-Tagging in Notiz/Kommentar-Feldern wird als HelenaTask geparst und in die Queue eingestellt
+- [x] **TASK-01**: @Helena-Tagging in Notiz/Kommentar-Feldern wird als HelenaTask geparst und in die Queue eingestellt
 - [x] **TASK-02**: HelenaTask Prisma-Modell mit Status-Flow (PENDING → RUNNING → DONE / FAILED / WAITING_APPROVAL)
-- [ ] **TASK-03**: HelenaTask speichert vollständigen Agent-Trace (Gedanken + Tool-Aufrufe als JSON steps[])
-- [ ] **TASK-04**: Task-Prioritäten (1-10) mit höherer Priorität für manuell zugewiesene Tasks vs Background-Scanner
+- [x] **TASK-03**: HelenaTask speichert vollständigen Agent-Trace (Gedanken + Tool-Aufrufe als JSON steps[])
+- [x] **TASK-04**: Task-Prioritäten (1-10) mit höherer Priorität für manuell zugewiesene Tasks vs Background-Scanner
 - [ ] **TASK-05**: Task-Abbruch via UI setzt Status auf ABGEBROCHEN — Agent-Loop prüft zwischen Steps
 
 ### Draft-Approval (DRFT)
@@ -118,7 +118,7 @@
 | AGNT-04 | Phase 20 | Complete |
 | AGNT-05 | Phase 20 | Complete |
 | AGNT-06 | Phase 20 | Complete |
-| AGNT-07 | Phase 21 | Pending |
+| AGNT-07 | Phase 21 | Complete |
 | ORCH-01 | Phase 22 | Pending |
 | ORCH-02 | Phase 22 | Pending |
 | ORCH-03 | Phase 22 | Pending |
@@ -126,10 +126,10 @@
 | ORCH-05 | Phase 22 | Pending |
 | ORCH-06 | Phase 22 | Pending |
 | ORCH-07 | Phase 22 | Pending |
-| TASK-01 | Phase 21 | Pending |
+| TASK-01 | Phase 21 | Complete |
 | TASK-02 | Phase 19 | Complete |
-| TASK-03 | Phase 21 | Pending |
-| TASK-04 | Phase 21 | Pending |
+| TASK-03 | Phase 21 | Complete |
+| TASK-04 | Phase 21 | Complete |
 | TASK-05 | Phase 21 | Pending |
 | DRFT-01 | Phase 19 | Complete |
 | DRFT-02 | Phase 23 | Pending |

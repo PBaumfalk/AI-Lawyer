@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { PrismaClient } from "@prisma/client";
+import type { ExtendedPrismaClient } from "@/lib/db";
 
 // ---------------------------------------------------------------------------
 // Mocks -- must be declared before any import that transitively loads them
@@ -110,7 +110,7 @@ import type { CoreMessage } from "ai";
 // Helpers
 // ---------------------------------------------------------------------------
 
-function createMockPrisma(): PrismaClient {
+function createMockPrisma(): ExtendedPrismaClient {
   return {
     akte: {
       findFirst: vi.fn(async () => ({
@@ -153,7 +153,7 @@ function createMockPrisma(): PrismaClient {
       create: vi.fn(async (args: any) => ({ id: "notiz-1", ...args.data })),
     },
     $queryRawUnsafe: vi.fn(async () => []),
-  } as unknown as PrismaClient;
+  } as unknown as ExtendedPrismaClient;
 }
 
 function createMockToolContext(

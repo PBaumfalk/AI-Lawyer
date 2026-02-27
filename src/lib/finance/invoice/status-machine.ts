@@ -6,11 +6,9 @@
 //       GESTELLT -> MAHNUNG (tracks dunning level)
 
 import { RechnungStatus, MahnStufe } from '@prisma/client';
-import type { PrismaClient } from '@prisma/client';
 import { getNextInvoiceNumber } from './nummernkreis';
 import type { TransitionResult } from './types';
-
-type PrismaTransaction = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
+import type { PrismaTransactionClient as PrismaTransaction } from '@/lib/db';
 
 /**
  * Valid status transitions map.

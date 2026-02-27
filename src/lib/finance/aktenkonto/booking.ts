@@ -3,11 +3,9 @@
 // GoBD-compliant: no edits or deletions, only new entries and Stornobuchungen
 
 import { BuchungsTyp, KontoTyp } from '@prisma/client';
-import type { PrismaClient } from '@prisma/client';
 import { calculateFremdgeldDeadline } from './fremdgeld';
 import type { BookingInput, StornoInput } from './types';
-
-type PrismaTransaction = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
+import type { PrismaTransactionClient as PrismaTransaction } from '@/lib/db';
 
 /**
  * Create a new Aktenkonto booking (append-only).

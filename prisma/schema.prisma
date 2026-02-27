@@ -1929,12 +1929,26 @@ model HelenaDraft {
   reviewedBy     User?             @relation("HelenaDraftReviewer", fields: [reviewedById], references: [id])
   reviewedAt     DateTime?
 
+  // Revision tracking
+  parentDraftId      String?
+  parentDraft        HelenaDraft?  @relation("DraftRevisions", fields: [parentDraftId], references: [id])
+  revisions          HelenaDraft[] @relation("DraftRevisions")
+  revisionCount      Int           @default(0)  // 0 = original, 1-3 = revisions
+
+  // Structured rejection
+  feedbackCategories String[]      // ["Inhaltlich falsch", "Ton/Stil unpassend"]
+  noRevise           Boolean       @default(false)  // "Nicht ueberarbeiten" flag
+
+  // Undo window
+  undoExpiresAt      DateTime?     // Set on accept, null after 5s or on undo
+
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
   @@index([akteId, status])
   @@index([userId, status])
   @@index([status, createdAt])
+  @@index([parentDraftId])
   @@map("helena_drafts")
 }
 

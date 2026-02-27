@@ -13,7 +13,8 @@
  * Returns "error" with captured error details on failure.
  */
 
-import type { PrismaClient, UserRole } from "@prisma/client";
+import type { UserRole } from "@prisma/client";
+import type { ExtendedPrismaClient } from "@/lib/db";
 import type { IntentResult, Schriftsatz, ErvWarnung, RetrievalBeleg } from "./schemas";
 import { recognizeIntent, buildAkteContext } from "./intent-router";
 import { prefillSlotsFromAkte, fillSlots, type SlotValues } from "./slot-filler";
@@ -31,7 +32,7 @@ import { SchriftsatzSchema } from "./schemas";
 // ---------------------------------------------------------------------------
 
 export interface SchriftsatzPipelineOptions {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   userId: string;
   userRole: UserRole;
   userName: string;

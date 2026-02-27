@@ -8,7 +8,7 @@
  * (fail open) with a logged warning.
  */
 
-import type { PrismaClient } from "@prisma/client";
+import type { ExtendedPrismaClient } from "@/lib/db";
 import Redis from "ioredis";
 import { createLogger } from "@/lib/logger";
 import { getSettingTyped } from "@/lib/settings/service";
@@ -97,7 +97,7 @@ const DEFAULT_LIMIT = 60;
  */
 export async function checkRateLimit(options: {
   userId: string;
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
 }): Promise<RateLimitResult> {
   const { userId } = options;
 

@@ -2,9 +2,7 @@
 // Uses PostgreSQL UPSERT with RETURNING for gap-free sequence generation
 // Safe under concurrent access - no duplicate numbers possible
 
-import type { PrismaClient } from '@prisma/client';
-
-type PrismaTransaction = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
+import type { PrismaTransactionClient as PrismaTransaction } from '@/lib/db';
 
 /**
  * Generate the next invoice number atomically using PostgreSQL UPSERT.

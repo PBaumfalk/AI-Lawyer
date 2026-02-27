@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { PrismaClient } from "@prisma/client";
+import type { ExtendedPrismaClient } from "@/lib/db";
 
 // ---------------------------------------------------------------------------
 // Mocks -- declared before imports
@@ -708,7 +708,7 @@ describe("runHelenaAgent - integration", () => {
     const { runHelenaAgent } = await import("../index");
 
     const result = await runHelenaAgent({
-      prisma: {} as PrismaClient,
+      prisma: {} as unknown as ExtendedPrismaClient,
       userId: "user-1",
       userRole: "ADMIN",
       userName: "Test User",
@@ -762,7 +762,7 @@ describe("runHelenaAgent - integration", () => {
     const { runHelenaAgent } = await import("../index");
 
     const result = await runHelenaAgent({
-      prisma: {} as PrismaClient,
+      prisma: {} as unknown as ExtendedPrismaClient,
       userId: "user-1",
       userRole: "ANWALT",
       userName: "Dr. Muster",
@@ -812,7 +812,7 @@ describe("runHelenaAgent - integration", () => {
     const { runHelenaAgent } = await import("../index");
 
     const result = await runHelenaAgent({
-      prisma: {} as PrismaClient,
+      prisma: {} as unknown as ExtendedPrismaClient,
       userId: "user-1",
       userRole: "ADMIN",
       userName: "Test",

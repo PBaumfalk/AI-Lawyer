@@ -10,7 +10,8 @@
  * reliably with esbuild bundling.
  */
 
-import type { PrismaClient, UserRole } from "@prisma/client";
+import type { UserRole } from "@prisma/client";
+import type { ExtendedPrismaClient } from "@/lib/db";
 import type { CoreTool } from "ai";
 import { buildAkteAccessFilter } from "@/lib/rbac";
 import { createToolCache, createCacheKey } from "../tool-cache";
@@ -68,7 +69,7 @@ const TOOL_REGISTRY: Record<
 };
 
 export interface CreateHelenaToolsOptions {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   userId: string;
   userRole: UserRole;
   akteId: string | null;

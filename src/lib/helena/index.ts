@@ -22,7 +22,8 @@
  * ```
  */
 
-import type { PrismaClient, UserRole } from "@prisma/client";
+import type { UserRole } from "@prisma/client";
+import type { ExtendedPrismaClient } from "@/lib/db";
 import type { CoreMessage } from "ai";
 import { createLogger } from "@/lib/logger";
 import { getProviderName, getHelenaUserId } from "@/lib/ai/provider";
@@ -47,7 +48,7 @@ const log = createLogger("helena");
 // ---------------------------------------------------------------------------
 
 export interface HelenaAgentOptions {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   userId: string;
   userRole: UserRole;
   userName: string;

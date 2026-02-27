@@ -5,14 +5,15 @@
  * providing shared dependencies (Prisma, user info, RBAC filter).
  */
 
-import type { PrismaClient, UserRole } from "@prisma/client";
+import type { UserRole } from "@prisma/client";
+import type { ExtendedPrismaClient } from "@/lib/db";
 import type { ToolCache } from "../tool-cache";
 
 // Re-export tool type from AI SDK for convenience
 export type { CoreTool as HelenaTool } from "ai";
 
 export interface ToolContext {
-  prisma: PrismaClient;
+  prisma: ExtendedPrismaClient;
   userId: string;
   userRole: UserRole;
   akteId: string | null;

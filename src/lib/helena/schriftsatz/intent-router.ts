@@ -12,7 +12,7 @@
  */
 
 import { generateObject } from "ai";
-import type { PrismaClient } from "@prisma/client";
+import type { ExtendedPrismaClient } from "@/lib/db";
 import { getModelForTier } from "../complexity-classifier";
 import { IntentResultSchema } from "./schemas";
 import type { IntentResult } from "./schemas";
@@ -140,7 +140,7 @@ export async function recognizeIntent(
  * @returns AkteContext or null if the Akte is not found
  */
 export async function buildAkteContext(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   akteId: string
 ): Promise<AkteContext | null> {
   const akte = await prisma.akte.findFirst({

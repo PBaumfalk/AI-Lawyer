@@ -12,7 +12,7 @@
  * All slot keys use {{UPPER_SNAKE_CASE}} convention.
  */
 
-import type { PrismaClient } from "@prisma/client";
+import type { ExtendedPrismaClient } from "@/lib/db";
 import {
   getKlageartDefinition,
   type SlotDefinition,
@@ -52,7 +52,7 @@ export interface SlotFillResult {
  * @returns Partial SlotValues with source attribution
  */
 export async function prefillSlotsFromAkte(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   akteId: string,
   intent: IntentResult
 ): Promise<Partial<SlotValues>> {

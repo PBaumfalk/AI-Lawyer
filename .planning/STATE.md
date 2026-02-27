@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-27T10:48:21.621Z"
+last_updated: "2026-02-27T10:54:15.000Z"
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 29
-  completed_plans: 27
+  completed_plans: 28
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 18 (Muster-RAG + Admin Upload UI) Plan 01 complete — Plan 02 (Admin Upload UI + ingestion processor) is next
+**Current focus:** v0.1 Helena RAG — Phase 18 (Muster-RAG + Admin Upload UI) Plan 02 complete — Plan 03 (Helena Chain F — muster RAG search integration) is next
 
 ## Current Position
 
 Phase: 18 of 18 (Muster-RAG + Admin Upload UI) — In Progress
-Plan: 1 of 3 complete
-Status: Phase 18 Plan 01 complete — Schema migration (isKanzleiEigen/kanzleiEigen), muster ingestion library (insertMusterChunks with content bypass, searchMusterChunks with 1.3x kanzlei boost), 6 amtliche Arbeitsrecht Formulare seeded idempotently. Plan 02 (Admin Upload UI + processMusterIngestionJob) is next.
-Last activity: 2026-02-27 — Phase 18 Plan 01 complete: Prisma migration, src/lib/muster/ingestion.ts, src/lib/muster/seed-amtliche.ts
+Plan: 2 of 3 complete
+Status: Phase 18 Plan 02 complete — musterIngestionQueue, processMusterIngestionJob, ner-pii trigger, worker registration, seedAmtlicheFormulare on startup, /admin/muster UI, GET/POST/DELETE/PATCH API routes. Plan 03 (Helena Chain F) is next.
+Last activity: 2026-02-27 — Phase 18 Plan 02 complete: muster-ingestion queue/processor, admin upload UI + REST API
 
-Progress: [██████░░░░] ~60%
+Progress: [███████░░░] ~70%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [██████░░░░] ~60%
 | Phase 17-urteile-rag P02 | ~2m | 2 tasks | 3 files |
 | Phase 17-urteile-rag P03 | 1 | 1 tasks | 1 files |
 | Phase 18-muster-rag-admin-upload-ui P01 | 5 | 2 tasks | 4 files |
+| Phase 18-muster-rag-admin-upload-ui P02 | 4m | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,9 @@ Recent decisions affecting v0.1:
 - [Phase 18-01]: insertMusterChunks optional content param: when provided, extractMusterFullText and MinIO are skipped entirely — seed path uses hardcoded templates
 - [Phase 18-01]: KANZLEI_BOOST=1.3 applied post-query in application code (not SQL) for simplicity; searchMusterChunks fetches limit*3 candidates before filter
 - [Phase 18-01]: seedAmtlicheFormulare uses nerStatus=INDEXED on synthetic Muster rows — hardcoded content needs no NER processing; idempotent via SystemSetting muster.amtliche_seed_version
+- [Phase 18-02]: Admin muster page is "use client" (not server component) — GlassPanel/GlassCard are client components; all other admin pages are also "use client"; DELETE/PATCH require JS fetch calls (HTML forms cannot do DELETE/PATCH natively)
+- [Phase 18-02]: musterIngestionWorker concurrency:2 — two concurrent ingestion jobs allowed; embedding inside insertMusterChunks is sequential per chunk anyway
+- [Phase 18-02]: MinIO deletion in DELETE is best-effort (non-fatal try/catch) — DB row deleted regardless to prevent orphan records when MinIO object already gone
 
 ### Pending Todos
 
@@ -128,5 +132,5 @@ Recent decisions affecting v0.1:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 17 Plan 03 complete. Chain E (urteilChunksPromise) + URTEILE-QUELLEN injection wired. Phase 17 fully complete. Phase 18 (Muster-RAG + Admin Upload UI) is next.
+Stopped at: Phase 18 Plan 02 complete. musterIngestionQueue + processor + ner-pii trigger + worker registration + /admin/muster UI + REST API (GET/POST/DELETE/PATCH). Plan 03 (Helena Chain F — muster RAG search integration) is next.
 Resume file: None

@@ -52,11 +52,14 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     if (socketRef.current?.connected) return;
 
     // Same-origin connection — cookies sent automatically via withCredentials
+    // Limited retries: stop after 3 attempts to avoid console spam in dev mode
+    // (npm run dev uses next dev --turbo which has no Socket.IO server)
     const socket = io({
       withCredentials: true,
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
       transports: ["websocket", "polling"],
     });
 
@@ -68,8 +71,15 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       setIsConnected(false);
     });
 
+    let connectErrors = 0;
     socket.on("connect_error", (err) => {
-      console.warn("[SocketProvider] Connection error:", err.message);
+      connectErrors++;
+      if (connectErrors <= 1) {
+        console.warn("[SocketProvider] Connection error:", err.message);
+      }
+      if (connectErrors === 3) {
+        console.warn("[SocketProvider] Giving up after 3 attempts. Use `npm run dev:server` for Socket.IO support.");
+      }
       setIsConnected(false);
     });
 

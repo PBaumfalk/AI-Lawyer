@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-27T08:25:40.900Z"
+last_updated: "2026-02-27T08:29:30Z"
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 23
-  completed_plans: 21
+  completed_plans: 22
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 16 (PII-Filter) Plan 01 COMPLETE — Plan 02 (BullMQ processor + acceptance test) is next
+**Current focus:** v0.1 Helena RAG — Phase 16 (PII-Filter) Plan 02 COMPLETE — Plan 03 (acceptance test) is next
 
 ## Current Position
 
 Phase: 16 of 18 (PII-Filter) — In Progress
-Plan: 1 of 3 complete
-Status: Phase 16 Plan 01 complete — NER-PII core module built (ner-filter.ts + institution-whitelist.ts). Plan 02 (BullMQ ner-pii queue/processor + Muster state machine) is next.
-Last activity: 2026-02-27 — Phase 16 Plan 01 complete: runNerFilter() + buildNerPrompt() + INSTITUTION_PATTERNS + isInstitutionName() fully implemented with DSGVO gate compliance
+Plan: 2 of 3 complete
+Status: Phase 16 Plan 02 complete — BullMQ ner-pii queue, processor (3-state machine), and nerPiiWorker all wired. Plan 03 (acceptance test) is next.
+Last activity: 2026-02-27 — Phase 16 Plan 02 complete: nerPiiQueue + processNerPiiJob + recoverStuckNerJobs + nerPiiWorker (concurrency:1) registered
 
-Progress: [███░░░░░░░] ~15%
+Progress: [████░░░░░░] ~20%
 
 ## Performance Metrics
 
@@ -44,12 +44,13 @@ Progress: [███░░░░░░░] ~15%
 | 13. Hybrid Search + Reranking | 3/3 | ~18m | 6m |
 | 14. Gesetze-RAG | 3/3 | ~4m | ~2m |
 | 15. Normen-Verknüpfung in Akte | 3/3 | ~4m+~4m+~2m | ~3m |
-| 16. PII-Filter | 1/3 | ~2m | ~2m |
+| 16. PII-Filter | 2/3 | ~4m | ~2m |
 | 17. Urteile-RAG | 0/TBD | - | - |
 | 18. Muster-RAG + Admin Upload UI | 0/TBD | - | - |
 | Phase 14-gesetze-rag P02 | 2 | 2 tasks | 3 files |
 | Phase 15-normen-verknuepfung-in-akte P01 | 4 | 2 tasks | 4 files |
 | Phase 16-pii-filter P01 | 2m | 2 tasks | 2 files |
+| Phase 16-pii-filter P02 | ~2m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,9 @@ Recent decisions affecting v0.1:
 - [Phase 16-pii-filter]: NER_TIMEOUT_MS=45_000: AbortSignal.timeout propagates uncaught — BRAO §43a compliance, no silent hasPii:false on Ollama timeout
 - [Phase 16-pii-filter]: format:json + /\{[\s\S]*\}/ double defense against Qwen3 <think> token leakage in ner-filter.ts
 - [Phase 16-pii-filter]: buildNerPrompt() does not slice text — caller responsible for windowing (UrteilChunk: full content; Muster: slice(0,6000)+slice(-2000) in Phase 18 processor)
+- [Phase 16-02]: nerPiiQueue attempts:1 — NER timeout is permanent fail; processor resets nerStatus PENDING_NER before re-throw; Phase 18 re-submits manually
+- [Phase 16-02]: Muster.name used for logging (schema has no dateiname field); plan spec was incorrect — actual field is name
+- [Phase 16-02]: processUrteilNer() throws Error on PII — Phase 17 caller skips ingestion; no DB write in processor — Phase 17 sets piiFiltered:true
 
 ### Pending Todos
 
@@ -106,5 +110,5 @@ Recent decisions affecting v0.1:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 16 Plan 01 complete. NER-PII core module (ner-filter.ts + institution-whitelist.ts) implemented. Phase 16 Plan 02 (BullMQ processor + acceptance test) is next.
+Stopped at: Phase 16 Plan 02 complete. nerPiiQueue + ner-pii.processor.ts + nerPiiWorker all wired. Phase 16 Plan 03 (acceptance test) is next.
 Resume file: None

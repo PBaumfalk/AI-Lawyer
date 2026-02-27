@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
-status: defining_requirements
-last_updated: "2026-02-27T23:00:00.000Z"
+status: ready_to_plan
+last_updated: "2026-02-27T23:30:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 8
   completed_phases: 0
-  total_plans: 0
+  total_plans: 16
   completed_plans: 0
 ---
 
@@ -17,124 +17,66 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-02-27)
 
-**Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.2 Helena Agent — defining requirements
+**Core value:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail.
+**Current focus:** v0.2 Helena Agent — Phase 19 ready to plan
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-27 — Milestone v0.2 started
+Phase: 19 of 26 (Schema Foundation)
+Plan: 0 of 1 in current phase
+Status: Ready to plan
+Last activity: 2026-02-27 — Roadmap created (8 phases, 16 plans, 53/53 requirements mapped)
 
 Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 48 (v3.4: 38 + v3.5: 10)
-- Average duration: see milestone archives
-- Total execution time: see milestones/v3.4-ROADMAP.md + milestones/v3.5-ROADMAP.md
+- Total plans completed: 67 (v3.4: 38 + v3.5: 10 + v0.1: 19)
+- v0.2 plans: 0/16
 
-**By Phase (v0.1 — not started):**
+**By Phase (v0.2):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 12. RAG Schema Foundation | 1/1 | ~5m | 5m |
-| 13. Hybrid Search + Reranking | 3/3 | ~18m | 6m |
-| 14. Gesetze-RAG | 3/3 | ~4m | ~2m |
-| 15. Normen-Verknüpfung in Akte | 3/3 | ~4m+~4m+~2m | ~3m |
-| 16. PII-Filter | 3/3 | ~5m | ~2m |
-| 17. Urteile-RAG | 3/3 | ~6m | ~2m |
-| 18. Muster-RAG + Admin Upload UI | 0/TBD | - | - |
-| Phase 14-gesetze-rag P02 | 2 | 2 tasks | 3 files |
-| Phase 15-normen-verknuepfung-in-akte P01 | 4 | 2 tasks | 4 files |
-| Phase 16-pii-filter P01 | 2m | 2 tasks | 2 files |
-| Phase 16-pii-filter P02 | ~2m | 2 tasks | 3 files |
-| Phase 16-pii-filter P03 | 1 | 1 tasks | 1 files |
-| Phase 17-urteile-rag P01 | 3 | 2 tasks | 2 files |
-| Phase 17-urteile-rag P02 | ~2m | 2 tasks | 3 files |
-| Phase 17-urteile-rag P03 | 1 | 1 tasks | 1 files |
-| Phase 18-muster-rag-admin-upload-ui P01 | 5 | 2 tasks | 4 files |
-| Phase 18-muster-rag-admin-upload-ui P02 | 4m | 2 tasks | 8 files |
-| Phase 18-muster-rag-admin-upload-ui P03 | 1m | 1 tasks | 1 files |
+| 19. Schema Foundation | 0/1 | - | - |
+| 20. Agent Tools + ReAct Loop | 0/3 | - | - |
+| 21. @Helena Task-System | 0/2 | - | - |
+| 22. Schriftsatz Orchestrator | 0/2 | - | - |
+| 23. Draft-Approval Workflow | 0/2 | - | - |
+| 24. Scanner + Alerts | 0/2 | - | - |
+| 25. Helena Memory | 0/1 | - | - |
+| 26. Activity Feed UI + QA-Gates | 0/3 | - | - |
 
 ## Accumulated Context
 
 ### Decisions
 
-All v3.5 decisions archived in PROJECT.md Key Decisions table.
+All v0.1 decisions archived in STATE.md history.
+Recent decisions affecting v0.2:
 
-Recent decisions affecting v0.1:
-- qwen3.5:35b als Ollama-Standard — validiert fuer LLM-as-reranker (Option A); Qwen3-Reranker-4B (Option B) availability unverified, nicht verwenden
-- DSGVO-Gate ist non-negotiable: PII-Filter muss standalone acceptance-getestet sein BEVOR Urteile oder Muster in pgvector/Meilisearch indiziert werden
-- Phase 12-01: chunkType column NOT NULL DEFAULT 'STANDALONE' — no backfill script needed, Prisma migration handles existing rows
-- Phase 12-01: HNSW manual SQL file (manual_rag_hnsw_indexes.sql) follows manual_pgvector_index.sql convention — both applied at Docker entrypoint
-- [Phase 13-01]: hybridSearch() queries pgvector directly (inline SQL) instead of calling searchSimilar() — SearchResult lacks id/chunkType/parentChunkId required for RRF keying
-- [Phase 13-01]: DISTINCT ON (dokumentId) resolves BM25 document hits to best child chunk in one SQL round-trip; AbortSignal.timeout(3000) on Ollama reranker with graceful RRF fallback
-- [Phase 13-02]: chunkDocumentParentChild uses GERMAN_LEGAL_SEPARATORS for both parent (8000 chars) and child (2000 chars) splitters; global child index across all parents
-- [Phase 13-02]: PARENT rows stored with NULL embedding; chunkType != PARENT filter guards all 4 searchSimilar branches; insertChunks() preserved for STANDALONE pipeline until Plan 03
-- [Phase 13-03]: confidenceFlag 'low' not used for RRF — RRF scores (max ~0.016) not comparable to cosine threshold 0.3; any RRF result is 'ok'; bm25Limit:50 + vectorLimit:50 -> finalLimit:10 for wide candidate fusion
-- [Phase 14-01]: SHA cache stored in SystemSetting as JSON string via getSetting/updateSetting — setSettingTyped does not exist; use manual JSON.parse/stringify
-- [Phase 14-01]: upsertLawChunks uses DELETE+INSERT per row (not SQL UPSERT) for clean embedding replacement on model version change
-- [Phase 14-01]: searchLawChunks receives pre-computed queryEmbedding — ki-chat Chain D reuses Chain B embedding to avoid second Ollama call
-- [Phase 14-03]: queryEmbeddingPromise shared between Chain B and Chain D via Promise memoization — single Ollama call regardless of chain count
-- [Phase 14-03]: Chain D non-fatal — failure returns [] and Helena responds from hybridSearch; minScore:0.6 gates law chunk injection for non-legal queries
-- [Phase 14-03]: GESETZE-QUELLEN injected after ENDE QUELLEN — law context supplements document context; every Norm carries "nicht amtlich — Stand: [date] | Quelle: [url]"
-- [Phase 14-gesetze-rag]: [Phase 14-02]: gesetzeSyncWorker concurrency:1 — sequential sync avoids GitHub rate limit and Ollama contention for nightly cron
-- [Phase 14-gesetze-rag]: [Phase 14-02]: SHA cache saved once at end of full sync run — batch save avoids N Settings writes; failed-mid-sync Gesetze retry on next cron (idempotent)
-- [Phase 15-01]: NORM_VERKNUEPFT and NORM_ENTFERNT added to AuditAktion union type for type-safe audit logging in normen routes
-- [Phase 15-01]: POST validates law_chunk existence before creating AkteNorm — returns 404 if not found in DB, 409 if already pinned
-- [Phase 15-01]: Search route uses LEFT(content, 300) in raw ILIKE SQL to cap payload; minimum q.length < 2 guard prevents full-table scans
-- [Phase 15-02]: Chain A return type changed from Promise<string> to Promise<{ aktenKontextBlock, pinnedNormenBlock }> — pinned normen fetched inside Chain A, not a new Chain E; PINNED NORMEN injected before QUELLEN and GESETZE-QUELLEN
-- [Phase 15-02]: akteNorm.findMany + Promise.all(findFirst) pattern — cannot use Prisma include JOIN with LawChunk due to Unsupported(vector(1024)) column
-- [Phase 15-03]: @radix-ui/react-dialog primitive used directly (Dialog.Root/Portal/Overlay/Content) — dialog.tsx shadcn component does not exist in this project; no new package added
-- [Phase 15-03]: initialNormen rendered directly from server props (no local useState) — router.refresh() re-runs server component for fresh DB data after mutations
-- [Phase 16-pii-filter]: NER_TIMEOUT_MS=45_000: AbortSignal.timeout propagates uncaught — BRAO §43a compliance, no silent hasPii:false on Ollama timeout
-- [Phase 16-pii-filter]: format:json + /\{[\s\S]*\}/ double defense against Qwen3 <think> token leakage in ner-filter.ts
-- [Phase 16-pii-filter]: buildNerPrompt() does not slice text — caller responsible for windowing (UrteilChunk: full content; Muster: slice(0,6000)+slice(-2000) in Phase 18 processor)
-- [Phase 16-02]: nerPiiQueue attempts:1 — NER timeout is permanent fail; processor resets nerStatus PENDING_NER before re-throw; Phase 18 re-submits manually
-- [Phase 16-02]: Muster.name used for logging (schema has no dateiname field); plan spec was incorrect — actual field is name
-- [Phase 16-02]: processUrteilNer() throws Error on PII — Phase 17 caller skips ingestion; no DB write in processor — Phase 17 sets piiFiltered:true
-- [Phase 16-pii-filter]: /// <reference types="vitest/globals" /> in test file keeps vitest types scoped to tests without modifying tsconfig.json
-- [Phase 16-pii-filter]: Partial-match assertion added to forbiddenInPersons check — catches LLM edge case of appending city/country qualifiers to institution names
-- [Phase 17-urteile-rag]: parseAttributeValue (no trailing s) is the correct fast-xml-parser v5 X2jOptions property name — TypeScript caught the plan spec error
-- [Phase 17-urteile-rag]: Array.from(guids) instead of [...guids] for Set serialization — TS target lacks downlevelIteration; identical runtime behavior
-- [Phase 17-urteile-rag]: ingestUrteilItem never throws — AbortError from Ollama timeout caught, returns 'error'; processor must not mark GUID as seen on 'error' to enable retry on next cron
-- [Phase 17-02]: urteileSyncQueue cron at 03:00 Europe/Berlin — one hour after gesetzeSyncJob at 02:00 to avoid simultaneous Ollama embedding calls
-- [Phase 17-02]: concurrency:1 for urteile-sync Worker — sequential sync avoids GPU contention during NER gate + embedding inside ingestUrteilItem
-- [Phase 17-02]: pii_rejected GUIDs ARE added to guidCache (no NER re-run); error GUIDs NOT added (retry on next cron)
-- [Phase 17-03]: Chain E failure is non-fatal — catch returns [] so Helena responds without Urteile without crashing ki-chat
-- [Phase 17-03]: queryEmbeddingPromise shared between Chain B, D, and Chain E — single Ollama embedding call for all three chains (urteil_chunks reuses existing embedding)
-- [Phase 18-01]: insertMusterChunks optional content param: when provided, extractMusterFullText and MinIO are skipped entirely — seed path uses hardcoded templates
-- [Phase 18-01]: KANZLEI_BOOST=1.3 applied post-query in application code (not SQL) for simplicity; searchMusterChunks fetches limit*3 candidates before filter
-- [Phase 18-01]: seedAmtlicheFormulare uses nerStatus=INDEXED on synthetic Muster rows — hardcoded content needs no NER processing; idempotent via SystemSetting muster.amtliche_seed_version
-- [Phase 18-02]: Admin muster page is "use client" (not server component) — GlassPanel/GlassCard are client components; all other admin pages are also "use client"; DELETE/PATCH require JS fetch calls (HTML forms cannot do DELETE/PATCH natively)
-- [Phase 18-02]: musterIngestionWorker concurrency:2 — two concurrent ingestion jobs allowed; embedding inside insertMusterChunks is sequential per chunk anyway
-- [Phase 18-02]: MinIO deletion in DELETE is best-effort (non-fatal try/catch) — DB row deleted regardless to prevent orphan records when MinIO object already gone
-- [Phase 18-03]: Chain F minScore 0.55 (not 0.6): template content with {{PLATZHALTER}} has lower cosine similarity due to placeholder density — wider retrieval needed
-- [Phase 18-03]: queryEmbeddingPromise shared across Chain B/D/E/F — single Ollama embedding call regardless of chain count; Chain F is non-fatal, catch returns []
-- [Phase 18-03]: MUSTER-QUELLEN injection uses parentContent fallback to content — parent chunk provides larger context window for Schriftsatz structure guidance
+- Zero new npm packages — all agent capabilities built on existing AI SDK v4 + BullMQ + Prisma + Socket.IO
+- AI SDK stays on v4.3.19 — v5/v6 migration deferred to v0.3
+- Two execution modes: inline (5-step, HTTP) and background (20-step, BullMQ)
+- Schriftsatz uses deterministic generateObject pipeline, NOT free-form ReAct agent
+- ENTWURF gate must be Prisma middleware (not HTTP middleware) — BRAK 2025 compliance
+- lockDuration:120000 on helena-agent queue (default 30s would cause duplicate agent runs)
 
 ### Pending Todos
 
-7 todos pending — 4 sind in v0.1 Roadmap aufgenommen, 3 fuer spaeter:
-- RAG pipeline hybrid search (Phase 13) — in Scope
-- Gesetze-RAG (Phasen 14-15) — in Scope
-- Urteile-RAG (Phasen 16-17) — in Scope
-- Arbeitswissen-RAG (Phase 18) — in Scope
-- Falldatenblaetter — deferred to post-v0.1
-- BI-Dashboard — deferred to post-v0.1
-- Export CSV/XLSX — deferred to post-v0.1
+3 deferred from v0.1:
+- Falldatenblaetter — deferred to post-v0.2
+- BI-Dashboard — deferred to post-v0.2
+- Export CSV/XLSX — deferred to post-v0.2
 
 ### Blockers/Concerns
 
-- Phase 13 (Reranking): Cross-encoder P95-Latenz muss BEVOR Live-Wiring benchmarked werden. Wenn P95 > 3s: erst RRF-only shippen, Reranking als Feature-Flag nachliefern.
-- Phase 17 (Urteile): BMJ HTML-Selektoren (article.result, div.dokument-meta) muessen live verifiziert werden vor Scraper-Bau. robots.txt-Check erforderlich.
-- Phase 16 (PII) RESOLVED: Acceptance test suite created (tests/pii/ner-filter.acceptance.test.ts). Must be run against live Ollama with qwen3.5:35b before Phase 17 ingestion begins — `npx vitest run tests/pii/ner-filter.acceptance.test.ts --timeout 60000`
+- Ollama qwen3.5:35b tool call format instability — smoke test every tool through full Ollama stack before shipping (Phase 20)
+- Schriftsatz section schemas need Anwalt review before Phase 22 ships (ZPO 253, 130)
+- Pin Ollama Docker image version before Phase 20 — tool call behavior is version-dependent
 
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 18 Plan 03 complete. Chain F musterChunksPromise + MUSTER-QUELLEN injection in ki-chat route. Phase 18 complete — all 5 ARBW requirements done. v3.4 Helena RAG milestone complete.
+Stopped at: Roadmap created for v0.2 Helena Agent. 8 phases (19-26), 16 plans, 53 requirements mapped.
 Resume file: None

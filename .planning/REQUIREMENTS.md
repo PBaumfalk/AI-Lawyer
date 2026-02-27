@@ -112,65 +112,65 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AGNT-01 | — | Pending |
-| AGNT-02 | — | Pending |
-| AGNT-03 | — | Pending |
-| AGNT-04 | — | Pending |
-| AGNT-05 | — | Pending |
-| AGNT-06 | — | Pending |
-| AGNT-07 | — | Pending |
-| ORCH-01 | — | Pending |
-| ORCH-02 | — | Pending |
-| ORCH-03 | — | Pending |
-| ORCH-04 | — | Pending |
-| ORCH-05 | — | Pending |
-| ORCH-06 | — | Pending |
-| ORCH-07 | — | Pending |
-| TASK-01 | — | Pending |
-| TASK-02 | — | Pending |
-| TASK-03 | — | Pending |
-| TASK-04 | — | Pending |
-| TASK-05 | — | Pending |
-| DRFT-01 | — | Pending |
-| DRFT-02 | — | Pending |
-| DRFT-03 | — | Pending |
-| DRFT-04 | — | Pending |
-| DRFT-05 | — | Pending |
-| DRFT-06 | — | Pending |
-| SCAN-01 | — | Pending |
-| SCAN-02 | — | Pending |
-| SCAN-03 | — | Pending |
-| SCAN-04 | — | Pending |
-| SCAN-05 | — | Pending |
-| SCAN-06 | — | Pending |
-| ALRT-01 | — | Pending |
-| ALRT-02 | — | Pending |
-| ALRT-03 | — | Pending |
-| ALRT-04 | — | Pending |
-| ALRT-05 | — | Pending |
-| MEM-01 | — | Pending |
-| MEM-02 | — | Pending |
-| MEM-03 | — | Pending |
-| MEM-04 | — | Pending |
-| QA-01 | — | Pending |
-| QA-02 | — | Pending |
-| QA-03 | — | Pending |
-| QA-04 | — | Pending |
-| QA-05 | — | Pending |
-| QA-06 | — | Pending |
-| QA-07 | — | Pending |
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| UI-03 | — | Pending |
-| UI-04 | — | Pending |
-| UI-05 | — | Pending |
-| UI-06 | — | Pending |
+| AGNT-01 | Phase 20 | Pending |
+| AGNT-02 | Phase 20 | Pending |
+| AGNT-03 | Phase 20 | Pending |
+| AGNT-04 | Phase 20 | Pending |
+| AGNT-05 | Phase 20 | Pending |
+| AGNT-06 | Phase 20 | Pending |
+| AGNT-07 | Phase 21 | Pending |
+| ORCH-01 | Phase 22 | Pending |
+| ORCH-02 | Phase 22 | Pending |
+| ORCH-03 | Phase 22 | Pending |
+| ORCH-04 | Phase 22 | Pending |
+| ORCH-05 | Phase 22 | Pending |
+| ORCH-06 | Phase 22 | Pending |
+| ORCH-07 | Phase 22 | Pending |
+| TASK-01 | Phase 21 | Pending |
+| TASK-02 | Phase 19 | Pending |
+| TASK-03 | Phase 21 | Pending |
+| TASK-04 | Phase 21 | Pending |
+| TASK-05 | Phase 21 | Pending |
+| DRFT-01 | Phase 19 | Pending |
+| DRFT-02 | Phase 23 | Pending |
+| DRFT-03 | Phase 23 | Pending |
+| DRFT-04 | Phase 23 | Pending |
+| DRFT-05 | Phase 23 | Pending |
+| DRFT-06 | Phase 23 | Pending |
+| SCAN-01 | Phase 24 | Pending |
+| SCAN-02 | Phase 24 | Pending |
+| SCAN-03 | Phase 24 | Pending |
+| SCAN-04 | Phase 24 | Pending |
+| SCAN-05 | Phase 24 | Pending |
+| SCAN-06 | Phase 24 | Pending |
+| ALRT-01 | Phase 19 | Pending |
+| ALRT-02 | Phase 24 | Pending |
+| ALRT-03 | Phase 24 | Pending |
+| ALRT-04 | Phase 24 | Pending |
+| ALRT-05 | Phase 24 | Pending |
+| MEM-01 | Phase 19 | Pending |
+| MEM-02 | Phase 25 | Pending |
+| MEM-03 | Phase 25 | Pending |
+| MEM-04 | Phase 25 | Pending |
+| QA-01 | Phase 26 | Pending |
+| QA-02 | Phase 26 | Pending |
+| QA-03 | Phase 26 | Pending |
+| QA-04 | Phase 26 | Pending |
+| QA-05 | Phase 26 | Pending |
+| QA-06 | Phase 26 | Pending |
+| QA-07 | Phase 26 | Pending |
+| UI-01 | Phase 26 | Pending |
+| UI-02 | Phase 26 | Pending |
+| UI-03 | Phase 26 | Pending |
+| UI-04 | Phase 26 | Pending |
+| UI-05 | Phase 26 | Pending |
+| UI-06 | Phase 26 | Pending |
 
 **Coverage:**
 - v0.2 requirements: 53 total
-- Mapped to phases: 0 (roadmap pending)
-- Unmapped: 53
+- Mapped to phases: 53
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-02-27 after initial definition*
+*Last updated: 2026-02-27 after roadmap creation*

@@ -10,6 +10,7 @@ import { UploadPanel } from "@/components/dokumente/upload-panel";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { CommandFristenRechnerWrapper } from "@/components/layout/command-fristenrechner-wrapper";
+import { OnlyOfficePreloader } from "@/components/onlyoffice-preloader";
 
 // All dashboard pages require auth + fresh data — skip static generation during build
 export const dynamic = "force-dynamic";
@@ -25,10 +26,9 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Resolve OnlyOffice URL for preloading the editor SDK script
+  // Resolve OnlyOffice URL from request headers (works for LAN/localhost)
   const headersList = await headers();
   const onlyofficeUrl = resolvePublicOnlyOfficeUrl(headersList);
-  const ooApiScript = `${onlyofficeUrl}/web-apps/apps/api/documents/api.js`;
 
   // Provider hierarchy: SessionProvider > SocketProvider > NotificationProvider > UploadProvider
   return (
@@ -36,16 +36,8 @@ export default async function DashboardLayout({
       <SocketProvider>
         <NotificationProvider>
           <UploadProvider>
-            {/* OnlyOffice preload: hidden iframe caches HTML/CSS/JS/fonts (v9.0+)
-                See: https://api.onlyoffice.com/docs/docs-api/get-started/configuration/preload/ */}
-            <link rel="dns-prefetch" href={onlyofficeUrl} />
-            <link rel="preconnect" href={onlyofficeUrl} crossOrigin="anonymous" />
-            <iframe
-              src={`${onlyofficeUrl}/web-apps/apps/api/documents/preload.html`}
-              style={{ display: "none" }}
-              aria-hidden="true"
-              tabIndex={-1}
-            />
+            {/* OnlyOffice preload: client-side prefetch avoids hydration errors + warnings */}
+            <OnlyOfficePreloader url={onlyofficeUrl} />
             <div className="flex h-screen overflow-hidden">
               <Sidebar />
               <div className="flex flex-col flex-1 overflow-hidden">

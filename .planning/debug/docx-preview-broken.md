@@ -1,8 +1,8 @@
 ---
 status: awaiting_human_verify
-trigger: "Combined: DOCX preview stuck, OnlyOffice slow, Socket.IO failing, 404 on bearbeiten page"
+trigger: "Combined: DOCX preview stuck, OnlyOffice slow, Socket.IO failing, 404 on bearbeiten page, React hydration errors, preload warnings"
 created: 2026-02-27T12:00:00Z
-updated: 2026-02-27T14:30:00Z
+updated: 2026-02-27T21:00:00Z
 ---
 
 ## Current Focus
@@ -124,3 +124,28 @@ files_changed:
   - src/components/dokumente/document-detail.tsx (enhanced preview UX)
   - src/app/api/dokumente/[id]/preview/route.ts (added POST handler)
   - package.json (added dev:server script)
+
+## Round 2 — React Hydration + Preload Warnings (2026-02-27)
+
+### New Symptoms
+- React hydration errors #418, #425, #423 in browser console
+- "preloaded using link preload but not used within a few seconds" warnings for ALL OnlyOffice editor types (word, cell, slide, visio)
+- Socket.IO 404 (expected in dev mode — probe catches it)
+
+### Root Causes
+
+5. HYDRATION MISMATCH: `<link>` elements rendered server-side inside client component tree (children of SessionProvider/SocketProvider/etc.) get hoisted to `<head>` by the browser during HTML parsing. React hydration finds them missing from body → errors #418/#425/#423.
+
+6. PRELOAD WARNINGS: The hidden iframe loading `preload.html` uses `<link rel="preload">` for ALL editor types (document, spreadsheet, presentation, visio). These resources are never consumed within the iframe's page context → browser warns for every single resource.
+
+### Fix
+
+Replaced server-rendered `<link>` + `<iframe>` elements with a new `OnlyOfficePreloader` client component:
+- Renders `null` (no SSR output → no hydration mismatches)
+- Creates dns-prefetch + preconnect + prefetch links in `useEffect` (client-only)
+- Uses `<link rel="prefetch">` for api.js only — "prefetch" = "cache for future navigation" → no warnings
+- Versioned resources (9.x.x-hash/...) loaded by api.js on editor open are cached by browser with long TTL due to content-hashed URLs
+
+files_changed_round2:
+  - src/components/onlyoffice-preloader.tsx (NEW)
+  - src/app/(dashboard)/layout.tsx (replaced iframe+links with OnlyOfficePreloader)

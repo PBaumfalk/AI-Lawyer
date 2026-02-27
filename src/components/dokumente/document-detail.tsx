@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ResizablePanelGroup,
@@ -37,6 +37,20 @@ import Link from "next/link";
 
 // MIME types editable in OnlyOffice
 const ONLYOFFICE_EDITABLE = new Set([
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/msword",
+  "application/vnd.oasis.opendocument.text",
+  "application/rtf",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
+  "application/vnd.oasis.opendocument.spreadsheet",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.oasis.opendocument.presentation",
+]);
+
+// MIME types convertible to PDF preview via OnlyOffice
+const CONVERTIBLE_TO_PDF = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/msword",
   "application/vnd.oasis.opendocument.text",
@@ -175,55 +189,48 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
     fetchDocument();
   }, [fetchDocument]);
 
-  // Poll for preview generation completion (non-PDF documents without a preview yet).
-  // Preview is generated via OnlyOffice conversion (fire-and-forget on upload).
-  // Give up after 60 seconds of polling to avoid polling forever if OnlyOffice is down.
-  const [previewPollStart] = useState(() => Date.now());
-  const [previewTimedOut, setPreviewTimedOut] = useState(false);
   const [previewGenerating, setPreviewGenerating] = useState(false);
-
-  const needsPreviewPoll =
-    !!dokument &&
-    dokument.mimeType !== "application/pdf" &&
-    !dokument.previewUrl &&
-    dokument.previewPfad === null &&
-    !previewTimedOut;
-
-  useEffect(() => {
-    if (!needsPreviewPoll) return;
-    const interval = setInterval(() => {
-      if (Date.now() - previewPollStart > 60_000) {
-        setPreviewTimedOut(true);
-        return;
-      }
-      fetchDocument();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [needsPreviewPoll, fetchDocument, previewPollStart]);
+  const [previewFailed, setPreviewFailed] = useState(false);
+  const autoTriggered = useRef(false);
 
   // Trigger preview generation via OnlyOffice (synchronous API call)
   const generatePreview = useCallback(async () => {
     if (!dokument) return;
     setPreviewGenerating(true);
-    setPreviewTimedOut(false);
+    setPreviewFailed(false);
     try {
       const res = await fetch(`/api/dokumente/${dokument.id}/preview`, {
         method: "POST",
       });
       const data = await res.json();
       if (data.status === "ready") {
-        // Preview generated successfully, refresh document data
         await fetchDocument();
       } else if (!res.ok) {
         console.error("[Preview] Generation failed:", data.error);
-        setPreviewTimedOut(true);
+        setPreviewFailed(true);
       }
     } catch {
-      setPreviewTimedOut(true);
+      setPreviewFailed(true);
     } finally {
       setPreviewGenerating(false);
     }
   }, [dokument, fetchDocument]);
+
+  // Auto-trigger preview generation when document loads without a preview
+  useEffect(() => {
+    if (
+      dokument &&
+      dokument.mimeType !== "application/pdf" &&
+      dokument.previewPfad === null &&
+      !dokument.previewUrl &&
+      CONVERTIBLE_TO_PDF.has(dokument.mimeType) &&
+      !autoTriggered.current &&
+      !previewGenerating
+    ) {
+      autoTriggered.current = true;
+      generatePreview();
+    }
+  }, [dokument, previewGenerating, generatePreview]);
 
   const handleRename = async () => {
     if (!renameValue.trim() || !dokument) return;
@@ -401,7 +408,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                       )}
                       {previewGenerating
                         ? "Vorschau wird generiert..."
-                        : previewTimedOut
+                        : previewFailed
                           ? "Vorschau erneut generieren"
                           : `${getMimeLabel(dokument.mimeType)}-Datei - Vorschau als PDF`}
                     </Button>
@@ -423,37 +430,37 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                 <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900">
                   <div className="text-center space-y-3">
                     <FileText className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600" />
-                    {dokument.previewPfad === null && !previewTimedOut && !previewGenerating && (
-                      <div className="space-y-2">
-                        <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" />
-                        <p className="text-sm text-slate-500">
-                          Vorschau wird generiert...
-                        </p>
-                      </div>
-                    )}
                     {previewGenerating && (
                       <div className="space-y-2">
                         <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
                         <p className="text-sm text-blue-600 dark:text-blue-400">
-                          Vorschau wird ueber OnlyOffice generiert...
+                          Vorschau wird generiert...
                         </p>
                       </div>
                     )}
-                    {dokument.previewPfad === null && previewTimedOut && !previewGenerating && (
+                    {!previewGenerating && previewFailed && (
                       <div className="space-y-2">
                         <p className="text-sm text-slate-500">
-                          Vorschau konnte nicht automatisch generiert werden.
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          Klicken Sie auf den Button, um die Vorschau manuell zu generieren.
+                          Vorschau konnte nicht generiert werden.
                         </p>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={generatePreview}
+                          onClick={() => {
+                            autoTriggered.current = false;
+                            generatePreview();
+                          }}
                         >
-                          Vorschau generieren
+                          Erneut versuchen
                         </Button>
+                      </div>
+                    )}
+                    {!previewGenerating && !previewFailed && dokument.previewPfad === null && (
+                      <div className="space-y-2">
+                        <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" />
+                        <p className="text-sm text-slate-500">
+                          Vorschau wird vorbereitet...
+                        </p>
                       </div>
                     )}
                     {dokument.previewPfad !== null && !dokument.previewUrl && (

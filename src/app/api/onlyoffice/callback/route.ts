@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { uploadFile } from "@/lib/storage";
-import { verifyToken, rewriteOnlyOfficeUrl } from "@/lib/onlyoffice";
+import {
+  verifyToken,
+  rewriteOnlyOfficeUrl,
+  canConvertToPdf,
+  generatePreviewWithBriefkopf,
+} from "@/lib/onlyoffice";
 import { indexDokument } from "@/lib/meilisearch";
 
 /**
@@ -176,6 +181,13 @@ export async function POST(request: NextRequest) {
       console.log(
         `[ONLYOFFICE] Document saved (status 2): ${dokument.name} (${dokumentId}), version incremented to ${dokument.version + 1}`
       );
+
+      // Fire-and-forget: regenerate preview with Briefkopf
+      if (canConvertToPdf(dokument.mimeType)) {
+        generatePreviewWithBriefkopf(dokumentId).catch((err) => {
+          console.error(`[ONLYOFFICE] Preview regeneration failed for ${dokumentId}:`, err);
+        });
+      }
     } catch (err) {
       console.error("[ONLYOFFICE] Error saving document (status 2):", err);
       return NextResponse.json({ error: 1 });

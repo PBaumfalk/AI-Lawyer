@@ -5,6 +5,15 @@
  */
 
 import jwt from "jsonwebtoken";
+import { prisma } from "@/lib/db";
+import {
+  getFileStream,
+  uploadFile,
+  deleteFile,
+  getInternalDownloadUrl,
+} from "@/lib/storage";
+import { applyBriefkopfToDocx } from "@/lib/briefkopf";
+import { convertBufferToPdf } from "@/lib/briefkopf";
 
 const ONLYOFFICE_URL = process.env.ONLYOFFICE_URL ?? "http://localhost:8080";
 // Internal URL for server-to-server calls to ONLYOFFICE (e.g. PDF conversion)
@@ -434,5 +443,101 @@ export async function convertDocumentToPdf(
   } catch (err) {
     console.error("[convertDocumentToPdf] Unexpected error:", err);
     return null;
+  }
+}
+
+/**
+ * Generate a PDF preview with Briefkopf (letterhead) injection.
+ *
+ * Pipeline:
+ * 1. Load document from DB
+ * 2. Download DOCX from MinIO
+ * 3. Load default Briefkopf and apply it to the DOCX
+ * 4. Upload merged DOCX to temp MinIO path
+ * 5. Convert to PDF via OnlyOffice ConvertService
+ * 6. Store PDF in MinIO and update previewPfad in DB
+ * 7. Clean up temp file
+ *
+ * Falls back to conversion without Briefkopf if none is configured.
+ */
+export async function generatePreviewWithBriefkopf(
+  dokumentId: string
+): Promise<void> {
+  const dokument = await prisma.dokument.findUnique({
+    where: { id: dokumentId },
+    select: { id: true, name: true, akteId: true, dateipfad: true, mimeType: true },
+  });
+
+  if (!dokument) {
+    console.error(`[PreviewBriefkopf] Document not found: ${dokumentId}`);
+    return;
+  }
+
+  // 1. Download DOCX from MinIO
+  const stream = await getFileStream(dokument.dateipfad);
+  if (!stream) {
+    console.error(`[PreviewBriefkopf] No file stream for ${dokument.dateipfad}`);
+    return;
+  }
+  const chunks: Uint8Array[] = [];
+  for await (const chunk of stream as AsyncIterable<Uint8Array>) {
+    chunks.push(chunk);
+  }
+  let docBuffer: Buffer = Buffer.from(Buffer.concat(chunks));
+
+  // 2. Load default Briefkopf and apply
+  try {
+    const briefkopf = await prisma.briefkopf.findFirst({
+      where: { istStandard: true },
+    });
+
+    if (briefkopf?.dateipfad) {
+      const bkStream = await getFileStream(briefkopf.dateipfad);
+      if (bkStream) {
+        const bkChunks: Uint8Array[] = [];
+        for await (const chunk of bkStream as AsyncIterable<Uint8Array>) {
+          bkChunks.push(chunk);
+        }
+        const briefkopfBuffer = Buffer.from(Buffer.concat(bkChunks));
+        docBuffer = applyBriefkopfToDocx(Buffer.from(docBuffer), briefkopfBuffer);
+        console.log(`[PreviewBriefkopf] Applied Briefkopf "${briefkopf.name}" to ${dokument.name}`);
+      }
+    }
+  } catch (err) {
+    console.warn(`[PreviewBriefkopf] Briefkopf apply failed, continuing without:`, err);
+  }
+
+  // 3. Upload merged DOCX to temp path
+  const tempKey = `temp/preview_${dokumentId}_${Date.now()}.docx`;
+  await uploadFile(
+    tempKey,
+    docBuffer,
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    docBuffer.length
+  );
+
+  try {
+    // 4. Get internal presigned URL for OnlyOffice to download
+    const downloadUrl = await getInternalDownloadUrl(tempKey);
+
+    // 5. Convert to PDF via OnlyOffice
+    const pdfBuffer = await convertBufferToPdf(downloadUrl);
+
+    // 6. Store PDF in MinIO
+    const previewPath = `akten/${dokument.akteId}/previews/${dokument.id}.pdf`;
+    await uploadFile(previewPath, pdfBuffer, "application/pdf", pdfBuffer.length);
+
+    // 7. Update previewPfad in DB
+    await prisma.dokument.update({
+      where: { id: dokument.id },
+      data: { previewPfad: previewPath },
+    });
+
+    console.log(
+      `[PreviewBriefkopf] Preview generated for ${dokument.name}: ${previewPath} (${pdfBuffer.length} bytes)`
+    );
+  } finally {
+    // 8. Clean up temp file
+    await deleteFile(tempKey).catch(() => {});
   }
 }

@@ -99,6 +99,15 @@ export async function getDownloadUrl(key: string): Promise<string> {
 }
 
 /**
+ * Get a pre-signed download URL using the internal S3 client.
+ * Used for server-to-server access (e.g. OnlyOffice fetching temp files from MinIO).
+ */
+export async function getInternalDownloadUrl(key: string): Promise<string> {
+  const command = new GetObjectCommand({ Bucket: BUCKET, Key: key });
+  return getSignedUrl(s3Client, command, { expiresIn: 300 });
+}
+
+/**
  * Get a file's content as a readable stream.
  */
 export async function getFileStream(key: string) {

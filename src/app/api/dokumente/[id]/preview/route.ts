@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { uploadFile } from "@/lib/storage";
-import { convertDocumentToPdf, canConvertToPdf } from "@/lib/onlyoffice";
+import { canConvertToPdf, generatePreviewWithBriefkopf } from "@/lib/onlyoffice";
 
 /**
  * GET /api/dokumente/[id]/preview -- Get a PDF preview URL for the document.
@@ -128,30 +127,10 @@ export async function POST(
     );
   }
 
-  // Convert directly via OnlyOffice Conversion API (no worker needed)
+  // Convert via OnlyOffice with Briefkopf injection
   try {
-    console.log(`[PREVIEW] Converting ${dokument.name} to PDF via OnlyOffice`);
-
-    const pdfBuffer = await convertDocumentToPdf(dokument.id, dokument.name);
-
-    if (!pdfBuffer) {
-      return NextResponse.json(
-        { error: "Konvertierung fehlgeschlagen. Ist OnlyOffice erreichbar?" },
-        { status: 502 }
-      );
-    }
-
-    // Store preview PDF in MinIO
-    const previewPath = `akten/${dokument.akteId}/previews/${dokument.id}.pdf`;
-    await uploadFile(previewPath, pdfBuffer, "application/pdf", pdfBuffer.length);
-
-    // Update document record with preview path
-    await prisma.dokument.update({
-      where: { id: dokument.id },
-      data: { previewPfad: previewPath },
-    });
-
-    console.log(`[PREVIEW] Preview generated: ${previewPath} (${pdfBuffer.length} bytes)`);
+    console.log(`[PREVIEW] Generating preview with Briefkopf for ${dokument.name}`);
+    await generatePreviewWithBriefkopf(dokument.id);
 
     return NextResponse.json({
       url: `/api/dokumente/${id}?preview=true`,

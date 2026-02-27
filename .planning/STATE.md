@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-26T23:52:20.176Z"
+last_updated: "2026-02-27T00:15:50.885Z"
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 14
+  completed_plans: 12
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 12 (RAG Schema Foundation) — Plan 01 complete
+**Current focus:** v0.1 Helena RAG — Phase 13 (Hybrid Search + Reranking) — Plan 02 complete
 
 ## Current Position
 
-Phase: 12 of 18 (RAG Schema Foundation)
-Plan: 1 complete
+Phase: 13 of 18 (Hybrid Search + Reranking)
+Plan: 2 of 3 complete
 Status: In progress
-Last activity: 2026-02-26 — Phase 12 Plan 01 complete: Prisma schema + 5 RAG tables + HNSW indexes
+Last activity: 2026-02-27 — Phase 13 Plan 02 complete: parent-child chunking primitives in chunker.ts + vector-store.ts
 
 Progress: [█░░░░░░░░░] ~5%
 
@@ -40,8 +40,8 @@ Progress: [█░░░░░░░░░] ~5%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 12. RAG Schema Foundation | 1/TBD | ~5m | 5m |
-| 13. Hybrid Search + Reranking | 0/TBD | - | - |
+| 12. RAG Schema Foundation | 1/1 | ~5m | 5m |
+| 13. Hybrid Search + Reranking | 2/3 | ~16m | 8m |
 | 14. Gesetze-RAG | 0/TBD | - | - |
 | 15. Normen-Verknüpfung in Akte | 0/TBD | - | - |
 | 16. PII-Filter | 0/TBD | - | - |
@@ -59,6 +59,8 @@ Recent decisions affecting v0.1:
 - DSGVO-Gate ist non-negotiable: PII-Filter muss standalone acceptance-getestet sein BEVOR Urteile oder Muster in pgvector/Meilisearch indiziert werden
 - Phase 12-01: chunkType column NOT NULL DEFAULT 'STANDALONE' — no backfill script needed, Prisma migration handles existing rows
 - Phase 12-01: HNSW manual SQL file (manual_rag_hnsw_indexes.sql) follows manual_pgvector_index.sql convention — both applied at Docker entrypoint
+- [Phase 13-02]: chunkDocumentParentChild uses GERMAN_LEGAL_SEPARATORS for both parent (8000 chars) and child (2000 chars) splitters; global child index across all parents
+- [Phase 13-02]: PARENT rows stored with NULL embedding; chunkType != PARENT filter guards all 4 searchSimilar branches; insertChunks() preserved for STANDALONE pipeline until Plan 03
 
 ### Pending Todos
 
@@ -79,6 +81,6 @@ Recent decisions affecting v0.1:
 
 ## Session Continuity
 
-Last session: 2026-02-26
-Stopped at: Phase 12 Plan 01 complete — RAG schema foundation applied (5 tables, HNSW indexes, Prisma client regenerated)
+Last session: 2026-02-27
+Stopped at: Phase 13 Plan 02 complete — parent-child chunking primitives in chunker.ts and vector-store.ts
 Resume file: None

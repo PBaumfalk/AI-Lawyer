@@ -152,7 +152,7 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 12. RAG Schema Foundation | 1/1 | Complete    | 2026-02-26 | - |
-| 13. Hybrid Search + Reranking | v0.1 | 0/3 | Not started | - |
+| 13. Hybrid Search + Reranking | 1/3 | In Progress|  | - |
 | 14. Gesetze-RAG | v0.1 | 0/TBD | Not started | - |
 | 15. Normen-Verknüpfung in Akte | v0.1 | 0/TBD | Not started | - |
 | 16. PII-Filter | v0.1 | 0/TBD | Not started | - |

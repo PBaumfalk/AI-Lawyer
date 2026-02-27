@@ -102,6 +102,13 @@ None - no external service configuration required.
 - Phase 15 (Normen-Verknuepfung in Akte) can begin — Helena can now cite Gesetze; next step is surfacing them in the Akte UI
 - law_chunks table must be populated via gesetze-sync cron (14-02) before Chain D produces results in production
 
+## Self-Check: PASSED
+
+- FOUND: src/app/api/ki-chat/route.ts
+- FOUND: .planning/phases/14-gesetze-rag/14-03-SUMMARY.md
+- FOUND: commit 5e68633 (feat: Chain D)
+- FOUND: commit 8985b5b (docs: metadata)
+
 ---
 *Phase: 14-gesetze-rag*
 *Completed: 2026-02-27*

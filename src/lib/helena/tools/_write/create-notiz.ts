@@ -8,6 +8,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import type { ToolContext, ToolResult } from "../types";
+import { notifyDraftCreated } from "@/lib/helena/draft-notification";
 
 export function createCreateNotizTool(ctx: ToolContext) {
   return tool({
@@ -48,6 +49,19 @@ export function createCreateNotizTool(ctx: ToolContext) {
           inhalt,
         },
       });
+
+      // Resolve Akte owner for notification recipients
+      const akte = await ctx.prisma.akte.findUnique({
+        where: { id: targetAkteId },
+        select: { anwaltId: true, sachbearbeiterId: true },
+      });
+      const akteAnwaltId = akte?.anwaltId ?? akte?.sachbearbeiterId ?? null;
+
+      // Fire-and-forget: notification failure must not fail the tool
+      notifyDraftCreated(
+        { id: draft.id, akteId: targetAkteId, userId: ctx.userId, typ: draft.typ, titel: draft.titel },
+        akteAnwaltId,
+      ).catch(() => {});
 
       return {
         data: {

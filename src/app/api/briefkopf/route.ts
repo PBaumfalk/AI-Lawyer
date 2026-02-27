@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadFile } from "@/lib/storage";
-import { generateBriefkopfDocx, BriefkopfData } from "@/lib/briefkopf";
+import { generateBriefkopfDocx, BriefkopfData, BriefkopfDesign } from "@/lib/briefkopf";
 
 /**
  * GET /api/briefkopf -- list all Briefkoepfe
@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
   const logo = formData.get("logo") as File | null;
   const docx = formData.get("docx") as File | null;
   const istStandard = formData.get("istStandard") === "true";
+  const design = ((formData.get("design") as string) || "klassisch") as BriefkopfDesign;
 
   if (!name?.trim()) {
     return NextResponse.json(
@@ -60,6 +61,17 @@ export async function POST(request: NextRequest) {
     let logoUrl: string | null = null;
     let logoBuffer: Buffer | null = null;
     let dateipfad: string | null = null;
+
+    // Parse anwaelte from JSON string or comma-separated
+    const anwaelteRaw = formData.get("anwaelte") as string | null;
+    let anwaelte: string[] = [];
+    if (anwaelteRaw) {
+      try {
+        anwaelte = JSON.parse(anwaelteRaw);
+      } catch {
+        anwaelte = anwaelteRaw.split(",").map((s) => s.trim()).filter(Boolean);
+      }
+    }
 
     // Upload logo if provided — keep buffer for DOCX generation
     if (logo) {
@@ -96,8 +108,9 @@ export async function POST(request: NextRequest) {
         bic: (formData.get("bic") as string) || null,
         bankName: (formData.get("bankName") as string) || null,
         braoInfo: (formData.get("braoInfo") as string) || null,
+        anwaelte,
       };
-      const generated = generateBriefkopfDocx(fields, logoBuffer, logo?.type ?? null);
+      const generated = generateBriefkopfDocx(fields, logoBuffer, logo?.type ?? null, design);
       const timestamp = Date.now();
       dateipfad = `briefkoepfe/vorlagen/${timestamp}_generated.docx`;
       await uploadFile(
@@ -133,6 +146,8 @@ export async function POST(request: NextRequest) {
         bic: (formData.get("bic") as string) || null,
         bankName: (formData.get("bankName") as string) || null,
         braoInfo: (formData.get("braoInfo") as string) || null,
+        anwaelte,
+        design,
         istStandard,
       },
     });

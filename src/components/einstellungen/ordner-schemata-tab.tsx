@@ -73,6 +73,12 @@ export function OrdnerSchemataTab() {
   const [newOrdner, setNewOrdner] = useState<string[]>(["Schriftsaetze", "Korrespondenz", "Rechnungen", "Sonstiges"]);
   const [newOrdnerInput, setNewOrdnerInput] = useState("");
 
+  // Edit schema form state
+  const [editName, setEditName] = useState("");
+  const [editSachgebiet, setEditSachgebiet] = useState("");
+  const [editOrdner, setEditOrdner] = useState<string[]>([]);
+  const [editOrdnerInput, setEditOrdnerInput] = useState("");
+
   const fetchSchemata = useCallback(async () => {
     try {
       const res = await fetch("/api/ordner-schemata");
@@ -119,6 +125,64 @@ export function OrdnerSchemataTab() {
     } catch (err: any) {
       toast.error(err.message || "Fehler beim Erstellen");
     }
+  };
+
+  // Open edit dialog
+  const handleStartEdit = (schema: OrdnerSchemaItem) => {
+    setEditingSchema(schema);
+    setEditName(schema.name);
+    setEditSachgebiet(schema.sachgebiet ?? "");
+    setEditOrdner([...schema.ordner]);
+    setEditOrdnerInput("");
+  };
+
+  // Save edit
+  const handleSaveEdit = async () => {
+    if (!editingSchema || !editName.trim()) {
+      toast.error("Name ist erforderlich");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/ordner-schemata/${editingSchema.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName.trim(),
+          sachgebiet: editSachgebiet || null,
+          ordner: editOrdner,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Fehler");
+      }
+      toast.success("Schema aktualisiert");
+      setEditingSchema(null);
+      fetchSchemata();
+    } catch (err: any) {
+      toast.error(err.message || "Fehler beim Speichern");
+    }
+  };
+
+  // Edit: add/remove/move folder helpers
+  const handleEditAddOrdner = () => {
+    if (!editOrdnerInput.trim()) return;
+    setEditOrdner((prev) => [...prev, editOrdnerInput.trim()]);
+    setEditOrdnerInput("");
+  };
+
+  const handleEditRemoveOrdner = (index: number) => {
+    setEditOrdner((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEditMoveOrdner = (index: number, direction: "up" | "down") => {
+    setEditOrdner((prev) => {
+      const arr = [...prev];
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= arr.length) return arr;
+      [arr[index], arr[targetIndex]] = [arr[targetIndex], arr[index]];
+      return arr;
+    });
   };
 
   // Delete schema (called from AlertDialog confirmation)
@@ -265,6 +329,13 @@ export function OrdnerSchemataTab() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => handleStartEdit(schema)}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setDeleteTarget(schema)}
                     >
                       <Trash2 className="w-3.5 h-3.5 text-rose-500" />
@@ -394,6 +465,107 @@ export function OrdnerSchemataTab() {
               </Button>
               <Button onClick={handleCreate} disabled={!newName.trim()}>
                 Schema erstellen
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit schema dialog */}
+      {editingSchema && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="glass rounded-xl p-6 w-full max-w-lg mx-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-heading text-foreground">
+                Schema bearbeiten
+              </h3>
+              <button
+                onClick={() => setEditingSchema(null)}
+                className="p-1 rounded-md hover:bg-muted"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Name <span className="text-rose-500">*</span></Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="z.B. Zivilrecht Standard"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Sachgebiet (optional)</Label>
+              <select
+                value={editSachgebiet}
+                onChange={(e) => setEditSachgebiet(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Kein Sachgebiet (global)</option>
+                {Object.entries(SACHGEBIET_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Ordner</Label>
+              <div className="space-y-1">
+                {editOrdner.map((ordner, i) => (
+                  <div key={i} className="flex items-center gap-1">
+                    <span className="flex-1 text-sm px-2 py-1 rounded bg-muted/50">
+                      {ordner}
+                    </span>
+                    <button
+                      onClick={() => handleEditMoveOrdner(i, "up")}
+                      disabled={i === 0}
+                      className="p-1 rounded hover:bg-muted disabled:opacity-30"
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleEditMoveOrdner(i, "down")}
+                      disabled={i === editOrdner.length - 1}
+                      className="p-1 rounded hover:bg-muted disabled:opacity-30"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleEditRemoveOrdner(i)}
+                      className="p-1 rounded hover:bg-muted text-rose-500"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-1 mt-2">
+                <Input
+                  value={editOrdnerInput}
+                  onChange={(e) => setEditOrdnerInput(e.target.value)}
+                  placeholder="Neuer Ordner..."
+                  className="h-8 text-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleEditAddOrdner();
+                    }
+                  }}
+                />
+                <Button size="sm" onClick={handleEditAddOrdner} disabled={!editOrdnerInput.trim()}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={() => setEditingSchema(null)}>
+                Abbrechen
+              </Button>
+              <Button onClick={handleSaveEdit} disabled={!editName.trim()}>
+                Speichern
               </Button>
             </div>
           </div>

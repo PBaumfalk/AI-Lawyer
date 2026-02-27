@@ -869,6 +869,8 @@ model Briefkopf {
   bic           String?
   bankName      String?
   braoInfo      String?  // BRAO/regulatory info text
+  anwaelte      String[] // Lawyer names (required by BRAO/BORA on letterhead)
+  design        String   @default("klassisch") // klassisch | modern | elegant
   istStandard   Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

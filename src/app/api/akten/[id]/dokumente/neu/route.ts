@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { uploadFile } from "@/lib/storage";
+import { uploadFile, getFileStream } from "@/lib/storage";
 import { logAuditEvent } from "@/lib/audit";
 import { indexDokument } from "@/lib/meilisearch";
 import { createBlankDocx } from "@/lib/vorlagen";
+import { applyBriefkopfToDocx } from "@/lib/briefkopf";
 import { requireAkteAccess } from "@/lib/rbac";
 
 /**
@@ -42,7 +43,29 @@ export async function POST(
 
   try {
     // Generate blank DOCX
-    const blankBuffer = createBlankDocx();
+    let blankBuffer: Buffer = createBlankDocx();
+
+    // Apply default Briefkopf if available
+    const briefkopf = await prisma.briefkopf.findFirst({
+      where: { istStandard: true },
+    });
+
+    if (briefkopf?.dateipfad) {
+      try {
+        const bkStream = await getFileStream(briefkopf.dateipfad);
+        if (bkStream) {
+          const bkChunks: Uint8Array[] = [];
+          for await (const chunk of bkStream as AsyncIterable<Uint8Array>) {
+            bkChunks.push(chunk);
+          }
+          const briefkopfBuffer = Buffer.concat(bkChunks);
+          blankBuffer = applyBriefkopfToDocx(blankBuffer, briefkopfBuffer);
+        }
+      } catch (err) {
+        console.error("[NeuDokument] Briefkopf apply failed:", err);
+        // Continue without Briefkopf rather than failing
+      }
+    }
 
     // Upload to MinIO
     const timestamp = Date.now();

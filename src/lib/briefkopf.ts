@@ -47,15 +47,16 @@ function xmlEsc(s: string | null | undefined): string {
  *
  * The generated DOCX can be passed directly to applyBriefkopfToDocx.
  *
- * Layout:
- *   Header: [Logo paragraph?] | KanzleiName (bold 14pt blue) | Adresse | Tel/Fax | Email/Web
- *   Footer: IBAN BIC Bank Steuernr [TAB→right] Seite {PAGE}
- *           [braoInfo line?]
+ * Three design options:
+ *   - klassisch: Centered layout with logo left, name centered blue, contact centered
+ *   - modern: Two-column table — logo+name+anwaelte left, contact info right-aligned
+ *   - elegant: Centered large name (dark), decorative borders, formal spacing
  */
 export function generateBriefkopfDocx(
   data: BriefkopfData,
   logoBuffer?: Buffer | null,
-  logoMimeType?: string | null
+  logoMimeType?: string | null,
+  design: BriefkopfDesign = "klassisch"
 ): Buffer {
   const zip = new PizZip();
 
@@ -85,7 +86,6 @@ export function generateBriefkopfDocx(
 </Relationships>`;
 
   // ── word/document.xml ───────────────────────────────────────────────────
-  // Minimal body: one empty paragraph + sectPr referencing header/footer
   const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
             xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
@@ -133,180 +133,11 @@ export function generateBriefkopfDocx(
   </w:style>
 </w:styles>`;
 
-  // ── word/header1.xml ─────────────────────────────────────────────────────
-  const hdrParas: string[] = [];
+  // ── Header XML — design-specific ──────────────────────────────────────────
+  const headerXml = buildHeaderXml(data, hasLogo, design);
 
-  // Logo paragraph (inline drawing, 3cm × 1.5cm = 1080000 × 540000 EMU)
-  if (hasLogo) {
-    hdrParas.push(
-      `<w:p>` +
-        `<w:pPr><w:jc w:val="left"/></w:pPr>` +
-        `<w:r><w:drawing>` +
-        `<wp:inline distT="0" distB="0" distL="0" distR="0" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
-        `<wp:extent cx="1080000" cy="540000"/>` +
-        `<wp:effectExtent l="0" t="0" r="0" b="0"/>` +
-        `<wp:docPr id="1" name="Logo"/>` +
-        `<wp:cNvGraphicFramePr>` +
-        `<a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>` +
-        `</wp:cNvGraphicFramePr>` +
-        `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">` +
-        `<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
-        `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
-        `<pic:nvPicPr>` +
-        `<pic:cNvPr id="1" name="Logo"/><pic:cNvPicPr/>` +
-        `</pic:nvPicPr>` +
-        `<pic:blipFill>` +
-        `<a:blip r:embed="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>` +
-        `<a:stretch><a:fillRect/></a:stretch>` +
-        `</pic:blipFill>` +
-        `<pic:spPr>` +
-        `<a:xfrm><a:off x="0" y="0"/><a:ext cx="1080000" cy="540000"/></a:xfrm>` +
-        `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>` +
-        `</pic:spPr>` +
-        `</pic:pic>` +
-        `</a:graphicData>` +
-        `</a:graphic>` +
-        `</wp:inline>` +
-        `</w:drawing></w:r>` +
-        `</w:p>`
-    );
-  }
-
-  // Kanzleiname — bold, 14pt (28 half-pt), brand blue #1D4ED8
-  if (data.kanzleiName) {
-    hdrParas.push(
-      `<w:p>` +
-        `<w:pPr><w:jc w:val="center"/></w:pPr>` +
-        `<w:r><w:rPr><w:b/><w:color w:val="1D4ED8"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr>` +
-        `<w:t>${xmlEsc(data.kanzleiName)}</w:t></w:r>` +
-        `</w:p>`
-    );
-  }
-
-  // Adresse
-  if (data.adresse) {
-    hdrParas.push(
-      `<w:p>` +
-        `<w:pPr><w:jc w:val="center"/></w:pPr>` +
-        `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>` +
-        `<w:t>${xmlEsc(data.adresse)}</w:t></w:r>` +
-        `</w:p>`
-    );
-  }
-
-  // Tel | Fax
-  const telFaxLine = [
-    data.telefon ? `Tel: ${data.telefon}` : null,
-    data.fax ? `Fax: ${data.fax}` : null,
-  ]
-    .filter(Boolean)
-    .join("  |  ");
-  if (telFaxLine) {
-    hdrParas.push(
-      `<w:p>` +
-        `<w:pPr><w:jc w:val="center"/></w:pPr>` +
-        `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>` +
-        `<w:t>${xmlEsc(telFaxLine)}</w:t></w:r>` +
-        `</w:p>`
-    );
-  }
-
-  // E-Mail | Web
-  const emailWebLine = [
-    data.email ? `E-Mail: ${data.email}` : null,
-    data.website ? `Web: ${data.website}` : null,
-  ]
-    .filter(Boolean)
-    .join("  |  ");
-  if (emailWebLine) {
-    hdrParas.push(
-      `<w:p>` +
-        `<w:pPr><w:jc w:val="center"/></w:pPr>` +
-        `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>` +
-        `<w:t>${xmlEsc(emailWebLine)}</w:t></w:r>` +
-        `</w:p>`
-    );
-  }
-
-  // Fallback: header must have at least one paragraph
-  if (hdrParas.length === 0) {
-    hdrParas.push(`<w:p><w:pPr><w:pStyle w:val="Header"/></w:pPr></w:p>`);
-  }
-
-  // Bottom border on the last header paragraph
-  const borderAttr =
-    `<w:pBdr>` +
-    `<w:bottom w:val="single" w:sz="4" w:space="1" w:color="auto"/>` +
-    `</w:pBdr>`;
-  const lastHdr = hdrParas[hdrParas.length - 1];
-  hdrParas[hdrParas.length - 1] = lastHdr.includes("<w:pPr>")
-    ? lastHdr.replace("<w:pPr>", `<w:pPr>${borderAttr}`)
-    : lastHdr.replace("<w:p>", `<w:p><w:pPr>${borderAttr}</w:pPr>`);
-
-  const headerXml =
-    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
-    `<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"\n` +
-    `       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n` +
-    hdrParas.join("\n") +
-    `\n</w:hdr>`;
-
-  // ── word/footer1.xml ─────────────────────────────────────────────────────
-  // Tab stop at right margin for page number (content width: 11906 - 1800 - 1440 = 8666 twips)
-  const rightTabPos = 8666;
-  const ftrParas: string[] = [];
-
-  const leftFooter = [
-    data.iban ? `IBAN: ${data.iban}` : null,
-    data.bic ? `BIC: ${data.bic}` : null,
-    data.bankName || null,
-    data.steuernr ? `St.-Nr.: ${data.steuernr}` : null,
-    data.ustIdNr ? `USt-IdNr: ${data.ustIdNr}` : null,
-  ]
-    .filter(Boolean)
-    .join("  |  ");
-
-  // Page-number field runs (begin / instrText / separate / cached "1" / end)
-  const pageField =
-    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r>` +
-    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r>` +
-    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r>` +
-    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t>1</w:t></w:r>` +
-    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r>`;
-
-  ftrParas.push(
-    `<w:p>` +
-      `<w:pPr>` +
-      `<w:pStyle w:val="Footer"/>` +
-      `<w:tabs><w:tab w:val="right" w:pos="${rightTabPos}"/></w:tabs>` +
-      `</w:pPr>` +
-      (leftFooter
-        ? `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>` +
-          `<w:t xml:space="preserve">${xmlEsc(leftFooter)}</w:t></w:r>` +
-          `<w:r><w:tab/></w:r>`
-        : `<w:r><w:tab/></w:r>`) +
-      `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>` +
-      `<w:t xml:space="preserve">Seite </w:t></w:r>` +
-      pageField +
-      `</w:p>`
-  );
-
-  // Optional braoInfo line (7pt = 14 half-pt)
-  if (data.braoInfo) {
-    ftrParas.push(
-      `<w:p>` +
-        `<w:pPr><w:pStyle w:val="Footer"/><w:jc w:val="left"/></w:pPr>` +
-        `<w:r><w:rPr><w:sz w:val="14"/><w:szCs w:val="14"/></w:rPr>` +
-        `<w:t>${xmlEsc(data.braoInfo)}</w:t></w:r>` +
-        `</w:p>`
-    );
-  }
-
-  const footerXml =
-    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
-    `<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"\n` +
-    `       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n` +
-    ftrParas.join("\n") +
-    `\n</w:ftr>`;
+  // ── Footer XML — shared across designs ────────────────────────────────────
+  const footerXml = buildFooterXml(data, design);
 
   // ── Assemble ZIP ─────────────────────────────────────────────────────────
   zip.file("[Content_Types].xml", contentTypes);
@@ -331,11 +162,428 @@ export function generateBriefkopfDocx(
   return zip.generate({ type: "nodebuffer", compression: "DEFLATE" }) as Buffer;
 }
 
+// ─── Logo XML snippet (reused by all designs) ──────────────────────────────
+
+function logoDrawingXml(align: "left" | "center" = "left"): string {
+  return (
+    `<w:p>` +
+    `<w:pPr><w:jc w:val="${align}"/></w:pPr>` +
+    `<w:r><w:drawing>` +
+    `<wp:inline distT="0" distB="0" distL="0" distR="0" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
+    `<wp:extent cx="1080000" cy="540000"/>` +
+    `<wp:effectExtent l="0" t="0" r="0" b="0"/>` +
+    `<wp:docPr id="1" name="Logo"/>` +
+    `<wp:cNvGraphicFramePr>` +
+    `<a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>` +
+    `</wp:cNvGraphicFramePr>` +
+    `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">` +
+    `<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+    `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+    `<pic:nvPicPr>` +
+    `<pic:cNvPr id="1" name="Logo"/><pic:cNvPicPr/>` +
+    `</pic:nvPicPr>` +
+    `<pic:blipFill>` +
+    `<a:blip r:embed="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>` +
+    `<a:stretch><a:fillRect/></a:stretch>` +
+    `</pic:blipFill>` +
+    `<pic:spPr>` +
+    `<a:xfrm><a:off x="0" y="0"/><a:ext cx="1080000" cy="540000"/></a:xfrm>` +
+    `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>` +
+    `</pic:spPr>` +
+    `</pic:pic>` +
+    `</a:graphicData>` +
+    `</a:graphic>` +
+    `</wp:inline>` +
+    `</w:drawing></w:r>` +
+    `</w:p>`
+  );
+}
+
+// ─── Logo XML for table cell (no outer <w:p>, returns runs only) ─────────
+
+function logoDrawingRuns(): string {
+  return (
+    `<w:r><w:drawing>` +
+    `<wp:inline distT="0" distB="0" distL="0" distR="0" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
+    `<wp:extent cx="1080000" cy="540000"/>` +
+    `<wp:effectExtent l="0" t="0" r="0" b="0"/>` +
+    `<wp:docPr id="1" name="Logo"/>` +
+    `<wp:cNvGraphicFramePr>` +
+    `<a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>` +
+    `</wp:cNvGraphicFramePr>` +
+    `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">` +
+    `<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+    `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+    `<pic:nvPicPr>` +
+    `<pic:cNvPr id="1" name="Logo"/><pic:cNvPicPr/>` +
+    `</pic:nvPicPr>` +
+    `<pic:blipFill>` +
+    `<a:blip r:embed="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>` +
+    `<a:stretch><a:fillRect/></a:stretch>` +
+    `</pic:blipFill>` +
+    `<pic:spPr>` +
+    `<a:xfrm><a:off x="0" y="0"/><a:ext cx="1080000" cy="540000"/></a:xfrm>` +
+    `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>` +
+    `</pic:spPr>` +
+    `</pic:pic>` +
+    `</a:graphicData>` +
+    `</a:graphic>` +
+    `</wp:inline>` +
+    `</w:drawing></w:r>`
+  );
+}
+
+// ─── Design: Klassisch (centered) ──────────────────────────────────────────
+
+function buildHeaderKlassisch(data: BriefkopfData, hasLogo: boolean): string[] {
+  const hdrParas: string[] = [];
+
+  if (hasLogo) hdrParas.push(logoDrawingXml("left"));
+
+  if (data.kanzleiName) {
+    hdrParas.push(
+      `<w:p><w:pPr><w:jc w:val="center"/></w:pPr>` +
+      `<w:r><w:rPr><w:b/><w:color w:val="1D4ED8"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr>` +
+      `<w:t>${xmlEsc(data.kanzleiName)}</w:t></w:r></w:p>`
+    );
+  }
+
+  if (data.anwaelte && data.anwaelte.length > 0) {
+    const line = data.anwaelte.filter(Boolean).join("  |  ");
+    if (line) {
+      hdrParas.push(
+        `<w:p><w:pPr><w:jc w:val="center"/></w:pPr>` +
+        `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>` +
+        `<w:t>${xmlEsc(line)}</w:t></w:r></w:p>`
+      );
+    }
+  }
+
+  if (data.adresse) {
+    hdrParas.push(
+      `<w:p><w:pPr><w:jc w:val="center"/></w:pPr>` +
+      `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>` +
+      `<w:t>${xmlEsc(data.adresse)}</w:t></w:r></w:p>`
+    );
+  }
+
+  const telFax = [
+    data.telefon ? `Tel: ${data.telefon}` : null,
+    data.fax ? `Fax: ${data.fax}` : null,
+  ].filter(Boolean).join("  |  ");
+  if (telFax) {
+    hdrParas.push(
+      `<w:p><w:pPr><w:jc w:val="center"/></w:pPr>` +
+      `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>` +
+      `<w:t>${xmlEsc(telFax)}</w:t></w:r></w:p>`
+    );
+  }
+
+  const emailWeb = [
+    data.email ? `E-Mail: ${data.email}` : null,
+    data.website ? `Web: ${data.website}` : null,
+  ].filter(Boolean).join("  |  ");
+  if (emailWeb) {
+    hdrParas.push(
+      `<w:p><w:pPr><w:jc w:val="center"/></w:pPr>` +
+      `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>` +
+      `<w:t>${xmlEsc(emailWeb)}</w:t></w:r></w:p>`
+    );
+  }
+
+  return hdrParas;
+}
+
+// ─── Design: Modern (two-column table) ─────────────────────────────────────
+
+function buildHeaderModern(data: BriefkopfData, hasLogo: boolean): string[] {
+  // Build left cell content: logo + kanzleiname + anwaelte + adresse
+  const leftParas: string[] = [];
+
+  if (hasLogo) {
+    leftParas.push(`<w:p><w:pPr><w:spacing w:after="60"/></w:pPr>${logoDrawingRuns()}</w:p>`);
+  }
+
+  if (data.kanzleiName) {
+    leftParas.push(
+      `<w:p><w:pPr><w:spacing w:after="20"/></w:pPr>` +
+      `<w:r><w:rPr><w:b/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr>` +
+      `<w:t>${xmlEsc(data.kanzleiName)}</w:t></w:r></w:p>`
+    );
+  }
+
+  if (data.anwaelte && data.anwaelte.length > 0) {
+    for (const anwalt of data.anwaelte.filter(Boolean)) {
+      leftParas.push(
+        `<w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>` +
+        `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/><w:color w:val="64748B"/></w:rPr>` +
+        `<w:t>${xmlEsc(anwalt)}</w:t></w:r></w:p>`
+      );
+    }
+  }
+
+  if (data.adresse) {
+    leftParas.push(
+      `<w:p><w:pPr><w:spacing w:before="40" w:after="0"/></w:pPr>` +
+      `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/><w:color w:val="64748B"/></w:rPr>` +
+      `<w:t>${xmlEsc(data.adresse)}</w:t></w:r></w:p>`
+    );
+  }
+
+  if (leftParas.length === 0) {
+    leftParas.push(`<w:p/>`);
+  }
+
+  // Build right cell content: tel, fax, email, website (right-aligned)
+  const rightParas: string[] = [];
+  const rightItems = [
+    data.telefon ? `Tel: ${data.telefon}` : null,
+    data.fax ? `Fax: ${data.fax}` : null,
+    data.email ?? null,
+    data.website ?? null,
+  ].filter(Boolean);
+
+  for (const item of rightItems) {
+    rightParas.push(
+      `<w:p><w:pPr><w:jc w:val="right"/><w:spacing w:after="20" w:line="240" w:lineRule="auto"/></w:pPr>` +
+      `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/><w:color w:val="475569"/></w:rPr>` +
+      `<w:t>${xmlEsc(item!)}</w:t></w:r></w:p>`
+    );
+  }
+
+  if (rightParas.length === 0) {
+    rightParas.push(`<w:p/>`);
+  }
+
+  // Build table XML (invisible borders, 60/40 split)
+  const noBorders =
+    `<w:tblBorders>` +
+    `<w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>` +
+    `<w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>` +
+    `<w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>` +
+    `<w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>` +
+    `<w:insideH w:val="none" w:sz="0" w:space="0" w:color="auto"/>` +
+    `<w:insideV w:val="none" w:sz="0" w:space="0" w:color="auto"/>` +
+    `</w:tblBorders>`;
+
+  const tableXml =
+    `<w:tbl>` +
+    `<w:tblPr>` +
+    `<w:tblW w:w="5000" w:type="pct"/>` +
+    noBorders +
+    `<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/></w:tblCellMar>` +
+    `</w:tblPr>` +
+    `<w:tblGrid><w:gridCol w:w="5200"/><w:gridCol w:w="3466"/></w:tblGrid>` +
+    `<w:tr>` +
+    `<w:tc><w:tcPr><w:tcW w:w="5200" w:type="dxa"/><w:vAlign w:val="top"/></w:tcPr>${leftParas.join("")}</w:tc>` +
+    `<w:tc><w:tcPr><w:tcW w:w="3466" w:type="dxa"/><w:vAlign w:val="top"/></w:tcPr>${rightParas.join("")}</w:tc>` +
+    `</w:tr>` +
+    `</w:tbl>`;
+
+  // Blue accent line below table
+  const accentLine =
+    `<w:p><w:pPr>` +
+    `<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="1D4ED8"/></w:pBdr>` +
+    `<w:spacing w:before="60" w:after="0"/>` +
+    `</w:pPr></w:p>`;
+
+  return [tableXml, accentLine];
+}
+
+// ─── Design: Elegant (centered, formal) ────────────────────────────────────
+
+function buildHeaderElegant(data: BriefkopfData, hasLogo: boolean): string[] {
+  const hdrParas: string[] = [];
+
+  if (hasLogo) hdrParas.push(logoDrawingXml("center"));
+
+  // Kanzleiname — 16pt, dark slate, bold
+  if (data.kanzleiName) {
+    hdrParas.push(
+      `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="40"/></w:pPr>` +
+      `<w:r><w:rPr><w:b/><w:color w:val="1E293B"/><w:sz w:val="32"/><w:szCs w:val="32"/>` +
+      `<w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/></w:rPr>` +
+      `<w:t>${xmlEsc(data.kanzleiName)}</w:t></w:r></w:p>`
+    );
+  }
+
+  // Thin decorative rule
+  hdrParas.push(
+    `<w:p><w:pPr><w:jc w:val="center"/>` +
+    `<w:pBdr><w:bottom w:val="single" w:sz="2" w:space="1" w:color="94A3B8"/></w:pBdr>` +
+    `<w:spacing w:after="40"/>` +
+    `</w:pPr></w:p>`
+  );
+
+  // Anwaelte — each on own line, centered, 9pt, slate
+  if (data.anwaelte && data.anwaelte.length > 0) {
+    const line = data.anwaelte.filter(Boolean).join("  \u00B7  "); // middle dot separator
+    if (line) {
+      hdrParas.push(
+        `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="20"/></w:pPr>` +
+        `<w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/><w:color w:val="475569"/>` +
+        `<w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/></w:rPr>` +
+        `<w:t>${xmlEsc(line)}</w:t></w:r></w:p>`
+      );
+    }
+  }
+
+  // Adresse centered
+  if (data.adresse) {
+    hdrParas.push(
+      `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>` +
+      `<w:r><w:rPr><w:sz w:val="17"/><w:szCs w:val="17"/><w:color w:val="64748B"/></w:rPr>` +
+      `<w:t>${xmlEsc(data.adresse)}</w:t></w:r></w:p>`
+    );
+  }
+
+  // All contact info in one compact line
+  const contactLine = [
+    data.telefon ? `Tel: ${data.telefon}` : null,
+    data.fax ? `Fax: ${data.fax}` : null,
+    data.email ?? null,
+    data.website ?? null,
+  ].filter(Boolean).join("  \u00B7  ");
+  if (contactLine) {
+    hdrParas.push(
+      `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>` +
+      `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/><w:color w:val="64748B"/></w:rPr>` +
+      `<w:t>${xmlEsc(contactLine)}</w:t></w:r></w:p>`
+    );
+  }
+
+  return hdrParas;
+}
+
+// ─── Build header XML wrapper ──────────────────────────────────────────────
+
+function buildHeaderXml(data: BriefkopfData, hasLogo: boolean, design: BriefkopfDesign): string {
+  let hdrParas: string[];
+
+  switch (design) {
+    case "modern":
+      hdrParas = buildHeaderModern(data, hasLogo);
+      break;
+    case "elegant":
+      hdrParas = buildHeaderElegant(data, hasLogo);
+      break;
+    default:
+      hdrParas = buildHeaderKlassisch(data, hasLogo);
+      break;
+  }
+
+  // Fallback: header must have at least one paragraph
+  if (hdrParas.length === 0) {
+    hdrParas.push(`<w:p><w:pPr><w:pStyle w:val="Header"/></w:pPr></w:p>`);
+  }
+
+  // Add bottom border to last paragraph (klassisch and elegant only, modern has its own accent line)
+  if (design !== "modern") {
+    const borderVal = design === "elegant" ? "double" : "single";
+    const borderColor = design === "elegant" ? "94A3B8" : "auto";
+    const borderAttr =
+      `<w:pBdr>` +
+      `<w:bottom w:val="${borderVal}" w:sz="4" w:space="1" w:color="${borderColor}"/>` +
+      `</w:pBdr>`;
+    const lastHdr = hdrParas[hdrParas.length - 1];
+    hdrParas[hdrParas.length - 1] = lastHdr.includes("<w:pPr>")
+      ? lastHdr.replace("<w:pPr>", `<w:pPr>${borderAttr}`)
+      : lastHdr.replace("<w:p>", `<w:p><w:pPr>${borderAttr}</w:pPr>`);
+  }
+
+  return (
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
+    `<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"\n` +
+    `       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n` +
+    hdrParas.join("\n") +
+    `\n</w:hdr>`
+  );
+}
+
+// ─── Build footer XML ──────────────────────────────────────────────────────
+
+function buildFooterXml(data: BriefkopfData, design: BriefkopfDesign): string {
+  const rightTabPos = 8666; // content width in twips
+  const ftrParas: string[] = [];
+  const isElegant = design === "elegant";
+
+  // Top border on footer
+  const topBorderPpr = isElegant
+    ? `<w:pBdr><w:top w:val="double" w:sz="2" w:space="1" w:color="94A3B8"/></w:pBdr>`
+    : `<w:pBdr><w:top w:val="single" w:sz="2" w:space="1" w:color="auto"/></w:pBdr>`;
+
+  const leftFooter = [
+    data.iban ? `IBAN: ${data.iban}` : null,
+    data.bic ? `BIC: ${data.bic}` : null,
+    data.bankName || null,
+    data.steuernr ? `St.-Nr.: ${data.steuernr}` : null,
+    data.ustIdNr ? `USt-IdNr: ${data.ustIdNr}` : null,
+  ].filter(Boolean).join("  |  ");
+
+  const pageField =
+    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r>` +
+    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r>` +
+    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r>` +
+    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t>1</w:t></w:r>` +
+    `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r>`;
+
+  if (isElegant && leftFooter) {
+    // Elegant: centered bank info line, then centered page number
+    ftrParas.push(
+      `<w:p><w:pPr><w:pStyle w:val="Footer"/><w:jc w:val="center"/>${topBorderPpr}</w:pPr>` +
+      `<w:r><w:rPr><w:sz w:val="14"/><w:szCs w:val="14"/><w:color w:val="64748B"/></w:rPr>` +
+      `<w:t xml:space="preserve">${xmlEsc(leftFooter)}</w:t></w:r></w:p>`
+    );
+    ftrParas.push(
+      `<w:p><w:pPr><w:pStyle w:val="Footer"/><w:jc w:val="center"/></w:pPr>` +
+      `<w:r><w:rPr><w:sz w:val="14"/><w:szCs w:val="14"/><w:color w:val="64748B"/></w:rPr>` +
+      `<w:t xml:space="preserve">Seite </w:t></w:r>${pageField}</w:p>`
+    );
+  } else {
+    // Klassisch & Modern: left footer + right page number
+    ftrParas.push(
+      `<w:p><w:pPr><w:pStyle w:val="Footer"/>` +
+      `<w:tabs><w:tab w:val="right" w:pos="${rightTabPos}"/></w:tabs>` +
+      (design === "modern" ? `<w:pBdr><w:top w:val="single" w:sz="2" w:space="1" w:color="1D4ED8"/></w:pBdr>` : topBorderPpr) +
+      `</w:pPr>` +
+      (leftFooter
+        ? `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>` +
+          `<w:t xml:space="preserve">${xmlEsc(leftFooter)}</w:t></w:r>` +
+          `<w:r><w:tab/></w:r>`
+        : `<w:r><w:tab/></w:r>`) +
+      `<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>` +
+      `<w:t xml:space="preserve">Seite </w:t></w:r>` +
+      pageField +
+      `</w:p>`
+    );
+  }
+
+  if (data.braoInfo) {
+    const jc = isElegant ? "center" : "left";
+    const sz = isElegant ? "12" : "14";
+    ftrParas.push(
+      `<w:p><w:pPr><w:pStyle w:val="Footer"/><w:jc w:val="${jc}"/></w:pPr>` +
+      `<w:r><w:rPr><w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/>${isElegant ? `<w:color w:val="64748B"/>` : ""}</w:rPr>` +
+      `<w:t>${xmlEsc(data.braoInfo)}</w:t></w:r></w:p>`
+    );
+  }
+
+  return (
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
+    `<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"\n` +
+    `       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n` +
+    ftrParas.join("\n") +
+    `\n</w:ftr>`
+  );
+}
+
 const APP_INTERNAL_URL =
   process.env.APP_INTERNAL_URL ?? "http://host.docker.internal:3000";
 const ONLYOFFICE_SECRET = process.env.ONLYOFFICE_SECRET ?? "";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
+
+export type BriefkopfDesign = "klassisch" | "modern" | "elegant";
 
 export interface BriefkopfData {
   kanzleiName?: string | null;
@@ -350,6 +598,7 @@ export interface BriefkopfData {
   bic?: string | null;
   bankName?: string | null;
   braoInfo?: string | null;
+  anwaelte?: string[]; // Lawyer names (required by BRAO/BORA)
 }
 
 // ─── DOCX Header/Footer Manipulation ────────────────────────────────────────

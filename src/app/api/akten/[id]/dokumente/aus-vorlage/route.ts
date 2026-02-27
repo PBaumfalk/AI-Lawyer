@@ -4,6 +4,7 @@ import { uploadFile, getFileStream } from "@/lib/storage";
 import { logAuditEvent } from "@/lib/audit";
 import { indexDokument } from "@/lib/meilisearch";
 import { resolvePlatzhalter, fillDocxTemplate } from "@/lib/vorlagen";
+import { applyBriefkopfToDocx } from "@/lib/briefkopf";
 import { requireAkteAccess } from "@/lib/rbac";
 
 /**
@@ -28,7 +29,7 @@ export async function POST(
 
   // Parse body
   const body = await request.json();
-  const { vorlageId, dateiname, ordner, tags } = body;
+  const { vorlageId, dateiname, ordner, tags, briefkopfId } = body;
 
   if (!vorlageId) {
     return NextResponse.json({ error: "vorlageId ist erforderlich" }, { status: 400 });
@@ -125,7 +126,38 @@ export async function POST(
     });
 
     // Fill template with data
-    const filledBuffer = fillDocxTemplate(templateBuffer, placeholderData);
+    let filledBuffer = fillDocxTemplate(templateBuffer, placeholderData);
+
+    // Apply Briefkopf (letterhead) if available
+    let briefkopf = null;
+    if (briefkopfId) {
+      briefkopf = await prisma.briefkopf.findUnique({
+        where: { id: briefkopfId },
+      });
+    }
+    if (!briefkopf) {
+      // Fall back to default Briefkopf
+      briefkopf = await prisma.briefkopf.findFirst({
+        where: { istStandard: true },
+      });
+    }
+
+    if (briefkopf?.dateipfad) {
+      try {
+        const bkStream = await getFileStream(briefkopf.dateipfad);
+        if (bkStream) {
+          const bkChunks: Uint8Array[] = [];
+          for await (const chunk of bkStream as AsyncIterable<Uint8Array>) {
+            bkChunks.push(chunk);
+          }
+          const briefkopfBuffer = Buffer.concat(bkChunks);
+          filledBuffer = applyBriefkopfToDocx(filledBuffer, briefkopfBuffer);
+        }
+      } catch (err) {
+        console.error("[AusVorlage] Briefkopf apply failed:", err);
+        // Continue without Briefkopf rather than failing
+      }
+    }
 
     // Generate output filename
     const outputName = dateiname?.trim()

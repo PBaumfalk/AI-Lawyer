@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { deleteFile, uploadFile, getDownloadUrl, getFileStream } from "@/lib/storage";
-import { generateBriefkopfDocx, BriefkopfData } from "@/lib/briefkopf";
+import { generateBriefkopfDocx, BriefkopfData, BriefkopfDesign } from "@/lib/briefkopf";
 
 /**
  * GET /api/briefkopf/[id] -- get a single Briefkopf
@@ -84,11 +84,22 @@ export async function PUT(
     "bic",
     "bankName",
     "braoInfo",
+    "design",
   ];
   for (const field of textFields) {
     const value = formData.get(field) as string | null;
     if (value !== null) {
       updateData[field] = value.trim() || null;
+    }
+  }
+
+  // Update anwaelte (array field)
+  const anwaelteRaw = formData.get("anwaelte") as string | null;
+  if (anwaelteRaw !== null) {
+    try {
+      updateData.anwaelte = JSON.parse(anwaelteRaw);
+    } catch {
+      updateData.anwaelte = anwaelteRaw.split(",").map((s: string) => s.trim()).filter(Boolean);
     }
   }
 
@@ -222,9 +233,14 @@ export async function PUT(
         (updateData.braoInfo !== undefined
           ? updateData.braoInfo
           : briefkopf.braoInfo) ?? null,
+      anwaelte:
+        updateData.anwaelte !== undefined
+          ? updateData.anwaelte
+          : briefkopf.anwaelte ?? [],
     };
 
-    const generated = generateBriefkopfDocx(mergedFields, logoBuffer, logoMime);
+    const mergedDesign = ((updateData.design ?? briefkopf.design ?? "klassisch") as BriefkopfDesign);
+    const generated = generateBriefkopfDocx(mergedFields, logoBuffer, logoMime, mergedDesign);
     const timestamp = Date.now();
     const newDateipfad = `briefkoepfe/vorlagen/${timestamp}_generated.docx`;
     await uploadFile(

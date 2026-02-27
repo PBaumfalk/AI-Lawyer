@@ -182,4 +182,4 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 | 15. Normen-Verknüpfung in Akte | 3/3 | Complete    | 2026-02-27 | - |
 | 16. PII-Filter | 3/3 | Complete    | 2026-02-27 | - |
 | 17. Urteile-RAG | 3/3 | Complete    | 2026-02-27 | - |
-| 18. Muster-RAG + Admin Upload UI | 3/3 | Complete   | 2026-02-27 | - |
+| 18. Muster-RAG + Admin Upload UI | 3/3 | Complete    | 2026-02-27 | - |

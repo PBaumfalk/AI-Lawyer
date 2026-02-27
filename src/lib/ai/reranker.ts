@@ -72,6 +72,7 @@ Antworte NUR mit einem JSON-Objekt. Schluessel ist die id des Textausschnitts, W
 Beispiel: {"id-1": 8, "id-2": 3}
 Keine Erklaerungen, kein Text ausserhalb des JSON.`;
 
+  const t0 = Date.now();
   try {
     const response = await fetch(`${OLLAMA_URL}/api/generate`, {
       method: "POST",
@@ -108,9 +109,10 @@ Keine Erklaerungen, kein Text ausserhalb des JSON.`;
       return scoreB - scoreA;
     });
 
+    console.log(`[reranker] Reranked ${candidates.length} candidates in ${Date.now() - t0}ms`);
     return ranked.slice(0, 10);
   } catch (err) {
-    console.warn("[reranker] Fallback to RRF order:", err);
+    console.warn(`[reranker] Fallback to RRF order after ${Date.now() - t0}ms:`, err);
     return candidates.slice(0, 10);
   }
 }

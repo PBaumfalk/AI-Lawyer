@@ -5,6 +5,12 @@
  * Retrieves relevant document chunks via pgvector, builds a system prompt
  * with source citations, and streams the AI response using the AI SDK.
  *
+ * Performance optimisation: the RAG pipeline (embedding + hybrid search +
+ * reranker + law_chunks) is SKIPPED when the query is a short greeting or
+ * conversational message that would not benefit from document retrieval.
+ * This avoids multiple Ollama round-trips (embedding model + reranker model)
+ * and DB queries that produce no useful results for simple messages.
+ *
  * === Helena HARD LIMITS ===
  * All AI output is ENTWURF by default and requires human Freigabe.
  * Helena may NEVER send external communications, delete data, etc.
@@ -104,10 +110,63 @@ const NO_SOURCES_INSTRUCTION = `\n\nZu dieser Akte sind aktuell keine Dokumentin
 const LOW_CONFIDENCE_INSTRUCTION = `\n\nDie verfügbaren Dokumente haben geringe Relevanz zur Frage. Priorisiere dein Fachwissen, ziehe Dokumente nur heran wenn sie wirklich passen.`;
 
 // ---------------------------------------------------------------------------
+// RAG skip heuristic
+// ---------------------------------------------------------------------------
+
+/**
+ * Determine whether the RAG pipeline (embedding + hybrid search + reranker +
+ * law_chunks) should be skipped for this query.
+ *
+ * Skipping saves 3 Ollama round-trips (embedding model, reranker model) plus
+ * multiple DB queries — easily 5-30+ seconds on resource-constrained servers.
+ *
+ * RAG is skipped when ALL of these are true:
+ *   1. The query is short (max 40 chars / max 6 words) — greetings, small talk
+ *   2. The query does NOT contain legal keywords that signal a document question
+ *
+ * When an Akte IS selected, RAG is only skipped for very short queries (<=20
+ * chars) since the user likely expects document-aware answers.
+ */
+function shouldSkipRag(queryText: string, hasAkte: boolean): boolean {
+  const trimmed = queryText.trim();
+  const charLen = trimmed.length;
+  const wordCount = trimmed.split(/\s+/).length;
+
+  // Very short messages are always conversational (greetings, "ja", "nein", "danke")
+  if (charLen <= 20 && wordCount <= 4) {
+    return true;
+  }
+
+  // With a specific Akte selected, only skip for the shortest messages (above).
+  // Longer messages in an Akte context likely want document-aware answers.
+  if (hasAkte) {
+    return false;
+  }
+
+  // Without Akte: skip RAG for short conversational queries that don't contain
+  // legal/document keywords. These would just waste time on Ollama calls.
+  if (charLen > 80 || wordCount > 12) {
+    return false;
+  }
+
+  // Check for keywords that signal a document/legal question worth RAG'ing
+  const legalKeywords =
+    /\b(akte|akten|dokument|frist|termin|urteil|beschluss|klage|vertrag|mandant|paragraph|bgb|stgb|zpo|stpo|anwalt|gericht|mahnung|schreib|entwurf|brief|mail|zusammenfass|analyse|pruef|check|recherche|gesetz|norm|vorschrift)\b/i;
+
+  if (legalKeywords.test(trimmed)) {
+    return false;
+  }
+
+  return true;
+}
+
+// ---------------------------------------------------------------------------
 // POST handler
 // ---------------------------------------------------------------------------
 
 export async function POST(req: NextRequest) {
+  const t0 = Date.now();
+
   const session = await auth();
   if (!session?.user?.id) {
     return new Response("Nicht authentifiziert", { status: 401 });
@@ -147,15 +206,30 @@ export async function POST(req: NextRequest) {
       : "";
 
   // ---------------------------------------------------------------------------
+  // Determine if RAG pipeline should run.
+  // Skipping RAG avoids Ollama embedding call + Meilisearch + pgvector +
+  // Ollama reranker call — easily saving 5-30 seconds on slow hardware.
+  // ---------------------------------------------------------------------------
+
+  const hasAkte = !!akteId;
+  const skipRag = shouldSkipRag(queryText, hasAkte);
+
+  if (skipRag) {
+    console.log(`[ki-chat] RAG skipped for short/conversational query (${queryText.length} chars, akte=${hasAkte})`);
+  }
+
+  // ---------------------------------------------------------------------------
   // Run independent chains in parallel to minimize time-to-first-token:
-  //   Chain A: Akte structured context (DB queries)
-  //   Chain B: RAG retrieval (Ollama embedding + pgvector search)
-  //   Chain C: Model config (settings reads)
+  //   Chain A: Akte structured context (DB queries) — only if akteId
+  //   Chain B: RAG retrieval (Ollama embedding + hybrid search) — only if !skipRag
+  //   Chain C: Model config (settings reads — cached via TTL)
+  //   Chain D: Law chunks (pgvector) — only if !skipRag
   // ---------------------------------------------------------------------------
 
   // Chain A: Fetch structured Akte data for context
   const akteContextPromise = (async (): Promise<string> => {
     if (!akteId) return "";
+    const tA = Date.now();
     try {
       const akte = await prisma.akte.findUnique({
         where: { id: akteId },
@@ -261,6 +335,8 @@ export async function POST(req: NextRequest) {
               .join("\n")
           : "- (keine Dokumente vorhanden)";
 
+      console.log(`[ki-chat] Chain A (Akte context) took ${Date.now() - tA}ms`);
+
       return `\n\n--- AKTEN-KONTEXT ---
 Aktenzeichen: ${akte.aktenzeichen}
 Rubrum: ${akte.kurzrubrum}
@@ -284,43 +360,51 @@ ${terminLines}
   })();
 
   // Shared query embedding — generated once, used by Chain B (hybridSearch) and Chain D (law_chunks).
-  // If embedding fails, both chains degrade gracefully (Chain B returns no sources, Chain D returns []).
-  const queryEmbeddingPromise = generateQueryEmbedding(queryText).catch((err) => {
-    console.error("[ki-chat] Query embedding generation failed:", err);
-    return null as null;
-  });
-
-  // Chain B: RAG retrieval (hybrid search: BM25 + vector + RRF + reranking)
-  const ragPromise = (async (): Promise<{
-    sources: HybridSearchResult[];
-    confidenceFlag: "none" | "low" | "ok";
-  }> => {
-    try {
-      const queryEmbedding = await queryEmbeddingPromise;
-      if (!queryEmbedding) return { sources: [], confidenceFlag: "none" };
-      const results = await hybridSearch(queryText, queryEmbedding, {
-        akteId: akteId ?? undefined,
-        crossAkte,
-        userId,
-        bm25Limit: 50,
-        vectorLimit: 50,
-        finalLimit: 10,
+  // SKIPPED when RAG is not needed (saves Ollama round-trip: 200ms-10s).
+  const queryEmbeddingPromise = skipRag
+    ? Promise.resolve(null)
+    : generateQueryEmbedding(queryText).catch((err) => {
+        console.error("[ki-chat] Query embedding generation failed:", err);
+        return null as null;
       });
 
-      if (results.length === 0) {
-        return { sources: results, confidenceFlag: "none" };
-      }
-      // RRF scores: rank-1 = 1/(60+1) ≈ 0.016. Any results returned are meaningful.
-      // "low" confidence reserved for future quality scoring; RRF results are always relevant.
-      return {
-        sources: results,
-        confidenceFlag: "ok",
-      };
-    } catch (err) {
-      console.error("[ki-chat] RAG retrieval failed:", err);
-      return { sources: [], confidenceFlag: "none" };
-    }
-  })();
+  // Chain B: RAG retrieval (hybrid search: BM25 + vector + RRF + reranking)
+  // SKIPPED when RAG is not needed (saves Meilisearch + pgvector + Ollama reranker calls).
+  const ragPromise = skipRag
+    ? Promise.resolve({ sources: [] as HybridSearchResult[], confidenceFlag: "none" as const })
+    : (async (): Promise<{
+        sources: HybridSearchResult[];
+        confidenceFlag: "none" | "low" | "ok";
+      }> => {
+        const tB = Date.now();
+        try {
+          const queryEmbedding = await queryEmbeddingPromise;
+          if (!queryEmbedding) return { sources: [], confidenceFlag: "none" };
+          const results = await hybridSearch(queryText, queryEmbedding, {
+            akteId: akteId ?? undefined,
+            crossAkte,
+            userId,
+            bm25Limit: 50,
+            vectorLimit: 50,
+            finalLimit: 10,
+          });
+
+          console.log(`[ki-chat] Chain B (RAG) took ${Date.now() - tB}ms, ${results.length} sources`);
+
+          if (results.length === 0) {
+            return { sources: results, confidenceFlag: "none" };
+          }
+          // RRF scores: rank-1 = 1/(60+1) ~ 0.016. Any results returned are meaningful.
+          // "low" confidence reserved for future quality scoring; RRF results are always relevant.
+          return {
+            sources: results,
+            confidenceFlag: "ok",
+          };
+        } catch (err) {
+          console.error("[ki-chat] RAG retrieval failed:", err);
+          return { sources: [], confidenceFlag: "none" };
+        }
+      })();
 
   // Chain C: Model configuration (settings reads — now cached via TTL)
   const modelConfigPromise = Promise.all([
@@ -330,22 +414,28 @@ ${terminLines}
   ]);
 
   // Chain D: law_chunks retrieval (Gesetze-RAG)
-  // Runs in parallel with hybridSearch — shares queryEmbedding to avoid double Ollama round-trip.
-  // Score threshold 0.6: filters out law chunks for non-legal queries (vector similarity = relevance signal).
-  const lawChunksPromise = (async (): Promise<Awaited<ReturnType<typeof searchLawChunks>>> => {
-    try {
-      const queryEmbedding = await queryEmbeddingPromise;
-      if (!queryEmbedding) return [];
-      return await searchLawChunks(queryEmbedding, { limit: 5, minScore: 0.6 });
-    } catch (err) {
-      console.error("[ki-chat] Law chunks search failed:", err);
-      return [];
-    }
-  })();
+  // SKIPPED when RAG is not needed (saves pgvector query).
+  const lawChunksPromise = skipRag
+    ? Promise.resolve([] as Awaited<ReturnType<typeof searchLawChunks>>)
+    : (async (): Promise<Awaited<ReturnType<typeof searchLawChunks>>> => {
+        const tD = Date.now();
+        try {
+          const queryEmbedding = await queryEmbeddingPromise;
+          if (!queryEmbedding) return [];
+          const results = await searchLawChunks(queryEmbedding, { limit: 5, minScore: 0.6 });
+          console.log(`[ki-chat] Chain D (law_chunks) took ${Date.now() - tD}ms, ${results.length} results`);
+          return results;
+        } catch (err) {
+          console.error("[ki-chat] Law chunks search failed:", err);
+          return [];
+        }
+      })();
 
   // Await all chains in parallel
   const [aktenKontextBlock, ragResult, [model, modelName, providerName], lawChunks] =
     await Promise.all([akteContextPromise, ragPromise, modelConfigPromise, lawChunksPromise]);
+
+  console.log(`[ki-chat] All chains resolved in ${Date.now() - t0}ms (provider=${providerName}, model=${modelName}, ragSkipped=${skipRag})`);
 
   const { sources, confidenceFlag } = ragResult;
 

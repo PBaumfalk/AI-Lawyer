@@ -74,6 +74,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 export async function generateQueryEmbedding(
   query: string
 ): Promise<number[]> {
+  const t0 = Date.now();
   const prefixedText = `query: ${query}`;
 
   const res = await fetch(`${OLLAMA_URL}/api/embed`, {
@@ -94,6 +95,8 @@ export async function generateQueryEmbedding(
   if (!data.embeddings?.[0]) {
     throw new Error("Ollama returned empty embeddings array");
   }
+
+  console.log(`[embedder] Query embedding generated in ${Date.now() - t0}ms`);
   return data.embeddings[0];
 }
 

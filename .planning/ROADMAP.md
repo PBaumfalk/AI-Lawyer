@@ -101,12 +101,15 @@ Plans:
   3. All 5 write-tools create their outputs exclusively as drafts/proposals (never as final records directly)
   4. Ollama tool-call response guard detects JSON-as-content responses from qwen3.5:35b and corrects them before the loop continues
   5. Token budget manager truncates oldest tool results when approaching 75% of context window — no context overflow crashes
-**Plans**: 3 plans
+  6. Rate limiter enforces admin-configurable per-user per-hour request limits
+  7. Unit tests for tool factory functions and integration tests for the ReAct loop pass
+**Plans**: 4 plans
 
 Plans:
 - [ ] 20-01-PLAN.md — Shared tool library: types, factory, 18+ tool modules (12 read + 6 write), role filter, cache, audit, system prompt
-- [ ] 20-02-PLAN.md — ReAct orchestrator: generateText wrapper with stall detector, token budget manager, step tracing
-- [ ] 20-03-PLAN.md — Ollama response guard, complexity classifier, unified runHelenaAgent() entry point
+- [ ] 20-02-PLAN.md — ReAct orchestrator: generateText wrapper with stall detector, token budget manager, step tracing, parallel tool call support
+- [ ] 20-03-PLAN.md — Ollama response guard, complexity classifier, rate limiter, unified runHelenaAgent() entry point
+- [ ] 20-04-PLAN.md — Unit tests for tools + infrastructure, integration tests for ReAct loop with mock LLM
 
 ### Phase 21: @Helena Task-System
 **Goal**: Users can trigger Helena tasks by typing @Helena in any note/comment field and track task progress in real-time
@@ -210,7 +213,7 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 + 24 + 25 (parallel-eligible after 20, 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 19. Schema Foundation | 1/1 | Complete    | 2026-02-27 | - |
-| 20. Agent Tools + ReAct Loop | v0.2 | 0/3 | Not started | - |
+| 20. Agent Tools + ReAct Loop | v0.2 | 0/4 | Not started | - |
 | 21. @Helena Task-System | v0.2 | 0/2 | Not started | - |
 | 22. Schriftsatz Orchestrator | v0.2 | 0/2 | Not started | - |
 | 23. Draft-Approval Workflow | v0.2 | 0/2 | Not started | - |

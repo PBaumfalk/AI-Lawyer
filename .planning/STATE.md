@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
-status: unknown
-last_updated: "2026-02-27T20:12:17.983Z"
+status: in-progress
+last_updated: "2026-02-27T21:15:18.000Z"
 progress:
   total_phases: 14
   completed_phases: 13
   total_plans: 38
-  completed_plans: 38
+  completed_plans: 39
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 23 of 26 (Draft-Approval Workflow)
-Plan: 0 of 2 in current phase
-Status: Phase 22 complete, ready for Phase 23
-Last activity: 2026-02-27 — Completed 22-02 RAG Assembly + ERV Validator + Pipeline Orchestrator
+Plan: 1 of 2 in current phase
+Status: Phase 23 in progress
+Last activity: 2026-02-27 — Completed 23-01 Draft Lifecycle Backend (ENTWURF gate + API routes)
 
 Progress: [██████░░░░] 56%
 
@@ -33,7 +33,7 @@ Progress: [██████░░░░] 56%
 
 **Velocity:**
 - Total plans completed: 71 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 9/16
+- v0.2 plans: 10/16
 
 **By Phase (v0.2):**
 
@@ -43,7 +43,7 @@ Progress: [██████░░░░] 56%
 | 20. Agent Tools + ReAct Loop | 4/4 | 22min | 5.5min |
 | 21. @Helena Task-System | 2/2 | 6min | 3min |
 | 22. Schriftsatz Orchestrator | 2/2 | 14min | 7min |
-| 23. Draft-Approval Workflow | 0/2 | - | - |
+| 23. Draft-Approval Workflow | 1/2 | 9min | 9min |
 | 24. Scanner + Alerts | 0/2 | - | - |
 | 25. Helena Memory | 0/1 | - | - |
 | 26. Activity Feed UI + QA-Gates | 0/3 | - | - |
@@ -95,6 +95,13 @@ Recent decisions affecting v0.2:
 - Pipeline stores SchriftsatzSchema as HelenaDraft.meta JSON for downstream processing
 - Schriftsatz routing is an early return in runHelenaAgent -- ReAct code path completely untouched
 - computeGkgFee * 3 for Klageverfahren court costs in Kosten section
+- Prisma $extends (not deprecated middleware) for ENTWURF gate -- Prisma 5 recommended pattern
+- ExtendedPrismaClient type exported from db.ts -- all Helena/finance modules use it instead of PrismaClient
+- PrismaTransactionClient type from db.ts for $extends-aware transaction type derivation
+- Defense-in-depth: explicit ENTWURF in acceptDraft tx + $extends gate as global safety net
+- Fail-open Redis draft lock: if Redis unavailable, returns success with warning
+- Auto-revise enqueue is non-blocking: failure logs but does not fail rejection
+- Undo window pattern: undoExpiresAt set on accept, checked on undo, 5s TTL
 
 ### Pending Todos
 
@@ -112,5 +119,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 22-02-PLAN.md (RAG Assembly + ERV Validator + Pipeline Orchestrator) -- Phase 22 complete
-Resume file: .planning/phases/22-deterministic-schriftsatz-orchestrator/22-02-SUMMARY.md
+Stopped at: Completed 23-01-PLAN.md (ENTWURF gate + Draft Lifecycle API)
+Resume file: .planning/phases/23-draft-approval-workflow/23-01-SUMMARY.md

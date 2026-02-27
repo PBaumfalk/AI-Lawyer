@@ -999,18 +999,19 @@ model UrteilChunk {
 }
 
 model Muster {
-  id           String          @id @default(cuid())
-  name         String
-  kategorie    String
-  beschreibung String?         @db.Text
-  minioKey     String
-  mimeType     String
-  nerStatus    MusterNerStatus @default(PENDING_NER)
-  uploadedById String
-  uploadedBy   User            @relation("MusterUploads", fields: [uploadedById], references: [id])
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  chunks       MusterChunk[]
+  id             String          @id @default(cuid())
+  name           String
+  kategorie      String
+  beschreibung   String?         @db.Text
+  minioKey       String
+  mimeType       String
+  nerStatus      MusterNerStatus @default(PENDING_NER)
+  isKanzleiEigen Boolean         @default(false) // true = uploaded via /admin/muster; false = seeded amtliche
+  uploadedById   String
+  uploadedBy     User            @relation("MusterUploads", fields: [uploadedById], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  chunks         MusterChunk[]
 
   @@index([nerStatus])
   @@map("muster")
@@ -1025,6 +1026,7 @@ model MusterChunk {
   parentContent String?   @db.Text
   embedding     Unsupported("vector(1024)")?
   modelVersion  String
+  kanzleiEigen  Boolean   @default(false) // Propagated from parent Muster.isKanzleiEigen at insert time
   createdAt     DateTime  @default(now())
 
   @@unique([musterId, chunkIndex])

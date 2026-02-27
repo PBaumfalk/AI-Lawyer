@@ -313,7 +313,7 @@ export async function POST(req: NextRequest) {
       if (ocrDocIds.length > 0) {
         const snippetRows = await prisma.$queryRaw<
           { id: string; snippet: string }[]
-        >`SELECT id, LEFT("ocrText", 500) as snippet FROM "Dokument" WHERE id = ANY(${ocrDocIds}) AND "ocrText" IS NOT NULL`;
+        >`SELECT id, LEFT("ocrText", 500) as snippet FROM "dokumente" WHERE id = ANY(${ocrDocIds}) AND "ocrText" IS NOT NULL`;
         for (const row of snippetRows) {
           if (row.snippet) ocrSnippets.set(row.id, row.snippet.trim());
         }

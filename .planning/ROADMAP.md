@@ -86,10 +86,10 @@ See: `milestones/v0.1-ROADMAP.md` for full phase details.
   3. HelenaDraft has type enum (DOKUMENT, FRIST, NOTIZ, ALERT) and status enum (PENDING, ACCEPTED, REJECTED, EDITED) with feedback field
   4. All new models have proper foreign keys to Akte and User with ON DELETE CASCADE for DSGVO compliance
   5. Prisma Client generates cleanly and existing application starts without errors
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 19-01: Prisma schema migration for all 5 Helena Agent models
+- [ ] 19-01-PLAN.md --- Add 5 Helena Agent models (HelenaTask, HelenaDraft, HelenaAlert, HelenaMemory, AktenActivity) + 5 enums + reverse relations + migration
 
 ### Phase 20: Agent Tools + ReAct Loop
 **Goal**: Helena can execute bounded multi-step reasoning with tool calls as a pure TypeScript library testable in isolation — the engine that powers all agent features

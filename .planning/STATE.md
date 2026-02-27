@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena Agent
 status: in-progress
-last_updated: "2026-02-27T16:49:57Z"
+last_updated: "2026-02-27T16:58:16.017Z"
 progress:
-  total_phases: 12
-  completed_phases: 11
-  total_plans: 34
-  completed_plans: 35
+  total_phases: 13
+  completed_phases: 12
+  total_plans: 36
+  completed_plans: 36
 ---
 
 # Project State
@@ -22,18 +22,18 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 ## Current Position
 
-Phase: 21 of 26 (@Helena Task-System)
-Plan: 1 of 2 in current phase
-Status: Plan 21-01 complete, ready for Plan 21-02
-Last activity: 2026-02-27 — Completed 21-01 @Helena Task System Infrastructure
+Phase: 22 of 26 (Schriftsatz Orchestrator)
+Plan: 0 of 2 in current phase
+Status: Phase 21 complete, ready for Phase 22
+Last activity: 2026-02-27 — Completed 21-02 Helena Task API Routes and Worker Registration
 
-Progress: [████░░░░░░] 38%
+Progress: [████░░░░░░] 44%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 69 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 6/16
+- Total plans completed: 70 (v3.4: 38 + v3.5: 10 + v0.1: 19)
+- v0.2 plans: 7/16
 
 **By Phase (v0.2):**
 
@@ -41,7 +41,7 @@ Progress: [████░░░░░░] 38%
 |-------|-------|-------|----------|
 | 19. Schema Foundation | 1/1 | 3min | 3min |
 | 20. Agent Tools + ReAct Loop | 4/4 | 22min | 5.5min |
-| 21. @Helena Task-System | 1/2 | 3min | 3min |
+| 21. @Helena Task-System | 2/2 | 6min | 3min |
 | 22. Schriftsatz Orchestrator | 0/2 | - | - |
 | 23. Draft-Approval Workflow | 0/2 | - | - |
 | 24. Scanner + Alerts | 0/2 | - | - |
@@ -81,6 +81,9 @@ Recent decisions affecting v0.2:
 - BullMQ priority inversion: Math.max(1, 10 - prioritaet) maps domain priority to BullMQ priority
 - HelenaTaskJobData exported from processor, imported as type in task-service (clean dependency direction)
 - In-process AbortController map for task cancellation (not Redis -- must be same process as agent)
+- lockDuration:120_000 on Worker instance (not queue) per BullMQ v5 best practice
+- Helena API uses requireAuth() + buildAkteAccessFilter() (consistent with existing route patterns)
+- No PRAKTIKANT check in Helena API -- role removed in Phase 8, all 4 existing roles can use @Helena
 
 ### Pending Todos
 
@@ -98,5 +101,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 21-01-PLAN.md (@Helena Task System Infrastructure). Phase 21 in progress (1/2 plans).
+Stopped at: Completed 21-02-PLAN.md (Helena Task API Routes and Worker Registration). Phase 21 complete (2/2 plans). Ready for Phase 22.
 Resume file: None

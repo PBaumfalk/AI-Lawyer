@@ -31,7 +31,7 @@
 - [x] **TASK-02**: HelenaTask Prisma-Modell mit Status-Flow (PENDING → RUNNING → DONE / FAILED / WAITING_APPROVAL)
 - [x] **TASK-03**: HelenaTask speichert vollständigen Agent-Trace (Gedanken + Tool-Aufrufe als JSON steps[])
 - [x] **TASK-04**: Task-Prioritäten (1-10) mit höherer Priorität für manuell zugewiesene Tasks vs Background-Scanner
-- [ ] **TASK-05**: Task-Abbruch via UI setzt Status auf ABGEBROCHEN — Agent-Loop prüft zwischen Steps
+- [x] **TASK-05**: Task-Abbruch via UI setzt Status auf ABGEBROCHEN — Agent-Loop prüft zwischen Steps
 
 ### Draft-Approval (DRFT)
 
@@ -130,7 +130,7 @@
 | TASK-02 | Phase 19 | Complete |
 | TASK-03 | Phase 21 | Complete |
 | TASK-04 | Phase 21 | Complete |
-| TASK-05 | Phase 21 | Pending |
+| TASK-05 | Phase 21 | Complete |
 | DRFT-01 | Phase 19 | Complete |
 | DRFT-02 | Phase 23 | Pending |
 | DRFT-03 | Phase 23 | Pending |

@@ -36,10 +36,16 @@ export default async function DashboardLayout({
       <SocketProvider>
         <NotificationProvider>
           <UploadProvider>
-            {/* Preload OnlyOffice SDK — cuts ~5-15s off first editor open */}
+            {/* OnlyOffice preload: hidden iframe caches HTML/CSS/JS/fonts (v9.0+)
+                See: https://api.onlyoffice.com/docs/docs-api/get-started/configuration/preload/ */}
             <link rel="dns-prefetch" href={onlyofficeUrl} />
             <link rel="preconnect" href={onlyofficeUrl} crossOrigin="anonymous" />
-            <link rel="preload" href={ooApiScript} as="script" crossOrigin="anonymous" />
+            <iframe
+              src={`${onlyofficeUrl}/web-apps/apps/api/documents/preload.html`}
+              style={{ display: "none" }}
+              aria-hidden="true"
+              tabIndex={-1}
+            />
             <div className="flex h-screen overflow-hidden">
               <Sidebar />
               <div className="flex flex-col flex-1 overflow-hidden">

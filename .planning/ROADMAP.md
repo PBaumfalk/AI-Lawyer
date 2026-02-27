@@ -144,7 +144,12 @@ Plans:
   2. BAG RSS-Feed wird täglich inkrementell verarbeitet — neue Entscheidungen erscheinen ohne manuellen Eingriff in urteil_chunks
   3. Jedes Helena-Zitat eines Urteils enthält Gericht + Aktenzeichen + Datum + Leitsatz-Snippet + Quellenlink — kein einziges AZ ist LLM-generiert (alle kommen aus urteil_chunks.citation)
   4. Kein Urteil mit pii_geprueft = false ist in urteil_chunks — die PII-Gate-Invariante hält über alle Ingestion-Pfade
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 17-01-PLAN.md — src/lib/urteile/ library: rss-client.ts (7 BMJ feeds, fast-xml-parser, title regex) + ingestion.ts (inline NER gate, DELETE+INSERT, GUID cache, searchUrteilChunks)
+- [ ] 17-02-PLAN.md — BullMQ urteile-sync processor + urteileSyncQueue + Worker registration + daily 03:00 cron
+- [ ] 17-03-PLAN.md — ki-chat Chain E: searchUrteilChunks() parallel fetch + URTEILE-QUELLEN system prompt injection + URTEIL-04 anti-hallucination instruction
 
 ### Phase 18: Muster-RAG + Admin Upload UI
 **Goal**: Amtliche Formulare und kanzlei-eigene Schriftsatzmuster sind in muster_chunks indiziert — Helena erstellt strukturierte Schriftsatz-Entwürfe aus dem Kanzlei-Wissen, niemals als fertiges Dokument
@@ -171,5 +176,5 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 | 14. Gesetze-RAG | 3/3 | Complete    | 2026-02-27 | - |
 | 15. Normen-Verknüpfung in Akte | 3/3 | Complete    | 2026-02-27 | - |
 | 16. PII-Filter | 3/3 | Complete    | 2026-02-27 | - |
-| 17. Urteile-RAG | v0.1 | 0/TBD | Not started | - |
+| 17. Urteile-RAG | v0.1 | 0/3 | Not started | - |
 | 18. Muster-RAG + Admin Upload UI | v0.1 | 0/TBD | Not started | - |

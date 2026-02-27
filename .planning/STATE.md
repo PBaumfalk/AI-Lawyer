@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena Agent
 status: in-progress
-last_updated: "2026-02-27T15:05:00.000Z"
+last_updated: "2026-02-27T15:13:31.000Z"
 progress:
   total_phases: 11
   completed_phases: 10
@@ -23,24 +23,24 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 20 of 26 (Agent Tools + ReAct Loop)
-Plan: 2 of 4 in current phase
-Status: Plan 20-01 complete, continuing Phase 20
-Last activity: 2026-02-27 — Completed 20-01 Helena Tool Library (18 tools, factory, RBAC, caching)
+Plan: 3 of 4 in current phase
+Status: Plan 20-02 complete, continuing Phase 20
+Last activity: 2026-02-27 — Completed 20-02 ReAct Orchestrator (runAgent, token budget, stall detection)
 
-Progress: [██░░░░░░░░] 13%
+Progress: [██░░░░░░░░] 19%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 68 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 2/16
+- v0.2 plans: 3/16
 
 **By Phase (v0.2):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 19. Schema Foundation | 1/1 | 3min | 3min |
-| 20. Agent Tools + ReAct Loop | 1/4 | 7min | 7min |
+| 20. Agent Tools + ReAct Loop | 2/4 | 12min | 6min |
 | 21. @Helena Task-System | 0/2 | - | - |
 | 22. Schriftsatz Orchestrator | 0/2 | - | - |
 | 23. Draft-Approval Workflow | 0/2 | - | - |
@@ -69,6 +69,9 @@ Recent decisions affecting v0.2:
 - Static import registry for Helena tools (not dynamic require) -- esbuild bundling compatibility
 - HelenaDraft.akteId non-nullable -- notes always require Akte context
 - create_draft_zeiterfassung uses HelenaDraftTyp.NOTIZ with meta.subtype (no ZEITERFASSUNG enum)
+- ToolSet generic type assertion for toolResults in onStepFinish -- AI SDK resolves execute return to never
+- Direct trackTokenUsage in orchestrator instead of wrapWithTracking -- aggregates across all steps
+- Stall force message injected as user role message for natural conversation flow
 
 ### Pending Todos
 
@@ -86,5 +89,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 20-01-PLAN.md (Helena Tool Library). Phase 20 in progress (1/4 plans).
+Stopped at: Completed 20-02-PLAN.md (ReAct Orchestrator). Phase 20 in progress (2/4 plans).
 Resume file: None

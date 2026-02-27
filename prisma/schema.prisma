@@ -399,6 +399,7 @@ model User {
   helenaDraftsCreated  HelenaDraft[]    @relation("HelenaDraftUser")
   helenaDraftsReviewed HelenaDraft[]    @relation("HelenaDraftReviewer")
   helenaAlerts         HelenaAlert[]
+  pendingSchriftsaetze PendingSchriftsatz[]
   aktenActivities      AktenActivity[]
 
   // RBAC: Dezernat membership and Admin-Override
@@ -732,6 +733,7 @@ model Akte {
   helenaDrafts     HelenaDraft[]
   helenaAlerts     HelenaAlert[]
   helenaMemory     HelenaMemory?    // One-to-one via @unique on akteId
+  pendingSchriftsaetze PendingSchriftsatz[]
   activities       AktenActivity[]
 
   // RBAC: Dezernat membership and Admin-Override
@@ -1992,6 +1994,33 @@ model HelenaMemory {
   updatedAt       DateTime @updatedAt
 
   @@map("helena_memories")
+}
+
+/// Persists in-flight Schriftsatz pipeline state for multi-turn Rueckfragen.
+/// One pending pipeline per user per Akte. Expires after 7 days.
+model PendingSchriftsatz {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  akteId      String
+  akte        Akte     @relation(fields: [akteId], references: [id], onDelete: Cascade)
+
+  // Pipeline state
+  intentState Json     // Serialized IntentResult
+  slotState   Json     // Serialized SlotValues (merged so far)
+  rueckfrage  String   @db.Text  // Current question text for display
+  round       Int      @default(1)  // Current round (1-5)
+  message     String   @db.Text  // Original user message that triggered the pipeline
+
+  // TTL
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, akteId])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("pending_schriftsaetze")
 }
 
 model AktenActivity {

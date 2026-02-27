@@ -474,3 +474,17 @@ export {
   resolvePlatzhalterInSchema,
   PLATZHALTER_MAP,
 } from "./platzhalter";
+
+// Multi-turn Rueckfragen
+export {
+  savePendingPipeline,
+  loadPendingPipeline,
+  clearPendingPipeline,
+  MAX_ROUNDS,
+  type PendingPipelineState,
+} from "./pending-pipeline";
+export {
+  classifyAnswerIntent,
+  extractSlotValues,
+  type AnswerIntent,
+} from "./answer-parser";

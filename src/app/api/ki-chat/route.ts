@@ -28,6 +28,18 @@ import { hybridSearch, type HybridSearchResult } from "@/lib/embedding/hybrid-se
 import { searchLawChunks } from "@/lib/gesetze/ingestion";
 import { searchUrteilChunks, type UrteilChunkResult } from "@/lib/urteile/ingestion";
 import { searchMusterChunks, type MusterChunkResult } from "@/lib/muster/ingestion";
+import {
+  isSchriftsatzIntent,
+  runSchriftsatzPipeline,
+  loadPendingPipeline,
+  savePendingPipeline,
+  clearPendingPipeline,
+  MAX_ROUNDS,
+} from "@/lib/helena/schriftsatz";
+import {
+  classifyAnswerIntent,
+  extractSlotValues,
+} from "@/lib/helena/schriftsatz/answer-parser";
 
 // ---------------------------------------------------------------------------
 // System prompt for Helena (German)
@@ -213,6 +225,260 @@ export async function POST(req: NextRequest) {
     typeof lastUserMessage.content === "string"
       ? lastUserMessage.content
       : "";
+
+  // ---------------------------------------------------------------------------
+  // Schriftsatz Pipeline Routing (ORCH-04 multi-turn Rueckfragen)
+  // Check BEFORE RAG pipeline: pending state takes priority
+  // ---------------------------------------------------------------------------
+
+  if (akteId) {
+    // Check for pending Schriftsatz pipeline
+    const pending = await loadPendingPipeline(userId, akteId);
+
+    if (pending) {
+      // Check for new Schriftsatz request while one is pending
+      if (isSchriftsatzIntent(queryText)) {
+        const responsePayload = {
+          type: "schriftsatz_conflict" as const,
+          text: `Du hast noch einen offenen Entwurf fuer einen Schriftsatz. Verwerfen und neu starten?`,
+          pendingRueckfrage: pending.rueckfrage,
+          round: pending.round,
+          maxRounds: MAX_ROUNDS,
+        };
+        return new Response(JSON.stringify(responsePayload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      // Classify: is this message an answer, correction, cancel, or unrelated?
+      const intent = await classifyAnswerIntent(
+        queryText,
+        pending.rueckfrage,
+        pending.slotState,
+      );
+
+      if (intent.type === "cancel") {
+        await clearPendingPipeline(userId, akteId);
+        // Fall through to normal RAG chat -- do NOT return here
+      } else if (intent.type === "unrelated") {
+        await clearPendingPipeline(userId, akteId);
+        // Fall through to normal RAG chat
+      } else {
+        // "answer" or "correction" -- extract slot values and resume pipeline
+        console.log(`[ki-chat] Resuming Schriftsatz pipeline (round ${pending.round + 1}/${MAX_ROUNDS})`);
+
+        // Determine expected slot keys from existing state
+        const missingKeys = Object.entries(pending.slotState)
+          .filter(([, v]) => v === null)
+          .map(([k]) => k);
+
+        // If correction, include the corrected slot key
+        const expectedKeys = intent.type === "correction" && intent.correctedSlotKey
+          ? Array.from(new Set([...missingKeys, intent.correctedSlotKey]))
+          : missingKeys;
+
+        const extracted = await extractSlotValues(
+          queryText,
+          pending.rueckfrage,
+          expectedKeys,
+          pending.slotState,
+        );
+
+        // Merge extracted values into existing slot state
+        const mergedSlotValues: Record<string, string | number | boolean | null> = {
+          ...pending.slotState,
+        };
+        for (const [key, value] of Object.entries(extracted)) {
+          if (value !== undefined && value !== null && value !== "") {
+            mergedSlotValues[key] = value;
+          }
+        }
+
+        const newRound = pending.round + 1;
+
+        // Re-run the full pipeline with merged userSlotValues
+        const userRole = (session?.user as any)?.role ?? "SACHBEARBEITER";
+        const userName = session?.user?.name ?? "Nutzer";
+
+        const pipelineResult = await runSchriftsatzPipeline({
+          prisma,
+          userId,
+          userRole,
+          userName,
+          akteId,
+          message: pending.message, // Original message that started the pipeline
+          userSlotValues: mergedSlotValues,
+        });
+
+        if (pipelineResult.status === "needs_input" && newRound < MAX_ROUNDS) {
+          // Save updated state and return Rueckfrage
+          await savePendingPipeline({
+            userId,
+            akteId,
+            intentState: pipelineResult.intentState!,
+            slotState: pipelineResult.slotState!,
+            rueckfrage: pipelineResult.rueckfrage!,
+            round: newRound,
+            message: pending.message,
+          });
+
+          // Build response with round counter and slot context
+          const filledSlots = Object.entries(pipelineResult.slotState ?? {})
+            .filter(([, v]) => v !== null && !(typeof v === "string" && v.startsWith("{{")))
+            .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {} as Record<string, unknown>);
+
+          const responsePayload = {
+            type: "schriftsatz_rueckfrage" as const,
+            rueckfrage: pipelineResult.rueckfrage!,
+            round: newRound,
+            maxRounds: MAX_ROUNDS,
+            filledSlots,
+          };
+
+          return new Response(JSON.stringify(responsePayload), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        if (pipelineResult.status === "needs_input" && newRound >= MAX_ROUNDS) {
+          // Round cap reached -- create draft with PLATZHALTERs
+          // Clear pending state, then run pipeline one more time forcing completion
+          await clearPendingPipeline(userId, akteId);
+
+          // Build list of unresolved PLATZHALTERs
+          const unresolved = Object.entries(pipelineResult.slotState ?? {})
+            .filter(([, v]) => v === null || (typeof v === "string" && v.startsWith("{{")))
+            .map(([k]) => k);
+
+          const fallbackMessage = `Ich erstelle den Entwurf mit Platzhaltern fuer: ${unresolved.join(", ")}. Diese kannst du spaeter ergaenzen.`;
+
+          // Force-complete the pipeline by filling missing slots with PLATZHALTERs
+          const forcedSlotValues = { ...mergedSlotValues };
+          for (const key of unresolved) {
+            forcedSlotValues[key] = `{{${key}}}`;
+          }
+
+          const forcedResult = await runSchriftsatzPipeline({
+            prisma,
+            userId,
+            userRole,
+            userName,
+            akteId,
+            message: pending.message,
+            userSlotValues: forcedSlotValues,
+          });
+
+          const responsePayload = {
+            type: "schriftsatz_complete" as const,
+            text: fallbackMessage,
+            draftId: forcedResult.draftId ?? null,
+            warnungen: forcedResult.warnungen,
+          };
+
+          return new Response(JSON.stringify(responsePayload), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        // Pipeline complete or error -- clear pending state
+        await clearPendingPipeline(userId, akteId);
+
+        if (pipelineResult.status === "complete") {
+          const responsePayload = {
+            type: "schriftsatz_complete" as const,
+            text: `Schriftsatz erstellt. Der Entwurf liegt zur Pruefung bereit.`,
+            draftId: pipelineResult.draftId ?? null,
+            warnungen: pipelineResult.warnungen,
+          };
+
+          return new Response(JSON.stringify(responsePayload), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        // Error case
+        const errorPayload = {
+          type: "schriftsatz_error" as const,
+          text: "Beim Erstellen des Schriftsatzes ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+          warnungen: pipelineResult.warnungen,
+        };
+
+        return new Response(JSON.stringify(errorPayload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // No pending state -- check for new Schriftsatz intent
+    if (!pending && isSchriftsatzIntent(queryText)) {
+      console.log(`[ki-chat] New Schriftsatz intent detected -- routing to pipeline`);
+
+      const userRole = (session?.user as any)?.role ?? "SACHBEARBEITER";
+      const userName = session?.user?.name ?? "Nutzer";
+
+      const pipelineResult = await runSchriftsatzPipeline({
+        prisma,
+        userId,
+        userRole,
+        userName,
+        akteId,
+        message: queryText,
+      });
+
+      if (pipelineResult.status === "needs_input") {
+        // Save state for multi-turn
+        await savePendingPipeline({
+          userId,
+          akteId,
+          intentState: pipelineResult.intentState!,
+          slotState: pipelineResult.slotState!,
+          rueckfrage: pipelineResult.rueckfrage!,
+          round: 1,
+          message: queryText,
+        });
+
+        const filledSlots = Object.entries(pipelineResult.slotState ?? {})
+          .filter(([, v]) => v !== null && !(typeof v === "string" && v.startsWith("{{")))
+          .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {} as Record<string, unknown>);
+
+        const responsePayload = {
+          type: "schriftsatz_rueckfrage" as const,
+          rueckfrage: pipelineResult.rueckfrage!,
+          round: 1,
+          maxRounds: MAX_ROUNDS,
+          filledSlots,
+        };
+
+        return new Response(JSON.stringify(responsePayload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (pipelineResult.status === "complete") {
+        const responsePayload = {
+          type: "schriftsatz_complete" as const,
+          text: `Schriftsatz erstellt. Der Entwurf liegt zur Pruefung bereit.`,
+          draftId: pipelineResult.draftId ?? null,
+          warnungen: pipelineResult.warnungen,
+        };
+
+        return new Response(JSON.stringify(responsePayload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      // Error -- fall through to normal RAG
+      console.error("[ki-chat] Schriftsatz pipeline error, falling back to RAG");
+    }
+  }
+  // If no Schriftsatz routing matched, continue to normal RAG pipeline below
 
   // ---------------------------------------------------------------------------
   // Determine if RAG pipeline should run.

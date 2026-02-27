@@ -128,7 +128,12 @@ Plans:
   2. Vollständige Personennamen (Kläger, Beklagte) aus echten Urteilen überstehen den Filter nicht — kein unredaktiertes Klarname-Fragment gelangt in die Embedding-Pipeline
   3. Die Status-Machine PENDING_NER → NER_RUNNING → INDEXED | REJECTED_PII_DETECTED existiert — kein Bypass-Pfad führt zu pgvector ohne NER_COMPLETE-Zustand
   4. Bei Ollama-Timeout (> 45s) schlägt der Job fehl und bleibt auf PENDING_NER — keine Silent-Indexierung ohne PII-Prüfung
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Core NER module: ner-filter.ts + institution-whitelist.ts (Ollama few-shot, AbortSignal.timeout)
+- [ ] 16-02-PLAN.md — BullMQ ner-pii queue + processor + worker registration (Muster state machine)
+- [ ] 16-03-PLAN.md — Acceptance test: 10 real Urteil excerpts validating 0 institution false-positives
 
 ### Phase 17: Urteile-RAG
 **Goal**: Entscheidungen aller 7 Bundesgerichte und BAG-RSS-Updates sind PII-gefiltert in urteil_chunks indiziert — Helena zitiert Urteile nur aus verifizierten Metadaten, nie aus LLM-Imagination

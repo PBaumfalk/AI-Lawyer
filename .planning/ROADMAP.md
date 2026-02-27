@@ -96,7 +96,12 @@ Plans:
   2. BullMQ-Cron läuft täglich um 02:00 Europe/Berlin — geänderte Gesetze werden re-indexiert, unveränderte übersprungen
   3. Encoding-Smoke-Test schlägt an vor der Ingestion wenn §-Zeichen als "Â§" erscheinen — fehlerhafte Dateien werden übersprungen, kein Silent-Corrupt-Data
   4. Jede zitierte Norm in einer Helena-Antwort trägt den Hinweis "nicht amtlich — Stand: [Datum]" und einen Quellenlink zur Gesetzesstelle
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — GitHub API client + Markdown parser + law_chunks ingestion/search library (src/lib/gesetze/)
+- [ ] 14-02-PLAN.md — BullMQ gesetze-sync cron processor + queue + worker registration
+- [ ] 14-03-PLAN.md — ki-chat Chain D: law_chunks parallel retrieval + system prompt injection
 
 ### Phase 15: Normen-Verknüpfung in Akte
 **Goal**: Anwälte können §§ strukturiert an Akten pinnen — pinned Normen fließen automatisch in Helenas System-Kontext für genau diese Akte ein
@@ -153,7 +158,7 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 |-------|-----------|----------------|--------|-----------|
 | 12. RAG Schema Foundation | 1/1 | Complete    | 2026-02-26 | - |
 | 13. Hybrid Search + Reranking | 3/3 | Complete    | 2026-02-27 | - |
-| 14. Gesetze-RAG | v0.1 | 0/TBD | Not started | - |
+| 14. Gesetze-RAG | v0.1 | 0/3 | Planned | - |
 | 15. Normen-Verknüpfung in Akte | v0.1 | 0/TBD | Not started | - |
 | 16. PII-Filter | v0.1 | 0/TBD | Not started | - |
 | 17. Urteile-RAG | v0.1 | 0/TBD | Not started | - |

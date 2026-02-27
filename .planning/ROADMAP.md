@@ -101,12 +101,12 @@ Plans:
   3. All 5 write-tools create their outputs exclusively as drafts/proposals (never as final records directly)
   4. Ollama tool-call response guard detects JSON-as-content responses from qwen3.5:35b and corrects them before the loop continues
   5. Token budget manager truncates oldest tool results when approaching 75% of context window — no context overflow crashes
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 20-01: Shared tool library (agent-tools.ts) with 14 tool factory functions (9 read + 5 write)
-- [ ] 20-02: ReAct agent loop (orchestrator.ts) with iteration cap, stall detector, token budget manager
-- [ ] 20-03: Ollama tool-call response guard and dual-mode execution (inline 5-step vs background 20-step)
+- [ ] 20-01-PLAN.md — Shared tool library: types, factory, 18+ tool modules (12 read + 6 write), role filter, cache, audit, system prompt
+- [ ] 20-02-PLAN.md — ReAct orchestrator: generateText wrapper with stall detector, token budget manager, step tracing
+- [ ] 20-03-PLAN.md — Ollama response guard, complexity classifier, unified runHelenaAgent() entry point
 
 ### Phase 21: @Helena Task-System
 **Goal**: Users can trigger Helena tasks by typing @Helena in any note/comment field and track task progress in real-time

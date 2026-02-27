@@ -161,7 +161,12 @@ Plans:
   3. Kanzlei-eigene Muster erhalten einen messbaren Retrieval-Boost über öffentliche Formulare — kanzleispezifische Schriftsätze erscheinen bei Arbeitsrecht-Anfragen vor generischen Vordrucken
   4. Kein kanzlei-eigenes Muster mit unredaktierten Mandantendaten gelangt in pgvector — REJECTED_PII_DETECTED-Status verhindert die Indexierung ohne Bypass-Möglichkeit
   5. Helena liefert Schriftsatz-Entwürfe mit Rubrum, Anträgen und Begründung — der Output enthält explizite {{PLATZHALTER}} und ist als ENTWURF markiert, niemals als fertiger Schriftsatz
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 18-01-PLAN.md — Schema migration (isKanzleiEigen + kanzleiEigen) + src/lib/muster/ library (ingestion.ts + seed-amtliche.ts)
+- [ ] 18-02-PLAN.md — musterIngestionQueue + muster-ingestion.processor.ts + ner-pii trigger + Admin UI /admin/muster + upload API routes
+- [ ] 18-03-PLAN.md — ki-chat Chain F: searchMusterChunks() parallel fetch + MUSTER-QUELLEN system prompt injection (ARBW-05)
 
 ## Progress
 
@@ -177,4 +182,4 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 | 15. Normen-Verknüpfung in Akte | 3/3 | Complete    | 2026-02-27 | - |
 | 16. PII-Filter | 3/3 | Complete    | 2026-02-27 | - |
 | 17. Urteile-RAG | 3/3 | Complete    | 2026-02-27 | - |
-| 18. Muster-RAG + Admin Upload UI | v0.1 | 0/TBD | Not started | - |
+| 18. Muster-RAG + Admin Upload UI | v0.1 | 0/3 | Not started | - |

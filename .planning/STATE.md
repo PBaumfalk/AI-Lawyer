@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-27T09:42:42.651Z"
+last_updated: "2026-02-27T09:49:39.797Z"
 progress:
   total_phases: 9
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 26
-  completed_plans: 24
+  completed_plans: 26
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 17 (Urteile-RAG) in progress — Plans 01+02 complete
+**Current focus:** v0.1 Helena RAG — Phase 17 (Urteile-RAG) COMPLETE — Phase 18 (Muster-RAG + Admin Upload UI) is next
 
 ## Current Position
 
-Phase: 17 of 18 (Urteile-RAG) — IN PROGRESS
-Plan: 2 of 3 complete
-Status: Phase 17 Plan 02 complete — BullMQ processor + Queue + daily 03:00 cron wired. Plan 03 (ki-chat Chain E) is next.
-Last activity: 2026-02-27 — Phase 17 Plan 02 complete: processUrteileSyncJob, urteileSyncQueue, registerUrteileSyncJob, urteile-sync Worker registered in worker.ts
+Phase: 17 of 18 (Urteile-RAG) — COMPLETE
+Plan: 3 of 3 complete
+Status: Phase 17 Plan 03 complete — Chain E parallel Urteil retrieval + URTEILE-QUELLEN injection wired into ki-chat. Phase 18 (Muster-RAG + Admin Upload UI) is next.
+Last activity: 2026-02-27 — Phase 17 Plan 03 complete: Chain E (urteilChunksPromise), Promise.all[4], URTEILE-QUELLEN system prompt injection, anti-hallucination AZ instruction
 
-Progress: [████░░░░░░] ~22%
+Progress: [█████░░░░░] ~56%
 
 ## Performance Metrics
 
@@ -45,7 +45,7 @@ Progress: [████░░░░░░] ~22%
 | 14. Gesetze-RAG | 3/3 | ~4m | ~2m |
 | 15. Normen-Verknüpfung in Akte | 3/3 | ~4m+~4m+~2m | ~3m |
 | 16. PII-Filter | 3/3 | ~5m | ~2m |
-| 17. Urteile-RAG | 0/TBD | - | - |
+| 17. Urteile-RAG | 3/3 | ~6m | ~2m |
 | 18. Muster-RAG + Admin Upload UI | 0/TBD | - | - |
 | Phase 14-gesetze-rag P02 | 2 | 2 tasks | 3 files |
 | Phase 15-normen-verknuepfung-in-akte P01 | 4 | 2 tasks | 4 files |
@@ -54,6 +54,7 @@ Progress: [████░░░░░░] ~22%
 | Phase 16-pii-filter P03 | 1 | 1 tasks | 1 files |
 | Phase 17-urteile-rag P01 | 3 | 2 tasks | 2 files |
 | Phase 17-urteile-rag P02 | ~2m | 2 tasks | 3 files |
+| Phase 17-urteile-rag P03 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,8 @@ Recent decisions affecting v0.1:
 - [Phase 17-02]: urteileSyncQueue cron at 03:00 Europe/Berlin — one hour after gesetzeSyncJob at 02:00 to avoid simultaneous Ollama embedding calls
 - [Phase 17-02]: concurrency:1 for urteile-sync Worker — sequential sync avoids GPU contention during NER gate + embedding inside ingestUrteilItem
 - [Phase 17-02]: pii_rejected GUIDs ARE added to guidCache (no NER re-run); error GUIDs NOT added (retry on next cron)
+- [Phase 17-03]: Chain E failure is non-fatal — catch returns [] so Helena responds without Urteile without crashing ki-chat
+- [Phase 17-03]: queryEmbeddingPromise shared between Chain B, D, and Chain E — single Ollama embedding call for all three chains (urteil_chunks reuses existing embedding)
 
 ### Pending Todos
 
@@ -121,5 +124,5 @@ Recent decisions affecting v0.1:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 17 Plan 02 complete. processUrteileSyncJob + urteileSyncQueue + registerUrteileSyncJob wired. Phase 17 Plan 03 (ki-chat Chain E) is next.
+Stopped at: Phase 17 Plan 03 complete. Chain E (urteilChunksPromise) + URTEILE-QUELLEN injection wired. Phase 17 fully complete. Phase 18 (Muster-RAG + Admin Upload UI) is next.
 Resume file: None

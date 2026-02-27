@@ -152,6 +152,19 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Trigger action: /api/admin/jobs/:queueName/trigger
+  if (pathSegments[1] === "trigger") {
+    try {
+      const job = await queue.add("manual", {}, { attempts: 2 });
+      return NextResponse.json({ success: true, jobId: job.id });
+    } catch (err) {
+      return NextResponse.json(
+        { error: "Fehler beim Starten des Jobs" },
+        { status: 500 }
+      );
+    }
+  }
+
   // Retry action: /api/admin/jobs/:queueName/:jobId/retry
   if (pathSegments.length >= 3 && pathSegments[2] === "retry") {
     const jobId = pathSegments[1];

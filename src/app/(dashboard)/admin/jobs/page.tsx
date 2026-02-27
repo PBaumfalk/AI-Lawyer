@@ -15,6 +15,7 @@ import {
   Loader2,
   Pause,
   Timer,
+  Zap,
 } from "lucide-react";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -113,6 +114,21 @@ export default function AdminJobsPage() {
       fetchQueues();
     } catch {
       // Error is silently ignored; queue/job states will refresh
+    }
+  };
+
+  const [triggering, setTriggering] = useState<string | null>(null);
+
+  const handleTrigger = async (queueName: string) => {
+    try {
+      setTriggering(queueName);
+      await fetch(`/api/admin/jobs/${queueName}/trigger`, { method: "POST" });
+      fetchQueues();
+      if (expandedQueue === queueName) fetchJobs(queueName, selectedStatus);
+    } catch {
+      // silently ignore
+    } finally {
+      setTriggering(null);
     }
   };
 
@@ -231,6 +247,22 @@ export default function AdminJobsPage() {
                 <Badge variant="outline">
                   {queue.counts.completed} abgeschlossen
                 </Badge>
+                {queue.name === "gesetze-sync" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); handleTrigger(queue.name); }}
+                    disabled={triggering === queue.name || queue.counts.active > 0}
+                    className="text-brand-600 border-brand-300 hover:bg-brand-50"
+                  >
+                    {triggering === queue.name ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <Zap className="w-3 h-3 mr-1" />
+                    )}
+                    Jetzt synchronisieren
+                  </Button>
+                )}
               </div>
             </button>
 

@@ -121,6 +121,17 @@ export const aiProactiveQueue = new Queue("ai-proactive", {
   },
 });
 
+/** Gesetze-sync queue for daily bundestag/gesetze ingestion cron */
+export const gesetzeSyncQueue = new Queue("gesetze-sync", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: "custom" },
+    removeOnComplete: { age: 86_400 },   // 24h
+    removeOnFail: { age: 604_800 },      // 7 days
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
 export const ALL_QUEUES: Queue[] = [
   testQueue,
@@ -133,6 +144,7 @@ export const ALL_QUEUES: Queue[] = [
   aiScanQueue,
   aiBriefingQueue,
   aiProactiveQueue,
+  gesetzeSyncQueue,
 ];
 
 /**
@@ -206,6 +218,32 @@ export async function registerAiBriefingJob(
       data: {},
       opts: {
         removeOnComplete: { count: 50 },
+        removeOnFail: { count: 20 },
+      },
+    }
+  );
+}
+
+/**
+ * Register the daily Gesetze sync cron job.
+ * Uses upsertJobScheduler for idempotent (re)registration.
+ *
+ * @param cronPattern - Cron expression (default: "0 2 * * *" = 02:00 daily)
+ */
+export async function registerGesetzeSyncJob(
+  cronPattern = "0 2 * * *"
+): Promise<void> {
+  await gesetzeSyncQueue.upsertJobScheduler(
+    "gesetze-sync-daily",
+    {
+      pattern: cronPattern,
+      tz: "Europe/Berlin",
+    },
+    {
+      name: "sync-gesetze",
+      data: {},
+      opts: {
+        removeOnComplete: { count: 10 },
         removeOnFail: { count: 20 },
       },
     }

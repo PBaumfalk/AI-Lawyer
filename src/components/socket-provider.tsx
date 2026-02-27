@@ -49,46 +49,46 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     }
 
     // Avoid duplicate connections
-    if (socketRef.current?.connected) return;
+    if (socketRef.current) return;
 
-    // Same-origin connection — cookies sent automatically via withCredentials
-    // Limited retries: stop after 3 attempts to avoid console spam in dev mode
-    // (npm run dev uses next dev --turbo which has no Socket.IO server)
-    const socket = io({
-      withCredentials: true,
-      reconnection: true,
-      reconnectionAttempts: 3,
-      reconnectionDelay: 2000,
-      reconnectionDelayMax: 10000,
-      transports: ["websocket", "polling"],
-    });
+    // Probe Socket.IO endpoint before connecting to avoid error spam
+    // in dev mode (npm run dev has no Socket.IO server)
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
 
-    socket.on("connect", () => {
-      setIsConnected(true);
-    });
+    fetch("/socket.io/?EIO=4&transport=polling", {
+      signal: controller.signal,
+    })
+      .then((res) => {
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error("not available");
 
-    socket.on("disconnect", () => {
-      setIsConnected(false);
-    });
+        const socket = io({
+          withCredentials: true,
+          reconnection: true,
+          reconnectionAttempts: 5,
+          reconnectionDelay: 2000,
+          reconnectionDelayMax: 10000,
+          transports: ["websocket", "polling"],
+        });
 
-    let connectErrors = 0;
-    socket.on("connect_error", (err) => {
-      connectErrors++;
-      if (connectErrors <= 1) {
-        console.warn("[SocketProvider] Connection error:", err.message);
-      }
-      if (connectErrors === 3) {
-        console.warn("[SocketProvider] Giving up after 3 attempts. Use `npm run dev:server` for Socket.IO support.");
-      }
-      setIsConnected(false);
-    });
+        socket.on("connect", () => setIsConnected(true));
+        socket.on("disconnect", () => setIsConnected(false));
+        socket.on("connect_error", () => setIsConnected(false));
 
-    socketRef.current = socket;
+        socketRef.current = socket;
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        // Socket.IO server not available — skip silently
+      });
 
     return () => {
-      socket.disconnect();
-      socketRef.current = null;
-      setIsConnected(false);
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+        setIsConnected(false);
+      }
     };
   }, [status, session?.user]);
 

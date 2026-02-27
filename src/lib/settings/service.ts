@@ -6,12 +6,52 @@ import type { SystemSetting } from "@prisma/client";
 
 const log = createLogger("settings");
 
+// ---------------------------------------------------------------------------
+// In-memory settings cache with TTL (avoids repeated DB roundtrips)
+// ---------------------------------------------------------------------------
+
+/** Cache TTL in milliseconds (30 seconds) */
+const SETTINGS_CACHE_TTL = 30_000;
+
+interface CacheEntry {
+  setting: SystemSetting | null;
+  expiresAt: number;
+}
+
+const settingsCache = new Map<string, CacheEntry>();
+
+/**
+ * Get a cached setting, fetching from DB only if cache is empty or expired.
+ */
+async function getCachedSetting(key: string): Promise<SystemSetting | null> {
+  const now = Date.now();
+  const cached = settingsCache.get(key);
+  if (cached && cached.expiresAt > now) {
+    return cached.setting;
+  }
+
+  const setting = await prisma.systemSetting.findUnique({ where: { key } });
+  settingsCache.set(key, { setting, expiresAt: now + SETTINGS_CACHE_TTL });
+  return setting;
+}
+
+/**
+ * Invalidate the settings cache for a specific key or all keys.
+ */
+export function invalidateSettingsCache(key?: string): void {
+  if (key) {
+    settingsCache.delete(key);
+  } else {
+    settingsCache.clear();
+  }
+}
+
 /**
  * Get a single setting value by key.
  * Returns null if the setting does not exist.
  */
 export async function getSetting(key: string): Promise<string | null> {
-  const setting = await prisma.systemSetting.findUnique({ where: { key } });
+  const setting = await getCachedSetting(key);
   return setting?.value ?? null;
 }
 
@@ -23,7 +63,7 @@ export async function getSettingTyped<T>(
   key: string,
   defaultValue: T
 ): Promise<T> {
-  const setting = await prisma.systemSetting.findUnique({ where: { key } });
+  const setting = await getCachedSetting(key);
   if (!setting) return defaultValue;
 
   try {
@@ -75,6 +115,9 @@ export async function updateSetting(
       label: def?.label ?? key,
     },
   });
+
+  // Invalidate cache for this key so next read picks up the new value
+  invalidateSettingsCache(key);
 
   // Publish change to Redis so worker picks it up immediately
   let publisher: ReturnType<typeof createRedisConnection> | null = null;

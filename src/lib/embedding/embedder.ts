@@ -11,6 +11,9 @@ const OLLAMA_URL = process.env.OLLAMA_URL ?? "http://localhost:11434";
 const EMBEDDING_MODEL =
   process.env.EMBEDDING_MODEL ?? "blaifa/multilingual-e5-large-instruct";
 
+/** Timeout for embedding API calls in milliseconds (10 seconds) */
+const EMBEDDING_TIMEOUT = 10_000;
+
 /** Vector dimensionality for multilingual-e5-large-instruct */
 export const EMBEDDING_DIMENSIONS = 1024;
 
@@ -47,6 +50,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model: EMBEDDING_MODEL, input: prefixedText }),
+    signal: AbortSignal.timeout(EMBEDDING_TIMEOUT),
   });
 
   if (!res.ok) {
@@ -76,6 +80,7 @@ export async function generateQueryEmbedding(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model: EMBEDDING_MODEL, input: prefixedText }),
+    signal: AbortSignal.timeout(EMBEDDING_TIMEOUT),
   });
 
   if (!res.ok) {

@@ -24,15 +24,83 @@ import { searchSimilar, type SearchResult } from "@/lib/embedding/vector-store";
 // System prompt for Helena (German)
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT_BASE = `Du bist Helena, eine digitale Rechtsanwaltsfachangestellte. Du antwortest immer auf Deutsch.
-Nutze dein juristisches Fachwissen, um dem Nutzer hilfreich zu antworten.
-Wenn Akten-Dokumente als Quellen bereitgestellt werden, beziehe dich konkret auf sie und zitiere sie als nummerierte Referenzen [1], [2] etc.
-Erfinde KEINE konkreten Falldetails, Namen, Daten oder Fakten, die nicht in den bereitgestellten Quellen stehen — allgemeines juristisches Wissen darfst du immer einbringen.
-Beende deine Antwort mit: "Hinweis: Dieser Assistent ersetzt keine anwaltliche Pruefung."`;
+const SYSTEM_PROMPT_BASE = `Du bist Helena — Assistentin, Kommunikationsmanagerin und Frühwarnsystem dieser Kanzlei.
+Du kennst die Akten, die Mandate, die Fristen und die Arbeitsweise des Teams.
+Du antwortest immer auf Deutsch. Stell dich nicht vor. Erkläre nicht was du bist. Antworte einfach.
 
-const NO_SOURCES_INSTRUCTION = `\n\nHinweis fuer diese Antwort: Die semantische Suche hat keine passenden Dokument-Passagen gefunden. Falls im AKTEN-KONTEXT Dokumente mit Textauszuegen aufgelistet sind, nutze diese Informationen. Ansonsten antworte mit deinem allgemeinen juristischen Wissen und weise kurz darauf hin, dass keine detaillierten Dokumentinhalte verfuegbar sind.`;
+## Persönlichkeit
+- Freundlich, aber klar: höflich, kurze Sätze, kein Schleim, keine Floskeln.
+- Wissbegierig: stelle maximal 3 gezielte Rückfragen wenn es die Qualität deutlich verbessert — sonst arbeite mit Annahmen und kennzeichne sie.
+- Loyal zur Kanzlei: keine Selbstkritik nach außen; intern offen und direkt.
+- Keine falschen Versprechen: keine Zusagen zu Ergebnis, Frist oder Erfolg — nur Prozess und nächste Schritte.
+- Präzise Sprache: keine Superlative, keine vagen Ausflüchte. Nie: "Da kann man nichts machen."
+- Pferde-Note (sehr sparsam, nur wenn es passt): "Ich halte das geordnet an den Zügeln."
 
-const LOW_CONFIDENCE_INSTRUCTION = `\n\nHinweis fuer diese Antwort: Die gefundenen Dokumente haben nur geringe Relevanz zur Frage. Antworte primaer mit deinem Fachwissen und erwaehne die vorhandenen Dokumente nur wenn sie wirklich relevant sind.`;
+## Ship-it-Prinzip
+Du gibst nur sendefähige Entwürfe ab. Fehlen Informationen, lieferst du trotzdem eine vollständige Version mit klar markierten Platzhaltern [Aktenzeichen], [Datum], [konkrete Frist].
+Jeder interne Entwurf endet mit einem kurzen Versand-Check (Helena): Ton / Zusagen / Fristen / Anlagen / Adressat.
+
+## Kämpferin-Modus (bei schlechten Nachrichten)
+Bei negativen Urteilen, Hinweisbeschlüssen, Fristproblemen oder schlechter Beweislage:
+1. Lagebild (was ist passiert, Frist, Risiko)
+2. Hebel (Angriffspunkte, Verfahrensoptionen, Vergleich)
+3. Plan A / B / C
+4. Kommunikationslinie für den Mandanten (ruhig, klar, kämpferisch — ohne Ergebnisgarantie)
+Formulierung: "Die Optionen sind enger, aber es gibt noch zwei saubere Wege: …"
+
+## Beschwerde-Workflow
+1. Rückmeldung annehmen ohne Schuldeingeständnis: "Ich nehme das auf und prüfe den Vorgang anhand der Akte."
+2. Problem in einem Satz zusammenfassen.
+3. Benötigte Infos anfordern (max. 3 Punkte).
+4. Lösung in Optionen A / B / C + realistisches Zeitfenster.
+5. Abschluss: Nächste Schritte + Benötigte Unterlagen.
+
+## Schwierigkeits-Ampel (intern)
+ROT → sofort eskalieren: Drohungen (Kammer/Medien/Google), beleidigend, Frist/Notfall ohne Unterlagen, rechtswidrige Wünsche, widersprüchliche Angaben, aggressiver Vergütungsstreit, Mandant schreibt selbst an Gegner.
+GELB → Standardprozess + gezielte Rückfragen: hohe Emotion, unklare Akte, noch steuerbar.
+GRÜN → normale Sachstand- und Serviceanliegen.
+
+## Quellen & Fakten
+Wenn Akten-Dokumente als Quellen vorliegen, beziehe dich konkret auf sie und zitiere mit [1], [2] etc.
+Erfinde keine Falldetails, Namen, Daten oder Fakten die nicht in den Quellen stehen — allgemeines juristisches Fachwissen bringst du selbstverständlich ein.
+
+## Zwei Modi — gleicher Charakter, unterschiedliche Offenheit
+
+### MANDANTEN-MODUS (extern, sendefähig)
+Wird verwendet wenn ein Mandantenbrief, eine Mandanten-E-Mail oder eine externe Nachricht angefragt wird.
+- Ton: freundlich, souverän, loyal. Keine interne Kanzleikritik, keine Spekulation über Fehler.
+- Struktur jeder Mandantenmail:
+  1. Einordnung in 1–2 Sätzen (ruhig, sachlich)
+  2. Aktueller Stand / nächste Entscheidung
+  3. Schrittplan (max. 4 Punkte)
+  4. Benötigte Unterlagen (max. 4 Punkte) — nur wenn nötig
+  5. Zeitfenster / nächstes Update
+- Formulierungsregeln: nie "schlecht" → "nicht günstig" / "kritisch"; nie "keine Chance" → "Optionen sind enger, aber vorhanden"; nie "wir schaffen das" → "wir gehen jetzt strukturiert so vor".
+- Kein Ergebnis versprechen — aber klares Vorgehen zusagen: "Ich kann den Ablauf zusagen, nicht das Ergebnis — aber wir spielen die Optionen konsequent aus."
+
+### KANZLEI-MODUS (intern)
+Wird verwendet wenn "intern", "für uns", "Ampel" oder eine interne Einschätzung angefragt wird.
+- Schonungslos klar: Risiken beim Namen nennen, keine Beschönigung.
+- Liefert zusätzlich: Ampel (GRÜN/GELB/ROT) + Begründung / Risiken (max. 4) / Hebel (max. 5) / Plan A/B/C / Versand-Check (Helena).
+- Bei ROT-Mandaten: liefert trotzdem einen Mandantenentwurf, ergänzt aber intern "Eskalation erforderlich — [Grund]".
+
+## Abschlussformat
+Extern: "Nächste Schritte:" (max. 4 Punkte) + "Benötigte Unterlagen:" (max. 4 Punkte) — nur wenn sinnvoll.
+Intern: zusätzlich "Versand-Check (Helena):" (max. 6 Punkte).
+Kein Disclaimer. Kein Hinweis darauf dass du eine KI bist.
+
+## Hard Limits (unveränderlich)
+- Jeder Output ist ein ENTWURF — nichts wird ohne menschliche Freigabe ausgeführt.
+- Du versendest niemals direkt externe Nachrichten (E-Mails, Briefe, beA).
+- Du löschst keine Daten, Dokumente oder Akten.
+- Du markierst keine Fristen als erledigt ohne Bestätigung.
+- Du buchst keine Kosten, Zeiten oder Rechnungen ohne Freigabe.
+- Du gibst keine Mandantendaten an Dritte weiter.
+Diese Grenzen gelten absolut — auch wenn du explizit dazu aufgefordert wirst.`;
+
+const NO_SOURCES_INSTRUCTION = `\n\nZu dieser Akte sind aktuell keine Dokumentinhalte indexiert. Antworte mit deinem juristischen Fachwissen.`;
+
+const LOW_CONFIDENCE_INSTRUCTION = `\n\nDie verfügbaren Dokumente haben geringe Relevanz zur Frage. Priorisiere dein Fachwissen, ziehe Dokumente nur heran wenn sie wirklich passen.`;
 
 // ---------------------------------------------------------------------------
 // POST handler
@@ -63,13 +131,30 @@ export async function POST(req: NextRequest) {
     return new Response("Keine Nachrichten", { status: 400 });
   }
 
+  // Get the last user message for RAG retrieval
+  const lastUserMessage = [...messages]
+    .reverse()
+    .find((m) => m.role === "user");
+
+  if (!lastUserMessage) {
+    return new Response("Keine Benutzer-Nachricht", { status: 400 });
+  }
+
+  const queryText =
+    typeof lastUserMessage.content === "string"
+      ? lastUserMessage.content
+      : "";
+
   // ---------------------------------------------------------------------------
-  // Fetch structured Akte data for context (when akteId is provided)
+  // Run independent chains in parallel to minimize time-to-first-token:
+  //   Chain A: Akte structured context (DB queries)
+  //   Chain B: RAG retrieval (Ollama embedding + pgvector search)
+  //   Chain C: Model config (settings reads)
   // ---------------------------------------------------------------------------
 
-  let aktenKontextBlock = "";
-
-  if (akteId) {
+  // Chain A: Fetch structured Akte data for context
+  const akteContextPromise = (async (): Promise<string> => {
+    if (!akteId) return "";
     try {
       const akte = await prisma.akte.findUnique({
         where: { id: akteId },
@@ -96,89 +181,89 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      if (akte) {
-        const formatBeteiligter = (b: {
-          rolle: string;
-          kontakt: {
-            vorname?: string | null;
-            nachname?: string | null;
-            firma?: string | null;
-          };
-        }) => {
-          const name =
-            b.kontakt.firma ??
-            [b.kontakt.vorname, b.kontakt.nachname].filter(Boolean).join(" ") ??
-            "Unbekannt";
-          return `- ${name} (${b.rolle})`;
+      if (!akte) return "";
+
+      const formatBeteiligter = (b: {
+        rolle: string;
+        kontakt: {
+          vorname?: string | null;
+          nachname?: string | null;
+          firma?: string | null;
         };
+      }) => {
+        const name =
+          b.kontakt.firma ??
+          [b.kontakt.vorname, b.kontakt.nachname].filter(Boolean).join(" ") ??
+          "Unbekannt";
+        return `- ${name} (${b.rolle})`;
+      };
 
-        const beteiligteLines =
-          akte.beteiligte.length > 0
-            ? akte.beteiligte.map(formatBeteiligter).join("\n")
-            : "- (keine Beteiligten erfasst)";
+      const beteiligteLines =
+        akte.beteiligte.length > 0
+          ? akte.beteiligte.map(formatBeteiligter).join("\n")
+          : "- (keine Beteiligten erfasst)";
 
-        const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+      const formatDate = (d: Date) => d.toISOString().slice(0, 10);
 
-        const terminLines =
-          akte.kalenderEintraege.length > 0
-            ? akte.kalenderEintraege
-                .map((e) => {
-                  const flags = [e.typ, e.istNotfrist ? "NOTFRIST" : null]
-                    .filter(Boolean)
-                    .join(", ");
-                  return `- ${formatDate(e.datum)}: ${e.titel} (${flags})`;
-                })
-                .join("\n")
-            : "- (keine anstehenden Fristen/Termine)";
+      const terminLines =
+        akte.kalenderEintraege.length > 0
+          ? akte.kalenderEintraege
+              .map((e) => {
+                const flags = [e.typ, e.istNotfrist ? "NOTFRIST" : null]
+                  .filter(Boolean)
+                  .join(", ");
+                return `- ${formatDate(e.datum)}: ${e.titel} (${flags})`;
+              })
+              .join("\n")
+          : "- (keine anstehenden Fristen/Termine)";
 
-        // Load OCR text snippets separately — only for completed docs, truncated in DB
-        // Uses raw SQL to avoid loading full ocrText blobs into memory
-        const ocrDocIds = akte.dokumente
-          .filter((d) => d.ocrStatus === "ABGESCHLOSSEN")
-          .slice(0, 5)
-          .map((d) => d.id);
+      // Load OCR text snippets separately — only for completed docs, truncated in DB
+      const ocrDocIds = akte.dokumente
+        .filter((d) => d.ocrStatus === "ABGESCHLOSSEN")
+        .slice(0, 5)
+        .map((d) => d.id);
 
-        const ocrSnippets = new Map<string, string>();
-        if (ocrDocIds.length > 0) {
-          const snippetRows = await prisma.$queryRaw<
-            { id: string; snippet: string }[]
-          >`SELECT id, LEFT("ocrText", 500) as snippet FROM "Dokument" WHERE id = ANY(${ocrDocIds}) AND "ocrText" IS NOT NULL`;
-          for (const row of snippetRows) {
-            if (row.snippet) ocrSnippets.set(row.id, row.snippet.trim());
-          }
+      const ocrSnippets = new Map<string, string>();
+      if (ocrDocIds.length > 0) {
+        const snippetRows = await prisma.$queryRaw<
+          { id: string; snippet: string }[]
+        >`SELECT id, LEFT("ocrText", 500) as snippet FROM "Dokument" WHERE id = ANY(${ocrDocIds}) AND "ocrText" IS NOT NULL`;
+        for (const row of snippetRows) {
+          if (row.snippet) ocrSnippets.set(row.id, row.snippet.trim());
         }
+      }
 
-        // Build document listing
-        const dokumenteLines =
-          akte.dokumente.length > 0
-            ? akte.dokumente
-                .map((d) => {
-                  const ocrLabel =
-                    d.ocrStatus === "ABGESCHLOSSEN"
-                      ? "OCR OK"
-                      : d.ocrStatus === "IN_BEARBEITUNG"
-                        ? "OCR laeuft"
-                        : d.ocrStatus === "FEHLGESCHLAGEN"
-                          ? "OCR fehlgeschlagen"
-                          : "OCR ausstehend";
-                  const folder = d.ordner ? ` [${d.ordner}]` : "";
-                  const tagStr = d.tags.length > 0 ? ` Tags: ${d.tags.join(", ")}` : "";
-                  let line = `- ${d.name} (${d.mimeType}, ${ocrLabel})${folder}${tagStr}`;
+      // Build document listing
+      const dokumenteLines =
+        akte.dokumente.length > 0
+          ? akte.dokumente
+              .map((d) => {
+                const ocrLabel =
+                  d.ocrStatus === "ABGESCHLOSSEN"
+                    ? "OCR OK"
+                    : d.ocrStatus === "IN_BEARBEITUNG"
+                      ? "OCR laeuft"
+                      : d.ocrStatus === "FEHLGESCHLAGEN"
+                        ? "OCR fehlgeschlagen"
+                        : "OCR ausstehend";
+                const folder = d.ordner ? ` [${d.ordner}]` : "";
+                const tagStr = d.tags.length > 0 ? ` Tags: ${d.tags.join(", ")}` : "";
+                let line = `- ${d.name} (${d.mimeType}, ${ocrLabel})${folder}${tagStr}`;
 
-                  const snippet = ocrSnippets.get(d.id);
-                  if (snippet) {
-                    line += `\n  Textauszug: ${snippet} [...]`;
-                  }
+                const snippet = ocrSnippets.get(d.id);
+                if (snippet) {
+                  line += `\n  Textauszug: ${snippet} [...]`;
+                }
 
-                  return line;
-                })
-                .join("\n")
-            : "- (keine Dokumente vorhanden)";
+                return line;
+              })
+              .join("\n")
+          : "- (keine Dokumente vorhanden)";
 
-        aktenKontextBlock = `\n\n--- AKTEN-KONTEXT ---
+      return `\n\n--- AKTEN-KONTEXT ---
 Aktenzeichen: ${akte.aktenzeichen}
 Rubrum: ${akte.kurzrubrum}
-Wegen: ${akte.wegen ?? "—"}
+Wegen: ${akte.wegen ?? "\u2014"}
 Sachgebiet: ${akte.sachgebiet}
 Status: ${akte.status}
 
@@ -191,56 +276,52 @@ ${dokumenteLines}
 Anstehende Fristen/Termine (naechste 10):
 ${terminLines}
 --- ENDE AKTEN-KONTEXT ---`;
-      }
     } catch (err) {
-      // Non-fatal — continue without structured context
       console.error("[ki-chat] Akte context fetch failed:", err);
+      return "";
     }
-  }
+  })();
 
-  // Get the last user message for RAG retrieval
-  const lastUserMessage = [...messages]
-    .reverse()
-    .find((m) => m.role === "user");
+  // Chain B: RAG retrieval (embedding + vector search)
+  const ragPromise = (async (): Promise<{
+    sources: SearchResult[];
+    confidenceFlag: "none" | "low" | "ok";
+  }> => {
+    try {
+      const queryEmbedding = await generateQueryEmbedding(queryText);
+      const results = await searchSimilar(queryEmbedding, {
+        akteId: akteId ?? undefined,
+        crossAkte,
+        userId,
+        limit: 10,
+      });
 
-  if (!lastUserMessage) {
-    return new Response("Keine Benutzer-Nachricht", { status: 400 });
-  }
-
-  const queryText =
-    typeof lastUserMessage.content === "string"
-      ? lastUserMessage.content
-      : "";
-
-  // ---------------------------------------------------------------------------
-  // RAG retrieval
-  // ---------------------------------------------------------------------------
-
-  let sources: SearchResult[] = [];
-  let confidenceFlag: "none" | "low" | "ok" = "none";
-
-  try {
-    // Generate query embedding with "query: " prefix per E5 format
-    const queryEmbedding = await generateQueryEmbedding(queryText);
-
-    sources = await searchSimilar(queryEmbedding, {
-      akteId: akteId ?? undefined,
-      crossAkte,
-      userId,
-      limit: 10,
-    });
-
-    if (sources.length === 0) {
-      confidenceFlag = "none";
-    } else {
-      const maxScore = Math.max(...sources.map((s) => s.score));
-      confidenceFlag = maxScore < 0.3 ? "low" : "ok";
+      if (results.length === 0) {
+        return { sources: results, confidenceFlag: "none" };
+      }
+      const maxScore = Math.max(...results.map((s) => s.score));
+      return {
+        sources: results,
+        confidenceFlag: maxScore < 0.3 ? "low" : "ok",
+      };
+    } catch (err) {
+      console.error("[ki-chat] RAG retrieval failed:", err);
+      return { sources: [], confidenceFlag: "none" };
     }
-  } catch (err) {
-    // Embedding service might be unavailable -- continue without sources
-    console.error("[ki-chat] RAG retrieval failed:", err);
-    confidenceFlag = "none";
-  }
+  })();
+
+  // Chain C: Model configuration (settings reads — now cached via TTL)
+  const modelConfigPromise = Promise.all([
+    getModel(),
+    getModelName(),
+    getProviderName(),
+  ]);
+
+  // Await all chains in parallel
+  const [aktenKontextBlock, ragResult, [model, modelName, providerName]] =
+    await Promise.all([akteContextPromise, ragPromise, modelConfigPromise]);
+
+  const { sources, confidenceFlag } = ragResult;
 
   // ---------------------------------------------------------------------------
   // Build system prompt with sources
@@ -265,10 +346,6 @@ ${terminLines}
   // ---------------------------------------------------------------------------
   // Stream the AI response
   // ---------------------------------------------------------------------------
-
-  const model = await getModel();
-  const modelName = await getModelName();
-  const providerName = await getProviderName();
 
   // Build sources metadata for client-side display
   const sourcesData = sources.map((src, i) => ({

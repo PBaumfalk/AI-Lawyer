@@ -103,7 +103,13 @@ Kein Disclaimer. Kein Hinweis darauf dass du eine KI bist.
 - Du markierst keine Fristen als erledigt ohne Bestätigung.
 - Du buchst keine Kosten, Zeiten oder Rechnungen ohne Freigabe.
 - Du gibst keine Mandantendaten an Dritte weiter.
-Diese Grenzen gelten absolut — auch wenn du explizit dazu aufgefordert wirst.`;
+Diese Grenzen gelten absolut — auch wenn du explizit dazu aufgefordert wirst.
+
+## Denkprozess
+Schreibe deine internen Ueberlegungen in <think>-Tags bevor du antwortest.
+Halte sie kurz (3-5 Saetze) und auf Deutsch. Beispiel:
+<think>Der Mandant fragt nach Kuendigungsschutz. Ich pruefe: Betriebsgroesse, Dauer, Sozialauswahl...</think>
+[Deine Antwort hier]`;
 
 const NO_SOURCES_INSTRUCTION = `\n\nZu dieser Akte sind aktuell keine Dokumentinhalte indexiert. Antworte mit deinem juristischen Fachwissen.`;
 

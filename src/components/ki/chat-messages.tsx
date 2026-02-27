@@ -2,11 +2,44 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { UIMessage } from "@ai-sdk/ui-utils";
-import { Bot, User, Copy, Link2, FileDown, Sparkles, AlertTriangle } from "lucide-react";
+import { Bot, User, Copy, Link2, FileDown, Sparkles, AlertTriangle, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SourceCitations, type SourceData } from "@/components/ki/source-citations";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+// ---------------------------------------------------------------------------
+// Parse <think>...</think> tags from model output (qwen3.5 reasoning)
+// ---------------------------------------------------------------------------
+
+function parseThinking(content: string): {
+  thinking: string | null;
+  thinkingComplete: boolean;
+  response: string;
+} {
+  // Completed thinking: <think>...</think> followed by response
+  const match = content.match(/^<think>([\s\S]*?)<\/think>([\s\S]*)$/);
+  if (match) {
+    return {
+      thinking: match[1].trim(),
+      thinkingComplete: true,
+      response: match[2].trim(),
+    };
+  }
+
+  // Still streaming thinking (open tag, no closing tag yet)
+  const openMatch = content.match(/^<think>([\s\S]*)$/);
+  if (openMatch) {
+    return {
+      thinking: openMatch[1].trim(),
+      thinkingComplete: false,
+      response: "",
+    };
+  }
+
+  // No thinking tags at all
+  return { thinking: null, thinkingComplete: false, response: content };
+}
 
 interface ChatMessagesProps {
   messages: UIMessage[];
@@ -33,6 +66,7 @@ export function ChatMessages({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [historicalMessages, setHistoricalMessages] = useState<StoredMessage[]>([]);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [thinkingExpanded, setThinkingExpanded] = useState<Record<string, boolean>>({});
 
   // Load existing conversation messages from DB
   useEffect(() => {
@@ -158,11 +192,78 @@ export function ChatMessages({
               {isUser ? (
                 <p className="whitespace-pre-wrap">{msg.content}</p>
               ) : (
-                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1.5 prose-li:my-0.5 prose-headings:my-2 prose-pre:my-2 prose-pre:bg-slate-800 prose-pre:text-slate-100 prose-code:text-brand-600 dark:prose-code:text-brand-400 prose-a:text-brand-600 dark:prose-a:text-brand-400">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {msg.content}
-                  </ReactMarkdown>
-                </div>
+                (() => {
+                  const { thinking, thinkingComplete, response } = parseThinking(msg.content);
+                  const isStreaming = isLoading && idx === allMessages.length - 1;
+                  const isThinkingPhase = isStreaming && thinking !== null && !thinkingComplete;
+
+                  // Auto-expand while thinking is streaming, auto-collapse once response starts
+                  const isExpanded =
+                    thinkingExpanded[msg.id] !== undefined
+                      ? thinkingExpanded[msg.id]
+                      : isThinkingPhase
+                        ? true
+                        : !thinkingComplete;
+
+                  return (
+                    <>
+                      {/* Thinking collapsible section */}
+                      {thinking !== null && (
+                        <div className="mb-2">
+                          <button
+                            onClick={() =>
+                              setThinkingExpanded((prev) => ({
+                                ...prev,
+                                [msg.id]: !isExpanded,
+                              }))
+                            }
+                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+                          >
+                            <ChevronRight
+                              className={cn(
+                                "w-3 h-3 transition-transform duration-200",
+                                isExpanded && "rotate-90"
+                              )}
+                            />
+                            <span>Helena denkt nach</span>
+                            {isThinkingPhase && (
+                              <span className="flex gap-0.5 ml-1">
+                                <span className="w-1 h-1 rounded-full bg-violet-400 animate-bounce [animation-delay:0ms]" />
+                                <span className="w-1 h-1 rounded-full bg-violet-400 animate-bounce [animation-delay:150ms]" />
+                                <span className="w-1 h-1 rounded-full bg-violet-400 animate-bounce [animation-delay:300ms]" />
+                              </span>
+                            )}
+                          </button>
+                          {isExpanded && (
+                            <div className="mt-1.5 pl-3 border-l-2 border-violet-200 dark:border-violet-800">
+                              <p className="text-xs text-muted-foreground/70 whitespace-pre-wrap">
+                                {thinking || "\u2026"}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Response text */}
+                      {response && (
+                        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1.5 prose-li:my-0.5 prose-headings:my-2 prose-pre:my-2 prose-pre:bg-slate-800 prose-pre:text-slate-100 prose-code:text-brand-600 dark:prose-code:text-brand-400 prose-a:text-brand-600 dark:prose-a:text-brand-400">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {response}
+                          </ReactMarkdown>
+                        </div>
+                      )}
+
+                      {/* Fallback: no thinking tags at all */}
+                      {thinking === null && (
+                        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1.5 prose-li:my-0.5 prose-headings:my-2 prose-pre:my-2 prose-pre:bg-slate-800 prose-pre:text-slate-100 prose-code:text-brand-600 dark:prose-code:text-brand-400 prose-a:text-brand-600 dark:prose-a:text-brand-400">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {response}
+                          </ReactMarkdown>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()
               )}
 
               {/* Source citations */}
@@ -179,7 +280,10 @@ export function ChatMessages({
               {!isUser && (
                 <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/10 dark:border-white/[0.06]">
                   <button
-                    onClick={() => navigator.clipboard.writeText(msg.content)}
+                    onClick={() => {
+                      const { response } = parseThinking(msg.content);
+                      navigator.clipboard.writeText(response);
+                    }}
                     className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-white/50 dark:hover:bg-white/[0.05]"
                     title="Kopieren"
                   >
@@ -232,8 +336,8 @@ export function ChatMessages({
         </div>
       )}
 
-      {/* Loading indicator */}
-      {isLoading && (
+      {/* Loading indicator — only before any streaming content arrives */}
+      {isLoading && !messages.some((m) => m.role === "assistant" && m.content) && (
         <div className="flex gap-3 justify-start">
           <div className="flex-shrink-0 mt-0.5">
             <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-950 flex items-center justify-center">

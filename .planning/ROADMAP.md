@@ -80,7 +80,12 @@ Plans:
   2. Exakte §-Nummern und Aktenzeichen-Strings aus Dokumenten werden korrekt retrieved — BM25-Beitrag ist nachweisbar
   3. Reranking reduziert den Kandidaten-Pool auf Top-10 — bei P95-Latenz > 3s fällt das System automatisch auf RRF-Reihenfolge zurück ohne Fehler
   4. Parent-Chunk-Inhalt (2.000 Token) wird als LLM-Kontext übergeben, Kind-Chunk (500 Token) als Retrieval-Unit — Antworten enthalten vollständige §-Absätze, keine abgeschnittenen Fragmente
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — New library files: reranker.ts (Ollama batch reranker + RrfCandidate) + hybrid-search.ts (RRF orchestrator + hybridSearch)
+- [ ] 13-02-PLAN.md — Upgrade chunker.ts (chunkDocumentParentChild) + vector-store.ts (insertParentChildChunks, fetchParentContent, updated searchSimilar)
+- [ ] 13-03-PLAN.md — Wire embedding.processor.ts (parent-child pipeline) + ki-chat/route.ts (hybridSearch + contextContent)
 
 ### Phase 14: Gesetze-RAG
 **Goal**: Bundesgesetze aus bundestag/gesetze sind in law_chunks indiziert und werden täglich aktualisiert — Helena kann Rechtsfragen mit verifizierten Normen statt LLM-Trainingsdaten beantworten
@@ -147,7 +152,7 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 12. RAG Schema Foundation | 1/1 | Complete    | 2026-02-26 | - |
-| 13. Hybrid Search + Reranking | v0.1 | 0/TBD | Not started | - |
+| 13. Hybrid Search + Reranking | v0.1 | 0/3 | Not started | - |
 | 14. Gesetze-RAG | v0.1 | 0/TBD | Not started | - |
 | 15. Normen-Verknüpfung in Akte | v0.1 | 0/TBD | Not started | - |
 | 16. PII-Filter | v0.1 | 0/TBD | Not started | - |

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
 status: unknown
-last_updated: "2026-02-27T21:50:18.231Z"
+last_updated: "2026-02-27T22:45:58.313Z"
 progress:
-  total_phases: 15
+  total_phases: 16
   completed_phases: 14
-  total_plans: 41
-  completed_plans: 41
+  total_plans: 44
+  completed_plans: 43
 ---
 
 # Project State
@@ -24,8 +24,8 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 Phase: 24 of 26 (Scanner + Alerts)
 Plan: 0 of 2 in current phase
-Status: Phase 23 complete, Phase 24 next
-Last activity: 2026-02-27 — Completed 23-03 Wire Draft Notifications
+Status: Phase 23.1 in progress (plan 1/3 complete)
+Last activity: 2026-02-27 — Completed 23.1-01 Wire Draft Notification in update-akte-rag
 
 Progress: [███████░░░] 60%
 
@@ -33,7 +33,7 @@ Progress: [███████░░░] 60%
 
 **Velocity:**
 - Total plans completed: 71 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 12/17
+- v0.2 plans: 13/20
 
 **By Phase (v0.2):**
 
@@ -44,6 +44,7 @@ Progress: [███████░░░] 60%
 | 21. @Helena Task-System | 2/2 | 6min | 3min |
 | 22. Schriftsatz Orchestrator | 2/2 | 14min | 7min |
 | 23. Draft-Approval Workflow | 3/3 | 18min | 6min |
+| 23.1. Integration Wiring Fixes | 1/3 | 1min | 1min |
 | 24. Scanner + Alerts | 0/2 | - | - |
 | 25. Helena Memory | 0/1 | - | - |
 | 26. Activity Feed UI + QA-Gates | 0/3 | - | - |
@@ -123,5 +124,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 23-03-PLAN.md (Wire Draft Notifications)
-Resume file: .planning/phases/23-draft-approval-workflow/23-03-SUMMARY.md
+Stopped at: Completed 23.1-01-PLAN.md (Wire Draft Notification in update-akte-rag)
+Resume file: .planning/phases/23.1-integration-wiring-fixes/23.1-01-SUMMARY.md

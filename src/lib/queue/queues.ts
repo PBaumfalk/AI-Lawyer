@@ -132,6 +132,20 @@ export const gesetzeSyncQueue = new Queue("gesetze-sync", {
   },
 });
 
+/**
+ * NER-PII queue for async Muster NER processing (ARBW-03 compliance).
+ * attempts: 1 — NER timeout is a permanent fail (no retry), processor resets nerStatus to PENDING_NER.
+ */
+export const nerPiiQueue = new Queue("ner-pii", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    attempts: 1,           // NER is non-retryable by design — timeout = permanent fail
+    backoff: { type: "custom" },
+    removeOnComplete: { age: 86_400 },   // 24h
+    removeOnFail: { age: 604_800 },      // 7 days
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
 export const ALL_QUEUES: Queue[] = [
   testQueue,
@@ -145,6 +159,7 @@ export const ALL_QUEUES: Queue[] = [
   aiBriefingQueue,
   aiProactiveQueue,
   gesetzeSyncQueue,
+  nerPiiQueue,
 ];
 
 /**

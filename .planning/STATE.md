@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 13 (Hybrid Search + Reranking) — COMPLETE
+**Current focus:** v0.1 Helena RAG — Phase 14 (Gesetze-RAG) — Plan 01 complete
 
 ## Current Position
 
-Phase: 13 of 18 (Hybrid Search + Reranking) — COMPLETE
-Plan: 3 of 3 complete
-Status: Phase 13 complete — Phase 14 next
-Last activity: 2026-02-27 — Phase 13 Plan 03 complete: embedding processor + ki-chat wired to parent-child hybrid search pipeline
+Phase: 14 of 18 (Gesetze-RAG) — IN PROGRESS
+Plan: 1 of 3 complete
+Status: Phase 14 Plan 01 complete — Plan 02 (gesetze-sync cron processor) next
+Last activity: 2026-02-27 — Phase 14 Plan 01 complete: GitHub API client, Markdown parser, law_chunks ingestion/search library
 
 Progress: [██░░░░░░░░] ~10%
 
@@ -42,7 +42,7 @@ Progress: [██░░░░░░░░] ~10%
 |-------|-------|-------|----------|
 | 12. RAG Schema Foundation | 1/1 | ~5m | 5m |
 | 13. Hybrid Search + Reranking | 3/3 | ~18m | 6m |
-| 14. Gesetze-RAG | 0/TBD | - | - |
+| 14. Gesetze-RAG | 1/3 | ~2m | 2m |
 | 15. Normen-Verknüpfung in Akte | 0/TBD | - | - |
 | 16. PII-Filter | 0/TBD | - | - |
 | 17. Urteile-RAG | 0/TBD | - | - |
@@ -64,6 +64,9 @@ Recent decisions affecting v0.1:
 - [Phase 13-02]: chunkDocumentParentChild uses GERMAN_LEGAL_SEPARATORS for both parent (8000 chars) and child (2000 chars) splitters; global child index across all parents
 - [Phase 13-02]: PARENT rows stored with NULL embedding; chunkType != PARENT filter guards all 4 searchSimilar branches; insertChunks() preserved for STANDALONE pipeline until Plan 03
 - [Phase 13-03]: confidenceFlag 'low' not used for RRF — RRF scores (max ~0.016) not comparable to cosine threshold 0.3; any RRF result is 'ok'; bm25Limit:50 + vectorLimit:50 -> finalLimit:10 for wide candidate fusion
+- [Phase 14-01]: SHA cache stored in SystemSetting as JSON string via getSetting/updateSetting — setSettingTyped does not exist; use manual JSON.parse/stringify
+- [Phase 14-01]: upsertLawChunks uses DELETE+INSERT per row (not SQL UPSERT) for clean embedding replacement on model version change
+- [Phase 14-01]: searchLawChunks receives pre-computed queryEmbedding — ki-chat Chain D reuses Chain B embedding to avoid second Ollama call
 
 ### Pending Todos
 
@@ -85,5 +88,5 @@ Recent decisions affecting v0.1:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 13 complete (all 3 plans). Phase 14 (Gesetze-RAG) is next.
+Stopped at: Phase 14 Plan 01 complete. Phase 14 Plan 02 (gesetze-sync cron processor) is next.
 Resume file: None

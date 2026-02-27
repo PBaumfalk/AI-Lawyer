@@ -176,22 +176,19 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
   }, [fetchDocument]);
 
   // Poll for preview generation completion (non-PDF documents without a preview yet)
-  useEffect(() => {
-    if (
-      !dokument ||
-      dokument.mimeType === "application/pdf" ||
-      dokument.previewUrl
-    ) {
-      return;
-    }
-    // previewPfad is null => preview is still being generated, poll every 3s
-    if (dokument.previewPfad !== null) return;
+  const needsPreviewPoll =
+    !!dokument &&
+    dokument.mimeType !== "application/pdf" &&
+    !dokument.previewUrl &&
+    dokument.previewPfad === null;
 
+  useEffect(() => {
+    if (!needsPreviewPoll) return;
     const interval = setInterval(() => {
       fetchDocument();
     }, 3000);
     return () => clearInterval(interval);
-  }, [dokument, fetchDocument]);
+  }, [needsPreviewPoll, fetchDocument]);
 
   const handleRename = async () => {
     if (!renameValue.trim() || !dokument) return;

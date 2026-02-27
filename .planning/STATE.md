@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-27T00:26:49.571Z"
+last_updated: "2026-02-27T06:31:52Z"
 progress:
   total_phases: 4
   completed_phases: 4
@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 14 (Gesetze-RAG) — Plan 01 complete
+**Current focus:** v0.1 Helena RAG — Phase 14 (Gesetze-RAG) — Plan 03 complete — Phase COMPLETE
 
 ## Current Position
 
-Phase: 14 of 18 (Gesetze-RAG) — IN PROGRESS
-Plan: 1 of 3 complete
-Status: Phase 14 Plan 01 complete — Plan 02 (gesetze-sync cron processor) next
-Last activity: 2026-02-27 — Phase 14 Plan 01 complete: GitHub API client, Markdown parser, law_chunks ingestion/search library
+Phase: 14 of 18 (Gesetze-RAG) — COMPLETE
+Plan: 3 of 3 complete
+Status: Phase 14 complete — all 3 plans done. Phase 15 (Normen-Verknuepfung in Akte) is next.
+Last activity: 2026-02-27 — Phase 14 Plan 03 complete: ki-chat Chain D law_chunks parallel retrieval with shared embedding
 
 Progress: [██░░░░░░░░] ~10%
 
@@ -42,7 +42,7 @@ Progress: [██░░░░░░░░] ~10%
 |-------|-------|-------|----------|
 | 12. RAG Schema Foundation | 1/1 | ~5m | 5m |
 | 13. Hybrid Search + Reranking | 3/3 | ~18m | 6m |
-| 14. Gesetze-RAG | 1/3 | ~2m | 2m |
+| 14. Gesetze-RAG | 3/3 | ~4m | ~2m |
 | 15. Normen-Verknüpfung in Akte | 0/TBD | - | - |
 | 16. PII-Filter | 0/TBD | - | - |
 | 17. Urteile-RAG | 0/TBD | - | - |
@@ -67,6 +67,9 @@ Recent decisions affecting v0.1:
 - [Phase 14-01]: SHA cache stored in SystemSetting as JSON string via getSetting/updateSetting — setSettingTyped does not exist; use manual JSON.parse/stringify
 - [Phase 14-01]: upsertLawChunks uses DELETE+INSERT per row (not SQL UPSERT) for clean embedding replacement on model version change
 - [Phase 14-01]: searchLawChunks receives pre-computed queryEmbedding — ki-chat Chain D reuses Chain B embedding to avoid second Ollama call
+- [Phase 14-03]: queryEmbeddingPromise shared between Chain B and Chain D via Promise memoization — single Ollama call regardless of chain count
+- [Phase 14-03]: Chain D non-fatal — failure returns [] and Helena responds from hybridSearch; minScore:0.6 gates law chunk injection for non-legal queries
+- [Phase 14-03]: GESETZE-QUELLEN injected after ENDE QUELLEN — law context supplements document context; every Norm carries "nicht amtlich — Stand: [date] | Quelle: [url]"
 
 ### Pending Todos
 
@@ -88,5 +91,5 @@ Recent decisions affecting v0.1:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 14 Plan 01 complete. Phase 14 Plan 02 (gesetze-sync cron processor) is next.
+Stopped at: Phase 14 Plan 03 complete. Phase 14 COMPLETE. Phase 15 (Normen-Verknuepfung in Akte) is next.
 Resume file: None

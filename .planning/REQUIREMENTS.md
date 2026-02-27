@@ -17,7 +17,7 @@ Requirements für v0.1 Helena RAG. Jede Anforderung mapped auf eine Roadmap-Phas
 
 - [x] **GESETZ-01**: Bundesgesetze aus bundestag/gesetze GitHub-Repo in eigene `law_chunks`-Tabelle ingested (hierarchisch nach §/Absatz, Metadaten: gesetz, paragraf, absatz, stand, quelle_url); HNSW-Index auf embedding-Spalte
 - [x] **GESETZ-02**: Täglicher automatischer Sync (BullMQ cron 02:00 Europe/Berlin) — geänderte Dateien werden erkannt und re-indexiert; Encoding-Smoke-Test (§-Zeichen) als ersten Ingestion-Schritt
-- [ ] **GESETZ-03**: Helena retrievet automatisch Top-5 Normen-Chunks bei Anfragen mit Rechtsbezug; jede Norm wird mit "nicht amtlich — Stand: [Datum]"-Hinweis und Quellenlink zitiert
+- [x] **GESETZ-03**: Helena retrievet automatisch Top-5 Normen-Chunks bei Anfragen mit Rechtsbezug; jede Norm wird mit "nicht amtlich — Stand: [Datum]"-Hinweis und Quellenlink zitiert
 - [ ] **GESETZ-04**: Nutzer kann §§ strukturiert an Akte verknüpfen — Suchmodal über law_chunks, Hinzufügen mit optionaler Notiz, Anzeige als Chip-Liste in Akte-Detailseite; pinned Normen werden in Helenas System-Kontext für die Akte injiziert
 
 ### Urteile-RAG
@@ -84,7 +84,7 @@ Welche Phasen welche Anforderungen abdecken.
 | RAGQ-03 | Phase 13 | Complete |
 | GESETZ-01 | Phase 14 | Complete |
 | GESETZ-02 | Phase 14 | Complete |
-| GESETZ-03 | Phase 14 | Pending |
+| GESETZ-03 | Phase 14 | Complete |
 | GESETZ-04 | Phase 15 | Pending |
 | URTEIL-01 | Phase 17 | Pending |
 | URTEIL-02 | Phase 17 | Pending |

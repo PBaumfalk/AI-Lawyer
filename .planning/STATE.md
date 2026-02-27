@@ -22,25 +22,25 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 ## Current Position
 
-Phase: 20 of 26 (Agent Tools + ReAct Loop)
-Plan: 4 of 4 in current phase
-Status: Plan 20-03 complete, continuing Phase 20
-Last activity: 2026-02-27 — Completed 20-03 Guard, Classifier, Rate Limiter & Entry Point
+Phase: 20 of 26 (Agent Tools + ReAct Loop) -- COMPLETE
+Plan: 4 of 4 in current phase -- ALL DONE
+Status: Phase 20 complete, ready for Phase 21
+Last activity: 2026-02-27 — Completed 20-04 Tests for Tools + ReAct Loop
 
-Progress: [██░░░░░░░░] 25%
+Progress: [███░░░░░░░] 31%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 68 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 4/16
+- v0.2 plans: 5/16
 
 **By Phase (v0.2):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 19. Schema Foundation | 1/1 | 3min | 3min |
-| 20. Agent Tools + ReAct Loop | 3/4 | 17min | 5.7min |
+| 20. Agent Tools + ReAct Loop | 4/4 | 22min | 5.5min |
 | 21. @Helena Task-System | 0/2 | - | - |
 | 22. Schriftsatz Orchestrator | 0/2 | - | - |
 | 23. Draft-Approval Workflow | 0/2 | - | - |
@@ -76,6 +76,8 @@ Recent decisions affecting v0.2:
 - Fail-open rate limiter: allow requests when Redis unavailable, log warning
 - Auto-escalation capped at 1 retry to prevent infinite loops on stall
 - Model name prefix convention (gpt*/claude* -> cloud) for tier-specific provider routing
+- ioredis mock uses class pattern (not vi.fn) for new Redis() constructor compatibility in vitest
+- generateText mock uses swappable generateTextMockImpl variable for per-test LLM behavior control
 
 ### Pending Todos
 
@@ -93,5 +95,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 20-03-PLAN.md (Guard, Classifier, Rate Limiter & Entry Point). Phase 20 in progress (3/4 plans).
+Stopped at: Completed 20-04-PLAN.md (Tests for Tools + ReAct Loop). Phase 20 complete (4/4 plans).
 Resume file: None

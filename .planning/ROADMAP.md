@@ -66,7 +66,7 @@ See: `milestones/v0.1-ROADMAP.md` for full phase details.
 **Milestone Goal:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, @-Tagging Task-System, Draft-Approval-Workflow, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail. Akte-Detail wird zum Activity Feed.
 
 - [x] **Phase 19: Schema Foundation** - Prisma models for HelenaTask, HelenaDraft, HelenaAlert, HelenaMemory, AktenActivity (completed 2026-02-27)
-- [ ] **Phase 20: Agent Tools + ReAct Loop** - Shared tool library (9 read + 5 write) and bounded ReAct agent loop with safeguards
+- [x] **Phase 20: Agent Tools + ReAct Loop** - Shared tool library (9 read + 5 write) and bounded ReAct agent loop with safeguards (completed 2026-02-27)
 - [ ] **Phase 21: @Helena Task-System** - @-mention parsing, HelenaTask queue, BullMQ worker, task lifecycle
 - [ ] **Phase 22: Deterministic Schriftsatz Orchestrator** - Intent-Router, Slot-Filling, SchriftsatzSchema, RAG Assembly, ERV-Validator
 - [ ] **Phase 23: Draft-Approval Workflow** - HelenaDraft lifecycle, ENTWURF Prisma middleware gate, accept/reject/edit with feedback
@@ -213,7 +213,7 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 + 24 + 25 (parallel-eligible after 20, 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 19. Schema Foundation | 1/1 | Complete    | 2026-02-27 | - |
-| 20. Agent Tools + ReAct Loop | 3/4 | In Progress|  | - |
+| 20. Agent Tools + ReAct Loop | 4/4 | Complete   | 2026-02-27 | - |
 | 21. @Helena Task-System | v0.2 | 0/2 | Not started | - |
 | 22. Schriftsatz Orchestrator | v0.2 | 0/2 | Not started | - |
 | 23. Draft-Approval Workflow | v0.2 | 0/2 | Not started | - |

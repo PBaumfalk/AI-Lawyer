@@ -146,6 +146,17 @@ export const nerPiiQueue = new Queue("ner-pii", {
   },
 });
 
+/** Urteile-sync queue for daily BMJ federal courts RSS ingestion cron */
+export const urteileSyncQueue = new Queue("urteile-sync", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: "custom" },
+    removeOnComplete: { age: 86_400 },   // 24h
+    removeOnFail: { age: 604_800 },      // 7 days
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
 export const ALL_QUEUES: Queue[] = [
   testQueue,
@@ -160,6 +171,7 @@ export const ALL_QUEUES: Queue[] = [
   aiProactiveQueue,
   gesetzeSyncQueue,
   nerPiiQueue,
+  urteileSyncQueue,
 ];
 
 /**
@@ -256,6 +268,33 @@ export async function registerGesetzeSyncJob(
     },
     {
       name: "sync-gesetze",
+      data: {},
+      opts: {
+        removeOnComplete: { count: 10 },
+        removeOnFail: { count: 20 },
+      },
+    }
+  );
+}
+
+/**
+ * Register the daily Urteile sync cron job.
+ * Uses upsertJobScheduler for idempotent (re)registration.
+ * Runs at 03:00 Europe/Berlin — one hour after Gesetze sync at 02:00.
+ *
+ * @param cronPattern - Cron expression (default: "0 3 * * *" = 03:00 daily)
+ */
+export async function registerUrteileSyncJob(
+  cronPattern = "0 3 * * *"
+): Promise<void> {
+  await urteileSyncQueue.upsertJobScheduler(
+    "urteile-sync-daily",
+    {
+      pattern: cronPattern,
+      tz: "Europe/Berlin",
+    },
+    {
+      name: "sync-urteile",
       data: {},
       opts: {
         removeOnComplete: { count: 10 },

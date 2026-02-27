@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
-import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, ocrQueue } from "@/lib/queue/queues";
+import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerUrteileSyncJob, ocrQueue } from "@/lib/queue/queues";
 import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.processor";
 import { processFristReminders } from "@/workers/processors/frist-reminder";
 import { initializeDefaults, getSettingTyped } from "@/lib/settings/service";
@@ -19,6 +19,7 @@ import { processBriefing, type BriefingJobData } from "@/lib/ai/briefing-process
 import { processProactive, type ProactiveJobData } from "@/lib/ai/proactive-processor";
 import { processGesetzeSyncJob } from "@/lib/queue/processors/gesetze-sync.processor";
 import { processNerPiiJob, type NerPiiJobData, recoverStuckNerJobs } from "@/lib/queue/processors/ner-pii.processor";
+import { processUrteileSyncJob } from "@/lib/queue/processors/urteile-sync.processor";
 import { prisma } from "@/lib/db";
 
 const log = createLogger("worker");
@@ -596,6 +597,43 @@ nerPiiWorker.on("error", (err) => {
 workers.push(nerPiiWorker);
 log.info("[Worker] ner-pii processor registered");
 
+// ─── Urteile-Sync Queue Worker ───────────────────────────────────────────────
+
+const urteileSyncWorker = new Worker(
+  "urteile-sync",
+  async () => processUrteileSyncJob(),
+  {
+    connection,
+    concurrency: 1, // Sequential sync — avoids Ollama contention during NER+embedding
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+urteileSyncWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, result: job.returnvalue },
+    "[Worker] urteile-sync job completed"
+  );
+});
+
+urteileSyncWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job?.id, err: err.message, attemptsMade: job.attemptsMade },
+    "[Worker] urteile-sync job failed"
+  );
+});
+
+urteileSyncWorker.on("error", (err) => {
+  log.error({ err }, "[Worker] urteile-sync worker error");
+});
+
+workers.push(urteileSyncWorker);
+log.info("[Worker] urteile-sync processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -723,6 +761,14 @@ async function startup() {
     log.warn({ err }, "Failed to register Gesetze sync job (non-fatal)");
   }
 
+  // Register daily Urteile sync cron job (03:00 — one hour after Gesetze sync)
+  try {
+    await registerUrteileSyncJob();
+    log.info("Urteile sync job registered (03:00 Europe/Berlin daily)");
+  } catch (err) {
+    log.warn({ err }, "Failed to register Urteile sync job (non-fatal)");
+  }
+
   // Recover any Muster rows stuck in NER_RUNNING from a previous crashed worker
   try {
     await recoverStuckNerJobs();
@@ -780,6 +826,7 @@ async function startup() {
         "test", "frist-reminder", "email-send", "email-sync",
         "document-ocr", "document-preview", "document-embedding",
         "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync", "ner-pii",
+        "urteile-sync",
       ],
       fristScanZeit: scanZeit,
     },

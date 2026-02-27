@@ -213,7 +213,7 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 + 24 + 25 (parallel-eligible after 20, 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 19. Schema Foundation | 1/1 | Complete    | 2026-02-27 | - |
-| 20. Agent Tools + ReAct Loop | v0.2 | 0/4 | Not started | - |
+| 20. Agent Tools + ReAct Loop | 1/4 | In Progress|  | - |
 | 21. @Helena Task-System | v0.2 | 0/2 | Not started | - |
 | 22. Schriftsatz Orchestrator | v0.2 | 0/2 | Not started | - |
 | 23. Draft-Approval Workflow | v0.2 | 0/2 | Not started | - |

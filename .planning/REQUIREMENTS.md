@@ -28,14 +28,14 @@
 ### Task-System (TASK)
 
 - [ ] **TASK-01**: @Helena-Tagging in Notiz/Kommentar-Feldern wird als HelenaTask geparst und in die Queue eingestellt
-- [ ] **TASK-02**: HelenaTask Prisma-Modell mit Status-Flow (PENDING → RUNNING → DONE / FAILED / WAITING_APPROVAL)
+- [x] **TASK-02**: HelenaTask Prisma-Modell mit Status-Flow (PENDING → RUNNING → DONE / FAILED / WAITING_APPROVAL)
 - [ ] **TASK-03**: HelenaTask speichert vollständigen Agent-Trace (Gedanken + Tool-Aufrufe als JSON steps[])
 - [ ] **TASK-04**: Task-Prioritäten (1-10) mit höherer Priorität für manuell zugewiesene Tasks vs Background-Scanner
 - [ ] **TASK-05**: Task-Abbruch via UI setzt Status auf ABGEBROCHEN — Agent-Loop prüft zwischen Steps
 
 ### Draft-Approval (DRFT)
 
-- [ ] **DRFT-01**: HelenaDraft Prisma-Modell (PENDING → ACCEPTED / REJECTED / EDITED) mit Typ (DOKUMENT, FRIST, NOTIZ, ALERT)
+- [x] **DRFT-01**: HelenaDraft Prisma-Modell (PENDING → ACCEPTED / REJECTED / EDITED) mit Typ (DOKUMENT, FRIST, NOTIZ, ALERT)
 - [ ] **DRFT-02**: ENTWURF-Gate auf Prisma-Middleware-Ebene: Helena-erstellte Dokumente können nie status!=ENTWURF haben (BRAK 2025 / BRAO §43)
 - [ ] **DRFT-03**: Draft-Anzeige im Akte-Feed visuell markiert ("Helena-Entwurf · ausstehend") mit Accept/Reject/Edit Buttons
 - [ ] **DRFT-04**: Bei Ablehnung: Feedback-Feld wird in Helena-Kontext gespeichert (Lerneffekt für zukünftige Entwürfe)
@@ -53,7 +53,7 @@
 
 ### Alert-System (ALRT)
 
-- [ ] **ALRT-01**: HelenaAlert Prisma-Modell mit 6 Typen (FRIST_KRITISCH, AKTE_INAKTIV, BETEILIGTE_FEHLEN, DOKUMENT_FEHLT, WIDERSPRUCH, NEUES_URTEIL)
+- [x] **ALRT-01**: HelenaAlert Prisma-Modell mit 6 Typen (FRIST_KRITISCH, AKTE_INAKTIV, BETEILIGTE_FEHLEN, DOKUMENT_FEHLT, WIDERSPRUCH, NEUES_URTEIL)
 - [ ] **ALRT-02**: Alert-Center im Dashboard mit Filter nach Typ, Akte, Priorität und Gelesen/Ungelesen
 - [ ] **ALRT-03**: Alerts erscheinen im Akte-Feed als Helena-Event (visuell differenziert von manuellen Einträgen)
 - [ ] **ALRT-04**: Alert-Deduplizierung: gleicher Alert-Typ + gleiche Akte innerhalb 24h wird nicht doppelt erzeugt
@@ -61,7 +61,7 @@
 
 ### Helena Memory (MEM)
 
-- [ ] **MEM-01**: Per-Akte Helena-Kontext (Zusammenfassung, erkannte Risiken, nächste Schritte, offene Fragen, relevante Normen/Urteile)
+- [x] **MEM-01**: Per-Akte Helena-Kontext (Zusammenfassung, erkannte Risiken, nächste Schritte, offene Fragen, relevante Normen/Urteile)
 - [ ] **MEM-02**: Memory wird bei jedem Helena-Aufruf in dieser Akte als Kontext geladen ("Helena erinnert sich")
 - [ ] **MEM-03**: Automatischer Memory-Refresh wenn Akte seit letztem Scan verändert wurde (neues Dokument, neue Frist etc.)
 - [ ] **MEM-04**: DSGVO-konform: Memory-Einträge werden bei Akten-Löschung kaskadierend gelöscht (Art. 17 DSGVO)
@@ -127,11 +127,11 @@
 | ORCH-06 | Phase 22 | Pending |
 | ORCH-07 | Phase 22 | Pending |
 | TASK-01 | Phase 21 | Pending |
-| TASK-02 | Phase 19 | Pending |
+| TASK-02 | Phase 19 | Complete |
 | TASK-03 | Phase 21 | Pending |
 | TASK-04 | Phase 21 | Pending |
 | TASK-05 | Phase 21 | Pending |
-| DRFT-01 | Phase 19 | Pending |
+| DRFT-01 | Phase 19 | Complete |
 | DRFT-02 | Phase 23 | Pending |
 | DRFT-03 | Phase 23 | Pending |
 | DRFT-04 | Phase 23 | Pending |
@@ -143,12 +143,12 @@
 | SCAN-04 | Phase 24 | Pending |
 | SCAN-05 | Phase 24 | Pending |
 | SCAN-06 | Phase 24 | Pending |
-| ALRT-01 | Phase 19 | Pending |
+| ALRT-01 | Phase 19 | Complete |
 | ALRT-02 | Phase 24 | Pending |
 | ALRT-03 | Phase 24 | Pending |
 | ALRT-04 | Phase 24 | Pending |
 | ALRT-05 | Phase 24 | Pending |
-| MEM-01 | Phase 19 | Pending |
+| MEM-01 | Phase 19 | Complete |
 | MEM-02 | Phase 25 | Pending |
 | MEM-03 | Phase 25 | Pending |
 | MEM-04 | Phase 25 | Pending |

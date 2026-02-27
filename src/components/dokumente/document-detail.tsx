@@ -175,6 +175,24 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
     fetchDocument();
   }, [fetchDocument]);
 
+  // Poll for preview generation completion (non-PDF documents without a preview yet)
+  useEffect(() => {
+    if (
+      !dokument ||
+      dokument.mimeType === "application/pdf" ||
+      dokument.previewUrl
+    ) {
+      return;
+    }
+    // previewPfad is null => preview is still being generated, poll every 3s
+    if (dokument.previewPfad !== null) return;
+
+    const interval = setInterval(() => {
+      fetchDocument();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [dokument, fetchDocument]);
+
   const handleRename = async () => {
     if (!renameValue.trim() || !dokument) return;
     try {
@@ -336,9 +354,34 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                       In OnlyOffice bearbeiten
                     </Button>
                   </Link>
-                  <span className="text-xs text-blue-600 dark:text-blue-400">
-                    {getMimeLabel(dokument.mimeType)}-Datei - Vorschau als PDF
-                  </span>
+                  {!hasPdfPreview && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700"
+                      onClick={async () => {
+                        // Trigger a re-check / manual preview generation via the preview endpoint
+                        try {
+                          const res = await fetch(`/api/dokumente/${dokument.id}/preview`);
+                          const data = await res.json();
+                          if (data.url) {
+                            // Preview is ready now, refresh
+                            fetchDocument();
+                          }
+                        } catch {
+                          // ignore
+                        }
+                      }}
+                    >
+                      <FileText className="w-3.5 h-3.5 mr-1" />
+                      {getMimeLabel(dokument.mimeType)}-Datei - Vorschau als PDF
+                    </Button>
+                  )}
+                  {hasPdfPreview && (
+                    <span className="text-xs text-blue-600 dark:text-blue-400">
+                      {getMimeLabel(dokument.mimeType)}-Datei - Vorschau als PDF
+                    </span>
+                  )}
                 </div>
               )}
 

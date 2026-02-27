@@ -17,13 +17,13 @@
 
 ### Orchestrator (ORCH)
 
-- [ ] **ORCH-01**: Deterministic Schriftsatz-Orchestrator mit festem Ablauf: Intent-Erkennung → Slot-Filling → RAG-Retrieval → Output-Assembly → ERV-Validator
+- [x] **ORCH-01**: Deterministic Schriftsatz-Orchestrator mit festem Ablauf: Intent-Erkennung → Slot-Filling → RAG-Retrieval → Output-Assembly → ERV-Validator
 - [x] **ORCH-02**: Intent-Router erkennt Klageart, Stadium, Gerichtszweig aus Nutzeranfrage (KSchG-Klage, Mahnung, EV-Antrag, etc.)
 - [x] **ORCH-03**: SchriftsatzSchema als Zod-typisiertes Zwischenformat (Rubrum, Anträge, Sachverhalt, Rechtliche Würdigung, Beweisangebote, Anlagen, Kosten, Formales)
 - [x] **ORCH-04**: Slot-Filling mit automatischer Rückfrage bei fehlenden Pflichtfeldern (Kläger, Beklagter, Kündigungsdatum etc.)
-- [ ] **ORCH-05**: Einheitlicher Platzhalter-Standard über alle Muster und Output ({{Kläger_Name}}, {{Streitwert_EUR}} etc.)
-- [ ] **ORCH-06**: ERV/beA-Validator als letzter Schritt mit warnungen[] (PDF/A, Signaturpflicht, Dateigrößen-Limits)
-- [ ] **ORCH-07**: Jeder Schriftsatz-Entwurf enthält retrieval_belege[] (welche Chunks genutzt wurden — Audit-Trail)
+- [x] **ORCH-05**: Einheitlicher Platzhalter-Standard über alle Muster und Output ({{Kläger_Name}}, {{Streitwert_EUR}} etc.)
+- [x] **ORCH-06**: ERV/beA-Validator als letzter Schritt mit warnungen[] (PDF/A, Signaturpflicht, Dateigrößen-Limits)
+- [x] **ORCH-07**: Jeder Schriftsatz-Entwurf enthält retrieval_belege[] (welche Chunks genutzt wurden — Audit-Trail)
 
 ### Task-System (TASK)
 
@@ -119,13 +119,13 @@
 | AGNT-05 | Phase 20 | Complete |
 | AGNT-06 | Phase 20 | Complete |
 | AGNT-07 | Phase 21 | Complete |
-| ORCH-01 | Phase 22 | Pending |
+| ORCH-01 | Phase 22 | Complete |
 | ORCH-02 | Phase 22 | Complete |
 | ORCH-03 | Phase 22 | Complete |
 | ORCH-04 | Phase 22 | Complete |
-| ORCH-05 | Phase 22 | Pending |
-| ORCH-06 | Phase 22 | Pending |
-| ORCH-07 | Phase 22 | Pending |
+| ORCH-05 | Phase 22 | Complete |
+| ORCH-06 | Phase 22 | Complete |
+| ORCH-07 | Phase 22 | Complete |
 | TASK-01 | Phase 21 | Complete |
 | TASK-02 | Phase 19 | Complete |
 | TASK-03 | Phase 21 | Complete |

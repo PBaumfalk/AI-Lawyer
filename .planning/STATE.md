@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena Agent
 status: unknown
-last_updated: "2026-02-27T19:55:15.000Z"
+last_updated: "2026-02-27T20:06:09.000Z"
 progress:
   total_phases: 13
-  completed_phases: 12
+  completed_phases: 13
   total_plans: 36
-  completed_plans: 37
+  completed_plans: 38
 ---
 
 # Project State
@@ -22,18 +22,18 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 ## Current Position
 
-Phase: 22 of 26 (Schriftsatz Orchestrator)
-Plan: 1 of 2 in current phase
-Status: Phase 22 Plan 01 complete, ready for Plan 02
-Last activity: 2026-02-27 — Completed 22-01 SchriftsatzSchema + Intent Router + Slot Filler
+Phase: 23 of 26 (Draft-Approval Workflow)
+Plan: 0 of 2 in current phase
+Status: Phase 22 complete, ready for Phase 23
+Last activity: 2026-02-27 — Completed 22-02 RAG Assembly + ERV Validator + Pipeline Orchestrator
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 56%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 70 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 8/16
+- Total plans completed: 71 (v3.4: 38 + v3.5: 10 + v0.1: 19)
+- v0.2 plans: 9/16
 
 **By Phase (v0.2):**
 
@@ -42,7 +42,7 @@ Progress: [█████░░░░░] 50%
 | 19. Schema Foundation | 1/1 | 3min | 3min |
 | 20. Agent Tools + ReAct Loop | 4/4 | 22min | 5.5min |
 | 21. @Helena Task-System | 2/2 | 6min | 3min |
-| 22. Schriftsatz Orchestrator | 1/2 | 6min | 6min |
+| 22. Schriftsatz Orchestrator | 2/2 | 14min | 7min |
 | 23. Draft-Approval Workflow | 0/2 | - | - |
 | 24. Scanner + Alerts | 0/2 | - | - |
 | 25. Helena Memory | 0/1 | - | - |
@@ -89,6 +89,12 @@ Recent decisions affecting v0.2:
 - {{UPPER_SNAKE_CASE}} is the unified Platzhalter standard for all Schriftsatz output
 - Akte pre-fill populates all alias slots (PARTEI_A, ANTRAGSTELLER, BERUFUNGSKLAEGER, ABSENDER) from mandant/gegner
 - Abmahnung has custom section config (aussergerichtlich nature, no beweisangebote/anlagen/kosten)
+- ERV-Validator never hard-blocks draft creation -- warnings only, sorted by severity (KRITISCH/WARNUNG/INFO)
+- RAG context capped at 4000 chars per section to keep LLM prompts manageable
+- isSchriftsatzIntent is a fast heuristic (no LLM) -- pattern matching on filing terms + action verbs
+- Pipeline stores SchriftsatzSchema as HelenaDraft.meta JSON for downstream processing
+- Schriftsatz routing is an early return in runHelenaAgent -- ReAct code path completely untouched
+- computeGkgFee * 3 for Klageverfahren court costs in Kosten section
 
 ### Pending Todos
 
@@ -106,5 +112,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 22-01-PLAN.md (SchriftsatzSchema + Intent Router + Slot Filler)
-Resume file: .planning/phases/22-deterministic-schriftsatz-orchestrator/22-01-SUMMARY.md
+Stopped at: Completed 22-02-PLAN.md (RAG Assembly + ERV Validator + Pipeline Orchestrator) -- Phase 22 complete
+Resume file: .planning/phases/22-deterministic-schriftsatz-orchestrator/22-02-SUMMARY.md

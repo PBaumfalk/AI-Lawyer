@@ -68,7 +68,7 @@ See: `milestones/v0.1-ROADMAP.md` for full phase details.
 - [x] **Phase 19: Schema Foundation** - Prisma models for HelenaTask, HelenaDraft, HelenaAlert, HelenaMemory, AktenActivity (completed 2026-02-27)
 - [x] **Phase 20: Agent Tools + ReAct Loop** - Shared tool library (9 read + 5 write) and bounded ReAct agent loop with safeguards (completed 2026-02-27)
 - [x] **Phase 21: @Helena Task-System** - @-mention parsing, HelenaTask queue, BullMQ worker, task lifecycle (completed 2026-02-27)
-- [ ] **Phase 22: Deterministic Schriftsatz Orchestrator** - Intent-Router, Slot-Filling, SchriftsatzSchema, RAG Assembly, ERV-Validator
+- [x] **Phase 22: Deterministic Schriftsatz Orchestrator** - Intent-Router, Slot-Filling, SchriftsatzSchema, RAG Assembly, ERV-Validator (completed 2026-02-27)
 - [ ] **Phase 23: Draft-Approval Workflow** - HelenaDraft lifecycle, ENTWURF Prisma middleware gate, accept/reject/edit with feedback
 - [ ] **Phase 24: Scanner + Alerts** - Background scanner cron, 6 alert types, deduplication, alert-center, Socket.IO push
 - [ ] **Phase 25: Helena Memory** - Per-Akte context storage, auto-refresh, DSGVO cascade delete
@@ -215,7 +215,7 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 + 24 + 25 (parallel-eligible after 20, 
 | 19. Schema Foundation | 1/1 | Complete    | 2026-02-27 | - |
 | 20. Agent Tools + ReAct Loop | 4/4 | Complete    | 2026-02-27 | - |
 | 21. @Helena Task-System | 2/2 | Complete    | 2026-02-27 | - |
-| 22. Schriftsatz Orchestrator | 1/2 | In Progress|  | - |
+| 22. Schriftsatz Orchestrator | 2/2 | Complete   | 2026-02-27 | - |
 | 23. Draft-Approval Workflow | v0.2 | 0/2 | Not started | - |
 | 24. Scanner + Alerts | v0.2 | 0/2 | Not started | - |
 | 25. Helena Memory | v0.2 | 0/1 | Not started | - |

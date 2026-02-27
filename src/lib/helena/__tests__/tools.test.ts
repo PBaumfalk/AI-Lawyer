@@ -638,9 +638,9 @@ describe("token-budget", () => {
       { role: "system", content: "System prompt" },
       { role: "user", content: "First user message" },
       { role: "assistant", content: "Response 1" },
-      { role: "tool", content: "A".repeat(5000) }, // Large tool result
+      { role: "tool", content: [{ type: "tool-result", toolCallId: "t1", toolName: "test", result: "A".repeat(5000) }] } as CoreMessage, // Large tool result
       { role: "assistant", content: "Response 2" },
-      { role: "tool", content: "B".repeat(5000) }, // Large tool result
+      { role: "tool", content: [{ type: "tool-result", toolCallId: "t2", toolName: "test", result: "B".repeat(5000) }] } as CoreMessage, // Large tool result
       { role: "user", content: "Second user message" },
     ];
 
@@ -657,9 +657,9 @@ describe("token-budget", () => {
       { role: "system", content: "System" },
       { role: "user", content: "Question" },
       { role: "assistant", content: "Let me look..." },
-      { role: "tool", content: "X".repeat(10000) },
+      { role: "tool", content: [{ type: "tool-result", toolCallId: "t1", toolName: "test", result: "X".repeat(10000) }] } as CoreMessage,
       { role: "assistant", content: "More analysis..." },
-      { role: "tool", content: "Y".repeat(10000) },
+      { role: "tool", content: [{ type: "tool-result", toolCallId: "t2", toolName: "test", result: "Y".repeat(10000) }] } as CoreMessage,
       { role: "user", content: "Last question" },
     ];
 

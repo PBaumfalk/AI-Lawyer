@@ -511,9 +511,9 @@ describe("runAgent - token budget", () => {
       { role: "system", content: "System prompt" },
       { role: "user", content: "Initial question" },
       { role: "assistant", content: "A".repeat(30000) },
-      { role: "tool", content: "B".repeat(30000) },
+      { role: "tool", content: [{ type: "tool-result", toolCallId: "t1", toolName: "test", result: "B".repeat(30000) }] } as CoreMessage,
       { role: "assistant", content: "C".repeat(30000) },
-      { role: "tool", content: "D".repeat(30000) },
+      { role: "tool", content: [{ type: "tool-result", toolCallId: "t2", toolName: "test", result: "D".repeat(30000) }] } as CoreMessage,
       { role: "user", content: "Follow-up" },
     ];
 

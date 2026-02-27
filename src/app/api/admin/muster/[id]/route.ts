@@ -31,7 +31,7 @@ import { nerPiiQueue } from "@/lib/queue/queues";
  */
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user) {
@@ -41,7 +41,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 });
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   try {
     // Load Muster to get minioKey before deletion
@@ -83,7 +83,7 @@ export async function DELETE(
  */
 export async function PATCH(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user) {
@@ -93,7 +93,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 });
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const muster = await prisma.muster.findUnique({

@@ -98,6 +98,53 @@
 
 ---
 
+## Milestone: v0.1 — Helena RAG
+
+**Shipped:** 2026-02-27
+**Phases:** 7 (12–18) | **Plans:** 19 | **Commits:** 243
+
+### What Was Built
+- Hybrid Search via RRF (Meilisearch BM25 + pgvector cosine, k=60, N=50) + Cross-Encoder Reranking (Ollama, top-50 → top-10, 3s timeout fallback) — all ki-chat retrievals upgraded
+- Parent-Child Chunking: 500-token retrieval chunks linked to 2000-token context chunks via self-referential Prisma relation + ChunkType enum
+- Gesetze-RAG: bundestag/gesetze GitHub Sync → law_chunks (HNSW), daily BullMQ cron at 02:00, encoding smoke test, Helena Chain D with "nicht amtlich" disclaimer
+- §§-Verknüpfung in Akte: NormenSection UI (search modal + chip-list), AkteNorm API routes, ki-chat Chain A (pinned normen at highest system prompt priority)
+- NER PII-Filter: Ollama few-shot (5+ German legal examples) + institution whitelist (20+ regex patterns), state machine PENDING_NER → NER_RUNNING → INDEXED | REJECTED_PII_DETECTED
+- Urteile-RAG: 7 BMJ RSS feeds → urteil_chunks with double PII gate (inline + query-time), daily BAG incremental sync via GUID cache, ki-chat Chain E (kein LLM-generiertes AZ)
+- Muster-RAG + Admin UI: amtliche Formulare with {{PLATZHALTER}}, /admin/muster upload (MinIO), async NER via BullMQ, 1.3× kanzlei boost, ki-chat Chain F (ENTWURF Schriftsätze)
+
+### What Worked
+- **6-chain parallel ki-chat:** All chains (A=pinned normen, B=hybrid search, C=model config, D=gesetze, E=urteile, F=muster) launch as independent async IIFEs, collected by a single Promise.all — zero blocking, shared queryEmbedding generated once
+- **Double PII gate pattern for Urteile:** Inline `runNerFilter()` before INSERT + `piiFiltered=true` query filter — two independent gates, neither is a single point of failure
+- **Integration checker caught a real bug:** The `params` not awaited pattern in admin/muster/[id]/route.ts was missed by phase verification but caught by the integration checker — demonstrating the value of cross-phase wiring analysis
+- **Inline NER for Urteile, BullMQ NER for Muster:** The two-track approach (synchronous for per-item pipeline, async state machine for user-uploaded files) was architecturally correct for each use case
+- **HNSW indexes via manual SQL:** Follows the existing `manual_pgvector_index.sql` pattern — Prisma doesn't generate HNSW DDL, manual-sql approach is consistent and clean
+
+### What Was Inefficient
+- **Phase 12 SUMMARY missing `requirements_completed` field:** The one SUMMARY without this field (12-01) caused a "partial" flag in the 3-source cross-reference, requiring manual verification. Cost: minor audit friction.
+- **processUrteilNer() dead code:** Phase 16 created a BullMQ dispatch path for Urteil NER that Phase 17 never uses (it went inline). Planning didn't coordinate this cross-phase decision. Dead code should be removed.
+- **adhoc-bugfixes session mid-milestone:** Reasoning UI + multiple bugfixes were done in an ad-hoc session outside the GSD phase structure — valuable work but context saved only in .continue-here.md, not in SUMMARY/VERIFICATION artifacts.
+
+### Patterns Established
+- **6-chain parallel ki-chat:** Pattern for adding additional knowledge source = new `ChainXPromise` IIFE + await in Promise.all + system prompt injection block. Zero changes to other chains.
+- **Double PII gate:** Inline NER before INSERT + query-time piiFiltered/nerStatus filter on retrieval — defense in depth for DSGVO compliance.
+- **RSS incremental sync with GUID cache:** `loadGuidCache/saveGuidCache` via SystemSetting — idempotent, avoids re-processing seen items. Reusable for any RSS-based sync.
+- **seedAmtlicheFormulare() at worker startup with SystemSetting guard:** One-time idempotent seed without cron complexity. Apply to any hardcoded dataset.
+- **Next.js 15 params Promise:** Always `const { id } = await params;` for dynamic route params. Sync access returns undefined in Next.js 15 App Router.
+
+### Key Lessons
+1. **Integration checker is essential.** Phase-level verification passed for ARBW-02 but the cross-phase params issue was only caught by the integration checker. Always run it.
+2. **Coordinate cross-phase implementation decisions during planning.** The processUrteilNer dead code resulted from Phase 16 and Phase 17 independently choosing different NER approaches. A brief inter-phase planning note would have prevented this.
+3. **SUMMARY frontmatter quality matters.** Missing `requirements_completed` in even one SUMMARY creates audit friction. Standardize this field across all plans.
+4. **LLM-as-reranker is validated for legal RAG.** qwen3.5:35b as cross-encoder (not dedicated Qwen3-Reranker-4B) works well — 3s timeout fallback prevents latency blowup.
+5. **Double PII gating is the right DSGVO pattern.** The overhead of two checks is negligible; the protection against silent indexing of PII is non-negotiable for §43a BRAO compliance.
+
+### Cost Observations
+- Model mix: ~35% opus (execution/integration), ~55% sonnet (planning/research), ~10% haiku (extraction)
+- Sessions: ~8 sessions across 2 days
+- Notable: Integration checker (gsd-integration-checker) found the ARBW-02 defect that phase verifiers missed — strong ROI for cross-phase wiring analysis
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -106,6 +153,7 @@
 |-----------|----------|--------|-------|------------|
 | v3.4 | ~15 | 13 | 38 | First milestone with GSD workflow; gap-closure phases proved effective |
 | v3.5 | ~5 | 2 | 10 | Design-token-first approach; scope reduction should happen at requirements time |
+| v0.1 | ~8 | 7 | 19 | 6-chain parallel ki-chat; integration checker caught cross-phase bug missed by phase verifiers |
 
 ### Cumulative Quality
 
@@ -113,11 +161,14 @@
 |-----------|-------|-------------|-------------|-----------------|
 | v3.4 | 207+ (Frist + RVG) | 64/64 | 7 | 5 (non-blocking) |
 | v3.5 | 207+ (unchanged) | 5/18 shipped (13 deferred) | 1 | 2 (font-heading, .glass alias — non-blocking) |
+| v0.1 | 207+ (unchanged) | 16/16 | 1 (+ integration check) | 2 (processUrteilNer dead code, NER attempts:1) |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. Plan integration wiring explicitly — gap-closure phases are effective but reactive
 2. Audit incrementally rather than only at milestone boundary
-3. Prisma schema as source of truth scales well across 60+ models
+3. Prisma schema as source of truth scales well across 65+ models
 4. Scope decisions belong at requirements time — mid-milestone removals create audit noise
 5. Design-token-first: define tokens before migrating components — makes page migrations mechanical
+6. Integration checker is non-negotiable — phase-level verification misses cross-phase wiring defects
+7. Coordinate cross-phase implementation decisions during planning — prevents dead code from independent choices

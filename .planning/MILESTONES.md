@@ -70,3 +70,34 @@
 
 ---
 
+
+## v0.1 Helena RAG (Shipped: 2026-02-27)
+
+**Delivered:** Helena erhält drei strukturierte Wissensquellen (Gesetze, Urteile, Schriftsatzmuster) und ein NotebookLM-qualitatives Retrieval via Hybrid Search + Cross-Encoder Reranking — alle 16 RAG-Anforderungen erfüllt, 19 Pläne in 2 Tagen.
+
+**Phases:** 7 (12–18)
+**Plans:** 19 completed
+**Lines of Code:** ~97,400 LOC TypeScript
+**Commits:** 243
+**Git range:** `feat(12-01)` → `feat(18-03)`
+**Timeline:** 2026-02-26 → 2026-02-27 (2 days)
+
+**Key accomplishments:**
+1. Hybrid Search via Reciprocal Rank Fusion (BM25 + pgvector, k=60, N=50) + Cross-Encoder Reranking via Ollama (top-50 → top-10, 3s timeout fallback) — Helena retrieves substantively better context
+2. Bundesgesetze-RAG: bundestag/gesetze GitHub-Sync in law_chunks, täglicher BullMQ-Cron 02:00, Encoding-Smoke-Test; Helena zitiert §§ mit "nicht amtlich"-Disclaimer und Quellenlink
+3. §§-Verknüpfung in Akte: Suchmodal über law_chunks, Chip-Liste in Akte-Detailseite, pinned Normen als höchste Priorität in Helenas System-Kontext (Chain A)
+4. NER PII-Filter via Ollama (5+ Few-Shot, Institution-Whitelist mit 20+ Patterns): Status-Machine PENDING_NER → NER_RUNNING → INDEXED | REJECTED_PII_DETECTED — kein Bypass-Pfad
+5. Urteile-RAG: 7 BMJ-Bundesgerichts-RSS-Feeds in urteil_chunks, inline PII-Gate + doppelte piiFiltered-Query-Filter-Invariante, täglicher inkrementeller BAG-Sync, Helena zitiert nur aus DB (kein LLM-generiertes AZ)
+6. Muster-RAG + Admin Upload UI: amtliche Formulare mit {{PLATZHALTER}} in muster_chunks, Admin-UI /admin/muster (MinIO-Upload, NER-Status-Badge, Retry), 1.3× Kanzlei-Boost, Helena erstellt ENTWURF-Schriftsätze mit Rubrum/Anträge/Begründung
+
+**Tech debt (non-blocking):**
+- `processUrteilNer()` in ner-pii.processor.ts ist dead code — Phase 17 nutzt inline `runNerFilter()` stattdessen
+- NER queue `attempts:1` — Ollama-Timeout erfordert manuellen "Erneut prüfen"-Klick
+
+**Archives:**
+- `milestones/v0.1-ROADMAP.md`
+- `milestones/v0.1-REQUIREMENTS.md`
+- `milestones/v0.1-MILESTONE-AUDIT.md`
+
+---
+

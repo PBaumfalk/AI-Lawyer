@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-27T11:04:03.097Z"
+last_updated: "2026-02-27T11:22:16.187Z"
 progress:
   total_phases: 10
   completed_phases: 9

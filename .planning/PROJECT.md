@@ -125,41 +125,31 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - ✓ Glass-Komponentenbibliothek (GlassCard, GlassPanel, GlassKpiCard, glass-input, glass-shimmer) — v3.5
 - ✓ Alle 26 Dashboard-Seiten auf Glass-Design migriert — v3.5
 
+**RAG Pipeline Quality (v0.1):**
+- ✓ Hybrid Search (Meilisearch BM25 + pgvector via RRF, k=60, N=50) — v0.1
+- ✓ Parent-Child Chunking (500-Token Kind-Chunk, 2.000-Token Parent-Chunk) — v0.1
+- ✓ Cross-Encoder Reranking via Ollama (top-50 → top-10, 3s fallback) — v0.1
+
+**Gesetze-RAG (v0.1):**
+- ✓ bundestag/gesetze in law_chunks (tägl. BullMQ-Cron 02:00, Encoding-Smoke-Test) — v0.1
+- ✓ Helena retrievet Top-5 Normen bei Rechtsfragen mit "nicht amtlich"-Disclaimer — v0.1
+- ✓ Normen-Verknüpfung in Akte-UI (Suchmodal, Chip-Liste, pinned im Helena-Kontext) — v0.1
+
+**Urteile-RAG (v0.1):**
+- ✓ BMJ Rechtsprechung-im-Internet in urteil_chunks (7 Bundesgerichts-RSS-Feeds) — v0.1
+- ✓ NER PII-Filter via Ollama (Few-Shot + Institution-Whitelist, State Machine) — v0.1
+- ✓ BAG RSS-Feed täglicher inkrementeller Update — v0.1
+- ✓ Helena zitiert Urteile mit Gericht + AZ + Datum + Quellenlink (kein LLM-generiertes AZ) — v0.1
+
+**Arbeitswissen-RAG (v0.1):**
+- ✓ Amtliche Formulare in muster_chunks mit normierten {{PLATZHALTER}} — v0.1
+- ✓ Admin-Upload UI /admin/muster (MinIO, NER-Status-Badge, nie Git) — v0.1
+- ✓ PII-Anonymisierung kanzlei-eigener Muster (PENDING_NER → INDEXED | REJECTED) — v0.1
+- ✓ Helena erstellt ENTWURF-Schriftsätze (Rubrum, Anträge, Begründung + {{PLATZHALTER}}) — v0.1
+
 ### Active
 
-<!-- v0.1 scope — Helena RAG-Erweiterung -->
-
-**RAG Pipeline Quality:**
-- [ ] Hybrid Search (Meilisearch BM25 + pgvector via RRF)
-- [ ] Parent-Child Chunking (500-Token Embedding, 2.000-Token Prompt)
-- [ ] Cross-Encoder Reranking via Ollama
-
-**Gesetze-RAG:**
-- [ ] bundestag/gesetze in law_chunks (täglich sync)
-- [ ] Helena retrievet Normen automatisch bei Rechtsfragen
-- [ ] Normen-Verknüpfung in Akte-UI
-
-**Urteile-RAG:**
-- [ ] BMJ Rechtsprechung-im-Internet in urteil_chunks
-- [ ] NER PII-Filter via Ollama
-- [ ] BAG RSS-Feed (Arbeitsrecht)
-- [ ] Helena zitiert Urteile mit Quellennachweis
-
-**Arbeitswissen-RAG:**
-- [ ] Amtliche Formulare in muster_chunks
-- [ ] Admin-Upload UI (MinIO, nie Git)
-- [ ] PII-Anonymisierung kanzlei-eigener Muster
-- [ ] Helena erstellt Schriftsatz-Entwürfe
-
-## Current Milestone: v0.1 Helena RAG
-
-**Goal:** Helena mit drei Wissensquellen ausstatten — Gesetze, Urteile, Schriftsatzmuster — und die RAG-Pipeline durch Hybrid Search, Parent-Child Chunking und Cross-Encoder Reranking auf NotebookLM-Qualität heben.
-
-**Target features:**
-- Hybrid Search + Reranking für alle Helena-Retrievals
-- Gesetze-RAG (bundestag/gesetze, tägl. Sync, Normen-Verknüpfung in Akte)
-- Urteile-RAG (BMJ, NER PII-Filter via Ollama, BAG RSS, Quellennachweis)
-- Arbeitswissen-RAG (amtliche Formulare + kanzlei-eigene Muster in MinIO)
+<!-- Next milestone scope — to be defined -->
 
 ## Future (post v0.1)
 
@@ -214,11 +204,11 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ## Context
 
-Shipped v3.5 with ~91,300 LOC TypeScript (234 files changed, +26,707/-1,020 lines in v3.5).
-Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (60+ Models), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11.
+Shipped v0.1 with ~97,400 LOC TypeScript (243 commits in v0.1 alone).
+Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (65+ Models including law_chunks, urteil_chunks, muster, muster_chunks, akte_normen), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, fast-xml-parser, pgvector HNSW.
 Docker Compose deployment with 9 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice, ollama).
-All BUILD and Glass UI requirements satisfied. FD/BI/EXP deferred to v3.6.
-Minor tech debt: 62× font-heading in sub-components, 77× .glass alias in sub-components (both non-blocking), Briefkopf OnlyOffice editing deferred, bea.expert library requires commercial registration.
+All RAG pipeline requirements satisfied (16/16). Helena has three knowledge sources: law_chunks (Bundesgesetze), urteil_chunks (7 Bundesgerichte PII-gefiltert), muster_chunks (amtliche Formulare + kanzlei-eigene Muster).
+Minor tech debt: processUrteilNer() dead code in ner-pii.processor.ts, NER queue attempts:1 (manual retry required on Ollama timeout), OnlyOffice "wird geladen" bug outstanding (not v0.1 scope).
 
 ## Constraints
 
@@ -260,5 +250,12 @@ Minor tech debt: 62× font-heading in sub-components, 77× .glass alias in sub-c
 | Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | — Pending (v3.6+) |
 | CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending (v3.6+) |
 
+| Hybrid Search via RRF (v0.1) | BM25 + pgvector parallel retrieval beats vector-only for exact §-Nummern | ✓ Good — k=60, N=50, measurably better exact-match recall |
+| Cross-Encoder Reranking via LLM-as-reranker (v0.1) | Qwen3.5-as-reranker validated (dedicated Qwen3-Reranker-4B availability unverified) | ✓ Good — 3s AbortSignal timeout, fallback to RRF order |
+| Inline NER gate for Urteile (v0.1) | Synchronous runNerFilter() in ingestUrteilItem() cleaner than BullMQ for per-item flow | ✓ Good — double gate: inline before INSERT + piiFiltered=true query filter |
+| BullMQ NER state machine for Muster (v0.1) | Async because upload flow needs UI feedback on status | ✓ Good — PENDING_NER→NER_RUNNING→INDEXED/REJECTED, no bypass path |
+| seedAmtlicheFormulare() at worker startup (v0.1) | Idempotent via SystemSetting guard, avoids cron complexity for one-time seed | ✓ Good — content bypasses MinIO for hardcoded templates |
+| params Promise pattern in Next.js 15 (v0.1) | Sync params pattern caused 404s on DELETE/PATCH — await params required | ✓ Good — caught by integration checker, 2-line fix applied |
+
 ---
-*Last updated: 2026-02-26 after v0.1 milestone start*
+*Last updated: 2026-02-27 after v0.1 milestone completion*

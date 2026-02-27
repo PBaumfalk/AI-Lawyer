@@ -121,11 +121,11 @@ Plans:
   3. HelenaTask stores the complete agent trace (thoughts + tool calls as JSON steps[]) after completion
   4. Manually triggered tasks (via @-tag) run at higher priority than scanner-generated tasks
   5. User can abort a running task from the UI, and the agent loop stops between steps (status -> ABGEBROCHEN)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 21-01: @Helena mention parser and BullMQ helena-task queue registration
-- [ ] 21-02: Helena task processor with Socket.IO progress events, abort support, and priority handling
+- [ ] 21-01-PLAN.md — @Helena mention parser, task service, BullMQ helena-task queue, and processor with Socket.IO progress
+- [ ] 21-02-PLAN.md — Helena task API routes (create/list/detail/abort), worker registration with lockDuration: 120_000, startup recovery
 
 ### Phase 22: Deterministic Schriftsatz Orchestrator
 **Goal**: Helena can draft legally-structured court filings via a deterministic pipeline (not free-form agent), with every section validated against retrieved legal sources

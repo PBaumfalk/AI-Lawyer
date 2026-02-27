@@ -231,9 +231,9 @@ export async function POST(req: NextRequest) {
   //   Chain D: Law chunks (pgvector) — only if !skipRag
   // ---------------------------------------------------------------------------
 
-  // Chain A: Fetch structured Akte data for context
-  const akteContextPromise = (async (): Promise<string> => {
-    if (!akteId) return "";
+  // Chain A: Fetch structured Akte data for context + pinned normen injection
+  const akteContextPromise = (async (): Promise<{ aktenKontextBlock: string; pinnedNormenBlock: string }> => {
+    if (!akteId) return { aktenKontextBlock: "", pinnedNormenBlock: "" };
     const tA = Date.now();
     try {
       const akte = await prisma.akte.findUnique({
@@ -261,7 +261,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      if (!akte) return "";
+      if (!akte) return { aktenKontextBlock: "", pinnedNormenBlock: "" };
 
       const formatBeteiligter = (b: {
         rolle: string;
@@ -340,9 +340,7 @@ export async function POST(req: NextRequest) {
               .join("\n")
           : "- (keine Dokumente vorhanden)";
 
-      console.log(`[ki-chat] Chain A (Akte context) took ${Date.now() - tA}ms`);
-
-      return `\n\n--- AKTEN-KONTEXT ---
+      const akteContextStr = `\n\n--- AKTEN-KONTEXT ---
 Aktenzeichen: ${akte.aktenzeichen}
 Rubrum: ${akte.kurzrubrum}
 Wegen: ${akte.wegen ?? "\u2014"}
@@ -358,9 +356,56 @@ ${dokumenteLines}
 Anstehende Fristen/Termine (naechste 10):
 ${terminLines}
 --- ENDE AKTEN-KONTEXT ---`;
+
+      // Fetch pinned normen for this Akte — parallel per-norm LawChunk lookup.
+      // CRITICAL: Cannot JOIN AkteNorm with LawChunk via Prisma include because
+      // LawChunk has Unsupported("vector(1024)") which blocks Prisma JOINs.
+      let pinnedNormenBlock = "";
+
+      const pinnedNormen = await prisma.akteNorm.findMany({
+        where: { akteId },
+        orderBy: { createdAt: "asc" },
+      });
+
+      if (pinnedNormen.length > 0) {
+        const chunks = await Promise.all(
+          pinnedNormen.map((norm) =>
+            prisma.lawChunk.findFirst({
+              where: {
+                gesetzKuerzel: norm.gesetzKuerzel,
+                paragraphNr: norm.paragraphNr,
+              },
+              select: { titel: true, content: true, sourceUrl: true, syncedAt: true },
+            })
+          )
+        );
+
+        pinnedNormenBlock = `\n\n--- PINNED NORMEN (Akte ${akte.aktenzeichen} — höchste Priorität) ---\n`;
+        pinnedNormen.forEach((norm, i) => {
+          const chunk = chunks[i];
+          if (!chunk) return; // Skip if law_chunk no longer exists — guard against null
+          const standDate = new Date(chunk.syncedAt).toLocaleDateString("de-DE", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          });
+          pinnedNormenBlock += `\n[P${i + 1}] ${norm.gesetzKuerzel} ${norm.paragraphNr}: ${chunk.titel}\n`;
+          pinnedNormenBlock += `${chunk.content}\n`;
+          if (norm.anmerkung) {
+            pinnedNormenBlock += `Anmerkung des Anwalts: ${norm.anmerkung}\n`;
+          }
+          pinnedNormenBlock += `HINWEIS: nicht amtlich — Stand: ${standDate} | Quelle: ${chunk.sourceUrl ?? "https://www.gesetze-im-internet.de/"}\n`;
+        });
+        pinnedNormenBlock += "\n--- ENDE PINNED NORMEN ---";
+        pinnedNormenBlock += "\n\nDiese Normen wurden vom Anwalt explizit für diese Akte verknüpft. Beziehe dich bevorzugt auf diese §§.";
+      }
+
+      console.log(`[ki-chat] Chain A (Akte context + pinned normen) took ${Date.now() - tA}ms (${pinnedNormen.length} pinned norms)`);
+
+      return { aktenKontextBlock: akteContextStr, pinnedNormenBlock };
     } catch (err) {
       console.error("[ki-chat] Akte context fetch failed:", err);
-      return "";
+      return { aktenKontextBlock: "", pinnedNormenBlock: "" };
     }
   })();
 
@@ -437,7 +482,7 @@ ${terminLines}
       })();
 
   // Await all chains in parallel
-  const [aktenKontextBlock, ragResult, [model, modelName, providerName], lawChunks] =
+  const [{ aktenKontextBlock, pinnedNormenBlock }, ragResult, [model, modelName, providerName], lawChunks] =
     await Promise.all([akteContextPromise, ragPromise, modelConfigPromise, lawChunksPromise]);
 
   console.log(`[ki-chat] All chains resolved in ${Date.now() - t0}ms (provider=${providerName}, model=${modelName}, ragSkipped=${skipRag})`);
@@ -454,6 +499,13 @@ ${terminLines}
     systemPrompt += NO_SOURCES_INSTRUCTION;
   } else if (confidenceFlag === "low") {
     systemPrompt += LOW_CONFIDENCE_INSTRUCTION;
+  }
+
+  // Pinned norms — highest legal priority context for this Akte.
+  // Injected BEFORE document QUELLEN and auto-retrieved GESETZE-QUELLEN so
+  // the model treats them as the lawyer's explicit legal strategy.
+  if (pinnedNormenBlock) {
+    systemPrompt += pinnedNormenBlock;
   }
 
   if (sources.length > 0) {

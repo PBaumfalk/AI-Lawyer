@@ -170,6 +170,6 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 | 13. Hybrid Search + Reranking | 3/3 | Complete    | 2026-02-27 | - |
 | 14. Gesetze-RAG | 3/3 | Complete    | 2026-02-27 | - |
 | 15. Normen-Verknüpfung in Akte | 3/3 | Complete    | 2026-02-27 | - |
-| 16. PII-Filter | 3/3 | Complete   | 2026-02-27 | - |
+| 16. PII-Filter | 3/3 | Complete    | 2026-02-27 | - |
 | 17. Urteile-RAG | v0.1 | 0/TBD | Not started | - |
 | 18. Muster-RAG + Admin Upload UI | v0.1 | 0/TBD | Not started | - |

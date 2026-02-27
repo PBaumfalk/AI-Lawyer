@@ -176,19 +176,28 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
   }, [fetchDocument]);
 
   // Poll for preview generation completion (non-PDF documents without a preview yet)
+  // Give up after 90 seconds of polling to avoid polling forever when the worker/Stirling-PDF is down.
+  const [previewPollStart] = useState(() => Date.now());
+  const [previewTimedOut, setPreviewTimedOut] = useState(false);
+
   const needsPreviewPoll =
     !!dokument &&
     dokument.mimeType !== "application/pdf" &&
     !dokument.previewUrl &&
-    dokument.previewPfad === null;
+    dokument.previewPfad === null &&
+    !previewTimedOut;
 
   useEffect(() => {
     if (!needsPreviewPoll) return;
     const interval = setInterval(() => {
+      if (Date.now() - previewPollStart > 90_000) {
+        setPreviewTimedOut(true);
+        return;
+      }
       fetchDocument();
     }, 3000);
     return () => clearInterval(interval);
-  }, [needsPreviewPoll, fetchDocument]);
+  }, [needsPreviewPoll, fetchDocument, previewPollStart]);
 
   const handleRename = async () => {
     if (!renameValue.trim() || !dokument) return;
@@ -357,21 +366,33 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                       variant="outline"
                       className="text-xs text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700"
                       onClick={async () => {
-                        // Trigger a re-check / manual preview generation via the preview endpoint
+                        // First check if preview is already ready
                         try {
-                          const res = await fetch(`/api/dokumente/${dokument.id}/preview`);
-                          const data = await res.json();
-                          if (data.url) {
-                            // Preview is ready now, refresh
+                          const checkRes = await fetch(`/api/dokumente/${dokument.id}/preview`);
+                          const checkData = await checkRes.json();
+                          if (checkData.url) {
                             fetchDocument();
+                            return;
                           }
+                        } catch {
+                          // continue to re-trigger
+                        }
+                        // Re-trigger preview generation via POST
+                        try {
+                          await fetch(`/api/dokumente/${dokument.id}/preview`, {
+                            method: "POST",
+                          });
+                          // Reset timeout so polling restarts
+                          setPreviewTimedOut(false);
                         } catch {
                           // ignore
                         }
                       }}
                     >
                       <FileText className="w-3.5 h-3.5 mr-1" />
-                      {getMimeLabel(dokument.mimeType)}-Datei - Vorschau als PDF
+                      {previewTimedOut
+                        ? "Vorschau erneut generieren"
+                        : `${getMimeLabel(dokument.mimeType)}-Datei - Vorschau als PDF`}
                     </Button>
                   )}
                   {hasPdfPreview && (
@@ -391,11 +412,39 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                 <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900">
                   <div className="text-center space-y-3">
                     <FileText className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600" />
-                    <p className="text-sm text-slate-500">
-                      {dokument.previewPfad === null
-                        ? "Vorschau wird generiert..."
-                        : "Keine Vorschau verfuegbar"}
-                    </p>
+                    {dokument.previewPfad === null && !previewTimedOut && (
+                      <div className="space-y-1">
+                        <Loader2 className="w-5 h-5 mx-auto animate-spin text-slate-400" />
+                        <p className="text-sm text-slate-500">
+                          Vorschau wird generiert...
+                        </p>
+                      </div>
+                    )}
+                    {dokument.previewPfad === null && previewTimedOut && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-slate-500">
+                          Vorschau konnte nicht generiert werden.
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          Stirling-PDF oder der Worker sind moeglicherweise nicht erreichbar.
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setPreviewTimedOut(false);
+                            fetchDocument();
+                          }}
+                        >
+                          Erneut pruefen
+                        </Button>
+                      </div>
+                    )}
+                    {dokument.previewPfad !== null && !dokument.previewUrl && (
+                      <p className="text-sm text-slate-500">
+                        Keine Vorschau verfuegbar
+                      </p>
+                    )}
                     {isEditable && (
                       <Link href={`/dokumente/${dokument.id}/bearbeiten`}>
                         <Button size="sm" variant="outline">

@@ -15,7 +15,8 @@
     "build:server": "tsx scripts/build-server.ts",
     "build:worker": "tsx scripts/build-worker.ts",
     "build:custom": "npm run build:server && npm run build:worker",
-    "dev:worker": "tsx --watch src/worker.ts"
+    "dev:worker": "tsx --watch src/worker.ts",
+    "dev:server": "tsx --watch src/server.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

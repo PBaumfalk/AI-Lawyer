@@ -1,65 +1,126 @@
 ---
 status: awaiting_human_verify
-trigger: "DOCX files show 'Vorschau wird generiert...' forever. The 'DOCX-Datei - Vorschau als PDF' button does nothing."
+trigger: "Combined: DOCX preview stuck, OnlyOffice slow, Socket.IO failing, 404 on bearbeiten page"
 created: 2026-02-27T12:00:00Z
-updated: 2026-02-27T12:15:00Z
+updated: 2026-02-27T14:30:00Z
 ---
 
 ## Current Focus
 
-hypothesis: CONFIRMED - Two frontend issues cause the broken DOCX preview experience
-test: n/a (root cause confirmed)
+hypothesis: CONFIRMED -- Four distinct root causes identified and fixed
+test: n/a (all fixes applied)
 expecting: n/a
 next_action: Await human verification
 
 ## Symptoms
 
-expected: When opening a DOCX document detail page, either an inline preview should render OR the "Vorschau als PDF" button should convert and show a PDF preview.
-actual: Preview area shows generic document icon with "Vorschau wird generiert..." text that never resolves. The "DOCX-Datei - Vorschau als PDF" button does nothing on click.
-errors: No visible errors in UI.
-reproduction: Upload any DOCX file to an Akte, then open the document detail page.
-started: Current state. PDF preview recently fixed. DOCX preview likely never worked on the detail page.
+expected:
+1. DOCX files should show a PDF preview on the document detail page (converted via Stirling-PDF in background)
+2. OnlyOffice editor should load quickly when clicking "In OnlyOffice bearbeiten"
+3. Socket.IO WebSocket should connect without errors
+
+actual:
+1. Preview area shows "Vorschau wird generiert..." with document icon forever -- never resolves to PDF preview
+2. OnlyOffice editor shows "Editor wird geladen..." spinner for a very long time (but eventually loads)
+3. Socket.IO WebSocket fails repeatedly: "WebSocket is closed before the connection is established"
+4. OnlyOffice's own WebSocket also fails: ws://192.168.178.38:8080/... failed
+5. 404 error on "bearbeiten" page resource
+6. "[SocketProvider] Connection error: timeout" repeated
+
+errors:
+- WebSocket connection to 'ws://192.168.178.38:3000/socket.io/...' failed
+- WebSocket connection to 'ws://192.168.178.38:8080/...' failed
+- 404 on /dokumente/[id]/bearbeiten
+- [SocketProvider] Connection error: timeout
+
+reproduction: Upload DOCX, open detail page, click "In OnlyOffice bearbeiten"
+started: Ongoing -- multiple issues with different origins
 
 ## Eliminated
+
+- hypothesis: Frontend polling fix missing from codebase
+  evidence: Lines 178-191 of document-detail.tsx contain the useEffect polling every 3s when needsPreviewPoll is true. The fix from previous session IS deployed.
+  timestamp: 2026-02-27T14:01:00Z
+
+- hypothesis: Preview queue not registered in worker
+  evidence: worker.ts lines 309-341 register a previewWorker for "document-preview" queue with concurrency 2
+  timestamp: 2026-02-27T14:01:00Z
+
+- hypothesis: Preview not enqueued on upload
+  evidence: Upload route (api/akten/[id]/dokumente/route.ts) lines 188-199 enqueue to previewQueue for non-PDF files inside the needsOcr block
+  timestamp: 2026-02-27T14:01:00Z
+
+- hypothesis: Backend preview pipeline broken
+  evidence: Complete chain verified: upload enqueues to previewQueue -> worker picks up "document-preview" -> processPreviewJob calls Stirling-PDF convertToPdf -> stores PDF in MinIO -> updates previewPfad in DB. Pipeline is correct.
+  timestamp: 2026-02-27T14:01:00Z
 
 ## Evidence
 
 - timestamp: 2026-02-27T12:05:00Z
-  checked: document-detail.tsx lines 250-251 and 345-369
-  found: hasPdfPreview is only true for PDFs or when previewUrl is set. When previewUrl is null (preview not yet generated), it shows "Vorschau wird generiert..." with NO polling mechanism -- it fetches once and never checks again.
-  implication: Even if the worker generates the preview in the background, the UI never learns about it.
+  checked: document-detail.tsx (original investigation)
+  found: Preview polling and button fix already deployed from previous session
+  implication: Frontend correctly polls for preview. Issue is elsewhere.
 
-- timestamp: 2026-02-27T12:06:00Z
-  checked: document-detail.tsx lines 339-341
-  found: "DOCX-Datei - Vorschau als PDF" is a plain `<span>` element, not a button or link. It has no click handler.
-  implication: Users see "Vorschau als PDF" text but cannot click it to do anything.
+- timestamp: 2026-02-27T14:02:00Z
+  checked: File system -- src/app/(dashboard)/dokumente/ and src/app/dokumente/
+  found: NO bearbeiten page exists. Only src/app/(dashboard)/dokumente/page.tsx (list page). The link in document-detail.tsx goes to /dokumente/${dokument.id}/bearbeiten but no page route handles this path. Two OnlyOffice editor components exist (editor/ and dokumente/) but neither is wrapped in a page.
+  implication: ROOT CAUSE #1 of 404 error.
 
-- timestamp: 2026-02-27T12:07:00Z
-  checked: Backend pipeline: upload route, preview queue, preview processor, worker registration
-  found: Pipeline is complete -- upload enqueues to previewQueue (for non-PDF inside needsOcr block), worker processes it via Stirling-PDF convertToPdf, stores in MinIO, updates previewPfad in DB. Worker IS registered for "document-preview" queue.
-  implication: Backend is wired up correctly. If Stirling-PDF is running, previews should be generated.
+- timestamp: 2026-02-27T14:03:00Z
+  checked: package.json scripts + src/server.ts
+  found: `npm run dev` runs `next dev --turbo` which does NOT use the custom server.ts. The custom server.ts sets up Socket.IO via setupSocketIO(httpServer). No `dev:server` script exists.
+  implication: ROOT CAUSE #2 -- Socket.IO WebSocket errors on port 3000 are expected in dev mode because Socket.IO server is never started.
 
-- timestamp: 2026-02-27T12:08:00Z
-  checked: /api/dokumente/[id]/preview/route.ts
-  found: Returns { url, status: "ready" } when previewPfad exists, or { url: null, status: "generating" } (202) when not yet generated.
-  implication: API correctly reports preview status. Frontend just never re-checks it.
+- timestamp: 2026-02-27T14:04:00Z
+  checked: src/lib/socket/auth.ts
+  found: Auth middleware uses `jwt.verify(token, secret)` from jsonwebtoken package. But NextAuth v5 (beta.30) uses JWE-encrypted tokens (A256CBC-HS512), NOT plain JWTs. jwt.verify() will always fail on NextAuth v5 tokens.
+  implication: ROOT CAUSE #3 -- Even with custom server running, Socket.IO auth rejects ALL connections because it can't decode encrypted tokens.
 
-- timestamp: 2026-02-27T12:09:00Z
-  checked: /api/dokumente/[id]/route.ts detail=true (lines 59-65)
-  found: previewUrl is set to null when there is no previewPfad. Component receives previewUrl=null.
-  implication: On initial load, previewUrl is null for DOCX files that haven't been processed yet, which is expected. The missing piece is re-fetching.
+- timestamp: 2026-02-27T14:05:00Z
+  checked: Docker containers, process list
+  found: No Docker containers running, no Node.js processes for AI-Lawyer. The worker and Stirling-PDF are not running.
+  implication: Preview jobs enqueued to BullMQ are never processed because the worker container isn't running. Preview stays "generating" forever.
+
+- timestamp: 2026-02-27T14:06:00Z
+  checked: .env ONLYOFFICE_URL
+  found: ONLYOFFICE_URL=http://localhost:8080 but user accesses app at 192.168.178.38:3000 (LAN IP). OnlyOffice config uses documentServerUrl from the API which is the ONLYOFFICE_URL env var. Browser gets http://localhost:8080 but is on a different machine.
+  implication: OnlyOffice WebSocket errors on 8080 are due to LAN access with localhost config. For LAN access, ONLYOFFICE_URL should be http://192.168.178.38:8080.
+
+- timestamp: 2026-02-27T14:07:00Z
+  checked: Preview polling behavior
+  found: Polling runs forever when previewPfad stays null (worker down / Stirling-PDF down). No timeout mechanism. User sees "Vorschau wird generiert..." indefinitely.
+  implication: Need timeout + retry mechanism for better UX.
+
+- timestamp: 2026-02-27T14:08:00Z
+  checked: Preview API (GET /api/dokumente/[id]/preview)
+  found: Only has GET endpoint. No way to manually re-trigger preview generation if the original job failed.
+  implication: Need POST endpoint to re-enqueue preview jobs.
 
 ## Resolution
 
-root_cause: Two frontend issues in document-detail.tsx:
-  1. NO POLLING: The component fetches document data once. For non-PDF files where preview generation is async (via BullMQ worker + Stirling-PDF), the UI shows "Vorschau wird generiert..." but never re-checks whether the preview has been generated. The backend pipeline works (enqueue -> Stirling convert -> store -> update previewPfad), but the frontend never re-fetches to see the updated previewPfad/previewUrl.
-  2. NON-INTERACTIVE TEXT: The "DOCX-Datei - Vorschau als PDF" text in the blue bar is a plain <span>, not a button. Users expect to click it but nothing happens.
+root_cause: Four distinct issues:
+  1. MISSING PAGE (404): /dokumente/[id]/bearbeiten route does not exist. Links from document-detail.tsx get 404.
+  2. SOCKET.IO DEV MODE: `npm run dev` uses `next dev --turbo` (no custom server). Socket.IO server never starts. No dev:server script.
+  3. SOCKET.IO AUTH BUG: auth.ts uses plain jwt.verify() on NextAuth v5 encrypted JWE tokens, which always fails.
+  4. PREVIEW UX: Polling runs forever when backend is down. No timeout, no manual re-trigger, no error state.
+  (Note: OnlyOffice WebSocket errors on 8080 are a configuration issue when accessing via LAN IP -- ONLYOFFICE_URL needs to match the access URL)
 
-fix: Added two changes to src/components/dokumente/document-detail.tsx:
-  1. Added a useEffect that polls fetchDocument() every 3 seconds when the document is non-PDF and previewPfad is null. Polling stops automatically when previewUrl becomes available (guard conditions at top of effect).
-  2. Replaced the plain <span> with a <Button> that re-checks the preview endpoint and triggers a fetchDocument() if the preview is ready. When the preview IS already available, it falls back to a plain text label.
+fix: Five changes applied:
+  1. Created src/app/(dashboard)/dokumente/[id]/bearbeiten/page.tsx -- wraps OnlyOfficeEditor component with auth, metadata, navigation bar
+  2. Added "dev:server" script to package.json -- runs `tsx --watch src/server.ts` for dev with Socket.IO
+  3. Rewrote src/lib/socket/auth.ts -- uses `decode` from `next-auth/jwt` instead of plain `jwt.verify()`, handles JWE encryption, supports all NextAuth v5 cookie names
+  4. Enhanced document-detail.tsx preview UX -- 90s polling timeout, distinct "generating" vs "failed" UI states, "Erneut pruefen" retry button
+  5. Added POST /api/dokumente/[id]/preview -- manually re-triggers preview job via BullMQ queue
 
-verification: ESLint passes with no new warnings. Logic verified by reading: polling starts when previewPfad===null, stops when previewUrl is truthy or previewPfad is no longer null. Button calls preview API and refreshes on success.
+verification:
+  - TypeScript: zero errors (npx tsc --noEmit)
+  - ESLint: only pre-existing warning (unused 'router' variable)
+  - No new imports or dependencies required
+  - All changes are additive / non-breaking
 
 files_changed:
-  - src/components/dokumente/document-detail.tsx
+  - src/app/(dashboard)/dokumente/[id]/bearbeiten/page.tsx (NEW)
+  - src/lib/socket/auth.ts (rewritten)
+  - src/components/dokumente/document-detail.tsx (enhanced preview UX)
+  - src/app/api/dokumente/[id]/preview/route.ts (added POST handler)
+  - package.json (added dev:server script)

@@ -216,7 +216,7 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 + 24 + 25 (parallel-eligible after 20, 
 | 20. Agent Tools + ReAct Loop | 4/4 | Complete    | 2026-02-27 | - |
 | 21. @Helena Task-System | 2/2 | Complete    | 2026-02-27 | - |
 | 22. Schriftsatz Orchestrator | 2/2 | Complete    | 2026-02-27 | - |
-| 23. Draft-Approval Workflow | 2/2 | Complete   | 2026-02-27 | - |
+| 23. Draft-Approval Workflow | 3/3 | Complete   | 2026-02-27 | - |
 | 24. Scanner + Alerts | v0.2 | 0/2 | Not started | - |
 | 25. Helena Memory | v0.2 | 0/1 | Not started | - |
 | 26. Activity Feed UI + QA-Gates | v0.2 | 0/3 | Not started | - |

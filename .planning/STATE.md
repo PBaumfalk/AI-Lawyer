@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
 status: in-progress
-last_updated: "2026-02-27T21:15:18.000Z"
+last_updated: "2026-02-27T21:45:48.000Z"
 progress:
   total_phases: 14
   completed_phases: 13
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 Phase: 24 of 26 (Scanner + Alerts)
 Plan: 0 of 2 in current phase
 Status: Phase 23 complete, Phase 24 next
-Last activity: 2026-02-27 — Completed 23-02 Draft UI Components + Global Inbox
+Last activity: 2026-02-27 — Completed 23-03 Wire Draft Notifications
 
 Progress: [███████░░░] 60%
 
@@ -33,7 +33,7 @@ Progress: [███████░░░] 60%
 
 **Velocity:**
 - Total plans completed: 71 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 11/16
+- v0.2 plans: 12/17
 
 **By Phase (v0.2):**
 
@@ -43,7 +43,7 @@ Progress: [███████░░░] 60%
 | 20. Agent Tools + ReAct Loop | 4/4 | 22min | 5.5min |
 | 21. @Helena Task-System | 2/2 | 6min | 3min |
 | 22. Schriftsatz Orchestrator | 2/2 | 14min | 7min |
-| 23. Draft-Approval Workflow | 2/2 | 16min | 8min |
+| 23. Draft-Approval Workflow | 3/3 | 18min | 6min |
 | 24. Scanner + Alerts | 0/2 | - | - |
 | 25. Helena Memory | 0/1 | - | - |
 | 26. Activity Feed UI + QA-Gates | 0/3 | - | - |
@@ -97,6 +97,7 @@ Recent decisions affecting v0.2:
 - Socket.IO banner refetch pattern: new draft events show banner, user clicks to reload (not auto-insert)
 - Keyboard shortcuts A/B/R skip text inputs via target.tagName check to avoid form conflicts
 - Schriftsatz routing is an early return in runHelenaAgent -- ReAct code path completely untouched
+- Akte owner fallback for notifications: anwaltId -> sachbearbeiterId (verantwortlichId does not exist in schema)
 - computeGkgFee * 3 for Klageverfahren court costs in Kosten section
 - Prisma $extends (not deprecated middleware) for ENTWURF gate -- Prisma 5 recommended pattern
 - ExtendedPrismaClient type exported from db.ts -- all Helena/finance modules use it instead of PrismaClient
@@ -122,5 +123,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 23-02-PLAN.md (Draft UI Components + Global Inbox)
-Resume file: .planning/phases/23-draft-approval-workflow/23-02-SUMMARY.md
+Stopped at: Completed 23-03-PLAN.md (Wire Draft Notifications)
+Resume file: .planning/phases/23-draft-approval-workflow/23-03-SUMMARY.md

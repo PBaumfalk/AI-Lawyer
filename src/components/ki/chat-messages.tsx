@@ -244,17 +244,8 @@ export function ChatMessages({
                         </div>
                       )}
 
-                      {/* Response text */}
+                      {/* Response text (or full content when no thinking tags) */}
                       {response && (
-                        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1.5 prose-li:my-0.5 prose-headings:my-2 prose-pre:my-2 prose-pre:bg-slate-800 prose-pre:text-slate-100 prose-code:text-brand-600 dark:prose-code:text-brand-400 prose-a:text-brand-600 dark:prose-a:text-brand-400">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {response}
-                          </ReactMarkdown>
-                        </div>
-                      )}
-
-                      {/* Fallback: no thinking tags at all */}
-                      {thinking === null && (
                         <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1.5 prose-li:my-0.5 prose-headings:my-2 prose-pre:my-2 prose-pre:bg-slate-800 prose-pre:text-slate-100 prose-code:text-brand-600 dark:prose-code:text-brand-400 prose-a:text-brand-600 dark:prose-a:text-brand-400">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {response}

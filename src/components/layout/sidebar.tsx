@@ -9,6 +9,7 @@ import {
   Users,
   Calendar,
   FileText,
+  FileCheck,
   Wallet,
   Mail,
   MessageSquare,
@@ -29,10 +30,12 @@ import {
   Moon,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { TimerSidebarWidget } from "@/components/finanzen/timer-sidebar-widget";
 import { useTheme } from "@/components/providers/theme-provider";
+import { useSocket } from "@/components/socket-provider";
+import { Badge } from "@/components/ui/badge";
 import type { UserRole } from "@prisma/client";
 
 // Roles that should NOT see a given nav item
@@ -41,6 +44,8 @@ type NavItem = {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   hideForRoles?: UserRole[];
+  /** Key for dynamic badge count (resolved at runtime) */
+  badgeKey?: string;
 };
 
 const navigation: NavItem[] = [
@@ -49,6 +54,7 @@ const navigation: NavItem[] = [
   { name: "Kontakte", href: "/kontakte", icon: Users },
   { name: "Kalender", href: "/kalender", icon: Calendar },
   { name: "Dokumente", href: "/dokumente", icon: FileText },
+  { name: "Entwuerfe", href: "/entwuerfe", icon: FileCheck, badgeKey: "pendingDrafts" },
   { name: "E-Mails", href: "/email", icon: Mail },
   { name: "Tickets", href: "/tickets", icon: TicketCheck },
   { name: "Helena", href: "/ki-chat", icon: Sparkles },
@@ -78,8 +84,57 @@ export function Sidebar() {
   const { data: session } = useSession();
   const { resolvedTheme, setTheme } = useTheme();
   const prefersReducedMotion = useReducedMotion();
+  const { socket } = useSocket();
   const userRole = (session?.user as any)?.role as UserRole | undefined;
   const isAdmin = userRole === "ADMIN";
+
+  // Pending drafts badge count
+  const [pendingDraftsCount, setPendingDraftsCount] = useState(0);
+
+  const fetchDraftCount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/helena/drafts?status=PENDING&limit=0");
+      if (res.ok) {
+        const data = await res.json();
+        setPendingDraftsCount(data.total ?? 0);
+      }
+    } catch {
+      // Non-critical -- badge will show 0
+    }
+  }, []);
+
+  // Fetch on mount and listen for Socket.IO events to update
+  useEffect(() => {
+    fetchDraftCount();
+  }, [fetchDraftCount]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    function handleDraftChange() {
+      fetchDraftCount();
+    }
+
+    socket.on("helena:draft-created", handleDraftChange);
+    socket.on("helena:draft-revision", handleDraftChange);
+    socket.on("helena:draft-accepted", handleDraftChange);
+    socket.on("helena:draft-rejected", handleDraftChange);
+
+    return () => {
+      socket.off("helena:draft-created", handleDraftChange);
+      socket.off("helena:draft-revision", handleDraftChange);
+      socket.off("helena:draft-accepted", handleDraftChange);
+      socket.off("helena:draft-rejected", handleDraftChange);
+    };
+  }, [socket, fetchDraftCount]);
+
+  // Badge counts by key
+  const badgeCounts: Record<string, number> = useMemo(
+    () => ({
+      pendingDrafts: pendingDraftsCount,
+    }),
+    [pendingDraftsCount]
+  );
 
   // Filter navigation items based on user role
   const filteredNavigation = useMemo(() => {
@@ -136,13 +191,16 @@ export function Sidebar() {
         {filteredNavigation.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
+          const badgeCount = item.badgeKey
+            ? badgeCounts[item.badgeKey] ?? 0
+            : 0;
           return (
             <Link
               key={item.href}
               href={item.href}
               title={collapsed ? item.name : undefined}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
+                "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
                 isActive
                   ? "bg-[oklch(45%_0.2_260/0.15)] text-[oklch(45%_0.2_260)] border-l-2 border-[oklch(45%_0.2_260)] -ml-[2px]"
                   : "text-[oklch(40%_0.015_250)] dark:text-[oklch(65%_0.01_250)] hover:bg-white/5 dark:hover:bg-white/[0.03]"
@@ -150,14 +208,27 @@ export function Sidebar() {
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
               {!collapsed && (
-                <motion.span
-                  className="truncate"
-                  initial={prefersReducedMotion ? false : { opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  {item.name}
-                </motion.span>
+                <>
+                  <motion.span
+                    className="truncate"
+                    initial={prefersReducedMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    {item.name}
+                  </motion.span>
+                  {badgeCount > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-auto h-5 min-w-[20px] px-1.5 text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300"
+                    >
+                      {badgeCount}
+                    </Badge>
+                  )}
+                </>
+              )}
+              {collapsed && badgeCount > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-violet-500" />
               )}
             </Link>
           );

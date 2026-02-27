@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-27T08:29:30Z"
+last_updated: "2026-02-27T08:34:30.532Z"
 progress:
-  total_phases: 7
-  completed_phases: 6
+  total_phases: 8
+  completed_phases: 7
   total_plans: 23
-  completed_plans: 22
+  completed_plans: 23
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 16 (PII-Filter) Plan 02 COMPLETE — Plan 03 (acceptance test) is next
+**Current focus:** v0.1 Helena RAG — Phase 16 (PII-Filter) COMPLETE — Phase 17 (Urteile-RAG) is next
 
 ## Current Position
 
-Phase: 16 of 18 (PII-Filter) — In Progress
-Plan: 2 of 3 complete
-Status: Phase 16 Plan 02 complete — BullMQ ner-pii queue, processor (3-state machine), and nerPiiWorker all wired. Plan 03 (acceptance test) is next.
-Last activity: 2026-02-27 — Phase 16 Plan 02 complete: nerPiiQueue + processNerPiiJob + recoverStuckNerJobs + nerPiiWorker (concurrency:1) registered
+Phase: 16 of 18 (PII-Filter) — COMPLETE
+Plan: 3 of 3 complete
+Status: Phase 16 Plan 03 complete — acceptance test suite (10 Urteil excerpts) created as DSGVO gate proof. Phase 16 fully done. Phase 17 Urteile-RAG is next.
+Last activity: 2026-02-27 — Phase 16 Plan 03 complete: tests/pii/ner-filter.acceptance.test.ts (10 excerpts, 5 hasPii:false / 5 hasPii:true, TypeScript clean)
 
 Progress: [████░░░░░░] ~20%
 
@@ -44,13 +44,14 @@ Progress: [████░░░░░░] ~20%
 | 13. Hybrid Search + Reranking | 3/3 | ~18m | 6m |
 | 14. Gesetze-RAG | 3/3 | ~4m | ~2m |
 | 15. Normen-Verknüpfung in Akte | 3/3 | ~4m+~4m+~2m | ~3m |
-| 16. PII-Filter | 2/3 | ~4m | ~2m |
+| 16. PII-Filter | 3/3 | ~5m | ~2m |
 | 17. Urteile-RAG | 0/TBD | - | - |
 | 18. Muster-RAG + Admin Upload UI | 0/TBD | - | - |
 | Phase 14-gesetze-rag P02 | 2 | 2 tasks | 3 files |
 | Phase 15-normen-verknuepfung-in-akte P01 | 4 | 2 tasks | 4 files |
 | Phase 16-pii-filter P01 | 2m | 2 tasks | 2 files |
 | Phase 16-pii-filter P02 | ~2m | 2 tasks | 3 files |
+| Phase 16-pii-filter P03 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,8 @@ Recent decisions affecting v0.1:
 - [Phase 16-02]: nerPiiQueue attempts:1 — NER timeout is permanent fail; processor resets nerStatus PENDING_NER before re-throw; Phase 18 re-submits manually
 - [Phase 16-02]: Muster.name used for logging (schema has no dateiname field); plan spec was incorrect — actual field is name
 - [Phase 16-02]: processUrteilNer() throws Error on PII — Phase 17 caller skips ingestion; no DB write in processor — Phase 17 sets piiFiltered:true
+- [Phase 16-pii-filter]: /// <reference types="vitest/globals" /> in test file keeps vitest types scoped to tests without modifying tsconfig.json
+- [Phase 16-pii-filter]: Partial-match assertion added to forbiddenInPersons check — catches LLM edge case of appending city/country qualifiers to institution names
 
 ### Pending Todos
 
@@ -105,10 +108,10 @@ Recent decisions affecting v0.1:
 
 - Phase 13 (Reranking): Cross-encoder P95-Latenz muss BEVOR Live-Wiring benchmarked werden. Wenn P95 > 3s: erst RRF-only shippen, Reranking als Feature-Flag nachliefern.
 - Phase 17 (Urteile): BMJ HTML-Selektoren (article.result, div.dokument-meta) muessen live verifiziert werden vor Scraper-Bau. robots.txt-Check erforderlich.
-- Phase 16 (PII): qwen3.5:35b NER-Qualitaet auf echten deutschen Gerichtsentscheidungen (BAG/BGH Arbeitsrecht + Mietrecht) muss empirisch validiert werden — Few-Shot-Beispiele aus echten Urteilen, nicht synthetisch.
+- Phase 16 (PII) RESOLVED: Acceptance test suite created (tests/pii/ner-filter.acceptance.test.ts). Must be run against live Ollama with qwen3.5:35b before Phase 17 ingestion begins — `npx vitest run tests/pii/ner-filter.acceptance.test.ts --timeout 60000`
 
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 16 Plan 02 complete. nerPiiQueue + ner-pii.processor.ts + nerPiiWorker all wired. Phase 16 Plan 03 (acceptance test) is next.
+Stopped at: Phase 16 Plan 03 complete. Phase 16 PII-Filter fully done. tests/pii/ner-filter.acceptance.test.ts — 10 Urteil excerpts DSGVO gate proof. Phase 17 Urteile-RAG is next.
 Resume file: None

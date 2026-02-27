@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.4
-milestone_name: Helena RAG
-status: unknown
-last_updated: "2026-02-27T10:54:15.000Z"
+milestone: v0.2
+milestone_name: Helena Agent
+status: defining_requirements
+last_updated: "2026-02-27T23:00:00.000Z"
 progress:
-  total_phases: 10
-  completed_phases: 8
-  total_plans: 29
-  completed_plans: 28
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 18 (Muster-RAG + Admin Upload UI) Plan 02 complete — Plan 03 (Helena Chain F — muster RAG search integration) is next
+**Current focus:** v0.2 Helena Agent — defining requirements
 
 ## Current Position
 
-Phase: 18 of 18 (Muster-RAG + Admin Upload UI) — In Progress
-Plan: 2 of 3 complete
-Status: Phase 18 Plan 02 complete — musterIngestionQueue, processMusterIngestionJob, ner-pii trigger, worker registration, seedAmtlicheFormulare on startup, /admin/muster UI, GET/POST/DELETE/PATCH API routes. Plan 03 (Helena Chain F) is next.
-Last activity: 2026-02-27 — Phase 18 Plan 02 complete: muster-ingestion queue/processor, admin upload UI + REST API
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-27 — Milestone v0.2 started
 
-Progress: [███████░░░] ~70%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Progress: [███████░░░] ~70%
 | Phase 17-urteile-rag P03 | 1 | 1 tasks | 1 files |
 | Phase 18-muster-rag-admin-upload-ui P01 | 5 | 2 tasks | 4 files |
 | Phase 18-muster-rag-admin-upload-ui P02 | 4m | 2 tasks | 8 files |
+| Phase 18-muster-rag-admin-upload-ui P03 | 1m | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,9 @@ Recent decisions affecting v0.1:
 - [Phase 18-02]: Admin muster page is "use client" (not server component) — GlassPanel/GlassCard are client components; all other admin pages are also "use client"; DELETE/PATCH require JS fetch calls (HTML forms cannot do DELETE/PATCH natively)
 - [Phase 18-02]: musterIngestionWorker concurrency:2 — two concurrent ingestion jobs allowed; embedding inside insertMusterChunks is sequential per chunk anyway
 - [Phase 18-02]: MinIO deletion in DELETE is best-effort (non-fatal try/catch) — DB row deleted regardless to prevent orphan records when MinIO object already gone
+- [Phase 18-03]: Chain F minScore 0.55 (not 0.6): template content with {{PLATZHALTER}} has lower cosine similarity due to placeholder density — wider retrieval needed
+- [Phase 18-03]: queryEmbeddingPromise shared across Chain B/D/E/F — single Ollama embedding call regardless of chain count; Chain F is non-fatal, catch returns []
+- [Phase 18-03]: MUSTER-QUELLEN injection uses parentContent fallback to content — parent chunk provides larger context window for Schriftsatz structure guidance
 
 ### Pending Todos
 
@@ -132,5 +136,5 @@ Recent decisions affecting v0.1:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 18 Plan 02 complete. musterIngestionQueue + processor + ner-pii trigger + worker registration + /admin/muster UI + REST API (GET/POST/DELETE/PATCH). Plan 03 (Helena Chain F — muster RAG search integration) is next.
+Stopped at: Phase 18 Plan 03 complete. Chain F musterChunksPromise + MUSTER-QUELLEN injection in ki-chat route. Phase 18 complete — all 5 ARBW requirements done. v3.4 Helena RAG milestone complete.
 Resume file: None

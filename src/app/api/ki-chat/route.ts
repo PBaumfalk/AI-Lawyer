@@ -27,6 +27,7 @@ import { generateQueryEmbedding } from "@/lib/embedding/embedder";
 import { hybridSearch, type HybridSearchResult } from "@/lib/embedding/hybrid-search";
 import { searchLawChunks } from "@/lib/gesetze/ingestion";
 import { searchUrteilChunks, type UrteilChunkResult } from "@/lib/urteile/ingestion";
+import { searchMusterChunks, type MusterChunkResult } from "@/lib/muster/ingestion";
 
 // ---------------------------------------------------------------------------
 // System prompt for Helena (German)
@@ -233,6 +234,7 @@ export async function POST(req: NextRequest) {
   //   Chain C: Model config (settings reads — cached via TTL)
   //   Chain D: Law chunks (pgvector) — only if !skipRag
   //   Chain E: Urteil chunks (pgvector) — only if !skipRag
+  //   Chain F: Muster chunks (pgvector, ARBW-05) — only if !skipRag
   // ---------------------------------------------------------------------------
 
   // Chain A: Fetch structured Akte data for context + pinned normen injection
@@ -507,9 +509,27 @@ ${terminLines}
         }
       })();
 
+  // Chain F: muster_chunks retrieval (Muster-RAG, ARBW-05)
+  // Schriftsatzmuster für strukturierte Entwürfe (kanzlei-eigene + amtliche Formulare)
+  const musterChunksPromise = skipRag
+    ? Promise.resolve([] as MusterChunkResult[])
+    : (async (): Promise<MusterChunkResult[]> => {
+        const tF = Date.now();
+        try {
+          const queryEmbedding = await queryEmbeddingPromise;
+          if (!queryEmbedding) return [];
+          const results = await searchMusterChunks(queryEmbedding, { limit: 5, minScore: 0.55 });
+          console.log(`[ki-chat] Chain F (muster_chunks) took ${Date.now() - tF}ms, ${results.length} results`);
+          return results;
+        } catch (err) {
+          console.error("[ki-chat] Muster chunks search failed:", err);
+          return [];
+        }
+      })();
+
   // Await all chains in parallel
-  const [{ aktenKontextBlock, pinnedNormenBlock }, ragResult, [model, modelName, providerName], lawChunks, urteilChunks] =
-    await Promise.all([akteContextPromise, ragPromise, modelConfigPromise, lawChunksPromise, urteilChunksPromise]);
+  const [{ aktenKontextBlock, pinnedNormenBlock }, ragResult, [model, modelName, providerName], lawChunks, urteilChunks, musterChunks] =
+    await Promise.all([akteContextPromise, ragPromise, modelConfigPromise, lawChunksPromise, urteilChunksPromise, musterChunksPromise]);
 
   console.log(`[ki-chat] All chains resolved in ${Date.now() - t0}ms (provider=${providerName}, model=${modelName}, ragSkipped=${skipRag})`);
 
@@ -576,6 +596,19 @@ ${terminLines}
     systemPrompt += "\n--- ENDE URTEILE-QUELLEN ---";
     systemPrompt += "\n\nWenn du Urteile zitierst: immer Gericht + Aktenzeichen + Datum + Quellenlink angeben.";
     systemPrompt += " Wenn kein Aktenzeichen in den URTEILE-QUELLEN steht, zitiere das Urteil NICHT und erfinde kein AZ.";
+  }
+
+  // Inject Muster-Quellen block (Chain F results) — Schriftsatz-RAG (ARBW-05)
+  if (musterChunks.length > 0) {
+    systemPrompt += "\n\n--- MUSTER-QUELLEN ---\n";
+    systemPrompt += "Nutze diese Schriftsatzmuster als Strukturvorlage. Übernimm den Aufbau (Rubrum, Anträge, Begründung) und fülle alle {{PLATZHALTER}} mit den Akte-Daten — oder behalte sie als explizite Platzhalter wenn Daten fehlen.\n";
+    musterChunks.forEach((m, i) => {
+      const herkunft = m.kanzleiEigen ? "Kanzlei-Muster" : "Amtliches Formular";
+      systemPrompt += `\n[M${i + 1}] ${m.musterName} (${herkunft}, Kategorie: ${m.kategorie})\n`;
+      systemPrompt += `${m.parentContent ?? m.content}\n`;
+    });
+    systemPrompt += "\n--- ENDE MUSTER-QUELLEN ---";
+    systemPrompt += "\n\nWenn du einen Schriftsatz-Entwurf erstellst: Beginne mit RUBRUM (Kläger, Beklagte, Gericht), dann ANTRÄGE (nummeriert), dann BEGRÜNDUNG (I., II., ...). Alle fehlenden Angaben als {{PLATZHALTER}}. Schließe ab mit: '\u26a0\ufe0f ENTWURF — Platzhalter prüfen und vor Einreichung ausfüllen.'";
   }
 
   // ---------------------------------------------------------------------------

@@ -26,6 +26,7 @@ import { trackTokenUsage } from "@/lib/ai/token-tracker";
 import { generateQueryEmbedding } from "@/lib/embedding/embedder";
 import { hybridSearch, type HybridSearchResult } from "@/lib/embedding/hybrid-search";
 import { searchLawChunks } from "@/lib/gesetze/ingestion";
+import { searchUrteilChunks, type UrteilChunkResult } from "@/lib/urteile/ingestion";
 
 // ---------------------------------------------------------------------------
 // System prompt for Helena (German)
@@ -231,6 +232,7 @@ export async function POST(req: NextRequest) {
   //   Chain B: RAG retrieval (Ollama embedding + hybrid search) — only if !skipRag
   //   Chain C: Model config (settings reads — cached via TTL)
   //   Chain D: Law chunks (pgvector) — only if !skipRag
+  //   Chain E: Urteil chunks (pgvector) — only if !skipRag
   // ---------------------------------------------------------------------------
 
   // Chain A: Fetch structured Akte data for context + pinned normen injection
@@ -487,9 +489,27 @@ ${terminLines}
         }
       })();
 
+  // Chain E: urteil_chunks retrieval (Urteile-RAG)
+  // Non-fatal — error returns [] and Helena responds without Urteile.
+  const urteilChunksPromise = skipRag
+    ? Promise.resolve([] as UrteilChunkResult[])
+    : (async (): Promise<UrteilChunkResult[]> => {
+        const tE = Date.now();
+        try {
+          const queryEmbedding = await queryEmbeddingPromise;
+          if (!queryEmbedding) return [];
+          const results = await searchUrteilChunks(queryEmbedding, { limit: 5, minScore: 0.6 });
+          console.log(`[ki-chat] Chain E (urteil_chunks) took ${Date.now() - tE}ms, ${results.length} results`);
+          return results;
+        } catch (err) {
+          console.error("[ki-chat] Urteil chunks search failed:", err);
+          return [];
+        }
+      })();
+
   // Await all chains in parallel
-  const [{ aktenKontextBlock, pinnedNormenBlock }, ragResult, [model, modelName, providerName], lawChunks] =
-    await Promise.all([akteContextPromise, ragPromise, modelConfigPromise, lawChunksPromise]);
+  const [{ aktenKontextBlock, pinnedNormenBlock }, ragResult, [model, modelName, providerName], lawChunks, urteilChunks] =
+    await Promise.all([akteContextPromise, ragPromise, modelConfigPromise, lawChunksPromise, urteilChunksPromise]);
 
   console.log(`[ki-chat] All chains resolved in ${Date.now() - t0}ms (provider=${providerName}, model=${modelName}, ragSkipped=${skipRag})`);
 
@@ -537,6 +557,25 @@ ${terminLines}
     });
     systemPrompt += "\n--- ENDE GESETZE-QUELLEN ---";
     systemPrompt += "\n\nWenn du Normen zitierst, füge immer den 'nicht amtlich'-Hinweis und den Quellenlink hinzu.";
+  }
+
+  // Inject Urteile-Quellen block (Chain E results) — only when urteil_chunks found with score >= 0.6
+  // URTEIL-04: All citation fields (gericht, aktenzeichen, datum, sourceUrl) come from DB — never LLM-generated.
+  if (urteilChunks.length > 0) {
+    systemPrompt += "\n\n--- URTEILE-QUELLEN ---\n";
+    urteilChunks.forEach((u, i) => {
+      const datumStr = new Date(u.datum).toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+      systemPrompt += `\n[U${i + 1}] ${u.gericht} ${u.aktenzeichen} vom ${datumStr}\n`;
+      systemPrompt += `${u.content}\n`;
+      systemPrompt += `Quelle: ${u.sourceUrl}\n`;
+    });
+    systemPrompt += "\n--- ENDE URTEILE-QUELLEN ---";
+    systemPrompt += "\n\nWenn du Urteile zitierst: immer Gericht + Aktenzeichen + Datum + Quellenlink angeben.";
+    systemPrompt += " Wenn kein Aktenzeichen in den URTEILE-QUELLEN steht, zitiere das Urteil NICHT und erfinde kein AZ.";
   }
 
   // ---------------------------------------------------------------------------

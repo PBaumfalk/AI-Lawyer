@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { AkteDetailTabs } from "@/components/akten/akte-detail-tabs";
 import { AkteDetailHeader } from "@/components/akten/akte-detail-header";
+import { NormenSection } from "@/components/akten/normen-section";
 import { AkteSocketBridge } from "@/components/akten/akte-socket-bridge";
 import { AkteTimerBridge } from "@/components/akten/akte-timer-bridge";
 import { AdminOverrideButton } from "@/components/admin/admin-override-button";
@@ -48,6 +49,10 @@ export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
         orderBy: { createdAt: "desc" },
         take: 50,
         include: { user: { select: { name: true } } },
+      },
+      normen: {
+        include: { addedBy: { select: { name: true } } },
+        orderBy: { createdAt: "desc" },
       },
       _count: {
         select: {
@@ -121,6 +126,12 @@ export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
           value={akte._count.chatNachrichten}
         />
       </div>
+
+      {/* Verknüpfte Normen — pinned § for Helena context */}
+      <NormenSection
+        akteId={id}
+        initialNormen={serializedAkte.normen ?? []}
+      />
 
       {/* Tabbed content */}
       <AkteDetailTabs akte={serializedAkte} />

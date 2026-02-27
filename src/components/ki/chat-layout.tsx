@@ -40,7 +40,7 @@ export function ChatLayout({
 
   // Single shared useChat instance — owned here so both ChatInput and ChatMessages
   // operate on the same message state and streaming response.
-  const { messages, append, isLoading, setMessages } = useChat({
+  const { messages, append, status, stop, error, setMessages } = useChat({
     api: "/api/ki-chat",
     body: {
       akteId: selectedAkteId,
@@ -60,7 +60,15 @@ export function ChatLayout({
     onFinish: () => {
       setRefreshKey((k) => k + 1);
     },
+    onError: (err) => {
+      // Error is captured in the `error` state from useChat and displayed
+      // by ChatMessages. No additional handling needed here.
+      console.error("[ki-chat] Request failed:", err.message);
+    },
   });
+
+  // Derive isLoading from status for components that need a boolean
+  const isLoading = status === "submitted" || status === "streaming";
 
   // Reset messages + sources when switching to a different conversation
   useEffect(() => {
@@ -99,21 +107,26 @@ export function ChatLayout({
   }, []);
 
   const handleNewChat = useCallback(() => {
+    // Abort any in-flight request first — this resets useChat status to "ready"
+    // and prevents the loading indicator from being stuck.
+    stop();
     setSelectedConversationId(null);
     setMessages([]);
     setSources([]);
     setRefreshKey((k) => k + 1);
-  }, [setMessages]);
+  }, [setMessages, stop]);
 
   const handleSelectConversation = useCallback(
     (convId: string, akteId: string | null) => {
+      // Abort any in-flight request before switching conversations
+      stop();
       setSelectedConversationId(convId);
       if (akteId) {
         setSelectedAkteId(akteId);
         setCrossAkte(false);
       }
     },
-    []
+    [stop]
   );
 
   return (
@@ -189,6 +202,7 @@ export function ChatLayout({
             key={selectedConversationId ?? "new"}
             messages={messages}
             isLoading={isLoading}
+            error={error}
             sources={sources}
             conversationId={selectedConversationId}
           />

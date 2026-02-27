@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { UIMessage } from "@ai-sdk/react";
-import { Bot, User, Copy, Link2, FileDown, Sparkles } from "lucide-react";
+import { Bot, User, Copy, Link2, FileDown, Sparkles, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SourceCitations, type SourceData } from "@/components/ki/source-citations";
 import ReactMarkdown from "react-markdown";
@@ -11,6 +11,7 @@ import remarkGfm from "remark-gfm";
 interface ChatMessagesProps {
   messages: UIMessage[];
   isLoading: boolean;
+  error?: Error | undefined;
   sources: SourceData[];
   conversationId: string | null;
 }
@@ -25,6 +26,7 @@ interface StoredMessage {
 export function ChatMessages({
   messages,
   isLoading,
+  error,
   sources,
   conversationId,
 }: ChatMessagesProps) {
@@ -206,6 +208,29 @@ export function ChatMessages({
           </div>
         );
       })}
+
+      {/* Error indicator */}
+      {error && !isLoading && (
+        <div className="flex gap-3 justify-start">
+          <div className="flex-shrink-0 mt-0.5">
+            <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            </div>
+          </div>
+          <div className="rounded-2xl rounded-bl-sm px-4 py-3 bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200/50 dark:border-rose-800/30">
+            <p className="text-sm text-rose-700 dark:text-rose-300 font-medium">
+              Helena konnte nicht antworten
+            </p>
+            <p className="text-xs text-rose-600/80 dark:text-rose-400/70 mt-1">
+              {error.message.includes("Nicht authentifiziert")
+                ? "Sitzung abgelaufen — bitte Seite neu laden."
+                : error.message.includes("Failed to fetch")
+                  ? "Verbindung zum Server fehlgeschlagen. Bitte pruefen Sie Ihre Internetverbindung."
+                  : "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Loading indicator */}
       {isLoading && (

@@ -34,6 +34,11 @@ import { runAgent, type AgentRunResult, type StepUpdate, type AgentStep } from "
 import { classifyComplexity, getModelForTier, escalateTier } from "./complexity-classifier";
 import { checkRateLimit } from "./rate-limiter";
 import { ollamaResponseGuard, contentScanGuard } from "./response-guard";
+import {
+  runSchriftsatzPipeline,
+  isSchriftsatzIntent,
+  renderSchriftsatzMarkdown,
+} from "./schriftsatz";
 
 const log = createLogger("helena");
 
@@ -170,6 +175,82 @@ export async function runHelenaAgent(
     },
     "Complexity classification",
   );
+
+  // -----------------------------------------------------------------------
+  // 3b. Check for Schriftsatz intent -- route to deterministic pipeline
+  // -----------------------------------------------------------------------
+
+  if (
+    akteId &&
+    classification.tier === 3 &&
+    isSchriftsatzIntent(message)
+  ) {
+    log.info(
+      { akteId, tier: classification.tier },
+      "Schriftsatz intent detected -- routing to deterministic pipeline",
+    );
+
+    const pipelineResult = await runSchriftsatzPipeline({
+      prisma,
+      userId,
+      userRole,
+      userName,
+      akteId,
+      message,
+      abortSignal,
+      onStepUpdate: onStepUpdate
+        ? (step) => onStepUpdate({
+            stepNumber: 0,
+            toolName: step.stage,
+            description: step.detail,
+          })
+        : undefined,
+    });
+
+    // Map pipeline result to HelenaAgentResult
+    if (pipelineResult.status === "needs_input") {
+      return {
+        text: pipelineResult.rueckfrage ?? "Ich brauche weitere Informationen.",
+        mode: actualMode,
+        tier: 3,
+        steps: [{ type: "thought", content: "Schriftsatz-Pipeline: Rueckfrage", timestamp: Date.now() }],
+        totalTokens: pipelineResult.totalTokens,
+        finishReason: "needs-input",
+        capReached: false,
+      };
+    }
+
+    if (pipelineResult.status === "error") {
+      return {
+        text: "Beim Erstellen des Schriftsatzes ist ein Fehler aufgetreten. " +
+          (pipelineResult.warnungen[0]?.text ?? "Bitte versuche es erneut."),
+        mode: actualMode,
+        tier: 3,
+        steps: [{ type: "error", content: pipelineResult.warnungen[0]?.text ?? "Pipeline error", timestamp: Date.now() }],
+        totalTokens: pipelineResult.totalTokens,
+        finishReason: "error",
+        capReached: false,
+      };
+    }
+
+    // Success -- render markdown and return
+    const markdown = pipelineResult.schriftsatz
+      ? renderSchriftsatzMarkdown(pipelineResult.schriftsatz)
+      : "Schriftsatz erstellt.";
+
+    return {
+      text: markdown,
+      mode: actualMode,
+      tier: 3,
+      steps: [
+        { type: "thought", content: `Schriftsatz-Pipeline: ${pipelineResult.schriftsatz?.klageart} erstellt`, timestamp: Date.now() },
+        { type: "toolResult", content: JSON.stringify({ draftId: pipelineResult.draftId, belege: pipelineResult.retrieval_belege.length }), timestamp: Date.now() },
+      ],
+      totalTokens: pipelineResult.totalTokens,
+      finishReason: "complete",
+      capReached: false,
+    };
+  }
 
   // -----------------------------------------------------------------------
   // 4. Get model for tier
@@ -376,3 +457,7 @@ export type { AgentRunOptions, AgentRunResult, StepUpdate, AgentStep } from "./o
 export type { ToolContext, ToolResult } from "./tools/types";
 export type { ComplexityResult } from "./complexity-classifier";
 export type { RateLimitResult } from "./rate-limiter";
+
+// Schriftsatz pipeline re-exports
+export { runSchriftsatzPipeline, isSchriftsatzIntent } from "./schriftsatz";
+export type { SchriftsatzPipelineResult, SchriftsatzPipelineOptions } from "./schriftsatz";

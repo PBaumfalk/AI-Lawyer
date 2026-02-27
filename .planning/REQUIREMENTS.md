@@ -18,9 +18,9 @@
 ### Orchestrator (ORCH)
 
 - [ ] **ORCH-01**: Deterministic Schriftsatz-Orchestrator mit festem Ablauf: Intent-Erkennung → Slot-Filling → RAG-Retrieval → Output-Assembly → ERV-Validator
-- [ ] **ORCH-02**: Intent-Router erkennt Klageart, Stadium, Gerichtszweig aus Nutzeranfrage (KSchG-Klage, Mahnung, EV-Antrag, etc.)
-- [ ] **ORCH-03**: SchriftsatzSchema als Zod-typisiertes Zwischenformat (Rubrum, Anträge, Sachverhalt, Rechtliche Würdigung, Beweisangebote, Anlagen, Kosten, Formales)
-- [ ] **ORCH-04**: Slot-Filling mit automatischer Rückfrage bei fehlenden Pflichtfeldern (Kläger, Beklagter, Kündigungsdatum etc.)
+- [x] **ORCH-02**: Intent-Router erkennt Klageart, Stadium, Gerichtszweig aus Nutzeranfrage (KSchG-Klage, Mahnung, EV-Antrag, etc.)
+- [x] **ORCH-03**: SchriftsatzSchema als Zod-typisiertes Zwischenformat (Rubrum, Anträge, Sachverhalt, Rechtliche Würdigung, Beweisangebote, Anlagen, Kosten, Formales)
+- [x] **ORCH-04**: Slot-Filling mit automatischer Rückfrage bei fehlenden Pflichtfeldern (Kläger, Beklagter, Kündigungsdatum etc.)
 - [ ] **ORCH-05**: Einheitlicher Platzhalter-Standard über alle Muster und Output ({{Kläger_Name}}, {{Streitwert_EUR}} etc.)
 - [ ] **ORCH-06**: ERV/beA-Validator als letzter Schritt mit warnungen[] (PDF/A, Signaturpflicht, Dateigrößen-Limits)
 - [ ] **ORCH-07**: Jeder Schriftsatz-Entwurf enthält retrieval_belege[] (welche Chunks genutzt wurden — Audit-Trail)
@@ -120,9 +120,9 @@
 | AGNT-06 | Phase 20 | Complete |
 | AGNT-07 | Phase 21 | Complete |
 | ORCH-01 | Phase 22 | Pending |
-| ORCH-02 | Phase 22 | Pending |
-| ORCH-03 | Phase 22 | Pending |
-| ORCH-04 | Phase 22 | Pending |
+| ORCH-02 | Phase 22 | Complete |
+| ORCH-03 | Phase 22 | Complete |
+| ORCH-04 | Phase 22 | Complete |
 | ORCH-05 | Phase 22 | Pending |
 | ORCH-06 | Phase 22 | Pending |
 | ORCH-07 | Phase 22 | Pending |

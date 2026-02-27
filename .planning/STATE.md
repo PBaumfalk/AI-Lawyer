@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena Agent
 status: unknown
-last_updated: "2026-02-27T17:02:46.963Z"
+last_updated: "2026-02-27T19:55:15.000Z"
 progress:
   total_phases: 13
   completed_phases: 12
   total_plans: 36
-  completed_plans: 36
+  completed_plans: 37
 ---
 
 # Project State
@@ -18,22 +18,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail.
-**Current focus:** v0.2 Helena Agent — Phase 21 in progress
+**Current focus:** v0.2 Helena Agent — Phase 22 in progress
 
 ## Current Position
 
 Phase: 22 of 26 (Schriftsatz Orchestrator)
-Plan: 0 of 2 in current phase
-Status: Phase 21 complete, ready for Phase 22
-Last activity: 2026-02-27 — Completed 21-02 Helena Task API Routes and Worker Registration
+Plan: 1 of 2 in current phase
+Status: Phase 22 Plan 01 complete, ready for Plan 02
+Last activity: 2026-02-27 — Completed 22-01 SchriftsatzSchema + Intent Router + Slot Filler
 
-Progress: [████░░░░░░] 44%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 70 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 7/16
+- v0.2 plans: 8/16
 
 **By Phase (v0.2):**
 
@@ -42,7 +42,7 @@ Progress: [████░░░░░░] 44%
 | 19. Schema Foundation | 1/1 | 3min | 3min |
 | 20. Agent Tools + ReAct Loop | 4/4 | 22min | 5.5min |
 | 21. @Helena Task-System | 2/2 | 6min | 3min |
-| 22. Schriftsatz Orchestrator | 0/2 | - | - |
+| 22. Schriftsatz Orchestrator | 1/2 | 6min | 6min |
 | 23. Draft-Approval Workflow | 0/2 | - | - |
 | 24. Scanner + Alerts | 0/2 | - | - |
 | 25. Helena Memory | 0/1 | - | - |
@@ -84,6 +84,11 @@ Recent decisions affecting v0.2:
 - lockDuration:120_000 on Worker instance (not queue) per BullMQ v5 best practice
 - Helena API uses requireAuth() + buildAkteAccessFilter() (consistent with existing route patterns)
 - No PRAKTIKANT check in Helena API -- role removed in Phase 8, all 4 existing roles can use @Helena
+- IntentResultSchema.rechtsgebiet aligns with Prisma Sachgebiet enum (VERKEHRSRECHT, INKASSO) for direct mapping
+- fillSlots() is pure function (no LLM, no DB) for deterministic behavior and easy testing
+- {{UPPER_SNAKE_CASE}} is the unified Platzhalter standard for all Schriftsatz output
+- Akte pre-fill populates all alias slots (PARTEI_A, ANTRAGSTELLER, BERUFUNGSKLAEGER, ABSENDER) from mandant/gegner
+- Abmahnung has custom section config (aussergerichtlich nature, no beweisangebote/anlagen/kosten)
 
 ### Pending Todos
 
@@ -101,5 +106,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 22 context gathered. Ready for planning.
-Resume file: .planning/phases/22-deterministic-schriftsatz-orchestrator/22-CONTEXT.md
+Stopped at: Completed 22-01-PLAN.md (SchriftsatzSchema + Intent Router + Slot Filler)
+Resume file: .planning/phases/22-deterministic-schriftsatz-orchestrator/22-01-SUMMARY.md

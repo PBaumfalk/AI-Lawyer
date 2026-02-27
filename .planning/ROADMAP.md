@@ -48,7 +48,7 @@ See: `milestones/v3.5-ROADMAP.md` for full phase details.
 **Milestone Goal:** Helena mit drei Wissensquellen ausstatten (Gesetze, Urteile, Schriftsatzmuster) und die RAG-Pipeline durch Hybrid Search, Parent-Child Chunking und Cross-Encoder Reranking auf NotebookLM-Qualität heben.
 
 - [x] **Phase 12: RAG Schema Foundation** — Prisma-Migrationen für LawChunk, UrteilChunk, Muster, MusterChunk, AkteNorm; chunkType-Enum und parentChunkId auf DocumentChunk; HNSW-Indexes (completed 2026-02-26)
-- [ ] **Phase 13: Hybrid Search + Reranking** — RRF-Fusion (Meilisearch BM25 + pgvector) mit k=60, Cross-Encoder Reranking via Ollama, Parent-Child Chunker; ki-chat-Route auf hybridSearch umgestellt
+- [x] **Phase 13: Hybrid Search + Reranking** — RRF-Fusion (Meilisearch BM25 + pgvector) mit k=60, Cross-Encoder Reranking via Ollama, Parent-Child Chunker; ki-chat-Route auf hybridSearch umgestellt (completed 2026-02-27)
 - [ ] **Phase 14: Gesetze-RAG** — bundestag/gesetze GitHub-Sync in law_chunks, täglicher BullMQ-Cron, Encoding-Smoke-Test; Helena retrievet automatisch Top-5 Normen bei Rechtsfragen
 - [ ] **Phase 15: Normen-Verknüpfung in Akte** — AkteNorm-API, Norm-Suchmodal in Akte-Detailseite, Chip-Liste, pinned Normen in Helenas System-Kontext
 - [ ] **Phase 16: PII-Filter** — Regex + Ollama NER (5+ Few-Shot-Beispiele, Institution-Whitelist), Acceptance-Test auf 10 echten Gerichtsentscheidungen; Status-Machine PENDING_NER → INDEXED | REJECTED
@@ -152,7 +152,7 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 12. RAG Schema Foundation | 1/1 | Complete    | 2026-02-26 | - |
-| 13. Hybrid Search + Reranking | 2/3 | In Progress|  | - |
+| 13. Hybrid Search + Reranking | 3/3 | Complete   | 2026-02-27 | - |
 | 14. Gesetze-RAG | v0.1 | 0/TBD | Not started | - |
 | 15. Normen-Verknüpfung in Akte | v0.1 | 0/TBD | Not started | - |
 | 16. PII-Filter | v0.1 | 0/TBD | Not started | - |

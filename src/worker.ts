@@ -2,6 +2,8 @@ import { Worker } from "bullmq";
 import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
 import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerUrteileSyncJob, ocrQueue } from "@/lib/queue/queues";
+import { processMusterIngestionJob, processMusterIngestPending, type MusterIngestionJobData } from "@/lib/queue/processors/muster-ingestion.processor";
+import { seedAmtlicheFormulare } from "@/lib/muster/seed-amtliche";
 import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.processor";
 import { processFristReminders } from "@/workers/processors/frist-reminder";
 import { initializeDefaults, getSettingTyped } from "@/lib/settings/service";
@@ -634,6 +636,36 @@ urteileSyncWorker.on("error", (err) => {
 workers.push(urteileSyncWorker);
 log.info("[Worker] urteile-sync processor registered");
 
+// ─── Muster-Ingestion Queue Worker ───────────────────────────────────────────
+
+const musterIngestionWorker = new Worker<MusterIngestionJobData>(
+  "muster-ingestion",
+  async (job) => processMusterIngestionJob(job.data),
+  {
+    connection,
+    concurrency: 2, // Allow two concurrent ingestion jobs (embedding is sequential inside)
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+musterIngestionWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info({ jobId: job.id }, "muster-ingestion job completed");
+});
+
+musterIngestionWorker.on("failed", (job, err) => {
+  log.error({ jobId: job?.id, err }, "muster-ingestion job failed");
+});
+
+musterIngestionWorker.on("error", (err) => {
+  log.error({ err }, "muster-ingestion worker error");
+});
+
+workers.push(musterIngestionWorker);
+log.info("[Worker] muster-ingestion processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -776,6 +808,20 @@ async function startup() {
     log.warn({ err }, "Failed to recover stuck NER jobs (non-fatal)");
   }
 
+  // Re-enqueue any INDEXED Muster that has 0 chunks (recovery for crashed ingestion jobs)
+  try {
+    await processMusterIngestPending();
+  } catch (err) {
+    log.warn({ err }, "Failed to run muster ingest pending sweep (non-fatal)");
+  }
+
+  // Seed 6 amtliche Arbeitsrecht Formulare on first boot (idempotent via SystemSetting)
+  try {
+    await seedAmtlicheFormulare();
+  } catch (err) {
+    log.warn({ err }, "Failed to seed amtliche Formulare (non-fatal)");
+  }
+
   // Re-queue documents that previously failed OCR (e.g. due to Stirling-PDF being unavailable).
   // Resets FEHLGESCHLAGEN → AUSSTEHEND and enqueues a fresh OCR job.
   try {
@@ -826,7 +872,7 @@ async function startup() {
         "test", "frist-reminder", "email-send", "email-sync",
         "document-ocr", "document-preview", "document-embedding",
         "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync", "ner-pii",
-        "urteile-sync",
+        "urteile-sync", "muster-ingestion",
       ],
       fristScanZeit: scanZeit,
     },

@@ -157,6 +157,20 @@ export const urteileSyncQueue = new Queue("urteile-sync", {
   },
 });
 
+/**
+ * Muster-ingestion queue for automatic chunk ingestion after NER gate passes.
+ * attempts: 2 — retry once on transient embedding or MinIO failures.
+ */
+export const musterIngestionQueue = new Queue("muster-ingestion", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: "custom" },
+    removeOnComplete: { age: 86_400 },   // 24h
+    removeOnFail: { age: 604_800 },      // 7 days
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
 export const ALL_QUEUES: Queue[] = [
   testQueue,
@@ -172,6 +186,7 @@ export const ALL_QUEUES: Queue[] = [
   gesetzeSyncQueue,
   nerPiiQueue,
   urteileSyncQueue,
+  musterIngestionQueue,
 ];
 
 /**

@@ -17,6 +17,7 @@ import { createLogger } from "@/lib/logger";
 import { prisma } from "@/lib/db";
 import { runNerFilter } from "@/lib/pii/ner-filter";
 import { getFileStream } from "@/lib/storage";
+import { musterIngestionQueue } from "@/lib/queue/queues";
 
 const log = createLogger("ner-pii-processor");
 
@@ -122,6 +123,8 @@ async function processMusterNer(musterId: string): Promise<void> {
         data: { nerStatus: "INDEXED" },
       });
       log.info({ musterId }, "Muster NER passed: no PII");
+      // Phase 18: trigger chunk ingestion after NER passes
+      await musterIngestionQueue.add("ingest-muster", { musterId });
     }
   } catch (err) {
     // CRITICAL: reset to PENDING_NER on ANY error (including AbortError/timeout)

@@ -59,7 +59,9 @@ export type AuditAktion =
   | "BEA_ZUORDNUNG_GEAENDERT"
   | "BEA_ANHANG_HERUNTERGELADEN"
   | "BEA_SAFEID_GEAENDERT"
-  | "BEA_POSTFACH_GEWECHSELT"; // BEA_POSTFACH_GEWECHSELT: reserved for future multi-postbox UI
+  | "BEA_POSTFACH_GEWECHSELT" // BEA_POSTFACH_GEWECHSELT: reserved for future multi-postbox UI
+  | "NORM_VERKNUEPFT"
+  | "NORM_ENTFERNT";
 
 /**
  * German human-readable labels for all audit actions.
@@ -125,6 +127,8 @@ export const AKTION_LABELS: Record<string, string> = {
   BEA_ANHANG_HERUNTERGELADEN: "beA Anhang heruntergeladen",
   BEA_SAFEID_GEAENDERT: "Safe-ID geaendert",
   BEA_POSTFACH_GEWECHSELT: "beA Postfach gewechselt",
+  NORM_VERKNUEPFT: "hat Norm verknuepft",
+  NORM_ENTFERNT: "hat Norm entfernt",
 };
 
 /**

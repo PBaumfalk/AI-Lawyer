@@ -159,6 +159,16 @@ Plans:
 - [ ] 23-01: ENTWURF Prisma middleware gate and HelenaDraft lifecycle (accept/reject/edit with auto-creation)
 - [ ] 23-02: Draft notification (Socket.IO) and rejection-feedback-to-context pipeline
 
+### Phase 23.1: Integration Wiring Fixes
+**Goal**: Close cross-phase integration gaps found by milestone audit — wire orphaned modules and fix multi-turn Schriftsatz flow
+**Depends on**: Phase 22, Phase 23
+**Requirements**: DRFT-06, ORCH-04
+**Gap Closure:** Closes integration gaps from v0.2 audit
+**Success Criteria** (what must be TRUE):
+  1. `update-akte-rag.ts` calls `notifyDraftCreated` after `helenaDraft.create` (completes DRFT-06 for all 6 write-tool sites)
+  2. Schriftsatz pipeline Rueckfragen can be answered via follow-up message — `userSlotValues` routing through agent options or conversation state persistence enables multi-turn slot-filling (ORCH-04)
+**Plans**: TBD
+
 ### Phase 24: Scanner + Alerts
 **Goal**: Helena proactively scans all open cases nightly and surfaces critical issues as prioritized alerts without users needing to ask
 **Depends on**: Phase 19, Phase 20
@@ -208,15 +218,16 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute: 19 -> 20 -> 21 + 22 + 23 + 24 + 25 (parallel-eligible after 20, but executed sequentially) -> 26
+Phases execute: 19 -> 20 -> 21 + 22 + 23 -> 23.1 -> 24 + 25 (parallel-eligible, executed sequentially) -> 26
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 19. Schema Foundation | 1/1 | Complete    | 2026-02-27 | - |
-| 20. Agent Tools + ReAct Loop | 4/4 | Complete    | 2026-02-27 | - |
-| 21. @Helena Task-System | 2/2 | Complete    | 2026-02-27 | - |
-| 22. Schriftsatz Orchestrator | 2/2 | Complete    | 2026-02-27 | - |
-| 23. Draft-Approval Workflow | 3/3 | Complete    | 2026-02-27 | - |
+| 19. Schema Foundation | v0.2 | 1/1 | Complete | 2026-02-27 |
+| 20. Agent Tools + ReAct Loop | v0.2 | 4/4 | Complete | 2026-02-27 |
+| 21. @Helena Task-System | v0.2 | 2/2 | Complete | 2026-02-27 |
+| 22. Schriftsatz Orchestrator | v0.2 | 2/2 | Complete | 2026-02-27 |
+| 23. Draft-Approval Workflow | v0.2 | 3/3 | Complete | 2026-02-27 |
+| 23.1. Integration Wiring Fixes | v0.2 | 0/TBD | Not started | - |
 | 24. Scanner + Alerts | v0.2 | 0/2 | Not started | - |
 | 25. Helena Memory | v0.2 | 0/1 | Not started | - |
 | 26. Activity Feed UI + QA-Gates | v0.2 | 0/3 | Not started | - |

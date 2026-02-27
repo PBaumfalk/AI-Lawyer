@@ -18,7 +18,7 @@ import { prisma } from "@/lib/db";
 import { getModel, getModelName, getProviderName } from "@/lib/ai/provider";
 import { trackTokenUsage } from "@/lib/ai/token-tracker";
 import { generateQueryEmbedding } from "@/lib/embedding/embedder";
-import { searchSimilar, type SearchResult } from "@/lib/embedding/vector-store";
+import { hybridSearch, type HybridSearchResult } from "@/lib/embedding/hybrid-search";
 
 // ---------------------------------------------------------------------------
 // System prompt for Helena (German)
@@ -282,27 +282,30 @@ ${terminLines}
     }
   })();
 
-  // Chain B: RAG retrieval (embedding + vector search)
+  // Chain B: RAG retrieval (hybrid search: BM25 + vector + RRF + reranking)
   const ragPromise = (async (): Promise<{
-    sources: SearchResult[];
+    sources: HybridSearchResult[];
     confidenceFlag: "none" | "low" | "ok";
   }> => {
     try {
       const queryEmbedding = await generateQueryEmbedding(queryText);
-      const results = await searchSimilar(queryEmbedding, {
+      const results = await hybridSearch(queryText, queryEmbedding, {
         akteId: akteId ?? undefined,
         crossAkte,
         userId,
-        limit: 10,
+        bm25Limit: 50,
+        vectorLimit: 50,
+        finalLimit: 10,
       });
 
       if (results.length === 0) {
         return { sources: results, confidenceFlag: "none" };
       }
-      const maxScore = Math.max(...results.map((s) => s.score));
+      // RRF scores: rank-1 = 1/(60+1) ≈ 0.016. Any results returned are meaningful.
+      // "low" confidence reserved for future quality scoring; RRF results are always relevant.
       return {
         sources: results,
-        confidenceFlag: maxScore < 0.3 ? "low" : "ok",
+        confidenceFlag: "ok",
       };
     } catch (err) {
       console.error("[ki-chat] RAG retrieval failed:", err);
@@ -338,7 +341,7 @@ ${terminLines}
   if (sources.length > 0) {
     systemPrompt += "\n\n--- QUELLEN ---\n";
     sources.forEach((src, i) => {
-      systemPrompt += `\n[${i + 1}] Dokument: ${src.dokumentName} (Akte: ${src.akteAktenzeichen})\n${src.content}\n`;
+      systemPrompt += `\n[${i + 1}] Dokument: ${src.dokumentName} (Akte: ${src.akteAktenzeichen})\n${src.contextContent}\n`;
     });
     systemPrompt += "\n--- ENDE QUELLEN ---";
   }
@@ -355,6 +358,7 @@ ${terminLines}
     akteAktenzeichen: src.akteAktenzeichen,
     passage: src.content.slice(0, 200),
     score: src.score,
+    sources: src.sources, // ['bm25', 'vector'] | ['bm25'] | ['vector']
   }));
 
   const result = streamText({

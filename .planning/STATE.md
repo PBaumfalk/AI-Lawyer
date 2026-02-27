@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena RAG
 status: unknown
-last_updated: "2026-02-27T07:33:38.653Z"
+last_updated: "2026-02-27T07:37:00Z"
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 20
-  completed_plans: 19
+  completed_plans: 20
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine proaktive KI-Agentin aktenuebergreifend lernt, automatisch Entwuerfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.1 Helena RAG — Phase 15 (Normen-Verknuepfung in Akte) — Plan 02 complete
+**Current focus:** v0.1 Helena RAG — Phase 15 (Normen-Verknuepfung in Akte) COMPLETE — Phase 16 (PII-Filter) is next
 
 ## Current Position
 
-Phase: 15 of 18 (Normen-Verknuepfung in Akte) — in progress
-Plan: 2 of 3 complete
-Status: Phase 15 Plan 02 complete — ki-chat Chain A extended with pinned normen injection. Phase 15 Plan 03 (if any) or Phase 16 (PII-Filter) is next.
-Last activity: 2026-02-27 — Phase 15 Plan 02 complete: ki-chat Chain A injects PINNED NORMEN block from AkteNorm into system prompt
+Phase: 15 of 18 (Normen-Verknuepfung in Akte) — COMPLETE
+Plan: 3 of 3 complete
+Status: Phase 15 Plan 03 complete — NormenSection UI component built and wired into Akte detail page. Phase 16 (PII-Filter) is next.
+Last activity: 2026-02-27 — Phase 15 Plan 03 complete: NormenSection chip-list + search modal + detail sheet visible on every Akte detail page
 
-Progress: [██░░░░░░░░] ~10%
+Progress: [███░░░░░░░] ~15%
 
 ## Performance Metrics
 
@@ -43,7 +43,7 @@ Progress: [██░░░░░░░░] ~10%
 | 12. RAG Schema Foundation | 1/1 | ~5m | 5m |
 | 13. Hybrid Search + Reranking | 3/3 | ~18m | 6m |
 | 14. Gesetze-RAG | 3/3 | ~4m | ~2m |
-| 15. Normen-Verknüpfung in Akte | 2/3 | ~4m+~4m | ~4m |
+| 15. Normen-Verknüpfung in Akte | 3/3 | ~4m+~4m+~2m | ~3m |
 | 16. PII-Filter | 0/TBD | - | - |
 | 17. Urteile-RAG | 0/TBD | - | - |
 | 18. Muster-RAG + Admin Upload UI | 0/TBD | - | - |
@@ -79,6 +79,8 @@ Recent decisions affecting v0.1:
 - [Phase 15-01]: Search route uses LEFT(content, 300) in raw ILIKE SQL to cap payload; minimum q.length < 2 guard prevents full-table scans
 - [Phase 15-02]: Chain A return type changed from Promise<string> to Promise<{ aktenKontextBlock, pinnedNormenBlock }> — pinned normen fetched inside Chain A, not a new Chain E; PINNED NORMEN injected before QUELLEN and GESETZE-QUELLEN
 - [Phase 15-02]: akteNorm.findMany + Promise.all(findFirst) pattern — cannot use Prisma include JOIN with LawChunk due to Unsupported(vector(1024)) column
+- [Phase 15-03]: @radix-ui/react-dialog primitive used directly (Dialog.Root/Portal/Overlay/Content) — dialog.tsx shadcn component does not exist in this project; no new package added
+- [Phase 15-03]: initialNormen rendered directly from server props (no local useState) — router.refresh() re-runs server component for fresh DB data after mutations
 
 ### Pending Todos
 
@@ -100,5 +102,5 @@ Recent decisions affecting v0.1:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Phase 15 Plan 02 complete. PINNED NORMEN injection into ki-chat system prompt done. Phase 15 Plan 03 or Phase 16 (PII-Filter) is next.
+Stopped at: Phase 15 Plan 03 complete. NormenSection UI fully wired into Akte detail page. Phase 15 COMPLETE. Phase 16 (PII-Filter) is next.
 Resume file: None

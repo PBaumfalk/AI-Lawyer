@@ -26,6 +26,7 @@ import {
 } from "./platzhalter";
 import { getKlageartDefinition } from "./klageart-registry";
 import { SchriftsatzSchema } from "./schemas";
+import { notifyDraftCreated } from "@/lib/helena/draft-notification";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -283,6 +284,19 @@ export async function runSchriftsatzPipeline(
         meta: schriftsatz as unknown as Record<string, unknown>,
       },
     });
+
+    // Resolve Akte owner for notification recipients
+    const akteForNotify = await prisma.akte.findUnique({
+      where: { id: akteId },
+      select: { anwaltId: true, sachbearbeiterId: true },
+    });
+    const akteAnwaltId = akteForNotify?.anwaltId ?? akteForNotify?.sachbearbeiterId ?? null;
+
+    // Fire-and-forget: notification failure must not fail the pipeline
+    notifyDraftCreated(
+      { id: draft.id, akteId, userId, typ: "DOKUMENT", titel: draft.titel },
+      akteAnwaltId,
+    ).catch(() => {});
 
     return {
       status: "complete",

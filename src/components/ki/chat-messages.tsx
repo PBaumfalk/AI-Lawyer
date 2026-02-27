@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import type { UIMessage } from "@ai-sdk/react";
+import type { UIMessage } from "@ai-sdk/ui-utils";
 import { Bot, User, Copy, Link2, FileDown, Sparkles, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SourceCitations, type SourceData } from "@/components/ki/source-citations";

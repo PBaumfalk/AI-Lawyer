@@ -95,7 +95,12 @@ export async function getModel(): Promise<LanguageModel> {
         cachedOllama = createOllama({ baseURL: `${ollamaUrl}/api` });
         cachedOllamaUrl = ollamaUrl;
       }
-      return cachedOllama(model);
+      // LFM2 models need specific sampling settings per docs.liquid.ai
+      const isLfm = model.toLowerCase().startsWith("lfm");
+      const ollamaSettings = isLfm
+        ? { minP: 0.15, repeatPenalty: 1.05 }
+        : {};
+      return cachedOllama(model, ollamaSettings);
     }
   }
 }

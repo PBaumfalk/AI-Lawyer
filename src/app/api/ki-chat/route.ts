@@ -496,10 +496,23 @@ ${terminLines}
     sources: src.sources, // ['bm25', 'vector'] | ['bm25'] | ['vector']
   }));
 
+  // ---------------------------------------------------------------------------
+  // Model-specific sampling parameters
+  // LFM2 requires strict settings per docs.liquid.ai — without these it
+  // parrots prompt structure instead of following instructions.
+  // ---------------------------------------------------------------------------
+
+  const isLfm = modelName.toLowerCase().startsWith("lfm");
+
+  const samplingParams = isLfm
+    ? { temperature: 0.3, topK: 50, frequencyPenalty: 0.05 }
+    : {};
+
   const result = streamText({
     model,
     system: systemPrompt,
     messages,
+    ...samplingParams,
     onFinish: async ({ text, usage }) => {
       const tokensIn = usage?.promptTokens ?? 0;
       const tokensOut = usage?.completionTokens ?? 0;

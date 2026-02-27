@@ -33,7 +33,7 @@ Requirements für v0.1 Helena RAG. Jede Anforderung mapped auf eine Roadmap-Phas
 - [x] **ARBW-02**: Admin-UI unter `/admin/muster` für Upload kanzlei-eigener Schriftsatzmuster (DOCX/PDF → MinIO `muster-uploads/`, nie in Git); shadcn/ui Dateitabelle mit NER-Status-Spalte
 - [x] **ARBW-03**: PII-Anonymisierung vor Ingestion kanzlei-eigener Muster via Ollama NER (identisches Modul wie URTEIL-03); Status-Machine `PENDING_NER → NER_RUNNING → INDEXED | REJECTED_PII_DETECTED` — kein Bypass-Pfad (BRAO §43a)
 - [x] **ARBW-04**: Kanzlei-eigene Muster erhalten höchsten Retrieval-Boost (über öffentliche Formulare); Schriftsatz-Relevanz-Score in Metadaten
-- [ ] **ARBW-05**: Helena erstellt strukturierte Schriftsatz-Entwürfe (Rubrum, Anträge, Begründung mit Platzhaltern) aus muster_chunks + relevanten law_chunks + urteil_chunks + Akten-Kontext; Ausgabe immer als ENTWURF mit expliziten `{{PLATZHALTER}}`
+- [x] **ARBW-05**: Helena erstellt strukturierte Schriftsatz-Entwürfe (Rubrum, Anträge, Begründung mit Platzhaltern) aus muster_chunks + relevanten law_chunks + urteil_chunks + Akten-Kontext; Ausgabe immer als ENTWURF mit expliziten `{{PLATZHALTER}}`
 
 ## v2 Requirements
 
@@ -94,7 +94,7 @@ Welche Phasen welche Anforderungen abdecken.
 | ARBW-02 | Phase 18 | Complete |
 | ARBW-03 | Phase 16 | Complete |
 | ARBW-04 | Phase 18 | Complete |
-| ARBW-05 | Phase 18 | Pending |
+| ARBW-05 | Phase 18 | Complete |
 
 **Coverage:**
 - v1 requirements: 16 total

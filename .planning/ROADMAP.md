@@ -53,7 +53,7 @@ See: `milestones/v3.5-ROADMAP.md` for full phase details.
 - [x] **Phase 15: Normen-Verknüpfung in Akte** — AkteNorm-API, Norm-Suchmodal in Akte-Detailseite, Chip-Liste, pinned Normen in Helenas System-Kontext (completed 2026-02-27)
 - [x] **Phase 16: PII-Filter** — Regex + Ollama NER (5+ Few-Shot-Beispiele, Institution-Whitelist), Acceptance-Test auf 10 echten Gerichtsentscheidungen; Status-Machine PENDING_NER → INDEXED | REJECTED (completed 2026-02-27)
 - [x] **Phase 17: Urteile-RAG** — BMJ-Scraper für 7 Bundesgerichte, BAG RSS-Feed, urteil_chunks mit PII-Gate; Helena zitiert Urteile mit Gericht + AZ + Datum + Quellenlink (completed 2026-02-27)
-- [ ] **Phase 18: Muster-RAG + Admin Upload UI** — Amtliche Formulare in muster_chunks, Admin-UI /admin/muster, PII-Gate für kanzlei-eigene Muster, Retrieval-Boost, Helena Schriftsatz-Entwurf
+- [x] **Phase 18: Muster-RAG + Admin Upload UI** — Amtliche Formulare in muster_chunks, Admin-UI /admin/muster, PII-Gate für kanzlei-eigene Muster, Retrieval-Boost, Helena Schriftsatz-Entwurf (completed 2026-02-27)
 
 ## Phase Details
 
@@ -182,4 +182,4 @@ Note: Phase 16 (PII-Filter) depends on Phase 12, not 15. Phases 14-15 and 16 can
 | 15. Normen-Verknüpfung in Akte | 3/3 | Complete    | 2026-02-27 | - |
 | 16. PII-Filter | 3/3 | Complete    | 2026-02-27 | - |
 | 17. Urteile-RAG | 3/3 | Complete    | 2026-02-27 | - |
-| 18. Muster-RAG + Admin Upload UI | 2/3 | In Progress|  | - |
+| 18. Muster-RAG + Admin Upload UI | 3/3 | Complete   | 2026-02-27 | - |

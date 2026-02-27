@@ -19,6 +19,7 @@ import { getModel, getModelName, getProviderName } from "@/lib/ai/provider";
 import { trackTokenUsage } from "@/lib/ai/token-tracker";
 import { generateQueryEmbedding } from "@/lib/embedding/embedder";
 import { hybridSearch, type HybridSearchResult } from "@/lib/embedding/hybrid-search";
+import { searchLawChunks } from "@/lib/gesetze/ingestion";
 
 // ---------------------------------------------------------------------------
 // System prompt for Helena (German)
@@ -282,13 +283,21 @@ ${terminLines}
     }
   })();
 
+  // Shared query embedding — generated once, used by Chain B (hybridSearch) and Chain D (law_chunks).
+  // If embedding fails, both chains degrade gracefully (Chain B returns no sources, Chain D returns []).
+  const queryEmbeddingPromise = generateQueryEmbedding(queryText).catch((err) => {
+    console.error("[ki-chat] Query embedding generation failed:", err);
+    return null as null;
+  });
+
   // Chain B: RAG retrieval (hybrid search: BM25 + vector + RRF + reranking)
   const ragPromise = (async (): Promise<{
     sources: HybridSearchResult[];
     confidenceFlag: "none" | "low" | "ok";
   }> => {
     try {
-      const queryEmbedding = await generateQueryEmbedding(queryText);
+      const queryEmbedding = await queryEmbeddingPromise;
+      if (!queryEmbedding) return { sources: [], confidenceFlag: "none" };
       const results = await hybridSearch(queryText, queryEmbedding, {
         akteId: akteId ?? undefined,
         crossAkte,
@@ -320,9 +329,23 @@ ${terminLines}
     getProviderName(),
   ]);
 
+  // Chain D: law_chunks retrieval (Gesetze-RAG)
+  // Runs in parallel with hybridSearch — shares queryEmbedding to avoid double Ollama round-trip.
+  // Score threshold 0.6: filters out law chunks for non-legal queries (vector similarity = relevance signal).
+  const lawChunksPromise = (async (): Promise<Awaited<ReturnType<typeof searchLawChunks>>> => {
+    try {
+      const queryEmbedding = await queryEmbeddingPromise;
+      if (!queryEmbedding) return [];
+      return await searchLawChunks(queryEmbedding, { limit: 5, minScore: 0.6 });
+    } catch (err) {
+      console.error("[ki-chat] Law chunks search failed:", err);
+      return [];
+    }
+  })();
+
   // Await all chains in parallel
-  const [aktenKontextBlock, ragResult, [model, modelName, providerName]] =
-    await Promise.all([akteContextPromise, ragPromise, modelConfigPromise]);
+  const [aktenKontextBlock, ragResult, [model, modelName, providerName], lawChunks] =
+    await Promise.all([akteContextPromise, ragPromise, modelConfigPromise, lawChunksPromise]);
 
   const { sources, confidenceFlag } = ragResult;
 
@@ -344,6 +367,23 @@ ${terminLines}
       systemPrompt += `\n[${i + 1}] Dokument: ${src.dokumentName} (Akte: ${src.akteAktenzeichen})\n${src.contextContent}\n`;
     });
     systemPrompt += "\n--- ENDE QUELLEN ---";
+  }
+
+  // Inject Gesetze-Quellen block (Chain D results) — only when law_chunks found with score >= 0.6
+  if (lawChunks.length > 0) {
+    systemPrompt += "\n\n--- GESETZE-QUELLEN (nicht amtlich) ---\n";
+    lawChunks.forEach((norm, i) => {
+      const standDate = new Date(norm.syncedAt).toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+      systemPrompt += `\n[G${i + 1}] ${norm.gesetzKuerzel} ${norm.paragraphNr}: ${norm.titel}\n`;
+      systemPrompt += `${norm.content}\n`;
+      systemPrompt += `HINWEIS: nicht amtlich — Stand: ${standDate} | Quelle: ${norm.sourceUrl ?? "https://www.gesetze-im-internet.de/"}\n`;
+    });
+    systemPrompt += "\n--- ENDE GESETZE-QUELLEN ---";
+    systemPrompt += "\n\nWenn du Normen zitierst, füge immer den 'nicht amtlich'-Hinweis und den Quellenlink hinzu.";
   }
 
   // ---------------------------------------------------------------------------

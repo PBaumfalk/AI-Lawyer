@@ -67,7 +67,7 @@ See: `milestones/v0.1-ROADMAP.md` for full phase details.
 
 - [x] **Phase 19: Schema Foundation** - Prisma models for HelenaTask, HelenaDraft, HelenaAlert, HelenaMemory, AktenActivity (completed 2026-02-27)
 - [x] **Phase 20: Agent Tools + ReAct Loop** - Shared tool library (9 read + 5 write) and bounded ReAct agent loop with safeguards (completed 2026-02-27)
-- [ ] **Phase 21: @Helena Task-System** - @-mention parsing, HelenaTask queue, BullMQ worker, task lifecycle
+- [x] **Phase 21: @Helena Task-System** - @-mention parsing, HelenaTask queue, BullMQ worker, task lifecycle (completed 2026-02-27)
 - [ ] **Phase 22: Deterministic Schriftsatz Orchestrator** - Intent-Router, Slot-Filling, SchriftsatzSchema, RAG Assembly, ERV-Validator
 - [ ] **Phase 23: Draft-Approval Workflow** - HelenaDraft lifecycle, ENTWURF Prisma middleware gate, accept/reject/edit with feedback
 - [ ] **Phase 24: Scanner + Alerts** - Background scanner cron, 6 alert types, deduplication, alert-center, Socket.IO push
@@ -121,11 +121,11 @@ Plans:
   3. HelenaTask stores the complete agent trace (thoughts + tool calls as JSON steps[]) after completion
   4. Manually triggered tasks (via @-tag) run at higher priority than scanner-generated tasks
   5. User can abort a running task from the UI, and the agent loop stops between steps (status -> ABGEBROCHEN)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 21-01: @Helena mention parser and BullMQ helena-task queue registration
-- [ ] 21-02: Helena task processor with Socket.IO progress events, abort support, and priority handling
+- [ ] 21-01-PLAN.md — @Helena mention parser, task service, BullMQ helena-task queue, and processor with Socket.IO progress
+- [ ] 21-02-PLAN.md — Helena task API routes (create/list/detail/abort), worker registration with lockDuration: 120_000, startup recovery
 
 ### Phase 22: Deterministic Schriftsatz Orchestrator
 **Goal**: Helena can draft legally-structured court filings via a deterministic pipeline (not free-form agent), with every section validated against retrieved legal sources
@@ -214,7 +214,7 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 + 24 + 25 (parallel-eligible after 20, 
 |-------|-----------|----------------|--------|-----------|
 | 19. Schema Foundation | 1/1 | Complete    | 2026-02-27 | - |
 | 20. Agent Tools + ReAct Loop | 4/4 | Complete    | 2026-02-27 | - |
-| 21. @Helena Task-System | v0.2 | 0/2 | Not started | - |
+| 21. @Helena Task-System | 2/2 | Complete    | 2026-02-27 | - |
 | 22. Schriftsatz Orchestrator | v0.2 | 0/2 | Not started | - |
 | 23. Draft-Approval Workflow | v0.2 | 0/2 | Not started | - |
 | 24. Scanner + Alerts | v0.2 | 0/2 | Not started | - |

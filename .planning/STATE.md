@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.4
 milestone_name: Helena Agent
 status: unknown
-last_updated: "2026-02-27T15:38:53.652Z"
+last_updated: "2026-02-27T17:02:46.963Z"
 progress:
-  total_phases: 12
-  completed_phases: 11
-  total_plans: 34
-  completed_plans: 34
+  total_phases: 13
+  completed_phases: 12
+  total_plans: 36
+  completed_plans: 36
 ---
 
 # Project State
@@ -18,22 +18,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail.
-**Current focus:** v0.2 Helena Agent — Phase 20 in progress
+**Current focus:** v0.2 Helena Agent — Phase 21 in progress
 
 ## Current Position
 
-Phase: 20 of 26 (Agent Tools + ReAct Loop) -- COMPLETE
-Plan: 4 of 4 in current phase -- ALL DONE
-Status: Phase 20 complete, ready for Phase 21
-Last activity: 2026-02-27 — Completed 20-04 Tests for Tools + ReAct Loop
+Phase: 22 of 26 (Schriftsatz Orchestrator)
+Plan: 0 of 2 in current phase
+Status: Phase 21 complete, ready for Phase 22
+Last activity: 2026-02-27 — Completed 21-02 Helena Task API Routes and Worker Registration
 
-Progress: [███░░░░░░░] 31%
+Progress: [████░░░░░░] 44%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 68 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 5/16
+- Total plans completed: 70 (v3.4: 38 + v3.5: 10 + v0.1: 19)
+- v0.2 plans: 7/16
 
 **By Phase (v0.2):**
 
@@ -41,7 +41,7 @@ Progress: [███░░░░░░░] 31%
 |-------|-------|-------|----------|
 | 19. Schema Foundation | 1/1 | 3min | 3min |
 | 20. Agent Tools + ReAct Loop | 4/4 | 22min | 5.5min |
-| 21. @Helena Task-System | 0/2 | - | - |
+| 21. @Helena Task-System | 2/2 | 6min | 3min |
 | 22. Schriftsatz Orchestrator | 0/2 | - | - |
 | 23. Draft-Approval Workflow | 0/2 | - | - |
 | 24. Scanner + Alerts | 0/2 | - | - |
@@ -78,6 +78,12 @@ Recent decisions affecting v0.2:
 - Model name prefix convention (gpt*/claude* -> cloud) for tier-specific provider routing
 - ioredis mock uses class pattern (not vi.fn) for new Redis() constructor compatibility in vitest
 - generateText mock uses swappable generateTextMockImpl variable for per-test LLM behavior control
+- BullMQ priority inversion: Math.max(1, 10 - prioritaet) maps domain priority to BullMQ priority
+- HelenaTaskJobData exported from processor, imported as type in task-service (clean dependency direction)
+- In-process AbortController map for task cancellation (not Redis -- must be same process as agent)
+- lockDuration:120_000 on Worker instance (not queue) per BullMQ v5 best practice
+- Helena API uses requireAuth() + buildAkteAccessFilter() (consistent with existing route patterns)
+- No PRAKTIKANT check in Helena API -- role removed in Phase 8, all 4 existing roles can use @Helena
 
 ### Pending Todos
 
@@ -95,5 +101,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 20-04-PLAN.md (Tests for Tools + ReAct Loop). Phase 20 complete (4/4 plans).
+Stopped at: Completed 21-02-PLAN.md (Helena Task API Routes and Worker Registration). Phase 21 complete (2/2 plans). Ready for Phase 22.
 Resume file: None

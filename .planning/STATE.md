@@ -22,18 +22,18 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 ## Current Position
 
-Phase: 23 of 26 (Draft-Approval Workflow)
-Plan: 1 of 2 in current phase
-Status: Phase 23 in progress
-Last activity: 2026-02-27 — Completed 23-01 Draft Lifecycle Backend (ENTWURF gate + API routes)
+Phase: 24 of 26 (Scanner + Alerts)
+Plan: 0 of 2 in current phase
+Status: Phase 23 complete, Phase 24 next
+Last activity: 2026-02-27 — Completed 23-02 Draft UI Components + Global Inbox
 
-Progress: [██████░░░░] 56%
+Progress: [███████░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 71 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 10/16
+- v0.2 plans: 11/16
 
 **By Phase (v0.2):**
 
@@ -43,7 +43,7 @@ Progress: [██████░░░░] 56%
 | 20. Agent Tools + ReAct Loop | 4/4 | 22min | 5.5min |
 | 21. @Helena Task-System | 2/2 | 6min | 3min |
 | 22. Schriftsatz Orchestrator | 2/2 | 14min | 7min |
-| 23. Draft-Approval Workflow | 1/2 | 9min | 9min |
+| 23. Draft-Approval Workflow | 2/2 | 16min | 8min |
 | 24. Scanner + Alerts | 0/2 | - | - |
 | 25. Helena Memory | 0/1 | - | - |
 | 26. Activity Feed UI + QA-Gates | 0/3 | - | - |
@@ -93,6 +93,9 @@ Recent decisions affecting v0.2:
 - RAG context capped at 4000 chars per section to keep LLM prompts manageable
 - isSchriftsatzIntent is a fast heuristic (no LLM) -- pattern matching on filing terms + action verbs
 - Pipeline stores SchriftsatzSchema as HelenaDraft.meta JSON for downstream processing
+- NavItem extended with badgeKey for generic dynamic sidebar badge support (not Entwuerfe-specific)
+- Socket.IO banner refetch pattern: new draft events show banner, user clicks to reload (not auto-insert)
+- Keyboard shortcuts A/B/R skip text inputs via target.tagName check to avoid form conflicts
 - Schriftsatz routing is an early return in runHelenaAgent -- ReAct code path completely untouched
 - computeGkgFee * 3 for Klageverfahren court costs in Kosten section
 - Prisma $extends (not deprecated middleware) for ENTWURF gate -- Prisma 5 recommended pattern
@@ -119,5 +122,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 23-01-PLAN.md (ENTWURF gate + Draft Lifecycle API)
-Resume file: .planning/phases/23-draft-approval-workflow/23-01-SUMMARY.md
+Stopped at: Completed 23-02-PLAN.md (Draft UI Components + Global Inbox)
+Resume file: .planning/phases/23-draft-approval-workflow/23-02-SUMMARY.md

@@ -37,10 +37,10 @@
 
 - [x] **DRFT-01**: HelenaDraft Prisma-Modell (PENDING → ACCEPTED / REJECTED / EDITED) mit Typ (DOKUMENT, FRIST, NOTIZ, ALERT)
 - [x] **DRFT-02**: ENTWURF-Gate auf Prisma-Middleware-Ebene: Helena-erstellte Dokumente können nie status!=ENTWURF haben (BRAK 2025 / BRAO §43)
-- [ ] **DRFT-03**: Draft-Anzeige im Akte-Feed visuell markiert ("Helena-Entwurf · ausstehend") mit Accept/Reject/Edit Buttons
+- [x] **DRFT-03**: Draft-Anzeige im Akte-Feed visuell markiert ("Helena-Entwurf · ausstehend") mit Accept/Reject/Edit Buttons
 - [x] **DRFT-04**: Bei Ablehnung: Feedback-Feld wird in Helena-Kontext gespeichert (Lerneffekt für zukünftige Entwürfe)
 - [x] **DRFT-05**: Akzeptierter Draft wird automatisch als Dokument/Frist/Notiz in der Akte angelegt
-- [ ] **DRFT-06**: Socket.IO Benachrichtigung an Zuständigen wenn Helena einen Draft erstellt hat
+- [x] **DRFT-06**: Socket.IO Benachrichtigung an Zuständigen wenn Helena einen Draft erstellt hat
 
 ### Proaktiver Scanner (SCAN)
 
@@ -133,10 +133,10 @@
 | TASK-05 | Phase 21 | Complete |
 | DRFT-01 | Phase 19 | Complete |
 | DRFT-02 | Phase 23 | Complete |
-| DRFT-03 | Phase 23 | Pending |
+| DRFT-03 | Phase 23 | Complete |
 | DRFT-04 | Phase 23 | Complete |
 | DRFT-05 | Phase 23 | Complete |
-| DRFT-06 | Phase 23 | Pending |
+| DRFT-06 | Phase 23 | Complete |
 | SCAN-01 | Phase 24 | Pending |
 | SCAN-02 | Phase 24 | Pending |
 | SCAN-03 | Phase 24 | Pending |

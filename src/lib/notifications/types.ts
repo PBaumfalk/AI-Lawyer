@@ -14,7 +14,11 @@ export type NotificationType =
   | "email:connection-failure"
   | "email:send-failed"
   | "system:alert"
-  | "ai_suggestion";
+  | "ai_suggestion"
+  | "helena:draft-created"
+  | "helena:draft-revision"
+  | "helena:draft-accepted"
+  | "helena:draft-rejected";
 
 /**
  * Payload for creating a new notification.

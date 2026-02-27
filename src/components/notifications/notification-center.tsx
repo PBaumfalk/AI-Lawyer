@@ -40,6 +40,10 @@ const typeIcons: Record<NotificationType, React.ElementType> = {
   "email:send-failed": XCircle,
   "system:alert": AlertTriangle,
   "ai_suggestion": Sparkles,
+  "helena:draft-created": Sparkles,
+  "helena:draft-revision": Sparkles,
+  "helena:draft-accepted": CheckCircle2,
+  "helena:draft-rejected": XCircle,
 };
 
 /** Map notification types to icon colors */
@@ -56,6 +60,10 @@ const typeColors: Record<NotificationType, string> = {
   "frist:ueberfaellig": "text-rose-600",
   "system:alert": "text-rose-600",
   "ai_suggestion": "text-violet-500",
+  "helena:draft-created": "text-violet-500",
+  "helena:draft-revision": "text-violet-500",
+  "helena:draft-accepted": "text-emerald-500",
+  "helena:draft-rejected": "text-rose-500",
 };
 
 /**

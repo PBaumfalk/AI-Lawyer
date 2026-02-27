@@ -10,8 +10,8 @@
 - [x] **AGNT-01**: Helena kann autonom über einen ReAct-Loop (Reason→Act→Observe) mehrstufige Aufgaben ausführen (max 20 Steps, dann Fallback-Meldung)
 - [x] **AGNT-02**: Helena hat 9 Read-Only-Tools (read_akte, read_dokumente, read_fristen, read_zeiterfassung, search_gesetze, search_urteile, search_muster, get_kosten_rules, search_alle_akten)
 - [x] **AGNT-03**: Helena hat 5 Write-Tools die immer als Draft/Vorschlag erzeugt werden (create_draft_dokument, create_draft_frist, create_notiz, create_alert, update_akte_rag)
-- [ ] **AGNT-04**: Helena-Agent läuft in zwei Modi: Inline (5-Step-Cap, HTTP-Request) für schnelle Chat-Interaktion und Background (20-Step-Cap, BullMQ-Worker) für komplexe Aufgaben
-- [ ] **AGNT-05**: Ollama-Tool-Call-Response-Guard: Erkennt und korrigiert JSON-als-Content statt tool_calls (qwen3.5:35b Kompatibilität)
+- [x] **AGNT-04**: Helena-Agent läuft in zwei Modi: Inline (5-Step-Cap, HTTP-Request) für schnelle Chat-Interaktion und Background (20-Step-Cap, BullMQ-Worker) für komplexe Aufgaben
+- [x] **AGNT-05**: Ollama-Tool-Call-Response-Guard: Erkennt und korrigiert JSON-als-Content statt tool_calls (qwen3.5:35b Kompatibilität)
 - [x] **AGNT-06**: Token-Budget-Manager begrenzt LLM-Kontextverbrauch pro Agent-Run (kein Context-Window-Overflow)
 - [ ] **AGNT-07**: BullMQ Helena-Task-Queue mit lockDuration:120000 und job.updateProgress() pro Step (Anti-Stall)
 
@@ -115,8 +115,8 @@
 | AGNT-01 | Phase 20 | Complete |
 | AGNT-02 | Phase 20 | Complete |
 | AGNT-03 | Phase 20 | Complete |
-| AGNT-04 | Phase 20 | Pending |
-| AGNT-05 | Phase 20 | Pending |
+| AGNT-04 | Phase 20 | Complete |
+| AGNT-05 | Phase 20 | Complete |
 | AGNT-06 | Phase 20 | Complete |
 | AGNT-07 | Phase 21 | Pending |
 | ORCH-01 | Phase 22 | Pending |

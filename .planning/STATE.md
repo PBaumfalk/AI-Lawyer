@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
 status: unknown
-last_updated: "2026-02-28T10:49:34.736Z"
+last_updated: "2026-02-28T11:39:30Z"
 progress:
-  total_phases: 19
+  total_phases: 20
   completed_phases: 18
-  total_plans: 50
-  completed_plans: 50
+  total_plans: 52
+  completed_plans: 51
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail.
-**Current focus:** v0.2 Helena Agent -- Phase 26 complete (3/3 plans done). All v0.2 phases complete.
+**Current focus:** v0.2 Helena Agent -- Phase 27 in progress (1/2 plans done). Activity Feed QA Pipeline Wiring.
 
 ## Current Position
 
-Phase: 26 of 26 (Activity Feed UI + QA-Gates)
-Plan: 3 of 3 in current phase
-Status: Phase 26 complete (3/3 plans done). v0.2 milestone complete.
-Last activity: 2026-02-28 -- Completed 26-02 Activity Feed Interactivity
+Phase: 27 of 27 (Activity Feed QA Pipeline Wiring)
+Plan: 2 of 2 in current phase
+Status: Phase 27 plan 02 complete. Plan 01 pending.
+Last activity: 2026-02-28 -- Completed 27-02 QA Pipeline Wiring
 
-Progress: [██████████] 100%
+Progress: [█████████░] 98%
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Progress: [██████████] 100%
 | 24. Scanner + Alerts | 2/2 | 13min | 6.5min |
 | 25. Helena Memory | 1/1 | 5min | 5min |
 | 26. Activity Feed UI + QA-Gates | 3/3 | 18min | 6min |
+| 27. Activity Feed QA Pipeline Wiring | 1/2 | 1min | 1min |
 
 ## Accumulated Context
 
@@ -139,6 +140,8 @@ Recent decisions affecting v0.2:
 - [Phase 26]: Banner refetch pattern for new feed entries (not auto-insert) -- avoids race conditions with server ordering
 - [Phase 26]: DraftReviewActions as separate sub-component with local state for edit/reject mode management
 - [Phase 26]: useHelenaTaskProgress hook for per-Akte Socket.IO task progress tracking
+- [Phase 27]: try-catch (not fire-and-forget .catch) for logRetrieval in Schriftsatz pipeline -- await for data integrity, catch for pipeline safety
+- [Phase 27]: getModelForTier(3) for model name in retrieval log -- cached call, no performance concern
 
 ### Pending Todos
 
@@ -156,5 +159,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 26-02-PLAN.md (Activity Feed Interactivity) -- all v0.2 plans complete
-Resume file: .planning/phases/26-activity-feed-ui-qa-gates/26-02-SUMMARY.md
+Stopped at: Completed 27-02-PLAN.md (QA Pipeline Wiring)
+Resume file: .planning/phases/27-activity-feed-qa-pipeline-wiring/27-02-SUMMARY.md

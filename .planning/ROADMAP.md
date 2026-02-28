@@ -248,7 +248,7 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 -> 23.1 -> 24 + 25 (parallel-eligible, 
 | 24. Scanner + Alerts | 2/2 | Complete    | 2026-02-28 | - |
 | 25. Helena Memory | 1/1 | Complete    | 2026-02-28 | - |
 | 26. Activity Feed UI + QA-Gates | 3/3 | Complete    | 2026-02-28 | - |
-| 27. Activity Feed + QA Pipeline Wiring | 0/2 | Planned | - | - |
+| 27. Activity Feed + QA Pipeline Wiring | 1/2 | In Progress|  | - |
 
 ---
 *Roadmap created: 2026-02-27*

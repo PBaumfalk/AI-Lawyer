@@ -71,10 +71,10 @@
 - [x] **QA-01**: Goldset-Testkatalog mit ≥20 Queries (Arbeitsrecht: KSchG, Lohnklage, Abmahnung, EV, Mahnverfahren, Fristen, Kosten)
 - [x] **QA-02**: Retrieval-Metriken automatisch messbar: Recall@k, MRR, No-result-Rate
 - [x] **QA-03**: Halluzinations-Check: §-Referenzen und Aktenzeichen in Helena-Antworten werden gegen Retrieval-Chunks verifiziert (nicht LLM-fabricated)
-- [ ] **QA-04**: Schriftsatz-Retrieval-Log pro Entwurf (schriftsatz_id, query_text, retrieval_belege[], prompt_version, modell)
+- [x] **QA-04**: Schriftsatz-Retrieval-Log pro Entwurf (schriftsatz_id, query_text, retrieval_belege[], prompt_version, modell)
 - [x] **QA-05**: UI-Anzeige: "Helena hat X Normen, Y Urteile, Z Muster-Bausteine verwendet" mit aufklappbaren Quellen-Links
-- [ ] **QA-06**: Release-Gates: Recall@5 Normen ≥0.85, Halluzinationsrate ≤0.05, Formale Vollständigkeit ≥0.90
-- [ ] **QA-07**: Keine Mandantendaten in Logs (nur anonymisierte Query-Hashes für Metriken)
+- [x] **QA-06**: Release-Gates: Recall@5 Normen ≥0.85, Halluzinationsrate ≤0.05, Formale Vollständigkeit ≥0.90
+- [x] **QA-07**: Keine Mandantendaten in Logs (nur anonymisierte Query-Hashes für Metriken)
 
 ### Akte-Detail UI (UI)
 
@@ -155,10 +155,10 @@
 | QA-01 | Phase 26 | Complete |
 | QA-02 | Phase 26 | Complete |
 | QA-03 | Phase 26 | Complete |
-| QA-04 | Phase 27 | Pending |
+| QA-04 | Phase 27 | Complete |
 | QA-05 | Phase 26 | Complete |
-| QA-06 | Phase 27 | Pending |
-| QA-07 | Phase 27 | Pending |
+| QA-06 | Phase 27 | Complete |
+| QA-07 | Phase 27 | Complete |
 | UI-01 | Phase 26 | Complete |
 | UI-02 | Phase 26 | Complete |
 | UI-03 | Phase 26 | Complete |

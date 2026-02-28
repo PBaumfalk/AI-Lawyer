@@ -72,7 +72,7 @@ See: `milestones/v0.1-ROADMAP.md` for full phase details.
 - [x] **Phase 23: Draft-Approval Workflow** - HelenaDraft lifecycle, ENTWURF Prisma middleware gate, accept/reject/edit with feedback (completed 2026-02-27)
 - [x] **Phase 24: Scanner + Alerts** - Background scanner cron, 6 alert types, deduplication, alert-center, Socket.IO push (completed 2026-02-28)
 - [x] **Phase 25: Helena Memory** - Per-Akte context storage, auto-refresh, DSGVO cascade delete (completed 2026-02-28)
-- [ ] **Phase 26: Activity Feed UI + QA-Gates** - Akte-Detail feed umbau, composer, alert-center widget, QA goldset, retrieval metrics, audit trail
+- [x] **Phase 26: Activity Feed UI + QA-Gates** - Akte-Detail feed umbau, composer, alert-center widget, QA goldset, retrieval metrics, audit trail (completed 2026-02-28)
 
 ## Phase Details
 
@@ -230,7 +230,7 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 -> 23.1 -> 24 + 25 (parallel-eligible, 
 | 23.1. Integration Wiring Fixes | 3/3 | Complete    | 2026-02-27 | - |
 | 24. Scanner + Alerts | 2/2 | Complete    | 2026-02-28 | - |
 | 25. Helena Memory | 1/1 | Complete    | 2026-02-28 | - |
-| 26. Activity Feed UI + QA-Gates | 2/3 | In Progress|  | - |
+| 26. Activity Feed UI + QA-Gates | 3/3 | Complete   | 2026-02-28 | - |
 
 ---
 *Roadmap created: 2026-02-27*

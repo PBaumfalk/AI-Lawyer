@@ -79,11 +79,11 @@
 ### Akte-Detail UI (UI)
 
 - [x] **UI-01**: Akte-Detail Activity Feed ersetzt Tab-basierte Navigation — chronologischer Feed mit allen Events (Dokumente, Fristen, E-Mails, Helena-Drafts, Alerts, Notizen)
-- [ ] **UI-02**: Composer im Feed: Nutzer kann direkt im Feed Notizen schreiben und @Helena taggen
+- [x] **UI-02**: Composer im Feed: Nutzer kann direkt im Feed Notizen schreiben und @Helena taggen
 - [x] **UI-03**: Helena vs Human Attribution: jeder Feed-Eintrag zeigt klar ob von Helena oder Mensch erstellt
-- [ ] **UI-04**: Alert-Center Dashboard-Widget mit Badge-Count für ungelesene Alerts
-- [ ] **UI-05**: Helena-Task-Status im Chat: Laufende Tasks zeigen Fortschritt (Step X von Y, aktuelles Tool)
-- [ ] **UI-06**: Draft-Review inline im Feed: Accept/Reject/Edit ohne Seitenwechsel
+- [x] **UI-04**: Alert-Center Dashboard-Widget mit Badge-Count für ungelesene Alerts
+- [x] **UI-05**: Helena-Task-Status im Chat: Laufende Tasks zeigen Fortschritt (Step X von Y, aktuelles Tool)
+- [x] **UI-06**: Draft-Review inline im Feed: Accept/Reject/Edit ohne Seitenwechsel
 
 ## Future Requirements (v0.3+)
 
@@ -160,11 +160,11 @@
 | QA-06 | Phase 26 | Complete |
 | QA-07 | Phase 26 | Complete |
 | UI-01 | Phase 26 | Complete |
-| UI-02 | Phase 26 | Pending |
+| UI-02 | Phase 26 | Complete |
 | UI-03 | Phase 26 | Complete |
-| UI-04 | Phase 26 | Pending |
-| UI-05 | Phase 26 | Pending |
-| UI-06 | Phase 26 | Pending |
+| UI-04 | Phase 26 | Complete |
+| UI-05 | Phase 26 | Complete |
+| UI-06 | Phase 26 | Complete |
 
 **Coverage:**
 - v0.2 requirements: 53 total

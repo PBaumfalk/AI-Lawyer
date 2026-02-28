@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
-status: in-progress
-last_updated: "2026-02-28T08:21:39Z"
+status: unknown
+last_updated: "2026-02-28T08:31:52.562Z"
 progress:
-  total_phases: 16
-  completed_phases: 15
-  total_plans: 44
-  completed_plans: 45
+  total_phases: 17
+  completed_phases: 16
+  total_plans: 46
+  completed_plans: 46
 ---
 
 # Project State
@@ -23,17 +23,17 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 24 of 26 (Scanner + Alerts)
-Plan: 1 of 2 in current phase
-Status: Phase 24 in progress (1/2 plans done), ready for 24-02
-Last activity: 2026-02-28 — Completed 24-01 Scanner Backend
+Plan: 2 of 2 in current phase
+Status: Phase 24 complete (2/2 plans done), ready for Phase 25
+Last activity: 2026-02-28 — Completed 24-02 Alert-Center UI + REST API
 
-Progress: [████████░░] 65%
+Progress: [█████████░] 70%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 71 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 15/20
+- v0.2 plans: 16/20
 
 **By Phase (v0.2):**
 
@@ -45,7 +45,7 @@ Progress: [████████░░] 65%
 | 22. Schriftsatz Orchestrator | 2/2 | 14min | 7min |
 | 23. Draft-Approval Workflow | 3/3 | 18min | 6min |
 | 23.1. Integration Wiring Fixes | 3/3 | 9min | 3min |
-| 24. Scanner + Alerts | 1/2 | 8min | 8min |
+| 24. Scanner + Alerts | 2/2 | 13min | 6.5min |
 | 25. Helena Memory | 0/1 | - | - |
 | 26. Activity Feed UI + QA-Gates | 0/3 | - | - |
 
@@ -119,6 +119,7 @@ Recent decisions affecting v0.2:
 - [Phase 24]: FRIST_KRITISCH gets Socket.IO push + notification but NOT email (frist-reminder.ts handles email)
 - [Phase 24]: DOKUMENT_FEHLT uses name-only matching (Dokument has no kategorie field) with Vollmacht special case
 - [Phase 24]: Progressive escalation uses meta fields (escalatedAt3d/escalatedAt7d) to prevent re-escalation
+- [Phase 24]: helena:alert-badge Socket.IO event carries exact count for direct badge set (no refetch needed)
 
 ### Pending Todos
 
@@ -136,5 +137,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 24-01-PLAN.md (Scanner Backend)
-Resume file: .planning/phases/24-scanner-alerts/24-01-SUMMARY.md
+Stopped at: Completed 24-02-PLAN.md (Alert-Center UI + REST API)
+Resume file: .planning/phases/24-scanner-alerts/24-02-SUMMARY.md

@@ -54,10 +54,10 @@
 ### Alert-System (ALRT)
 
 - [x] **ALRT-01**: HelenaAlert Prisma-Modell mit 6 Typen (FRIST_KRITISCH, AKTE_INAKTIV, BETEILIGTE_FEHLEN, DOKUMENT_FEHLT, WIDERSPRUCH, NEUES_URTEIL)
-- [ ] **ALRT-02**: Alert-Center im Dashboard mit Filter nach Typ, Akte, Priorität und Gelesen/Ungelesen
+- [x] **ALRT-02**: Alert-Center im Dashboard mit Filter nach Typ, Akte, Priorität und Gelesen/Ungelesen
 - [x] **ALRT-03**: Alerts erscheinen im Akte-Feed als Helena-Event (visuell differenziert von manuellen Einträgen)
 - [x] **ALRT-04**: Alert-Deduplizierung: gleicher Alert-Typ + gleiche Akte innerhalb 24h wird nicht doppelt erzeugt
-- [ ] **ALRT-05**: Kritische Alerts (FRIST_KRITISCH) erzeugen zusätzlich Socket.IO Push-Notification
+- [x] **ALRT-05**: Kritische Alerts (FRIST_KRITISCH) erzeugen zusätzlich Socket.IO Push-Notification
 
 ### Helena Memory (MEM)
 
@@ -144,10 +144,10 @@
 | SCAN-05 | Phase 24 | Pending |
 | SCAN-06 | Phase 24 | Complete |
 | ALRT-01 | Phase 19 | Complete |
-| ALRT-02 | Phase 24 | Pending |
+| ALRT-02 | Phase 24 | Complete |
 | ALRT-03 | Phase 24 | Complete |
 | ALRT-04 | Phase 24 | Complete |
-| ALRT-05 | Phase 24 | Pending |
+| ALRT-05 | Phase 24 | Complete |
 | MEM-01 | Phase 19 | Complete |
 | MEM-02 | Phase 25 | Pending |
 | MEM-03 | Phase 25 | Pending |

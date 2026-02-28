@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 28 - Falldatenblaetter Schema + Templates
+**Current focus:** Phase 29 - Falldatenblaetter UI
 
 ## Current Position
 
-Phase: 28 of 32 (Falldatenblaetter Schema + Templates)
-Plan: 4 of 4 in current phase (COMPLETE)
-Status: Phase Complete
-Last activity: 2026-02-28 -- completed 28-04 (Admin Visibility Fix)
+Phase: 29 of 32 (Falldatenblaetter UI)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-02-28 -- completed 29-01 (API + Form Enhancements)
 
 Progress: [##........] 20% (v0.3: 1/5 phases)
 
@@ -51,6 +51,7 @@ Progress: [##........] 20% (v0.3: 1/5 phases)
 | Phase 28 P02 | 4min | 2 tasks | 7 files |
 | Phase 28 P03 | 6min | 2 tasks | 7 files |
 | Phase 28 P04 | 1min | 1 task | 1 file |
+| Phase 29 P01 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Recent decisions affecting current work:
 - [28-03]: Extracted shared TemplateBuilder component for new/edit pages -- props-based mode switching
 - [28-03]: Used inline field editor (not modal) for Gruppen-first builder UX
 - [28-04]: Empty where-clause for ADMIN branch (no filter) -- simplest bypass, matches [id]/route.ts pattern
+- [29-01]: Local TemplateField/TemplateSchema interfaces in form -- decoupled from Zod validation schemas
+- [29-01]: Completeness tracks only required fields, returns 100% when none exist
 
 ### Pending Todos
 
@@ -85,5 +88,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 28-04-PLAN.md (Admin Visibility Fix) -- Phase 28 gap closure complete
+Stopped at: Completed 29-01-PLAN.md (API + Form Enhancements)
 Resume file: None

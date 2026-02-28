@@ -13,8 +13,14 @@ import {
   ChevronRight,
   ChevronDown,
   ExternalLink,
+  Check,
+  Pencil,
+  X,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 // Feed entry data shape (from API response)
 export interface FeedEntryData {
@@ -83,6 +89,9 @@ function getDeepLink(entry: FeedEntryData): string | null {
 
 export function ActivityFeedEntry({ entry }: ActivityFeedEntryProps) {
   const [expanded, setExpanded] = useState(false);
+  const [draftStatus, setDraftStatus] = useState<string | null>(
+    entry.meta?.draftStatus ?? null
+  );
 
   const isHelena = entry.user === null;
   const Icon = typIcons[entry.typ] ?? FileText;
@@ -138,7 +147,7 @@ export function ActivityFeedEntry({ entry }: ActivityFeedEntryProps) {
             ) : (
               <span>{entry.user?.name ?? "System"}</span>
             )}
-            <span>·</span>
+            <span>&middot;</span>
             <span>{relativeTime(entry.createdAt)}</span>
           </div>
         </div>
@@ -148,6 +157,35 @@ export function ActivityFeedEntry({ entry }: ActivityFeedEntryProps) {
       {expanded && (
         <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800">
           <ExpandedContent entry={entry} />
+
+          {/* Source display for Helena draft entries */}
+          {entry.typ === "HELENA_DRAFT" && <SourceDisplay entry={entry} />}
+
+          {/* Inline draft review for HELENA_DRAFT with PENDING status */}
+          {entry.typ === "HELENA_DRAFT" && draftStatus === "PENDING" && (
+            <DraftReviewActions
+              entry={entry}
+              onStatusChange={setDraftStatus}
+            />
+          )}
+
+          {/* Status badge for non-pending drafts */}
+          {entry.typ === "HELENA_DRAFT" &&
+            draftStatus &&
+            draftStatus !== "PENDING" && (
+              <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                <span
+                  className={cn(
+                    "text-xs px-2 py-1 rounded-full",
+                    draftStatus === "ACCEPTED"
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                      : "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400"
+                  )}
+                >
+                  {draftStatus === "ACCEPTED" ? "Angenommen" : "Abgelehnt"}
+                </span>
+              </div>
+            )}
 
           {/* Deep link to relevant tab */}
           {deepLink && (
@@ -159,6 +197,212 @@ export function ActivityFeedEntry({ entry }: ActivityFeedEntryProps) {
               Details anzeigen
             </a>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Inline draft review actions (Accept/Edit/Reject)
+function DraftReviewActions({
+  entry,
+  onStatusChange,
+}: {
+  entry: FeedEntryData;
+  onStatusChange: (status: string) => void;
+}) {
+  const [editMode, setEditMode] = useState(false);
+  const [rejectMode, setRejectMode] = useState(false);
+  const [editText, setEditText] = useState(entry.inhalt ?? "");
+  const [rejectFeedback, setRejectFeedback] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const draftId = entry.meta?.draftId;
+  if (!draftId) return null;
+
+  async function handleAccept() {
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/helena/drafts/${draftId}/accept`, {
+        method: "PATCH",
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Entwurf angenommen");
+      onStatusChange("ACCEPTED");
+    } catch {
+      toast.error("Fehler beim Annehmen");
+    }
+    setActionLoading(false);
+  }
+
+  async function handleReject() {
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/helena/drafts/${draftId}/reject`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedback: rejectFeedback }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Entwurf abgelehnt");
+      onStatusChange("REJECTED");
+      setRejectMode(false);
+    } catch {
+      toast.error("Fehler beim Ablehnen");
+    }
+    setActionLoading(false);
+  }
+
+  async function handleSaveEdit() {
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/helena/drafts/${draftId}/edit`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: editText }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Entwurf bearbeitet");
+      setEditMode(false);
+    } catch {
+      toast.error("Fehler beim Speichern");
+    }
+    setActionLoading(false);
+  }
+
+  return (
+    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+      {editMode ? (
+        <div className="w-full space-y-2">
+          <textarea
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            className="w-full p-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 resize-none"
+            rows={4}
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={handleSaveEdit}
+              disabled={actionLoading}
+            >
+              {actionLoading ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+              ) : null}
+              Speichern
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setEditMode(false)}
+            >
+              Abbrechen
+            </Button>
+          </div>
+        </div>
+      ) : rejectMode ? (
+        <div className="w-full space-y-2">
+          <textarea
+            value={rejectFeedback}
+            onChange={(e) => setRejectFeedback(e.target.value)}
+            placeholder="Feedback (optional)..."
+            className="w-full p-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 resize-none"
+            rows={2}
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleReject}
+              disabled={actionLoading}
+            >
+              {actionLoading ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+              ) : null}
+              Ablehnen
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setRejectMode(false)}
+            >
+              Abbrechen
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <Button
+            size="sm"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            onClick={handleAccept}
+            disabled={actionLoading}
+          >
+            <Check className="w-3.5 h-3.5 mr-1" /> Annehmen
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setEditMode(true)}
+          >
+            <Pencil className="w-3.5 h-3.5 mr-1" /> Bearbeiten
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setRejectMode(true)}
+          >
+            <X className="w-3.5 h-3.5 mr-1" /> Ablehnen
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// Collapsible source display for Helena draft entries
+function SourceDisplay({ entry }: { entry: FeedEntryData }) {
+  const [sourcesExpanded, setSourcesExpanded] = useState(false);
+
+  const belege: any[] =
+    entry.meta?.retrieval_belege ?? entry.meta?.retrievalBelege ?? [];
+  if (belege.length === 0) return null;
+
+  const normenCount = belege.filter(
+    (b: any) => b.quelle === "gesetz"
+  ).length;
+  const urteileCount = belege.filter(
+    (b: any) => b.quelle === "urteil"
+  ).length;
+  const musterCount = belege.filter(
+    (b: any) => b.quelle === "muster"
+  ).length;
+
+  return (
+    <div className="mt-3">
+      <button
+        onClick={() => setSourcesExpanded(!sourcesExpanded)}
+        className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1"
+      >
+        <ChevronRight
+          className={cn(
+            "w-3 h-3 transition-transform",
+            sourcesExpanded && "rotate-90"
+          )}
+        />
+        Quellen: {normenCount} Normen, {urteileCount} Urteile, {musterCount}{" "}
+        Muster
+      </button>
+      {sourcesExpanded && (
+        <div className="mt-2 pl-4 space-y-1 text-xs text-slate-600 dark:text-slate-400">
+          {belege.map((b: any, i: number) => (
+            <div key={i} className="flex items-baseline gap-2">
+              <span className="font-medium">{b.referenz}</span>
+              <span className="text-slate-400 truncate max-w-md">
+                {b.auszug?.slice(0, 100)}
+              </span>
+            </div>
+          ))}
         </div>
       )}
     </div>

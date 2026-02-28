@@ -108,12 +108,13 @@ See: `milestones/v0.2-ROADMAP.md` for full phase details.
   3. Admin can approve or reject submitted templates with the result visible to the submitting user
   4. Approved templates appear as available Standardfaelle for all users when creating or editing Falldatenblaetter
   5. The 10 existing Sachgebiet schemas from TypeScript are present as seed templates in the database (single source of truth)
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
-- [ ] 28-01-PLAN.md — Prisma schema (enum + model + Akte FK), Zod validation, seed function, worker wiring
-- [ ] 28-02-PLAN.md — Template CRUD API routes + workflow transitions (einreichen/genehmigen/ablehnen)
-- [ ] 28-03-PLAN.md — User template list, Gruppen-first builder, admin review queue + detail
+- [x] 28-01-PLAN.md — Prisma schema (enum + model + Akte FK), Zod validation, seed function, worker wiring
+- [x] 28-02-PLAN.md — Template CRUD API routes + workflow transitions (einreichen/genehmigen/ablehnen)
+- [x] 28-03-PLAN.md — User template list, Gruppen-first builder, admin review queue + detail
+- [ ] 28-04-PLAN.md — Gap closure: Admin visibility override in GET /api/falldaten-templates (FD-05 fix)
 
 ### Phase 29: Falldatenblaetter UI
 **Goal**: Users can view, fill out, and track completeness of Falldatenblaetter directly within an Akte
@@ -185,7 +186,7 @@ Phases execute in numeric order: 28 -> 28.1 -> 29 -> 30 -> 31 -> 32
 | 10-11 | v3.5 | 10/10 | Complete | 2026-02-26 |
 | 12-18 | v0.1 | 19/19 | Complete | 2026-02-27 |
 | 19-27 | v0.2 | 23/23 | Complete | 2026-02-28 |
-| 28. Falldatenblaetter Schema + Templates | 3/3 | Complete   | 2026-02-28 | - |
+| 28. Falldatenblaetter Schema + Templates | 3/4 | Gap closure   | 2026-02-28 | - |
 | 29. Falldatenblaetter UI | v0.3 | 0/TBD | Not started | - |
 | 30. SCAN-05 Neu-Urteil-Check | v0.3 | 0/TBD | Not started | - |
 | 31. Messaging Schema + API | v0.3 | 0/TBD | Not started | - |
@@ -193,4 +194,4 @@ Phases execute in numeric order: 28 -> 28.1 -> 29 -> 30 -> 31 -> 32
 
 ---
 *Roadmap created: 2026-02-24*
-*Last updated: 2026-02-28 after v0.3 roadmap creation*
+*Last updated: 2026-02-28 after gap closure plan for Phase 28*

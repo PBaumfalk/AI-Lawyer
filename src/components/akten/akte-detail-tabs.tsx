@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DokumenteTab } from "@/components/dokumente/dokumente-tab";
 import { KalenderTab } from "@/components/kalender/kalender-tab";
@@ -7,6 +8,17 @@ import { AktenkontoLedger } from "@/components/finanzen/aktenkonto-ledger";
 import { InvoiceList } from "@/components/finanzen/invoice-list";
 import { AkteZeiterfassungTab } from "@/components/finanzen/akte-zeiterfassung-tab";
 import { ActivityFeed } from "./activity-feed";
+import { FalldatenTab } from "./falldaten-tab";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 // Serialized version of the Prisma akte with includes
 interface AkteData {
@@ -91,63 +103,150 @@ export const rolleBadgeVariant: Record<string, "default" | "danger" | "warning" 
 };
 
 export function AkteDetailTabs({ akte }: { akte: AkteData }) {
+  const [activeTab, setActiveTab] = useState("feed");
+  const [completeness, setCompleteness] = useState<{
+    percent: number;
+    filled: number;
+    total: number;
+  }>({ percent: 0, filled: 0, total: 0 });
+  const [falldatenDirty, setFalldatenDirty] = useState(false);
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+
+  // ─── Controlled Tab Switching with Unsaved Changes Guard ─────────────────
+
+  const handleTabChange = useCallback(
+    (newTab: string) => {
+      // If leaving Falldaten tab with unsaved changes, show warning
+      if (activeTab === "falldaten" && falldatenDirty && newTab !== "falldaten") {
+        setPendingTab(newTab);
+        setShowUnsavedDialog(true);
+        return;
+      }
+      setActiveTab(newTab);
+    },
+    [activeTab, falldatenDirty]
+  );
+
+  // ─── Browser beforeunload Guard ──────────────────────────────────────────
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (falldatenDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [falldatenDirty]);
+
   return (
-    <Tabs defaultValue="feed">
-      <TabsList className="w-full justify-start">
-        <TabsTrigger value="feed">Aktivitaeten</TabsTrigger>
-        <TabsTrigger value="dokumente">
-          Dokumente ({akte.dokumente.length})
-        </TabsTrigger>
-        <TabsTrigger value="kalender">
-          Termine & Fristen ({akte.kalenderEintraege.length})
-        </TabsTrigger>
-        <TabsTrigger value="finanzen">Finanzen</TabsTrigger>
-      </TabsList>
+    <>
+      <Tabs defaultValue="feed" value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="w-full justify-start">
+          <TabsTrigger value="feed">Aktivitaeten</TabsTrigger>
+          <TabsTrigger value="dokumente">
+            Dokumente ({akte.dokumente.length})
+          </TabsTrigger>
+          <TabsTrigger value="kalender">
+            Termine & Fristen ({akte.kalenderEintraege.length})
+          </TabsTrigger>
+          <TabsTrigger value="finanzen">Finanzen</TabsTrigger>
+          <TabsTrigger value="falldaten">
+            Falldaten{completeness.total > 0 ? ` (${completeness.percent}%)` : ""}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* --- Feed (default) ------------------------------------------------ */}
-      <TabsContent value="feed">
-        <ActivityFeed akteId={akte.id} />
-      </TabsContent>
+        {/* --- Feed (default) ------------------------------------------------ */}
+        <TabsContent value="feed">
+          <ActivityFeed akteId={akte.id} />
+        </TabsContent>
 
-      {/* --- Dokumente ----------------------------------------------------- */}
-      <TabsContent value="dokumente">
-        <DokumenteTab akteId={akte.id} initialDokumente={akte.dokumente} />
-      </TabsContent>
+        {/* --- Dokumente ----------------------------------------------------- */}
+        <TabsContent value="dokumente">
+          <DokumenteTab akteId={akte.id} initialDokumente={akte.dokumente} />
+        </TabsContent>
 
-      {/* --- Kalender ------------------------------------------------------ */}
-      <TabsContent value="kalender">
-        <KalenderTab
-          akteId={akte.id}
-          initialEintraege={akte.kalenderEintraege}
-        />
-      </TabsContent>
+        {/* --- Kalender ------------------------------------------------------ */}
+        <TabsContent value="kalender">
+          <KalenderTab
+            akteId={akte.id}
+            initialEintraege={akte.kalenderEintraege}
+          />
+        </TabsContent>
 
-      {/* --- Finanzen (combined Aktenkonto + Rechnungen + Zeiterfassung) ---- */}
-      <TabsContent value="finanzen">
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">
-              Aktenkonto
-            </h3>
-            <AktenkontoLedger
-              akteId={akte.id}
-              aktenzeichen={akte.aktenzeichen}
-            />
+        {/* --- Finanzen (combined Aktenkonto + Rechnungen + Zeiterfassung) ---- */}
+        <TabsContent value="finanzen">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">
+                Aktenkonto
+              </h3>
+              <AktenkontoLedger
+                akteId={akte.id}
+                aktenzeichen={akte.aktenzeichen}
+              />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">
+                Rechnungen
+              </h3>
+              <InvoiceList akteId={akte.id} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">
+                Zeiterfassung
+              </h3>
+              <AkteZeiterfassungTab akteId={akte.id} />
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">
-              Rechnungen
-            </h3>
-            <InvoiceList akteId={akte.id} />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">
-              Zeiterfassung
-            </h3>
-            <AkteZeiterfassungTab akteId={akte.id} />
-          </div>
-        </div>
-      </TabsContent>
-    </Tabs>
+        </TabsContent>
+
+        {/* --- Falldaten ---------------------------------------------------- */}
+        <TabsContent value="falldaten">
+          <FalldatenTab
+            akteId={akte.id}
+            sachgebiet={akte.sachgebiet}
+            initialFalldaten={akte.falldaten}
+            falldatenTemplateId={akte.falldatenTemplateId}
+            onCompletenessChange={setCompleteness}
+            onDirtyChange={setFalldatenDirty}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* --- Unsaved Changes Dialog ----------------------------------------- */}
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ungespeicherte Aenderungen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sie haben ungespeicherte Aenderungen in den Falldaten. Moechten Sie
+              den Tab trotzdem wechseln? Ihre Aenderungen gehen verloren.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingTab(null);
+                setShowUnsavedDialog(false);
+              }}
+            >
+              Abbrechen
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingTab) setActiveTab(pendingTab);
+                setPendingTab(null);
+                setShowUnsavedDialog(false);
+                setFalldatenDirty(false);
+              }}
+            >
+              Trotzdem wechseln
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

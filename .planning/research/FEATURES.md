@@ -1,477 +1,298 @@
-# Feature Research
+# Feature Landscape
 
-**Domain:** Legal AI Agent — Helena Agent v2 (Autonomous Agent Capabilities for German Kanzlei Software)
-**Researched:** 2026-02-27
-**Confidence:** MEDIUM — agent loop patterns HIGH from official Vercel AI SDK docs; legal domain specifics MEDIUM from multiple corroborating sources; German professional-responsibility constraints HIGH from BRAK/BRAO official sources; @-mention UX and activity feed patterns MEDIUM from established SaaS analogues
-
----
-
-## Context: What Already Exists (Do Not Rebuild)
-
-This is research for a SUBSEQUENT MILESTONE adding autonomous agent capabilities to an existing ~91,300-LOC codebase. The following is already shipped and must be integrated with, not replaced:
-
-- Helena chat with per-Akte RAG (pgvector + Meilisearch, Vercel AI SDK v4)
-- Hybrid Search (BM25 + pgvector + cross-encoder reranking) — shipped in v0.1
-- ENTWURF workflow: all AI output = ENTWURF status; human must promote to FREIGEGEBEN before any action
-- Real-time notifications via Socket.IO (custom server.ts on port 3000)
-- BullMQ job queues with Redis for background processing (async, retry, cron)
-- Multi-provider AI (Ollama qwen3.5:35b / OpenAI / Anthropic)
-- Audit-Trail (logAuditEvent, per-Akte + system-wide)
-- KI-Entwürfe-Workspace (list + detail + save as Dokument/Aktennotiz)
-
-New agent features must integrate via BullMQ (background processing), Socket.IO (real-time updates), and the existing ENTWURF promotion workflow.
+**Domain:** Kanzlei-Collaboration (Internal Messaging, Proactive Court Decision Monitoring, Structured Case Checklists)
+**Researched:** 2026-02-28
+**Confidence:** HIGH (features build on well-understood existing infrastructure)
 
 ---
 
-## Feature Landscape
-
-### Category 1: ReAct Agent-Loop
-
-The foundation that makes Helena an agent rather than a chatbot. ReAct (Reasoning + Acting) interleaves Thought, Action, and Observation in a loop until a terminal answer is reached.
-
-#### Table Stakes
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Multi-step tool-calling loop | A legal AI agent must chain: retrieve law → search case documents → check calendar → draft response. A single-pass LLM cannot do this reliably | MEDIUM | Vercel AI SDK v4+ supports `generateText` with `maxSteps` and `stopWhen: stepCountIs(N)`. Already using AI SDK — no new framework needed. Cap at 10 steps to prevent runaway loops |
-| Transparent reasoning trace (Thought log) | Lawyers must be able to see WHY Helena did what she did — professional duty under BRAO §43a | LOW | Log each ReAct step (Thought/Action/Observation) to a structured JSON column on `KIEntwurf` model. Display as collapsible trace in Entwurf detail view |
-| Hard step cap with graceful degradation | Runaway loops are a production liability — infinite tool calls burning GPU or hitting rate limits | LOW | `stopWhen: stepCountIs(10)` in generateText. On cap hit: return partial result with "Analyse unvollständig — bitte manuell vervollständigen" in ENTWURF |
-| Tool result injection back into context | Each tool call result must feed the next reasoning step | LOW | Handled natively by Vercel AI SDK: tool calls appended to conversation history automatically, new generation triggered |
-
-#### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Zod-typed tool registry | Type-safe tool definitions prevent schema drift between tool definition and tool implementation — critical when tools mutate DB or calendar | LOW | Define each Helena tool as `tool({ description, parameters: z.object({...}), execute })` using Vercel AI SDK tool helper. Zod validation at tool input boundary |
-| Per-Akte agent context injection | Helena's system prompt is dynamically constructed per Akte — Beteiligte, Rechtsgebiet, pinned Normen, open Fristen — enabling case-aware reasoning without extra tool calls | MEDIUM | Build `buildHelenaContext(akteId)` that assembles a structured system-prompt section. Inject at agent startup. Re-use across all agent invocations for that Akte |
-| Agent invocation audit log | Every agent run (trigger, steps, tools called, tokens used) stored with ENTWURF reference | LOW | Extend existing `logAuditEvent` schema with `agentRunId`, `steps[]` JSON |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| LangGraph / custom state machine orchestrator | Perceived as "proper" agent framework | Project already uses Vercel AI SDK v4 which has native multi-step tool calling. Adding LangGraph introduces a competing abstraction layer, new dependency tree, and inconsistent streaming interfaces | `generateText` with `maxSteps` + `stopWhen` covers all required agent patterns within the existing SDK |
-| Unlimited agent recursion / self-spawning agents | Maximum flexibility for complex tasks | Unbounded loops burn GPU quota, risk hallucination amplification, make debugging impossible | Hard cap at 10 steps per invocation; complex multi-phase work modeled as separate BullMQ jobs that each spawn a bounded agent |
-| Autonomous action without human gate | Maximum efficiency | Absolute No-Go per BRAK 2025; BRAO §43 professional responsibility lies with Anwalt; EU AI Act high-risk classification for legal decisions | All agent outputs land in ENTWURF. No action taken until human promotes. ENTWURF gate is non-negotiable |
-
----
-
-### Category 2: Tool-Calling — Legal Domain Tool Set
-
-The tools Helena can call during her reasoning loop. Each tool is a typed function the LLM invokes by name with structured arguments.
-
-#### Table Stakes
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| `searchAktenDokumente(query, akteId)` | Helena must retrieve relevant Akte documents during reasoning — core RAG tool | LOW | Already exists as Helena RAG retrieval; wrap as agent tool. Returns: [{chunkId, score, excerpt, dokumentTitle}] |
-| `searchGesetze(query)` | Legal reasoning requires norm retrieval — "Was gilt nach § 626 BGB?" | LOW | Wraps law_chunks hybrid search (built in v0.1). Returns: [{normId, paragraph, text, standDatum}] |
-| `searchUrteile(query)` | Case law grounding — prevents hallucinated citations | LOW | Wraps urteil_chunks hybrid search. Returns: [{urteilId, gericht, az, datum, leitsatz}] |
-| `getAkteMetadata(akteId)` | Agent needs structured case facts — Beteiligte, Rechtsgebiet, Sachstand — without reading all documents | LOW | Query Prisma Akte model. Returns typed AkteContext object. Required for Rubrum in Schriftsatz |
-| `getFristen(akteId)` | Deadline awareness is mandatory for any legal task planning | LOW | Query Termin model WHERE akteId AND typ='FRIST'. Returns: [{datum, beschreibung, priority, daysRemaining}] |
-
-#### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| `createEntwurf(akteId, inhalt, typ)` | Helena can produce structured output and store it as ENTWURF in one tool call — no copy-paste | LOW | Calls existing KIEntwurf create logic. Status always ENTWURF. Returns entwurfId for Socket.IO notification. This is the primary output tool |
-| `createFristEntwurf(akteId, datum, beschreibung)` | Auto-detected deadlines stored as calendar ENTWURF items — lawyer approves or rejects | LOW | Creates Termin with status=ENTWURF. Already partly implemented in Helena proactive scan. Wrap as explicit tool |
-| `addNormToAkte(akteId, normId)` | Agent can pin relevant norms discovered during reasoning — captures agent knowledge for future queries | LOW | Calls AkteNorm create (built in v0.1). Returns confirmation |
-| `searchMuster(query)` | Agent retrieves kanzlei-specific templates for Schriftsatz drafting | LOW | Wraps muster_chunks hybrid search. Returns: [{musterId, titel, kategorie, excerpt}] |
-| `getEmailContext(akteId, limit)` | Email threads often contain key facts (deadlines, counter-party positions) | MEDIUM | Query Email model WHERE akteId, limit=10. Strip attachments, return subject+snippet. Allows agent to ground drafts in correspondence |
-| `createAktennotiz(akteId, inhalt)` | Agent can record observations as structured Aktennotiz ENTWURF — audit trail of agent reasoning output | LOW | Calls existing Aktennotiz create. Status=ENTWURF |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| `sendEmail(to, subject, body)` as agent tool | Maximum automation | Absolute No-Go — sending email = irreversible action; violates BRAK AI sending prohibition; professional liability for mis-sent correspondence | `createEmailEntwurf(akteId, ...)` only — agent creates draft, human sends |
-| `deleteDocument(dokumentId)` as agent tool | Cleanup tasks | Irreversible; data loss risk; audit trail gaps | Agent can flag documents for review; deletion is human-only action |
-| `updateBeteiligte(...)` as agent tool | Agent-detected parties should update records | Write access to authoritative legal data via autonomous agent = high error risk | `suggestBeteiligte(...)` creates a structured suggestion ENTWURF; human confirms via existing Beteiligte-suggestion flow |
-| Tools without Zod schema validation | Simpler to implement | LLM-generated tool arguments will occasionally have wrong types; unvalidated calls against Prisma = DB errors or silent data corruption | All tool parameters must use `z.object()` with `.describe()` on every field. Zod `.safeParse()` before execution |
-
----
-
-### Category 3: @-Mention Task System
-
-UX pattern for delegating work to Helena explicitly, from within the case context.
-
-#### Table Stakes
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| @Helena mention in Akte comment/message triggers agent | Natural, familiar UX (Slack, GitHub, Linear all use @-mention as delegation primitive) | MEDIUM | Parse message text for `@helena` or `@Helena` prefix. Extract task description after @. Enqueue BullMQ `helena-task` job. Show "Helena arbeitet daran..." state |
-| Task progress indicator in UI | User must know agent is working — perceived responsiveness | LOW | Socket.IO room per Akte; emit `helena:thinking`, `helena:step:{n}`, `helena:done`. Show animated spinner in chat thread with step description |
-| Task result linked to originating mention | User traces from "I asked Helena X" to "Helena produced Y" | LOW | Store `mentionId` on KIEntwurf. Display "Helena hat einen Entwurf erstellt" reply in the thread with direct link to ENTWURF |
-| Fail gracefully with user-readable error | Agent failures (timeout, tool error, LLM error) must not leave task in limbo | LOW | BullMQ job failure handler emits `helena:failed` via Socket.IO. Show error message with retry option and agent trace for debugging |
-
-#### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Task queue with per-Akte serialization | Multiple concurrent requests for same Akte should not produce conflicting drafts | MEDIUM | BullMQ job group per `akteId` with concurrency=1 per group. Subsequent @-mentions queue behind running job for that Akte |
-| @Helena with structured intent detection | "@Helena erstelle Klageschrift gegen [Beklagter]" — extract task type + target automatically | MEDIUM | Intent classification prompt runs first (fast, no tools), routes to specialized agent persona (Schriftsatz-Modus, Fristencheck-Modus, Recherche-Modus). Each mode has tailored system prompt and tool set |
-| Suggested @Helena commands | New users don't know what to ask — proactive suggestions reduce onboarding friction | LOW | Show contextual suggestions below chat input: "Erstelle Schriftsatz-Entwurf", "Prüfe Fristen", "Recherchiere Rechtslage zu §..." |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Free-form @Helena without task scoping | Maximum flexibility | Without scoping, agent has no stable tool set — tries to do everything, takes too many steps, produces generic output | Detect intent first; route to bounded agent mode with specific tool list |
-| Real-time streaming agent output character-by-character | Looks impressive | For background BullMQ tasks, streaming to UI requires persistent SSE/WS connection per job. Complexity not justified when task takes 10-30s | Emit structured progress events (step names, not token streams); show completed ENTWURF when done |
-
----
-
-### Category 4: Draft-Approval Workflow (ENTWURF → FREIGEGEBEN)
-
-The human-in-the-loop mechanism for all agent-produced content.
-
-#### Table Stakes
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Accept / Reject / Edit actions on every ENTWURF | Standard review UX; every legal AI platform that survives uses this gate | LOW | Already exists as KI-Entwurf workflow. Ensure all agent-created items (Schriftsatz, Frist, Aktennotiz, Norm-suggestion) route through the same ENTWURF flow |
-| Rejection reason capture | Helena learns from rejections if reason is structured | LOW | Add `ablehnungsGrund: string?` to KIEntwurf model. Dropdown options: "Sachlich falsch", "Unvollständig", "Falsches Format", "Andere". Free-text for edge cases |
-| Diff view for edited ENTWURFs | Lawyer edits draft before accepting — must see what changed vs original | MEDIUM | Store original AI output separately in `originalInhalt` field. Show diff on "Bearbeiten" action. Use existing OnlyOffice Track Changes or client-side diff library |
-| "Alle ablehnen" bulk action | Multiple queued ENTWURFs from an agent run; lawyer wants to dismiss quickly | LOW | Bulk reject endpoint with optional shared Ablehnungsgrund |
-
-#### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| ENTWURF expiry and cleanup | Stale drafts from old agent runs clutter the workspace | LOW | Add `expiresAt` to KIEntwurf. BullMQ daily cron auto-archives ENTWURFs older than 30 days with status=ABGELAUFEN. Notify owner via Socket.IO |
-| Agent trace in ENTWURF detail | Lawyer can audit every tool call that produced this draft — transparency for professional responsibility | LOW | Display `agentTrace` (Thought/Action/Observation JSON array) as collapsible "Wie Helena zu diesem Entwurf kam" section |
-| One-click promote to FREIGEGEBEN + action | Accept ENTWURF and immediately open it in OnlyOffice / attach to beA send / schedule Frist in one gesture | MEDIUM | Post-promotion action sheet: "In OnlyOffice öffnen", "An beA anhängen", "Zu Kalender hinzufügen". Routes based on ENTWURF type |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Auto-promote ENTWURF after N days without action | Reduces backlog | Professional liability — an unreviewed AI draft that auto-promotes and reaches court is a BRAO violation. Frankfurt Sept 2025 case directly on point | ENTWURFs age out to ABGELAUFEN, never auto-promote. Nagging notification instead |
-| Single-click blind accept without preview | Speed | Lawyer must have meaningful opportunity to review — BRAK 2025 guidelines explicitly require this | Keep two-step: open ENTWURF detail → then Accept button. Prevent single-click accept from list view |
-
----
-
-### Category 5: Proactive Scanning
-
-Helena checks cases automatically, without user prompting, and surfaces findings as ENTWURFs or alerts.
-
-#### Table Stakes
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Fristencheck on newly-uploaded documents | Legal professionals expect AI to catch deadlines in Schriftsätze — this is table stakes for 2026 legal AI | MEDIUM | Already partially implemented. Wrap as scheduled BullMQ job: after OCR completes on a new upload, trigger helena-frist-scan job. Output: Frist ENTWURF per detected deadline |
-| Beteiligte-Erkennung from new documents | New documents often name parties not yet in Akte — Helena flags missing Beteiligte | MEDIUM | Already partially implemented. Extend to all new uploads, not just specific ones |
-| Daily Akte health scan per assigned Anwalt | Proactive monitoring: open Fristen in 7 days, new unveraktete emails, stale tickets | MEDIUM | BullMQ daily cron (02:00 Uhr, outside office hours). Per Akte with `status='OFFEN'` and assigned user. Emit findings as Alert items |
-
-#### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Semantic similarity cross-Akte (detect related cases) | New Akte involving same Beklagte/Gläubiger detected automatically — conflict check extension | HIGH | Run embedding similarity on Beteiligte names + Sachverhalt snippet against existing Akte embeddings. Surface as low-priority alert "Ähnliche Akte gefunden: [AZ]" |
-| Auto-suggest Rechtsgrundlage for new Akte | When a new Akte is opened in Rechtsgebiet Arbeitsrecht, Helena immediately suggests the 3 most relevant Normen | MEDIUM | Trigger on Akte creation. Lightweight retrieval (no full agent loop) from law_chunks using Rechtsgebiet as query. Output: AkteNorm ENTWURFs |
-| Verjährungs-Radar (statute of limitations) | Proactively alert when Verjährungsfrist approaches for Akte with no Klage filed | HIGH | Parse Akte creation date + Rechtsgebiet → compute applicable Verjährungsfrist (§195 BGB = 3 Jahre standard; §199 BGB Kenntniserfordernis). Alert at 6 months before expiry. Needs a mapping table of Rechtsgebiet → Verjährungsnorm |
-| Email-triggered scan (new IMAP message → Helena reads + flags) | Email from Gericht or Gegner often contains deadlines or action items | MEDIUM | After IMAP IDLE delivers new email for a known Akte: enqueue helena-email-scan job. Extracts: Fristen, Beteiligte, Handlungsempfehlungen. Output: ENTWURF with structured findings |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Continuous real-time scanning (scan every document the moment it arrives in all Akten) | Maximum freshness | GPU-exhausting for qwen3.5:35b; scanning a 100-Akte firm simultaneously would take hours; Socket.IO broadcast flood | Trigger-based: scan on upload complete, scan on email arrival, daily cron for health checks. Never scan all Akten simultaneously |
-| Helena autonomously contacts counter-parties based on scan findings | Closing the loop automatically | Irreversible action; professional conduct violation; BRAK prohibition on unsupervised AI correspondence | Helena creates correspondence ENTWURF + alert; Anwalt reviews and sends manually |
-
----
-
-### Category 6: Agent Memory — Per-Case Context Persistence
-
-What Helena remembers about a case across sessions.
-
-#### Table Stakes
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Conversation history per Akte, persisted | Lawyer resumes context: "As we discussed yesterday, the Beklagte argues..." — Helena must recall | LOW | Already shipped: `ChatMessage` model per user per Akte. Inject last N=20 messages into agent system context |
-| Key facts extraction (Fallblatt / Case Snapshot) | Running full document RAG on every agent invocation is slow and expensive. Helena should maintain a cached "what I know about this case" summary | HIGH | New `AkteSnapshot` model: KI-generated summary, last updated timestamp. Rebuilt on major events (new document, new Beteiligte, status change). Inject into system prompt header. Regeneration = BullMQ job |
-| Pinned context items (Normen, decisions) | Lawyer has explicitly told Helena "always remember this norm for this case" — should persist | LOW | Existing AkteNorm model (built v0.1). Already injectable into context. Add similar AkteUrteile model |
-
-#### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Memory quality indicator ("Kontext aktuell / veraltet") | AkteSnapshot may be outdated if new documents arrived since last rebuild | LOW | Compare `snapshot.updatedAt` vs latest `Dokument.createdAt`. Display "Kontext vom [datum]" with refresh button in Helena chat header |
-| Semantic memory summarization (episodic → semantic compression) | Over many months, chat history grows too large for context injection. Need compression | HIGH | After 50+ messages, run summarization job: compress old episodic messages into a "Zusammenfassung" block stored in AkteSnapshot. Retain last 10 messages verbatim. Standard pattern from LangChain memory research |
-| Cross-session preference learning (per-Anwalt) | Helena learns individual Anwalt's style preferences: short vs verbose, formal vs informal | VERY HIGH | Requires per-user preference model and fine-tuning or few-shot injection. Defer — too complex for this milestone |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Storing memory in LLM fine-tune / LoRA | Deep personalization | Requires GPU infrastructure for continuous training, evaluation pipeline, validation that learned preferences don't bleed across users/cases | Prompt-injection memory: structured facts in system prompt is simpler, auditable, and correctable |
-| Unlimited conversation history in context | Complete recall | Context window overflow kills generation; qwen3.5:35b has 32k context; 200 messages of chat + documents fills it | Sliding window: 20 recent messages + AkteSnapshot header. Historical messages queryable but not in active context |
-
----
-
-### Category 7: Alert System
-
-Priority-routed notifications from Helena and the system to the right person at the right time.
-
-#### Table Stakes
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Priority levels (Kritisch / Hoch / Mittel / Info) | Not all alerts are equal — a Verjährungsfrist alarm is not the same as "Helena has a suggestion" | LOW | 4-tier severity. Kritisch = 🔴 banner + Sound. Hoch = 🟡 badge. Mittel = notification bell. Info = feed entry only |
-| Role-based alert routing | Frist alerts go to Anwalt; admin alerts go to ADMIN; general suggestions go to assigned Sachbearbeiter | LOW | AlertRule model: `{eventType, minPriority, targetRole, targetUserId?}`. Alert creation resolves recipients from rules |
-| In-app notification center (bell icon) | Standard SaaS pattern — users expect a central alert hub | LOW | Already partially implemented via Socket.IO notifications. Extend with Alert model in Prisma: `{id, userId, eventType, priority, payload, readAt, akteId?}` |
-| Frist reminder cascade (7d → 3d → 1d) | Already implemented in v3.4 for calendar. Helena agent alerts should use same pattern | LOW | Re-use existing BullMQ Frist-reminder cron. Extend to include Helena-detected Fristen (status=FREIGEGEBEN only — not ENTWURFs) |
-
-#### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Alert digest (daily summary email) | Lawyers away from desk need a digest — avoids notification overload | MEDIUM | BullMQ daily digest job (08:00 Uhr). Aggregate unread Hoch+Kritisch alerts per user. Send via existing SMTP. HTML template with case links |
-| Alert snooze ("Erinnere mich morgen") | Lawyers working on something else can defer without losing the alert | LOW | `snoozeUntil: DateTime` on Alert model. BullMQ delayed job re-delivers at snoozeUntil |
-| Alert → ENTWURF conversion ("Lass Helena das bearbeiten") | One-click from alert to delegating work to Helena | MEDIUM | Alert actions: [Jetzt anzeigen] [Später erinnern] [An Helena delegieren]. "Delegieren" creates a @Helena BullMQ task linked to the alert |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Push notifications to mobile | Lawyers are never away from computer (browser-only app) | App is Chrome-only; no mobile app exists; implementing Web Push for a non-PWA is wasted effort | Email digest for away-from-desk alerting; real-time in-app for at-desk |
-| Slack/Teams integration for alerts | Firms use external tools | Out of scope (self-hosted, no external SaaS dependencies for core features); distracts from building in-app experience | In-app notification center + email digest covers the need |
-
----
-
-### Category 8: QA Evaluation — Measuring Legal AI Quality
-
-How to know Helena is working correctly.
-
-#### Table Stakes
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Token usage tracking per agent run | Cost control and anomaly detection | LOW | Already shipped: token tracking per user/Akte. Extend with `agentRunId` to attribute tokens to specific agent tasks |
-| ENTWURF rejection rate metric | If >30% of Helena's ENTWURFs are rejected, quality is poor — actionable signal | LOW | Admin dashboard: group KIEntwurf by ablehnungsGrund, rejection rate per week. Trend chart |
-| Step count per agent run logging | Average steps per task + outliers where agent took 9/10 steps (near cap) signals prompt engineering issues | LOW | Store `stepCount` on AgentRun model. Admin dashboard: histogram |
-
-#### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Goldset evaluation suite (30-50 labeled queries) | Structured measurement of retrieval quality and answer accuracy — the only way to know if RAG improvements actually help | HIGH | Create a labeled dataset: {query, expected_sources[], expected_answer_snippet}. Run evaluation job weekly. Metrics: Recall@5, Precision@5, Answer faithfulness (checked against expected sources) |
-| Hallucination detection (citation grounding check) | Helena cites a case or norm — verify the citation actually came from retrieved chunks, not LLM fabrication | HIGH | Post-generation: for each §-reference and AZ in Helena's answer, check if it appears in the retrieved chunks used. Flag as "Nicht aus Quellen belegt" if not found. Display warning badge on affected citations |
-| User feedback on individual answers (thumbs up/down) | Fastest labeling mechanism — lawyers rate answers inline | LOW | Thumbs up/down on each Helena message. Store as `AnswerFeedback`. Export for goldset labeling and weekly quality reports |
-| A/B baseline comparison (with/without agent loop) | Know if the ReAct loop actually improves over simple RAG | MEDIUM | Evaluation mode in admin: run same query set against single-pass RAG and full agent loop. Compare rejection rates and feedback scores |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Automated hallucination detection via external API (Vectara Hallucination Evaluator, etc.) | Turnkey solution | Client data sent to external service — DSGVO violation; breaks self-hosted principle | In-house citation grounding check: compare citations to retrieved chunk IDs. Simpler and sufficient |
-| Continuous A/B testing on production users | Statistical rigor | Users in legal context should not receive experimentally degraded AI — professional liability risk | Offline evaluation on goldset; manual A/B by admin on demand |
-
----
-
-### Category 9: Activity Feed UI
-
-Slack/GitHub-style chronological log of case activity.
-
-#### Table Stakes
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Per-Akte activity feed (Timeline) | Case management platforms universally show a timeline — what happened, when, by whom | MEDIUM | New `ActivityEvent` model: {id, akteId, userId?, agentRunId?, eventType, payload, createdAt}. Display as vertical timeline in Akte detail. Replaces manual Aktennotizen for system events |
-| Event types: Dokument hochgeladen, Frist erstellt, E-Mail veraktet, Helena Entwurf erstellt, Status geändert | Completeness — lawyers must reconstruct the case history | LOW | Map existing audit log events to ActivityEvent types. Extend logAuditEvent to also write ActivityEvent |
-| Helena events clearly distinguished from human events | Professional responsibility — must always know who did what | LOW | ActivityEvent has `source: 'USER' | 'HELENA' | 'SYSTEM'`. Display with distinct icon/color: human avatar vs Helena chip |
-| Real-time update via Socket.IO | Feed feels live — new events appear without page refresh | LOW | Emit `akte:activity` on ActivityEvent create. Client subscribes to per-Akte Socket.IO room |
-
-#### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Filterable feed (Nur Helena / Nur Fristen / Nur Dokumente) | Busy cases accumulate hundreds of events — lawyers need signal, not noise | LOW | Client-side filter chips. ActivityEvent.eventType enum as filter dimension |
-| Activity digest per Akte (on Akte open after absence) | "While you were away, 3 documents were uploaded and Helena created 2 ENTWURFs" — removes need to scroll entire feed | MEDIUM | Compute delta since last `UserAkteView.lastSeen` timestamp. Show collapsed summary at top of feed |
-| @-mention trail in feed | See who was mentioned and what Helena produced for each mention | LOW | @Helena tasks generate ActivityEvent on start and on completion. Renders as threaded sub-events |
-| Export feed as PDF/CSV for court file documentation | German procedural requirements: Akte must be reconstructable for court | MEDIUM | Export button on activity feed. PDF via existing pdf-lib + Briefkopf. CSV of structured events |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Global cross-Akte activity feed | Firm-wide "what's happening" view | Privacy: RBAC means not every user sees every Akte. Building a cross-Akte feed requires re-checking access on every event render — expensive | Dashboard KPI widgets (Neue Akten, offene Entwürfe) give the firm-wide overview without per-event privacy checks |
-| Emoji reactions on activity items | Fun, familiar from Slack | Out of place in professional legal context; German Kanzlei culture is formal | Skip entirely |
-
----
-
-## Feature Dependencies
+## Feature Area 1: Internes Messaging (Slack-Style Channels + Case Threads)
+
+### Table Stakes
+
+Features users expect from an internal messaging system. Missing = feels incomplete or unusable.
+
+| Feature | Why Expected | Complexity | Dependencies | Notes |
+|---------|--------------|------------|--------------|-------|
+| Akten-Threads (Case Discussions) | Primary use case: team discusses a case in-context without leaving the Akte detail view | Med | AktenActivity feed (exists), Socket.IO rooms `akte:{id}` (exists) | Extends Activity Feed Composer -- messages appear chronologically alongside other events |
+| Allgemeine Kanaele (General Channels) | Kanzlei-wide communication (Orga, News, ad-hoc) -- without this, users fall back to WhatsApp/Email | Med | New Prisma models (Channel, ChannelMessage, ChannelMember) | Admin-created + user-created channels; RBAC controls who can create |
+| @Mentions with In-App Notifications | Users must be notified when addressed; without this, messages get missed | Med | Notification model (exists), Socket.IO `user:{id}` rooms (exists) | Parse @username or @roleName from message content, create Notification, push via Socket.IO |
+| Real-Time Message Delivery | Messages must appear instantly for all channel/thread members | Low | Socket.IO (exists), Redis pub/sub emitter (exists) | Emit to `channel:{id}` or `akte:{id}` room on message creation |
+| Unread Count / Badge | Users need to see at-a-glance what requires attention | Low | ChannelMember.lastReadAt tracking | Sidebar badge (like existing Alert-Center badge pattern) |
+| Message Persistence | Messages must survive page refresh -- ephemeral is unacceptable for legal context | Low | PostgreSQL (exists) | Audit trail requirement for Kanzlei communication |
+| Channel List / Sidebar Section | Entry point for messaging -- must be visible in navigation | Low | Sidebar component (exists, animated Glass design) | New sidebar section below existing nav items |
+
+### Differentiators
+
+Features that set this apart from "just another chat." Not expected, but valued.
+
+| Feature | Value Proposition | Complexity | Dependencies | Notes |
+|---------|-------------------|------------|--------------|-------|
+| @Helena in Channels | Ask Helena questions in any channel -- she responds in-context (same ReAct agent) | Med | Helena @-mention parser (exists), HelenaTask queue (exists) | Extend at-mention-parser to work in channels, not just Akte Composer |
+| Akte-Verknuepfung in Messages | Reference an Akte from a general channel message -- clickable link to case | Low | Akte model (exists) | Pattern: `#AZ-2026-0042` auto-linked, like GitHub issue references |
+| Dokument-Verknuepfung in Messages | Attach/reference a DMS document in a message | Low | Dokument model (exists), MinIO (exists) | File picker from DMS, not local file upload |
+| Threaded Replies in Channels | Reply to a specific message without cluttering main channel | Med | Parent-child message relation | Like Slack threads: reply in side-panel or inline collapse |
+| Typing Indicators | Shows who is currently typing | Low | Socket.IO events (exists) | Ephemeral -- broadcast to room, no DB persistence |
+| Message Editing / Deletion | Correct typos, remove accidental sends | Low | Soft-delete pattern, editedAt timestamp | Audit trail: store original in JSON history, show "(bearbeitet)" |
+| Pinned Messages | Pin important messages to top of channel | Low | `pinned` boolean + `pinnedAt` on message | Useful for channel rules, important announcements |
+| Message Search | Full-text search across all messages | Med | Meilisearch (exists) | Index messages like emails/documents are already indexed |
+
+### Anti-Features
+
+Features to explicitly NOT build.
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| External/Client Messaging | DSGVO nightmare, mixes internal team comms with privileged client comms; scope creep into Mandantenportal | Keep internal-only; Mandantenportal is a separate future feature |
+| File Upload (local files) | DMS is the single source of truth -- bypassing it creates untracked documents | Reference documents from DMS; add "Quick Upload to DMS + Reference" if needed |
+| Voice/Video Calls | Massive complexity (WebRTC), far outside scope; teams already use phone/Teams | Link to external tools if needed |
+| Message Reactions (Emoji) | Low value for a 5-person Kanzlei; adds UI complexity | Simple "Gelesen" indicator is sufficient |
+| E2E Encryption | Self-hosted system behind VPN; E2E adds complexity without meaningful security gain for internal comms | TLS in transit, encrypted at rest in PostgreSQL is sufficient |
+| Rich Text / WYSIWYG Editor | Overhead for quick messages; Markdown-like formatting is sufficient | Simple Markdown (bold, italic, code, links) via lightweight parser |
+| Message Scheduling | Edge case; adds queue complexity for minimal value | Send immediately; use Kalender for time-sensitive reminders |
+
+### Feature Dependencies (Messaging)
 
 ```
-[ReAct Agent-Loop (generateText + maxSteps)]
-    requires --> [Vercel AI SDK v4] (already exists)
-    requires --> [BullMQ Worker] (already exists)
-    requires --> [Tool Registry — Zod typed tools] (NEW)
-
-[Tool Registry]
-    requires --> [searchAktenDokumente] (wraps existing Helena RAG)
-    requires --> [searchGesetze] (wraps law_chunks from v0.1)
-    requires --> [searchUrteile] (wraps urteil_chunks from v0.1)
-    requires --> [getAkteMetadata] (Prisma query)
-    requires --> [getFristen] (Prisma query)
-    requires --> [createEntwurf] (wraps existing KIEntwurf create)
-
-[@-Mention Task System]
-    requires --> [ReAct Agent-Loop] (agent is triggered by mention)
-    requires --> [BullMQ helena-task queue] (NEW queue)
-    requires --> [Socket.IO per-Akte room] (already exists)
-    requires --> [Intent classification prompt] (NEW)
-
-[Draft-Approval Workflow (enhanced)]
-    requires --> [KI-Entwurf model + ENTWURF workflow] (already exists)
-    requires --> [agentTrace field on KIEntwurf] (NEW Prisma field)
-    requires --> [ablehnungsGrund field on KIEntwurf] (NEW Prisma field)
-
-[Proactive Scanning]
-    requires --> [ReAct Agent-Loop] (uses agent for complex scans)
-    requires --> [BullMQ daily cron] (already exists)
-    requires --> [OCR completion event] (already exists — extend trigger)
-    requires --> [IMAP IDLE event] (already exists — extend trigger)
-
-[Agent Memory — AkteSnapshot]
-    requires --> [AkteSnapshot Prisma model] (NEW)
-    requires --> [BullMQ snapshot-rebuild job] (NEW)
-    requires --> [ReAct Agent-Loop] (snapshot injected into system context)
-
-[Alert System]
-    requires --> [Alert Prisma model] (NEW)
-    requires --> [AlertRule Prisma model] (NEW)
-    requires --> [Socket.IO notification channel] (already exists — extend)
-    requires --> [Existing BullMQ Frist-reminder cron] (already exists)
-    requires --> [SMTP for digests] (already exists)
-
-[Activity Feed]
-    requires --> [ActivityEvent Prisma model] (NEW — or extend existing Audit log)
-    requires --> [Socket.IO akte:activity event] (NEW event type)
-    requires --> [All agent actions emit ActivityEvent] (NEW integration point)
-
-[QA Evaluation]
-    requires --> [AgentRun Prisma model with stepCount, tokens] (NEW)
-    requires --> [ENTWURF ablehnungsGrund] (from Draft-Approval workflow above)
-    requires --> [AnswerFeedback Prisma model] (NEW)
-    requires --> [Goldset dataset] (NEW — manually curated)
-    requires --> [Citation grounding checker] (NEW — post-generation validation)
+Channel Model + ChannelMessage Model --> Channel List UI --> Message Sending
+                                                         --> Real-Time Delivery (Socket.IO)
+                                                         --> @Mention Parsing --> Notification
+Akte Activity Composer (exists) --> Akten-Thread Messages (reuse Composer, new message type)
+                                --> Helena @-mention in threads (existing parser)
+ChannelMember.lastReadAt --> Unread Count Badge
 ```
 
-### Critical Dependency Notes
+---
 
-- **Tool Registry is the foundation** — all other agent features depend on a working set of Zod-typed tools. Build this first before any agent mode.
-- **@-Mention requires working ReAct Loop** — do not build the UX trigger until the underlying agent can actually complete tasks reliably.
-- **Proactive Scanning should use the same agent infrastructure** as @-Mention — same BullMQ queue, same tool registry, same ENTWURF output. Don't build two separate Helena execution paths.
-- **AkteSnapshot blocks semantic memory compression** — the snapshot model is shared infrastructure for both Agent Memory and efficient context injection for all agent invocations.
-- **Activity Feed needs to be wired to all other agent features** — it's the logging layer, not a standalone feature. Build the model early; wire events iteratively.
-- **QA Evaluation can be built incrementally** — token tracking and ENTWURF rejection rates can ship with the first agent features; Goldset evaluation is a later addition.
+## Feature Area 2: SCAN-05 Neu-Urteil-Check (Cross-Akte Semantic Court Decision Matching)
+
+### Table Stakes
+
+Features users expect from proactive court decision monitoring. Missing = feature is non-functional.
+
+| Feature | Why Expected | Complexity | Dependencies | Notes |
+|---------|--------------|------------|--------------|-------|
+| Cross-Akte Semantic Matching | Core value: when a new Urteil is ingested via RSS, check if it is relevant to any open Akte | High | UrteilChunk embeddings (exists), Akte-level embeddings/keywords (needs creation), pgvector (exists) | Key challenge: what represents an "Akte" for semantic comparison? Must build Akte-level query vector from case summary/Sachgebiet/key terms |
+| NEUES_URTEIL Alert Creation | When a match is found, create an alert in the existing Alert system | Low | HelenaAlert model with NEUES_URTEIL typ (exists), Alert-Center UI (exists) | Direct reuse of existing infrastructure -- alert.meta carries { urteilChunkId, aktenzeichen, score } |
+| Relevance Threshold | Only alert on genuinely relevant matches, not noise | Med | Configurable via SystemSetting (exists) | Must tune cosine similarity threshold carefully; too low = alert fatigue, too high = missed relevant cases |
+| Socket.IO Push for Alerts | Real-time notification when a new relevant Urteil is found | Low | Socket.IO emitter (exists), Alert push (exists) | Existing pattern: emit to `user:{userId}` room |
+| Akte-Detail: Relevant Urteile Section | Show matched Urteile in the Akte detail view | Med | UrteilChunk model (exists), Akte relation needed | Link from alert.meta.urteilChunkId to display source, Gericht, AZ, Datum |
+
+### Differentiators
+
+| Feature | Value Proposition | Complexity | Dependencies | Notes |
+|---------|-------------------|------------|--------------|-------|
+| Helena Urteil-Briefing | Helena summarizes why the Urteil is relevant to the specific Akte (not just "score > threshold") | Med | Helena LLM (exists), HelenaMemory (exists) | One LLM call per match to generate a 2-3 sentence explanation; stored in alert.inhalt |
+| Sachgebiet-Filtered Matching | Only match Urteile against Akten in the same Rechtsgebiet | Low | UrteilChunk.rechtsgebiet (exists), Akte.sachgebiet (exists) | Reduces false positives significantly; WHERE clause in matching query |
+| Batch Matching on RSS Sync | Run matching immediately after urteile-sync cron completes (not a separate cron) | Low | urteile-sync processor (exists) | Chain: urteile-sync -> emit "new urteile inserted" IDs -> SCAN-05 processes those IDs |
+| Manual Re-Check | User can trigger "Suche relevante Urteile" for a specific Akte on demand | Low | Helena tool search-urteile (exists) | Already exists as a Helena tool; just needs UI button in Akte-Detail |
+| Deduplication | Do not alert twice for the same Urteil-Akte pair | Low | Unique constraint or check before insert | meta.urteilChunkId + akteId uniqueness check |
+
+### Anti-Features
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| Full-Text Keyword Matching (only) | BM25 alone misses semantic similarity -- a Kuendigungsschutz case should match a Kuendigungsschutzklage Urteil even without exact keyword overlap | Use pgvector cosine similarity (semantic); optionally combine with BM25 via RRF like existing hybrid search |
+| Auto-Pin Urteile to Akte | LLM confidence is not high enough to auto-associate legal precedent without human review | Create NEUES_URTEIL alert; user reviews and manually pins via existing AkteNorm pattern or new UrteilVerknuepfung |
+| Per-Document Matching | Matching every Urteil against every document chunk in every Akte is O(n*m) and computationally infeasible | Match against Akte-level representation (HelenaMemory summary + Sachgebiet + kurzrubrum + falldaten keywords) |
+| Real-Time Matching on RSS Item Arrival | RSS sync processes 7 feeds sequentially; matching during sync would block the pipeline | Decouple: urteile-sync inserts, then SCAN-05 job runs matching batch on newly inserted IDs |
+
+### Feature Dependencies (SCAN-05)
+
+```
+Urteile-Sync Processor (exists) --> Newly Ingested Urteil IDs
+                                --> SCAN-05 Matching Job (new BullMQ queue or chained in scanner)
+Akte-Level Embedding/Summary    --> Built from HelenaMemory.content (exists) + Akte.kurzrubrum + Akte.sachgebiet
+                                --> pgvector cosine similarity query
+Match Result (score > threshold) --> HelenaAlert(typ=NEUES_URTEIL) creation
+                                 --> Socket.IO push notification
+                                 --> Helena Briefing (optional LLM explanation)
+```
 
 ---
 
-## MVP Definition
+## Feature Area 3: Falldatenblaetter (Dynamic Case Checklists with Community Workflow + Helena Integration)
 
-### v0.2 Launch With (Helena Agent v2 — Core Agent Capabilities)
+### Table Stakes
 
-- [ ] **Tool Registry (6 core tools)** — `searchAktenDokumente`, `searchGesetze`, `searchUrteile`, `getAkteMetadata`, `getFristen`, `createEntwurf` — the minimum set for useful legal agent work
-- [ ] **ReAct Agent-Loop** via `generateText` with `maxSteps=10` — bounded, auditable, fails gracefully
-- [ ] **@Helena mention trigger** — in Akte chat/message area, triggers BullMQ job, Socket.IO progress events, ENTWURF result
-- [ ] **Enhanced ENTWURF** — add `agentTrace`, `ablehnungsGrund` fields; display trace in detail view
-- [ ] **Alert System (Priority + Role-routing)** — Alert model, AlertRule, in-app notification center extension
-- [ ] **Activity Feed (per-Akte)** — ActivityEvent model, timeline UI, Helena vs Human distinction, Socket.IO real-time
+Features users expect from structured case data collection. Missing = feature is incomplete.
 
-### Add After Validation (v0.2.x)
+| Feature | Why Expected | Complexity | Dependencies | Notes |
+|---------|--------------|------------|--------------|-------|
+| Dynamic Form Rendering from Schema | Render a form (text, select, date, boolean, currency, textarea, number fields) from a JSON schema definition | Low | FalldatenSchema types (exists in `falldaten-schemas.ts`), Akte.falldaten JSON column (exists) | Already have 10 Sachgebiet schemas defined; form rendering is the main new work |
+| Falldatenblatt per Akte (linked to Sachgebiet) | Each Akte shows its Sachgebiet-specific form; data saves to Akte.falldaten | Low | Akte.sachgebiet (exists), Akte.falldaten (exists), getFalldatenSchema() (exists) | Minimal new backend work -- form writes to existing JSON column |
+| Grouped Field Rendering | Fields grouped visually by `gruppe` property (e.g., "Arbeitsverhaeltnis", "Kuendigung") | Low | FalldatenFeld.gruppe (exists in type) | Collapsible sections for better UX |
+| Completeness Indicator | Show how many required fields are filled vs total (e.g., "12/18 ausgefuellt") | Low | FalldatenFeld.required (exists in type) | Simple computed value from schema + data |
+| Multi-Type Field Support | text, textarea, number, date, select, boolean, currency -- all must render correctly | Med | FalldatenFeldTyp (exists) | Standard form components; currency needs Intl.NumberFormat |
 
-- [ ] **Proactive Scanning** — email-triggered scan, daily health scan; only after agent loop is stable
-- [ ] **AkteSnapshot (Agent Memory)** — reduces per-invocation latency; add after seeing performance issues in practice
-- [ ] **QA Metrics in Admin** — rejection rate dashboard, step count histogram; add once enough data exists
-- [ ] **Additional tools** — `createFristEntwurf`, `addNormToAkte`, `searchMuster`, `createAktennotiz`, `getEmailContext`
-- [ ] **Alert snooze + digest email** — polish after core alerting works
-- [ ] **Activity Feed export (PDF/CSV)** — add when court documentation need arises
+### Table Stakes: Community Template Workflow
 
-### Future Consideration (v0.3+)
+| Feature | Why Expected | Complexity | Dependencies | Notes |
+|---------|--------------|------------|--------------|-------|
+| User Creates Custom Template | Any user can define a new Falldatenblatt schema for a case type not covered by the 10 built-in schemas | Med | New model: FalldatenTemplate with fields definition, status, creator | Schema builder UI: add/remove/reorder fields |
+| Admin Review + Approval Workflow | Submitted templates go through Admin review before becoming available kanzlei-wide | Med | FalldatenTemplate.status (ENTWURF -> EINGEREICHT -> GENEHMIGT -> ABGELEHNT) | Admin sees pending templates in /admin section |
+| Approved Template = Standard Option | Once approved, template appears in the Sachgebiet/Falltyp dropdown for new Akten | Low | Query approved templates + built-in schemas | Merge built-in + custom approved templates in UI picker |
+| Template Versioning | When an approved template is updated, existing Akten keep their version; new Akten get the latest | Med | version field on template, Akte stores templateId + version | Critical: changing a template must not break existing filled-in data |
 
-- [ ] **Goldset Evaluation Suite** — requires 2-3 months of production data to label meaningful queries
-- [ ] **Hallucination citation-grounding check** — high implementation complexity; validate with simpler metrics first
-- [ ] **Semantic cross-Akte similarity** — Verjährungs-Radar, related case detection — high value, high complexity
-- [ ] **Intent-routing to specialized agent modes** — Schriftsatz-Modus, Recherche-Modus — after v0.2 proves stable
-- [ ] **Episodic → Semantic memory compression** — only needed when Akten age past ~50 chat sessions
+### Table Stakes: Helena Integration
+
+| Feature | Why Expected | Complexity | Dependencies | Notes |
+|---------|--------------|------------|--------------|-------|
+| Helena Auto-Fill from Akte Data | Helena reads existing Akte data (Beteiligte, Dokumente OCR text, emails) and pre-fills Falldatenblatt fields | High | Helena ReAct agent (exists), read-akte-detail tool (exists), generateObject (AI SDK, exists) | Use generateObject with Falldaten schema as Zod schema; Helena maps extracted data to field keys |
+| Helena Suggests Applicable Template | When a new Akte is created or Sachgebiet changes, Helena suggests which Falldatenblatt template fits | Med | Helena tools (exists), FalldatenTemplate query | Rule-based first (sachgebiet match), LLM for ambiguous cases |
+
+### Differentiators
+
+| Feature | Value Proposition | Complexity | Dependencies | Notes |
+|---------|-------------------|------------|--------------|-------|
+| Conditional Field Logic | Show/hide fields based on other field values (e.g., show "Kuendigungsfrist" only when "kuendigungsart" != "aufhebungsvertrag") | Med | Extended FalldatenFeld type with `showWhen` condition | Significant UX improvement; JSON-based condition: `{ field: "kuendigungsart", op: "neq", value: "aufhebungsvertrag" }` |
+| Falldatenblatt PDF Export | Generate a PDF summary of the filled Falldatenblatt for the physical Akte | Med | PDF generation (pattern exists from Rechnungs-PDF) | Professional layout with Briefkopf; useful for Mandantengespraech preparation |
+| Falldatenblatt in Activity Feed | When Helena auto-fills or user updates, show event in Activity Feed | Low | AktenActivity model (exists), AktenActivityTyp enum | Add new activity type or use NOTIZ type with meta |
+| Template Sharing / Export | Export a template as JSON; import in another Kanzlei instance | Low | JSON serialization of schema | Useful for future multi-tenant scenarios |
+| Helena Completeness Check | Helena proactively alerts when a Falldatenblatt is incomplete (e.g., "Fehlende Angaben: Kuendigungsdatum, Abfindungsangebot") | Med | Helena scanner check pattern (exists), FalldatenSchema (exists) | Add as SCAN-06 in nightly scanner; rule-based, no LLM |
+| Field-Level Audit Trail | Track who changed which field and when | Med | JSON diff + AuditLog (exists) | Store diffs in audit_logs for each save; useful for compliance |
+
+### Anti-Features
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| WYSIWYG Template Builder | Drag-and-drop form builder is massive frontend effort for a 5-person Kanzlei | Simple structured form: "add field" button with type/label/options inputs |
+| External Form Submission (Mandanten fill in) | Mixes internal Falldatenblatt with external portal; DSGVO scope explosion | Keep Falldatenblaetter internal; Mandantenportal is separate future feature |
+| Auto-Submit to Court / beA | Falldatenblaetter are internal checklists, not court filings | Use Schriftsatz pipeline for court filings; Falldatenblatt informs the drafting |
+| Complex Validation Rules (regex, cross-field) | Over-engineering for checklist-style data; "required" is sufficient | Use simple required/optional; let Helena flag inconsistencies via proactive scan |
+| Nested Sub-Forms | Falldatenblaetter are flat-ish checklists by design; nesting adds complexity | Use `gruppe` for visual grouping; one level is enough |
+
+### Feature Dependencies (Falldatenblaetter)
+
+```
+FalldatenSchema types (exist) --> Form Renderer Component (new)
+                              --> Akte.falldaten JSON column (exists)
+                              --> Save/Load via API route
+
+FalldatenTemplate model (new) --> Template Builder UI (new, Admin)
+                              --> Community Workflow (ENTWURF -> EINGEREICHT -> GENEHMIGT)
+                              --> Template Picker (merge built-in + custom)
+
+Helena auto-fill             --> read-akte-detail tool (exists)
+                              --> generateObject with Falldaten Zod schema
+                              --> Write to Akte.falldaten via new Helena tool
+
+Helena template suggestion   --> Query FalldatenTemplate by sachgebiet
+                              --> Suggest via HelenaSuggestion (exists)
+```
 
 ---
 
-## Feature Prioritization Matrix
+## Cross-Feature Dependencies
 
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| Tool Registry (6 core tools) | HIGH | LOW | P1 |
-| ReAct Agent-Loop (generateText maxSteps) | HIGH | LOW | P1 |
-| @Helena mention trigger + BullMQ | HIGH | MEDIUM | P1 |
-| Enhanced ENTWURF (agentTrace, ablehnungsGrund) | HIGH | LOW | P1 |
-| Alert System (Priority + Role-routing) | HIGH | MEDIUM | P1 |
-| Activity Feed (per-Akte timeline) | HIGH | MEDIUM | P1 |
-| Proactive Scanning (email + daily cron) | HIGH | MEDIUM | P2 |
-| AkteSnapshot (agent memory) | MEDIUM | MEDIUM | P2 |
-| Additional tools (createFristEntwurf, searchMuster, etc.) | MEDIUM | LOW | P2 |
-| Alert digest + snooze | MEDIUM | LOW | P2 |
-| QA metrics dashboard (rejection rate, step count) | MEDIUM | LOW | P2 |
-| Activity feed export (PDF/CSV) | MEDIUM | LOW | P2 |
-| Goldset evaluation suite | HIGH | HIGH | P3 |
-| Hallucination citation grounding | HIGH | HIGH | P3 |
-| Verjährungs-Radar | HIGH | HIGH | P3 |
-| Cross-Akte semantic similarity | MEDIUM | HIGH | P3 |
-| Episodic → Semantic memory compression | MEDIUM | HIGH | P3 |
+```
+Messaging --> @Helena in Channels --> HelenaTask queue (exists)
+Messaging --> @Mentions --> Notification model (exists)
+Messaging --> Activity Feed integration --> AktenActivityTyp needs NACHRICHT type
+
+SCAN-05 --> HelenaAlert(NEUES_URTEIL) --> Alert-Center UI (exists)
+SCAN-05 --> urteile-sync processor --> BullMQ chain (exists)
+SCAN-05 --> Helena Memory for Akte-level representation (exists)
+
+Falldatenblaetter --> Akte.falldaten column (exists)
+Falldatenblaetter --> FalldatenSchema types (exists)
+Falldatenblaetter --> Helena generateObject (AI SDK, exists)
+Falldatenblaetter --> Helena Scanner for completeness check
+
+Messaging + Falldatenblaetter --> "Helena hat das Falldatenblatt ausgefuellt" message in Akte thread
+SCAN-05 + Messaging --> "Neues relevantes Urteil gefunden" notification in Akte thread
+```
 
 ---
 
-## Legal Domain Constraints (Non-Negotiable)
+## MVP Recommendation
 
-These are not design choices — they are professional conduct requirements under BRAK 2025 and BRAO.
+### Phase 1: Falldatenblaetter (lowest risk, highest immediate value)
 
-| Constraint | Source | Implementation |
-|------------|--------|----------------|
-| All AI output = ENTWURF; never auto-action | BRAK 2025 AI guidelines, BRAO §43 | ENTWURF status enforced in `createEntwurf` tool; no `sendEmail`, `submitToBeA`, `signDocument` tools may exist |
-| AI must not send correspondence autonomously | BRAK 2025; Frankfurt court Sept 2025 precedent | Email compose tool creates ENTWURF only; `sendEmail` is not in the tool registry |
-| Lawyer must have opportunity to review before action | BRAO §43a competence duty | Two-step approval: open ENTWURF detail → explicit Accept. No single-click blind accept from list |
-| All agent actions must be auditable | GoBD (German bookkeeping principles for digital records), 10-year retention | Every tool call logged in agentTrace; AgentRun model with full step log |
-| Client data must not leave premises | DSGVO Art. 5(1)(f), BRAK confidentiality duty | Only self-hosted LLM (Ollama qwen3.5:35b) for tasks involving real client data; OpenAI/Anthropic only for tasks on anonymized/synthetic content |
-| AI must be disclosed when used | BRAO §43a transparency; EU AI Act Art. 52 | KI badge on all ENTWURF items; "Von Helena erstellt" label visible to all users with access to the draft |
+Prioritize because:
+1. Infrastructure is 80% built (schemas exist, falldaten column exists, forms are straightforward)
+2. Immediate daily value for case intake and Mandantengespraech preparation
+3. No real-time complexity; standard CRUD forms
+4. Helena integration (auto-fill) is a natural extension of existing generateObject capability
+
+Build:
+- Form renderer component from FalldatenSchema
+- Akte-Detail tab/section for Falldatenblatt
+- Save/load from Akte.falldaten
+- Completeness indicator
+- Helena auto-fill tool (generateObject)
+
+Defer:
+- Community template workflow (Phase 2 or later -- built-in schemas cover 10 Sachgebiete already)
+- Conditional field logic (nice-to-have, not critical for v0.3)
+- PDF export (can be added later without schema changes)
+
+### Phase 2: SCAN-05 Neu-Urteil-Check (high value, moderate risk)
+
+Prioritize because:
+1. HelenaAlertTyp.NEUES_URTEIL already exists in the enum
+2. UrteilChunk embeddings and pgvector search already work
+3. urteile-sync BullMQ cron is already running daily
+4. Alert-Center + Socket.IO push already handle alert display
+5. Main new work: Akte-level embedding/representation + matching query + threshold tuning
+
+Build:
+- Akte-level query vector (from HelenaMemory + kurzrubrum + sachgebiet)
+- SCAN-05 matching processor (BullMQ job chained after urteile-sync)
+- NEUES_URTEIL alert creation with meta payload
+- Akte-Detail: show linked relevant Urteile
+
+Defer:
+- Helena briefing explanation (LLM-generated "why relevant") -- can run later as enhancement
+- Manual re-check button (Helena search-urteile tool already exists for ad-hoc use)
+
+### Phase 3: Internes Messaging (highest complexity, most new code)
+
+Prioritize last because:
+1. Most new schema (Channel, ChannelMessage, ChannelMember models)
+2. New UI surface area (channel list, message view, composer)
+3. Real-time complexity (message delivery, typing indicators, unread tracking)
+4. Akten-Threads partially covered by existing Activity Feed Composer
+5. Value is real but team currently uses WhatsApp/phone -- not a blocker
+
+Build:
+- Prisma models (Channel, ChannelMessage, ChannelMember)
+- Akten-Threads in Activity Feed (extend existing Composer)
+- General Channels UI (list, message view, composer)
+- @Mention parsing + Notification creation
+- Socket.IO real-time delivery
+- Unread count badges
+
+Defer:
+- Message search via Meilisearch (can index later without schema changes)
+- Threaded replies within channels (Akten-Threads cover the primary threaded use case)
+- Pinned messages (low-value for small team)
 
 ---
 
-## Competitor Feature Analysis
+## Complexity Summary
 
-| Feature | Harvey AI | Legora | Definely (LangGraph) | Helena (this project) |
-|---------|-----------|--------|----------------------|----------------------|
-| ReAct agent loop | Yes (cloud) | Yes (cloud) | Yes (LangGraph) | Vercel AI SDK generateText + maxSteps (self-hosted) |
-| Case file integration | Partial | Partial | Contract-specific | Embedded in Akte — full case context |
-| ENTWURF / approval gate | Yes | Yes | Redline review | KI-Entwurf with trace, rejection reason, BRAO-compliant |
-| Proactive scanning | Limited | Email-triggered | No | Daily cron + event-triggered (email, upload) |
-| Self-hosted / DSGVO | No (US cloud) | No (EU cloud, DPA required) | No (cloud) | Yes — full Docker Compose, zero egress |
-| Tool registry transparency | No | No | No | agentTrace visible in ENTWURF detail |
-| German legal knowledge sources | Yes (proprietary) | Partial | No | bundestag/gesetze + BMJ (v0.1) |
-| Activity feed | No | No | No | Per-Akte timeline with Helena/Human distinction |
-| Professional responsibility compliance | US law focus | EU framework | Not legal-specific | BRAK 2025 + BRAO explicitly modeled |
-
-**Helena's differentiated position:** The combination of (1) self-hosted DSGVO compliance, (2) BRAO-explicit ENTWURF gate, (3) transparent agent trace, (4) per-Akte embedded context (not standalone research tool), and (5) German legal knowledge sources is unique. No competitor combines all five.
+| Feature Area | New Models | New UI Surfaces | New BullMQ Queues | LLM Calls | Estimated Complexity |
+|-------------|------------|-----------------|-------------------|-----------|---------------------|
+| Falldatenblaetter (MVP) | 0 (uses existing Akte.falldaten) | 1 (form renderer) | 0 | 1 (auto-fill) | LOW-MED |
+| Falldatenblaetter (Template Workflow) | 1 (FalldatenTemplate) | 2 (builder, admin review) | 0 | 1 (suggest) | MED |
+| SCAN-05 | 0 (uses existing HelenaAlert) | 1 (Akte-Detail section) | 1 (scan-05 queue or scanner extension) | 0-1 (optional briefing) | MED |
+| Messaging (Akten-Threads) | 0-1 (may extend AktenActivity) | 0 (extends existing Composer) | 0 | 0 | LOW |
+| Messaging (General Channels) | 3 (Channel, ChannelMessage, ChannelMember) | 3 (sidebar, channel view, composer) | 0 | 0 | MED-HIGH |
+| Messaging (Full: search, threads, edit) | 0 additional | 2 (thread panel, search) | 0 | 0 | MED |
 
 ---
 
 ## Sources
 
-- Vercel AI SDK agent loop and tool calling: [AI SDK Agents — Vercel](https://vercel.com/kb/guide/how-to-build-ai-agents-with-vercel-and-the-ai-sdk), [AI SDK Loop Control docs](https://ai-sdk.dev/docs/agents/loop-control), [AI SDK Tool Calling](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling)
-- AI SDK 5 and 6 features (maxSteps, stopWhen, Agent abstraction): [AI SDK 5 Release](https://vercel.com/blog/ai-sdk-5), [AI SDK 6 Release](https://vercel.com/blog/ai-sdk-6)
-- ReAct agent pattern: [ReAct pattern TypeScript 2026](https://noqta.tn/en/tutorials/ai-agent-react-pattern-typescript-vercel-ai-sdk-2026), [AG2 ReAct Loops](https://docs.ag2.ai/latest/docs/blog/2025/06/12/ReAct-Loops-in-GroupChat/)
-- Legal AI agent tools (Harvey, Legora, Spellbook): [Spellbook Legal AI](https://www.spellbook.legal/), [Legora](https://legora.com/), [Harvey AI](https://www.harvey.ai/), [Definely + LangGraph case study](https://www.blog.langchain.com/customers-definely/)
-- Legal AI hallucination rates: [Stanford Law: Legal RAG Hallucinations study](https://dho.stanford.edu/wp-content/uploads/Legal_RAG_Hallucinations.pdf), [Lakera: Hallucination guide 2026](https://www.lakera.ai/blog/guide-to-hallucinations-in-large-language-models)
-- RAG evaluation metrics (Goldset, Recall@k, faithfulness): [Label Your Data: RAG Evaluation 2026](https://labelyourdata.com/articles/llm-fine-tuning/rag-evaluation), [Confident AI: LLM Evaluation Metrics](https://www.confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation)
-- Agent memory patterns (episodic, semantic, compression): [The New Stack: Memory for AI Agents](https://thenewstack.io/memory-for-ai-agents-a-new-paradigm-of-context-engineering/), [AWS AgentCore long-term memory](https://aws.amazon.com/blogs/machine-learning/building-smarter-ai-agents-agentcore-long-term-memory-deep-dive/)
-- Activity feed and agentic UX patterns: [UI Patterns: Activity Stream](https://ui-patterns.com/patterns/ActivityStream), [Smashing Magazine: Designing for Agentic AI](https://www.smashingmagazine.com/2026/02/designing-agentic-ai-practical-ux-patterns/)
-- BRAK AI guidelines and BRAO professional responsibility: [BRAK 2025 AI stance via advofleet](https://www.advofleet.com/insights/the-ripple-effects-of-the-2025-aba-ethics-opinion-on-generative-ai-in-european-law-firms), [Fordham Law: Legal profession and AI 2026](https://news.law.fordham.edu/blog/2026/01/28/what-the-legal-profession-needs-to-know-about-ai-in-2026/), [Germany AI regulatory landscape](https://www.legal500.com/guides/chapter/germany-artificial-intelligence/)
-- Frankfurt court AI hallucination liability: Library of Congress Global Legal Monitor Feb 2026 (Germany Regional Court rules AI-generated expert report inadmissible)
-
----
-
-*Feature research for: Helena Agent v2 — ReAct Loop, Tool Registry, @-Mention, Draft-Approval, Proactive Scanning, Agent Memory, Alerts, QA, Activity Feed*
-*Researched: 2026-02-27*
+- Existing codebase analysis: `prisma/schema.prisma` (70+ models, HelenaAlert.NEUES_URTEIL, AktenActivity, Akte.falldaten)
+- Existing code: `src/lib/falldaten-schemas.ts` (10 Sachgebiet schemas with 150+ fields total)
+- Existing code: `src/lib/urteile/ingestion.ts` (pgvector search, PII-gated ingestion)
+- Existing code: `src/worker.ts` (16 BullMQ queues, urteile-sync at 03:00 daily)
+- Existing code: `src/lib/socket/emitter.ts` (Redis emitter with user/akte/role rooms)
+- Existing code: `src/lib/scanner/types.ts` (CheckResult, ScannerConfig patterns)
+- [Slack Architecture - System Design](https://systemdesign.one/slack-architecture/) -- channel/message DB patterns
+- [Free Law Project - Semantic Search](https://free.law/2025/03/11/semantic-search/) -- domain-adapted legal semantic search
+- [UK National Archives - Semantic Search for Case Law](https://www.nationalarchives.gov.uk/blogs/digital/prototyping-semantic-search-for-case-law/) -- prototype patterns
+- [LegalServer - Dynamic Checklists](https://help.legalserver.org/article/1732-dynamic-checklists) -- legal checklist patterns
+- [Lawmatics - Intake Form Templates](https://www.lawmatics.com/blog/intake-process-template) -- template workflow patterns

@@ -1,809 +1,619 @@
-# Stack Research
+# Technology Stack
 
-**Domain:** Helena Agent v2 — Autonomous agent capabilities for AI-Lawyer (ReAct loop, deterministic orchestrator, @-tagging, draft-approval, background scanner, memory, alerts, QA-gates, activity feed)
-**Researched:** 2026-02-27
-**Confidence:** HIGH for core decisions (verified against official AI SDK docs, BullMQ docs, npm registry); MEDIUM for QA-gate patterns (academic + emerging practice)
+**Project:** AI-Lawyer v0.3 -- Kanzlei-Collaboration
+**Researched:** 2026-02-28
+**Mode:** Subsequent milestone -- stack additions for Internes Messaging, SCAN-05, Falldatenblaetter
 
-> This document covers ONLY libraries to ADD or decisions about what NOT to add for the Helena Agent v2 milestone.
-> The existing validated stack (Next.js 14+, Prisma, PostgreSQL 16+pgvector, MinIO, Meilisearch, BullMQ+Redis, Socket.IO, Vercel AI SDK v4, LangChain textsplitters, Ollama qwen3.5:35b, Zod v3) is NOT repeated here.
+## Executive Summary
 
----
+v0.3 adds three features to an existing 117k LOC TypeScript codebase. The critical finding: **zero new npm packages are needed**. All three features build entirely on existing infrastructure -- Socket.IO for real-time messaging, pgvector for cross-Akte semantic search, and the existing `falldaten-schemas.ts` + `FalldatenForm` system for dynamic case data forms. The work is Prisma models, API routes, UI components, BullMQ processors, and Socket.IO room extensions.
 
-## Critical Decision: AI SDK Version
-
-### Stay on AI SDK v4 (`ai: ^4.3.19`) for this milestone
-
-**Rationale:**
-
-The current AI SDK npm version is 6.x (as of 2026-02-27: `6.0.103`). Migrating from v4 to v5/v6 requires the following breaking changes across 8 files already using the SDK:
-
-| Breaking change | v4 | v5/v6 |
-|----------------|-----|--------|
-| Tool schema property | `parameters:` | `inputSchema:` |
-| Message types | `CoreMessage` | `ModelMessage` |
-| Message converter | `convertToCoreMessages()` | `convertToModelMessages()` |
-| Multi-step limit | `maxSteps:` | `stopWhen: stepCountIs(n)` |
-| Stream response helper | `toDataStreamResponse()` | `toUIMessageStreamResponse()` |
-| `useChat` input state | automatic | manual |
-
-Migrating this during a feature milestone introduces regression risk to the already-working RAG chat. The v4 API already supports everything needed for Helena Agent v2: `generateText` with `tools`, `generateObject` with Zod schemas, `streamText` for streaming. A separate tech-debt milestone (`v0.3-sdk-upgrade`) should handle this after v0.2 ships.
-
-**What this means for tool-calling code:** In v4, tools are defined with `parameters:` (Zod schema) and `execute:`. Do NOT use the v5/v6 `tool()` helper or `inputSchema:`. All new tool-calling code in this milestone uses the v4 API.
+This mirrors the v0.2 precedent ("Zero new npm packages") and is justified because every capability was verified against the installed dependency set.
 
 ---
 
-## 1. ReAct Agent Loop — No New Framework
+## Recommended Stack
 
-**Verdict: Build custom ReAct loop in TypeScript using existing `generateText` + `tools` from `ai@4.x`.**
+### Core Framework
 
-Do not add LangChain agents, CrewAI, AutoGen, or any agent framework. Reasons:
+No changes. Existing stack handles all v0.3 requirements.
 
-- LangChain.js agents are a port of the Python library with incomplete coverage (e.g., `ParentDocumentRetriever` does not exist in JS)
-- LangChain agent abstractions add indirection without value for a known, bounded use case
-- The project already has `generateText` with tool-calling. A ReAct loop is 60–80 lines of TypeScript on top of it
-- Self-hosted constraint makes cloud agent frameworks (LangSmith, CrewAI Cloud) non-starters
+| Technology | Version | v0.3 Role | Why Sufficient |
+|---|---|---|---|
+| Next.js 14+ (App Router) | ^14.2.21 | API routes for messaging + templates, pages for channel UI | Existing pattern from 26+ dashboard pages |
+| TypeScript | ^5.7.2 | Type safety for new models, schemas | Already in use |
+| Tailwind CSS + shadcn/ui | ^3.4.17 | Messaging UI components | Glass UI design system already established |
 
-**Implementation pattern (write to `src/lib/helena/agent-loop.ts`):**
+### Database
 
-```typescript
-import { generateText } from "ai";
-import { z } from "zod";
-import { getModel } from "@/lib/ai/provider";
-import { wrapWithTracking } from "@/lib/ai/token-tracker";
+No changes. All new data fits PostgreSQL + Prisma.
 
-const MAX_STEPS = 20; // hard ceiling, matches AI SDK v5+ default
+| Technology | Version | v0.3 Role | Why Sufficient |
+|---|---|---|---|
+| PostgreSQL 16 | existing | Channel, Message, FalldatenTemplate tables | Relational data with JSON columns -- perfect fit |
+| Prisma ORM | ^5.22.0 | New models (Channel, ChannelMember, Message, FalldatenTemplate) | 70+ models already managed. Same migration pattern. |
+| pgvector (HNSW) | 0.2.1 | SCAN-05: search document_chunks using urteil embedding | Existing index, existing query patterns in `vector-store.ts` |
 
-export interface AgentTool {
-  description: string;
-  parameters: z.ZodSchema;
-  execute: (args: unknown) => Promise<unknown>;
-}
+### Infrastructure
 
-export async function runAgentLoop(
-  systemPrompt: string,
-  userMessage: string,
-  tools: Record<string, AgentTool>,
-  options: {
-    akteId?: string;
-    userId: string;
-    onStep?: (step: number, toolName: string, result: unknown) => Promise<void>;
-  }
-): Promise<{ result: string; steps: number; toolCallHistory: Array<{ tool: string; args: unknown; result: unknown }> }> {
-  const messages: CoreMessage[] = [{ role: "user", content: userMessage }];
-  const history: Array<{ tool: string; args: unknown; result: unknown }> = [];
-  let stepCount = 0;
+No changes. No new Docker services.
 
-  while (stepCount < MAX_STEPS) {
-    const response = await wrapWithTracking(
-      () => generateText({
-        model: getModel(),
-        system: systemPrompt,
-        messages,
-        tools: Object.fromEntries(
-          Object.entries(tools).map(([name, t]) => [name, { description: t.description, parameters: t.parameters }])
-        ),
-        maxTokens: 2048,
-        temperature: 0,
-      }),
-      { userId: options.userId, akteId: options.akteId, taskType: "agent-loop" }
-    );
+| Technology | Version | v0.3 Role | Why Sufficient |
+|---|---|---|---|
+| Socket.IO + Redis Adapter | 4.8.3 + 8.3.0 | Real-time message delivery, typing indicators | Room system already supports `user:`, `akte:`, `role:` patterns. Add `channel:{id}` room. |
+| Socket.IO Redis Emitter | 5.1.0 | Worker-to-browser message push for SCAN-05 alerts | Already used for OCR/embedding/alert notifications from worker |
+| BullMQ | ^5.70.1 | SCAN-05 processor (post-sync hook) | 16 workers already registered. Same pattern. |
+| Redis 7 | existing | Socket.IO adapter, BullMQ backend, pub/sub | No changes needed |
 
-    // No tool calls — agent is done
-    if (!response.toolCalls || response.toolCalls.length === 0) {
-      return { result: response.text, steps: stepCount, toolCallHistory: history };
-    }
+### Supporting Libraries
 
-    // Execute tool calls and append results
-    const toolResults: CoreMessage["content"] = [];
-    for (const call of response.toolCalls) {
-      const tool = tools[call.toolName];
-      if (!tool) throw new Error(`Unknown tool: ${call.toolName}`);
+No new libraries. Existing ones cover all needs:
 
-      const result = await tool.execute(call.args);
-      history.push({ tool: call.toolName, args: call.args, result });
-      toolResults.push({ type: "tool-result", toolCallId: call.toolCallId, toolName: call.toolName, result: JSON.stringify(result) });
-
-      if (options.onStep) {
-        await options.onStep(stepCount, call.toolName, result);
-      }
-    }
-
-    // Append assistant response + tool results to conversation
-    messages.push({ role: "assistant", content: response.text + (response.toolCalls.length > 0 ? JSON.stringify(response.toolCalls) : "") });
-    messages.push({ role: "tool", content: toolResults });
-    stepCount++;
-  }
-
-  // Fallback: hit max steps, return last text
-  const lastText = messages.filter(m => m.role === "assistant").pop();
-  return {
-    result: typeof lastText?.content === "string" ? lastText.content : "Agent loop reached maximum steps.",
-    steps: stepCount,
-    toolCallHistory: history,
-  };
-}
-```
-
-**Why this over AI SDK v5 `stopWhen`:** The codebase is on v4. This implementation gives identical semantics (stop on text without tool calls OR max steps) without requiring an SDK upgrade.
+| Library | Version | v0.3 Role | Why Sufficient |
+|---|---|---|---|
+| TipTap (StarterKit + extensions) | 3.20.0 | Message composer rich text | Already used in email compose editor (`ComposeEditor`). Reuse pattern. |
+| Vercel AI SDK v4 | ^4.3.19 | Helena auto-fill for Falldatenblaetter via `generateObject` | Same pattern as Schriftsatz pipeline |
+| Zod | ^3.23.8 | Runtime validation for user-created FalldatenTemplate schemas | Already validating AI outputs, form inputs |
+| date-fns | ^4.1.0 | Message timestamps, "2 min ago" formatting | Already used throughout UI |
+| Lucide React | ^0.468.0 | Icons for messaging UI (MessageSquare, Hash, AtSign, etc.) | Already installed, 100+ icons in use |
+| Sonner | ^1.7.1 | Toast notifications for new messages, mentions | Already installed, used for all toasts |
 
 ---
 
-## 2. Structured Output — Existing `generateObject` + Zod v3
+## Feature-Specific Stack Decisions
 
-**No new library needed.** The project already uses `generateObject` with Zod schemas in `deadline-extractor.ts` and `party-extractor.ts`. The same pattern extends to all structured Helena outputs.
+### 1. Internes Messaging
 
-**Key schemas to define (write to `src/lib/helena/schemas/`):**
+#### Data Layer: Prisma models only
 
-```typescript
-// src/lib/helena/schemas/schriftsatz.schema.ts
-export const schriftsatzSchema = z.object({
-  titel: z.string().describe("Titel des Schriftsatzes"),
-  adressat: z.string().describe("Empfänger (Gericht/Partei)"),
-  einleitung: z.string().describe("Einleitungsabsatz"),
-  abschnitte: z.array(z.object({
-    ueberschrift: z.string(),
-    text: z.string(),
-    zitate: z.array(z.string()).describe("Gesetzeszitate und Urteilsverweise"),
-  })),
-  antrag: z.string().describe("Abschließender Antrag"),
-  anlagen: z.array(z.string()).describe("Liste der Anlagen"),
-  confidence: z.number().min(0).max(1),
-});
-
-// src/lib/helena/schemas/alert.schema.ts
-export const alertSchema = z.object({
-  type: z.enum(["FRIST_KRITISCH", "INAKTIVITAET", "ANOMALIE", "AUFGABE", "DOKUMENT", "SYSTEM"]),
-  titel: z.string(),
-  beschreibung: z.string(),
-  prioritaet: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
-  akteId: z.string().nullable(),
-  dueDate: z.string().nullable(),
-});
-
-// src/lib/helena/schemas/qa-gate.schema.ts
-export const qaGateSchema = z.object({
-  passed: z.boolean(),
-  recallScore: z.number().min(0).max(1).describe("Recall@k: fraction of expected sources found"),
-  hallucinationRisk: z.enum(["LOW", "MEDIUM", "HIGH"]),
-  missingCitations: z.array(z.string()),
-  unsupportedClaims: z.array(z.string()),
-  verdict: z.string().describe("Short human-readable QA verdict"),
-});
-```
-
-**Do NOT upgrade to Zod v4 in this milestone.** The `ai@4.x` SDK accepts Zod v3 schemas directly. Upgrading to Zod v4 while staying on AI SDK v4 risks peer-dependency conflicts (the AI SDK v5 migration guide explicitly requires `zod@4.1.8+`). Wait for the SDK upgrade milestone.
-
----
-
-## 3. BullMQ — Existing `bullmq@^5.70.1` with Step-Job Pattern
-
-**No library upgrade needed.** BullMQ 5.x already supports everything needed for agent background tasks.
-
-**Patterns to use:**
-
-### 3a. Agent Tasks as Step Jobs
-
-Long-running agent loops (Schriftsatz generation, background scanner) use BullMQ's step-job pattern to survive worker restarts:
-
-```typescript
-// src/lib/queue/processors/helena-agent.processor.ts
-enum AgentStep {
-  INIT = "INIT",
-  RETRIEVE = "RETRIEVE",
-  GENERATE = "GENERATE",
-  QA_GATE = "QA_GATE",
-  STORE_DRAFT = "STORE_DRAFT",
-  DONE = "DONE",
-}
-
-export async function helenaAgentProcessor(job: Job) {
-  let step: AgentStep = job.data.step ?? AgentStep.INIT;
-
-  while (step !== AgentStep.DONE) {
-    switch (step) {
-      case AgentStep.INIT: {
-        await job.updateData({ ...job.data, step: AgentStep.RETRIEVE });
-        step = AgentStep.RETRIEVE;
-        break;
-      }
-      case AgentStep.RETRIEVE: {
-        const chunks = await hybridSearch(job.data.query, job.data.akteId);
-        await job.updateData({ ...job.data, chunks, step: AgentStep.GENERATE });
-        step = AgentStep.GENERATE;
-        break;
-      }
-      case AgentStep.GENERATE: {
-        const draft = await runSchriftsatzOrchestrator(job.data);
-        await job.updateData({ ...job.data, draft, step: AgentStep.QA_GATE });
-        step = AgentStep.QA_GATE;
-        break;
-      }
-      case AgentStep.QA_GATE: {
-        const qa = await runQaGate(job.data.draft, job.data.chunks);
-        if (qa.hallucinationRisk === "HIGH") {
-          // Re-generate with explicit citation requirement
-          await job.updateData({ ...job.data, step: AgentStep.GENERATE, qaFeedback: qa });
-          step = AgentStep.GENERATE;
-          break;
-        }
-        await job.updateData({ ...job.data, qa, step: AgentStep.STORE_DRAFT });
-        step = AgentStep.STORE_DRAFT;
-        break;
-      }
-      case AgentStep.STORE_DRAFT: {
-        await storeDraftForApproval(job.data);
-        // Emit Socket.IO event for real-time UI update
-        await redisEmitter.emit("helena:draft-ready", { akteId: job.data.akteId, jobId: job.id });
-        await job.updateData({ ...job.data, step: AgentStep.DONE });
-        step = AgentStep.DONE;
-        break;
-      }
-    }
-  }
-}
-```
-
-**Key BullMQ behavior:** `job.updateData()` persists step state in Redis. If the worker crashes during `GENERATE`, on retry the job resumes from `GENERATE`, not from `INIT`. This is critical for expensive LLM calls.
-
-### 3b. @-Tagging as BullMQ Jobs
-
-```typescript
-// When user types "@Helena generate Abmahnung"
-await helenaQueue.add("agent-task", {
-  type: "SCHRIFTSATZ",
-  akteId,
-  userId,
-  prompt: extractedPrompt,
-  step: AgentStep.INIT,
-}, {
-  attempts: 3,
-  backoff: { type: "exponential", delay: 5000 },
-  removeOnComplete: 100,
-  removeOnFail: 50,
-});
-```
-
-### 3c. Nightly Background Scanner
-
-```typescript
-// Register in worker startup (src/lib/queue/worker.ts)
-await scannerQueue.add(
-  "nightly-scan",
-  { type: "FULL_SCAN" },
-  {
-    repeat: { pattern: "0 2 * * *" }, // 2 AM every night
-    jobId: "nightly-helena-scan",     // idempotent: only one scheduled job
-  }
-);
-```
-
-**Scanner checks to implement in `src/lib/queue/processors/scanner.processor.ts`:**
-1. Fristen within 7 days with no Wiedervorlage — emit `FRIST_KRITISCH` alert
-2. Akten with no activity for 30+ days — emit `INAKTIVITAET` alert
-3. Dokumente uploaded in last 24h without OCR completion — emit system alert
-4. RVG-Rechnungen overdue > 60 days — emit `ANOMALIE` alert
-5. @-Task mentions assigned to Helena with no response within 4h — emit `AUFGABE` alert
-6. New beA messages unprocessed for 24h — emit `DOKUMENT` alert
-
-**Separate queues for separation of concerns:**
-
-| Queue name | Purpose | Cron/Trigger |
-|------------|---------|--------------|
-| `helena-agent` | ReAct loop + Schriftsatz generation | On-demand (@-tag) |
-| `helena-scanner` | Nightly background scan | `0 2 * * *` |
-| `helena-pii` | Low-priority PII filtering (from v0.1) | After urteil-fetch |
-| existing queues | Unchanged | Unchanged |
-
----
-
-## 4. Helena Memory — PostgreSQL + Prisma (No New Library)
-
-**No new library.** Implement memory as a Prisma table. Redis-based memory (e.g., `mem0`, `zep`) would require a new Docker service — violates self-hosted simplicity.
-
-**Prisma schema additions:**
+New models (no changes to existing models):
 
 ```prisma
-// Per-case agent memory: Helena's working knowledge of an Akte
-model HelenaMemory {
-  id        String   @id @default(cuid())
-  akteId    String
-  akte      Akte     @relation(fields: [akteId], references: [id], onDelete: Cascade)
-  key       String   // e.g. "sachverhalt_summary", "bekannte_fristen", "mandant_ziele"
-  value     String   @db.Text
-  updatedAt DateTime @updatedAt
-  createdAt DateTime @default(now())
-
-  @@unique([akteId, key])
-  @@index([akteId])
-  @@map("helena_memory")
+enum ChannelTyp {
+  AKTE_THREAD    // Bound to a specific Akte
+  KANZLEI        // General Kanzlei-wide channel
 }
 
-// @-Tagging task system
-model HelenaTask {
-  id          String          @id @default(cuid())
-  akteId      String?
-  akte        Akte?           @relation(fields: [akteId], references: [id])
-  requestedBy String          // userId
-  type        HelenaTaskType
-  prompt      String          @db.Text
-  status      HelenaTaskStatus @default(PENDING)
-  jobId       String?         // BullMQ job ID
-  result      Json?           // Stored agent output
-  errorMsg    String?
-  createdAt   DateTime        @default(now())
-  completedAt DateTime?
-
-  @@index([akteId])
-  @@index([requestedBy])
-  @@index([status])
-  @@map("helena_tasks")
-}
-
-enum HelenaTaskType {
-  SCHRIFTSATZ
-  ANALYSE
-  ZUSAMMENFASSUNG
-  RECHERCHE
-  ENTWURF_KORREKTUR
-}
-
-enum HelenaTaskStatus {
-  PENDING
-  RUNNING
-  AWAITING_APPROVAL
-  APPROVED
-  REJECTED
-  FAILED
-}
-
-// Alert system
-model HelenaAlert {
+model Channel {
   id          String      @id @default(cuid())
-  akteId      String?
-  akte        Akte?       @relation(fields: [akteId], references: [id])
-  type        AlertType
-  titel       String
-  beschreibung String     @db.Text
-  prioritaet  AlertPriority @default(MEDIUM)
-  dismissed   Boolean     @default(false)
-  dismissedBy String?
-  dismissedAt DateTime?
+  name        String
+  typ         ChannelTyp
+  akteId      String?     // non-null for AKTE_THREAD
+  akte        Akte?       @relation(fields: [akteId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User        @relation(fields: [createdById], references: [id])
+  archived    Boolean     @default(false)
   createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  members     ChannelMember[]
+  messages    Message[]
 
-  @@index([akteId])
-  @@index([dismissed])
-  @@index([type, prioritaet])
-  @@map("helena_alerts")
+  @@unique([akteId]) // One thread per Akte (for AKTE_THREAD)
+  @@index([typ])
+  @@map("channels")
 }
 
-enum AlertType {
-  FRIST_KRITISCH
-  INAKTIVITAET
-  ANOMALIE
-  AUFGABE
-  DOKUMENT
-  SYSTEM
+model ChannelMember {
+  id          String    @id @default(cuid())
+  channelId   String
+  channel     Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt  DateTime  @default(now())
+  joinedAt    DateTime  @default(now())
+
+  @@unique([channelId, userId])
+  @@index([userId])
+  @@map("channel_members")
 }
 
-enum AlertPriority {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
+model Message {
+  id          String    @id @default(cuid())
+  channelId   String
+  channel     Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  content     String    @db.Text
+  replyToId   String?
+  replyTo     Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     Message[] @relation("MessageReplies")
+  mentions    Json?     // Array of mentioned userId strings
+  editedAt    DateTime?
+  deletedAt   DateTime? // Soft delete
+  createdAt   DateTime  @default(now())
+
+  @@index([channelId, createdAt])
+  @@index([authorId])
+  @@map("messages")
 }
 ```
 
-**Memory read/write pattern:**
+**Confidence:** HIGH -- follows exact same patterns as `AktenActivity`, `Notification`, `ChatNachricht` models.
 
-```typescript
-// src/lib/helena/memory.ts
-export async function getMemory(akteId: string): Promise<Record<string, string>> {
-  const entries = await prisma.helenaMemory.findMany({ where: { akteId } });
-  return Object.fromEntries(entries.map(e => [e.key, e.value]));
-}
+**Design decision: `@@unique([akteId])` on Channel for AKTE_THREAD type.** Each Akte gets exactly one discussion thread (auto-created on first message). This prevents thread sprawl and matches the Akte-centric UX. General KANZLEI channels have `akteId = null` and no uniqueness constraint on name (users can create freely).
 
-export async function setMemory(akteId: string, key: string, value: string): Promise<void> {
-  await prisma.helenaMemory.upsert({
-    where: { akteId_key: { akteId, key } },
-    update: { value },
-    create: { akteId, key, value },
-  });
-}
+#### Real-time Layer: Socket.IO rooms
+
+Existing rooms:
+```
+user:{userId}     -- personal notifications (auto-joined)
+role:{ROLE}        -- role-based broadcasts (auto-joined)
+akte:{akteId}      -- case-specific updates (dynamic join/leave)
+mailbox:{kontoId}  -- email real-time updates (dynamic join/leave)
 ```
 
-**Memory keys (standardized):**
+New room:
+```
+channel:{channelId} -- messaging channel (dynamic join/leave)
+```
 
-| Key | Content | Updated when |
-|-----|---------|-------------|
-| `sachverhalt_summary` | 2-3 sentence case summary | After each Schriftsatz generation |
-| `bekannte_fristen` | JSON array of key dates | After scanner runs |
-| `mandant_ziele` | Extracted client objectives | After initial document scan |
-| `letzte_aktion` | Last action taken by Helena | After each agent task completes |
-| `prozessstand` | Current procedural stage | After each Schriftsatz |
+Socket.IO events to add:
+
+| Event | Direction | Room Target | Payload |
+|---|---|---|---|
+| `message:new` | server -> client | `channel:{id}` | `{ id, channelId, authorId, authorName, content, replyToId, createdAt }` |
+| `message:update` | server -> client | `channel:{id}` | `{ id, content, editedAt }` |
+| `message:delete` | server -> client | `channel:{id}` | `{ id }` |
+| `typing:start` | client -> server -> client | `channel:{id}` | `{ userId, userName }` |
+| `typing:stop` | client -> server -> client | `channel:{id}` | `{ userId }` |
+| `channel:unread` | server -> client | `user:{userId}` | `{ channelId, unreadCount }` |
+| `join:channel` | client -> server | - | `channelId` |
+| `leave:channel` | client -> server | - | `channelId` |
+
+**Confidence:** HIGH -- `rooms.ts` already has `join:akte` / `leave:akte`. Add `join:channel` / `leave:channel` identically.
+
+#### Message Composer: Plain textarea (not TipTap)
+
+Use the `ActivityFeedComposer` pattern: `<textarea>` with Enter-to-send, Shift+Enter-for-newline, @-mention button. TipTap is available but overkill for internal messaging -- plain text with @mentions is faster to implement and matches Slack/Teams UX where rich formatting is secondary.
+
+**@User mentions: Extend existing regex pattern.** The existing `at-mention-parser.ts` uses `/@helena\s+([\s\S]+)/i`. Add a parallel `parseUserMentions(text): string[]` function that matches `@{name}` patterns against the user list. Store mentioned userIds in `Message.mentions` JSON field. Trigger notification for each mentioned user via existing `createNotification()`.
+
+**Confidence:** HIGH -- proven pattern from v0.2 ActivityFeedComposer.
+
+#### Unread Count: Database query + Socket.IO push
+
+```sql
+-- Unread count per channel for a user
+SELECT c.id, COUNT(m.id)
+FROM channels c
+JOIN channel_members cm ON cm."channelId" = c.id AND cm."userId" = $1
+LEFT JOIN messages m ON m."channelId" = c.id
+  AND m."createdAt" > cm."lastReadAt"
+  AND m."deletedAt" IS NULL
+  AND m."authorId" != $1
+GROUP BY c.id
+```
+
+Push updated count to `user:{userId}` room after each new message. Client receives via `channel:unread` event.
 
 ---
 
-## 5. Deterministic Schriftsatz Orchestrator — No New Library
+### 2. SCAN-05 Neu-Urteil-Check
 
-**Pattern: Sequential `generateObject` calls with Zod schemas for each section. No agent loop for Schriftsatz — determinism is more important than flexibility here.**
+#### Processing: BullMQ post-processor hook on urteile-sync
 
-```typescript
-// src/lib/helena/schriftsatz-orchestrator.ts
+SCAN-05 runs automatically after the daily urteile-sync job inserts new urteil_chunks. It inverts the existing search pattern: instead of searching urteil_chunks by query embedding (what `searchUrteilChunks()` does), it searches document_chunks using the urteil's embedding as the query vector.
 
-export async function orchestrateSchriftsatz(input: SchriftsatzInput): Promise<SchriftsatzDraft> {
-  // Step 1: Analyze case and determine applicable law (structured)
-  const rechtslage = await generateObject({
-    model: getModel(),
-    schema: rechtslageSchema,
-    prompt: buildRechtslagePrompt(input),
-  });
+**Pipeline:**
 
-  // Step 2: Retrieve relevant Normen + Urteile for identified legal basis
-  const quellen = await hybridSearch(rechtslage.object.hauptnormen.join(" "), input.akteId);
+```
+urteile-sync processor (existing, runs daily at 03:00)
+  -> inserts N new urteil_chunks with embeddings
+  -> on completion: emit scan-05 job with { urteilIds: [...newly inserted] }
 
-  // Step 3: Draft each section deterministically
-  const abschnitte = await Promise.all(
-    rechtslage.object.gliederungspunkte.map(punkt =>
-      generateObject({
-        model: getModel(),
-        schema: abschnittSchema,
-        prompt: buildAbschnittPrompt(punkt, quellen, input),
-      })
-    )
-  );
-
-  // Step 4: Generate Antrag
-  const antrag = await generateObject({
-    model: getModel(),
-    schema: antragSchema,
-    prompt: buildAntragPrompt(abschnitte.map(a => a.object), input),
-  });
-
-  return assembleSchriftsatz(rechtslage.object, abschnitte, antrag.object);
-}
+scan-05 processor (NEW)
+  -> for each new urteil:
+     -> load urteil embedding from urteil_chunks
+     -> run pgvector search against ALL document_chunks (all open Akten)
+     -> filter results by cosine similarity threshold (default 0.72)
+     -> group results by akteId
+     -> for each relevant Akte:
+        -> create HelenaAlert(typ: NEUES_URTEIL, meta: { urteilId, aktenzeichen, gericht, datum, score })
+        -> create Notification for Akte Verantwortlicher
+        -> create AktenActivity(typ: HELENA_ALERT)
 ```
 
-**Why not agent loop for Schriftsatz:** Legal briefs have a legally mandated structure (§ 253 ZPO, § 130 ZPO). Free-form agent exploration risks generating structurally invalid documents. Deterministic orchestration with defined sections guarantees format compliance. Use the agent loop only for open-ended research tasks.
+**Key SQL query (new function: `searchDocumentChunksByUrteilEmbedding`):**
+
+```sql
+SELECT
+  dc.id,
+  dc."dokumentId",
+  d.name AS dokument_name,
+  d."akteId",
+  a.aktenzeichen AS akte_aktenzeichen,
+  a."anwaltId",
+  1 - (dc.embedding <=> $1::vector) AS score
+FROM document_chunks dc
+JOIN dokumente d ON d.id = dc."dokumentId"
+JOIN akten a ON a.id = d."akteId"
+WHERE a.status = 'OFFEN'
+  AND dc."chunkType" != 'PARENT'
+  AND dc.embedding IS NOT NULL
+  AND 1 - (dc.embedding <=> $1::vector) > $2  -- threshold
+ORDER BY dc.embedding <=> $1::vector ASC
+LIMIT 50
+```
+
+**Confidence:** HIGH -- all infrastructure exists. This is a new processor function using existing query patterns from `hybrid-search.ts` and `vector-store.ts`.
+
+#### Alert deduplication
+
+The existing scanner already has deduplication in `resolveStaleAlerts()`. SCAN-05 uses the same pattern: before creating an alert, check if a `HelenaAlert` with `typ: NEUES_URTEIL` and matching `meta.urteilId + akteId` already exists. Skip if found.
+
+#### Threshold tuning
+
+Use `SystemSetting` key `scanner.urteil_relevance_threshold` (default: 0.72). Configurable via admin settings UI (same pattern as `scanner.frist_threshold_hours`, `scanner.inaktiv_threshold_days`).
+
+**Why 0.72 default:** Legal document embeddings with `multilingual-e5-large-instruct` show cosine similarity ~0.6-0.7 for loosely related topics, ~0.75-0.85 for directly relevant content. 0.72 balances recall (catching relevant decisions) against noise (irrelevant alerts). This should be calibrated after initial deployment.
+
+#### Performance consideration
+
+For N new urteile x M open Akten, the naive per-Akte approach (N x M queries) is expensive. The recommended approach: one global query per urteil (search ALL document_chunks, filter by status='OFFEN'). With HNSW index, each query is O(log n) regardless of table size. Expected runtime: ~200ms per urteil (50 results per query). With 5-20 new urteile per day, total SCAN-05 runtime: 1-4 seconds.
 
 ---
 
-## 6. QA-Gates — LLM-as-Judge + Citation Verification (No New Library)
+### 3. Falldatenblaetter
 
-**Approach:** Self-consistency check via `generateObject` on the produced draft. No external QA library needed — the existing Ollama model running `qwen3.5:35b` serves as judge.
+#### Existing Foundation
 
-**Three-gate pipeline (write to `src/lib/helena/qa-gate.ts`):**
+The Falldaten system is already built and working:
 
-### Gate 1: Citation Recall@k
+| Component | Location | Status |
+|---|---|---|
+| `FalldatenSchema` type | `src/lib/falldaten-schemas.ts` | 7 field types, grouping, options |
+| `FalldatenForm` component | `src/components/akten/falldaten-form.tsx` | Dynamic renderer for any schema |
+| `Akte.falldaten` JSON column | `prisma/schema.prisma` | Per-Akte case data storage |
+| `falldatenSchemas` registry | `src/lib/falldaten-schemas.ts` | 10 hardcoded schemas (Arbeitsrecht, Familienrecht, etc.) |
+| Sachgebiet enum | `prisma/schema.prisma` | 10 legal areas |
 
-Check whether the draft cites sources from the retrieved chunk set:
+#### What Changes for v0.3
 
-```typescript
-export async function checkRecallAtK(
-  draft: string,
-  retrievedChunks: Array<{ id: string; content: string; gesetzKuerzel?: string; aktenzeichen?: string }>,
-  k = 5
-): Promise<{ recall: number; foundIds: string[]; missedIds: string[] }> {
-  const topK = retrievedChunks.slice(0, k);
-  const foundIds = topK.filter(chunk =>
-    draft.includes(chunk.gesetzKuerzel ?? "") ||
-    draft.includes(chunk.aktenzeichen ?? "") ||
-    draft.includes(chunk.content.slice(0, 50)) // first 50 chars as fingerprint
-  ).map(c => c.id);
+**1. Move schemas from code to DB:**
 
-  return {
-    recall: foundIds.length / topK.length,
-    foundIds,
-    missedIds: topK.filter(c => !foundIds.includes(c.id)).map(c => c.id),
-  };
-}
-```
-
-### Gate 2: Hallucination Detection via LLM-as-Judge
-
-```typescript
-export async function checkHallucination(
-  draft: string,
-  sourceChunks: string[]
-): Promise<{ risk: "LOW" | "MEDIUM" | "HIGH"; unsupportedClaims: string[] }> {
-  const result = await generateObject({
-    model: getModel(),
-    schema: z.object({
-      unsupportedClaims: z.array(z.string()).describe("Behauptungen ohne Quellengrundlage"),
-      risk: z.enum(["LOW", "MEDIUM", "HIGH"]).describe("Gesamtrisiko für Halluzinationen"),
-    }),
-    system: `Du bist ein juristischer Qualitätsprüfer. Prüfe ob alle Behauptungen im Schriftsatz durch die bereitgestellten Quellen belegt sind.`,
-    prompt: `Quellen:\n${sourceChunks.slice(0, 5).join("\n---\n")}\n\nSchriftsatz:\n${draft.slice(0, 3000)}`,
-  });
-  return { risk: result.object.risk, unsupportedClaims: result.object.unsupportedClaims };
-}
-```
-
-### Gate 3: Format Compliance
-
-```typescript
-export async function checkFormatCompliance(draft: string, schriftsatzType: string): Promise<boolean> {
-  // Deterministic checks — no LLM needed
-  const hasAntrag = /^(Es wird beantragt|Ich beantrage|Wir beantragen)/m.test(draft);
-  const hasParteien = /Kläger|Beklagter|Antragsteller|Antragsgegner/i.test(draft);
-  const hasDatum = /\d{2}\.\d{2}\.\d{4}/.test(draft);
-  return hasAntrag && hasParteien && hasDatum;
-}
-```
-
-**Goldset evaluation (for QA regression testing):**
-
-Store golden test cases in Prisma — no separate evaluation framework:
+New `FalldatenTemplate` model replaces the hardcoded `falldatenSchemas` record:
 
 ```prisma
-model HelenaGoldset {
-  id           String   @id @default(cuid())
-  taskType     HelenaTaskType
-  input        Json     // Prompt + context
-  expectedKeys String[] // Expected citations, legal norms
-  createdAt    DateTime @default(now())
-  @@map("helena_goldset")
+enum FalldatenTemplateStatus {
+  ENTWURF       // User draft (only visible to creator)
+  EINGEREICHT   // Submitted for admin review
+  GENEHMIGT     // Admin approved (visible to all)
+  ABGELEHNT     // Admin rejected (with reason)
+}
+
+model FalldatenTemplate {
+  id            String                   @id @default(cuid())
+  sachgebiet    String                   // Free-text, not bound to Sachgebiet enum
+  label         String
+  beschreibung  String?
+  schema        Json                     // FalldatenSchema JSON (validated by Zod)
+  status        FalldatenTemplateStatus  @default(ENTWURF)
+  isDefault     Boolean                  @default(false) // Pre-seeded system templates
+  createdById   String
+  createdBy     User                     @relation(fields: [createdById], references: [id])
+  reviewedById  String?
+  reviewedBy    User?                    @relation("TemplateReviewer", fields: [reviewedById], references: [id])
+  reviewNote    String?                  // Admin feedback on rejection
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@index([sachgebiet, status])
+  @@index([status])
+  @@map("falldaten_templates")
 }
 ```
 
-Run against goldset weekly via BullMQ cron. Compare `recall@k` over time. Alert via `HelenaAlert` if recall drops > 10% from baseline.
+**Seed migration:** Copy 10 existing hardcoded schemas from `falldatenSchemas` into `FalldatenTemplate` rows with `status: GENEHMIGT` and `isDefault: true`. The hardcoded file remains as fallback.
 
----
+**2. Community workflow:**
 
-## 7. Draft-Approval Workflow — Existing Infrastructure
+| Action | Who | From Status | To Status |
+|---|---|---|---|
+| Create template | Any user | - | ENTWURF |
+| Edit template | Creator | ENTWURF | ENTWURF |
+| Submit for review | Creator | ENTWURF | EINGEREICHT |
+| Approve | ADMIN | EINGEREICHT | GENEHMIGT |
+| Reject (with note) | ADMIN | EINGEREICHT | ABGELEHNT |
+| Resubmit | Creator | ABGELEHNT | EINGEREICHT |
 
-**No new library.** The existing `Dokumentstatus` enum (`ENTWURF → ZUR_PRUEFUNG → FREIGEGEBEN → VERSENDET`) already implements the concept. Helena drafts should use `HelenaTaskStatus.AWAITING_APPROVAL` to gate output.
+**3. Schema validation with Zod:**
 
-**Pattern:**
-1. Helena generates draft → `HelenaTask.status = AWAITING_APPROVAL`, `KiDraft.status = ZUR_PRUEFUNG`
-2. Socket.IO event `helena:draft-ready` triggers real-time notification in UI
-3. User reviews in existing KI-Entwürfe-Workspace
-4. User approves → `KiDraft.status = FREIGEGEBEN`, `HelenaTask.status = APPROVED`
-5. User rejects with comment → `HelenaTask.status = REJECTED`, feedback stored in `HelenaTask.result`
-
-**Never auto-approve, never auto-send.** This is a hard constraint per BRAK 2025 + BRAO.
-
----
-
-## 8. Activity Feed (Akte-Detail Feed-Umbau) — Existing Infrastructure
-
-**No new library.** Use the existing `AuditLog` + Socket.IO + PostgreSQL pattern.
-
-**New Prisma model for structured activity entries:**
-
-```prisma
-model AktenActivity {
-  id          String       @id @default(cuid())
-  akteId      String
-  akte        Akte         @relation(fields: [akteId], references: [id], onDelete: Cascade)
-  type        ActivityType
-  actorId     String?      // userId or null for Helena/system
-  actorName   String?      // denormalized for display
-  description String       @db.Text
-  metadata    Json?        // type-specific payload
-  createdAt   DateTime     @default(now())
-
-  @@index([akteId, createdAt(sort: Desc)])
-  @@map("akten_activity")
-}
-
-enum ActivityType {
-  DOKUMENT_HOCHGELADEN
-  DOKUMENT_FREIGEGEBEN
-  FRIST_ANGELEGT
-  FRIST_ERREICHT
-  EMAIL_EMPFANGEN
-  EMAIL_VERSENDET
-  HELENA_ENTWURF
-  HELENA_ANALYSE
-  HELENA_ALERT
-  ZEITERFASSUNG
-  NOTIZ
-  STATUS_AENDERUNG
-}
-```
-
-**Real-time delivery:** When a new `AktenActivity` is written, emit `akte:activity` Socket.IO event to the akte's room. Client subscribes on akte detail page mount. No polling.
-
----
-
-## 9. Alert Delivery — Socket.IO + Prisma (No New Library)
-
-**Pattern for the 6 alert types:**
+When loading user-created templates from DB, validate JSON structure before rendering:
 
 ```typescript
-// src/lib/helena/alert-service.ts
-export async function createAlert(alert: {
-  akteId?: string;
-  type: AlertType;
-  titel: string;
-  beschreibung: string;
-  prioritaet: AlertPriority;
-}): Promise<HelenaAlert> {
-  const record = await prisma.helenaAlert.create({ data: alert });
+const FalldatenSchemaValidator = z.object({
+  sachgebiet: z.string(),
+  label: z.string(),
+  beschreibung: z.string(),
+  felder: z.array(z.object({
+    key: z.string().regex(/^[a-zA-Z][a-zA-Z0-9_]*$/), // Safe JS key
+    label: z.string(),
+    typ: z.enum(["text", "textarea", "number", "date", "select", "boolean", "currency"]),
+    placeholder: z.string().optional(),
+    optionen: z.array(z.object({
+      value: z.string(),
+      label: z.string(),
+    })).optional(),
+    required: z.boolean().optional(),
+    gruppe: z.string().optional(),
+  })),
+});
+```
 
-  // Real-time delivery via Socket.IO
-  if (alert.akteId) {
-    await redisEmitter.emit(`akte:${alert.akteId}:alert`, record);
+**4. Helena auto-fill:**
+
+Use `generateObject()` (Vercel AI SDK v4) with Akte context to extract structured data:
+
+```typescript
+const filledData = await generateObject({
+  model: getModel(),
+  schema: dynamicZodFromFalldatenSchema(template.schema),
+  system: "Extract case data from the provided documents and party information.",
+  prompt: buildAutoFillPrompt(akteContext, template.schema),
+});
+```
+
+The `dynamicZodFromFalldatenSchema()` function converts a `FalldatenSchema` into a Zod schema at runtime. Each field type maps directly:
+
+| FalldatenFeldTyp | Zod Type |
+|---|---|
+| text | `z.string().optional()` |
+| textarea | `z.string().optional()` |
+| number | `z.number().optional()` |
+| date | `z.string().optional()` |
+| select | `z.enum([...optionen.values]).optional()` |
+| boolean | `z.boolean().optional()` |
+| currency | `z.number().optional()` |
+
+Returns partial fill -- all fields optional. User reviews and confirms in existing `FalldatenForm`.
+
+**5. Helena template suggestion:**
+
+When Helena's background scanner detects a case pattern (e.g., new Arbeitsrecht Akte with Kuendigung-related documents but no Falldatenblatt filled), create a `HelenaAlert` suggesting the user fill the appropriate template. This uses the existing alert system -- no new infrastructure.
+
+**Confidence:** HIGH -- the entire type system, form renderer, and JSON storage already exist. The change is storage location (code -> DB) and access control.
+
+---
+
+## Prisma Schema Changes Summary
+
+### New Models
+
+| Model | Fields (approx.) | Purpose |
+|---|---|---|
+| `Channel` | ~10 | Messaging channels (Akte threads + Kanzlei-wide) |
+| `ChannelMember` | ~5 | Channel membership with lastReadAt |
+| `Message` | ~10 | Chat messages with replies, mentions, soft delete |
+| `FalldatenTemplate` | ~12 | DB-stored case data schemas with approval workflow |
+
+### New Enums
+
+| Enum | Values |
+|---|---|
+| `ChannelTyp` | AKTE_THREAD, KANZLEI |
+| `FalldatenTemplateStatus` | ENTWURF, EINGEREICHT, GENEHMIGT, ABGELEHNT |
+
+### Extended Enums
+
+| Enum | New Value | Purpose |
+|---|---|---|
+| `AktenActivityTyp` | `NACHRICHT` | Message posted in Akte thread appears in activity feed |
+
+### No Changes to Existing Models
+
+`HelenaAlertTyp.NEUES_URTEIL` already exists. No changes to User, Akte, HelenaAlert, or any other existing model.
+
+---
+
+## API Routes Summary
+
+### Messaging
+
+```
+POST   /api/channels                         -- Create channel (KANZLEI only; AKTE_THREAD auto-created)
+GET    /api/channels                         -- List user's channels with unread counts
+GET    /api/channels/[id]                    -- Channel detail with members
+GET    /api/channels/[id]/messages           -- Paginated messages (cursor-based)
+POST   /api/channels/[id]/messages           -- Send message (+ @mention notification + Socket.IO)
+PATCH  /api/channels/[id]/messages/[msgId]   -- Edit message (author only)
+DELETE /api/channels/[id]/messages/[msgId]   -- Soft-delete message (author or ADMIN)
+POST   /api/channels/[id]/read              -- Mark channel as read (update lastReadAt)
+GET    /api/channels/unread                  -- All unread counts for sidebar badge
+```
+
+### Falldatenblaetter
+
+```
+GET    /api/falldaten-templates              -- List templates (filter: status, sachgebiet)
+POST   /api/falldaten-templates              -- Create template (any user)
+GET    /api/falldaten-templates/[id]         -- Template detail
+PATCH  /api/falldaten-templates/[id]         -- Update template (creator, ENTWURF only)
+POST   /api/falldaten-templates/[id]/submit  -- Submit for review (creator)
+POST   /api/falldaten-templates/[id]/approve -- Approve (ADMIN only)
+POST   /api/falldaten-templates/[id]/reject  -- Reject with note (ADMIN only)
+POST   /api/akten/[id]/falldaten/auto-fill   -- Helena auto-fill (triggers generateObject)
+```
+
+### SCAN-05
+
+No new API routes. Runs in existing worker, creates alerts via existing `HelenaAlert` + `Notification` system.
+
+---
+
+## Worker Changes Summary
+
+### SCAN-05 processor
+
+```typescript
+// In worker.ts -- add post-sync hook on urteile-sync completion:
+urteileSyncWorker.on("completed", async (job) => {
+  // ... existing logging ...
+  if (job.returnvalue?.inserted > 0) {
+    await scan05Queue.add("scan-05", {
+      insertedCount: job.returnvalue.inserted,
+    });
   }
-  // Also emit to global notifications channel
-  await redisEmitter.emit("helena:alert", record);
+});
 
-  return record;
-}
+// New scan-05 worker (concurrency: 1, same pattern as scanner)
+const scan05Worker = new Worker("scan-05", async () => {
+  return processScan05();
+}, {
+  connection,
+  concurrency: 1,
+  settings: {
+    backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+  },
+});
 ```
 
-Alerts are displayed in a dedicated **Helena Alerts** panel (new UI component) + as toast notifications via `sonner` (already in stack).
+### No other worker changes
+
+Messaging is synchronous (API route -> Prisma -> Socket.IO emit). No BullMQ jobs needed for message delivery.
 
 ---
 
-## 10. New Tool Definitions for Agent Loop
+## Socket.IO Room Changes
 
-Helena's ReAct agent needs these tools (all call existing internal APIs — no new external dependencies):
+```typescript
+// In rooms.ts -- add channel room management:
+socket.on("join:channel", (channelId: string) => {
+  if (!channelId || typeof channelId !== "string") return;
+  socket.join(`channel:${channelId}`);
+  log.debug({ userId, channelId }, "Joined channel room");
+});
 
-| Tool name | Purpose | Calls |
-|-----------|---------|-------|
-| `search_law` | Retrieve relevant §§ from law_chunks | `hybridSearch()` on `law_chunks` |
-| `search_cases` | Retrieve relevant Urteile from urteil_chunks | `hybridSearch()` on `urteil_chunks` |
-| `search_templates` | Find Schriftsatz-Muster from muster_chunks | `hybridSearch()` on `muster_chunks` |
-| `search_akte` | Search case documents for context | `hybridSearch()` on `document_chunks` |
-| `calculate_deadline` | Compute BGB §§187-193 Frist | Existing `calculateFrist()` |
-| `get_akte_info` | Fetch Akte metadata (parties, status, Sachgebiet) | Prisma query |
-| `get_memory` | Read from HelenaMemory for this Akte | `getMemory()` |
-| `set_memory` | Persist insight to HelenaMemory | `setMemory()` |
-| `create_draft` | Store result as KI-Entwurf with ZUR_PRUEFUNG status | Prisma + MinIO |
-| `create_alert` | Create a HelenaAlert | `createAlert()` |
-
----
-
-## Complete Installation Summary
-
-```bash
-# Zero new production packages needed for Helena Agent v2 core features.
-# All capabilities built on:
-# - ai@^4.3.19 (existing — generateText + tools + generateObject)
-# - bullmq@^5.70.1 (existing — step jobs + cron)
-# - socket.io + @socket.io/redis-emitter (existing — real-time)
-# - zod@^3.23.8 (existing — structured output schemas)
-# - @prisma/client (existing — memory + alerts + activity feed)
-
-# Only if adding Goldset evaluation UI (optional, post v0.2):
-npm install @tanstack/react-table  # already in stack via @tanstack/react-virtual
+socket.on("leave:channel", (channelId: string) => {
+  if (!channelId || typeof channelId !== "string") return;
+  socket.leave(`channel:${channelId}`);
+  log.debug({ userId, channelId }, "Left channel room");
+});
 ```
 
-**Total new npm packages: 0.**
-
 ---
 
-## Recommended Stack (New Additions)
+## UI Component Inventory
 
-### Core Technologies
+### Messaging (new page: `/dashboard/nachrichten`)
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| `ai` (Vercel AI SDK) | `^4.3.19` (STAY on v4) | `generateText` with tools for ReAct loop; `generateObject` for structured outputs | Already in stack. Upgrade to v5/v6 is a separate task — breaking changes risk existing RAG chat. v4 has full tool-calling and structured output needed for all agent features. |
-| `bullmq` | `^5.70.1` (existing) | Step-job pattern for agent tasks; cron for nightly scanner | Already in stack. Step-job pattern with `job.updateData()` provides restart-safe long-running agent execution. |
-| `zod` | `^3.23.8` (STAY on v3) | Structured output schemas for all Helena outputs | Already in stack. Do NOT upgrade to v4 — requires AI SDK v5+ peer dep. |
-| PostgreSQL + Prisma | existing | HelenaMemory, HelenaTask, HelenaAlert, AktenActivity tables | Best choice for relational + queryable agent state. No Redis-based memory store needed. |
-| Socket.IO + `@socket.io/redis-emitter` | existing | Real-time agent progress, draft-ready notifications, activity feed | Already configured. BullMQ worker emits; Next.js server delivers to client. Zero new setup. |
+```
+src/components/messaging/channel-sidebar.tsx     -- Channel list with unread badges
+src/components/messaging/channel-view.tsx         -- Message thread view (scrollable)
+src/components/messaging/message-item.tsx          -- Single message bubble
+src/components/messaging/message-composer.tsx      -- Textarea with Enter-to-send, @mention
+src/components/messaging/typing-indicator.tsx      -- "User tippt..." indicator
+src/app/(dashboard)/nachrichten/page.tsx           -- Main messaging page
+src/app/(dashboard)/nachrichten/layout.tsx         -- Split layout (sidebar + thread)
+```
 
-### Zero-Dependency Implementations (TypeScript Only)
+### Messaging in Akte Detail (embedded)
 
-| Feature | Approach | File to Create |
-|---------|---------|----------------|
-| ReAct agent loop | Custom `while` loop on `generateText` + tools | `src/lib/helena/agent-loop.ts` |
-| Deterministic Schriftsatz orchestrator | Sequential `generateObject` calls | `src/lib/helena/schriftsatz-orchestrator.ts` |
-| Helena memory | Prisma `HelenaMemory` upserts | `src/lib/helena/memory.ts` |
-| Nightly scanner | BullMQ processor with cron `0 2 * * *` | `src/lib/queue/processors/scanner.processor.ts` |
-| Alert service | Prisma write + Socket.IO emit | `src/lib/helena/alert-service.ts` |
-| Citation Recall@k | String fingerprint matching | `src/lib/helena/qa-gate.ts` |
-| Hallucination detection | `generateObject` LLM-as-judge | `src/lib/helena/qa-gate.ts` |
-| Activity feed | Prisma `AktenActivity` + Socket.IO | `src/lib/helena/activity-service.ts` |
-| @-tagging handler | BullMQ job enqueue in API route | `src/app/api/helena/task/route.ts` |
+```
+src/components/akten/akte-thread.tsx              -- Akte discussion thread (uses Channel with typ=AKTE_THREAD)
+```
+
+This component embeds in the existing Akte detail page as a new feed type alongside the existing activity feed. The AKTE_THREAD channel is auto-created on first message.
+
+### Falldatenblaetter (extend existing)
+
+```
+src/components/falldaten/template-editor.tsx       -- Visual schema builder (add/remove/reorder fields)
+src/components/falldaten/template-list.tsx          -- Template management page
+src/components/falldaten/template-review.tsx        -- Admin review panel (approve/reject)
+src/components/falldaten/auto-fill-button.tsx       -- Helena auto-fill trigger button
+src/app/(dashboard)/admin/falldaten-templates/page.tsx  -- Admin template management
+```
+
+### SCAN-05 (zero new components)
+
+The existing `AlertCenter`, `AkteAlertsSection`, and notification system already handle `NEUES_URTEIL` alerts. The only addition is populating the `meta` JSON field with urteil details (Aktenzeichen, Gericht, Datum, relevance score) so the existing alert UI can display them.
 
 ---
 
 ## Alternatives Considered
 
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| Custom ReAct loop (`generateText` + tools) | LangChain.js agents | LangChain JS is incomplete port of Python. No `ParentDocumentRetriever`. Abstractions add indirection for marginal gain. 60–80 LOC TypeScript is simpler and auditable. |
-| Custom ReAct loop | Vercel AI SDK v5/v6 `ToolLoopAgent` class | Requires AI SDK v5 migration (8 files, breaking changes). Not worth the risk mid-milestone. |
-| Custom ReAct loop | CrewAI, AutoGen, LangGraph | Python-native. JS ports are experimental or cloud-dependent. Violates self-hosted constraint. |
-| PostgreSQL + Prisma for memory | `mem0` (npm library) | mem0 adds a Python sidecar in practice. No stable self-hosted JS-native version. Overkill for per-case key-value store. |
-| PostgreSQL + Prisma for memory | `zep` (memory service) | New Docker service. Adds operational complexity. Standard Postgres table is auditable and SQL-queryable. |
-| LLM-as-judge for hallucination detection | HaluGate (Python) | Python-only, requires separate service. Our `generateObject` pattern achieves same result with existing Ollama. |
-| LLM-as-judge for hallucination detection | Self-Consistency (multiple generations) | 3-5x more Ollama token cost per check. LLM-as-judge is more targeted and cheaper for domain-specific legal content. |
-| Sequential `generateObject` for Schriftsatz | Free-form agent loop | Legal briefs have mandated structure (§ 253 ZPO). Agent loop risks structurally non-compliant output. Determinism > flexibility here. |
-| BullMQ step-job pattern | Direct async call in API route | Agent tasks can take 2-10 minutes. API routes timeout. BullMQ provides retry, progress, and restart safety. |
+| Category | Decision | Alternative | Why Not |
+|---|---|---|---|
+| Real-time messaging | Socket.IO (existing) | Server-Sent Events | Socket.IO already handles bidirectional comms, rooms, auth. SSE is one-way only. |
+| Real-time messaging | Socket.IO (existing) | Pusher / Ably / Stream Chat | Contradicts self-hosted-first constraint. Socket.IO + Redis adapter already provides horizontal scaling. |
+| Message storage | PostgreSQL (Prisma) | Redis Streams | Messages need persistence, relations (replies, mentions, channels), RBAC, soft-delete. Postgres is the right choice. |
+| Message composer | Plain textarea | TipTap with Mention extension | @tiptap/extension-mention is NOT installed. Regex-based @mention parsing on submit is proven (v0.2 pattern). TipTap adds autocomplete dropdown complexity for limited value in internal messaging. |
+| @Mention autocomplete | Regex on submit | TipTap Mention extension | Would require installing `@tiptap/extension-mention` + `@tiptap/suggestion`. Regex parsing is 10 LOC vs new dependency + suggestion popup component. Can upgrade later. |
+| Client state management | React Context + useState | Zustand / Jotai / React Query | No global state library exists in the codebase. Adding one for messaging creates two state management patterns. Context + local state is the established approach. |
+| Falldaten schemas | DB-stored JSON + Zod | JSON Schema draft-07 + ajv | FalldatenSchema type is simpler than JSON Schema. Zod validates at runtime without heavyweight JSON Schema specification. |
+| Falldaten form builder | Custom field editor | React JSON Schema Form | Would require `@rjsf/core` + UI adapter. The existing `FalldatenForm` is 237 LOC and renders all 7 field types. A template editor is an extension of this, not a new form framework. |
+| SCAN-05 trigger | Post-sync hook (event-driven) | Separate daily cron | Running immediately after new urteile arrive is more timely. Separate cron would create a 24h delay between ingestion and alerting. |
+| SCAN-05 search | Global document_chunks query per urteil | Per-Akte iteration | One pgvector query per urteil (LIMIT 50, threshold filter) is O(log n). Per-Akte iteration would be O(m * log n). Global + group-by is faster and simpler. |
+| Helena auto-fill | generateObject with dynamic Zod schema | Free-form text extraction + regex parsing | Structured output via generateObject guarantees type-safe results that map directly to FalldatenSchema fields. Regex parsing is fragile for varied legal documents. |
 
 ---
 
-## What NOT to Use
+## What NOT to Add
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| LangChain.js agent classes | Incomplete JS port, adds LangChain complexity to a stack that only uses `@langchain/textsplitters` for one util function | Custom ReAct loop on Vercel AI SDK |
-| AI SDK v5/v6 in this milestone | 8 files have breaking API changes (`parameters` → `inputSchema`, `CoreMessage` → `ModelMessage`, etc.). Regression risk to RAG chat. | Stay on v4, add dedicated "SDK Upgrade" milestone |
-| Zod v4 in this milestone | Peer dep of AI SDK v5+. Upgrading Zod while staying on AI SDK v4 may cause type errors. | Stay on Zod v3 |
-| `mem0`, `zep`, or vector-based memory | New services, operational complexity, overkill for structured per-case key-value storage | Prisma `HelenaMemory` table |
-| OpenAI Assistants API | Cloud API, violates DSGVO self-hosted constraint | Local Ollama agent loop |
-| Separate evaluation framework (deepeval, ragas) | Python-only, adds new service. Ragas requires Python. deepeval requires Python. | Custom Recall@k + LLM-as-judge in TypeScript |
-| Separate activity-stream service | New Docker service for what is essentially a timestamped event table with Socket.IO delivery | Prisma `AktenActivity` + existing Socket.IO |
-| Polling for agent progress | Wastes resources, degrades UX. | Socket.IO `akte:progress` events from BullMQ worker via `@socket.io/redis-emitter` |
-| `node-schedule` or `node-cron` | Runs in app process, not worker. Doesn't survive worker restarts. | BullMQ repeatable jobs (already in use for `vorfristen-cron`) |
-
----
-
-## Stack Patterns by Variant
-
-**If Ollama GPU is overloaded during peak hours:**
-- Agent loop runs in BullMQ worker (separate process from Next.js app)
-- Scanner tasks are low-priority — set `priority: 10` (lower = lower priority in BullMQ)
-- Helena tasks triggered by users are high-priority — set `priority: 1`
-- This prevents background scans from starving user-facing agent requests
-
-**If a generated Schriftsatz fails QA Gate (HIGH hallucination risk):**
-- Re-run `GENERATE` step with explicit citation instruction in system prompt
-- Add `qaFeedback` to job data so orchestrator knows to be more conservative
-- After 2 failed QA gates, store draft as `ENTWURF` with warning flag — human must review
-- Never silently discard; always give user visibility
-
-**If Ollama times out during agent loop:**
-- Catch error at tool-execution level in `runAgentLoop()`
-- BullMQ retries job with exponential backoff (`attempts: 3, backoff: exponential`)
-- After 3 failures, set `HelenaTask.status = FAILED`, create `HelenaAlert` of type `SYSTEM`
-
-**If memory grows too large (many Akten, many keys):**
-- Add soft limit: `getMemory()` returns only keys updated in last 90 days
-- Add hard limit: max 20 key-value pairs per Akte (prune oldest on insert)
-- Memory is optimization, not source of truth — Akte data in Prisma is always authoritative
+| Package/Technology | Why NOT | Use Instead |
+|---|---|---|
+| `@tiptap/extension-mention` | Not installed. Regex @mention parsing is proven, simpler, and matches v0.2 pattern. | `parseUserMentions()` regex function |
+| `pusher` / `ably` / `stream-chat` | Cloud services, violates self-hosted constraint | Socket.IO + Redis adapter (existing) |
+| `@tanstack/react-query` | Not in codebase. Adding a query library creates two data-fetching patterns. | `fetch()` + `useEffect` + `router.refresh()` (existing pattern) |
+| `ajv` / JSON Schema validators | Overkill. FalldatenSchema is a simple type, not JSON Schema draft-07. | Zod runtime validation (existing) |
+| `slate` / `lexical` / `quill` | TipTap already installed. No reason for competing editor. | TipTap if rich text needed; plain textarea for messaging |
+| `zustand` / `jotai` | No global state management exists. Adding one mid-project is disruptive. | React Context + useState (existing pattern) |
+| `socket.io-msgpack-parser` | Binary encoding optimization for high-throughput. A Kanzlei has <20 concurrent users. | Default JSON parser (existing) |
+| Any new Docker service | 9 services is already complex. All features run on existing infrastructure. | PostgreSQL, Redis, existing services |
 
 ---
 
-## Version Compatibility
+## Installation
 
-| Package | Compatible With | Notes |
-|---------|----------------|-------|
-| `ai@^4.3.19` | Zod `^3.x` | v4 uses `parameters:` for tools, `schema:` for `generateObject`. Do NOT mix with v5 patterns. |
-| `bullmq@^5.70.1` | Redis 7 | `job.updateData()` requires BullMQ 5+. Already in use. |
-| `zod@^3.23.8` | `ai@^4.x` | Stay on v3. v4 requires AI SDK v5+ peer dep. |
-| `@socket.io/redis-emitter@^5.1.0` | `socket.io@^4.8.3`, Redis 7 | Already in use for IMAP IDLE notifications. Same pattern for agent progress. |
+```bash
+# No new packages to install.
+# After Prisma schema changes:
+npx prisma migrate dev --name v03-messaging-falldaten-templates
+npx prisma generate
+
+# Seed existing Falldaten schemas into FalldatenTemplate table:
+npx prisma db seed
+# (Add seed logic in prisma/seed.ts to import from falldaten-schemas.ts)
+```
 
 ---
 
-## Tech Debt: AI SDK Upgrade (Post v0.2)
+## Confidence Assessment
 
-When creating the `v0.3-sdk-upgrade` milestone, the following files need updates:
-
-| File | Change required |
-|------|----------------|
-| `src/app/api/ki-chat/route.ts` | `CoreMessage` → `ModelMessage`, `toDataStreamResponse()` → `toUIMessageStreamResponse()` |
-| `src/lib/ai/provider.ts` | `generateText` params unchanged, but check `maxTokens` → `maxOutputTokens` |
-| `src/lib/helena/agent-loop.ts` | `parameters:` → `inputSchema:` in tool definitions, `maxSteps` → `stopWhen: stepCountIs(20)` |
-| `src/lib/ai/deadline-extractor.ts` | `generateObject` — likely unchanged, `schema:` property is same in v5 |
-| `src/lib/ai/party-extractor.ts` | Same as deadline-extractor |
-| All new agent files in `src/lib/helena/` | Write v4-compatible now; codemod to v5 later with `npx @ai-sdk/codemod v5` |
-
-Run `npx @ai-sdk/codemod v5` then `npx @ai-sdk/codemod v6` to automate most of the migration.
+| Area | Confidence | Reason |
+|---|---|---|
+| Messaging stack | HIGH | Socket.IO rooms, Prisma models, textarea composer -- all validated patterns from v0.2 |
+| SCAN-05 stack | HIGH | pgvector search, BullMQ processor, HelenaAlert (NEUES_URTEIL already in enum) -- all existing infrastructure |
+| Falldatenblaetter stack | HIGH | FalldatenSchema type system + FalldatenForm component already exist. Change is storage (code -> DB) + access control. |
+| Zero new packages | HIGH | Verified every capability against 80+ installed dependencies in package.json |
 
 ---
 
 ## Sources
 
-- Vercel AI SDK tool calling documentation: https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling — tool definition with `parameters:` (v4) vs `inputSchema:` (v5+) confirmed (HIGH confidence)
-- AI SDK v4 to v5 migration guide: https://ai-sdk.dev/docs/migration-guides/migration-guide-5-0 — all breaking changes listed (HIGH confidence)
-- AI SDK v5 to v6 migration guide: https://ai-sdk.dev/docs/migration-guides/migration-guide-6-0 — v5→v6 is low-risk, v4→v5 is high-risk (HIGH confidence)
-- AI SDK 6 blog post: https://vercel.com/blog/ai-sdk-6 — `ToolLoopAgent` class, `stopWhen: stepCountIs(20)` default confirmed (HIGH confidence)
-- AI SDK loop control docs: https://ai-sdk.dev/docs/agents/loop-control — `stopWhen`, `prepareStep` confirmed (HIGH confidence)
-- npm `ai` version: `6.0.103` current (verified via `npm view ai version`, 2026-02-27) — project uses `^4.3.19` (HIGH confidence)
-- BullMQ step-job pattern: https://docs.bullmq.io/patterns/process-step-jobs — `job.updateData()`, `moveToDelayed()`, step enum pattern (HIGH confidence)
-- BullMQ long-running jobs: https://oneuptime.com/blog/post/2026-01-21-bullmq-long-running-jobs/view — checkpointing strategy (MEDIUM confidence)
-- Zod v3 vs v4 compatibility: https://zod.dev/v4/versioning — peer dep chain makes v4 upgrade tied to AI SDK v5 (HIGH confidence)
-- LangChain.js vs Vercel AI SDK comparison: https://strapi.io/blog/langchain-vs-vercel-ai-sdk-vs-openai-sdk-comparison-guide — confirmed LangChain JS is incomplete vs Python port (MEDIUM confidence)
-- Hallucination detection via LLM-as-judge: https://www.datadoghq.com/blog/ai/llm-hallucination-detection/ — production-validated approach (MEDIUM confidence)
-- Self-consistency detection (SelfCheckGPT): https://www.emergentmind.com/topics/self-consistency-based-hallucination-detection — academic basis for multi-pass checking (MEDIUM confidence; LLM-as-judge chosen for cost efficiency)
+- Codebase analysis (all HIGH confidence):
+  - `src/lib/socket/server.ts` -- Socket.IO setup with Redis adapter
+  - `src/lib/socket/rooms.ts` -- Room management patterns (user, role, akte, mailbox)
+  - `src/lib/socket/emitter.ts` -- Redis emitter for worker-to-browser push
+  - `src/components/socket-provider.tsx` -- Client Socket.IO connection
+  - `src/lib/embedding/vector-store.ts` -- pgvector search with cross-Akte support
+  - `src/lib/embedding/hybrid-search.ts` -- Hybrid BM25 + pgvector with RRF
+  - `src/lib/embedding/embedder.ts` -- Ollama embedding generation
+  - `src/lib/urteile/ingestion.ts` -- Urteil ingestion with embedding + PII gate
+  - `src/lib/queue/processors/urteile-sync.processor.ts` -- Daily RSS sync
+  - `src/workers/processors/scanner.ts` -- Background scanner pattern
+  - `src/lib/helena/tools/_write/create-alert.ts` -- Alert creation with NEUES_URTEIL type
+  - `src/lib/notifications/service.ts` -- Notification creation + Socket.IO push
+  - `src/lib/falldaten-schemas.ts` -- Complete schema type system (10 schemas, 7 field types)
+  - `src/components/akten/falldaten-form.tsx` -- Dynamic form renderer
+  - `src/components/akten/activity-feed-composer.tsx` -- Textarea composer with @Helena
+  - `src/lib/helena/at-mention-parser.ts` -- Regex @mention parsing
+  - `src/worker.ts` -- 16 BullMQ workers, startup, graceful shutdown
+  - `prisma/schema.prisma` -- 70+ models, HelenaAlert with NEUES_URTEIL enum
+  - `package.json` -- Full dependency list (80+ packages)
+- v0.2 precedent: "Zero new npm packages" decision validated successful
 
 ---
 
-*Stack research for: Helena Agent v2 — AI-Lawyer autonomous agent capabilities*
-*Researched: 2026-02-27*
+*Stack research for: AI-Lawyer v0.3 -- Kanzlei-Collaboration (Internes Messaging, SCAN-05, Falldatenblaetter)*
+*Researched: 2026-02-28*

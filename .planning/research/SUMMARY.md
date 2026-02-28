@@ -1,223 +1,198 @@
 # Project Research Summary
 
-**Project:** Helena Agent v2 — Autonomous Agent Capabilities for AI-Lawyer
-**Domain:** Legal AI Agent (German Kanzlei Software — ReAct loop, @-tagging, draft-approval, background scanner, memory, alerts, QA, activity feed)
-**Researched:** 2026-02-27
-**Confidence:** HIGH (stack/architecture verified against live codebase and official docs; legal compliance from BRAK official PDF; pitfalls from GitHub issues + peer-reviewed research)
+**Project:** AI-Lawyer v0.3 -- Kanzlei-Collaboration
+**Domain:** Legal Tech SaaS -- internal collaboration features for law firm case management
+**Researched:** 2026-02-28
+**Confidence:** HIGH
 
 ## Executive Summary
 
-Helena Agent v2 extends an existing, fully operational legal case management system (~91,300 LOC) with autonomous agent capabilities. The codebase already ships: Helena RAG chat with hybrid search, BullMQ job queues, Socket.IO real-time, and a multi-provider AI stack (Ollama/OpenAI/Anthropic via Vercel AI SDK v4). The research conclusion is emphatic: zero new npm packages are required. Every agent capability — ReAct loop, deterministic Schriftsatz orchestration, nightly scanner, per-case memory, alert delivery, activity feed — is buildable on the existing infrastructure. The recommended approach is additive TypeScript implementation layered on `generateText` + `tools` (AI SDK v4), BullMQ step-job pattern, Prisma for structured state, and Socket.IO for real-time delivery.
+v0.3 adds three features to an established 117k LOC TypeScript legal case management system: **Internes Messaging** (Slack-style channels + Akte-bound discussion threads), **SCAN-05 Neu-Urteil-Check** (proactive cross-Akte semantic matching of newly ingested court decisions), and **Falldatenblaetter** (dynamic case data checklists with community template workflow and Helena AI auto-fill). The critical finding across all research tracks is that **zero new npm packages are required**. Every capability builds on existing infrastructure -- Socket.IO for real-time messaging, pgvector for cross-Akte semantic search, BullMQ for background processing, and the existing `FalldatenSchema` type system + `FalldatenForm` component for dynamic forms. This continues the v0.2 "zero new dependencies" precedent and is verified against 80+ installed packages.
 
-The recommended architecture splits Helena into two execution modes: an inline mode (streaming chat, max 5 tool steps, immediate response) and a background mode (BullMQ worker, max 20 steps, progress via Socket.IO events). This split is the critical design decision — running long agent loops inside HTTP requests causes timeout failures. Complex tasks (Schriftsatz drafting, research chains) are handed off to BullMQ immediately and the user is directed to the Activity Feed for results. Legal document creation uses a deterministic sequential `generateObject` orchestrator rather than free-form agent exploration, because German court filings have mandatory structural requirements (§ 253 ZPO) that an unconstrained agent cannot reliably satisfy.
+The recommended approach is to build Falldatenblaetter first (80% of infrastructure already exists, lowest risk, highest immediate daily value for case intake), then SCAN-05 (hooks into the existing urteile-sync pipeline with no new UI beyond the existing alert system), and finally Messaging (highest new code surface, most new Prisma models, real-time complexity). All three features extend existing subsystems rather than creating new ones -- Messaging extends Socket.IO rooms + Activity Feed patterns, SCAN-05 extends the urteile-sync processor + scanner alert pipeline, and Falldatenblaetter extends the existing `falldaten` JSON column + schema registry.
 
-The key risks are: (1) Ollama qwen3.5:35b has documented tool call format instability — all tool invocations need response validation and smoke testing before any agent feature ships; (2) German professional conduct rules (BRAK 2025, BRAO §43) are non-negotiable — all agent output must land in ENTWURF status and a human must explicitly promote before any action; (3) an AI SDK upgrade to v5/v6 would require breaking changes across 8 existing files and must be deferred to a separate milestone (v0.3-sdk-upgrade). Mitigating all three risks requires iteration caps on the ReAct loop, Prisma middleware enforcement of ENTWURF status on every agent-created document, and pinning the Ollama Docker image version.
+The top risks are: (1) Socket.IO message delivery semantics -- the existing fire-and-forget pattern for notifications must NOT be used for persistent chat; messages must be persisted before broadcast (write-then-emit). (2) SCAN-05 alert fatigue -- naive semantic matching between court decisions and cases in the same legal area produces high false-positive rates, requiring Sachgebiet-aware thresholds and Akte-level summary embeddings instead of per-document matching. (3) Helena auto-fill hallucination -- the LLM will fabricate plausible but unverified field values for Falldatenblaetter, requiring source-grounded extraction with per-field confidence scores and an explicit ENTWURF review gate. (4) RBAC leakage in messaging -- Akte-confidential content must not leak into general channels (BRAO 43a Verschwiegenheitspflicht).
 
 ## Key Findings
 
 ### Recommended Stack
 
-The existing stack handles everything needed. No new production packages are required. The AI SDK must stay on v4.3.19 — upgrading to v5/v6 introduces 6 breaking API changes across 8 files including `CoreMessage → ModelMessage`, `parameters → inputSchema`, and `toDataStreamResponse → toUIMessageStreamResponse`. Similarly, Zod must stay on v3 — Zod v4 is a peer dependency of AI SDK v5+. A dedicated tech-debt milestone (`v0.3-sdk-upgrade`) should handle the SDK migration after v0.2 ships.
+No changes to the existing stack. All v0.3 features build on the established technology: Next.js 14+ (App Router), TypeScript, Tailwind CSS + shadcn/ui, PostgreSQL 16 + Prisma ORM, pgvector (HNSW), Socket.IO + Redis adapter, BullMQ, Vercel AI SDK v4 with `generateObject`. No new Docker services (remains at 9). No new npm packages.
 
-New Prisma models do all the heavy lifting: `HelenaTask` (multi-step job with step log JSON), `HelenaDraft` (structured agent output), `HelenaAlert` (time-critical proactive notifications), `HelenaMemory` (per-case key-value agent memory), and `AktenActivity` (event feed). These are additive — no existing models are removed or modified structurally.
-
-**Core technologies:**
-- `ai@^4.3.19` (Vercel AI SDK v4, existing): `generateText` with `tools` for ReAct loop; `generateObject` for deterministic Schriftsatz sections — stay on v4, v5/v6 migration is a separate milestone
-- `bullmq@^5.70.1` (existing): step-job pattern with `job.updateData()` for restart-safe long-running agent execution; `0 2 * * *` cron for nightly scanner; `lockDuration: 120000` required for helena-agent queue
-- `zod@^3.23.8` (existing): tool parameter schemas and structured output schemas — stay on v3 to avoid AI SDK peer dep chain conflict
-- PostgreSQL + Prisma (existing): HelenaTask/HelenaDraft/HelenaAlert/HelenaMemory as structured queryable state; no new Docker services required
-- Socket.IO + `@socket.io/redis-emitter` (existing): real-time agent progress, draft-ready notifications, activity feed delivery — zero new infrastructure
-
-**Zero new npm packages.** All agent capabilities are custom TypeScript built on existing dependencies:
-- ReAct agent loop: custom `while` loop on `generateText` + tools (`src/lib/helena/agent-loop.ts`)
-- Deterministic Schriftsatz orchestrator: sequential `generateObject` calls (`src/lib/helena/schriftsatz-orchestrator.ts`)
-- Helena memory: Prisma `HelenaMemory` upserts (`src/lib/helena/memory.ts`)
-- Nightly scanner: BullMQ processor with cron `0 2 * * *` (`src/lib/queue/processors/scanner.processor.ts`)
-- Alert service: Prisma write + Socket.IO emit (`src/lib/helena/alert-service.ts`)
-- Citation Recall@k: string fingerprint matching (`src/lib/helena/qa-gate.ts`)
+**Core technologies (all existing):**
+- **Socket.IO + Redis adapter**: Real-time message delivery via `channel:{id}` rooms -- extends existing room conventions (`user:`, `role:`, `akte:`, `mailbox:`)
+- **pgvector (HNSW)**: SCAN-05 cross-Akte semantic search using Akte summary embeddings vs. Urteil embeddings
+- **BullMQ**: SCAN-05 processor as post-sync hook on urteile-sync completion
+- **Vercel AI SDK v4 `generateObject()`**: Helena auto-fill for Falldatenblaetter -- same pattern as Schriftsatz pipeline
+- **Zod**: Runtime validation of user-created FalldatenTemplate schemas from database JSON
+- **TipTap (available but not used)**: Messaging uses plain textarea with regex @mention parsing (proven v0.2 pattern), not rich text editor
 
 ### Expected Features
 
-**Must have (table stakes) — v0.2 launch:**
-- Tool Registry (6 core tools): `searchAktenDokumente`, `searchGesetze`, `searchUrteile`, `getAkteMetadata`, `getFristen`, `createEntwurf` — the minimum for useful legal agent work
-- ReAct Agent-Loop: `generateText` with `maxSteps=10` (inline) / `maxSteps=20` (background) — bounded, auditable, graceful degradation at step cap
-- @Helena mention trigger: parse `@Helena` in Akte chat, extract intent, enqueue BullMQ `helena-task` job, emit Socket.IO progress events, store ENTWURF result
-- Enhanced ENTWURF: add `agentTrace`, `ablehnungsGrund` fields; display step trace in detail view — required for BRAO transparency
-- Alert System (Priority + Role-routing): HelenaAlert model, severity tiers (INFO/WARNUNG/KRITISCH), in-app notification center extension
-- Activity Feed (per-Akte): AktenActivity timeline, Helena vs Human visual distinction, Socket.IO real-time update
+**Must have (table stakes):**
+- Akten-Threads: team discusses a case in-context within the Akte detail view
+- General Channels: kanzlei-wide communication (Orga, News) to replace WhatsApp/email
+- @Mentions with in-app notifications and Socket.IO push
+- Real-time message delivery, unread count badges
+- SCAN-05 cross-Akte semantic matching with NEUES_URTEIL alert creation
+- Configurable relevance threshold via SystemSetting
+- Dynamic Falldatenblatt form rendering from schema (7 field types)
+- User-created custom templates with Admin approval workflow (ENTWURF -> EINGEREICHT -> GENEHMIGT)
+- Helena auto-fill from Akte data via `generateObject()`
 
-**Should have (competitive) — v0.2.x:**
-- Proactive Scanning: email-triggered scan, daily health scan for Frist/Inaktivität/anomalies — only after core agent loop is stable
-- AkteSnapshot (Agent Memory): reduces per-invocation latency; build after observing real performance issues in production
-- Additional tools: `createFristEntwurf`, `addNormToAkte`, `searchMuster`, `createAktennotiz`, `getEmailContext`
-- Alert snooze (`snoozeUntil: DateTime`), daily digest email (08:00 BullMQ), Alert → ENTWURF delegation action
-- QA metrics in admin: ENTWURF rejection rate dashboard, step count histogram
+**Should have (differentiators):**
+- @Helena in channels (reuse existing ReAct agent in messaging context)
+- Akte-Verknuepfung in messages (#AZ-2026-0042 auto-linking)
+- Helena Urteil-Briefing (LLM explanation of why a ruling is relevant)
+- Typing indicators (ephemeral Socket.IO events)
+- Message editing with edit history (audit trail)
+- Completeness indicator for Falldatenblaetter
+- Conditional field logic (show/hide based on other field values)
 
-**Defer (v0.3+):**
-- Goldset evaluation suite — requires 2-3 months of production data to label meaningful queries
-- Hallucination citation-grounding check — high implementation complexity; validate with simpler rejection-rate metrics first
-- Verjährungs-Radar and cross-Akte semantic similarity — high value, high complexity
-- Specialized agent modes (Schriftsatz-Modus, Recherche-Modus) — after v0.2 proves stable
-- Episodic → Semantic memory compression — only when Akten age past ~50 chat sessions
-
-**Hard anti-features (never build):**
-- `sendEmail` as agent tool — irreversible, BRAK 2025 prohibition on autonomous AI correspondence
-- `deleteDocument` as agent tool — irreversible, data loss risk, audit trail gap
-- Auto-approve ENTWURF after N days — absolute BRAO violation (Frankfurt court precedent Sept 2025)
-- LangChain.js agent classes — incomplete JS port, adds abstraction layer without value for bounded use case
-- Cloud LLM for Akte document content — requires DSGVO data processor agreement; violates self-hosted constraint
+**Defer (v2+):**
+- External/client messaging (Mandantenportal scope)
+- File upload to channels (DMS is source of truth)
+- Voice/video calls (WebRTC complexity)
+- Message reactions (low value for 5-person kanzlei)
+- E2E encryption (self-hosted behind VPN; TLS sufficient)
+- Full-text message search via Meilisearch (index later without schema changes)
+- Threaded replies within general channels (Akten-Threads cover primary threading)
+- Falldatenblatt PDF export (can add later without schema changes)
+- Complex validation rules (regex, cross-field) for templates
+- WYSIWYG template builder (simple structured form is sufficient)
 
 ### Architecture Approach
 
-The architecture is deliberately additive. Four core new components sit on top of the existing stack: (1) `src/lib/ai/orchestrator.ts` — the background ReAct executor callable from both BullMQ worker and API routes; (2) `src/lib/ai/agent-tools.ts` — shared tool factory functions injected with runtime context (userId, akteId) used by both inline streaming chat and background orchestrator; (3) `src/lib/queue/processors/helena-task.processor.ts` — thin BullMQ wrapper that validates job data and calls the orchestrator; and (4) the Activity Feed UI component backed by a unified REST endpoint and Socket.IO subscriptions. The build order is strictly: schema migration → shared tool library → orchestrator + BullMQ worker → API routes → ki-chat route modification → Activity Feed UI → scanner extension.
+All three features extend existing subsystems. Messaging adds 3-4 new Prisma models (Channel, ChannelMember/Mitglied, Message/Nachricht, optionally Mention) and extends Socket.IO with `channel:{id}` rooms following the established `akte:{id}` room lifecycle. SCAN-05 hooks into the existing urteile-sync processor as a post-completion job, using Akte-level summary embeddings (new column on Akte model) instead of per-document matching to avoid O(N*M) explosion. Falldatenblaetter migrates the existing static TypeScript schema registry to a database-backed FalldatenTemplate model with a community approval workflow, introducing a FalldatenInstanz join table for template-Akte binding with completion tracking.
 
 **Major components:**
-1. `HelenaOrchestrator` (`src/lib/ai/orchestrator.ts`) — background ReAct loop using `generateText` with tools; persists each step to `HelenaTask.steps` JSON via `onStepFinish`; emits Socket.IO progress events; max 20 steps; AbortController wired to BullMQ worker shutdown signal
-2. `agent-tools.ts` (`src/lib/ai/`) — shared tool definitions; factory functions accept userId/akteId at runtime; used by both `streamText` (inline chat, 5-step cap) and `generateText` (background, 20-step cap); Zod parameter validation on all tools
-3. Schriftsatz Orchestrator (`src/lib/helena/schriftsatz-orchestrator.ts`) — sequential `generateObject` calls for each legally-mandated document section (§ 253 ZPO); deterministic structure enforced by Zod schemas; separate from the ReAct agent loop
-4. BullMQ queues: `helena-agent` (on-demand @-tag tasks, concurrency=1, lockDuration=120s), `helena-scanner` (nightly cron `0 2 * * *`), existing OCR/email/embedding queues unchanged
-5. Prisma data models: `HelenaTask` (step log JSON), `HelenaDraft` (structured output with quellen metadata), `HelenaAlert` (proactive notifications with fristDatum), `HelenaMemory` (per-case key-value), `AktenActivity` (feed events)
-6. Activity Feed UI: REST initial load + Socket.IO room subscriptions per-user and per-Akte; RBAC-filtered at socket room join; batch Socket.IO events from scanner to prevent UI flood
+1. **Messaging Persistence Layer** -- Channel, ChannelMember, Message models with REST API for writes, Socket.IO for push delivery + ephemeral events (typing)
+2. **SCAN-05 Post-Ingestion Processor** -- BullMQ job chained after urteile-sync, comparing new Urteil embeddings against Akte summary embeddings via pgvector cosine similarity
+3. **Akte Summary Embedding** -- New `summaryEmbedding` vector column on Akte, generated from kurzrubrum + sachgebiet + wegen + HelenaMemory content, refreshed on document changes
+4. **FalldatenTemplate + FalldatenInstanz** -- Database-backed template definitions with community workflow, replacing static TypeScript registry as the single schema source
+5. **Helena Auto-Fill Tool** -- New `fill_falldatenblatt` Helena tool using `generateObject()` with dynamic Zod schema conversion from FalldatenTemplate
 
 ### Critical Pitfalls
 
-1. **ReAct Infinite Loop** — implement `maxIterations: 10` hard cap AND a stall detector (abort if last 3 tool calls are identical); call `job.updateProgress()` on every agent step to reset BullMQ's 30s stall timer; set `lockDuration: 120000` on the `helena-agent` queue worker. Must be in Phase 1 before any tool is wired. Warning signs: same tool name 3+ times consecutively in logs; Ollama GPU at 100% with no new requests accepted.
+1. **Socket.IO write-then-emit (Critical)** -- The existing fire-and-forget pattern for notifications MUST NOT be used for chat. Messages must be persisted to PostgreSQL BEFORE broadcast. Use REST for writes, Socket.IO only for push delivery. Add client-side optimistic rendering with reconciliation and reconnection catch-up.
 
-2. **Ollama qwen3.5:35b Tool Call Hallucination** — Ollama returns tool call JSON as `message.content` instead of `message.tool_calls` (documented GitHub issues #11135, #11662); validate `response.toolCalls` array after every LLM call; implement text-mode ReAct fallback if tool calls fail consistently; pin Ollama Docker image version; run smoke test for every registered tool through the full Ollama stack before shipping any agent feature.
+2. **SCAN-05 N*M embedding explosion (Critical)** -- Naive per-document matching creates O(urteile * akten * chunks) queries. Prevention: use Akte-level summary embeddings (one vector per Akte), two-stage filtering (profile match then full search), and batch processing. Expected runtime with summary approach: 1-4 seconds for 5-20 new Urteile.
 
-3. **ENTWURF Status Bypass in Agent Tools** — agent tools that call `prisma.dokument.create()` directly bypass the HTTP middleware ENTWURF guard; all document-creating tools must route through the HTTP API endpoint; add Prisma middleware (`prisma.$use`) asserting `status = 'ENTWURF'` on every document create as last-resort guard; integration test: simulate agent create → attempt beA send → assert 403. This is a BRAO §43 professional conduct violation, not a UX bug.
+3. **Falldaten schema source confusion (Critical)** -- Two schema sources (TypeScript file + DB table) will cause maintenance chaos. Prevention: migrate static schemas to DB as STANDARD/seed templates, make DB the single source of truth, keep TypeScript file only as seed source.
 
-4. **Legal Hallucination in Schriftsatz Drafts** — Stanford 2025 peer-reviewed research: legal AI tools hallucinate 17–33% on legal queries even with RAG; implement post-generation §-reference verification (regex extract + `law_chunks.normReference` lookup) and Aktenzeichen verification against `urteil_chunks.citation`; system prompt hard constraint: cite only norms appearing verbatim in retrieved context; mandatory non-removable "KI-Entwurf — alle Normen vor Verwendung prüfen" disclaimer on every agent draft.
+4. **RBAC leakage in messaging (Critical)** -- Akte-confidential content in general channels violates BRAO 43a (Verschwiegenheitspflicht). Prevention: Akte-thread RBAC piggybacks on existing `buildAkteAccessFilter()`. General channels allow all users but prevent Akte-linking. Separate message storage per context.
 
-5. **Context Window Overflow** — 32k token qwen3.5:35b context exhausts after 5-8 agent iterations with large tool results (system prompt ~2k + 4 RAG chunks ~8k + 5 reasoning steps ~2.5k = ~14k at step 5); implement token budget manager (truncate oldest tool results when approaching 75% of context window); cap individual tool results at 2000 tokens with truncation indicator; must be in Phase 1 agent foundation before any task runs.
-
-6. **DSGVO Compliance for Agent Memory** — AI-generated case summaries and `HelenaMemory` entries contain synthesized personal data; must be added to Verarbeitungsverzeichnis; `ON DELETE CASCADE` from parent Akte; covered by existing DSGVO anonymization pipeline; staleness check required (if `memory.updatedAt < akte.updatedAt - 30 days`, mark stale). Must be addressed in Phase 3 before first summary generates in production.
-
-7. **BullMQ Agent Job Stalling and AbortSignal** — default `stalledInterval: 30s` was set for fast OCR jobs; agent jobs take 40-60s minimum; without `lockDuration: 120000`, the same agent job re-queues and runs twice, producing duplicate drafts and alerts; wire `AbortController` to BullMQ `worker.on('closing')` and pass `abortSignal` to `generateText` to prevent Ollama continuing after worker shutdown.
-
-8. **Activity Feed N+1 Queries and Socket.IO Event Flood** — feed page load issues 51 SQL statements for 50 events without nested `include`; nightly scanner emitting 200 individual `helena:activity` events causes browser React re-renders 200+ times; use single Prisma query with nested `include` for feed; batch Socket.IO emissions as `helena:activityBatch` per Akte; RBAC-filter Socket.IO rooms so users only receive events for Akten they can access.
+5. **Helena auto-fill hallucination (Critical)** -- LLM fabricates plausible field values not found in source documents. Prevention: source-grounded extraction only, per-field confidence scores, ENTWURF review gate, diff view for auto-filled data, strict type validation.
 
 ## Implications for Roadmap
 
-Based on combined research, a 7-phase build order is recommended, driven by schema-first dependencies, legal compliance gate requirements, and the two-mode agent architecture (inline vs. background).
+Based on combined research, six phases are recommended. The ordering follows dependency analysis, risk minimization, and the principle of building backend foundations before UI surfaces.
 
-### Phase 1: Agent Foundation and BullMQ Infrastructure
-**Rationale:** Database schema, shared tool library, ReAct loop core, and BullMQ queue configuration are the prerequisite for every subsequent feature. All critical pitfalls (infinite loop, context overflow, stall detection, Ollama tool call validation) must be addressed here — retrofitting these safeguards after user-visible features ship is exponentially harder and risks professional liability exposure.
-**Delivers:** Working `HelenaOrchestrator` executing bounded ReAct loops in a BullMQ worker; shared `agent-tools.ts` with all 6 core tool factory functions; Prisma schema migration (HelenaTask, HelenaDraft, HelenaAlert, HelenaMemory, AktenActivity); BullMQ `helena-agent` queue with `lockDuration: 120000` and `concurrency: 1`; iteration cap + stall detector (3 identical consecutive tool calls → abort); token budget manager (truncate at 75% of 32k context); Ollama tool call response validation with smoke test suite per tool.
-**Addresses (from FEATURES.md):** Tool Registry (6 core tools), ReAct Agent-Loop foundation
-**Avoids (from PITFALLS.md):** Pitfall 1 (infinite loop), Pitfall 2 (Ollama tool call format), Pitfall 5 (context window overflow), Pitfall 7 (BullMQ stalled jobs)
-**Research flag:** Standard patterns (Vercel AI SDK generateText + tools well-documented in official docs); no phase research needed.
+### Phase 1: Falldatenblaetter Schema + Templates (Backend)
+**Rationale:** Lowest risk, highest immediate value. 80% of infrastructure already exists (FalldatenSchema types, FalldatenForm component, Akte.falldaten column). No real-time complexity. The Prisma migration for FalldatenTemplate + FalldatenInstanz has no dependencies on other features.
+**Delivers:** Database-backed template system with community approval workflow, seed migration of 10 existing schemas, template CRUD API routes, submit/approve/reject workflow endpoints.
+**Addresses:** Dynamic form rendering, user-created templates, Admin approval workflow, completeness tracking.
+**Avoids:** Pitfall 3 (schema explosion) by establishing DB as single source of truth from the start. Pitfall 8 (RBAC mismatch) by reusing ADMIN role with self-approval check.
 
-### Phase 2: @Helena Mention Trigger and Enhanced ENTWURF
-**Rationale:** Once the agent loop is verified working, the UX trigger that exposes it to users is the highest-value deliverable. Enhanced ENTWURF (agentTrace, ablehnungsGrund) must ship alongside because BRAO transparency requirements apply from the first user-facing agent invocation — there is no grace period.
-**Delivers:** @Helena mention parsing in Akte chat (`@helena` / `@Helena` prefix detection), BullMQ job enqueue on mention, Socket.IO progress events (`helena:thinking`, `helena:step:{n}`, `helena:done`), ENTWURF result linked to originating mention; enhanced KIEntwurf model with `agentTrace` (Thought/Action/Observation JSON array) and `ablehnungsGrund` (dropdown + free text) fields; agent trace display as collapsible "Wie Helena zu diesem Entwurf kam" section in ENTWURF detail view.
-**Addresses (from FEATURES.md):** @Helena mention trigger, Enhanced ENTWURF workflow, intent detection for task routing
-**Avoids (from PITFALLS.md):** Pitfall 3 (ENTWURF status bypass — integration test: agent create → beA send → assert 403 required before shipping); Pitfall 4 (legal hallucination — §-reference post-verification in createEntwurf tool execute function)
-**Research flag:** Standard patterns; no phase research needed.
+### Phase 2: Falldatenblaetter UI + Helena Integration
+**Rationale:** Depends on Phase 1 schema. Delivers the user-facing value of case data collection. Helena auto-fill uses the same `generateObject()` pattern proven in v0.2 Schriftsatz pipeline.
+**Delivers:** Template builder UI (admin), template review panel, enhanced FalldatenInstanz form in Akte detail, Helena `fill_falldatenblatt` tool, completeness indicator.
+**Addresses:** Helena auto-fill, template suggestion, completeness indicator.
+**Avoids:** Pitfall 5 (hallucination) via source-grounded extraction, per-field confidence, ENTWURF status, diff view. Pitfall 11 (JSONB size) by capping fields at 40 per template.
 
-### Phase 3: Deterministic Schriftsatz Orchestration and Legal Draft QA Gates
-**Rationale:** Schriftsatz generation is the highest-value agent capability for a German Kanzlei. It requires a separate deterministic orchestrator (not free-form ReAct) because court filing structure is legally mandated (§ 253 ZPO, § 130 ZPO). QA gates (Citation Recall@k, LLM-as-judge hallucination detection, format compliance checks) ship with this phase — an unverified Schriftsatz draft with hallucinated §-references creates immediate professional liability.
-**Delivers:** `schriftsatz-orchestrator.ts` with sequential `generateObject` calls per legally-mandated section; three QA gates (`qa-gate.ts`): Citation Recall@k string fingerprint matching, LLM-as-judge hallucination detection via `generateObject`, deterministic format compliance regex; `searchMuster` tool for kanzlei-specific templates; `HelenaGoldset` Prisma model for regression testing; mandatory non-removable draft disclaimer in UI.
-**Uses (from STACK.md):** `generateObject` + Zod schemas (Zod v3, stay on v4 → blocked by AI SDK v4 peer dep), existing `hybridSearch()` for muster_chunks/law_chunks/urteil_chunks
-**Avoids (from PITFALLS.md):** Pitfall 4 (legal hallucination — §-verification mandatory before phase ships, 0 unverified references in test drafts accepted); Pitfall 10 (QA gold set bias — gold set must use held-out documents not used in RAG calibration; Anwalt reviews 100% of gold set answers)
-**Research flag:** Needs deeper research on German court filing structural requirements for system prompt design (ZPO §253 Klageschrift sections, §130 Allgemeine Formerfordernisse, §78 Anwaltszwang). A German attorney should review the Zod section schemas before this phase is planned in detail.
+### Phase 3: SCAN-05 Neu-Urteil-Check (Full Backend)
+**Rationale:** No new UI beyond existing alert system. HelenaAlertTyp.NEUES_URTEIL already exists in the enum. The main work is the Akte summary embedding column + HNSW index + post-sync processor. Building this after Falldatenblaetter means Falldaten content can contribute to Akte summaries.
+**Delivers:** Akte summary embedding infrastructure (new column + HNSW index), batch generation for existing Akten, SCAN-05 processor hooked into urteile-sync, NEUES_URTEIL alert creation with meta payload, Sachgebiet-aware threshold filtering, deduplication.
+**Addresses:** Cross-Akte semantic matching, proactive court decision alerts, configurable threshold, batch post-sync processing.
+**Avoids:** Pitfall 2 (N*M explosion) via Akte-level summary embeddings. Pitfall 9 (alert fatigue) via Sachgebiet-aware thresholds and alert grouping. Pitfall 13 (stale profiles) via document-change hooks and 7-day staleness tolerance. Pitfall 15 (queue contention) via dedicated `scan-05` BullMQ queue.
 
-### Phase 4: Alert System and Proactive Background Scanner
-**Rationale:** Alerts and the background scanner are operationally coupled — the scanner is the primary alert producer. The DSGVO pitfall for agent-generated memory/summaries containing personal data must be addressed in this phase before any summary is persisted to production. Scanner scope filtering is a hard requirement before production deployment — an unfiltered nightly scan on 100+ Akten occupies the GPU from 2am to 8am.
-**Delivers:** HelenaAlert model with severity tiers (INFO/WARNUNG/KRITISCH) and role-based routing; in-app notification center extension; nightly BullMQ cron scanner (`0 2 * * *`); 6 scanner checks: Fristen within 7 days, inactivity >30 days, OCR failures, RVG overdue >60 days, @-task no response >4h, beA unprocessed >24h; scope filter (Akten with `updatedAt > NOW() - INTERVAL '7 days'`); alert deduplication (48h suppression window per Akte+AlertType); cap 10 alerts per nightly run; DSGVO compliance for agent-generated data (Verarbeitungsverzeichnis entry, ON DELETE CASCADE to parent Akte, inclusion in anonymization pipeline).
-**Addresses (from FEATURES.md):** Proactive scanning (email-triggered + daily cron), Alert system (priority + role routing), alert dedup + throttle
-**Avoids (from PITFALLS.md):** Pitfall 6 (scanner cost explosion — scope filter mandatory, nightly runtime < 90 min target), Pitfall 7 (DSGVO akte_summary — must be addressed before first summary in production), Pitfall 8 (Activity Feed Socket.IO flood — batch events from scanner)
-**Research flag:** Standard patterns for BullMQ cron and alert routing; no phase research needed.
+### Phase 4: Messaging Schema + API (Backend)
+**Rationale:** Most new Prisma models (3-4 models, 2 enums). Running the migration separately from Phases 1 and 3 avoids migration conflicts. Backend-first approach allows API testing before UI work.
+**Delivers:** Channel, ChannelMember, Message Prisma models with migration, CRUD + pagination API routes, Socket.IO `channel:{id}` room integration, @mention parsing + notification creation, unread count computation.
+**Addresses:** Channel/thread creation, message persistence, real-time delivery foundation, @mentions.
+**Avoids:** Pitfall 1 (write-then-emit) by mandating REST for writes + Socket.IO for push. Pitfall 4 (RBAC leak) by separating Akte-thread RBAC from general channel access. Pitfall 14 (audit trail) via soft delete + edit history.
 
-### Phase 5: Activity Feed UI
-**Rationale:** The Activity Feed is the primary UI surface for all agent output. It can only be built after the data layer (Phase 1 schema), agent tasks (Phase 2), and alerts (Phase 4) exist. The database query plan must be verified before shipping — N+1 queries at 50+ events per feed load will exhaust the DB connection pool under moderate usage.
-**Delivers:** Unified `/api/helena/activity` endpoint (tasks + drafts + alerts merged, sorted by createdAt); `activity-feed.tsx` component (REST initial load + Socket.IO real-time via per-Akte rooms); task-card, draft-card, alert-card components with distinct Helena vs Human visual treatment (robot icon + blue accent for agent actions); Akte detail "Aktivitäten" tab; `/ki-chat?tab=tasks` TaskDashboard for cross-Akte view; filterable feed (Nur Helena / Nur Fristen / Nur Dokumente); RBAC Socket.IO room filtering; batched Socket.IO events from scanner.
-**Implements (from ARCHITECTURE.md):** ActivityFeed component, Task Dashboard, Socket.IO room-based RBAC delivery pattern, Pattern 5 (Activity Feed via existing Socket.IO infrastructure)
-**Avoids (from PITFALLS.md):** Pitfall 9 (Activity Feed N+1 — verify with `DEBUG=prisma:query` ≤3 SQL statements for 20-event feed; Socket.IO RBAC room filtering required; `helena:activityBatch` from scanner)
-**Research flag:** Standard patterns; no phase research needed.
+### Phase 5: Messaging UI
+**Rationale:** Depends on Phase 4 API layer. This is the highest new-UI-surface phase -- channel sidebar, message thread view, composer, Akte thread panel, unread badges.
+**Delivers:** `/dashboard/nachrichten` page with channel list + message view, Akte detail inline thread panel, message composer with @mention parsing, typing indicators, unread count badges in sidebar.
+**Addresses:** Channel list UI, message sending/receiving, typing indicators, unread badges, Akte-bound discussion.
+**Avoids:** Pitfall 6 (pagination) via cursor-based pagination from day one. Pitfall 7 (notification spam) via batch notification creation and client-side dedup. Pitfall 10 (room proliferation) by reusing `akte:*` rooms for threads.
 
-### Phase 6: Agent Memory (AkteSnapshot and HelenaMemory)
-**Rationale:** Memory is an optimization that reduces per-invocation latency and enables more context-aware agent reasoning. It should be built after observing real performance characteristics in production (Phases 2-5). Adding it too early optimizes for a hypothetical bottleneck and adds DSGVO compliance surface area before the agent is proven useful.
-**Delivers:** `HelenaMemory` Prisma model (per-case key-value with standardized keys: `sachverhalt_summary`, `bekannte_fristen`, `mandant_ziele`, `letzte_aktion`, `prozessstand`); `AkteSnapshot` model with staleness detection (`snapshot.updatedAt < akte.updatedAt - 30 days` → stale); BullMQ snapshot-rebuild job triggered on major Akte events (new Dokument, new Beteiligte, status change); memory size limits (max 20 key-value pairs per Akte, 90-day TTL on entries); memory injected into agent system prompt header; DSGVO cascade delete from Akte; inclusion in Art. 15 data subject access export.
-**Addresses (from FEATURES.md):** AkteSnapshot (reduced per-invocation latency), per-case context persistence across sessions, memory quality indicator ("Kontext vom [datum]" with refresh button)
-**Avoids (from PITFALLS.md):** Pitfall 7 (DSGVO — memory as personal data requiring Verarbeitungsverzeichnis entry and cascade delete)
-**Research flag:** Standard patterns (Prisma upsert memory, BullMQ trigger on entity change); no phase research needed.
-
-### Phase 7: QA Evaluation Framework and Admin Metrics
-**Rationale:** QA evaluation requires production data to label meaningful gold set queries. Building the framework before 2-3 months of production usage produces a biased evaluation that measures prompt engineering instead of real-world quality. This phase ships after sufficient production agent runs have accumulated to support a meaningful held-out evaluation set.
-**Delivers:** ENTWURF rejection rate dashboard (grouped by ablehnungsGrund dropdown selection, weekly trend chart); step count histogram (admin dashboard — identify near-cap agent runs); AgentRun Prisma model with token attribution per task; `HelenaGoldset` evaluation dataset (30-50 queries, held-out from RAG calibration documents, including 10 adversarial "I don't know" queries); weekly BullMQ evaluation cron comparing Recall@k against baseline; thumbs up/down feedback on Helena chat messages (`AnswerFeedback` model); alert when Recall@k drops >10% from established baseline.
-**Addresses (from FEATURES.md):** QA evaluation (rejection rate, step count, goldset, user feedback), admin metrics dashboard
-**Avoids (from PITFALLS.md):** Pitfall 10 (Goodhart's Law — gold set requires Anwalt review of 100% of generated answers as primary quality gate, not developer review; rotate 20% of queries quarterly; never show internal evaluation metrics to end users — show per-response "X von Y Zitaten verifiziert" instead)
-**Research flag:** Needs phase research on held-out gold set methodology for German legal domain — specifically structuring adversarial queries and preventing circular evaluation bias when the RAG index and gold set share source documents.
+### Phase 6: Cross-Feature Integration + Polish
+**Rationale:** Integration points between the three features. These are enhancements that depend on all three features being functional.
+**Delivers:** @Helena in channel messages (HelenaTask creation), SCAN-05 alert "Teilen" button for posting to Akte-thread, NEUES_URTEIL activity feed card renderer, summary embedding refresh triggers (on HelenaMemory change, Falldaten save, document upload).
+**Addresses:** @Helena in channels, SCAN-05 + messaging integration, summary embedding freshness.
+**Avoids:** Integration Pitfall 1 (Activity Feed confusion) by keeping chat and feed separate. Integration Pitfall 3 (redundant cross-posting) by using manual "Teilen" instead of auto-posting.
 
 ### Phase Ordering Rationale
 
-- **Dependency chain is strict:** Schema (Phase 1) must exist before any API route or worker; shared tool library before both ki-chat and orchestrator changes; orchestrator before Activity Feed has data to display.
-- **Legal compliance gates Phases 2 and 3:** ENTWURF enforcement (integration test with beA send attempt) and §-reference post-verification must pass before any agent output reaches users. These are not optional polish items — they are BRAO professional conduct requirements.
-- **Scanner (Phase 4) before Activity Feed UI (Phase 5):** The feed needs real events to display. Prototyping the UI before data exists requires mock data that misrepresents real event volume and timing.
-- **Memory (Phase 6) is explicitly deferred:** The agent loop functions correctly without memory — memory is a latency and context-quality optimization. Building it before observing real performance characteristics risks over-engineering for a hypothetical bottleneck.
-- **QA evaluation (Phase 7) requires production data:** A gold set built from development-time data has circular evaluation bias (Pitfall 10). The framework ships after the Anwalt has accumulated real queries over 2-3 months.
-- **No LangChain, no new agent frameworks:** All agent capabilities fit within the existing Vercel AI SDK v4 `generateText` + `tools` API. Adding a competing abstraction layer would create maintenance burden and streaming interface conflicts.
+- **Falldatenblaetter before SCAN-05:** Falldaten content enriches Akte summaries used for SCAN-05 matching. Building Falldatenblaetter first means the summary embedding generator can include Falldaten fields.
+- **SCAN-05 before Messaging:** SCAN-05 is backend-only (no new UI) and can ship independently. Messaging requires the most new UI surface area and benefits from having both Falldatenblaetter and SCAN-05 alerts available for cross-feature integration.
+- **Backend before UI within each feature:** Prisma migrations should not conflict. Running them sequentially (Phase 1, 3, 4) prevents merge conflicts in `schema.prisma`. API testing before UI reduces debug surface.
+- **Cross-feature polish last:** Integration points between features should only be built after each feature works independently. This prevents coupling failures from cascading.
 
 ### Research Flags
 
-Phases needing deeper research during planning:
-- **Phase 3 (Schriftsatz Orchestration):** German procedural law structural requirements for court filings (§ 253 ZPO Klageschrift, § 130 ZPO Allgemeine Vorschriften, Rubrum requirements) need to be mapped to Zod section schemas and system prompt design. A German attorney should review the section schema definitions before this phase ships. Specifically: which sections are legally mandated vs. optional, and what the Antrag must contain for different Schriftsatz types (Klageschrift vs. Berufung vs. Abmahnung).
-- **Phase 7 (QA Evaluation):** The held-out gold set methodology for German legal domain needs specific research. Standard IR evaluation (Recall@k, MRR@10) does not measure legal correctness — a chunk can be retrieved correctly but the LLM can still hallucinate the answer. German-legal-specific adversarial queries (citing non-existent §-Absatz, fabricated Aktenzeichen) need to be designed with practitioner input.
+Phases likely needing deeper research during planning:
+- **Phase 2 (Falldatenblaetter UI + Helena):** The `dynamicZodFromFalldatenSchema()` runtime conversion and Helena auto-fill confidence scoring need design-time iteration. The template builder UI complexity depends on scope decisions (drag-and-drop vs. simple add/remove).
+- **Phase 3 (SCAN-05):** Threshold tuning (default 0.72) is an estimate. The Sachgebiet soft-match mapping and two-stage filtering strategy need empirical validation with real RSS data. pgvector AVG aggregation on vector columns for centroid computation needs verification.
 
-Phases with standard patterns (skip phase research):
-- **Phase 1:** Vercel AI SDK v4 tool calling and BullMQ step-job patterns are documented in official docs. Direct codebase inspection confirms all integration points (queues.ts, worker.ts, ki-chat/route.ts).
-- **Phase 2:** @-mention parsing and BullMQ job enqueue follow well-established SaaS patterns (Slack, GitHub Issues, Linear). Socket.IO progress events already implemented for OCR and embedding pipelines in the codebase.
-- **Phase 4:** BullMQ cron and alert routing are standard. Scanner scope filtering is straightforward SQL. Deduplication pattern follows existing Vorfristen-reminder cron idempotency pattern.
-- **Phase 5:** Activity Feed with REST + Socket.IO is a solved problem. RBAC filtering follows existing Socket.IO room conventions already used for per-Akte document pipeline notifications.
-- **Phase 6:** Prisma upsert memory pattern is trivial. AkteSnapshot staleness detection follows the same pattern as the existing HelenaSuggestion cache invalidation.
+Phases with standard patterns (skip research-phase):
+- **Phase 1 (Falldatenblaetter Schema):** Standard Prisma model + CRUD API + seed migration. Well-documented, established patterns.
+- **Phase 4 (Messaging Schema + API):** Standard Prisma model + REST API + Socket.IO room extension. All patterns verified against existing codebase.
+- **Phase 5 (Messaging UI):** Standard React component work with existing shadcn/ui design system. Cursor pagination is well-documented.
+- **Phase 6 (Cross-Feature):** Integration work following existing patterns (HelenaTask queue, createScannerAlert, activity feed renderer).
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Zero new packages confirmed by cross-referencing existing package.json against required capabilities. AI SDK v4 breaking changes verified from official migration guides (HIGH). Zod v3 vs v4 peer dep constraint verified from official Zod versioning docs (HIGH). |
-| Features | HIGH for compliance constraints; MEDIUM for UX patterns | BRAK/BRAO legal constraints are from official December 2024 BRAK PDF (HIGH). @-mention UX patterns inferred from SaaS analogues with multiple corroborating sources (MEDIUM). Agent memory compression (episodic → semantic) is emerging practice with limited production validation data (MEDIUM). |
-| Architecture | HIGH | Based on direct codebase inspection of `src/app/api/ki-chat/route.ts`, `src/worker.ts`, `src/lib/ai/proactive-processor.ts`, `src/lib/queue/queues.ts`, `prisma/schema.prisma`. All integration points verified against live code. The two-mode design (inline 5-step vs. background 20-step) matches existing infrastructure capabilities exactly. |
-| Pitfalls | HIGH for BullMQ/Ollama/DSGVO; MEDIUM for QA evaluation | Ollama tool call format issues from active GitHub issues with reproducible cases (HIGH). BRAK 2025 Leitfaden is official BRAK PDF (HIGH). BullMQ stall behavior from official BullMQ docs (HIGH). QA gold set methodology is emerging practice with limited German-legal-specific guidance (MEDIUM). Stanford hallucination research is peer-reviewed (HIGH). |
+| Stack | HIGH | Zero new packages verified against 80+ installed dependencies. All capabilities confirmed in existing codebase. Continues validated v0.2 precedent. |
+| Features | HIGH | Feature landscape derived from codebase analysis + legal domain knowledge. Table stakes and anti-features clearly delineated. Complexity estimates grounded in existing LOC counts. |
+| Architecture | HIGH | All integration points verified against actual source files (socket rooms, BullMQ queues, scanner pipeline, falldaten schemas). No assumptions about external services. |
+| Pitfalls | HIGH (patterns), MEDIUM (thresholds) | Pitfall patterns verified against codebase. SCAN-05 threshold values (0.72 cosine similarity) and alert fatigue mitigation strategies are estimates needing empirical tuning. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Ollama Docker image version:** Current Docker Compose must be audited for `latest` tag on the Ollama service. Tool call behavior (Pitfall 2) is version-dependent and regressions are introduced without breaking changes. Pin to a specific version before Phase 1 ships. Verify pinned version does not have known tool call regressions for qwen3.5:35b.
-- **qwen3.5:35b step latency measurement:** Estimated at 2-3s per tool call step, making a 20-step background task 40-60s minimum. This needs empirical measurement on the production GPU to validate that `lockDuration: 120000` (2 minutes) is sufficient. If step latency is higher, `lockDuration` needs adjustment.
-- **Schriftsatz section schemas:** The Zod schemas for individual Schriftsatz sections (Tatbestand, Rechtliche Würdigung, Antrag structure) need validation against actual court filing requirements before Phase 3 is planned in detail. A German attorney practitioner should review the schema before Phase 3 planning.
-- **BRAK 2025 exact disclosure requirements:** The December 2024 BRAK Leitfaden was cited but the exact text of AI transparency disclosure requirements (which the "Von Helena erstellt" badge must satisfy) should be reviewed before Phase 2 ships the ENTWURF badge design.
-- **BullMQ `helenaTaskQueue` naming convention:** The existing codebase uses `aiScanQueue`, `aiBriefingQueue`, `aiProactiveQueue`. The new queue should follow the same naming — confirm `helenaTaskQueue` or `aiHelenaQueue` against the existing `queues.ts` convention before Phase 1 schema is finalized.
+- **SCAN-05 threshold calibration:** The 0.72 default cosine similarity threshold is an informed estimate based on `multilingual-e5-large-instruct` characteristics. Must be tuned with real Urteil-Akte pairs after initial deployment. Include a `SystemSetting` key for runtime adjustment.
+- **Akte summary embedding quality:** The composition of kurzrubrum + sachgebiet + wegen + HelenaMemory content for Akte summaries is untested. Quality of cross-Akte matching depends heavily on summary text quality. Need to validate with representative cases.
+- **pgvector AVG on vector columns:** The centroid computation approach (averaging top-N document chunk embeddings) for Akte profiles needs PostgreSQL verification. May need a custom SQL function.
+- **FalldatenInstanz vs. Akte.falldaten migration:** The architecture research suggests a separate FalldatenInstanz model (supports multiple templates per Akte), while the stack research suggests continuing to use the existing Akte.falldaten column. This discrepancy must be resolved in Phase 1 planning. Recommendation: adopt FalldatenInstanz for forward-compatibility, migrate existing data.
+- **Messaging write path:** REST for writes + Socket.IO for push delivery is the correct pattern. Architecture research initially considered Socket.IO for sending but correctly concluded REST is safer (explicit error responses, retry semantics). This must be enforced in implementation.
+- **Helena chat context:** Helena initially will NOT read chat messages from Akte-threads. Adding a `read-akte-chat` tool is deferred to a follow-up. This is a known gap for v0.3.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Vercel AI SDK v4 tool calling: https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling — `parameters:` vs `inputSchema:` distinction confirmed
-- AI SDK v4 to v5 migration guide: https://ai-sdk.dev/docs/migration-guides/migration-guide-5-0 — all 6 breaking changes verified
-- AI SDK v5 to v6 migration guide: https://ai-sdk.dev/docs/migration-guides/migration-guide-6-0 — `ToolLoopAgent`, `stopWhen: stepCountIs(20)` default confirmed
-- BullMQ step-job pattern: https://docs.bullmq.io/patterns/process-step-jobs — `job.updateData()` for restart-safe checkpointing confirmed
-- BullMQ stalled jobs: https://docs.bullmq.io/guide/workers/stalled-jobs — `lockDuration` and `stalledInterval` configuration confirmed
-- Vercel AI SDK AbortSignal: https://ai-sdk.dev/docs/advanced/stopping-streams — `abortSignal` parameter confirmed for `generateText`
-- BRAK Leitfaden KI-Einsatz (December 2024): https://www.brak.de/fileadmin/service/publikationen/Handlungshinweise/BRAK_Leitfaden_mit_Hinweisen_zum_KI-Einsatz_Stand_12_2024.pdf — professional conduct constraints (§43 BRAO, never auto-send)
-- Direct codebase inspection: `src/app/api/ki-chat/route.ts`, `src/worker.ts`, `src/lib/ai/proactive-processor.ts`, `src/lib/queue/queues.ts`, `prisma/schema.prisma` (models 1456-1820)
-- npm registry: `npm view ai version` = 6.0.103 current; project on `^4.3.19` — verified 2026-02-27
+- Codebase analysis -- all integration points verified against actual source files:
+  - `src/lib/socket/server.ts`, `rooms.ts`, `auth.ts`, `emitter.ts` (Socket.IO infrastructure)
+  - `src/worker.ts`, `src/lib/queue/queues.ts` (16 BullMQ queues, 6 cron jobs)
+  - `src/lib/scanner/service.ts` (createScannerAlert, dedup, escalation)
+  - `src/lib/urteile/ingestion.ts`, `rss-client.ts` (PII-gated ingestion pipeline)
+  - `src/lib/embedding/hybrid-search.ts`, `vector-store.ts` (pgvector + BM25 + RRF)
+  - `src/lib/falldaten-schemas.ts` (10 Sachgebiet schemas, 150+ fields)
+  - `src/components/akten/falldaten-form.tsx` (dynamic form renderer)
+  - `src/lib/helena/tools/index.ts` (14 tools, role filter, cache)
+  - `src/lib/helena/at-mention-parser.ts` (regex @mention parsing)
+  - `prisma/schema.prisma` (70+ models, HelenaAlert with NEUES_URTEIL enum)
+  - `package.json` (80+ packages, zero new additions needed)
 
 ### Secondary (MEDIUM confidence)
-- Stanford HAI: Legal AI Hallucination study 17-33% (2025, peer-reviewed): https://law.stanford.edu/wp-content/uploads/2024/05/Legal_RAG_Hallucinations.pdf — hallucination rate baseline for legal RAG
-- Ollama GitHub issue #11135: Qwen3 tool call hallucination — JSON as content instead of tool_calls
-- Ollama GitHub issue #11662: qwen3:32b tool call failures — version-dependent regression confirmed
-- EDPB AI Privacy Risks and Mitigations (April 2025): https://www.edpb.europa.eu/system/files/2025-04/ai-privacy-risks-and-mitigations-in-llms.pdf — DSGVO Art. 15 and Art. 17 for AI-generated summaries
-- LangChain.js vs Vercel AI SDK comparison: https://strapi.io/blog/langchain-vs-vercel-ai-sdk-vs-openai-sdk-comparison-guide — LangChain JS incomplete vs Python port confirmed
-- LLM-as-judge hallucination detection: https://www.datadoghq.com/blog/ai/llm-hallucination-detection/ — production-validated approach, confirmed for cost efficiency vs self-consistency
-- ReAct agent pattern in TypeScript 2026: https://noqta.tn/en/tutorials/ai-agent-react-pattern-typescript-vercel-ai-sdk-2026 — implementation pattern corroboration
-- Goodhart's Law in AI evaluation: https://blog.collinear.ai/p/gaming-the-system-goodharts-law-exemplified-in-ai-leaderboard-controversy — gold set methodology risks
+- [Slack Architecture - System Design](https://systemdesign.one/slack-architecture/) -- channel/message DB patterns
+- [Free Law Project - Semantic Search](https://free.law/2025/03/11/semantic-search/) -- legal semantic search
+- [UK National Archives - Semantic Search for Case Law](https://www.nationalarchives.gov.uk/blogs/digital/prototyping-semantic-search-for-case-law/) -- prototype patterns
+- [Socket.IO with Next.js](https://socket.io/how-to/use-with-nextjs) -- integration guide
+- [Scaling Socket.IO challenges](https://ably.com/topic/scaling-socketio) -- connection bottlenecks
+- [pgvector scaling presentation](https://pgconf.in/files/presentations/2025/954.pdf) -- HNSW index limits
+- [pgvector 0.8.0 improvements](https://aws.amazon.com/blogs/database/supercharging-vector-search-performance-and-relevance-with-pgvector-0-8-0-on-amazon-aurora-postgresql/) -- benchmarks
+- [LLM hallucination in data extraction](https://www.cradl.ai/post/hallucination-free-llm-data-extraction) -- dual-model verification
 
 ### Tertiary (LOW confidence)
-- Competitor feature analysis (Harvey AI, Legora, Definely) — sourced from marketing pages, not technical documentation; used only for feature comparison context, not implementation guidance
-- qwen3.5:35b step inference latency (2-3s per call) — community benchmarks on similar hardware; hardware-dependent, needs empirical validation on production GPU before BullMQ `lockDuration` is finalized
+- SCAN-05 cosine similarity threshold (0.72 default) -- informed estimate, needs empirical calibration
+- Sachgebiet soft-match mapping (Zivilrecht -> multiple Sachgebiete) -- domain knowledge, not validated with data
 
 ---
-*Research completed: 2026-02-27*
+*Research completed: 2026-02-28*
 *Ready for roadmap: yes*

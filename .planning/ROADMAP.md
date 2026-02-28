@@ -91,7 +91,7 @@ See: `milestones/v0.2-ROADMAP.md` for full phase details.
 - Decimal phases (28.1, 28.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 28: Falldatenblaetter Schema + Templates** - Database-backed template system with community approval workflow and seed migration (completed 2026-02-28)
-- [ ] **Phase 29: Falldatenblaetter UI** - User-facing form rendering with completeness tracking in Akte detail
+- [x] **Phase 29: Falldatenblaetter UI** - User-facing form rendering with completeness tracking in Akte detail (completed 2026-02-28)
 - [ ] **Phase 30: SCAN-05 Neu-Urteil-Check** - Cross-Akte semantic matching of new court decisions with proactive alerts
 - [ ] **Phase 31: Messaging Schema + API** - Channel/thread models, REST API, Socket.IO real-time delivery, @mentions
 - [ ] **Phase 32: Messaging UI** - Channel list, message view, Akte-thread panel, unread badges, @Helena integration
@@ -188,7 +188,7 @@ Phases execute in numeric order: 28 -> 28.1 -> 29 -> 30 -> 31 -> 32
 | 12-18 | v0.1 | 19/19 | Complete | 2026-02-27 |
 | 19-27 | v0.2 | 23/23 | Complete | 2026-02-28 |
 | 28. Falldatenblaetter Schema + Templates | 4/4 | Complete    | 2026-02-28 | - |
-| 29. Falldatenblaetter UI | 1/2 | In Progress|  | - |
+| 29. Falldatenblaetter UI | 2/2 | Complete   | 2026-02-28 | - |
 | 30. SCAN-05 Neu-Urteil-Check | v0.3 | 0/TBD | Not started | - |
 | 31. Messaging Schema + API | v0.3 | 0/TBD | Not started | - |
 | 32. Messaging UI | v0.3 | 0/TBD | Not started | - |

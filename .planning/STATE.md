@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 29 of 32 (Falldatenblaetter UI)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-02-28 -- completed 29-01 (API + Form Enhancements)
+Plan: 2 of 2 in current phase (COMPLETE)
+Status: Phase Complete
+Last activity: 2026-02-28 -- completed 29-02 (FalldatenTab Wrapper + Tab Integration)
 
-Progress: [##........] 20% (v0.3: 1/5 phases)
+Progress: [####......] 40% (v0.3: 2/5 phases)
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [##........] 20% (v0.3: 1/5 phases)
 | Phase 28 P03 | 6min | 2 tasks | 7 files |
 | Phase 28 P04 | 1min | 1 task | 1 file |
 | Phase 29 P01 | 2min | 2 tasks | 3 files |
+| Phase 29 P02 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [28-04]: Empty where-clause for ADMIN branch (no filter) -- simplest bypass, matches [id]/route.ts pattern
 - [29-01]: Local TemplateField/TemplateSchema interfaces in form -- decoupled from Zod validation schemas
 - [29-01]: Completeness tracks only required fields, returns 100% when none exist
+- [29-02]: Template resolution fetches by ID when assigned, auto-assigns STANDARD by sachgebiet when not
+- [29-02]: Completeness badge only shows percentage when required fields exist (total > 0)
+- [29-02]: Unsaved changes uses Radix AlertDialog, not native browser confirm
 
 ### Pending Todos
 
@@ -88,5 +92,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 29-01-PLAN.md (API + Form Enhancements)
+Stopped at: Completed 29-02-PLAN.md (FalldatenTab Wrapper + Tab Integration)
 Resume file: None

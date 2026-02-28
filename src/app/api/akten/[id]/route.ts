@@ -18,6 +18,7 @@ const updateAkteSchema = z.object({
   sachbearbeiterId: z.string().nullable().optional(),
   notizen: z.string().nullable().optional(),
   falldaten: z.record(z.any()).nullable().optional(),
+  falldatenTemplateId: z.string().nullable().optional(),
 });
 
 // GET /api/akten/[id]

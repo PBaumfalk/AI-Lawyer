@@ -18,6 +18,7 @@ interface AkteData {
   status: string;
   gegenstandswert: string | null;
   falldaten: Record<string, any> | null;
+  falldatenTemplateId: string | null;
   notizen: string | null;
   anwalt: { id: string; name: string; email: string } | null;
   sachbearbeiter: { id: string; name: string; email: string } | null;

@@ -26,6 +26,7 @@ import { processUrteileSyncJob } from "@/lib/queue/processors/urteile-sync.proce
 import { processHelenaTask, type HelenaTaskJobData } from "@/lib/queue/processors/helena-task.processor";
 import { processScanner } from "@/workers/processors/scanner";
 import { processAkteEmbeddingJob } from "@/lib/queue/processors/akte-embedding.processor";
+import { runNeuesUrteilCheck } from "@/lib/scanner/checks/neues-urteil-check";
 import { prisma } from "@/lib/db";
 
 const log = createLogger("worker");
@@ -617,12 +618,20 @@ const urteileSyncWorker = new Worker(
   }
 );
 
-urteileSyncWorker.on("completed", (job) => {
+urteileSyncWorker.on("completed", async (job) => {
   if (!job) return;
-  log.info(
-    { jobId: job.id, result: job.returnvalue },
-    "[Worker] urteile-sync job completed"
-  );
+  const result = job.returnvalue as { inserted: number; skipped: number; piiRejected: number; failed: number } | null;
+  log.info({ jobId: job.id, result }, "[Worker] urteile-sync job completed");
+
+  // Trigger Neu-Urteil cross-matching if any new Urteile were inserted
+  if (result?.inserted && result.inserted > 0) {
+    try {
+      const matchResult = await runNeuesUrteilCheck();
+      log.info({ ...matchResult }, "[Worker] Neu-Urteil cross-matching completed");
+    } catch (err) {
+      log.error({ err }, "[Worker] Neu-Urteil cross-matching failed (non-fatal)");
+    }
+  }
 });
 
 urteileSyncWorker.on("failed", (job, err) => {

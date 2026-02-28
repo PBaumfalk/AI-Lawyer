@@ -10,6 +10,7 @@ import {
   Clock,
   UserMinus,
   FileWarning,
+  Scale,
   CheckCircle2,
   Bell,
   ExternalLink,
@@ -49,6 +50,11 @@ const ALERT_TYPE_CONFIG: Record<
     icon: FileWarning,
     label: "Fehlende Dokumente",
     color: "text-sky-600 dark:text-sky-400",
+  },
+  NEUES_URTEIL: {
+    icon: Scale,
+    label: "Neues Urteil",
+    color: "text-violet-600 dark:text-violet-400",
   },
 };
 
@@ -128,6 +134,7 @@ const TYPE_CHIPS = [
   { value: "AKTE_INAKTIV", label: "Inaktive Akte" },
   { value: "BETEILIGTE_FEHLEN", label: "Fehlende Beteiligte" },
   { value: "DOKUMENT_FEHLT", label: "Fehlende Dokumente" },
+  { value: "NEUES_URTEIL", label: "Neues Urteil" },
 ] as const;
 
 const PRIORITY_CHIPS = [

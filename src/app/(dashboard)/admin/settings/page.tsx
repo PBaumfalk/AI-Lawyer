@@ -229,6 +229,42 @@ function SettingField({
               )}
             </Button>
           </>
+        ) : setting.type === "number" &&
+          setting.key === "scanner.neues_urteil_threshold" ? (
+          <>
+            <div className="flex items-center gap-3 w-64">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                Lockerer
+              </span>
+              <input
+                type="range"
+                min={setting.min ?? 0.5}
+                max={setting.max ?? 0.95}
+                step={0.01}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-violet-600"
+              />
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                Strenger
+              </span>
+            </div>
+            <span className="text-sm font-mono font-medium w-12 text-center">
+              {value}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onSave}
+              disabled={!isDirty || isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+            </Button>
+          </>
         ) : setting.type === "number" ? (
           <>
             <Input

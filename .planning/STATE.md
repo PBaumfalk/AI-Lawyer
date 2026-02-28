@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.3
 milestone_name: Kanzlei-Collaboration
 status: unknown
-last_updated: "2026-02-28T17:33:47.000Z"
+last_updated: "2026-02-28T19:19:30.000Z"
 progress:
   total_phases: 11
   completed_phases: 10
-  total_plans: 32
-  completed_plans: 32
+  total_plans: 33
+  completed_plans: 33
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 28 of 32 (Falldatenblaetter Schema + Templates)
-Plan: 3 of 3 in current phase (COMPLETE)
+Plan: 4 of 4 in current phase (COMPLETE)
 Status: Phase Complete
-Last activity: 2026-02-28 -- completed 28-03 (Template UI)
+Last activity: 2026-02-28 -- completed 28-04 (Admin Visibility Fix)
 
 Progress: [##........] 20% (v0.3: 1/5 phases)
 
@@ -50,6 +50,7 @@ Progress: [##........] 20% (v0.3: 1/5 phases)
 - Trend: Stable
 | Phase 28 P02 | 4min | 2 tasks | 7 files |
 | Phase 28 P03 | 6min | 2 tasks | 7 files |
+| Phase 28 P04 | 1min | 1 task | 1 file |
 
 ## Accumulated Context
 
@@ -67,6 +68,7 @@ Recent decisions affecting current work:
 - [28-02]: Added template:approved/template:rejected to NotificationType union for type safety
 - [28-03]: Extracted shared TemplateBuilder component for new/edit pages -- props-based mode switching
 - [28-03]: Used inline field editor (not modal) for Gruppen-first builder UX
+- [28-04]: Empty where-clause for ADMIN branch (no filter) -- simplest bypass, matches [id]/route.ts pattern
 
 ### Pending Todos
 
@@ -83,5 +85,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 28-03-PLAN.md (Template UI) -- Phase 28 complete
+Stopped at: Completed 28-04-PLAN.md (Admin Visibility Fix) -- Phase 28 gap closure complete
 Resume file: None

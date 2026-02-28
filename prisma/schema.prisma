@@ -298,6 +298,14 @@ enum MusterNerStatus {
   REJECTED_PII_DETECTED
 }
 
+enum FalldatenTemplateStatus {
+  ENTWURF
+  EINGEREICHT
+  GENEHMIGT
+  ABGELEHNT
+  STANDARD
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Kanzlei {
@@ -415,6 +423,10 @@ model User {
   // Phase 12: RAG relations
   akteNormen    AkteNorm[] @relation("AkteNormUser")
   musterUploads Muster[]   @relation("MusterUploads")
+
+  // Phase 28: Falldatenblaetter
+  falldatenTemplatesErstellt  FalldatenTemplate[]  @relation("FalldatenTemplateErsteller")
+  falldatenTemplatesGeprueft  FalldatenTemplate[]  @relation("FalldatenTemplatePruefer")
 
   @@map("users")
 }
@@ -698,7 +710,9 @@ model Akte {
   status           AkteStatus  @default(OFFEN)
   gegenstandswert  Decimal?    @db.Decimal(12, 2)
   // Custom case data (JSON Schema based, per Sachgebiet)
-  falldaten        Json?
+  falldaten            Json?
+  falldatenTemplateId  String?
+  falldatenTemplate    FalldatenTemplate?  @relation(fields: [falldatenTemplateId], references: [id])
   notizen          String?     @db.Text
   // Assigned staff
   anwaltId         String?
@@ -2063,4 +2077,33 @@ model SchriftsatzRetrievalLog {
   @@index([schriftsatzId])
   @@index([createdAt])
   @@map("schriftsatz_retrieval_logs")
+}
+
+// --- Falldatenblaetter (Phase 28) ---
+
+model FalldatenTemplate {
+  id              String                   @id @default(cuid())
+  name            String
+  beschreibung    String?                  @db.Text
+  sachgebiet      Sachgebiet?
+  schema          Json                     // { felder: FalldatenFeld[] }
+  version         Int                      @default(1)
+
+  status          FalldatenTemplateStatus  @default(ENTWURF)
+  erstelltVonId   String
+  erstelltVon     User                     @relation("FalldatenTemplateErsteller", fields: [erstelltVonId], references: [id])
+  geprueftVonId   String?
+  geprueftVon     User?                    @relation("FalldatenTemplatePruefer", fields: [geprueftVonId], references: [id])
+  geprueftAt      DateTime?
+  ablehnungsgrund String?                  @db.Text
+
+  akten           Akte[]                   // Reverse relation for Akte.falldatenTemplate
+
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@index([status])
+  @@index([sachgebiet])
+  @@index([erstelltVonId])
+  @@map("falldaten_templates")
 }

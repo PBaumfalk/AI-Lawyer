@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
-status: unknown
-last_updated: "2026-02-28T09:17:07.751Z"
+status: in-progress
+last_updated: "2026-02-28T10:30:11Z"
 progress:
   total_phases: 18
   completed_phases: 17
-  total_plans: 47
-  completed_plans: 47
+  total_plans: 50
+  completed_plans: 48
 ---
 
 # Project State
@@ -18,22 +18,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail.
-**Current focus:** v0.2 Helena Agent — Phase 25 complete, ready for Phase 26
+**Current focus:** v0.2 Helena Agent — Phase 26 in progress (1/3 plans done)
 
 ## Current Position
 
-Phase: 25 of 26 (Helena Memory)
-Plan: 1 of 1 in current phase
-Status: Phase 25 complete (1/1 plans done), ready for Phase 26
-Last activity: 2026-02-28 — Completed 25-01 Helena Memory Service
+Phase: 26 of 26 (Activity Feed UI + QA-Gates)
+Plan: 2 of 3 in current phase
+Status: Phase 26 in progress (1/3 plans done)
+Last activity: 2026-02-28 — Completed 26-01 Activity Feed UI
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 72 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 17/20
+- v0.2 plans: 18/20
 
 **By Phase (v0.2):**
 
@@ -47,7 +47,7 @@ Progress: [█████████░] 85%
 | 23.1. Integration Wiring Fixes | 3/3 | 9min | 3min |
 | 24. Scanner + Alerts | 2/2 | 13min | 6.5min |
 | 25. Helena Memory | 1/1 | 5min | 5min |
-| 26. Activity Feed UI + QA-Gates | 0/3 | - | - |
+| 26. Activity Feed UI + QA-Gates | 1/3 | 5min | 5min |
 
 ## Accumulated Context
 
@@ -126,6 +126,10 @@ Recent decisions affecting v0.2:
 - [Phase 25]: formatMemoryForPrompt caps at ~2000 tokens (~7000 chars) with summary truncation
 - [Phase 25]: Backward-compatible memory type detection: check for 'summary' string field to distinguish structured vs legacy
 - [Phase 25]: Memory injected before pinned normen in ki-chat system prompt for proper context layering
+- [Phase 26]: Feed API uses requireAkteAccess from @/lib/rbac (consistent with existing route patterns)
+- [Phase 26]: Polymorphic feed entry renders all 8 AktenActivityTyp variants with expand/collapse
+- [Phase 26]: Helena attribution via user===null check; Bot icon + brand blue border for drafts, severity borders for alerts
+- [Phase 26]: Feed absorbs 8 former tabs; akte-detail-tabs.tsx reduced from 921 to 152 lines (4 tabs: Feed+Dokumente+Kalender+Finanzen)
 
 ### Pending Todos
 
@@ -143,5 +147,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 25-01-PLAN.md (Helena Memory Service)
-Resume file: .planning/phases/25-helena-memory/25-01-SUMMARY.md
+Stopped at: Completed 26-01-PLAN.md (Activity Feed UI)
+Resume file: .planning/phases/26-activity-feed-ui-qa-gates/26-01-SUMMARY.md

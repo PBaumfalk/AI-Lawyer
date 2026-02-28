@@ -4,6 +4,7 @@ import { createLogger } from "@/lib/logger";
 import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerUrteileSyncJob, registerScannerJob, ocrQueue } from "@/lib/queue/queues";
 import { processMusterIngestionJob, processMusterIngestPending, type MusterIngestionJobData } from "@/lib/queue/processors/muster-ingestion.processor";
 import { seedAmtlicheFormulare } from "@/lib/muster/seed-amtliche";
+import { seedFalldatenTemplates } from "@/lib/falldaten/seed-templates";
 import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.processor";
 import { processFristReminders } from "@/workers/processors/frist-reminder";
 import { initializeDefaults, getSettingTyped } from "@/lib/settings/service";
@@ -951,6 +952,13 @@ async function startup() {
     await seedAmtlicheFormulare();
   } catch (err) {
     log.warn({ err }, "Failed to seed amtliche Formulare (non-fatal)");
+  }
+
+  // Seed Falldaten STANDARD templates on first boot (idempotent via SystemSetting)
+  try {
+    await seedFalldatenTemplates();
+  } catch (err) {
+    log.warn({ err }, "Failed to seed Falldaten templates (non-fatal)");
   }
 
   // Re-queue documents that previously failed OCR (e.g. due to Stirling-PDF being unavailable).

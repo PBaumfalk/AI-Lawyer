@@ -162,9 +162,32 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- Next milestone scope TBD — use /gsd:new-milestone -->
+<!-- v0.3 scope — defined 2026-02-28 -->
 
-(No active requirements — run `/gsd:new-milestone` to define next milestone scope)
+**Internes Messaging:**
+- [ ] Akten-bezogene Threads (Case Discussions direkt in Akte-Detail)
+- [ ] Allgemeine Kanäle (Kanzlei-weit: Orga, News, frei erstellbar)
+- [ ] @Mentions mit In-App-Benachrichtigungen
+- [ ] Echtzeit-Zustellung via Socket.IO
+
+**SCAN-05 Neu-Urteil-Check:**
+- [ ] Cross-Akte Semantic Search (neue RSS-Urteile gegen aktive Akten)
+- [ ] Relevanz-Alert im bestehenden Alert-System
+
+**Falldatenblaetter:**
+- [ ] Strukturierte Checklisten/Formulare pro Falltyp (Mandantengespräch-Leitfaden)
+- [ ] User erstellt Template → reicht beim Admin ein → Admin prüft/genehmigt → wird Standardfall
+- [ ] Helena befüllt existierende Falldatenblaetter automatisch aus Akte-Daten
+- [ ] Helena schlägt neue Falldatenblatt-Templates basierend auf Fallmustern vor
+
+## Current Milestone: v0.3 Kanzlei-Collaboration
+
+**Goal:** Interne Kommunikation (Echtzeit-Messaging mit Akten-Bezug), proaktive Rechtsprechungsüberwachung (SCAN-05), und strukturierte Fallaufnahme (Falldatenblaetter mit Helena-Integration).
+
+**Target features:**
+- Internes Messaging (Slack-Style Kanäle + Akten-Threads, @Mentions, Echtzeit)
+- SCAN-05 Neu-Urteil-Check (RSS-Urteile → Cross-Akte Relevanz → Alert)
+- Falldatenblaetter (Checklisten pro Falltyp, Community-Workflow, Helena befüllt + schlägt vor)
 
 ## Future (post v0.1)
 
@@ -287,9 +310,7 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, helenaT
 - **v0.1 Helena RAG** — 7 phases, 19 plans (2026-02-27)
 - **v0.2 Helena Agent** — 10 phases, 23 plans (2026-02-28)
 
-**Next:** Run `/gsd:new-milestone` to define v0.3 scope.
-
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
 ---
-*Last updated: 2026-02-28 after v0.2 milestone completion*
+*Last updated: 2026-02-28 after v0.3 milestone start*

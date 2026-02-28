@@ -46,6 +46,14 @@ export async function processScanner(): Promise<ScanResult> {
       "scanner.required_documents",
       { default: ["Vollmacht"] }
     ),
+    neuesUrteilEnabled: await getSettingTyped<boolean>(
+      "scanner.neues_urteil_enabled",
+      true
+    ),
+    neuesUrteilThreshold: await getSettingTyped<number>(
+      "scanner.neues_urteil_threshold",
+      0.72
+    ),
   };
 
   if (!config.enabled) {

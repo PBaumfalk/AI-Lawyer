@@ -29,4 +29,6 @@ export interface ScannerConfig {
   escalation3dEnabled: boolean; // default: true
   escalation7dEnabled: boolean; // default: true
   requiredDocuments: Record<string, string[]>; // Sachgebiet -> document names
+  neuesUrteilEnabled: boolean; // default: true
+  neuesUrteilThreshold: number; // default: 0.72
 }

@@ -225,6 +225,22 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     category: "scanner",
     label: "Erwartete Dokumente pro Sachgebiet (JSON)",
   },
+  {
+    key: "scanner.neues_urteil_enabled",
+    value: "true",
+    type: "boolean",
+    category: "scanner",
+    label: "Neu-Urteil-Check aktiviert",
+  },
+  {
+    key: "scanner.neues_urteil_threshold",
+    value: "0.72",
+    type: "number",
+    category: "scanner",
+    label: "Relevanz-Schwellenwert (Cosine Similarity)",
+    min: 0.50,
+    max: 0.95,
+  },
 
   // beA category
   {

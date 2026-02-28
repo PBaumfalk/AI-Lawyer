@@ -726,6 +726,10 @@ model Akte {
   geaendert        DateTime    @updatedAt
   archiviert       DateTime?
 
+  // Phase 30: Summary embedding for Neu-Urteil matching (SCAN-05)
+  summaryEmbedding     Unsupported("vector(1024)")?
+  summaryEmbeddingAt   DateTime?  // Last embedding refresh timestamp
+
   // Relations
   beteiligte        Beteiligter[]
   dokumente         Dokument[]

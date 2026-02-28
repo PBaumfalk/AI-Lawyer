@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
-import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerUrteileSyncJob, registerScannerJob, ocrQueue } from "@/lib/queue/queues";
+import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerAkteEmbeddingJob, registerUrteileSyncJob, registerScannerJob, ocrQueue } from "@/lib/queue/queues";
 import { processMusterIngestionJob, processMusterIngestPending, type MusterIngestionJobData } from "@/lib/queue/processors/muster-ingestion.processor";
 import { seedAmtlicheFormulare } from "@/lib/muster/seed-amtliche";
 import { seedFalldatenTemplates } from "@/lib/falldaten/seed-templates";
@@ -25,6 +25,7 @@ import { processNerPiiJob, type NerPiiJobData, recoverStuckNerJobs } from "@/lib
 import { processUrteileSyncJob } from "@/lib/queue/processors/urteile-sync.processor";
 import { processHelenaTask, type HelenaTaskJobData } from "@/lib/queue/processors/helena-task.processor";
 import { processScanner } from "@/workers/processors/scanner";
+import { processAkteEmbeddingJob } from "@/lib/queue/processors/akte-embedding.processor";
 import { prisma } from "@/lib/db";
 
 const log = createLogger("worker");
@@ -707,6 +708,50 @@ helenaTaskWorker.on("error", (err) => {
 workers.push(helenaTaskWorker);
 log.info("[Worker] helena-task processor registered");
 
+// ─── Akte-Embedding Queue Worker ───────────────────────────────────────────
+
+const akteEmbeddingWorker = new Worker(
+  "akte-embedding",
+  async () => processAkteEmbeddingJob(),
+  {
+    connection,
+    concurrency: 1, // Sequential Ollama calls — avoids GPU contention
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+akteEmbeddingWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, result: job.returnvalue },
+    "Akte embedding refresh completed"
+  );
+});
+
+akteEmbeddingWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, err: err.message, attemptsMade: job.attemptsMade },
+    "Akte embedding refresh failed"
+  );
+
+  socketEmitter.to("role:ADMIN").emit("notification", {
+    type: "job:failed",
+    title: "Akte-Embedding-Refresh fehlgeschlagen",
+    message: `Akte-Embedding-Refresh fehlgeschlagen: ${err.message}`,
+    data: { jobId: job.id, queue: "akte-embedding" },
+  });
+});
+
+akteEmbeddingWorker.on("error", (err) => {
+  log.error({ err }, "Akte embedding worker error");
+});
+
+workers.push(akteEmbeddingWorker);
+log.info("[Worker] akte-embedding processor registered");
+
 // ─── Scanner Queue Worker ──────────────────────────────────────────────────
 
 const scannerWorker = new Worker(
@@ -860,6 +905,16 @@ async function startup() {
       WITH (m = 16, ef_construction = 64)
     `);
     log.info("pgvector extension and HNSW index ensured");
+
+    // Phase 30: Akte summary embedding column + HNSW index (idempotent)
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE akten ADD COLUMN IF NOT EXISTS "summaryEmbedding" vector(1024);
+      ALTER TABLE akten ADD COLUMN IF NOT EXISTS "summaryEmbeddingAt" TIMESTAMP;
+      CREATE INDEX IF NOT EXISTS akten_summary_embedding_hnsw
+        ON akten USING hnsw ("summaryEmbedding" vector_cosine_ops)
+        WITH (m = 16, ef_construction = 64);
+    `);
+    log.info("Akte summary embedding column and HNSW index ensured");
   } catch (err) {
     log.warn({ err }, "Failed to ensure pgvector extension/index (non-fatal)");
   }
@@ -891,6 +946,14 @@ async function startup() {
     log.info("Gesetze sync job registered (02:00 Europe/Berlin daily)");
   } catch (err) {
     log.warn({ err }, "Failed to register Gesetze sync job (non-fatal)");
+  }
+
+  // Register daily Akte embedding refresh cron job (02:30 — after Gesetze sync, before Urteile sync)
+  try {
+    await registerAkteEmbeddingJob();
+    log.info("Akte embedding refresh job registered (02:30 Europe/Berlin daily)");
+  } catch (err) {
+    log.warn({ err }, "Failed to register Akte embedding job (non-fatal)");
   }
 
   // Register daily Urteile sync cron job (03:00 — one hour after Gesetze sync)
@@ -1011,7 +1074,7 @@ async function startup() {
         "test", "frist-reminder", "email-send", "email-sync",
         "document-ocr", "document-preview", "document-embedding",
         "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync", "ner-pii",
-        "urteile-sync", "muster-ingestion", "helena-task", "scanner",
+        "urteile-sync", "muster-ingestion", "helena-task", "akte-embedding", "scanner",
       ],
       fristScanZeit: scanZeit,
     },

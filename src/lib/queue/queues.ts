@@ -146,6 +146,16 @@ export const nerPiiQueue = new Queue("ner-pii", {
   },
 });
 
+/** Akte-embedding queue for nightly summary embedding refresh (SCAN-05) */
+export const akteEmbeddingQueue = new Queue("akte-embedding", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    attempts: 1,
+    removeOnComplete: { age: 86_400 },   // 24h
+    removeOnFail: { age: 604_800 },      // 7 days
+  },
+});
+
 /** Urteile-sync queue for daily BMJ federal courts RSS ingestion cron */
 export const urteileSyncQueue = new Queue("urteile-sync", {
   connection: getQueueConnection(),
@@ -218,6 +228,7 @@ export const ALL_QUEUES: Queue[] = [
   musterIngestionQueue,
   helenaTaskQueue,
   scannerQueue,
+  akteEmbeddingQueue,
 ];
 
 /**
@@ -314,6 +325,32 @@ export async function registerGesetzeSyncJob(
     },
     {
       name: "sync-gesetze",
+      data: {},
+      opts: {
+        removeOnComplete: { count: 10 },
+        removeOnFail: { count: 20 },
+      },
+    }
+  );
+}
+
+/**
+ * Register the daily Akte embedding refresh cron job (SCAN-05).
+ * Runs at 02:30 Europe/Berlin — after Gesetze sync (02:00), before Urteile sync (03:00).
+ *
+ * @param cronPattern - Cron expression (default: "30 2 * * *" = 02:30 daily)
+ */
+export async function registerAkteEmbeddingJob(
+  cronPattern = "30 2 * * *"
+): Promise<void> {
+  await akteEmbeddingQueue.upsertJobScheduler(
+    "akte-embedding-daily",
+    {
+      pattern: cronPattern,
+      tz: "Europe/Berlin",
+    },
+    {
+      name: "refresh-akte-embeddings",
       data: {},
       opts: {
         removeOnComplete: { count: 10 },

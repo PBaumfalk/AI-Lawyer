@@ -1,3 +1,16 @@
+---
+gsd_state_version: 1.0
+milestone: v0.3
+milestone_name: Kanzlei-Collaboration
+status: unknown
+last_updated: "2026-02-28T17:26:18.995Z"
+progress:
+  total_phases: 11
+  completed_phases: 9
+  total_plans: 32
+  completed_plans: 31
+---
+
 # Project State
 
 ## Project Reference
@@ -10,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 28 of 32 (Falldatenblaetter Schema + Templates)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-02-28 -- completed 28-01 (Schema + Seed)
+Last activity: 2026-02-28 -- completed 28-02 (API Routes)
 
 Progress: [..........] 0% (v0.3: 0/5 phases)
 
@@ -35,6 +48,7 @@ Progress: [..........] 0% (v0.3: 0/5 phases)
 **Recent Trend:**
 - Last milestone (v0.2): 23 plans in 2 days
 - Trend: Stable
+| Phase 28 P02 | 4min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -48,6 +62,8 @@ Recent decisions affecting current work:
 - [v0.3]: Dropped separate cross-feature integration phase -- MSG-07 covers @Helena in channels
 - [28-01]: No @@unique on [sachgebiet, status] -- STANDARD uniqueness enforced at application layer
 - [28-01]: FalldatenTemplate seed follows seedAmtlicheFormulare pattern (version guard + ADMIN lookup)
+- [28-02]: Used createNotification service helper for approve/reject notifications (DB + Socket.IO in one call)
+- [28-02]: Added template:approved/template:rejected to NotificationType union for type safety
 
 ### Pending Todos
 
@@ -64,5 +80,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 28-01-PLAN.md (Schema + Seed)
+Stopped at: Completed 28-02-PLAN.md (API Routes)
 Resume file: None

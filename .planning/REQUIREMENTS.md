@@ -11,9 +11,9 @@ Requirements for v0.3 Kanzlei-Collaboration milestone. Each maps to roadmap phas
 
 - [ ] **FD-01**: User can view and fill out a Falldatenblatt for an Akte based on its Sachgebiet
 - [ ] **FD-02**: User can see completeness percentage for each Falldatenblatt on an Akte
-- [ ] **FD-03**: User can create a custom Falldatenblatt template with configurable fields (Text, Datum, Dropdown, Checkbox, Zahl, Textbereich, Mehrfachauswahl)
-- [ ] **FD-04**: User can submit a custom template to Admin for review
-- [ ] **FD-05**: Admin can approve or reject submitted templates
+- [x] **FD-03**: User can create a custom Falldatenblatt template with configurable fields (Text, Datum, Dropdown, Checkbox, Zahl, Textbereich, Mehrfachauswahl)
+- [x] **FD-04**: User can submit a custom template to Admin for review
+- [x] **FD-05**: Admin can approve or reject submitted templates
 - [x] **FD-06**: Approved templates appear as available Standardfaelle for all users
 - [x] **FD-07**: Existing 10 Sachgebiet schemas are migrated as seed templates in DB (single source of truth)
 
@@ -80,9 +80,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | FD-01 | Phase 29 | Pending |
 | FD-02 | Phase 29 | Pending |
-| FD-03 | Phase 28 | Pending |
-| FD-04 | Phase 28 | Pending |
-| FD-05 | Phase 28 | Pending |
+| FD-03 | Phase 28 | Complete |
+| FD-04 | Phase 28 | Complete |
+| FD-05 | Phase 28 | Complete |
 | FD-06 | Phase 28 | Complete |
 | FD-07 | Phase 28 | Complete |
 | SCAN-01 | Phase 30 | Pending |

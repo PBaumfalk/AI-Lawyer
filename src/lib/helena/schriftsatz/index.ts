@@ -27,6 +27,7 @@ import {
 import { getKlageartDefinition } from "./klageart-registry";
 import { SchriftsatzSchema } from "./schemas";
 import { notifyDraftCreated } from "@/lib/helena/draft-notification";
+import { createDraftActivity } from "@/lib/helena/draft-activity";
 import { logRetrieval } from "@/lib/helena/qa/retrieval-log";
 import { getModelForTier } from "../complexity-classifier";
 
@@ -299,6 +300,15 @@ export async function runSchriftsatzPipeline(
       { id: draft.id, akteId, userId, typ: "DOKUMENT", titel: draft.titel },
       akteAnwaltId,
     ).catch(() => {});
+
+    // Fire-and-forget: activity feed entry for inline draft review
+    createDraftActivity(prisma, {
+      akteId,
+      draftId: draft.id,
+      draftTitel: draft.titel,
+      draftInhalt: markdown,
+      draftTyp: "DOKUMENT",
+    }).catch(() => {});
 
     // QA-04: Log retrieval audit trail for this Schriftsatz draft
     try {

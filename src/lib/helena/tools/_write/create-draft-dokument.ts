@@ -10,6 +10,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import type { ToolContext, ToolResult } from "../types";
 import { notifyDraftCreated } from "@/lib/helena/draft-notification";
+import { createDraftActivity } from "@/lib/helena/draft-activity";
 
 export function createCreateDraftDokumentTool(ctx: ToolContext) {
   return tool({
@@ -65,6 +66,15 @@ export function createCreateDraftDokumentTool(ctx: ToolContext) {
         { id: draft.id, akteId: targetAkteId, userId: ctx.userId, typ: draft.typ, titel: draft.titel },
         akteAnwaltId,
       ).catch(() => {});
+
+      // Fire-and-forget: activity feed entry for inline draft review
+      createDraftActivity(ctx.prisma, {
+        akteId: targetAkteId,
+        draftId: draft.id,
+        draftTitel: draft.titel,
+        draftInhalt: inhalt,
+        draftTyp: draft.typ,
+      }).catch(() => {});
 
       return {
         data: {

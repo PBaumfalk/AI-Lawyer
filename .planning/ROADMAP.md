@@ -5,7 +5,7 @@
 - ✅ **v3.4 Full-Featured Kanzleisoftware** — Phases 1-9 (shipped 2026-02-25)
 - ✅ **v3.5 Production Ready** — Phases 10-11 (shipped 2026-02-26)
 - ✅ **v0.1 Helena RAG** — Phases 12-18 (shipped 2026-02-27)
-- 🚧 **v0.2 Helena Agent** — Phases 19-26 (in progress)
+- 🚧 **v0.2 Helena Agent** — Phases 19-27 (in progress)
 
 ## Phases
 
@@ -73,6 +73,7 @@ See: `milestones/v0.1-ROADMAP.md` for full phase details.
 - [x] **Phase 24: Scanner + Alerts** - Background scanner cron, 6 alert types, deduplication, alert-center, Socket.IO push (completed 2026-02-28)
 - [x] **Phase 25: Helena Memory** - Per-Akte context storage, auto-refresh, DSGVO cascade delete (completed 2026-02-28)
 - [x] **Phase 26: Activity Feed UI + QA-Gates** - Akte-Detail feed umbau, composer, alert-center widget, QA goldset, retrieval metrics, audit trail (completed 2026-02-28)
+- [ ] **Phase 27: Activity Feed + QA Pipeline Wiring Fixes** - Fix inline draft review API paths, wire AktenActivity for HELENA_DRAFT, connect logRetrieval() to Schriftsatz pipeline
 
 ## Phase Details
 
@@ -215,6 +216,21 @@ Plans:
 - [ ] 26-02: Feed Composer with @Helena tagging, Alert-Center dashboard widget, task progress display
 - [ ] 26-03: QA goldset (>=20 queries Arbeitsrecht), retrieval metrics (Recall@k, MRR, hallucination check), retrieval log per draft, release gates, no-PII-in-logs
 
+### Phase 27: Activity Feed + QA Pipeline Wiring Fixes
+**Goal**: Close 3 cross-phase integration gaps found by v0.2 audit — fix inline draft review API paths, create AktenActivity entries for Helena drafts, and wire logRetrieval() into the Schriftsatz pipeline
+**Depends on**: Phase 26
+**Requirements**: DRFT-02, DRFT-03, DRFT-04, UI-05, UI-06, TASK-03, QA-04, QA-06, QA-07
+**Gap Closure:** Closes integration gaps from v0.2 milestone audit
+**Success Criteria** (what must be TRUE):
+  1. DraftReviewActions in activity-feed-entry.tsx calls `PATCH /api/helena/drafts/${id}` with `{ action }` body — accept/reject/edit work from the feed (no 404s)
+  2. All 5 draft creation sites (4 write tools + schriftsatz/index.ts) create an `AktenActivity(typ="HELENA_DRAFT")` — drafts appear in the chronological activity feed
+  3. `runSchriftsatzPipeline()` calls `logRetrieval()` after draft creation — `SchriftsatzRetrievalLog` table contains real data
+  4. QA dashboard no longer shows "KEINE DATEN" when a Schriftsatz has been generated
+**Plans**: TBD
+
+Plans:
+- [ ] 27-01: Fix DraftReviewActions API paths, add AktenActivity creation to draft write tools, wire logRetrieval() into Schriftsatz pipeline
+
 ## Progress
 
 **Execution Order:**
@@ -231,6 +247,7 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 -> 23.1 -> 24 + 25 (parallel-eligible, 
 | 24. Scanner + Alerts | 2/2 | Complete    | 2026-02-28 | - |
 | 25. Helena Memory | 1/1 | Complete    | 2026-02-28 | - |
 | 26. Activity Feed UI + QA-Gates | 3/3 | Complete    | 2026-02-28 | - |
+| 27. Activity Feed + QA Pipeline Wiring | 0/1 | Planned | - | - |
 
 ---
 *Roadmap created: 2026-02-27*

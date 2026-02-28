@@ -29,16 +29,16 @@
 
 - [x] **TASK-01**: @Helena-Tagging in Notiz/Kommentar-Feldern wird als HelenaTask geparst und in die Queue eingestellt
 - [x] **TASK-02**: HelenaTask Prisma-Modell mit Status-Flow (PENDING → RUNNING → DONE / FAILED / WAITING_APPROVAL)
-- [x] **TASK-03**: HelenaTask speichert vollständigen Agent-Trace (Gedanken + Tool-Aufrufe als JSON steps[])
+- [ ] **TASK-03**: HelenaTask speichert vollständigen Agent-Trace (Gedanken + Tool-Aufrufe als JSON steps[])
 - [x] **TASK-04**: Task-Prioritäten (1-10) mit höherer Priorität für manuell zugewiesene Tasks vs Background-Scanner
 - [x] **TASK-05**: Task-Abbruch via UI setzt Status auf ABGEBROCHEN — Agent-Loop prüft zwischen Steps
 
 ### Draft-Approval (DRFT)
 
 - [x] **DRFT-01**: HelenaDraft Prisma-Modell (PENDING → ACCEPTED / REJECTED / EDITED) mit Typ (DOKUMENT, FRIST, NOTIZ, ALERT)
-- [x] **DRFT-02**: ENTWURF-Gate auf Prisma-Middleware-Ebene: Helena-erstellte Dokumente können nie status!=ENTWURF haben (BRAK 2025 / BRAO §43)
-- [x] **DRFT-03**: Draft-Anzeige im Akte-Feed visuell markiert ("Helena-Entwurf · ausstehend") mit Accept/Reject/Edit Buttons
-- [x] **DRFT-04**: Bei Ablehnung: Feedback-Feld wird in Helena-Kontext gespeichert (Lerneffekt für zukünftige Entwürfe)
+- [ ] **DRFT-02**: ENTWURF-Gate auf Prisma-Middleware-Ebene: Helena-erstellte Dokumente können nie status!=ENTWURF haben (BRAK 2025 / BRAO §43)
+- [ ] **DRFT-03**: Draft-Anzeige im Akte-Feed visuell markiert ("Helena-Entwurf · ausstehend") mit Accept/Reject/Edit Buttons
+- [ ] **DRFT-04**: Bei Ablehnung: Feedback-Feld wird in Helena-Kontext gespeichert (Lerneffekt für zukünftige Entwürfe)
 - [x] **DRFT-05**: Akzeptierter Draft wird automatisch als Dokument/Frist/Notiz in der Akte angelegt
 - [x] **DRFT-06**: Socket.IO Benachrichtigung an Zuständigen wenn Helena einen Draft erstellt hat
 
@@ -71,10 +71,10 @@
 - [x] **QA-01**: Goldset-Testkatalog mit ≥20 Queries (Arbeitsrecht: KSchG, Lohnklage, Abmahnung, EV, Mahnverfahren, Fristen, Kosten)
 - [x] **QA-02**: Retrieval-Metriken automatisch messbar: Recall@k, MRR, No-result-Rate
 - [x] **QA-03**: Halluzinations-Check: §-Referenzen und Aktenzeichen in Helena-Antworten werden gegen Retrieval-Chunks verifiziert (nicht LLM-fabricated)
-- [x] **QA-04**: Schriftsatz-Retrieval-Log pro Entwurf (schriftsatz_id, query_text, retrieval_belege[], prompt_version, modell)
+- [ ] **QA-04**: Schriftsatz-Retrieval-Log pro Entwurf (schriftsatz_id, query_text, retrieval_belege[], prompt_version, modell)
 - [x] **QA-05**: UI-Anzeige: "Helena hat X Normen, Y Urteile, Z Muster-Bausteine verwendet" mit aufklappbaren Quellen-Links
-- [x] **QA-06**: Release-Gates: Recall@5 Normen ≥0.85, Halluzinationsrate ≤0.05, Formale Vollständigkeit ≥0.90
-- [x] **QA-07**: Keine Mandantendaten in Logs (nur anonymisierte Query-Hashes für Metriken)
+- [ ] **QA-06**: Release-Gates: Recall@5 Normen ≥0.85, Halluzinationsrate ≤0.05, Formale Vollständigkeit ≥0.90
+- [ ] **QA-07**: Keine Mandantendaten in Logs (nur anonymisierte Query-Hashes für Metriken)
 
 ### Akte-Detail UI (UI)
 
@@ -82,8 +82,8 @@
 - [x] **UI-02**: Composer im Feed: Nutzer kann direkt im Feed Notizen schreiben und @Helena taggen
 - [x] **UI-03**: Helena vs Human Attribution: jeder Feed-Eintrag zeigt klar ob von Helena oder Mensch erstellt
 - [x] **UI-04**: Alert-Center Dashboard-Widget mit Badge-Count für ungelesene Alerts
-- [x] **UI-05**: Helena-Task-Status im Chat: Laufende Tasks zeigen Fortschritt (Step X von Y, aktuelles Tool)
-- [x] **UI-06**: Draft-Review inline im Feed: Accept/Reject/Edit ohne Seitenwechsel
+- [ ] **UI-05**: Helena-Task-Status im Chat: Laufende Tasks zeigen Fortschritt (Step X von Y, aktuelles Tool)
+- [ ] **UI-06**: Draft-Review inline im Feed: Accept/Reject/Edit ohne Seitenwechsel
 
 ## Future Requirements (v0.3+)
 
@@ -128,13 +128,13 @@
 | ORCH-07 | Phase 22 | Complete |
 | TASK-01 | Phase 21 | Complete |
 | TASK-02 | Phase 19 | Complete |
-| TASK-03 | Phase 21 | Complete |
+| TASK-03 | Phase 27 | Pending |
 | TASK-04 | Phase 21 | Complete |
 | TASK-05 | Phase 21 | Complete |
 | DRFT-01 | Phase 19 | Complete |
-| DRFT-02 | Phase 23 | Complete |
-| DRFT-03 | Phase 23 | Complete |
-| DRFT-04 | Phase 23 | Complete |
+| DRFT-02 | Phase 27 | Pending |
+| DRFT-03 | Phase 27 | Pending |
+| DRFT-04 | Phase 27 | Pending |
 | DRFT-05 | Phase 23 | Complete |
 | DRFT-06 | Phase 23 | Complete |
 | SCAN-01 | Phase 24 | Complete |
@@ -155,16 +155,16 @@
 | QA-01 | Phase 26 | Complete |
 | QA-02 | Phase 26 | Complete |
 | QA-03 | Phase 26 | Complete |
-| QA-04 | Phase 26 | Complete |
+| QA-04 | Phase 27 | Pending |
 | QA-05 | Phase 26 | Complete |
-| QA-06 | Phase 26 | Complete |
-| QA-07 | Phase 26 | Complete |
+| QA-06 | Phase 27 | Pending |
+| QA-07 | Phase 27 | Pending |
 | UI-01 | Phase 26 | Complete |
 | UI-02 | Phase 26 | Complete |
 | UI-03 | Phase 26 | Complete |
 | UI-04 | Phase 26 | Complete |
-| UI-05 | Phase 26 | Complete |
-| UI-06 | Phase 26 | Complete |
+| UI-05 | Phase 27 | Pending |
+| UI-06 | Phase 27 | Pending |
 
 **Coverage:**
 - v0.2 requirements: 53 total
@@ -173,4 +173,4 @@
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-02-27 after roadmap creation*
+*Last updated: 2026-02-28 after gap closure phase creation*

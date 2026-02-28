@@ -10,6 +10,7 @@ const adminNavigation = [
   { name: "System", href: "/admin/system" },
   { name: "Pipeline", href: "/admin/pipeline" },
   { name: "Muster", href: "/admin/muster" },
+  { name: "Falldaten", href: "/admin/falldaten-templates" },
   { name: "Dezernate", href: "/admin/dezernate" },
   { name: "Rollen", href: "/admin/rollen" },
   { name: "Audit-Trail", href: "/admin/audit-trail" },

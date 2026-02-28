@@ -1,0 +1,109 @@
+# Requirements: AI-Lawyer v0.3
+
+**Defined:** 2026-02-28
+**Core Value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt, Schriftsätze deterministisch entwirft und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
+
+## v0.3 Requirements
+
+Requirements for v0.3 Kanzlei-Collaboration milestone. Each maps to roadmap phases.
+
+### Falldatenblaetter
+
+- [ ] **FD-01**: User can view and fill out a Falldatenblatt for an Akte based on its Sachgebiet
+- [ ] **FD-02**: User can see completeness percentage for each Falldatenblatt on an Akte
+- [ ] **FD-03**: User can create a custom Falldatenblatt template with configurable fields (Text, Datum, Dropdown, Checkbox, Zahl, Textbereich, Mehrfachauswahl)
+- [ ] **FD-04**: User can submit a custom template to Admin for review
+- [ ] **FD-05**: Admin can approve or reject submitted templates
+- [ ] **FD-06**: Approved templates appear as available Standardfälle for all users
+- [ ] **FD-07**: Existing 10 Sachgebiet schemas are migrated as seed templates in DB (single source of truth)
+
+### SCAN-05 Neu-Urteil-Check
+
+- [ ] **SCAN-01**: System generates summary embedding per active Akte from case context
+- [ ] **SCAN-02**: After RSS-Urteil ingestion, system matches new Urteile against active Akten via semantic similarity
+- [ ] **SCAN-03**: User receives NEUES_URTEIL alert when a relevant Urteil is found
+- [ ] **SCAN-04**: Admin can configure relevance threshold via SystemSetting
+- [ ] **SCAN-05**: Alert includes Helena-generated briefing explaining why the Urteil is relevant
+
+### Internes Messaging
+
+- [ ] **MSG-01**: User can create a channel with name and optional description
+- [ ] **MSG-02**: User can join and leave channels
+- [ ] **MSG-03**: User can send and receive messages in a channel in real-time
+- [ ] **MSG-04**: User can discuss within an Akte-Thread (case-bound, inherits Akte RBAC)
+- [ ] **MSG-05**: User can @mention other users in messages, triggering in-app notification
+- [ ] **MSG-06**: User sees unread message count badges per channel
+- [ ] **MSG-07**: User can @Helena in a channel message to trigger a HelenaTask
+- [ ] **MSG-08**: User sees typing indicators when others are composing
+
+## Future Requirements
+
+Deferred to future milestones. Tracked but not in current roadmap.
+
+### Falldatenblaetter (Future)
+
+- **FD-F01**: Helena auto-fills Falldatenblatt from Akte documents via generateObject()
+- **FD-F02**: Helena suggests new Falldatenblatt templates based on frequent case patterns
+- **FD-F03**: Conditional field logic (show/hide fields based on other field values)
+- **FD-F04**: Falldatenblatt PDF export
+
+### SCAN-05 (Future)
+
+- **SCAN-F01**: Sachgebiet-aware relevance thresholds (per-Rechtsgebiet calibration)
+
+### Messaging (Future)
+
+- **MSG-F01**: Message editing with edit history (audit trail)
+- **MSG-F02**: Akte-Verlinkung in messages (#AZ-... auto-linking)
+- **MSG-F03**: Full-text message search via Meilisearch
+- **MSG-F04**: File sharing in channels via DMS
+
+## Out of Scope
+
+Explicitly excluded. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| External/client messaging | Mandantenportal scope, separate milestone |
+| Voice/video calls | WebRTC complexity, overkill for 5-person Kanzlei |
+| Message reactions | Low value for small team |
+| E2E encryption | Self-hosted behind VPN; TLS sufficient |
+| WYSIWYG drag-and-drop template builder | Simple structured form is sufficient for v0.3 |
+| Threaded replies within general channels | Akten-Threads cover primary threading need |
+| Helena reads chat messages (read-akte-chat tool) | Deferred, adds complexity without clear v0.3 value |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| FD-01 | — | Pending |
+| FD-02 | — | Pending |
+| FD-03 | — | Pending |
+| FD-04 | — | Pending |
+| FD-05 | — | Pending |
+| FD-06 | — | Pending |
+| FD-07 | — | Pending |
+| SCAN-01 | — | Pending |
+| SCAN-02 | — | Pending |
+| SCAN-03 | — | Pending |
+| SCAN-04 | — | Pending |
+| SCAN-05 | — | Pending |
+| MSG-01 | — | Pending |
+| MSG-02 | — | Pending |
+| MSG-03 | — | Pending |
+| MSG-04 | — | Pending |
+| MSG-05 | — | Pending |
+| MSG-06 | — | Pending |
+| MSG-07 | — | Pending |
+| MSG-08 | — | Pending |
+
+**Coverage:**
+- v0.3 requirements: 20 total
+- Mapped to phases: 0
+- Unmapped: 20 ⚠️
+
+---
+*Requirements defined: 2026-02-28*
+*Last updated: 2026-02-28 after initial definition*

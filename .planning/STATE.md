@@ -2,38 +2,37 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
-status: unknown
-last_updated: "2026-02-28T12:28:28.173Z"
+status: completed
+last_updated: "2026-02-28T13:00:00.000Z"
 progress:
-  total_phases: 20
-  completed_phases: 19
-  total_plans: 52
-  completed_plans: 52
+  total_phases: 10
+  completed_phases: 10
+  total_plans: 23
+  completed_plans: 23
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-27)
+See: .planning/PROJECT.md (updated 2026-02-28)
 
-**Core value:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail.
-**Current focus:** v0.2 Helena Agent -- Phase 27 complete (2/2 plans done). All v0.2 phases complete.
+**Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt, Schriftsätze deterministisch entwirft und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
+**Current focus:** v0.2 Helena Agent shipped. Planning next milestone.
 
 ## Current Position
 
-Phase: 27 of 27 (Activity Feed QA Pipeline Wiring)
-Plan: 2 of 2 in current phase
-Status: Phase 27 complete (2/2 plans done). v0.2 milestone complete.
-Last activity: 2026-02-28 -- Completed 27-01 Activity Feed + Pipeline Wiring
+Phase: All complete
+Plan: All complete
+Status: v0.2 milestone shipped 2026-02-28
+Last activity: 2026-02-28 — Milestone v0.2 archived
 
 Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 72 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 20/20
+- Total plans completed: 90 (v3.4: 38 + v3.5: 10 + v0.1: 19 + v0.2: 23)
 
 **By Phase (v0.2):**
 
@@ -54,113 +53,22 @@ Progress: [██████████] 100%
 
 ### Decisions
 
-All v0.1 decisions archived in STATE.md history.
-Recent decisions affecting v0.2:
-
-- Zero new npm packages — all agent capabilities built on existing AI SDK v4 + BullMQ + Prisma + Socket.IO
-- AI SDK stays on v4.3.19 — v5/v6 migration deferred to v0.3
-- Two execution modes: inline (5-step, HTTP) and background (20-step, BullMQ)
-- Schriftsatz uses deterministic generateObject pipeline, NOT free-form ReAct agent
-- ENTWURF gate must be Prisma middleware (not HTTP middleware) — BRAK 2025 compliance
-- lockDuration:120000 on helena-agent queue (default 30s would cause duplicate agent runs)
-- Strict Prisma enums for Helena Agent models (not strings like HelenaSuggestion)
-- JSON steps[] on HelenaTask for agent trace (avoid over-normalization)
-- @unique on HelenaMemory.akteId for one-memory-per-Akte upsert pattern
-- Named relations HelenaDraftUser/HelenaDraftReviewer for dual User FKs
-- ON DELETE CASCADE on all Helena model akteId FKs (DSGVO Art. 17)
-- Static import registry for Helena tools (not dynamic require) -- esbuild bundling compatibility
-- HelenaDraft.akteId non-nullable -- notes always require Akte context
-- create_draft_zeiterfassung uses HelenaDraftTyp.NOTIZ with meta.subtype (no ZEITERFASSUNG enum)
-- ToolSet generic type assertion for toolResults in onStepFinish -- AI SDK resolves execute return to never
-- Direct trackTokenUsage in orchestrator instead of wrapWithTracking -- aggregates across all steps
-- Stall force message injected as user role message for natural conversation flow
-- Rule-based complexity classifier (no LLM call) with German legal term patterns for mode/tier selection
-- Fail-open rate limiter: allow requests when Redis unavailable, log warning
-- Auto-escalation capped at 1 retry to prevent infinite loops on stall
-- Model name prefix convention (gpt*/claude* -> cloud) for tier-specific provider routing
-- ioredis mock uses class pattern (not vi.fn) for new Redis() constructor compatibility in vitest
-- generateText mock uses swappable generateTextMockImpl variable for per-test LLM behavior control
-- BullMQ priority inversion: Math.max(1, 10 - prioritaet) maps domain priority to BullMQ priority
-- HelenaTaskJobData exported from processor, imported as type in task-service (clean dependency direction)
-- In-process AbortController map for task cancellation (not Redis -- must be same process as agent)
-- lockDuration:120_000 on Worker instance (not queue) per BullMQ v5 best practice
-- Helena API uses requireAuth() + buildAkteAccessFilter() (consistent with existing route patterns)
-- No PRAKTIKANT check in Helena API -- role removed in Phase 8, all 4 existing roles can use @Helena
-- IntentResultSchema.rechtsgebiet aligns with Prisma Sachgebiet enum (VERKEHRSRECHT, INKASSO) for direct mapping
-- fillSlots() is pure function (no LLM, no DB) for deterministic behavior and easy testing
-- {{UPPER_SNAKE_CASE}} is the unified Platzhalter standard for all Schriftsatz output
-- Akte pre-fill populates all alias slots (PARTEI_A, ANTRAGSTELLER, BERUFUNGSKLAEGER, ABSENDER) from mandant/gegner
-- Abmahnung has custom section config (aussergerichtlich nature, no beweisangebote/anlagen/kosten)
-- ERV-Validator never hard-blocks draft creation -- warnings only, sorted by severity (KRITISCH/WARNUNG/INFO)
-- RAG context capped at 4000 chars per section to keep LLM prompts manageable
-- isSchriftsatzIntent is a fast heuristic (no LLM) -- pattern matching on filing terms + action verbs
-- Pipeline stores SchriftsatzSchema as HelenaDraft.meta JSON for downstream processing
-- NavItem extended with badgeKey for generic dynamic sidebar badge support (not Entwuerfe-specific)
-- Socket.IO banner refetch pattern: new draft events show banner, user clicks to reload (not auto-insert)
-- Keyboard shortcuts A/B/R skip text inputs via target.tagName check to avoid form conflicts
-- Schriftsatz routing is an early return in runHelenaAgent -- ReAct code path completely untouched
-- Akte owner fallback for notifications: anwaltId -> sachbearbeiterId (verantwortlichId does not exist in schema)
-- computeGkgFee * 3 for Klageverfahren court costs in Kosten section
-- Prisma $extends (not deprecated middleware) for ENTWURF gate -- Prisma 5 recommended pattern
-- ExtendedPrismaClient type exported from db.ts -- all Helena/finance modules use it instead of PrismaClient
-- PrismaTransactionClient type from db.ts for $extends-aware transaction type derivation
-- Defense-in-depth: explicit ENTWURF in acceptDraft tx + $extends gate as global safety net
-- Fail-open Redis draft lock: if Redis unavailable, returns success with warning
-- Auto-revise enqueue is non-blocking: failure logs but does not fail rejection
-- Undo window pattern: undoExpiresAt set on accept, checked on undo, 5s TTL
-
-- PendingSchriftsatz model with @@unique([userId, akteId]) for one pending pipeline per user per Akte
-- Lazy TTL check on read: auto-delete expired PendingSchriftsatz records when loaded
-- Fast keyword check for cancel intent (abbrechen/stop/cancel) -- no LLM round-trip needed
-- JSON type discriminator for Schriftsatz pipeline responses (schriftsatz_rueckfrage/complete/error/conflict)
-- [Phase 23.1]: Custom fetch wrapper on useChat for non-streaming JSON interception (not onResponse) -- prevents stream parser crash
-- [Phase 23.1]: HTML comment metadata (<!--schriftsatz:...-->) in message content for pipeline state preservation across useChat re-renders
-- [Phase 24]: Scanner is purely deterministic (no LLM) -- batch Prisma queries only for reliability
-- [Phase 24]: Alert dedup window is 24h per akteId+typ (not per userId) to prevent duplicate issue alerts across Vertreter
-- [Phase 24]: FRIST_KRITISCH gets Socket.IO push + notification but NOT email (frist-reminder.ts handles email)
-- [Phase 24]: DOKUMENT_FEHLT uses name-only matching (Dokument has no kategorie field) with Vollmacht special case
-- [Phase 24]: Progressive escalation uses meta fields (escalatedAt3d/escalatedAt7d) to prevent re-escalation
-- [Phase 24]: helena:alert-badge Socket.IO event carries exact count for direct badge set (no refetch needed)
-- [Phase 25]: loadOrRefresh service pattern: load from DB, check staleness, auto-regenerate via LLM, never throw
-- [Phase 25]: 5-minute in-memory cooldown prevents rapid-fire LLM memory regeneration during bulk operations
-- [Phase 25]: _meta field in HelenaMemory.content for change detection (dokumentCount, beteiligteCount, fristenCount)
-- [Phase 25]: formatMemoryForPrompt caps at ~2000 tokens (~7000 chars) with summary truncation
-- [Phase 25]: Backward-compatible memory type detection: check for 'summary' string field to distinguish structured vs legacy
-- [Phase 25]: Memory injected before pinned normen in ki-chat system prompt for proper context layering
-- [Phase 26]: Feed API uses requireAkteAccess from @/lib/rbac (consistent with existing route patterns)
-- [Phase 26]: Polymorphic feed entry renders all 8 AktenActivityTyp variants with expand/collapse
-- [Phase 26]: Helena attribution via user===null check; Bot icon + brand blue border for drafts, severity borders for alerts
-- [Phase 26]: Feed absorbs 8 former tabs; akte-detail-tabs.tsx reduced from 921 to 152 lines (4 tabs: Feed+Dokumente+Kalender+Finanzen)
-- [Phase 26]: requireRole("ADMIN") for QA API endpoints (consistent with existing admin routes)
-- [Phase 26]: Goldset as TypeScript fixture array (not DB) for version-controlled deterministic QA
-- [Phase 26]: SHA-256 query hashing for PII-safe retrieval metric storage (QA-07)
-- [Phase 26]: Release gate thresholds: Recall@5 >= 0.85, Halluzinationsrate <= 0.05, Vollstaendigkeit >= 0.90
-- [Phase 26]: RegExp.exec() loop pattern instead of matchAll() iterator for TS target compatibility
-- [Phase 26]: getSocketEmitter (Redis emitter) for API route socket events -- consistent with helena/alerts pattern (not getIO)
-- [Phase 26]: Banner refetch pattern for new feed entries (not auto-insert) -- avoids race conditions with server ordering
-- [Phase 26]: DraftReviewActions as separate sub-component with local state for edit/reject mode management
-- [Phase 26]: useHelenaTaskProgress hook for per-Akte Socket.IO task progress tracking
-- [Phase 27]: try-catch (not fire-and-forget .catch) for logRetrieval in Schriftsatz pipeline -- await for data integrity, catch for pipeline safety
-- [Phase 27]: getModelForTier(3) for model name in retrieval log -- cached call, no performance concern
-- [Phase 27]: createDraftActivity wraps try-catch internally -- callers use .catch(() => {}) for double safety
-- [Phase 27]: userId: null hardcoded in createDraftActivity for Helena attribution in feed
-- [Phase 27]: draftInhalt truncated to 200 chars in AktenActivity.inhalt for feed preview
+All v0.2 decisions archived in milestones/v0.2-ROADMAP.md.
 
 ### Pending Todos
 
-3 deferred from v0.1:
+Deferred from previous milestones:
 - Falldatenblaetter — deferred to post-v0.2
 - BI-Dashboard — deferred to post-v0.2
 - Export CSV/XLSX — deferred to post-v0.2
+- SCAN-05 (Neu-Urteil-Check) — deferred, requires cross-Akte semantic search
 
 ### Blockers/Concerns
 
-- Ollama qwen3.5:35b tool call format instability — smoke test every tool through full Ollama stack before shipping (Phase 20)
-- Schriftsatz section schemas need Anwalt review before Phase 22 ships (ZPO 253, 130)
-- Pin Ollama Docker image version before Phase 20 — tool call behavior is version-dependent
+None — milestone complete, ready for next milestone planning.
 
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 27-01-PLAN.md (Activity Feed + Pipeline Wiring) -- all Phase 27 plans complete
-Resume file: .planning/phases/27-activity-feed-qa-pipeline-wiring/27-01-SUMMARY.md
+Stopped at: v0.2 milestone completed and archived
+Resume file: N/A — run `/gsd:new-milestone` to start v0.3

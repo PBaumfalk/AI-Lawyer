@@ -145,6 +145,57 @@
 
 ---
 
+## Milestone: v0.2 — Helena Agent
+
+**Shipped:** 2026-02-28
+**Phases:** 10 (19-27 + 23.1) | **Plans:** 23 | **Tasks:** 53 | **Commits:** 131
+
+### What Was Built
+- ReAct Agent-Loop: 14 tools (9 read + 5 write), bounded execution (5/20 steps inline/background), Ollama response guard, token budget manager, complexity classifier, rate limiter — 46 tests pass
+- Deterministic Schriftsatz-Orchestrator: Intent-Router (Klageart/Stadium/Gerichtszweig), Slot-Filling mit automatischer Rueckfrage, RAG Assembly (4000 chars/section), ERV/beA-Validator, multi-turn via PendingSchriftsatz
+- @Helena Task-System: @-mention parsing, BullMQ helena-task queue (lockDuration:120s), Socket.IO progress, task abort, REST API
+- Draft-Approval Workflow: ENTWURF Prisma $extends gate (BRAK 2025), HelenaDraft lifecycle (accept/reject/edit), feedback-to-context, Socket.IO notifications, global draft inbox
+- Background-Scanner (BullMQ cron): Frist-Check, Inaktivitaets-Check, Anomalie-Check, Alert-Deduplizierung, Auto-Resolve, Eskalation, Alert-Center UI + Sidebar-Badge
+- Helena Memory: per-Akte Kontext (Zusammenfassung, Risiken, naechste Schritte), auto-refresh, DSGVO cascade delete, 5min cooldown
+- Activity Feed UI: Akte-Detail Feed replaces 8 tabs (921→152 LOC), Composer with @Helena tagging, Helena vs Human Attribution, inline Draft-Review
+- QA-Gates: Goldset (20 Queries Arbeitsrecht), Retrieval-Metriken (Recall@k, MRR), Halluzinations-Check, Release-Gates, Schriftsatz-Retrieval-Log
+
+### What Worked
+- **Zero new npm packages:** All agent capabilities (ReAct, tools, scanner, memory, QA) built entirely on existing AI SDK v4 + BullMQ + Prisma + Socket.IO — no dependency bloat
+- **Deterministic pipeline for Schriftsatz:** Using generateObject instead of free-form ReAct for legal filings gives predictable, Zod-validated output — right architectural choice for structured legal documents
+- **Defense-in-depth ENTWURF gate:** Prisma $extends (not HTTP middleware) enforces BRAK compliance at database level — cannot be bypassed by any code path
+- **Activity Feed consolidation:** Replacing 8 tabs with a single chronological feed (921→152 LOC) was both UX improvement and code simplification
+- **Milestone audit with gap-closure phases:** Phase 23.1 and Phase 27 closed integration gaps identified by audit — pattern from v3.4 still effective
+- **Rule-based complexity classifier:** No LLM call for mode/tier selection keeps routing fast and deterministic
+
+### What Was Inefficient
+- **2 gap-closure phases still needed (23.1 + 27):** Despite planning integration more carefully, cross-phase wiring gaps (notification in write tools, API paths, retrieval logging) were only caught by audit. 2 of 10 phases (20%) were gap-closure.
+- **SCAN-05 deferred without alternative:** Neu-Urteil-Check was planned but requires cross-Akte semantic search not yet built. Should have been identified as infeasible during requirements, not during implementation.
+- **TypeScript type mismatches accumulated:** helena/index.ts has ~5 pre-existing TS errors from StepUpdate adapter. These were known but not fixed during the milestone — accumulated tech debt.
+- **Release gate hardcodes:** QA dashboard shows metrics but gate evaluation hardcodes hallucination/Vollstaendigkeit to 0/pass until a goldset POST is actually executed. No automated goldset runner exists.
+
+### Patterns Established
+- **Prisma $extends for business rules:** Use $extends (not deprecated middleware) for domain-invariant constraints (ENTWURF gate, BRAK compliance). Prisma 5 recommended pattern.
+- **ExtendedPrismaClient type:** All modules importing Prisma use ExtendedPrismaClient from db.ts, not raw PrismaClient — ensures $extends behavior is always present.
+- **createDraftActivity helper:** Centralized AktenActivity creation for drafts — all 5 write tool sites + Schriftsatz pipeline use the same helper with try-catch safety.
+- **Banner refetch pattern:** New events trigger banner notification, user clicks to reload — avoids race conditions with server ordering for feeds and draft lists.
+- **PendingSchriftsatz for multi-turn:** @@unique([userId, akteId]) for one pending pipeline per user per Akte — clean conversation state for Rueckfragen.
+- **HTML comment metadata in message content:** <!--schriftsatz:...--> preserves pipeline state across useChat re-renders.
+
+### Key Lessons
+1. **Gap-closure phases are still needed at ~20%.** Despite more careful upfront planning, integration wiring still gets missed. Accept this as a consistent pattern and budget 1-2 gap-closure phases per milestone.
+2. **Requirements feasibility check is missing.** SCAN-05 was infeasible at requirements time (needs cross-Akte search). Add a "feasibility gate" during requirements definition: can this be built with current architecture?
+3. **Prisma $extends is the right pattern for business invariants.** ENTWURF gate proves that database-level enforcement is safer than any middleware approach. Apply to future invariants.
+4. **TypeScript errors should be fixed immediately.** Deferring helena/index.ts type fixes created persistent noise. Future milestones should include a "zero TS errors" constraint.
+5. **QA gates need automated runners.** Release gates are only meaningful if the goldset actually executes automatically (CI or manual script). The dashboard alone is insufficient.
+
+### Cost Observations
+- Model mix: ~35% opus (execution), ~50% sonnet (planning/research), ~15% haiku (verification/extraction)
+- Sessions: ~10 sessions across 2 days
+- Notable: 23 plans in 2 days (~5 min/plan avg). Zero new dependencies — all complexity was pure TypeScript on existing stack.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -154,6 +205,7 @@
 | v3.4 | ~15 | 13 | 38 | First milestone with GSD workflow; gap-closure phases proved effective |
 | v3.5 | ~5 | 2 | 10 | Design-token-first approach; scope reduction should happen at requirements time |
 | v0.1 | ~8 | 7 | 19 | 6-chain parallel ki-chat; integration checker caught cross-phase bug missed by phase verifiers |
+| v0.2 | ~10 | 10 | 23 | Zero new dependencies; gap-closure phases still ~20%; Prisma $extends for business invariants |
 
 ### Cumulative Quality
 
@@ -162,13 +214,16 @@
 | v3.4 | 207+ (Frist + RVG) | 64/64 | 7 | 5 (non-blocking) |
 | v3.5 | 207+ (unchanged) | 5/18 shipped (13 deferred) | 1 | 2 (font-heading, .glass alias — non-blocking) |
 | v0.1 | 207+ (unchanged) | 16/16 | 1 (+ integration check) | 2 (processUrteilNer dead code, NER attempts:1) |
+| v0.2 | 253+ (Frist + RVG + Helena 46) | 52/53 (1 deferred) | 2 (audit + re-audit) | 5 (TS errors, stub, taskId, gate hardcodes, SCAN-05) |
 
 ### Top Lessons (Verified Across Milestones)
 
-1. Plan integration wiring explicitly — gap-closure phases are effective but reactive
+1. Plan integration wiring explicitly — gap-closure phases are effective but reactive (~20% of phases across all milestones)
 2. Audit incrementally rather than only at milestone boundary
-3. Prisma schema as source of truth scales well across 65+ models
-4. Scope decisions belong at requirements time — mid-milestone removals create audit noise
+3. Prisma schema as source of truth scales well across 70+ models
+4. Scope decisions belong at requirements time — both mid-milestone removals and infeasible requirements create noise
 5. Design-token-first: define tokens before migrating components — makes page migrations mechanical
 6. Integration checker is non-negotiable — phase-level verification misses cross-phase wiring defects
 7. Coordinate cross-phase implementation decisions during planning — prevents dead code from independent choices
+8. Zero-dependency milestones are possible — v0.2 added major agent capabilities with zero new npm packages
+9. Prisma $extends for business invariants — database-level enforcement is safer than middleware

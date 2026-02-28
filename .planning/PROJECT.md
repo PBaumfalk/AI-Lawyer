@@ -2,11 +2,11 @@
 
 ## What This Is
 
-Eine vollständig browserbasierte Kanzleisoftware mit integrierter KI-Agentin ("Helena") für die Kanzlei Baumfalk, Dortmund. Vereint Aktenverwaltung, Dokumentenmanagement mit OnlyOffice (Co-Editing, Track Changes, Vorlagen, Briefkopf), BGB-konforme Fristenberechnung, vollständigen E-Mail-Client (IMAP IDLE + SMTP), OCR-Pipeline mit RAG-Ingestion, Finanzen (RVG, Rechnungen, E-Rechnung, DATEV, SEPA, Zeiterfassung), beA-Integration, proaktive KI mit Document Chat, RBAC mit Dezernaten, DSGVO-Compliance und Audit-Trail — alles self-hosted via Docker Compose, alles im Browser.
+Eine vollständig browserbasierte Kanzleisoftware mit autonomer KI-Agentin ("Helena") für die Kanzlei Baumfalk, Dortmund. Vereint Aktenverwaltung, Dokumentenmanagement mit OnlyOffice (Co-Editing, Track Changes, Vorlagen, Briefkopf), BGB-konforme Fristenberechnung, vollständigen E-Mail-Client (IMAP IDLE + SMTP), OCR-Pipeline mit RAG-Ingestion, Finanzen (RVG, Rechnungen, E-Rechnung, DATEV, SEPA, Zeiterfassung), beA-Integration, autonome KI-Agentin mit ReAct-Loop, Tool-Calling, deterministischem Schriftsatz-Orchestrator, proaktivem Background-Scanner, per-Akte Memory und QA-Gates — RBAC mit Dezernaten, DSGVO-Compliance und Audit-Trail — alles self-hosted via Docker Compose, alles im Browser.
 
 ## Core Value
 
-Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine proaktive KI-Agentin aktenübergreifend lernt, automatisch Entwürfe erstellt, Fristen erkennt und als digitale Rechtsanwaltsfachangestellte mitarbeitet — ohne dass KI-generierte Inhalte jemals automatisch versendet werden.
+Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt, Schriftsätze deterministisch entwirft, proaktiv Scanner-Alerts auslöst, per-Akte Memory pflegt und als digitale Rechtsanwaltsfachangestellte mitarbeitet — ohne dass KI-generierte Inhalte jemals automatisch versendet oder finalisiert werden (BRAK 2025 / BRAO 43).
 
 ## Requirements
 
@@ -125,6 +125,19 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - ✓ Glass-Komponentenbibliothek (GlassCard, GlassPanel, GlassKpiCard, glass-input, glass-shimmer) — v3.5
 - ✓ Alle 26 Dashboard-Seiten auf Glass-Design migriert — v3.5
 
+**Helena Agent (v0.2):**
+- ✓ ReAct Agent-Loop mit 14 Tools (9 read + 5 write), bounded execution, Ollama response guard, token budget, rate limiter — v0.2
+- ✓ Deterministic Schriftsatz-Orchestrator (Intent → Slot-Filling → RAG → Assembly → ERV-Validator) mit SchriftsatzSchema — v0.2
+- ✓ @Helena Task-System: @-mention parsing, BullMQ queue, Socket.IO progress, abort, REST API — v0.2
+- ✓ Draft-Approval Workflow: ENTWURF Prisma $extends gate (BRAK 2025), HelenaDraft lifecycle, feedback-to-context — v0.2
+- ✓ Proaktiver Background-Scanner (BullMQ cron): Frist-Check, Inaktivitaets-Check, Anomalie-Check, Alert-Deduplizierung, Eskalation — v0.2
+- ✓ Alert-System (6 Typen) + Alert-Center Dashboard + Socket.IO Push + Sidebar-Badge — v0.2
+- ✓ Helena Memory: per-Akte Kontext, auto-refresh, DSGVO cascade delete — v0.2
+- ✓ Activity Feed UI: Akte-Detail Feed ersetzt Tabs, Composer mit @Helena, Helena vs Human Attribution — v0.2
+- ✓ QA-Gates: Goldset (20 Queries), Retrieval-Metriken (Recall@k, MRR), Halluzinations-Check, Release-Gates — v0.2
+- ✓ Inline Draft-Review im Feed: Accept/Reject/Edit ohne Seitenwechsel — v0.2
+- ✓ Schriftsatz-Retrieval-Log (Audit-Trail: Chunks → Entwurf) — v0.2
+
 **RAG Pipeline Quality (v0.1):**
 - ✓ Hybrid Search (Meilisearch BM25 + pgvector via RRF, k=60, N=50) — v0.1
 - ✓ Parent-Child Chunking (500-Token Kind-Chunk, 2.000-Token Parent-Chunk) — v0.1
@@ -149,43 +162,9 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- v0.2 Helena Agent scope -->
+<!-- Next milestone scope TBD — use /gsd:new-milestone -->
 
-**Agent-Core:**
-- [ ] Helena ReAct Agent-Loop mit Tool-Calling (max 20 Steps, Fallback bei Timeout)
-- [ ] Tool-Set: 9 Read-Tools (akte, dokumente, fristen, zeiterfassung, gesetze, urteile, muster, kosten_rules, alle_akten) + 5 Write-Tools (draft_dokument, draft_frist, notiz, alert, akte_rag_update)
-- [ ] Deterministic Orchestrator für Schriftsatz-Erstellung (Intent → Slot-Filling → RAG → Assembly → ERV-Validator)
-- [ ] Schriftsatz-Zwischenformat (SchriftsatzSchema) mit Rubrum, Anträge, Sachverhalt, Rechtliche Würdigung, Beweisangebote, Anlagen, Kosten
-
-**Task-System:**
-- [ ] @-Tagging: `@Helena [Aufgabe]` in Notiz/Kommentar-Feldern parsed Helena-Tasks
-- [ ] HelenaTask DB-Modell (PENDING → RUNNING → DONE/FAILED/WAITING_APPROVAL)
-- [ ] BullMQ Helena-Task-Queue mit Agent-Loop-Executor
-
-**Draft-Approval:**
-- [ ] HelenaDraft DB-Modell (PENDING → ACCEPTED/REJECTED/EDITED)
-- [ ] Draft-Anzeige in Akte-Feed (visuell markiert als "Helena-Entwurf")
-- [ ] Accept/Reject/Edit Workflow mit Feedback an Helena-Kontext
-
-**Proaktiver Scanner:**
-- [ ] Background-Scanner Cron (tägl.): Frist-Check, Inaktivitäts-Check, Anomalie-Check
-- [ ] Alert-System (FRIST_KRITISCH, AKTE_INAKTIV, BETEILIGTE_FEHLEN, DOKUMENT_FEHLT, WIDERSPRUCH, NEUES_URTEIL)
-- [ ] Alert-Center im Dashboard + Akte-Feed-Integration
-
-**Helena Memory:**
-- [ ] Per-Akte Kontext-Speicherung (Zusammenfassung, Risiken, nächste Schritte, offene Fragen)
-- [ ] Automatischer Memory-Refresh bei Akte-Zugriff
-
-**QA-Gates + Audit:**
-- [ ] Goldset-Testkatalog (≥20 Queries Arbeitsrecht)
-- [ ] Retrieval-Metriken (Recall@k, MRR, Halluzinationsrate)
-- [ ] Schriftsatz-Retrieval-Log (Audit-Trail: welche Chunks → welcher Entwurf)
-- [ ] Release-Gates (Score-Schwellen für Deploys)
-
-**UI:**
-- [ ] Akte-Detail Feed-Umbau (Activity Feed statt Tabs: Helena-Drafts, Alerts, Notizen, Events)
-- [ ] Composer im Feed (Notiz/Kommentar/Helena-Tag direkt im Feed)
-- [ ] Alert-Center Dashboard-Widget
+(No active requirements — run `/gsd:new-milestone` to define next milestone scope)
 
 ## Future (post v0.1)
 
@@ -240,11 +219,11 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ## Context
 
-Shipped v0.1 with ~97,400 LOC TypeScript (243 commits in v0.1 alone).
-Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (65+ Models including law_chunks, urteil_chunks, muster, muster_chunks, akte_normen), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, fast-xml-parser, pgvector HNSW.
+Shipped v0.2 with ~117,156 LOC TypeScript (131 commits in v0.2, 575+ total).
+Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (70+ Models including HelenaTask, HelenaDraft, HelenaAlert, HelenaMemory, AktenActivity, PendingSchriftsatz, SchriftsatzRetrievalLog), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, fast-xml-parser, pgvector HNSW.
 Docker Compose deployment with 9 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice, ollama).
-All RAG pipeline requirements satisfied (16/16). Helena has three knowledge sources: law_chunks (Bundesgesetze), urteil_chunks (7 Bundesgerichte PII-gefiltert), muster_chunks (amtliche Formulare + kanzlei-eigene Muster).
-Minor tech debt: processUrteilNer() dead code in ner-pii.processor.ts, NER queue attempts:1 (manual retry required on Ollama timeout), OnlyOffice "wird geladen" bug outstanding (not v0.1 scope).
+Helena is now an autonomous agent with ReAct-Loop, 14 tools, deterministic Schriftsatz pipeline, @-mention task system, draft-approval workflow, background scanner with 6 alert types, per-Akte memory, and QA-gates with retrieval metrics.
+Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, helenaTaskId not propagated to ToolContext, release gate hardcodes without goldset run, SCAN-05 (Neu-Urteil-Check) deferred.
 
 ## Constraints
 
@@ -286,6 +265,14 @@ Minor tech debt: processUrteilNer() dead code in ner-pii.processor.ts, NER queue
 | Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | — Pending (v3.6+) |
 | CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending (v3.6+) |
 
+| Zero new npm packages for v0.2 (v0.2) | All agent capabilities on existing AI SDK v4 + BullMQ + Prisma + Socket.IO | ✓ Good — no dependency bloat |
+| Deterministic Schriftsatz pipeline (v0.2) | generateObject not free-form ReAct for legal filings | ✓ Good — predictable, validated output |
+| ENTWURF gate via Prisma $extends (v0.2) | BRAK 2025 / BRAO 43 compliance at database level, not HTTP | ✓ Good — defense-in-depth |
+| lockDuration:120s on helena-agent queue (v0.2) | Default 30s causes duplicate agent runs | ✓ Good — BullMQ v5 best practice |
+| Rule-based complexity classifier (v0.2) | No LLM call for mode/tier selection, German legal term patterns | ✓ Good — fast, deterministic |
+| Activity Feed replaces 8 tabs (v0.2) | Chronological view with all event types, reduces page complexity | ✓ Good — 921→152 LOC reduction |
+| Goldset as TypeScript fixture (v0.2) | Version-controlled deterministic QA, not DB | ✓ Good — reproducible tests |
+| PendingSchriftsatz for multi-turn (v0.2) | @@unique([userId, akteId]) for one pending pipeline per user per Akte | ✓ Good — clean conversation state |
 | Hybrid Search via RRF (v0.1) | BM25 + pgvector parallel retrieval beats vector-only for exact §-Nummern | ✓ Good — k=60, N=50, measurably better exact-match recall |
 | Cross-Encoder Reranking via LLM-as-reranker (v0.1) | Qwen3.5-as-reranker validated (dedicated Qwen3-Reranker-4B availability unverified) | ✓ Good — 3s AbortSignal timeout, fallback to RRF order |
 | Inline NER gate for Urteile (v0.1) | Synchronous runNerFilter() in ingestUrteilItem() cleaner than BullMQ for per-item flow | ✓ Good — double gate: inline before INSERT + piiFiltered=true query filter |
@@ -293,22 +280,16 @@ Minor tech debt: processUrteilNer() dead code in ner-pii.processor.ts, NER queue
 | seedAmtlicheFormulare() at worker startup (v0.1) | Idempotent via SystemSetting guard, avoids cron complexity for one-time seed | ✓ Good — content bypasses MinIO for hardcoded templates |
 | params Promise pattern in Next.js 15 (v0.1) | Sync params pattern caused 404s on DELETE/PATCH — await params required | ✓ Good — caught by integration checker, 2-line fix applied |
 
-## Current Milestone: v0.2 Helena Agent
+## Shipped Milestones
 
-**Goal:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, @-Tagging Task-System, Draft-Approval-Workflow, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail. Akte-Detail wird zum Activity Feed.
+- **v3.4 Full-Featured Kanzleisoftware** — 13 phases, 38 plans (2026-02-25)
+- **v3.5 Production Ready** — 2 phases, 10 plans (2026-02-26)
+- **v0.1 Helena RAG** — 7 phases, 19 plans (2026-02-27)
+- **v0.2 Helena Agent** — 10 phases, 23 plans (2026-02-28)
 
-**Target features:**
-- ReAct Agent-Loop mit 14 Tools (9 read + 5 write)
-- Deterministic Schriftsatz-Orchestrator (Intent → Slot-Filling → RAG → Assembly)
-- @Helena Task-System (HelenaTask Queue)
-- Draft-Approval Workflow (HelenaDraft: accept/reject/edit)
-- Proaktiver Background-Scanner (Frist-Check, Inaktivität, Anomalien)
-- Alert-System (6 Typen) + Alert-Center
-- Helena Memory (per-Akte Kontext)
-- QA-Gates + Goldset + Retrieval-Metriken + Audit-Trail
-- Akte-Detail Feed-Umbau + Composer
+**Next:** Run `/gsd:new-milestone` to define v0.3 scope.
 
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
 ---
-*Last updated: 2026-02-27 after v0.2 milestone start*
+*Last updated: 2026-02-28 after v0.2 milestone completion*

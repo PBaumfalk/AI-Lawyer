@@ -2,10 +2,39 @@
 
 ## v0.2 Helena Agent (Shipped: 2026-02-28)
 
-**Phases completed:** 10 phases, 23 plans, 0 tasks
+**Delivered:** Helena wird vom Chat-Bot zum autonomen Agenten mit ReAct-Loop, deterministischem Schriftsatz-Orchestrator, @-Tagging Task-System, Draft-Approval-Workflow, proaktivem Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail. Akte-Detail umgebaut zum Activity Feed.
+
+**Phases:** 10 (19-27 + 23.1)
+**Plans:** 23 completed
+**Tasks:** 53 executed
+**Lines of Code:** ~117,156 LOC TypeScript
+**Commits:** 131
+**Git range:** `feat(19-01)` → `feat(27-01)`
+**Timeline:** 2026-02-27 → 2026-02-28 (2 days)
+**Requirements:** 52/53 satisfied (SCAN-05 deferred)
 
 **Key accomplishments:**
-- (none recorded)
+1. ReAct Agent-Loop mit 14 Tools (9 read + 5 write), bounded execution (5/20 steps inline/background), Ollama response guard, token budget manager, complexity classifier, rate limiter — 46 unit/integration tests pass
+2. Deterministic Schriftsatz-Orchestrator: Intent-Router (Klageart/Stadium/Gerichtszweig), Slot-Filling mit automatischer Rueckfrage, RAG Assembly (4000 chars/section), ERV/beA-Validator, Zod-typisiertes SchriftsatzSchema, multi-turn via PendingSchriftsatz
+3. @Helena Task-System: @-mention parsing, BullMQ helena-task queue (lockDuration:120s), Socket.IO progress events, task abort, REST API (create/list/detail/abort)
+4. Draft-Approval Workflow: ENTWURF Prisma $extends gate (BRAK 2025 / BRAO 43), HelenaDraft lifecycle (accept/reject/edit), feedback-to-context pipeline, Socket.IO notifications, global draft inbox
+5. Proaktiver Background-Scanner (BullMQ cron): Frist-Check, Inaktivitaets-Check, Anomalie-Check mit Deduplizierung, Auto-Resolve, progressiver Eskalation, Alert-Center UI mit Filter + Sidebar-Badge
+6. Helena Memory: per-Akte Kontext (Zusammenfassung, Risiken, naechste Schritte), auto-refresh bei Aenderung, DSGVO cascade delete, 5min cooldown
+7. Activity Feed UI: Akte-Detail Feed ersetzt 8 Tabs (921→152 LOC), Composer mit @Helena tagging, Helena vs Human Attribution, inline Draft-Review, QA-Dashboard mit Goldset (20 Queries), Retrieval-Metriken, Release-Gates
+
+**Known Gaps:**
+- SCAN-05: Neu-Urteil-Check deferred (requires cross-Akte semantic search)
+
+**Tech debt (non-blocking):**
+- Pre-existing TS errors in helena/index.ts (StepUpdate adapter type mismatches)
+- search-web.ts intentional stub (placeholder pending web search config)
+- helenaTaskId not propagated to ToolContext (drafts lack task traceability)
+- Release gate hardcodes hallucination/Vollstaendigkeit to 0/pass without goldset run
+
+**Archives:**
+- `milestones/v0.2-ROADMAP.md`
+- `milestones/v0.2-REQUIREMENTS.md`
+- `milestones/v0.2-MILESTONE-AUDIT.md`
 
 ---
 

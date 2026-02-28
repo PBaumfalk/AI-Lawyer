@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
 status: unknown
-last_updated: "2026-02-28T11:39:30Z"
+last_updated: "2026-02-28T11:41:09Z"
 progress:
   total_phases: 20
-  completed_phases: 18
+  completed_phases: 20
   total_plans: 52
-  completed_plans: 51
+  completed_plans: 52
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail.
-**Current focus:** v0.2 Helena Agent -- Phase 27 in progress (1/2 plans done). Activity Feed QA Pipeline Wiring.
+**Current focus:** v0.2 Helena Agent -- Phase 27 complete (2/2 plans done). All v0.2 phases complete.
 
 ## Current Position
 
 Phase: 27 of 27 (Activity Feed QA Pipeline Wiring)
 Plan: 2 of 2 in current phase
-Status: Phase 27 plan 02 complete. Plan 01 pending.
-Last activity: 2026-02-28 -- Completed 27-02 QA Pipeline Wiring
+Status: Phase 27 complete (2/2 plans done). v0.2 milestone complete.
+Last activity: 2026-02-28 -- Completed 27-01 Activity Feed + Pipeline Wiring
 
-Progress: [█████████░] 98%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -48,7 +48,7 @@ Progress: [█████████░] 98%
 | 24. Scanner + Alerts | 2/2 | 13min | 6.5min |
 | 25. Helena Memory | 1/1 | 5min | 5min |
 | 26. Activity Feed UI + QA-Gates | 3/3 | 18min | 6min |
-| 27. Activity Feed QA Pipeline Wiring | 1/2 | 1min | 1min |
+| 27. Activity Feed QA Pipeline Wiring | 2/2 | 4min | 2min |
 
 ## Accumulated Context
 
@@ -142,6 +142,9 @@ Recent decisions affecting v0.2:
 - [Phase 26]: useHelenaTaskProgress hook for per-Akte Socket.IO task progress tracking
 - [Phase 27]: try-catch (not fire-and-forget .catch) for logRetrieval in Schriftsatz pipeline -- await for data integrity, catch for pipeline safety
 - [Phase 27]: getModelForTier(3) for model name in retrieval log -- cached call, no performance concern
+- [Phase 27]: createDraftActivity wraps try-catch internally -- callers use .catch(() => {}) for double safety
+- [Phase 27]: userId: null hardcoded in createDraftActivity for Helena attribution in feed
+- [Phase 27]: draftInhalt truncated to 200 chars in AktenActivity.inhalt for feed preview
 
 ### Pending Todos
 
@@ -159,5 +162,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 27-02-PLAN.md (QA Pipeline Wiring)
-Resume file: .planning/phases/27-activity-feed-qa-pipeline-wiring/27-02-SUMMARY.md
+Stopped at: Completed 27-01-PLAN.md (Activity Feed + Pipeline Wiring) -- all Phase 27 plans complete
+Resume file: .planning/phases/27-activity-feed-qa-pipeline-wiring/27-01-SUMMARY.md

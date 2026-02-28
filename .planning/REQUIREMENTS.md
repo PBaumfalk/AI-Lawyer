@@ -29,16 +29,16 @@
 
 - [x] **TASK-01**: @Helena-Tagging in Notiz/Kommentar-Feldern wird als HelenaTask geparst und in die Queue eingestellt
 - [x] **TASK-02**: HelenaTask Prisma-Modell mit Status-Flow (PENDING → RUNNING → DONE / FAILED / WAITING_APPROVAL)
-- [ ] **TASK-03**: HelenaTask speichert vollständigen Agent-Trace (Gedanken + Tool-Aufrufe als JSON steps[])
+- [x] **TASK-03**: HelenaTask speichert vollständigen Agent-Trace (Gedanken + Tool-Aufrufe als JSON steps[])
 - [x] **TASK-04**: Task-Prioritäten (1-10) mit höherer Priorität für manuell zugewiesene Tasks vs Background-Scanner
 - [x] **TASK-05**: Task-Abbruch via UI setzt Status auf ABGEBROCHEN — Agent-Loop prüft zwischen Steps
 
 ### Draft-Approval (DRFT)
 
 - [x] **DRFT-01**: HelenaDraft Prisma-Modell (PENDING → ACCEPTED / REJECTED / EDITED) mit Typ (DOKUMENT, FRIST, NOTIZ, ALERT)
-- [ ] **DRFT-02**: ENTWURF-Gate auf Prisma-Middleware-Ebene: Helena-erstellte Dokumente können nie status!=ENTWURF haben (BRAK 2025 / BRAO §43)
-- [ ] **DRFT-03**: Draft-Anzeige im Akte-Feed visuell markiert ("Helena-Entwurf · ausstehend") mit Accept/Reject/Edit Buttons
-- [ ] **DRFT-04**: Bei Ablehnung: Feedback-Feld wird in Helena-Kontext gespeichert (Lerneffekt für zukünftige Entwürfe)
+- [x] **DRFT-02**: ENTWURF-Gate auf Prisma-Middleware-Ebene: Helena-erstellte Dokumente können nie status!=ENTWURF haben (BRAK 2025 / BRAO §43)
+- [x] **DRFT-03**: Draft-Anzeige im Akte-Feed visuell markiert ("Helena-Entwurf · ausstehend") mit Accept/Reject/Edit Buttons
+- [x] **DRFT-04**: Bei Ablehnung: Feedback-Feld wird in Helena-Kontext gespeichert (Lerneffekt für zukünftige Entwürfe)
 - [x] **DRFT-05**: Akzeptierter Draft wird automatisch als Dokument/Frist/Notiz in der Akte angelegt
 - [x] **DRFT-06**: Socket.IO Benachrichtigung an Zuständigen wenn Helena einen Draft erstellt hat
 
@@ -82,8 +82,8 @@
 - [x] **UI-02**: Composer im Feed: Nutzer kann direkt im Feed Notizen schreiben und @Helena taggen
 - [x] **UI-03**: Helena vs Human Attribution: jeder Feed-Eintrag zeigt klar ob von Helena oder Mensch erstellt
 - [x] **UI-04**: Alert-Center Dashboard-Widget mit Badge-Count für ungelesene Alerts
-- [ ] **UI-05**: Helena-Task-Status im Chat: Laufende Tasks zeigen Fortschritt (Step X von Y, aktuelles Tool)
-- [ ] **UI-06**: Draft-Review inline im Feed: Accept/Reject/Edit ohne Seitenwechsel
+- [x] **UI-05**: Helena-Task-Status im Chat: Laufende Tasks zeigen Fortschritt (Step X von Y, aktuelles Tool)
+- [x] **UI-06**: Draft-Review inline im Feed: Accept/Reject/Edit ohne Seitenwechsel
 
 ## Future Requirements (v0.3+)
 
@@ -128,13 +128,13 @@
 | ORCH-07 | Phase 22 | Complete |
 | TASK-01 | Phase 21 | Complete |
 | TASK-02 | Phase 19 | Complete |
-| TASK-03 | Phase 27 | Pending |
+| TASK-03 | Phase 27 | Complete |
 | TASK-04 | Phase 21 | Complete |
 | TASK-05 | Phase 21 | Complete |
 | DRFT-01 | Phase 19 | Complete |
-| DRFT-02 | Phase 27 | Pending |
-| DRFT-03 | Phase 27 | Pending |
-| DRFT-04 | Phase 27 | Pending |
+| DRFT-02 | Phase 27 | Complete |
+| DRFT-03 | Phase 27 | Complete |
+| DRFT-04 | Phase 27 | Complete |
 | DRFT-05 | Phase 23 | Complete |
 | DRFT-06 | Phase 23 | Complete |
 | SCAN-01 | Phase 24 | Complete |
@@ -163,8 +163,8 @@
 | UI-02 | Phase 26 | Complete |
 | UI-03 | Phase 26 | Complete |
 | UI-04 | Phase 26 | Complete |
-| UI-05 | Phase 27 | Pending |
-| UI-06 | Phase 27 | Pending |
+| UI-05 | Phase 27 | Complete |
+| UI-06 | Phase 27 | Complete |
 
 **Coverage:**
 - v0.2 requirements: 53 total

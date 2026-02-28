@@ -1,5 +1,14 @@
 # Milestones
 
+## v0.2 Helena Agent (Shipped: 2026-02-28)
+
+**Phases completed:** 10 phases, 23 plans, 0 tasks
+
+**Key accomplishments:**
+- (none recorded)
+
+---
+
 ## v3.4 Full-Featured Kanzleisoftware (Shipped: 2026-02-25)
 
 **Delivered:** AI-Lawyer transformed from an MVP case management system into a full-featured Kanzleisoftware with 64 capabilities across infrastructure, deadline calculation, email, document pipeline, finance, AI, beA, and security — all operational in 2 days.

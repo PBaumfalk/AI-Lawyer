@@ -44,19 +44,19 @@
 
 ### Proaktiver Scanner (SCAN)
 
-- [ ] **SCAN-01**: Täglicher Background-Scanner (BullMQ-Cron, konfigurierbar) prüft alle offenen Akten
-- [ ] **SCAN-02**: Frist-Check: Fristen < 7 Tage ohne zugehöriges Dokument → FRIST_KRITISCH Alert
-- [ ] **SCAN-03**: Inaktivitäts-Check: Akte > 30 Tage keine Aktivität → Wiedervorlage-Vorschlag
-- [ ] **SCAN-04**: Anomalie-Check: Fristablauf ohne Dokument, unvollständige Beteiligte, fehlender Gegenstandswert → Flag
+- [x] **SCAN-01**: Täglicher Background-Scanner (BullMQ-Cron, konfigurierbar) prüft alle offenen Akten
+- [x] **SCAN-02**: Frist-Check: Fristen < 7 Tage ohne zugehöriges Dokument → FRIST_KRITISCH Alert
+- [x] **SCAN-03**: Inaktivitäts-Check: Akte > 30 Tage keine Aktivität → Wiedervorlage-Vorschlag
+- [x] **SCAN-04**: Anomalie-Check: Fristablauf ohne Dokument, unvollständige Beteiligte, fehlender Gegenstandswert → Flag
 - [ ] **SCAN-05**: Neu-Urteil-Check: neue Urteile seit letztem Scan zu Rechtsgebiet der Akte → Hinweis
-- [ ] **SCAN-06**: Konfigurierbare Schwellenwerte pro Check-Typ (Tage, Aktivitäts-Schwelle etc.)
+- [x] **SCAN-06**: Konfigurierbare Schwellenwerte pro Check-Typ (Tage, Aktivitäts-Schwelle etc.)
 
 ### Alert-System (ALRT)
 
 - [x] **ALRT-01**: HelenaAlert Prisma-Modell mit 6 Typen (FRIST_KRITISCH, AKTE_INAKTIV, BETEILIGTE_FEHLEN, DOKUMENT_FEHLT, WIDERSPRUCH, NEUES_URTEIL)
 - [ ] **ALRT-02**: Alert-Center im Dashboard mit Filter nach Typ, Akte, Priorität und Gelesen/Ungelesen
-- [ ] **ALRT-03**: Alerts erscheinen im Akte-Feed als Helena-Event (visuell differenziert von manuellen Einträgen)
-- [ ] **ALRT-04**: Alert-Deduplizierung: gleicher Alert-Typ + gleiche Akte innerhalb 24h wird nicht doppelt erzeugt
+- [x] **ALRT-03**: Alerts erscheinen im Akte-Feed als Helena-Event (visuell differenziert von manuellen Einträgen)
+- [x] **ALRT-04**: Alert-Deduplizierung: gleicher Alert-Typ + gleiche Akte innerhalb 24h wird nicht doppelt erzeugt
 - [ ] **ALRT-05**: Kritische Alerts (FRIST_KRITISCH) erzeugen zusätzlich Socket.IO Push-Notification
 
 ### Helena Memory (MEM)
@@ -137,16 +137,16 @@
 | DRFT-04 | Phase 23 | Complete |
 | DRFT-05 | Phase 23 | Complete |
 | DRFT-06 | Phase 23 | Complete |
-| SCAN-01 | Phase 24 | Pending |
-| SCAN-02 | Phase 24 | Pending |
-| SCAN-03 | Phase 24 | Pending |
-| SCAN-04 | Phase 24 | Pending |
+| SCAN-01 | Phase 24 | Complete |
+| SCAN-02 | Phase 24 | Complete |
+| SCAN-03 | Phase 24 | Complete |
+| SCAN-04 | Phase 24 | Complete |
 | SCAN-05 | Phase 24 | Pending |
-| SCAN-06 | Phase 24 | Pending |
+| SCAN-06 | Phase 24 | Complete |
 | ALRT-01 | Phase 19 | Complete |
 | ALRT-02 | Phase 24 | Pending |
-| ALRT-03 | Phase 24 | Pending |
-| ALRT-04 | Phase 24 | Pending |
+| ALRT-03 | Phase 24 | Complete |
+| ALRT-04 | Phase 24 | Complete |
 | ALRT-05 | Phase 24 | Pending |
 | MEM-01 | Phase 19 | Complete |
 | MEM-02 | Phase 25 | Pending |

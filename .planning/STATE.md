@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
-status: unknown
-last_updated: "2026-02-27T23:03:10.267Z"
+status: in-progress
+last_updated: "2026-02-28T08:21:39Z"
 progress:
   total_phases: 16
   completed_phases: 15
   total_plans: 44
-  completed_plans: 44
+  completed_plans: 45
 ---
 
 # Project State
@@ -23,17 +23,17 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 24 of 26 (Scanner + Alerts)
-Plan: 0 of 2 in current phase
-Status: Phase 23.1 complete (3/3 plans done), ready for Phase 24
-Last activity: 2026-02-27 — Completed 23.1-03 Schriftsatz Rueckfragen Frontend UI
+Plan: 1 of 2 in current phase
+Status: Phase 24 in progress (1/2 plans done), ready for 24-02
+Last activity: 2026-02-28 — Completed 24-01 Scanner Backend
 
-Progress: [███████░░░] 60%
+Progress: [████████░░] 65%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 71 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 14/20
+- v0.2 plans: 15/20
 
 **By Phase (v0.2):**
 
@@ -45,7 +45,7 @@ Progress: [███████░░░] 60%
 | 22. Schriftsatz Orchestrator | 2/2 | 14min | 7min |
 | 23. Draft-Approval Workflow | 3/3 | 18min | 6min |
 | 23.1. Integration Wiring Fixes | 3/3 | 9min | 3min |
-| 24. Scanner + Alerts | 0/2 | - | - |
+| 24. Scanner + Alerts | 1/2 | 8min | 8min |
 | 25. Helena Memory | 0/1 | - | - |
 | 26. Activity Feed UI + QA-Gates | 0/3 | - | - |
 
@@ -114,6 +114,11 @@ Recent decisions affecting v0.2:
 - JSON type discriminator for Schriftsatz pipeline responses (schriftsatz_rueckfrage/complete/error/conflict)
 - [Phase 23.1]: Custom fetch wrapper on useChat for non-streaming JSON interception (not onResponse) -- prevents stream parser crash
 - [Phase 23.1]: HTML comment metadata (<!--schriftsatz:...-->) in message content for pipeline state preservation across useChat re-renders
+- [Phase 24]: Scanner is purely deterministic (no LLM) -- batch Prisma queries only for reliability
+- [Phase 24]: Alert dedup window is 24h per akteId+typ (not per userId) to prevent duplicate issue alerts across Vertreter
+- [Phase 24]: FRIST_KRITISCH gets Socket.IO push + notification but NOT email (frist-reminder.ts handles email)
+- [Phase 24]: DOKUMENT_FEHLT uses name-only matching (Dokument has no kategorie field) with Vollmacht special case
+- [Phase 24]: Progressive escalation uses meta fields (escalatedAt3d/escalatedAt7d) to prevent re-escalation
 
 ### Pending Todos
 
@@ -131,5 +136,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Phase 24 context gathered — ready for planning
-Resume file: .planning/phases/24-scanner-alerts/24-CONTEXT.md
+Stopped at: Completed 24-01-PLAN.md (Scanner Backend)
+Resume file: .planning/phases/24-scanner-alerts/24-01-SUMMARY.md

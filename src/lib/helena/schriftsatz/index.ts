@@ -27,6 +27,8 @@ import {
 import { getKlageartDefinition } from "./klageart-registry";
 import { SchriftsatzSchema } from "./schemas";
 import { notifyDraftCreated } from "@/lib/helena/draft-notification";
+import { logRetrieval } from "@/lib/helena/qa/retrieval-log";
+import { getModelForTier } from "../complexity-classifier";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -297,6 +299,20 @@ export async function runSchriftsatzPipeline(
       { id: draft.id, akteId, userId, typ: "DOKUMENT", titel: draft.titel },
       akteAnwaltId,
     ).catch(() => {});
+
+    // QA-04: Log retrieval audit trail for this Schriftsatz draft
+    try {
+      const { modelName } = await getModelForTier(3);
+      await logRetrieval({
+        schriftsatzId: draft.id,
+        queryText: message,
+        retrievalBelege: assemblyResult.allBelege,
+        promptVersion: "schriftsatz-v1",
+        modell: modelName,
+      });
+    } catch {
+      // Non-critical: QA logging failure must not fail the pipeline
+    }
 
     return {
       status: "complete",

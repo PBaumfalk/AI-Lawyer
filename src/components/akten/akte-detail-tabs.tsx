@@ -36,6 +36,7 @@ import { AkteEmailTab } from "@/components/email/akte-email-tab";
 import { AktenkontoLedger } from "@/components/finanzen/aktenkonto-ledger";
 import { InvoiceList } from "@/components/finanzen/invoice-list";
 import { AkteZeiterfassungTab } from "@/components/finanzen/akte-zeiterfassung-tab";
+import { AkteAlertsSection } from "@/components/akten/akte-alerts-section";
 import { toast } from "sonner";
 
 // Serialized version of the Prisma akte with includes
@@ -182,6 +183,7 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
         <TabsTrigger value="zeiterfassung">Zeiterfassung</TabsTrigger>
         <TabsTrigger value="emails">E-Mails</TabsTrigger>
         <TabsTrigger value="pruefprotokoll">Pruefprotokoll</TabsTrigger>
+        <TabsTrigger value="warnungen">Warnungen</TabsTrigger>
         <TabsTrigger value="historie">
           Historie ({akte.auditLogs?.length ?? 0})
         </TabsTrigger>
@@ -363,6 +365,11 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
       {/* ─── Pruefprotokoll ────────────────────────────────────────── */}
       <TabsContent value="pruefprotokoll">
         <BeaPruefprotokoll akteId={akte.id} />
+      </TabsContent>
+
+      {/* ─── Warnungen ─────────────────────────────────────────────── */}
+      <TabsContent value="warnungen" className="space-y-4">
+        <AkteAlertsSection akteId={akte.id} />
       </TabsContent>
 
       {/* ─── Historie ──────────────────────────────────────────────── */}

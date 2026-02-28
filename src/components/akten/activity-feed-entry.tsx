@@ -223,8 +223,10 @@ function DraftReviewActions({
   async function handleAccept() {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/helena/drafts/${draftId}/accept`, {
+      const res = await fetch(`/api/helena/drafts/${draftId}`, {
         method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "accept" }),
       });
       if (!res.ok) throw new Error();
       toast.success("Entwurf angenommen");
@@ -238,10 +240,10 @@ function DraftReviewActions({
   async function handleReject() {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/helena/drafts/${draftId}/reject`, {
+      const res = await fetch(`/api/helena/drafts/${draftId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ feedback: rejectFeedback }),
+        body: JSON.stringify({ action: "reject", text: rejectFeedback || undefined }),
       });
       if (!res.ok) throw new Error();
       toast.success("Entwurf abgelehnt");
@@ -256,10 +258,10 @@ function DraftReviewActions({
   async function handleSaveEdit() {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/helena/drafts/${draftId}/edit`, {
+      const res = await fetch(`/api/helena/drafts/${draftId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: editText }),
+        body: JSON.stringify({ action: "edit", inhalt: editText }),
       });
       if (!res.ok) throw new Error();
       toast.success("Entwurf bearbeitet");

@@ -20,7 +20,9 @@ export type NotificationType =
   | "helena:draft-accepted"
   | "helena:draft-rejected"
   | "helena:alert-critical"
-  | "scanner:admin-escalation";
+  | "scanner:admin-escalation"
+  | "template:approved"
+  | "template:rejected";
 
 /**
  * Payload for creating a new notification.

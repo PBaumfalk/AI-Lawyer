@@ -46,6 +46,8 @@ const typeIcons: Record<NotificationType, React.ElementType> = {
   "helena:draft-rejected": XCircle,
   "helena:alert-critical": AlertTriangle,
   "scanner:admin-escalation": AlertTriangle,
+  "template:approved": CheckCircle2,
+  "template:rejected": XCircle,
 };
 
 /** Map notification types to icon colors */
@@ -68,6 +70,8 @@ const typeColors: Record<NotificationType, string> = {
   "helena:draft-rejected": "text-rose-500",
   "helena:alert-critical": "text-rose-600",
   "scanner:admin-escalation": "text-amber-600",
+  "template:approved": "text-emerald-500",
+  "template:rejected": "text-rose-500",
 };
 
 /**

@@ -4,7 +4,7 @@
  * GET  /api/falldaten-templates -- List templates visible to current user
  * POST /api/falldaten-templates -- Create a new template (any authenticated user)
  *
- * Visibility: GENEHMIGT/STANDARD visible to all; own templates in any status visible to creator.
+ * Visibility: GENEHMIGT/STANDARD visible to all; own templates in any status visible to creator; ADMIN sees all templates.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
   }
 
   const userId = (session.user as any).id as string;
+  const userRole = (session.user as any).role as string;
   const { searchParams } = request.nextUrl;
 
   const statusFilter = searchParams.get("status") as FalldatenTemplateStatus | null;
@@ -61,8 +62,10 @@ export async function GET(request: NextRequest) {
     if (eigene) {
       // Only own templates
       where.erstelltVonId = userId;
+    } else if (userRole === "ADMIN") {
+      // Admins see ALL templates (needed for review queue)
     } else {
-      // Public (GENEHMIGT/STANDARD) + own templates in any status
+      // Regular users: public (GENEHMIGT/STANDARD) + own templates in any status
       where.OR = [
         { status: { in: [FalldatenTemplateStatus.GENEHMIGT, FalldatenTemplateStatus.STANDARD] } },
         { erstelltVonId: userId },

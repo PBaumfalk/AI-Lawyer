@@ -124,10 +124,11 @@ Plans:
   1. User can open an Akte and fill out a Falldatenblatt matching the Akte's Sachgebiet, with all field types rendering correctly
   2. User sees a completeness percentage for each Falldatenblatt on an Akte, reflecting how many required fields are filled
   3. Saved Falldatenblatt data persists and is visible when the user returns to the Akte
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 29-01: TBD
+- [ ] 29-01-PLAN.md — API extension (falldatenTemplateId PATCH), FalldatenForm multiselect + required highlights + completeness
+- [ ] 29-02-PLAN.md — FalldatenTab wrapper (template resolution, auto-assign, switch) + tab integration with controlled switching + unsaved changes guard
 
 ### Phase 30: SCAN-05 Neu-Urteil-Check
 **Goal**: The system proactively detects when newly ingested court decisions are relevant to active cases and alerts the responsible user with a Helena-generated briefing

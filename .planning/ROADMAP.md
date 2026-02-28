@@ -61,7 +61,7 @@ See: `milestones/v0.1-ROADMAP.md` for full phase details.
 
 </details>
 
-### 🚧 v0.2 Helena Agent (In Progress)
+### v0.2 Helena Agent (In Progress)
 
 **Milestone Goal:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, @-Tagging Task-System, Draft-Approval-Workflow, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail. Akte-Detail wird zum Activity Feed.
 
@@ -193,10 +193,10 @@ Plans:
   1. When Helena is invoked on an Akte, her system prompt includes the stored case summary, recognized risks, next steps, and open questions
   2. Memory auto-refreshes when the Akte has changed since the last memory update (new document, new deadline, new Beteiligte, etc.)
   3. Deleting an Akte cascading-deletes all associated HelenaMemory entries (DSGVO Art. 17 compliance)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 25-01: HelenaMemory service (load into agent context, staleness detection, auto-refresh trigger, DSGVO cascade)
+- [ ] 25-01-PLAN.md — HelenaMemory service (loadOrRefresh, generateMemory, formatMemoryForPrompt) + wiring into ki-chat Chain G and helena-task processor
 
 ### Phase 26: Activity Feed UI + QA-Gates
 **Goal**: The Akte detail page shows a unified chronological activity feed replacing tabs, and Helena quality is measurable via goldset tests, retrieval metrics, and hallucination checks
@@ -234,4 +234,4 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 -> 23.1 -> 24 + 25 (parallel-eligible, 
 
 ---
 *Roadmap created: 2026-02-27*
-*Last updated: 2026-02-27*
+*Last updated: 2026-02-28*

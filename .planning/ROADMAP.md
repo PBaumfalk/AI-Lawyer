@@ -185,7 +185,7 @@ Phases execute in numeric order: 28 -> 28.1 -> 29 -> 30 -> 31 -> 32
 | 10-11 | v3.5 | 10/10 | Complete | 2026-02-26 |
 | 12-18 | v0.1 | 19/19 | Complete | 2026-02-27 |
 | 19-27 | v0.2 | 23/23 | Complete | 2026-02-28 |
-| 28. Falldatenblaetter Schema + Templates | v0.3 | 0/TBD | Not started | - |
+| 28. Falldatenblaetter Schema + Templates | 1/3 | In Progress|  | - |
 | 29. Falldatenblaetter UI | v0.3 | 0/TBD | Not started | - |
 | 30. SCAN-05 Neu-Urteil-Check | v0.3 | 0/TBD | Not started | - |
 | 31. Messaging Schema + API | v0.3 | 0/TBD | Not started | - |

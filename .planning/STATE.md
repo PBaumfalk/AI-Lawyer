@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 28 of 32 (Falldatenblaetter Schema + Templates)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-28 -- v0.3 roadmap created
+Plan: 1 of 3 in current phase
+Status: Executing
+Last activity: 2026-02-28 -- completed 28-01 (Schema + Seed)
 
 Progress: [..........] 0% (v0.3: 0/5 phases)
 
@@ -46,6 +46,8 @@ Recent decisions affecting current work:
 - [v0.2]: Zero new npm packages -- continues into v0.3
 - [v0.2]: Activity Feed replaces tabs -- Akte-thread messaging integrates into existing feed
 - [v0.3]: Dropped separate cross-feature integration phase -- MSG-07 covers @Helena in channels
+- [28-01]: No @@unique on [sachgebiet, status] -- STANDARD uniqueness enforced at application layer
+- [28-01]: FalldatenTemplate seed follows seedAmtlicheFormulare pattern (version guard + ADMIN lookup)
 
 ### Pending Todos
 
@@ -56,11 +58,11 @@ Deferred from previous milestones (not in v0.3 scope):
 ### Blockers/Concerns
 
 - SCAN-05 threshold (0.72 cosine similarity) is an estimate -- needs empirical tuning
-- FalldatenInstanz vs Akte.falldaten migration strategy -- resolve in Phase 28 planning
+- FalldatenInstanz vs Akte.falldaten migration strategy -- resolved: simple FK on Akte for v0.3, FalldatenInstanz deferred
 - pgvector AVG on vector columns for Akte summary centroid -- needs verification
 
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: v0.3 roadmap created, ready to plan Phase 28
+Stopped at: Completed 28-01-PLAN.md (Schema + Seed)
 Resume file: None

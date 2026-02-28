@@ -130,6 +130,6 @@ Recent decisions affecting v0.2:
 
 ## Session Continuity
 
-Last session: 2026-02-27
-Stopped at: Completed 23.1-03-PLAN.md (Schriftsatz Rueckfragen Frontend UI) -- Phase 23.1 complete
-Resume file: .planning/phases/23.1-integration-wiring-fixes/23.1-03-SUMMARY.md
+Last session: 2026-02-28
+Stopped at: Phase 24 context gathered — ready for planning
+Resume file: .planning/phases/24-scanner-alerts/24-CONTEXT.md

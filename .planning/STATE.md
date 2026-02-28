@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
 status: in-progress
-last_updated: "2026-02-28T10:30:11Z"
+last_updated: "2026-02-28T10:33:00Z"
 progress:
   total_phases: 18
   completed_phases: 17
   total_plans: 50
-  completed_plans: 48
+  completed_plans: 49
 ---
 
 # Project State
@@ -18,22 +18,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail.
-**Current focus:** v0.2 Helena Agent — Phase 26 in progress (1/3 plans done)
+**Current focus:** v0.2 Helena Agent — Phase 26 in progress (2/3 plans done, 26-02 remaining)
 
 ## Current Position
 
 Phase: 26 of 26 (Activity Feed UI + QA-Gates)
-Plan: 2 of 3 in current phase
-Status: Phase 26 in progress (1/3 plans done)
-Last activity: 2026-02-28 — Completed 26-01 Activity Feed UI
+Plan: 3 of 3 in current phase
+Status: Phase 26 in progress (2/3 plans done, 26-02 remaining)
+Last activity: 2026-02-28 — Completed 26-03 QA Gates
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 95%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 72 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 18/20
+- v0.2 plans: 19/20
 
 **By Phase (v0.2):**
 
@@ -47,7 +47,7 @@ Progress: [█████████░] 90%
 | 23.1. Integration Wiring Fixes | 3/3 | 9min | 3min |
 | 24. Scanner + Alerts | 2/2 | 13min | 6.5min |
 | 25. Helena Memory | 1/1 | 5min | 5min |
-| 26. Activity Feed UI + QA-Gates | 1/3 | 5min | 5min |
+| 26. Activity Feed UI + QA-Gates | 2/3 | 13min | 6.5min |
 
 ## Accumulated Context
 
@@ -130,6 +130,11 @@ Recent decisions affecting v0.2:
 - [Phase 26]: Polymorphic feed entry renders all 8 AktenActivityTyp variants with expand/collapse
 - [Phase 26]: Helena attribution via user===null check; Bot icon + brand blue border for drafts, severity borders for alerts
 - [Phase 26]: Feed absorbs 8 former tabs; akte-detail-tabs.tsx reduced from 921 to 152 lines (4 tabs: Feed+Dokumente+Kalender+Finanzen)
+- [Phase 26]: requireRole("ADMIN") for QA API endpoints (consistent with existing admin routes)
+- [Phase 26]: Goldset as TypeScript fixture array (not DB) for version-controlled deterministic QA
+- [Phase 26]: SHA-256 query hashing for PII-safe retrieval metric storage (QA-07)
+- [Phase 26]: Release gate thresholds: Recall@5 >= 0.85, Halluzinationsrate <= 0.05, Vollstaendigkeit >= 0.90
+- [Phase 26]: RegExp.exec() loop pattern instead of matchAll() iterator for TS target compatibility
 
 ### Pending Todos
 
@@ -147,5 +152,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 26-01-PLAN.md (Activity Feed UI)
-Resume file: .planning/phases/26-activity-feed-ui-qa-gates/26-01-SUMMARY.md
+Stopped at: Completed 26-03-PLAN.md (QA Gates)
+Resume file: .planning/phases/26-activity-feed-ui-qa-gates/26-03-SUMMARY.md

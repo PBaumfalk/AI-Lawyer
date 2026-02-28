@@ -166,6 +166,66 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     label: "Briefing-Uhrzeit (HH:MM)",
   },
 
+  // Scanner category
+  {
+    key: "scanner.enabled",
+    value: "true",
+    type: "boolean",
+    category: "scanner",
+    label: "Naechtlicher Akten-Scanner aktiviert",
+  },
+  {
+    key: "scanner.cron_schedule",
+    value: "0 1 * * *",
+    type: "string",
+    category: "scanner",
+    label: "Scanner Cron-Zeitplan",
+  },
+  {
+    key: "scanner.frist_threshold_hours",
+    value: "48",
+    type: "number",
+    category: "scanner",
+    label: "Frist-Warnung Schwellenwert (Stunden)",
+    min: 12,
+    max: 168,
+  },
+  {
+    key: "scanner.inaktiv_threshold_days",
+    value: "14",
+    type: "number",
+    category: "scanner",
+    label: "Inaktivitaets-Schwellenwert (Tage)",
+    min: 7,
+    max: 90,
+  },
+  {
+    key: "scanner.escalation_3d_enabled",
+    value: "true",
+    type: "boolean",
+    category: "scanner",
+    label: "Eskalation nach 3 Tagen (+2 Severity)",
+  },
+  {
+    key: "scanner.escalation_7d_enabled",
+    value: "true",
+    type: "boolean",
+    category: "scanner",
+    label: "Eskalation nach 7 Tagen (Admin-Benachrichtigung)",
+  },
+  {
+    key: "scanner.required_documents",
+    value: JSON.stringify({
+      ARBEITSRECHT: ["Vollmacht", "Kuendigungsschreiben"],
+      VERKEHRSRECHT: ["Vollmacht", "Unfallbericht"],
+      FAMILIENRECHT: ["Vollmacht"],
+      default: ["Vollmacht"],
+    }),
+    type: "json",
+    category: "scanner",
+    label: "Erwartete Dokumente pro Sachgebiet (JSON)",
+  },
+
   // beA category
   {
     key: "bea.api_url",
@@ -191,5 +251,6 @@ export const CATEGORY_LABELS: Record<string, string> = {
   fristen: "Fristen",
   system: "System",
   ai: "KI / Helena",
+  scanner: "Scanner",
   bea: "beA",
 };

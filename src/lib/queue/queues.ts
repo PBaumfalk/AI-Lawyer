@@ -185,6 +185,21 @@ export const helenaTaskQueue = new Queue("helena-task", {
   },
 });
 
+/**
+ * Scanner queue for nightly deterministic Akten scanning.
+ * attempts: 2 -- retry once on transient DB failures.
+ * No LLM calls, fast deterministic checks only.
+ */
+export const scannerQueue = new Queue("scanner", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: "custom" },
+    removeOnComplete: { age: 86_400 }, // 24h
+    removeOnFail: { age: 604_800 }, // 7 days
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
 export const ALL_QUEUES: Queue[] = [
   testQueue,
@@ -202,6 +217,7 @@ export const ALL_QUEUES: Queue[] = [
   urteileSyncQueue,
   musterIngestionQueue,
   helenaTaskQueue,
+  scannerQueue,
 ];
 
 /**
@@ -328,6 +344,32 @@ export async function registerUrteileSyncJob(
       data: {},
       opts: {
         removeOnComplete: { count: 10 },
+        removeOnFail: { count: 20 },
+      },
+    }
+  );
+}
+
+/**
+ * Register the nightly scanner cron job.
+ * Uses upsertJobScheduler for idempotent (re)registration.
+ *
+ * @param cronPattern - Cron expression (default: "0 1 * * *" = 01:00 daily)
+ */
+export async function registerScannerJob(
+  cronPattern = "0 1 * * *"
+): Promise<void> {
+  await scannerQueue.upsertJobScheduler(
+    "scanner-nightly",
+    {
+      pattern: cronPattern,
+      tz: "Europe/Berlin",
+    },
+    {
+      name: "nightly-scan",
+      data: {},
+      opts: {
+        removeOnComplete: { count: 50 },
         removeOnFail: { count: 20 },
       },
     }

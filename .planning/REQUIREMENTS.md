@@ -14,7 +14,7 @@ Requirements for v0.3 Kanzlei-Collaboration milestone. Each maps to roadmap phas
 - [ ] **FD-03**: User can create a custom Falldatenblatt template with configurable fields (Text, Datum, Dropdown, Checkbox, Zahl, Textbereich, Mehrfachauswahl)
 - [ ] **FD-04**: User can submit a custom template to Admin for review
 - [ ] **FD-05**: Admin can approve or reject submitted templates
-- [ ] **FD-06**: Approved templates appear as available Standardfälle for all users
+- [ ] **FD-06**: Approved templates appear as available Standardfaelle for all users
 - [ ] **FD-07**: Existing 10 Sachgebiet schemas are migrated as seed templates in DB (single source of truth)
 
 ### SCAN-05 Neu-Urteil-Check
@@ -78,32 +78,32 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FD-01 | — | Pending |
-| FD-02 | — | Pending |
-| FD-03 | — | Pending |
-| FD-04 | — | Pending |
-| FD-05 | — | Pending |
-| FD-06 | — | Pending |
-| FD-07 | — | Pending |
-| SCAN-01 | — | Pending |
-| SCAN-02 | — | Pending |
-| SCAN-03 | — | Pending |
-| SCAN-04 | — | Pending |
-| SCAN-05 | — | Pending |
-| MSG-01 | — | Pending |
-| MSG-02 | — | Pending |
-| MSG-03 | — | Pending |
-| MSG-04 | — | Pending |
-| MSG-05 | — | Pending |
-| MSG-06 | — | Pending |
-| MSG-07 | — | Pending |
-| MSG-08 | — | Pending |
+| FD-01 | Phase 29 | Pending |
+| FD-02 | Phase 29 | Pending |
+| FD-03 | Phase 28 | Pending |
+| FD-04 | Phase 28 | Pending |
+| FD-05 | Phase 28 | Pending |
+| FD-06 | Phase 28 | Pending |
+| FD-07 | Phase 28 | Pending |
+| SCAN-01 | Phase 30 | Pending |
+| SCAN-02 | Phase 30 | Pending |
+| SCAN-03 | Phase 30 | Pending |
+| SCAN-04 | Phase 30 | Pending |
+| SCAN-05 | Phase 30 | Pending |
+| MSG-01 | Phase 31 | Pending |
+| MSG-02 | Phase 31 | Pending |
+| MSG-03 | Phase 31 | Pending |
+| MSG-04 | Phase 31 | Pending |
+| MSG-05 | Phase 31 | Pending |
+| MSG-06 | Phase 32 | Pending |
+| MSG-07 | Phase 32 | Pending |
+| MSG-08 | Phase 32 | Pending |
 
 **Coverage:**
 - v0.3 requirements: 20 total
-- Mapped to phases: 0
-- Unmapped: 20 ⚠️
+- Mapped to phases: 20
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after initial definition*
+*Last updated: 2026-02-28 after roadmap creation*

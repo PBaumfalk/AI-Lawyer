@@ -8,7 +8,7 @@ progress:
   total_phases: 12
   completed_phases: 11
   total_plans: 37
-  completed_plans: 36
+  completed_plans: 37
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 30 of 32 (SCAN-05 Neu-Urteil-Check)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-02-28 -- completed 30-01 (Akte Summary Embedding Infrastructure)
+Plan: 2 of 2 in current phase
+Status: Phase Complete
+Last activity: 2026-02-28 -- completed 30-02 (Neu-Urteil Cross-Matching Engine)
 
 Progress: [####......] 40% (v0.3: 2/5 phases)
 
@@ -54,6 +54,7 @@ Progress: [####......] 40% (v0.3: 2/5 phases)
 | Phase 29 P01 | 2min | 2 tasks | 3 files |
 | Phase 29 P02 | 2min | 2 tasks | 2 files |
 | Phase 30 P01 | 4min | 2 tasks | 9 files |
+| Phase 30 P02 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,9 @@ Recent decisions affecting current work:
 - [30-01]: AkteNorm fields read directly (no separate Norm relation) -- adapted plan accordingly
 - [30-01]: Cron at 02:30 slots between gesetze-sync (02:00) and urteile-sync (03:00)
 - [30-01]: attempts:1 for akte-embedding queue -- embedding failures are non-retryable
+- [30-02]: Per-Urteil dedup uses Prisma JSON path query on meta.urteilChunkId (not time-based 24h)
+- [30-02]: Sachgebiet pre-filter maps Rechtsgebiet to Sachgebiet; Verfassungsrecht matches all Akten
+- [30-02]: LLM briefing uses structured 3-section format with maxTokens 500 and fallback on failure
 
 ### Pending Todos
 
@@ -96,5 +100,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 30-01-PLAN.md (Akte Summary Embedding Infrastructure)
+Stopped at: Completed 30-02-PLAN.md (Neu-Urteil Cross-Matching Engine)
 Resume file: None

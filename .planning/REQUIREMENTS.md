@@ -20,10 +20,10 @@ Requirements for v0.3 Kanzlei-Collaboration milestone. Each maps to roadmap phas
 ### SCAN-05 Neu-Urteil-Check
 
 - [x] **SCAN-01**: System generates summary embedding per active Akte from case context
-- [ ] **SCAN-02**: After RSS-Urteil ingestion, system matches new Urteile against active Akten via semantic similarity
-- [ ] **SCAN-03**: User receives NEUES_URTEIL alert when a relevant Urteil is found
+- [x] **SCAN-02**: After RSS-Urteil ingestion, system matches new Urteile against active Akten via semantic similarity
+- [x] **SCAN-03**: User receives NEUES_URTEIL alert when a relevant Urteil is found
 - [x] **SCAN-04**: Admin can configure relevance threshold via SystemSetting
-- [ ] **SCAN-05**: Alert includes Helena-generated briefing explaining why the Urteil is relevant
+- [x] **SCAN-05**: Alert includes Helena-generated briefing explaining why the Urteil is relevant
 
 ### Internes Messaging
 
@@ -86,10 +86,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FD-06 | Phase 28 | Complete |
 | FD-07 | Phase 28 | Complete |
 | SCAN-01 | Phase 30 | Complete |
-| SCAN-02 | Phase 30 | Pending |
-| SCAN-03 | Phase 30 | Pending |
+| SCAN-02 | Phase 30 | Complete |
+| SCAN-03 | Phase 30 | Complete |
 | SCAN-04 | Phase 30 | Complete |
-| SCAN-05 | Phase 30 | Pending |
+| SCAN-05 | Phase 30 | Complete |
 | MSG-01 | Phase 31 | Pending |
 | MSG-02 | Phase 31 | Pending |
 | MSG-03 | Phase 31 | Pending |

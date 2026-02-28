@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: Helena Agent
-status: unknown
-last_updated: "2026-02-28T08:36:54.672Z"
+status: in-progress
+last_updated: "2026-02-28T09:11:46Z"
 progress:
   total_phases: 17
-  completed_phases: 16
+  completed_phases: 17
   total_plans: 46
-  completed_plans: 46
+  completed_plans: 47
 ---
 
 # Project State
@@ -18,22 +18,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Helena wird vom Chat-Bot zum autonomen Agenten — ReAct-Loop mit Tool-Calling, deterministischer Schriftsatz-Orchestrator, proaktiver Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail.
-**Current focus:** v0.2 Helena Agent — Phase 22 in progress
+**Current focus:** v0.2 Helena Agent — Phase 25 complete, ready for Phase 26
 
 ## Current Position
 
-Phase: 24 of 26 (Scanner + Alerts)
-Plan: 2 of 2 in current phase
-Status: Phase 24 complete (2/2 plans done), ready for Phase 25
-Last activity: 2026-02-28 — Completed 24-02 Alert-Center UI + REST API
+Phase: 25 of 26 (Helena Memory)
+Plan: 1 of 1 in current phase
+Status: Phase 25 complete (1/1 plans done), ready for Phase 26
+Last activity: 2026-02-28 — Completed 25-01 Helena Memory Service
 
-Progress: [█████████░] 70%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 71 (v3.4: 38 + v3.5: 10 + v0.1: 19)
-- v0.2 plans: 16/20
+- Total plans completed: 72 (v3.4: 38 + v3.5: 10 + v0.1: 19)
+- v0.2 plans: 17/20
 
 **By Phase (v0.2):**
 
@@ -46,7 +46,7 @@ Progress: [█████████░] 70%
 | 23. Draft-Approval Workflow | 3/3 | 18min | 6min |
 | 23.1. Integration Wiring Fixes | 3/3 | 9min | 3min |
 | 24. Scanner + Alerts | 2/2 | 13min | 6.5min |
-| 25. Helena Memory | 0/1 | - | - |
+| 25. Helena Memory | 1/1 | 5min | 5min |
 | 26. Activity Feed UI + QA-Gates | 0/3 | - | - |
 
 ## Accumulated Context
@@ -120,6 +120,12 @@ Recent decisions affecting v0.2:
 - [Phase 24]: DOKUMENT_FEHLT uses name-only matching (Dokument has no kategorie field) with Vollmacht special case
 - [Phase 24]: Progressive escalation uses meta fields (escalatedAt3d/escalatedAt7d) to prevent re-escalation
 - [Phase 24]: helena:alert-badge Socket.IO event carries exact count for direct badge set (no refetch needed)
+- [Phase 25]: loadOrRefresh service pattern: load from DB, check staleness, auto-regenerate via LLM, never throw
+- [Phase 25]: 5-minute in-memory cooldown prevents rapid-fire LLM memory regeneration during bulk operations
+- [Phase 25]: _meta field in HelenaMemory.content for change detection (dokumentCount, beteiligteCount, fristenCount)
+- [Phase 25]: formatMemoryForPrompt caps at ~2000 tokens (~7000 chars) with summary truncation
+- [Phase 25]: Backward-compatible memory type detection: check for 'summary' string field to distinguish structured vs legacy
+- [Phase 25]: Memory injected before pinned normen in ki-chat system prompt for proper context layering
 
 ### Pending Todos
 
@@ -137,5 +143,5 @@ Recent decisions affecting v0.2:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 24-02-PLAN.md (Alert-Center UI + REST API)
-Resume file: .planning/phases/24-scanner-alerts/24-02-SUMMARY.md
+Stopped at: Completed 25-01-PLAN.md (Helena Memory Service)
+Resume file: .planning/phases/25-helena-memory/25-01-SUMMARY.md

@@ -71,7 +71,7 @@ See: `milestones/v0.1-ROADMAP.md` for full phase details.
 - [x] **Phase 22: Deterministic Schriftsatz Orchestrator** - Intent-Router, Slot-Filling, SchriftsatzSchema, RAG Assembly, ERV-Validator (completed 2026-02-27)
 - [x] **Phase 23: Draft-Approval Workflow** - HelenaDraft lifecycle, ENTWURF Prisma middleware gate, accept/reject/edit with feedback (completed 2026-02-27)
 - [x] **Phase 24: Scanner + Alerts** - Background scanner cron, 6 alert types, deduplication, alert-center, Socket.IO push (completed 2026-02-28)
-- [ ] **Phase 25: Helena Memory** - Per-Akte context storage, auto-refresh, DSGVO cascade delete
+- [x] **Phase 25: Helena Memory** - Per-Akte context storage, auto-refresh, DSGVO cascade delete (completed 2026-02-28)
 - [ ] **Phase 26: Activity Feed UI + QA-Gates** - Akte-Detail feed umbau, composer, alert-center widget, QA goldset, retrieval metrics, audit trail
 
 ## Phase Details
@@ -229,7 +229,7 @@ Phases execute: 19 -> 20 -> 21 + 22 + 23 -> 23.1 -> 24 + 25 (parallel-eligible, 
 | 23. Draft-Approval Workflow | v0.2 | 3/3 | Complete | 2026-02-27 |
 | 23.1. Integration Wiring Fixes | 3/3 | Complete    | 2026-02-27 | - |
 | 24. Scanner + Alerts | 2/2 | Complete    | 2026-02-28 | - |
-| 25. Helena Memory | v0.2 | 0/1 | Not started | - |
+| 25. Helena Memory | 1/1 | Complete   | 2026-02-28 | - |
 | 26. Activity Feed UI + QA-Gates | v0.2 | 0/3 | Not started | - |
 
 ---

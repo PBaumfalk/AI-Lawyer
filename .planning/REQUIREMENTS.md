@@ -62,9 +62,9 @@
 ### Helena Memory (MEM)
 
 - [x] **MEM-01**: Per-Akte Helena-Kontext (Zusammenfassung, erkannte Risiken, nächste Schritte, offene Fragen, relevante Normen/Urteile)
-- [ ] **MEM-02**: Memory wird bei jedem Helena-Aufruf in dieser Akte als Kontext geladen ("Helena erinnert sich")
-- [ ] **MEM-03**: Automatischer Memory-Refresh wenn Akte seit letztem Scan verändert wurde (neues Dokument, neue Frist etc.)
-- [ ] **MEM-04**: DSGVO-konform: Memory-Einträge werden bei Akten-Löschung kaskadierend gelöscht (Art. 17 DSGVO)
+- [x] **MEM-02**: Memory wird bei jedem Helena-Aufruf in dieser Akte als Kontext geladen ("Helena erinnert sich")
+- [x] **MEM-03**: Automatischer Memory-Refresh wenn Akte seit letztem Scan verändert wurde (neues Dokument, neue Frist etc.)
+- [x] **MEM-04**: DSGVO-konform: Memory-Einträge werden bei Akten-Löschung kaskadierend gelöscht (Art. 17 DSGVO)
 
 ### QA-Gates + Audit (QA)
 
@@ -149,9 +149,9 @@
 | ALRT-04 | Phase 24 | Complete |
 | ALRT-05 | Phase 24 | Complete |
 | MEM-01 | Phase 19 | Complete |
-| MEM-02 | Phase 25 | Pending |
-| MEM-03 | Phase 25 | Pending |
-| MEM-04 | Phase 25 | Pending |
+| MEM-02 | Phase 25 | Complete |
+| MEM-03 | Phase 25 | Complete |
+| MEM-04 | Phase 25 | Complete |
 | QA-01 | Phase 26 | Pending |
 | QA-02 | Phase 26 | Pending |
 | QA-03 | Phase 26 | Pending |

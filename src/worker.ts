@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
-import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerUrteileSyncJob, ocrQueue } from "@/lib/queue/queues";
+import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerUrteileSyncJob, registerScannerJob, ocrQueue } from "@/lib/queue/queues";
 import { processMusterIngestionJob, processMusterIngestPending, type MusterIngestionJobData } from "@/lib/queue/processors/muster-ingestion.processor";
 import { seedAmtlicheFormulare } from "@/lib/muster/seed-amtliche";
 import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.processor";
@@ -23,6 +23,7 @@ import { processGesetzeSyncJob } from "@/lib/queue/processors/gesetze-sync.proce
 import { processNerPiiJob, type NerPiiJobData, recoverStuckNerJobs } from "@/lib/queue/processors/ner-pii.processor";
 import { processUrteileSyncJob } from "@/lib/queue/processors/urteile-sync.processor";
 import { processHelenaTask, type HelenaTaskJobData } from "@/lib/queue/processors/helena-task.processor";
+import { processScanner } from "@/workers/processors/scanner";
 import { prisma } from "@/lib/db";
 
 const log = createLogger("worker");
@@ -705,6 +706,53 @@ helenaTaskWorker.on("error", (err) => {
 workers.push(helenaTaskWorker);
 log.info("[Worker] helena-task processor registered");
 
+// ─── Scanner Queue Worker ──────────────────────────────────────────────────
+
+const scannerWorker = new Worker(
+  "scanner",
+  async () => processScanner(),
+  {
+    connection,
+    concurrency: 1, // Only one scan at a time -- prevents duplicate alerts
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+scannerWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, result: job.returnvalue },
+    "Scanner run completed"
+  );
+});
+
+scannerWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, err: err.message, attemptsMade: job.attemptsMade },
+    "Scanner run failed"
+  );
+
+  // Notify admins on final failure
+  if (job.attemptsMade >= (job.opts.attempts ?? 2)) {
+    socketEmitter.to("role:ADMIN").emit("notification", {
+      type: "job:failed",
+      title: "Naechtlicher Scanner fehlgeschlagen",
+      message: `Scanner-Cron fehlgeschlagen: ${err.message}`,
+      data: { jobId: job.id, queue: "scanner" },
+    });
+  }
+});
+
+scannerWorker.on("error", (err) => {
+  log.error({ err }, "Scanner worker error");
+});
+
+workers.push(scannerWorker);
+log.info("[Worker] scanner processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -768,6 +816,18 @@ subscriber.on("message", (channel, message) => {
           })
           .catch((err: unknown) => {
             log.error({ err }, "Failed to update frist reminder schedule");
+          });
+      }
+      if (data.key === "scanner.cron_schedule" && data.value) {
+        registerScannerJob(data.value)
+          .then(() => {
+            log.info(
+              { cronPattern: data.value },
+              "Scanner schedule updated"
+            );
+          })
+          .catch((err: unknown) => {
+            log.error({ err }, "Failed to update scanner schedule");
           });
       }
     } catch {
@@ -838,6 +898,18 @@ async function startup() {
     log.info("Urteile sync job registered (03:00 Europe/Berlin daily)");
   } catch (err) {
     log.warn({ err }, "Failed to register Urteile sync job (non-fatal)");
+  }
+
+  // Register nightly scanner cron job
+  try {
+    const scannerEnabled = await getSettingTyped<boolean>("scanner.enabled", true);
+    if (scannerEnabled) {
+      const scannerCron = await getSettingTyped<string>("scanner.cron_schedule", "0 1 * * *");
+      await registerScannerJob(scannerCron);
+      log.info({ scannerCron }, "Scanner cron job registered (nightly)");
+    }
+  } catch (err) {
+    log.warn({ err }, "Failed to register scanner cron job (non-fatal)");
   }
 
   // Recover any Muster rows stuck in NER_RUNNING from a previous crashed worker
@@ -931,7 +1003,7 @@ async function startup() {
         "test", "frist-reminder", "email-send", "email-sync",
         "document-ocr", "document-preview", "document-embedding",
         "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync", "ner-pii",
-        "urteile-sync", "muster-ingestion", "helena-task",
+        "urteile-sync", "muster-ingestion", "helena-task", "scanner",
       ],
       fristScanZeit: scanZeit,
     },

@@ -140,11 +140,11 @@ Plans:
   3. User receives a NEUES_URTEIL alert in the existing Alert-Center when a relevant Urteil is found for one of their Akten
   4. Admin can configure the relevance threshold via SystemSetting in the admin panel
   5. Each NEUES_URTEIL alert includes a Helena-generated briefing explaining why the Urteil is relevant to the specific Akte
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 30-01: TBD
-- [ ] 30-02: TBD
+- [ ] 30-01-PLAN.md — Prisma schema migration (summaryEmbedding vector column + HNSW index), SystemSettings (threshold + toggle), Akte summary text assembler, nightly embedding refresh cron
+- [ ] 30-02-PLAN.md — Cross-matching engine (pgvector cosine similarity + Sachgebiet pre-filter), LLM briefing generation, NEUES_URTEIL alert creation, worker trigger, Alert-Center UI config, admin threshold slider
 
 ### Phase 31: Messaging Schema + API
 **Goal**: The backend supports persistent channels, Akte-bound threads, real-time message delivery, and @mention notifications
@@ -189,10 +189,10 @@ Phases execute in numeric order: 28 -> 28.1 -> 29 -> 30 -> 31 -> 32
 | 19-27 | v0.2 | 23/23 | Complete | 2026-02-28 |
 | 28. Falldatenblaetter Schema + Templates | 4/4 | Complete    | 2026-02-28 | - |
 | 29. Falldatenblaetter UI | 2/2 | Complete    | 2026-02-28 | - |
-| 30. SCAN-05 Neu-Urteil-Check | v0.3 | 0/TBD | Not started | - |
+| 30. SCAN-05 Neu-Urteil-Check | v0.3 | 0/2 | Planned | - |
 | 31. Messaging Schema + API | v0.3 | 0/TBD | Not started | - |
 | 32. Messaging UI | v0.3 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-02-24*
-*Last updated: 2026-02-28 after gap closure plan for Phase 28*
+*Last updated: 2026-02-28 after Phase 30 planning*

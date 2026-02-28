@@ -1944,6 +1944,9 @@ model HelenaDraft {
   // Undo window
   undoExpiresAt      DateTime?     // Set on accept, null after 5s or on undo
 
+  // QA retrieval logs
+  retrievalLogs      SchriftsatzRetrievalLog[]
+
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
@@ -2040,4 +2043,24 @@ model AktenActivity {
   @@index([akteId, createdAt])
   @@index([akteId, typ])
   @@map("akten_activities")
+}
+
+/// QA-04: Per-Schriftsatz retrieval audit log for quality metrics
+model SchriftsatzRetrievalLog {
+  id              String   @id @default(cuid())
+
+  schriftsatzId   String   // HelenaDraft ID (the Schriftsatz draft)
+  draft           HelenaDraft @relation(fields: [schriftsatzId], references: [id], onDelete: Cascade)
+
+  queryHash       String   // SHA-256 hash of the query text (PII-safe, QA-07)
+  retrievalBelege Json     // Full RetrievalBeleg[] array
+  promptVersion   String   // Prompt template version identifier
+  modell          String   // Model name used for generation
+  recallAt5       Float?   // Pre-computed Recall@5 if goldset query
+
+  createdAt       DateTime @default(now())
+
+  @@index([schriftsatzId])
+  @@index([createdAt])
+  @@map("schriftsatz_retrieval_logs")
 }

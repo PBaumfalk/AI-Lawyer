@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.3
 milestone_name: Kanzlei-Collaboration
-status: unknown
-last_updated: "2026-02-28T20:58:19.159Z"
+status: in-progress
+last_updated: "2026-02-28T22:35:04Z"
 progress:
   total_phases: 12
   completed_phases: 11
-  total_plans: 35
-  completed_plans: 35
+  total_plans: 37
+  completed_plans: 36
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 29 - Falldatenblaetter UI
+**Current focus:** Phase 30 - SCAN-05 Neu-Urteil-Check
 
 ## Current Position
 
-Phase: 29 of 32 (Falldatenblaetter UI)
-Plan: 2 of 2 in current phase (COMPLETE)
-Status: Phase Complete
-Last activity: 2026-02-28 -- completed 29-02 (FalldatenTab Wrapper + Tab Integration)
+Phase: 30 of 32 (SCAN-05 Neu-Urteil-Check)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-02-28 -- completed 30-01 (Akte Summary Embedding Infrastructure)
 
 Progress: [####......] 40% (v0.3: 2/5 phases)
 
@@ -53,6 +53,7 @@ Progress: [####......] 40% (v0.3: 2/5 phases)
 | Phase 28 P04 | 1min | 1 task | 1 file |
 | Phase 29 P01 | 2min | 2 tasks | 3 files |
 | Phase 29 P02 | 2min | 2 tasks | 2 files |
+| Phase 30 P01 | 4min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,9 @@ Recent decisions affecting current work:
 - [29-02]: Template resolution fetches by ID when assigned, auto-assigns STANDARD by sachgebiet when not
 - [29-02]: Completeness badge only shows percentage when required fields exist (total > 0)
 - [29-02]: Unsaved changes uses Radix AlertDialog, not native browser confirm
+- [30-01]: AkteNorm fields read directly (no separate Norm relation) -- adapted plan accordingly
+- [30-01]: Cron at 02:30 slots between gesetze-sync (02:00) and urteile-sync (03:00)
+- [30-01]: attempts:1 for akte-embedding queue -- embedding failures are non-retryable
 
 ### Pending Todos
 
@@ -92,5 +96,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 29-02-PLAN.md (FalldatenTab Wrapper + Tab Integration)
+Stopped at: Completed 30-01-PLAN.md (Akte Summary Embedding Infrastructure)
 Resume file: None

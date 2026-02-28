@@ -26,6 +26,7 @@ import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { runHelenaAgent } from "@/lib/helena";
 import { getSocketEmitter } from "@/lib/socket/emitter";
+import { loadOrRefresh } from "@/lib/helena/memory-service";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("helena-task-processor");
@@ -106,10 +107,8 @@ export async function processHelenaTask(
       auftrag,
     });
 
-    // 3. Load HelenaMemory for this Akte (if exists -- immediate benefit before Phase 25)
-    const memory = await prisma.helenaMemory.findUnique({
-      where: { akteId },
-    });
+    // 3. Load HelenaMemory with staleness check + auto-refresh (MEM-02, MEM-03)
+    const memoryResult = await loadOrRefresh(prisma, akteId);
 
     // 4. Run Helena agent
     const result = await runHelenaAgent({
@@ -121,7 +120,9 @@ export async function processHelenaTask(
       message: auftrag,
       mode: "background",
       abortSignal: controller.signal,
-      helenaMemory: (memory?.content as Record<string, unknown>) ?? null,
+      helenaMemory: memoryResult.content
+        ? { ...memoryResult.content, _changes: memoryResult.changes }
+        : null,
       onStepUpdate: (step) => {
         // Reset BullMQ lock timer on each step (anti-stall, AGNT-07)
         job.updateProgress({

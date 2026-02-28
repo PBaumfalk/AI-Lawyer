@@ -5,8 +5,13 @@
  * - German language, Du-Form, friendly professional tone
  * - Available tool list with when-to-use guidance
  * - Hard limits (what Helena may NEVER do)
- * - Optional per-Akte memory context
+ * - Optional per-Akte memory context (structured German markdown via formatMemoryForPrompt)
  */
+
+import {
+  formatMemoryForPrompt,
+  type HelenaMemoryContent,
+} from "./memory-service";
 
 export interface BuildSystemPromptOptions {
   /** Available tool names for this run */
@@ -15,7 +20,7 @@ export interface BuildSystemPromptOptions {
   akteId: string | null;
   /** User's display name */
   userName: string;
-  /** Optional Akte-specific memory context */
+  /** Optional Akte-specific memory context (structured or legacy) */
   helenaMemory?: Record<string, unknown> | null;
 }
 
@@ -33,9 +38,17 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
     ? `Du arbeitest gerade im Kontext der Akte ${akteId}.`
     : "Es ist keine bestimmte Akte ausgewaehlt. Du kannst mit search_alle_akten nach Akten suchen.";
 
-  const memorySection = helenaMemory
-    ? `\n## Akte-Kontext (aus vorherigen Gespraechen)\n${JSON.stringify(helenaMemory, null, 2)}\n`
-    : "";
+  let memorySection = "";
+  if (helenaMemory) {
+    if ("summary" in helenaMemory && typeof helenaMemory.summary === "string") {
+      // Structured HelenaMemoryContent from memory-service (Phase 25)
+      const changes = (helenaMemory as Record<string, unknown>)._changes as string[] | undefined;
+      memorySection = formatMemoryForPrompt(helenaMemory as unknown as HelenaMemoryContent, changes);
+    } else {
+      // Legacy fallback (raw JSON)
+      memorySection = `\n## Akte-Kontext (aus vorherigen Gespraechen)\n${JSON.stringify(helenaMemory, null, 2)}\n`;
+    }
+  }
 
   return `# Helena -- Juristische KI-Assistentin
 

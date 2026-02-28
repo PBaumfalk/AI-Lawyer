@@ -40,6 +40,10 @@ import {
   classifyAnswerIntent,
   extractSlotValues,
 } from "@/lib/helena/schriftsatz/answer-parser";
+import {
+  loadOrRefresh,
+  formatMemoryForPrompt,
+} from "@/lib/helena/memory-service";
 
 // ---------------------------------------------------------------------------
 // System prompt for Helena (German)
@@ -793,9 +797,25 @@ ${terminLines}
         }
       })();
 
+  // Chain G: Helena Memory (load from DB, staleness check, optional LLM refresh)
+  // MEM-02, MEM-03: Auto-loads and refreshes memory for Akte context
+  const memoryPromise = akteId
+    ? (async () => {
+        const tG = Date.now();
+        try {
+          const result = await loadOrRefresh(prisma, akteId);
+          console.log(`[ki-chat] Chain G (HelenaMemory) took ${Date.now() - tG}ms, refreshed=${result.refreshed}`);
+          return result;
+        } catch (err) {
+          console.error("[ki-chat] HelenaMemory loading failed:", err);
+          return { content: null, refreshed: false as const };
+        }
+      })()
+    : Promise.resolve({ content: null, refreshed: false as const });
+
   // Await all chains in parallel
-  const [{ aktenKontextBlock, pinnedNormenBlock }, ragResult, [model, modelName, providerName], lawChunks, urteilChunks, musterChunks] =
-    await Promise.all([akteContextPromise, ragPromise, modelConfigPromise, lawChunksPromise, urteilChunksPromise, musterChunksPromise]);
+  const [{ aktenKontextBlock, pinnedNormenBlock }, ragResult, [model, modelName, providerName], lawChunks, urteilChunks, musterChunks, memoryResult] =
+    await Promise.all([akteContextPromise, ragPromise, modelConfigPromise, lawChunksPromise, urteilChunksPromise, musterChunksPromise, memoryPromise]);
 
   console.log(`[ki-chat] All chains resolved in ${Date.now() - t0}ms (provider=${providerName}, model=${modelName}, ragSkipped=${skipRag})`);
 
@@ -811,6 +831,11 @@ ${terminLines}
     systemPrompt += NO_SOURCES_INSTRUCTION;
   } else if (confidenceFlag === "low") {
     systemPrompt += LOW_CONFIDENCE_INSTRUCTION;
+  }
+
+  // Inject Helena Memory (Phase 25: MEM-02)
+  if (memoryResult.content) {
+    systemPrompt += formatMemoryForPrompt(memoryResult.content, memoryResult.changes);
   }
 
   // Pinned norms — highest legal priority context for this Akte.
@@ -997,6 +1022,7 @@ ${terminLines}
   return result.toDataStreamResponse({
     headers: {
       "X-Sources": encodeURIComponent(JSON.stringify(sourcesData)),
+      ...(memoryResult.refreshed ? { "X-Memory-Refreshed": "true" } : {}),
     },
   });
 }

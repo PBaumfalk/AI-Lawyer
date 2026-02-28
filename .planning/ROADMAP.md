@@ -108,11 +108,12 @@ See: `milestones/v0.2-ROADMAP.md` for full phase details.
   3. Admin can approve or reject submitted templates with the result visible to the submitting user
   4. Approved templates appear as available Standardfaelle for all users when creating or editing Falldatenblaetter
   5. The 10 existing Sachgebiet schemas from TypeScript are present as seed templates in the database (single source of truth)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 28-01: TBD
-- [ ] 28-02: TBD
+- [ ] 28-01-PLAN.md — Prisma schema (enum + model + Akte FK), Zod validation, seed function, worker wiring
+- [ ] 28-02-PLAN.md — Template CRUD API routes + workflow transitions (einreichen/genehmigen/ablehnen)
+- [ ] 28-03-PLAN.md — User template list, Gruppen-first builder, admin review queue + detail
 
 ### Phase 29: Falldatenblaetter UI
 **Goal**: Users can view, fill out, and track completeness of Falldatenblaetter directly within an Akte

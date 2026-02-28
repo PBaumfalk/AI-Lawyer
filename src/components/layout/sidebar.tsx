@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   Sun,
   Moon,
+  Bell,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -55,6 +56,7 @@ const navigation: NavItem[] = [
   { name: "Kalender", href: "/kalender", icon: Calendar },
   { name: "Dokumente", href: "/dokumente", icon: FileText },
   { name: "Entwuerfe", href: "/entwuerfe", icon: FileCheck, badgeKey: "pendingDrafts" },
+  { name: "Warnungen", href: "/alerts", icon: Bell, badgeKey: "unreadAlerts" },
   { name: "E-Mails", href: "/email", icon: Mail },
   { name: "Tickets", href: "/tickets", icon: TicketCheck },
   { name: "Helena", href: "/ki-chat", icon: Sparkles },
@@ -103,10 +105,26 @@ export function Sidebar() {
     }
   }, []);
 
+  // Unread alerts badge count
+  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
+
+  const fetchAlertCount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/helena/alerts?gelesen=false&limit=1");
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadAlertsCount(data.total ?? 0);
+      }
+    } catch {
+      // Non-critical -- badge will show 0
+    }
+  }, []);
+
   // Fetch on mount and listen for Socket.IO events to update
   useEffect(() => {
     fetchDraftCount();
-  }, [fetchDraftCount]);
+    fetchAlertCount();
+  }, [fetchDraftCount, fetchAlertCount]);
 
   useEffect(() => {
     if (!socket) return;
@@ -128,12 +146,35 @@ export function Sidebar() {
     };
   }, [socket, fetchDraftCount]);
 
+  // Socket.IO listeners for alert badge updates
+  useEffect(() => {
+    if (!socket) return;
+
+    function handleAlertBadge(data: { count: number }) {
+      setUnreadAlertsCount(data.count);
+    }
+
+    function handleCriticalAlert() {
+      // Refetch to get accurate count (critical alert may target this user)
+      fetchAlertCount();
+    }
+
+    socket.on("helena:alert-badge", handleAlertBadge);
+    socket.on("helena:alert-critical", handleCriticalAlert);
+
+    return () => {
+      socket.off("helena:alert-badge", handleAlertBadge);
+      socket.off("helena:alert-critical", handleCriticalAlert);
+    };
+  }, [socket, fetchAlertCount]);
+
   // Badge counts by key
   const badgeCounts: Record<string, number> = useMemo(
     () => ({
       pendingDrafts: pendingDraftsCount,
+      unreadAlerts: unreadAlertsCount,
     }),
-    [pendingDraftsCount]
+    [pendingDraftsCount, unreadAlertsCount]
   );
 
   // Filter navigation items based on user role

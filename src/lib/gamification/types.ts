@@ -72,6 +72,14 @@ export const STREAK_BONUSES = [
   { minDays: 3, multiplier: 1.10 },   // +10% Runen
 ] as const;
 
+// ─── Audit / Anti-Missbrauch ─────────────────────────────────────────────────
+
+/** Mirrors Prisma AuditStatus enum for use outside of @prisma/client imports */
+export type AuditStatusType = "NONE" | "PENDING" | "CONFIRMED" | "DECLINED";
+
+/** Bonus Runen awarded when a follow-up WV is created on the same day */
+export const FOLLOW_UP_WV_BONUS_RUNEN = 5;
+
 // ─── Boss Trophy ────────────────────────────────────────────────────────────
 
 export interface BossTrophy {

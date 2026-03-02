@@ -277,6 +277,15 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     min: 1,
     max: 168,
   },
+  {
+    key: "gamification.daily_runen_cap",
+    value: "40",
+    type: "number",
+    category: "gamification",
+    label: "Taegliches Runen-Limit (Wiedervorlage-Quests)",
+    min: 10,
+    max: 200,
+  },
 ];
 
 /** Category display labels (German) */

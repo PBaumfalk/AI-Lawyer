@@ -326,6 +326,13 @@ enum BossfightStatus {
   DEFEATED
 }
 
+enum AuditStatus {
+  NONE
+  PENDING
+  CONFIRMED
+  DECLINED
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Kanzlei {
@@ -2295,11 +2302,15 @@ model QuestCompletion {
   profile       UserGameProfile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
   xpVerdient    Int
   runenVerdient Int
+  pendingXp     Int              @default(0)
+  pendingRunen  Int              @default(0)
+  auditStatus   AuditStatus      @default(NONE)
   completedAt   DateTime         @default(now())
+  completedDate DateTime         @db.Date
 
   @@index([userId, completedAt])
   @@index([questId])
-  @@unique([userId, questId, completedAt])
+  @@unique([userId, questId, completedDate])
   @@map("quest_completions")
 }
 

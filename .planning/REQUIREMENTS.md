@@ -95,53 +95,53 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GAME-01 | — | Pending |
-| GAME-02 | — | Pending |
-| GAME-03 | — | Pending |
-| GAME-04 | — | Pending |
-| GAME-05 | — | Pending |
-| GAME-06 | — | Pending |
-| GAME-07 | — | Pending |
-| GAME-08 | — | Pending |
-| QUEST-01 | — | Pending |
-| QUEST-02 | — | Pending |
-| QUEST-03 | — | Pending |
-| QUEST-04 | — | Pending |
-| QUEST-05 | — | Pending |
-| QUEST-06 | — | Pending |
-| QUEST-07 | — | Pending |
-| QUEST-08 | — | Pending |
-| BOSS-01 | — | Pending |
-| BOSS-02 | — | Pending |
-| BOSS-03 | — | Pending |
-| BOSS-04 | — | Pending |
-| ABUSE-01 | — | Pending |
-| ABUSE-02 | — | Pending |
-| ABUSE-03 | — | Pending |
-| ABUSE-04 | — | Pending |
-| SHOP-01 | — | Pending |
-| SHOP-02 | — | Pending |
-| SHOP-03 | — | Pending |
-| SHOP-04 | — | Pending |
-| SHOP-05 | — | Pending |
-| PROFIL-01 | — | Pending |
-| PROFIL-02 | — | Pending |
-| PROFIL-03 | — | Pending |
-| TEAM-01 | — | Pending |
-| TEAM-02 | — | Pending |
-| TEAM-03 | — | Pending |
-| TEAM-04 | — | Pending |
-| QW-01 | — | Pending |
-| QW-02 | — | Pending |
-| QW-03 | — | Pending |
-| QW-04 | — | Pending |
-| QW-05 | — | Pending |
+| GAME-01 | Phase 33 | Pending |
+| GAME-02 | Phase 33 | Pending |
+| GAME-03 | Phase 33 | Pending |
+| GAME-04 | Phase 33 | Pending |
+| GAME-05 | Phase 33 | Pending |
+| GAME-06 | Phase 33 | Pending |
+| GAME-07 | Phase 34 | Pending |
+| GAME-08 | Phase 34 | Pending |
+| QUEST-01 | Phase 33 | Pending |
+| QUEST-02 | Phase 33 | Pending |
+| QUEST-03 | Phase 33 | Pending |
+| QUEST-04 | Phase 37 | Pending |
+| QUEST-05 | Phase 37 | Pending |
+| QUEST-06 | Phase 37 | Pending |
+| QUEST-07 | Phase 33 | Pending |
+| QUEST-08 | Phase 34 | Pending |
+| BOSS-01 | Phase 35 | Pending |
+| BOSS-02 | Phase 35 | Pending |
+| BOSS-03 | Phase 35 | Pending |
+| BOSS-04 | Phase 35 | Pending |
+| ABUSE-01 | Phase 38 | Pending |
+| ABUSE-02 | Phase 38 | Pending |
+| ABUSE-03 | Phase 38 | Pending |
+| ABUSE-04 | Phase 38 | Pending |
+| SHOP-01 | Phase 39 | Pending |
+| SHOP-02 | Phase 39 | Pending |
+| SHOP-03 | Phase 39 | Pending |
+| SHOP-04 | Phase 39 | Pending |
+| SHOP-05 | Phase 39 | Pending |
+| PROFIL-01 | Phase 40 | Pending |
+| PROFIL-02 | Phase 40 | Pending |
+| PROFIL-03 | Phase 40 | Pending |
+| TEAM-01 | Phase 41 | Pending |
+| TEAM-02 | Phase 41 | Pending |
+| TEAM-03 | Phase 41 | Pending |
+| TEAM-04 | Phase 41 | Pending |
+| QW-01 | Phase 36 | Pending |
+| QW-02 | Phase 36 | Pending |
+| QW-03 | Phase 36 | Pending |
+| QW-04 | Phase 36 | Pending |
+| QW-05 | Phase 36 | Pending |
 
 **Coverage:**
 - v0.4 requirements: 41 total
-- Mapped to phases: 0
-- Unmapped: 41
+- Mapped to phases: 41
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-02 after initial definition*
+*Last updated: 2026-03-02 after roadmap creation (41/41 mapped)*

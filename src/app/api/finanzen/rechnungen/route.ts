@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
 import { requireAuth, requireAkteAccess, buildAkteAccessFilter } from '@/lib/rbac';
 import { getNextInvoiceNumber } from '@/lib/finance/invoice/nummernkreis';
+import { enqueueQuestCheck } from '@/lib/gamification/quest-service';
 import { z } from 'zod';
 import type { InvoicePosition, UstSummary } from '@/lib/finance/invoice/types';
 
@@ -321,6 +322,11 @@ export async function POST(request: NextRequest) {
 
       return created;
     });
+
+    // Gamification: enqueue quest check after Rechnung creation
+    if (userId) {
+      enqueueQuestCheck(userId);
+    }
 
     return NextResponse.json({ rechnung }, { status: 201 });
   } catch (err: any) {

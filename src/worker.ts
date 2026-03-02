@@ -1,7 +1,9 @@
 import { Worker } from "bullmq";
 import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
-import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerAkteEmbeddingJob, registerUrteileSyncJob, registerScannerJob, ocrQueue } from "@/lib/queue/queues";
+import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerAkteEmbeddingJob, registerUrteileSyncJob, registerScannerJob, registerGamificationCrons, ocrQueue } from "@/lib/queue/queues";
+import type { GamificationJobData } from "@/lib/queue/queues";
+import { processGamificationJob } from "@/lib/queue/processors/gamification.processor";
 import { processMusterIngestionJob, processMusterIngestPending, type MusterIngestionJobData } from "@/lib/queue/processors/muster-ingestion.processor";
 import { seedAmtlicheFormulare } from "@/lib/muster/seed-amtliche";
 import { seedFalldatenTemplates } from "@/lib/falldaten/seed-templates";
@@ -810,6 +812,19 @@ scannerWorker.on("error", (err) => {
 workers.push(scannerWorker);
 log.info("[Worker] scanner processor registered");
 
+// ─── Gamification Queue Worker ───────────────────────────────────────────────
+
+const gamificationWorker = new Worker<GamificationJobData>(
+  "gamification",
+  async (job) => processGamificationJob(job),
+  { connection, concurrency: 3 } // Low concurrency -- lightweight jobs
+);
+gamificationWorker.on("failed", (job, err) => {
+  log.warn({ jobId: job?.id, jobName: job?.name, err: err.message }, "Gamification job failed");
+});
+workers.push(gamificationWorker);
+log.info("[Worker] gamification processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -987,6 +1002,14 @@ async function startup() {
     log.warn({ err }, "Failed to register scanner cron job (non-fatal)");
   }
 
+  // Register gamification cron jobs (daily reset 00:05, nightly safety net 23:55)
+  try {
+    await registerGamificationCrons();
+    log.info("Gamification crons registered (daily-reset 00:05, nightly-safety-net 23:55)");
+  } catch (err) {
+    log.warn({ err }, "Failed to register gamification crons (non-fatal)");
+  }
+
   // Recover any Muster rows stuck in NER_RUNNING from a previous crashed worker
   try {
     await recoverStuckNerJobs();
@@ -1099,7 +1122,7 @@ async function startup() {
         "test", "frist-reminder", "email-send", "email-sync",
         "document-ocr", "document-preview", "document-embedding",
         "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync", "ner-pii",
-        "urteile-sync", "muster-ingestion", "helena-task", "akte-embedding", "scanner",
+        "urteile-sync", "muster-ingestion", "helena-task", "akte-embedding", "scanner", "gamification",
       ],
       fristScanZeit: scanZeit,
     },

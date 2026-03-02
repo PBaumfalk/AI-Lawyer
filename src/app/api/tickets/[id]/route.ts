@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { enqueueQuestCheck } from "@/lib/gamification/quest-service";
 
 /**
  * GET /api/tickets/[id] — get single ticket with relations
@@ -111,6 +112,11 @@ export async function PATCH(
       emails: { select: { id: true, betreff: true } },
     },
   });
+
+  // Gamification: enqueue quest check when Ticket/WV marked as ERLEDIGT
+  if (body.status === "ERLEDIGT" && session.user?.id) {
+    enqueueQuestCheck(session.user.id);
+  }
 
   return NextResponse.json(updated);
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
 import { requireAuth, requireAkteAccess } from "@/lib/rbac";
+import { enqueueQuestCheck } from "@/lib/gamification/quest-service";
 import { z } from "zod";
 
 const updateKalenderSchema = z.object({
@@ -128,6 +129,11 @@ export async function PATCH(
         },
       });
     }
+  }
+
+  // Gamification: enqueue quest check when Frist marked as erledigt
+  if (parsed.data.erledigt === true && userId) {
+    enqueueQuestCheck(userId);
   }
 
   // Log general update

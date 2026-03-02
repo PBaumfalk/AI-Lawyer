@@ -16,6 +16,7 @@
 import { startOfDay } from "date-fns";
 
 import { prisma } from "@/lib/db";
+import { gamificationQueue } from "@/lib/queue/queues";
 import type { QuestCondition } from "./types";
 import { evaluateQuestCondition } from "./quest-evaluator";
 import {
@@ -99,17 +100,20 @@ export async function checkQuestsForUser(userId: string): Promise<void> {
 }
 
 /**
- * Fire-and-forget quest check entry point for business routes.
+ * Enqueue a quest check for a user via BullMQ.
+ * Fire-and-forget: never blocks calling code, never throws.
  *
- * Calls checkQuestsForUser and silently catches any errors.
- * NEVER blocks the calling business action.
- *
- * Will be replaced by BullMQ queue.add() in Plan 03 for better
- * isolation and retry semantics.
+ * The jobId dedup ensures that multiple business actions by the same user
+ * within the same hour don't create redundant queue jobs. The nightly
+ * safety-net cron handles the rest.
  */
 export function enqueueQuestCheck(userId: string): void {
-  // Will be replaced by BullMQ queue.add() in Plan 03
-  checkQuestsForUser(userId).catch(() => {
-    // Fire-and-forget: never block business logic
-  });
+  gamificationQueue
+    .add("quest-check", { userId }, {
+      // Deduplicate: if same user already in queue, don't add again
+      jobId: `quest-check-${userId}-${new Date().toISOString().slice(0, 13)}`, // Dedup per hour
+    })
+    .catch(() => {
+      // Fire-and-forget: silently ignore queue failures
+    });
 }

@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Eine vollständig browserbasierte Kanzleisoftware mit autonomer KI-Agentin ("Helena") für die Kanzlei Baumfalk, Dortmund. Vereint Aktenverwaltung, Dokumentenmanagement mit OnlyOffice (Co-Editing, Track Changes, Vorlagen, Briefkopf), BGB-konforme Fristenberechnung, vollständigen E-Mail-Client (IMAP IDLE + SMTP), OCR-Pipeline mit RAG-Ingestion, Finanzen (RVG, Rechnungen, E-Rechnung, DATEV, SEPA, Zeiterfassung), beA-Integration, autonome KI-Agentin mit ReAct-Loop, Tool-Calling, deterministischem Schriftsatz-Orchestrator, proaktivem Background-Scanner, per-Akte Memory und QA-Gates — RBAC mit Dezernaten, DSGVO-Compliance und Audit-Trail — alles self-hosted via Docker Compose, alles im Browser.
+Eine vollständig browserbasierte Kanzleisoftware mit autonomer KI-Agentin ("Helena") für die Kanzlei Baumfalk, Dortmund. Vereint Aktenverwaltung, Dokumentenmanagement mit OnlyOffice (Co-Editing, Track Changes, Vorlagen, Briefkopf), BGB-konforme Fristenberechnung, vollständigen E-Mail-Client (IMAP IDLE + SMTP), OCR-Pipeline mit RAG-Ingestion, Finanzen (RVG, Rechnungen, E-Rechnung, DATEV, SEPA, Zeiterfassung), beA-Integration, autonome KI-Agentin mit ReAct-Loop, Tool-Calling, deterministischem Schriftsatz-Orchestrator, proaktivem Background-Scanner mit Cross-Akte Urteil-Matching, per-Akte Memory und QA-Gates, internes Echtzeit-Messaging mit Akten-Threads und strukturierte Falldatenblaetter mit Community-Template-Workflow — RBAC mit Dezernaten, DSGVO-Compliance und Audit-Trail — alles self-hosted via Docker Compose, alles im Browser.
 
 ## Core Value
 
@@ -160,41 +160,24 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - ✓ PII-Anonymisierung kanzlei-eigener Muster (PENDING_NER → INDEXED | REJECTED) — v0.1
 - ✓ Helena erstellt ENTWURF-Schriftsätze (Rubrum, Anträge, Begründung + {{PLATZHALTER}}) — v0.1
 
+**Kanzlei-Collaboration (v0.3):**
+- ✓ Internes Messaging: Akten-bezogene Threads + allgemeine Kanäle + @Mentions + Echtzeit Socket.IO — v0.3
+- ✓ SCAN-05 Neu-Urteil-Check: Cross-Akte Semantic Search + NEUES_URTEIL Alerts + Helena-Briefing — v0.3
+- ✓ Falldatenblaetter: Strukturierte Checklisten pro Falltyp + Community-Template-Workflow + Admin-Approval — v0.3
+
 ### Active
 
-<!-- v0.3 scope — defined 2026-02-28 -->
+<!-- Next milestone scope — to be defined -->
 
-**Internes Messaging:**
-- [ ] Akten-bezogene Threads (Case Discussions direkt in Akte-Detail)
-- [ ] Allgemeine Kanäle (Kanzlei-weit: Orga, News, frei erstellbar)
-- [ ] @Mentions mit In-App-Benachrichtigungen
-- [ ] Echtzeit-Zustellung via Socket.IO
-
-**SCAN-05 Neu-Urteil-Check:**
-- [ ] Cross-Akte Semantic Search (neue RSS-Urteile gegen aktive Akten)
-- [ ] Relevanz-Alert im bestehenden Alert-System
-
-**Falldatenblaetter:**
-- [ ] Strukturierte Checklisten/Formulare pro Falltyp (Mandantengespräch-Leitfaden)
-- [ ] User erstellt Template → reicht beim Admin ein → Admin prüft/genehmigt → wird Standardfall
-- [ ] Helena befüllt existierende Falldatenblaetter automatisch aus Akte-Daten
-- [ ] Helena schlägt neue Falldatenblatt-Templates basierend auf Fallmustern vor
-
-## Current Milestone: v0.3 Kanzlei-Collaboration
-
-**Goal:** Interne Kommunikation (Echtzeit-Messaging mit Akten-Bezug), proaktive Rechtsprechungsüberwachung (SCAN-05), und strukturierte Fallaufnahme (Falldatenblaetter mit Helena-Integration).
-
-**Target features:**
-- Internes Messaging (Slack-Style Kanäle + Akten-Threads, @Mentions, Echtzeit)
-- SCAN-05 Neu-Urteil-Check (RSS-Urteile → Cross-Akte Relevanz → Alert)
-- Falldatenblaetter (Checklisten pro Falltyp, Community-Workflow, Helena befüllt + schlägt vor)
-
-## Future (post v0.1)
-
-**Falldatenblätter, BI-Dashboard, Export (aus v3.5 TODOs):**
-- [ ] Rechtsgebiet-spezifische Feldschemas (Admin-UI + dynamisches Formular)
+**BI-Dashboard + Export:**
 - [ ] KPI-Kacheln (Neue Akten, offene Posten, Fristen, Umsatz)
 - [ ] CSV/XLSX Export für Akten, Kontakte, Finanzdaten
+
+**Helena Intelligence:**
+- [ ] Helena befüllt existierende Falldatenblaetter automatisch aus Akte-Daten
+- [ ] Helena schlägt neue Falldatenblatt-Templates basierend auf Fallmustern vor
+- [ ] Fallzusammenfassung: Timeline + Key Facts pro Akte (KI-generiert)
+- [ ] Globaler KI-Chat: Aktenübergreifende Suche und Fragen via RAG
 
 **Mandantenportal:**
 - [ ] Freigegebene Dokumente einsehen/herunterladen
@@ -203,19 +186,8 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - [ ] Eigene Unterlagen hochladen
 - [ ] Authentifizierung: Einladungslink + Passwort
 
-**Internes Messaging:**
-- [ ] Akten-bezogene Diskussionen (Case Threads)
-- [ ] Allgemeine Kanäle (Kanzlei-weit)
-- [ ] @Mentions + In-App-Benachrichtigungen
-
 **Mahnwesen:**
 - [ ] Mahnstufen, Mahnlauf, Mahn-PDF
-
-**Fallzusammenfassung:**
-- [ ] Timeline + Key Facts pro Akte (KI-generiert)
-
-**Globaler KI-Chat:**
-- [ ] Aktenübergreifende Suche und Fragen via RAG
 
 **CalDAV-Sync:**
 - [ ] Bidirektionaler Sync mit externen Kalendern
@@ -242,11 +214,11 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ## Context
 
-Shipped v0.2 with ~117,156 LOC TypeScript (131 commits in v0.2, 575+ total).
-Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (70+ Models including HelenaTask, HelenaDraft, HelenaAlert, HelenaMemory, AktenActivity, PendingSchriftsatz, SchriftsatzRetrievalLog), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, fast-xml-parser, pgvector HNSW.
+Shipped v0.3 with ~125k LOC TypeScript (63 commits in v0.3, 638+ total).
+Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (80+ Models including Channel, ChannelMember, Message, MessageReaction, FalldatenTemplate), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, fast-xml-parser, pgvector HNSW.
 Docker Compose deployment with 9 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice, ollama).
-Helena is now an autonomous agent with ReAct-Loop, 14 tools, deterministic Schriftsatz pipeline, @-mention task system, draft-approval workflow, background scanner with 6 alert types, per-Akte memory, and QA-gates with retrieval metrics.
-Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, helenaTaskId not propagated to ToolContext, release gate hardcodes without goldset run, SCAN-05 (Neu-Urteil-Check) deferred.
+Helena is an autonomous agent with ReAct-Loop, 14 tools, deterministic Schriftsatz pipeline, @-mention task system, draft-approval workflow, background scanner with 7 alert types (incl. NEUES_URTEIL), per-Akte memory, QA-gates, and channel messaging integration.
+Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena silent in ALLGEMEIN channels, sidebar unread badge not real-time for background, Akte stats counter shows old chatNachrichten.
 
 ## Constraints
 
@@ -284,9 +256,13 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, helenaT
 | Inter statt DM Serif Display (v3.5) | SF Pro Display → Inter → system-ui Stack, moderner, schneller | ✓ Good — keine custom font loading, system-native feel |
 | qwen3.5:35b als Ollama-Standard (v3.5) | Deutlich besser als mistral:7b für Legal-Domain | ✓ Good — GPU-required but justified |
 | NEXT_PHASE Build-Flag (v3.5) | Verhindert pino-roll File-Transport bei SSR-Build-Zeit | ✓ Good — clean production builds |
-| Hybrid-Messaging (Akte + allgemein) | Beides gebraucht: case-spezifisch + Kanzlei-weit | — Pending (v3.6+) |
-| Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | — Pending (v3.6+) |
-| CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending (v3.6+) |
+| Hybrid-Messaging (Akte + allgemein) (v0.3) | Beides gebraucht: case-spezifisch + Kanzlei-weit | ✓ Good — ALLGEMEIN + AKTE channels with lazy-creation and RBAC sync |
+| Falldatenblaetter als DB-backed Templates (v0.3) | Single source of truth statt TypeScript registry | ✓ Good — 8 Feldtypen, Gruppen-Builder, Community-Workflow |
+| @Helena AKTE-only in Messaging (v0.3) | Helena braucht akteId-Kontext für sinnvolle Antworten | ✓ Good — design trade-off, ALLGEMEIN silently skipped |
+| Nightly cron für Akte-Embeddings (v0.3) | Einfacher als on-demand, 02:30 vor Urteile-Sync | ✓ Good — akzeptable Staleness für 5-Personen-Kanzlei |
+| Banner refetch statt auto-insert (v0.3) | Konsistent mit Activity Feed Pattern, verhindert Race Conditions | ✓ Good — message:new triggers refetch, not local insert |
+| Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | — Pending |
+| CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending |
 
 | Zero new npm packages for v0.2 (v0.2) | All agent capabilities on existing AI SDK v4 + BullMQ + Prisma + Socket.IO | ✓ Good — no dependency bloat |
 | Deterministic Schriftsatz pipeline (v0.2) | generateObject not free-form ReAct for legal filings | ✓ Good — predictable, validated output |
@@ -309,8 +285,9 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, helenaT
 - **v3.5 Production Ready** — 2 phases, 10 plans (2026-02-26)
 - **v0.1 Helena RAG** — 7 phases, 19 plans (2026-02-27)
 - **v0.2 Helena Agent** — 10 phases, 23 plans (2026-02-28)
+- **v0.3 Kanzlei-Collaboration** — 5 phases, 13 plans (2026-03-02)
 
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
 ---
-*Last updated: 2026-02-28 after v0.3 milestone start*
+*Last updated: 2026-03-02 after v0.3 milestone*

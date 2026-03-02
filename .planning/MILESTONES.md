@@ -1,5 +1,39 @@
 # Milestones
 
+## v0.3 Kanzlei-Collaboration (Shipped: 2026-03-02)
+
+**Delivered:** Interne Kommunikation mit Echtzeit-Messaging (Slack-Style Kanäle + Akten-Threads), proaktive Rechtsprechungsüberwachung (Cross-Akte Semantic Search gegen neue RSS-Urteile mit Helena-Briefing), und strukturierte Fallaufnahme (Falldatenblaetter mit Community-Template-Workflow und Admin-Approval).
+
+**Phases:** 5 (28-32)
+**Plans:** 13 completed
+**Tasks:** 25 executed
+**Lines of Code:** ~125k LOC TypeScript (+17.5k net in v0.3)
+**Commits:** 63
+**Git range:** `feat(28-01)` → `feat(32-02)`
+**Timeline:** 2026-02-28 → 2026-03-02 (3 days)
+**Requirements:** 20/20 satisfied
+
+**Key accomplishments:**
+1. Falldatenblaetter Template System — Database-backed templates with 8 field types, Gruppen-first builder, community submit/approve workflow (ENTWURF→EINGEREICHT→GENEHMIGT/ABGELEHNT), 10 Sachgebiet-Seed-Templates als single source of truth
+2. In-Akte Falldaten Forms — FalldatenTab mit Auto-Template-Zuweisung (STANDARD by Sachgebiet), Pflichtfeld-Highlighting (amber border), Completeness-Tracking (Prozent-Badge im Tab), Unsaved-Changes-Guard (AlertDialog)
+3. SCAN-05 Neu-Urteil-Check — Akte summaryEmbedding (pgvector HNSW, nightly cron 02:30), Cross-Matching-Engine (Cosine Similarity + Sachgebiet-Pre-Filter), LLM-Briefing (3-Sektionen-Prompt), NEUES_URTEIL-Alerts im Alert-Center (violet Scale icon), Admin Threshold-Slider
+4. Messaging Backend — Channel/ChannelMember/Message/MessageReaction Prisma Models, REST API (14 routes), Socket.IO rooms (join/leave/typing events), @mention Notifications, @Helena Channel-Response via BullMQ, AKTE-Kanal Lazy-Creation mit RBAC-Sync, Seed-Channels (#allgemein, #organisation)
+5. Messaging UI — /nachrichten Seite mit Split-Layout, ChannelSidebar (ALLGEMEIN/AKTE-Sektionen, unread Badges), MessageView (Paginierung, Banner-Refetch), MessageComposer (@mention picker, DMS Attachments, @Helena Button), TypingIndicator (5s auto-cleanup), AkteChannelTab im Akte-Detail
+
+**Tech debt (non-blocking):**
+- @Helena in ALLGEMEIN channels silently ignored (design: Helena braucht akteId-Kontext)
+- Sidebar unread badge nicht real-time für Hintergrund-Nachrichten (Update bei page load/channel visit)
+- Akte Stats-Counter zeigt chatNachrichten statt Channel Messages
+- No on-demand embedding refresh after Falldaten save (nightly cron akzeptabel)
+- Pre-existing TS errors in helena/index.ts (StepUpdate type mismatch)
+
+**Archives:**
+- `milestones/v0.3-ROADMAP.md`
+- `milestones/v0.3-REQUIREMENTS.md`
+- `milestones/v0.3-MILESTONE-AUDIT.md`
+
+---
+
 ## v0.2 Helena Agent (Shipped: 2026-02-28)
 
 **Delivered:** Helena wird vom Chat-Bot zum autonomen Agenten mit ReAct-Loop, deterministischem Schriftsatz-Orchestrator, @-Tagging Task-System, Draft-Approval-Workflow, proaktivem Background-Scanner mit Alerts, per-Akte Memory und QA-Gates mit Audit-Trail. Akte-Detail umgebaut zum Activity Feed.

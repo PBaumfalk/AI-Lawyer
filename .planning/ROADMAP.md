@@ -6,7 +6,7 @@
 - ✅ **v3.5 Production Ready** — Phases 10-11 (shipped 2026-02-26)
 - ✅ **v0.1 Helena RAG** — Phases 12-18 (shipped 2026-02-27)
 - ✅ **v0.2 Helena Agent** — Phases 19-27 (shipped 2026-02-28)
-- [ ] **v0.3 Kanzlei-Collaboration** — Phases 28-32 (in progress)
+- ✅ **v0.3 Kanzlei-Collaboration** — Phases 28-32 (shipped 2026-03-02)
 
 ## Phases
 
@@ -82,118 +82,31 @@ See: `milestones/v0.2-ROADMAP.md` for full phase details.
 
 </details>
 
-### v0.3 Kanzlei-Collaboration (In Progress)
+<details>
+<summary>v0.3 Kanzlei-Collaboration (Phases 28-32) -- SHIPPED 2026-03-02</summary>
 
-**Milestone Goal:** Interne Kommunikation (Echtzeit-Messaging mit Akten-Bezug), proaktive Rechtsprechungsüberwachung (SCAN-05), und strukturierte Fallaufnahme (Falldatenblaetter mit Community-Template-Workflow).
+- [x] Phase 28: Falldatenblaetter Schema + Templates (4/4 plans) -- completed 2026-02-28
+- [x] Phase 29: Falldatenblaetter UI (2/2 plans) -- completed 2026-02-28
+- [x] Phase 30: SCAN-05 Neu-Urteil-Check (2/2 plans) -- completed 2026-02-28
+- [x] Phase 31: Messaging Schema + API (3/3 plans) -- completed 2026-03-02
+- [x] Phase 32: Messaging UI (2/2 plans) -- completed 2026-03-02
 
-**Phase Numbering:**
-- Integer phases (28, 29, 30, ...): Planned milestone work
-- Decimal phases (28.1, 28.2): Urgent insertions (marked with INSERTED)
+**Total: 5 phases, 13 plans, 25 tasks, 20/20 requirements**
 
-- [x] **Phase 28: Falldatenblaetter Schema + Templates** - Database-backed template system with community approval workflow and seed migration (completed 2026-02-28)
-- [x] **Phase 29: Falldatenblaetter UI** - User-facing form rendering with completeness tracking in Akte detail (completed 2026-02-28)
-- [x] **Phase 30: SCAN-05 Neu-Urteil-Check** - Cross-Akte semantic matching of new court decisions with proactive alerts (completed 2026-02-28)
-- [x] **Phase 31: Messaging Schema + API** - Channel/thread models, REST API, Socket.IO real-time delivery, @mentions (completed 2026-03-02)
-- [x] **Phase 32: Messaging UI** - Channel list, message view, Akte-thread panel, unread badges, @Helena integration (completed 2026-03-02)
+See: `milestones/v0.3-ROADMAP.md` for full phase details.
 
-## Phase Details
-
-### Phase 28: Falldatenblaetter Schema + Templates
-**Goal**: Users and admins have a database-backed template system for structured case data collection, replacing the static TypeScript schema registry
-**Depends on**: Nothing (first phase of v0.3)
-**Requirements**: FD-03, FD-04, FD-05, FD-06, FD-07
-**Success Criteria** (what must be TRUE):
-  1. User can create a custom Falldatenblatt template with all 7 field types (Text, Datum, Dropdown, Checkbox, Zahl, Textbereich, Mehrfachauswahl)
-  2. User can submit a custom template for Admin review and sees it in EINGEREICHT status
-  3. Admin can approve or reject submitted templates with the result visible to the submitting user
-  4. Approved templates appear as available Standardfaelle for all users when creating or editing Falldatenblaetter
-  5. The 10 existing Sachgebiet schemas from TypeScript are present as seed templates in the database (single source of truth)
-**Plans**: 4 plans
-
-Plans:
-- [x] 28-01-PLAN.md — Prisma schema (enum + model + Akte FK), Zod validation, seed function, worker wiring
-- [x] 28-02-PLAN.md — Template CRUD API routes + workflow transitions (einreichen/genehmigen/ablehnen)
-- [x] 28-03-PLAN.md — User template list, Gruppen-first builder, admin review queue + detail
-- [ ] 28-04-PLAN.md — Gap closure: Admin visibility override in GET /api/falldaten-templates (FD-05 fix)
-
-### Phase 29: Falldatenblaetter UI
-**Goal**: Users can view, fill out, and track completeness of Falldatenblaetter directly within an Akte
-**Depends on**: Phase 28
-**Requirements**: FD-01, FD-02
-**Success Criteria** (what must be TRUE):
-  1. User can open an Akte and fill out a Falldatenblatt matching the Akte's Sachgebiet, with all field types rendering correctly
-  2. User sees a completeness percentage for each Falldatenblatt on an Akte, reflecting how many required fields are filled
-  3. Saved Falldatenblatt data persists and is visible when the user returns to the Akte
-**Plans**: 2 plans
-
-Plans:
-- [ ] 29-01-PLAN.md — API extension (falldatenTemplateId PATCH), FalldatenForm multiselect + required highlights + completeness
-- [ ] 29-02-PLAN.md — FalldatenTab wrapper (template resolution, auto-assign, switch) + tab integration with controlled switching + unsaved changes guard
-
-### Phase 30: SCAN-05 Neu-Urteil-Check
-**Goal**: The system proactively detects when newly ingested court decisions are relevant to active cases and alerts the responsible user with a Helena-generated briefing
-**Depends on**: Phase 29 (Falldaten content enriches Akte summary embeddings)
-**Requirements**: SCAN-01, SCAN-02, SCAN-03, SCAN-04, SCAN-05
-**Success Criteria** (what must be TRUE):
-  1. Each active Akte has a summary embedding generated from its case context (kurzrubrum, sachgebiet, wegen, HelenaMemory, Falldaten)
-  2. After RSS-Urteil ingestion completes, new Urteile are matched against active Akten via semantic similarity and relevant matches are detected
-  3. User receives a NEUES_URTEIL alert in the existing Alert-Center when a relevant Urteil is found for one of their Akten
-  4. Admin can configure the relevance threshold via SystemSetting in the admin panel
-  5. Each NEUES_URTEIL alert includes a Helena-generated briefing explaining why the Urteil is relevant to the specific Akte
-**Plans**: 2 plans
-
-Plans:
-- [ ] 30-01-PLAN.md — Prisma schema migration (summaryEmbedding vector column + HNSW index), SystemSettings (threshold + toggle), Akte summary text assembler, nightly embedding refresh cron
-- [ ] 30-02-PLAN.md — Cross-matching engine (pgvector cosine similarity + Sachgebiet pre-filter), LLM briefing generation, NEUES_URTEIL alert creation, worker trigger, Alert-Center UI config, admin threshold slider
-
-### Phase 31: Messaging Schema + API
-**Goal**: The backend supports persistent channels, Akte-bound threads, real-time message delivery, and @mention notifications
-**Depends on**: Nothing (independent of Falldatenblaetter/SCAN-05; parallel Prisma migration sequenced after Phase 30)
-**Requirements**: MSG-01, MSG-02, MSG-03, MSG-04, MSG-05
-**Success Criteria** (what must be TRUE):
-  1. User can create a channel with name and optional description via API, and the channel persists in the database
-  2. User can join and leave channels, with membership reflected immediately
-  3. User can send a message to a channel and other members receive it in real-time via Socket.IO
-  4. User can post messages in an Akte-bound thread that inherits the Akte's RBAC (only users with Akte access can read/write)
-  5. User can @mention another user in a message, and the mentioned user receives an in-app notification
-**Plans**: 3 plans
-
-Plans:
-- [ ] 31-01-PLAN.md — Prisma schema (Channel, ChannelMember, Message, MessageReaction), NotificationType, Socket.IO rooms, messaging service layer, seed channels, worker wiring
-- [ ] 31-02-PLAN.md — Channel CRUD API routes, membership join/leave, AKTE channel lazy creation with RBAC, read-marking
-- [ ] 31-03-PLAN.md — Message send/list/edit/delete API routes, emoji reactions, @mention notifications, @Helena channel response posting
-
-### Phase 32: Messaging UI
-**Goal**: Users have a complete messaging interface with channel navigation, unread tracking, typing indicators, and Helena integration
-**Depends on**: Phase 31
-**Requirements**: MSG-06, MSG-07, MSG-08
-**Success Criteria** (what must be TRUE):
-  1. User sees unread message count badges per channel in the messaging sidebar, updating in real-time as new messages arrive
-  2. User can @Helena in a channel message and a HelenaTask is created and processed, with Helena's response appearing in the channel
-  3. User sees a typing indicator when another user is composing a message in the same channel
-**Plans**: 2 plans
-
-Plans:
-- [ ] 32-01-PLAN.md — Messaging page shell, split layout, channel sidebar with unread badges, message view with chat bubbles, composer, @mention picker
-- [ ] 32-02-PLAN.md — Socket.IO bridge (channel rooms, typing indicators, real-time message events), sidebar unread badge, Akte Nachrichten tab
+</details>
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 28 -> 28.1 -> 29 -> 30 -> 31 -> 32
-
-| Phase | Milestone | Plans Complete | Status | Completed |
-|-------|-----------|----------------|--------|-----------|
-| 1-9 | v3.4 | 38/38 | Complete | 2026-02-25 |
-| 10-11 | v3.5 | 10/10 | Complete | 2026-02-26 |
-| 12-18 | v0.1 | 19/19 | Complete | 2026-02-27 |
-| 19-27 | v0.2 | 23/23 | Complete | 2026-02-28 |
-| 28. Falldatenblaetter Schema + Templates | 4/4 | Complete    | 2026-02-28 | - |
-| 29. Falldatenblaetter UI | 2/2 | Complete    | 2026-02-28 | - |
-| 30. SCAN-05 Neu-Urteil-Check | 2/2 | Complete    | 2026-02-28 | - |
-| 31. Messaging Schema + API | 3/3 | Complete    | 2026-03-02 | - |
-| 32. Messaging UI | 2/2 | Complete    | 2026-03-02 | - |
+| Milestone | Phases | Plans | Status | Completed |
+|-----------|--------|-------|--------|-----------|
+| v3.4 Full-Featured Kanzleisoftware | 1-9 | 38/38 | Complete | 2026-02-25 |
+| v3.5 Production Ready | 10-11 | 10/10 | Complete | 2026-02-26 |
+| v0.1 Helena RAG | 12-18 | 19/19 | Complete | 2026-02-27 |
+| v0.2 Helena Agent | 19-27 | 23/23 | Complete | 2026-02-28 |
+| v0.3 Kanzlei-Collaboration | 28-32 | 13/13 | Complete | 2026-03-02 |
 
 ---
 *Roadmap created: 2026-02-24*
-*Last updated: 2026-02-28 after Phase 30 planning*
+*Last updated: 2026-03-02 after v0.3 milestone*

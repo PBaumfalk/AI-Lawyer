@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -80,13 +80,16 @@ function formatDatumZeit(dateStr: string): string {
 
 export function KalenderListe() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Data state
   const [eintraege, setEintraege] = useState<KalenderEintragItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filter state
-  const [typFilter, setTypFilter] = useState("");
+  // Filter state -- initialize from URL search params for deep-link support
+  const [typFilter, setTypFilter] = useState(
+    () => searchParams.get("typ") ?? "",
+  );
   const [showErledigt, setShowErledigt] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 

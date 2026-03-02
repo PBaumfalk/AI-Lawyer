@@ -156,11 +156,12 @@ Plans:
   3. User can send a message to a channel and other members receive it in real-time via Socket.IO
   4. User can post messages in an Akte-bound thread that inherits the Akte's RBAC (only users with Akte access can read/write)
   5. User can @mention another user in a message, and the mentioned user receives an in-app notification
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 31-01: TBD
-- [ ] 31-02: TBD
+- [ ] 31-01-PLAN.md — Prisma schema (Channel, ChannelMember, Message, MessageReaction), NotificationType, Socket.IO rooms, messaging service layer, seed channels, worker wiring
+- [ ] 31-02-PLAN.md — Channel CRUD API routes, membership join/leave, AKTE channel lazy creation with RBAC, read-marking
+- [ ] 31-03-PLAN.md — Message send/list/edit/delete API routes, emoji reactions, @mention notifications, @Helena channel response posting
 
 ### Phase 32: Messaging UI
 **Goal**: Users have a complete messaging interface with channel navigation, unread tracking, typing indicators, and Helena integration

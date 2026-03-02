@@ -6,6 +6,7 @@ import { processMusterIngestionJob, processMusterIngestPending, type MusterInges
 import { seedAmtlicheFormulare } from "@/lib/muster/seed-amtliche";
 import { seedFalldatenTemplates } from "@/lib/falldaten/seed-templates";
 import { seedDefaultChannels } from "@/lib/messaging/channel-service";
+import { seedDailyQuests } from "@/lib/gamification/seed-quests";
 import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.processor";
 import { processFristReminders } from "@/workers/processors/frist-reminder";
 import { initializeDefaults, getSettingTyped } from "@/lib/settings/service";
@@ -1039,6 +1040,13 @@ async function startup() {
     await seedDefaultChannels();
   } catch (err) {
     log.warn({ err }, "Failed to seed default channels (non-fatal)");
+  }
+
+  // Seed 5 daily gamification quests on first boot (idempotent via SystemSetting)
+  try {
+    await seedDailyQuests();
+  } catch (err) {
+    log.warn({ err }, "Failed to seed daily quests (non-fatal)");
   }
 
   // Re-queue documents that previously failed OCR (e.g. due to Stirling-PDF being unavailable).

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 // Serialized version of the Prisma akte with includes
-interface AkteData {
+export interface AkteData {
   id: string;
   aktenzeichen: string;
   kurzrubrum: string;
@@ -82,6 +82,13 @@ interface AkteData {
     createdAt: string;
     user: { name: string } | null;
   }>;
+  _count?: {
+    dokumente: number;
+    kalenderEintraege: number;
+    zeiterfassungen: number;
+    chatNachrichten: number;
+    emailMessages: number;
+  };
 }
 
 export const rolleLabels: Record<string, string> = {
@@ -104,8 +111,20 @@ export const rolleBadgeVariant: Record<string, "default" | "danger" | "warning" 
   SONSTIGER: "muted",
 };
 
-export function AkteDetailTabs({ akte }: { akte: AkteData }) {
-  const [activeTab, setActiveTab] = useState("feed");
+interface AkteDetailTabsProps {
+  akte: AkteData;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+}
+
+export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: AkteDetailTabsProps) {
+  const [internalTab, setInternalTab] = useState("feed");
+  const currentTab = externalTab ?? internalTab;
+  const setTab = useCallback((tab: string) => {
+    setInternalTab(tab);
+    onTabChange?.(tab);
+  }, [onTabChange]);
+
   const [completeness, setCompleteness] = useState<{
     percent: number;
     filled: number;
@@ -115,19 +134,26 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
   const [pendingTab, setPendingTab] = useState<string | null>(null);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
+  // Sync external tab changes into internal state
+  useEffect(() => {
+    if (externalTab !== undefined) {
+      setInternalTab(externalTab);
+    }
+  }, [externalTab]);
+
   // ─── Controlled Tab Switching with Unsaved Changes Guard ─────────────────
 
   const handleTabChange = useCallback(
     (newTab: string) => {
       // If leaving Falldaten tab with unsaved changes, show warning
-      if (activeTab === "falldaten" && falldatenDirty && newTab !== "falldaten") {
+      if (currentTab === "falldaten" && falldatenDirty && newTab !== "falldaten") {
         setPendingTab(newTab);
         setShowUnsavedDialog(true);
         return;
       }
-      setActiveTab(newTab);
+      setTab(newTab);
     },
-    [activeTab, falldatenDirty]
+    [currentTab, falldatenDirty, setTab]
   );
 
   // ─── Browser beforeunload Guard ──────────────────────────────────────────
@@ -144,7 +170,7 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
 
   return (
     <>
-      <Tabs defaultValue="feed" value={activeTab} onValueChange={handleTabChange}>
+      <Tabs defaultValue="feed" value={currentTab} onValueChange={handleTabChange}>
         <TabsList className="w-full justify-start">
           <TabsTrigger value="feed">Aktivitaeten</TabsTrigger>
           <TabsTrigger value="dokumente">
@@ -159,7 +185,7 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
           </TabsTrigger>
           <TabsTrigger value="nachrichten">
             <MessageSquare className="w-4 h-4 mr-1.5" />
-            Nachrichten
+            Chat
           </TabsTrigger>
         </TabsList>
 
@@ -199,7 +225,7 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
               </h3>
               <InvoiceList akteId={akte.id} />
             </div>
-            <div>
+            <div id="zeiterfassung-section">
               <h3 className="text-sm font-semibold text-foreground mb-3">
                 Zeiterfassung
               </h3>
@@ -247,7 +273,7 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (pendingTab) setActiveTab(pendingTab);
+                if (pendingTab) setTab(pendingTab);
                 setPendingTab(null);
                 setShowUnsavedDialog(false);
                 setFalldatenDirty(false);

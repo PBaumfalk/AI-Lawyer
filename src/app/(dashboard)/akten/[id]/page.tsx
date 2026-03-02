@@ -1,21 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import {
-  Users,
-  FileText,
-  Calendar,
-  Clock,
-  MessageSquare,
-  Mail,
-  Sparkles,
-} from "lucide-react";
-import { AkteDetailTabs } from "@/components/akten/akte-detail-tabs";
+import { Sparkles } from "lucide-react";
 import { AkteDetailHeader } from "@/components/akten/akte-detail-header";
 import { NormenSection } from "@/components/akten/normen-section";
 import { AkteSocketBridge } from "@/components/akten/akte-socket-bridge";
 import { AkteTimerBridge } from "@/components/akten/akte-timer-bridge";
 import { AdminOverrideButton } from "@/components/admin/admin-override-button";
+import { AkteDetailClient } from "./akte-detail-client";
 
 interface AkteDetailPageProps {
   params: Promise<{ id: string }>;
@@ -93,70 +85,15 @@ export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
         <AdminOverrideButton akteId={id} aktenzeichen={akte.aktenzeichen} />
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-        <StatMini
-          icon={Users}
-          label="Beteiligte"
-          value={akte.beteiligte.length}
-        />
-        <StatMini
-          icon={FileText}
-          label="Dokumente"
-          value={akte._count.dokumente}
-        />
-        <StatMini
-          icon={Calendar}
-          label="Termine/Fristen"
-          value={akte._count.kalenderEintraege}
-        />
-        <StatMini
-          icon={Mail}
-          label="E-Mails"
-          value={akte._count.emailMessages}
-        />
-        <StatMini
-          icon={Clock}
-          label="Zeiterfassung"
-          value={akte._count.zeiterfassungen}
-        />
-        <StatMini
-          icon={MessageSquare}
-          label="Nachrichten"
-          value={akte._count.chatNachrichten}
-        />
-      </div>
-
-      {/* Verknüpfte Normen — pinned § for Helena context */}
+      {/* Verknuepfte Normen -- pinned for Helena context */}
       <NormenSection
         akteId={id}
         initialNormen={serializedAkte.normen ?? []}
       />
 
-      {/* Tabbed content */}
-      <AkteDetailTabs akte={serializedAkte} />
+      {/* KPI stats row + tabbed content (client component for interactivity) */}
+      <AkteDetailClient akte={serializedAkte} />
     </div>
   );
 }
 
-function StatMini({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="glass-card rounded-xl px-4 py-3 flex items-center gap-3">
-      <Icon className="w-4 h-4 text-muted-foreground" />
-      <div>
-        <p className="text-lg font-semibold text-foreground">
-          {value}
-        </p>
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  );
-}

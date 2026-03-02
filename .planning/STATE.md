@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
 status: executing
-last_updated: "2026-03-02T15:41:00Z"
+last_updated: "2026-03-02T16:52:00Z"
 progress:
   total_phases: 17
   completed_phases: 16
   total_plans: 47
-  completed_plans: 47
+  completed_plans: 48
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 35 complete (Bossfight), ready for Phase 36
+**Current focus:** v0.4 Quest & Polish -- Phase 35 complete (Bossfight, all 3 plans including gap closure), ready for Phase 36
 
 ## Current Position
 
 Phase: 35 of 41 (Bossfight) -- 3 of 9 in milestone (PHASE COMPLETE)
-Plan: 2 of 2 in current phase (COMPLETE)
+Plan: 3 of 3 in current phase (COMPLETE)
 Status: Executing
-Last activity: 2026-03-02 -- Completed 35-02 (Bossfight UI + Dashboard Integration)
+Last activity: 2026-03-02 -- Completed 35-03 (Gap Closure: Socket.IO + API field mismatches)
 
-Progress: [████░░░░░░] 39% (7/18 plans)
+Progress: [████░░░░░░] 44% (8/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 110 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:7)
+- Total plans completed: 111 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:8)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -52,6 +52,7 @@ Progress: [████░░░░░░] 39% (7/18 plans)
 | Phase 34 P01 | 3min | 2 tasks | 5 files |
 | Phase 35 P01 | 14min | 2 tasks | 14 files |
 | Phase 35 P02 | 4min | 2 tasks | 9 files |
+| Phase 35 P03 | 2min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,9 @@ Recent decisions affecting current work:
 - [35-02]: BossfightBanner uses self-fetching absent-until-loaded pattern (same as QuestWidget)
 - [35-02]: Socket.IO events overlay real-time state on top of initial fetch (no polling)
 - [35-02]: canvas-confetti is the only new npm dependency for bossfight UI (6KB, fire-and-forget)
+- [35-03]: All event shape fixes on emitter/API side only -- consumer components left untouched
+- [35-03]: totalDamage uses aggregate query across all participants for accurate defeat stats
+- [35-03]: runenEarned in boss:defeated uses VICTORY_RUNEN_BONUS constant for consistency
 
 ### Pending Todos
 
@@ -100,5 +104,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 35-02-PLAN.md (Bossfight UI + Dashboard Integration) -- Phase 35 COMPLETE
+Stopped at: Completed 35-03-PLAN.md (Gap Closure: Socket.IO + API field mismatches) -- Phase 35 fully COMPLETE
 Resume file: None -- ready for Phase 36

@@ -22,6 +22,7 @@ import { startOfDay, startOfWeek } from "date-fns";
 
 import { prisma } from "@/lib/db";
 import { gamificationQueue } from "@/lib/queue/queues";
+import { getSocketEmitter } from "@/lib/socket/emitter";
 import type { QuestCondition, CountCondition } from "./types";
 import { FOLLOW_UP_WV_BONUS_RUNEN } from "./types";
 import { evaluateQuestCondition } from "./quest-evaluator";
@@ -146,8 +147,8 @@ export async function checkQuestsForUser(userId: string): Promise<void> {
       runenToCredit = capResult.runenToCredit;
     }
 
-    // Determine if this completion needs audit (Plan 02 will wire this)
-    const needsAudit = false; // Placeholder -- wired in Plan 02
+    // Random audit sampling: ~2% of completions (midpoint of 1-3% per CONTEXT.md)
+    const needsAudit = Math.random() < 0.02;
 
     // Atomic: award rewards + record completion in single transaction (ABUSE-04)
     const today = startOfDay(now);
@@ -188,6 +189,35 @@ export async function checkQuestsForUser(userId: string): Promise<void> {
         continue;
       }
       throw err;
+    }
+
+    // If audit needed, emit Socket.IO event and schedule auto-confirm (ABUSE-03)
+    if (needsAudit) {
+      const completion = await prisma.questCompletion.findFirst({
+        where: { userId, questId: quest.id, completedDate: startOfDay(now) },
+        orderBy: { completedAt: "desc" },
+      });
+      if (completion) {
+        // Emit to user's browser room
+        getSocketEmitter()
+          .to(`user:${userId}`)
+          .emit("gamification:audit-needed", {
+            completionId: completion.id,
+            questName: quest.name,
+          });
+
+        // Schedule auto-confirm after 24 hours
+        gamificationQueue
+          .add(
+            "audit-auto-confirm",
+            { completionId: completion.id },
+            {
+              delay: 24 * 60 * 60 * 1000, // 24 hours
+              jobId: `audit-auto-confirm-${completion.id}`,
+            },
+          )
+          .catch(() => {}); // Fire-and-forget
+      }
     }
   }
 

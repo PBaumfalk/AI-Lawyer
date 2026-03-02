@@ -7,6 +7,7 @@ export interface GamificationJobData {
   userId?: string;     // For quest-check and boss-damage jobs
   kanzleiId?: string;  // For boss-damage, boss-heal, boss-check jobs
   userName?: string;    // For boss-damage jobs (display name)
+  completionId?: string;  // For audit-auto-confirm jobs
   // For cron jobs (daily-reset, nightly-safety-net), all fields may be omitted
 }
 

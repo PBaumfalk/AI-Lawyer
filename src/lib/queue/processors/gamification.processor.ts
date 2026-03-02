@@ -39,6 +39,8 @@ export async function processGamificationJob(job: Job<GamificationJobData>): Pro
       return handleBossCheck(job);
     case "weekly-snapshot":
       return handleWeeklySnapshot();
+    case "audit-auto-confirm":
+      return handleAuditAutoConfirm(job);
     default:
       log.warn({ jobName: job.name }, "Unknown gamification job type");
   }
@@ -98,6 +100,50 @@ async function handleBossCheck(job: Job<GamificationJobData>): Promise<void> {
 async function handleWeeklySnapshot(): Promise<void> {
   await createWeeklySnapshots();
   log.info("Weekly snapshot cron completed");
+}
+
+async function handleAuditAutoConfirm(job: Job<GamificationJobData>): Promise<void> {
+  const { completionId } = job.data;
+  if (!completionId) {
+    log.warn("audit-auto-confirm job missing completionId");
+    return;
+  }
+
+  const completion = await prisma.questCompletion.findUnique({
+    where: { id: completionId },
+  });
+
+  if (!completion) {
+    log.warn({ completionId }, "audit-auto-confirm: completion not found");
+    return;
+  }
+
+  // Only auto-confirm if still PENDING (user may have already confirmed/declined)
+  if (completion.auditStatus !== "PENDING") {
+    log.debug({ completionId, status: completion.auditStatus }, "audit-auto-confirm: already resolved");
+    return;
+  }
+
+  // Auto-confirm: credit the pending rewards
+  await prisma.$transaction(async (tx) => {
+    await tx.userGameProfile.update({
+      where: { userId: completion.userId },
+      data: {
+        xp: { increment: completion.pendingXp },
+        runen: { increment: completion.pendingRunen },
+      },
+    });
+    await tx.questCompletion.update({
+      where: { id: completionId },
+      data: {
+        auditStatus: "CONFIRMED",
+        xpVerdient: completion.pendingXp,
+        runenVerdient: completion.pendingRunen,
+      },
+    });
+  });
+
+  log.info({ completionId, userId: completion.userId }, "audit-auto-confirm: rewards credited");
 }
 
 async function handleNightlySafetyNet(): Promise<void> {

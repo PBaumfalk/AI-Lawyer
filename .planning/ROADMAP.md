@@ -265,7 +265,7 @@ Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34
 | 33. Gamification Schema + Quest Engine | 3/3 | Complete    | 2026-03-02 | - |
 | 34. Dashboard Widget + Quest Deep-Links | 2/2 | Complete    | 2026-03-02 | - |
 | 35. Bossfight | 3/3 | Complete    | 2026-03-02 | - |
-| 36. Quick Wins | 2/2 | Complete   | 2026-03-02 | - |
+| 36. Quick Wins | 2/2 | Complete    | 2026-03-02 | - |
 | 37. Klassen + Weekly + Special Quests | v0.4 | 0/2 | Not started | - |
 | 38. Anti-Missbrauch | v0.4 | 0/2 | Not started | - |
 | 39. Item-Shop + Inventar | v0.4 | 0/2 | Not started | - |

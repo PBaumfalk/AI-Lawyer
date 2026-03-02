@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
 status: unknown
-last_updated: "2026-03-02T17:00:44.711Z"
+last_updated: "2026-03-02T17:47:19Z"
 progress:
   total_phases: 18
   completed_phases: 17
   total_plans: 50
-  completed_plans: 50
+  completed_plans: 52
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 35 complete (Bossfight, all 3 plans including gap closure), ready for Phase 36
+**Current focus:** v0.4 Quest & Polish -- Phase 36 in progress (Quick Wins), Plan 02 complete
 
 ## Current Position
 
-Phase: 35 of 41 (Bossfight) -- 3 of 9 in milestone (PHASE COMPLETE)
-Plan: 3 of 3 in current phase (COMPLETE)
+Phase: 36 of 41 (Quick Wins) -- 4 of 9 in milestone
+Plan: 2 of 2 in current phase (COMPLETE)
 Status: Executing
-Last activity: 2026-03-02 -- Completed 35-03 (Gap Closure: Socket.IO + API field mismatches)
+Last activity: 2026-03-02 -- Completed 36-02 (OCR Recovery + Zeiterfassung Inline Edit)
 
-Progress: [████░░░░░░] 44% (8/18 plans)
+Progress: [█████░░░░░] 56% (10/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 111 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:8)
+- Total plans completed: 113 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:10)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -53,6 +53,8 @@ Progress: [████░░░░░░] 44% (8/18 plans)
 | Phase 35 P01 | 14min | 2 tasks | 14 files |
 | Phase 35 P02 | 4min | 2 tasks | 9 files |
 | Phase 35 P03 | 2min | 1 tasks | 2 files |
+| Phase 36 P01 | 3min | 2 tasks | 5 files |
+| Phase 36 P02 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -88,6 +90,9 @@ Recent decisions affecting current work:
 - [35-03]: All event shape fixes on emitter/API side only -- consumer components left untouched
 - [35-03]: totalDamage uses aggregate query across all participants for accurate defeat stats
 - [35-03]: runenEarned in boss:defeated uses VICTORY_RUNEN_BONUS constant for consistency
+- [36-02]: Vision-Analyse only for image MIME types (not PDFs) per research pitfall guidance
+- [36-02]: Manual text entry uses inline expanding textarea (not modal) per user decision
+- [36-02]: Category dropdown saves on selection for minimal friction (no separate save button)
 
 ### Pending Todos
 
@@ -98,11 +103,11 @@ Deferred from previous milestones (not in v0.4 scope):
 ### Blockers/Concerns
 
 - Streak Feiertagskalender: RESOLVED -- uses existing istFeiertag() from feiertagejs + Bundesland from SystemSetting
-- OCR Vision fallback: MinIO presigned URL to AI SDK v4 image attachment untested -- validate in Phase 36 planning
+- OCR Vision fallback: RESOLVED -- Vision API endpoint uses Buffer from MinIO stream directly (not presigned URL), tested via AI SDK generateText with image content
 - Bossfight activation trigger: RESOLVED -- automatic dual trigger (nightly cron + on-demand after WV creation), admin configures threshold
 
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 35-03-PLAN.md (Gap Closure: Socket.IO + API field mismatches) -- Phase 35 fully COMPLETE
-Resume file: None -- ready for Phase 36
+Stopped at: Completed 36-02-PLAN.md (OCR Recovery + Zeiterfassung Inline Edit) -- Phase 36 fully COMPLETE
+Resume file: None -- ready for next phase

@@ -1,6 +1,13 @@
 import { Queue, type JobsOptions } from "bullmq";
 import { getQueueConnection } from "@/lib/queue/connection";
 
+// ─── Gamification Job Types ─────────────────────────────────────────────────
+
+export interface GamificationJobData {
+  userId?: string;  // For quest-check jobs (single user)
+  // For cron jobs (daily-reset, nightly-safety-net), userId is omitted
+}
+
 /** Custom backoff intervals: 10s, 60s, 5min (per user decision) */
 const BACKOFF_DELAYS = [10_000, 60_000, 300_000];
 
@@ -210,6 +217,19 @@ export const scannerQueue = new Queue("scanner", {
   },
 });
 
+/**
+ * Gamification queue for async quest evaluation, daily reset, and nightly safety net.
+ * attempts: 1 — quest evaluation is idempotent, no retry needed.
+ */
+export const gamificationQueue = new Queue<GamificationJobData>("gamification", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    attempts: 1,              // Quest eval is idempotent, no retry needed
+    removeOnComplete: { age: 86_400 },
+    removeOnFail: { age: 604_800 },
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
 export const ALL_QUEUES: Queue[] = [
   testQueue,
@@ -229,6 +249,7 @@ export const ALL_QUEUES: Queue[] = [
   helenaTaskQueue,
   scannerQueue,
   akteEmbeddingQueue,
+  gamificationQueue,
 ];
 
 /**
@@ -409,6 +430,35 @@ export async function registerScannerJob(
         removeOnComplete: { count: 50 },
         removeOnFail: { count: 20 },
       },
+    }
+  );
+}
+
+/**
+ * Register gamification cron jobs:
+ * 1. Daily reset at 00:05 -- placeholder for future daily quest rotation
+ * 2. Nightly safety net at 23:55 -- catches missed quest completions, finalizes streaks
+ */
+export async function registerGamificationCrons(): Promise<void> {
+  // Daily reset at 00:05 Europe/Berlin
+  await gamificationQueue.upsertJobScheduler(
+    "gamification-daily-reset",
+    { pattern: "5 0 * * *", tz: "Europe/Berlin" },
+    {
+      name: "daily-reset",
+      data: {},
+      opts: { removeOnComplete: { count: 50 }, removeOnFail: { count: 20 } },
+    }
+  );
+
+  // Nightly safety net at 23:55 Europe/Berlin
+  await gamificationQueue.upsertJobScheduler(
+    "gamification-nightly-safety-net",
+    { pattern: "55 23 * * *", tz: "Europe/Berlin" },
+    {
+      name: "nightly-safety-net",
+      data: {},
+      opts: { removeOnComplete: { count: 50 }, removeOnFail: { count: 20 } },
     }
   );
 }

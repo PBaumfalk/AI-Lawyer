@@ -28,6 +28,7 @@ import { runHelenaAgent } from "@/lib/helena";
 import { getSocketEmitter } from "@/lib/socket/emitter";
 import { loadOrRefresh } from "@/lib/helena/memory-service";
 import { createLogger } from "@/lib/logger";
+import type { MessageNewPayload } from "@/lib/messaging/types";
 
 const log = createLogger("helena-task-processor");
 
@@ -68,6 +69,96 @@ export function abortTask(taskId: string): boolean {
  */
 export function getActiveTaskIds(): string[] {
   return Array.from(abortControllers.keys());
+}
+
+// ---------------------------------------------------------------------------
+// Helena system user lookup (cached, idempotent upsert fallback)
+// ---------------------------------------------------------------------------
+
+let helenaUserIdPromise: Promise<string> | null = null;
+
+/**
+ * Get the system user ID for Helena.
+ *
+ * Uses a module-level cached promise so we only query once per process lifetime.
+ * Falls back to creating a system user if none exists (idempotent via upsert).
+ */
+async function getHelenaUserId(): Promise<string> {
+  if (!helenaUserIdPromise) {
+    helenaUserIdPromise = (async () => {
+      // Try to find existing system user
+      const existing = await prisma.user.findFirst({
+        where: { isSystem: true },
+        select: { id: true },
+      });
+      if (existing) return existing.id;
+
+      // Fallback: create a system user for Helena (idempotent via upsert)
+      const helena = await prisma.user.upsert({
+        where: { email: "helena@system.local" },
+        update: {},
+        create: {
+          email: "helena@system.local",
+          name: "Helena",
+          passwordHash: "", // System user -- no login
+          isSystem: true,
+          role: "ADMIN",
+          kanzleiId: (await prisma.kanzlei.findFirst({ select: { id: true } }))!.id,
+        },
+        select: { id: true },
+      });
+      return helena.id;
+    })();
+  }
+  return helenaUserIdPromise;
+}
+
+/**
+ * Post Helena's response back to the originating channel as a system message.
+ *
+ * Creates a Message record and emits `message:new` via Socket.IO.
+ * Non-fatal: logs warning on failure but does not throw.
+ */
+async function postHelenaResponseToChannel(
+  channelId: string,
+  response: string,
+): Promise<void> {
+  try {
+    const helenaUserId = await getHelenaUserId();
+
+    const message = await prisma.message.create({
+      data: {
+        channelId,
+        authorId: helenaUserId,
+        body: response,
+      },
+      include: {
+        author: { select: { id: true, name: true, avatarUrl: true, isSystem: true } },
+      },
+    });
+
+    const payload: MessageNewPayload = {
+      id: message.id,
+      channelId,
+      authorId: message.authorId,
+      authorName: message.author.name || "Helena",
+      authorAvatarUrl: message.author.avatarUrl,
+      body: message.body,
+      mentions: null,
+      attachments: null,
+      parentId: null,
+      createdAt: message.createdAt.toISOString(),
+      isSystem: true,
+    };
+
+    getSocketEmitter()
+      .to(`channel:${channelId}`)
+      .emit("message:new", payload);
+
+    log.info({ channelId, messageId: message.id }, "Helena response posted to channel");
+  } catch (err) {
+    log.warn({ err, channelId }, "Failed to post Helena response to channel (non-fatal)");
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -177,6 +268,17 @@ export async function processHelenaTask(
       },
       "Helena task completed",
     );
+
+    // 8. Post response back to channel if triggered from @Helena mention
+    if (finalStatus === "DONE" && result.text) {
+      const task = await prisma.helenaTask.findUnique({
+        where: { id: taskId },
+        select: { channelId: true },
+      });
+      if (task?.channelId) {
+        await postHelenaResponseToChannel(task.channelId, result.text);
+      }
+    }
   } catch (error: unknown) {
     const errMsg =
       error instanceof Error ? error.message : String(error);

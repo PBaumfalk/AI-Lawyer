@@ -128,6 +128,7 @@ export async function sendMessage(params: {
           auftrag: instruction,
           prioritaet: 8,
           quelle: "at-mention",
+          channelId, // Post Helena response back to this channel
         }).catch((err) => {
           log.warn({ err, channelId, akteId: channel.akteId }, "Failed to create Helena task from channel mention");
         });

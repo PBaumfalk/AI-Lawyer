@@ -28,6 +28,8 @@ export interface CreateTaskOptions {
   prioritaet?: number;
   /** Source: "at-mention" | "manual" | "scanner" | "chat" */
   quelle?: string;
+  /** If triggered from channel @mention, post response back to this channel */
+  channelId?: string;
 }
 
 /**
@@ -47,6 +49,7 @@ export async function createHelenaTask(options: CreateTaskOptions) {
     auftrag,
     prioritaet = 5,
     quelle = "manual",
+    channelId,
   } = options;
 
   // 1. Create HelenaTask record in DB (BEFORE enqueue -- no race condition)
@@ -58,6 +61,7 @@ export async function createHelenaTask(options: CreateTaskOptions) {
       status: "PENDING",
       modus: "BACKGROUND",
       prioritaet,
+      channelId: channelId || undefined,
     },
   });
 

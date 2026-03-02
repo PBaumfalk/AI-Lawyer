@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
 import { requireAuth, buildAkteAccessFilter } from "@/lib/rbac";
+import { gamificationQueue } from "@/lib/queue/queues";
 import { z } from "zod";
 
 const createKalenderSchema = z.object({
@@ -212,6 +213,24 @@ export async function POST(request: NextRequest) {
       sonderfall: eintrag.sonderfall,
     },
   });
+
+  // Bossfight: enqueue boss heal when new Wiedervorlage created, and check spawn
+  if (parsed.data.typ === "WIEDERVORLAGE") {
+    const healUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { kanzleiId: true },
+    });
+    if (healUser?.kanzleiId) {
+      // Heal active boss (if any)
+      gamificationQueue
+        .add("boss-heal", { kanzleiId: healUser.kanzleiId })
+        .catch(() => {});
+      // Check if boss should spawn (backlog may have crossed threshold)
+      gamificationQueue
+        .add("boss-check", { kanzleiId: healUser.kanzleiId })
+        .catch(() => {});
+    }
+  }
 
   return NextResponse.json(eintrag, { status: 201 });
 }

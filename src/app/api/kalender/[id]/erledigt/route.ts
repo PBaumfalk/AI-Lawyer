@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
+import { gamificationQueue } from "@/lib/queue/queues";
 import { z } from "zod";
 
 const erledigtSchema = z.object({
@@ -94,6 +95,23 @@ export async function PATCH(
       istUeberfaellig: isOverdue,
     },
   });
+
+  // Bossfight: enqueue boss damage when Wiedervorlage marked as erledigt
+  if (parsed.data.erledigt && existing.typ === "WIEDERVORLAGE") {
+    const damageUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { kanzleiId: true, name: true },
+    });
+    if (damageUser?.kanzleiId) {
+      gamificationQueue
+        .add("boss-damage", {
+          userId,
+          kanzleiId: damageUser.kanzleiId,
+          userName: damageUser.name ?? undefined,
+        })
+        .catch(() => {}); // fire-and-forget
+    }
+  }
 
   return NextResponse.json(eintrag);
 }

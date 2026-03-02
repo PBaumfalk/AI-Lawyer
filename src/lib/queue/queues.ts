@@ -4,8 +4,10 @@ import { getQueueConnection } from "@/lib/queue/connection";
 // ─── Gamification Job Types ─────────────────────────────────────────────────
 
 export interface GamificationJobData {
-  userId?: string;  // For quest-check jobs (single user)
-  // For cron jobs (daily-reset, nightly-safety-net), userId is omitted
+  userId?: string;     // For quest-check and boss-damage jobs
+  kanzleiId?: string;  // For boss-damage, boss-heal, boss-check jobs
+  userName?: string;    // For boss-damage jobs (display name)
+  // For cron jobs (daily-reset, nightly-safety-net), all fields may be omitted
 }
 
 /** Custom backoff intervals: 10s, 60s, 5min (per user decision) */

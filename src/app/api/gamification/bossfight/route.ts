@@ -69,7 +69,7 @@ export async function GET() {
         });
         return {
           userId: d.userId,
-          name: dealerUser?.name ?? "Unbekannt",
+          userName: dealerUser?.name ?? "Unbekannt",
           totalDamage: d._sum.amount ?? 0,
         };
       }),

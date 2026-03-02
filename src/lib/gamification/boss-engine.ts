@@ -131,7 +131,7 @@ export async function checkAndSpawnBoss(kanzleiId: string): Promise<Bossfight | 
       getSocketEmitter()
         .to(`kanzlei:${kanzleiId}`)
         .emit("boss:spawned", {
-          id: boss.id,
+          bossfightId: boss.id,
           name: boss.name,
           spawnHp: boss.spawnHp,
           currentHp: boss.currentHp,
@@ -234,7 +234,7 @@ export async function dealBossDamage(
           .to(`kanzlei:${kanzleiId}`)
           .emit("boss:phase-change", {
             bossfightId: boss.id,
-            phase: newPhase,
+            newPhase,
             currentHp: updated.currentHp,
             spawnHp: updated.spawnHp,
           });
@@ -251,6 +251,12 @@ export async function dealBossDamage(
       });
 
       await awardVictoryRewards(tx, boss.id, boss.name);
+
+      // Get total damage across all participants
+      const totalDamageResult = await tx.bossfightDamage.aggregate({
+        where: { bossfightId: boss.id },
+        _sum: { amount: true },
+      });
 
       // Get MVP for the event
       const mvpGroup = await tx.bossfightDamage.groupBy({
@@ -277,7 +283,10 @@ export async function dealBossDamage(
           .emit("boss:defeated", {
             bossfightId: boss.id,
             bossName: boss.name,
-            mvp: { userId: mvpUserId, name: mvpName, damage: mvpGroup[0]?._sum?.amount ?? 0 },
+            mvpUserId: mvpUserId ?? "",
+            mvpUserName: mvpName,
+            totalDamage: totalDamageResult._sum?.amount ?? 0,
+            runenEarned: VICTORY_RUNEN_BONUS,
           });
       } catch (err) {
         log.warn({ err }, "Failed to emit boss:defeated event");

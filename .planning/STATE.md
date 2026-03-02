@@ -8,7 +8,7 @@ progress:
   total_phases: 20
   completed_phases: 19
   total_plans: 54
-  completed_plans: 54
+  completed_plans: 55
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 37 COMPLETE (Klassen + Weekly + Special Quests)
+**Current focus:** v0.4 Quest & Polish -- Phase 38 IN PROGRESS (Anti-Missbrauch)
 
 ## Current Position
 
-Phase: 37 of 41 (Klassen + Weekly + Special Quests) -- 5 of 9 in milestone
-Plan: 2 of 2 in current phase (COMPLETE)
+Phase: 38 of 41 (Anti-Missbrauch) -- 6 of 9 in milestone
+Plan: 1 of 2 in current phase
 Status: Executing
-Last activity: 2026-03-02 -- Completed 37-02 (Special Quest Frontend + Admin CRUD)
+Last activity: 2026-03-02 -- Completed 38-01 (Anti-Missbrauch Core)
 
-Progress: [██████░░░░] 67% (12/18 plans)
+Progress: [███████░░░] 72% (13/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 114 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:11)
+- Total plans completed: 115 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:12)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -57,6 +57,7 @@ Progress: [██████░░░░] 67% (12/18 plans)
 | Phase 36 P02 | 3min | 2 tasks | 5 files |
 | Phase 37 P01 | 6min | 2 tasks | 11 files |
 | Phase 37 P02 | 4min | 2 tasks | 6 files |
+| Phase 38 P01 | 4min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,10 @@ Recent decisions affecting current work:
 - [37-01]: Widget temporarily flattens grouped response; Plan 02 adds proper section headers
 - [Phase 37]: QuestSection is a separate reusable component (not inlined in QuestWidget) for clean separation
 - [Phase 37]: Condition templates defined server-side and sent to client -- admin never writes raw JSON
+- [38-01]: Redis INCR+EXPIRE for daily Runen cap (mirrors rate-limiter.ts pattern, fail-open)
+- [38-01]: findMany + JS filter for WV 30+ char check (Prisma lacks string length WHERE)
+- [38-01]: Runen cap on WV quests only; P2002 catch for concurrent idempotent completions
+- [38-01]: completedDate (DATE-only) replaces completedAt in unique constraint for tighter dedup
 
 ### Pending Todos
 
@@ -120,5 +125,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 37-02-PLAN.md (Special Quest Frontend + Admin CRUD) -- Phase 37 COMPLETE
-Resume file: Next phase
+Stopped at: Completed 38-01-PLAN.md (Anti-Missbrauch Core)
+Resume file: .planning/phases/38-anti-missbrauch/38-02-PLAN.md

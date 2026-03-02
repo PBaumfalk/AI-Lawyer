@@ -36,10 +36,10 @@
 
 ### Anti-Missbrauch
 
-- [ ] **ABUSE-01**: Qualifizierte Erledigung (Wiedervorlage zählt nur mit Status-Änderung + Vermerk + ggf. Folge-WV)
-- [ ] **ABUSE-02**: Runen-Deckel (max. 40 Runen/Tag aus Wiedervorlagen, darüber nur XP)
+- [x] **ABUSE-01**: Qualifizierte Erledigung (Wiedervorlage zählt nur mit Status-Änderung + Vermerk + ggf. Folge-WV)
+- [x] **ABUSE-02**: Runen-Deckel (max. 40 Runen/Tag aus Wiedervorlagen, darüber nur XP)
 - [ ] **ABUSE-03**: Random Audits (1-3% Stichprobe: System fragt "Erledigung bestätigen?", bei Ablehnung Punkte zurück)
-- [ ] **ABUSE-04**: Atomic Prisma-Increments für XP/Runen (Race Condition Prevention bei gleichzeitigen Completions)
+- [x] **ABUSE-04**: Atomic Prisma-Increments für XP/Runen (Race Condition Prevention bei gleichzeitigen Completions)
 
 ### Item-Shop
 
@@ -115,10 +115,10 @@
 | BOSS-02 | Phase 35 | Complete |
 | BOSS-03 | Phase 35 | Complete |
 | BOSS-04 | Phase 35 | Complete |
-| ABUSE-01 | Phase 38 | Pending |
-| ABUSE-02 | Phase 38 | Pending |
+| ABUSE-01 | Phase 38 | Complete |
+| ABUSE-02 | Phase 38 | Complete |
 | ABUSE-03 | Phase 38 | Pending |
-| ABUSE-04 | Phase 38 | Pending |
+| ABUSE-04 | Phase 38 | Complete |
 | SHOP-01 | Phase 39 | Pending |
 | SHOP-02 | Phase 39 | Pending |
 | SHOP-03 | Phase 39 | Pending |

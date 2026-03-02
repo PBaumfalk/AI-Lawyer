@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { ArrowDown } from "lucide-react";
 import type { MessageListItem } from "@/lib/messaging/types";
+import type {
+  MessageNewPayload,
+  MessageEditedPayload,
+  MessageDeletedPayload,
+} from "@/lib/messaging/types";
+import { useSocket } from "@/components/socket-provider";
 import { MessageList } from "./message-list";
 import { MessageComposer } from "./message-composer";
+import { MessagingSocketBridge } from "./messaging-socket-bridge";
+import { TypingIndicator } from "./typing-indicator";
 
 interface MessageViewProps {
   channelId: string;
@@ -20,6 +28,7 @@ interface ChannelMember {
 
 export function MessageView({ channelId, onMessageSent }: MessageViewProps) {
   const { data: session } = useSession();
+  const { socket } = useSocket();
   const [messages, setMessages] = useState<MessageListItem[]>([]);
   const [members, setMembers] = useState<ChannelMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +37,15 @@ export function MessageView({ channelId, onMessageSent }: MessageViewProps) {
   const [scrollToBottomTrigger, setScrollToBottomTrigger] = useState(0);
 
   const currentUserId = session?.user?.id ?? "";
+
+  // Ref to avoid stale closures in Socket.IO callbacks
+  const channelIdRef = useRef(channelId);
+  useEffect(() => {
+    channelIdRef.current = channelId;
+  }, [channelId]);
+
+  // Typing debounce ref
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch messages for the current channel
   const fetchMessages = useCallback(
@@ -96,6 +114,53 @@ export function MessageView({ channelId, onMessageSent }: MessageViewProps) {
     });
   }, [channelId, fetchMessages, fetchMembers, markAsRead]);
 
+  // ─── Socket.IO real-time event listeners ──────────────────────────────────
+
+  useEffect(() => {
+    if (!socket) return;
+
+    function handleMessageNew(data: MessageNewPayload) {
+      if (data.channelId !== channelIdRef.current) return;
+      // Banner refetch pattern: do NOT auto-insert
+      // If it's our own message, we already refetch via handleSent
+      if (data.authorId !== currentUserId) {
+        setHasNewMessages(true);
+      }
+    }
+
+    function handleMessageEdited(data: MessageEditedPayload) {
+      if (data.channelId !== channelIdRef.current) return;
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === data.id
+            ? { ...msg, body: data.body, editedAt: data.editedAt }
+            : msg
+        )
+      );
+    }
+
+    function handleMessageDeleted(data: MessageDeletedPayload) {
+      if (data.channelId !== channelIdRef.current) return;
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === data.id
+            ? { ...msg, deletedAt: new Date().toISOString() }
+            : msg
+        )
+      );
+    }
+
+    socket.on("message:new", handleMessageNew);
+    socket.on("message:edited", handleMessageEdited);
+    socket.on("message:deleted", handleMessageDeleted);
+
+    return () => {
+      socket.off("message:new", handleMessageNew);
+      socket.off("message:edited", handleMessageEdited);
+      socket.off("message:deleted", handleMessageDeleted);
+    };
+  }, [socket, currentUserId]);
+
   // Load older messages
   const handleLoadMore = useCallback(() => {
     if (nextCursor) {
@@ -153,8 +218,39 @@ export function MessageView({ channelId, onMessageSent }: MessageViewProps) {
     [messages, currentUserId, channelId, fetchMessages]
   );
 
+  // Typing emission handler -- passed to MessageComposer
+  const handleTyping = useCallback(() => {
+    if (!socket) return;
+
+    // Emit typing:start
+    socket.emit("typing:start", channelIdRef.current);
+
+    // Clear existing debounce timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set a 3s timeout to emit typing:stop when typing pauses
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("typing:stop", channelIdRef.current);
+      typingTimeoutRef.current = null;
+    }, 3000);
+  }, [socket]);
+
+  // Cleanup typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="flex-1 glass-card rounded-2xl flex flex-col overflow-hidden">
+      {/* Invisible socket bridge for channel room management */}
+      <MessagingSocketBridge channelId={channelId} />
+
       {/* Message list */}
       <MessageList
         messages={messages}
@@ -180,11 +276,15 @@ export function MessageView({ channelId, onMessageSent }: MessageViewProps) {
         </div>
       )}
 
+      {/* Typing indicator */}
+      <TypingIndicator channelId={channelId} currentUserId={currentUserId} />
+
       {/* Composer */}
       <MessageComposer
         channelId={channelId}
         members={members}
         onSent={handleSent}
+        onTyping={handleTyping}
       />
     </div>
   );

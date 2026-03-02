@@ -17,6 +17,7 @@ interface MessageComposerProps {
   channelId: string;
   members: { userId: string; userName: string }[];
   onSent: () => void;
+  onTyping?: () => void;
 }
 
 interface Attachment {
@@ -28,6 +29,7 @@ export function MessageComposer({
   channelId,
   members,
   onSent,
+  onTyping,
 }: MessageComposerProps) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -62,6 +64,9 @@ export function MessageComposer({
       const newText = e.target.value;
       setText(newText);
 
+      // Emit typing indicator
+      onTyping?.();
+
       const ta = e.target;
       ta.style.height = "auto";
       ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`;
@@ -90,7 +95,7 @@ export function MessageComposer({
       setMentionOpen(false);
       setMentionStartPos(null);
     },
-    []
+    [onTyping]
   );
 
   // Extract mention user IDs from text

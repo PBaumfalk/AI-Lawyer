@@ -199,11 +199,11 @@ Plans:
   2. A user earns max 40 Runen/day from Wiedervorlage quests; beyond the cap, only XP is awarded (Redis INCR enforcement)
   3. 1-3% of quest completions are flagged for random audit; the user sees a confirmation prompt, and declining revokes points
   4. Concurrent quest completions on the same profile never cause XP/Runen drift (atomic Prisma increments, DB-level idempotency)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 38-01: Qualified completion validators + Runen daily cap (Redis) + atomic increment hardening
-- [ ] 38-02: Random audit system (flagging, confirmation UI, point revocation)
+- [ ] 38-01-PLAN.md -- Schema migration (QuestCompletion + AuditStatus) + Runen daily cap (Redis) + qualified WV completion check + atomic $transaction hardening + cap indicator UI
+- [ ] 38-02-PLAN.md -- Random audit system (2% sampling, Socket.IO event, Sonner action toast, confirm/decline API, 24h auto-confirm BullMQ job)
 
 ### Phase 39: Item-Shop + Inventar
 **Goal**: Users can spend earned Runen on cosmetic and comfort items

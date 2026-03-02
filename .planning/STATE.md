@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
-status: unknown
-last_updated: "2026-03-02T13:06:56.259Z"
+status: executing
+last_updated: "2026-03-02T15:34:00Z"
 progress:
   total_phases: 17
   completed_phases: 16
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 34 complete, ready for Phase 35
+**Current focus:** v0.4 Quest & Polish -- Phase 35 in progress (Bossfight)
 
 ## Current Position
 
-Phase: 34 of 41 (Dashboard Widget + Quest Deep-Links) -- 2 of 9 in milestone
-Plan: 2 of 2 in current phase (COMPLETE)
-Status: Phase Complete
-Last activity: 2026-03-02 -- Completed 34-02 (Opt-in Toggle + Deep-Link Target)
+Phase: 35 of 41 (Bossfight) -- 3 of 9 in milestone
+Plan: 1 of 2 in current phase (COMPLETE)
+Status: Executing
+Last activity: 2026-03-02 -- Completed 35-01 (Bossfight Engine + Data Model)
 
-Progress: [███░░░░░░░] 28% (5/18 plans)
+Progress: [████░░░░░░] 33% (6/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 108 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:5)
+- Total plans completed: 109 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:6)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -50,6 +50,7 @@ Progress: [███░░░░░░░] 28% (5/18 plans)
 - Last milestone (v0.3): 13 plans, avg ~3.4 min/plan
 - Trend: Stable
 | Phase 34 P01 | 3min | 2 tasks | 5 files |
+| Phase 35 P01 | 14min | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,10 @@ Recent decisions affecting current work:
 - [Phase 34]: Widget uses absent-until-loaded pattern (returns null until fetch completes) to avoid layout shift
 - [Phase 34]: API returns 404 for opted-out users; widget treats 404 as opt-out signal and renders nothing
 - [Phase 34]: Deep-link builder uses static MODEL_TO_PATH lookup with URLSearchParams from condition.where
+- [35-01]: Boss HP mutations use Prisma $transaction with atomic decrement/increment to prevent race conditions
+- [35-01]: Phase transition rewards tracked via bitmask (phaseRewardsGiven) to prevent duplicate awards
+- [35-01]: Kanzlei room (kanzlei:{kanzleiId}) used for team-wide broadcasts instead of role-based rooms
+- [35-01]: Boss spawn check runs both in nightly cron AND on-demand after new WV creation
 
 ### Pending Todos
 
@@ -86,10 +91,10 @@ Deferred from previous milestones (not in v0.4 scope):
 
 - Streak Feiertagskalender: RESOLVED -- uses existing istFeiertag() from feiertagejs + Bundesland from SystemSetting
 - OCR Vision fallback: MinIO presigned URL to AI SDK v4 image attachment untested -- validate in Phase 36 planning
-- Bossfight activation trigger: manual admin vs automatic cron detection -- decide in Phase 35 planning
+- Bossfight activation trigger: RESOLVED -- automatic dual trigger (nightly cron + on-demand after WV creation), admin configures threshold
 
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 34-02-PLAN.md (Opt-in Toggle + Deep-Link Target) -- Phase 34 complete
-Resume file: None -- ready for Phase 35
+Stopped at: Completed 35-01-PLAN.md (Bossfight Engine + Data Model)
+Resume file: None -- ready for 35-02

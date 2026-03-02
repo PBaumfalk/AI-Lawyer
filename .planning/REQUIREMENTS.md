@@ -29,10 +29,10 @@
 
 ### Bossfight
 
-- [ ] **BOSS-01**: Bossfight-Mechanik mit HP = offene Wiedervorlagen (Team kämpft gemeinsam gegen Backlog-Monster)
-- [ ] **BOSS-02**: 4 Boss-Phasen mit eskalierenden Belohnungen (Phase 3: mehr Runen, Phase 4: Legendary-Trophäe)
+- [x] **BOSS-01**: Bossfight-Mechanik mit HP = offene Wiedervorlagen (Team kämpft gemeinsam gegen Backlog-Monster)
+- [x] **BOSS-02**: 4 Boss-Phasen mit eskalierenden Belohnungen (Phase 3: mehr Runen, Phase 4: Legendary-Trophäe)
 - [ ] **BOSS-03**: Team-Fortschritts-Banner auf Dashboard mit Echtzeit-Updates via Socket.IO
-- [ ] **BOSS-04**: Boss-Activation konfigurierbar (Admin setzt Schwellenwert für Backlog-Größe)
+- [x] **BOSS-04**: Boss-Activation konfigurierbar (Admin setzt Schwellenwert für Backlog-Größe)
 
 ### Anti-Missbrauch
 
@@ -111,10 +111,10 @@
 | QUEST-06 | Phase 37 | Pending |
 | QUEST-07 | Phase 33 | Complete |
 | QUEST-08 | Phase 34 | Complete |
-| BOSS-01 | Phase 35 | Pending |
-| BOSS-02 | Phase 35 | Pending |
+| BOSS-01 | Phase 35 | Complete |
+| BOSS-02 | Phase 35 | Complete |
 | BOSS-03 | Phase 35 | Pending |
-| BOSS-04 | Phase 35 | Pending |
+| BOSS-04 | Phase 35 | Complete |
 | ABUSE-01 | Phase 38 | Pending |
 | ABUSE-02 | Phase 38 | Pending |
 | ABUSE-03 | Phase 38 | Pending |

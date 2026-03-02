@@ -13,7 +13,7 @@
 - [x] **GAME-04**: Streak-Tracking mit automatischem Freeze bei Urlaub/Abwesenheit (kein Streak-Bruch bei Nicht-Arbeitstagen)
 - [x] **GAME-05**: Klassen-Zuweisung basierend auf RBAC-Rolle (Jurist=ANWALT, Schreiber=SACHBEARBEITER, Wächter=SEKRETARIAT, Quartiermeister=ADMIN)
 - [x] **GAME-06**: DSGVO-konforme Datenarchitektur (eigenes GameProfile nur selbst sichtbar, Team-Daten nur aggregiert)
-- [ ] **GAME-07**: Gamification ist opt-in sichtbar (Dashboard-Widget, kein Zwang, keine Push-Notifications)
+- [x] **GAME-07**: Gamification ist opt-in sichtbar (Dashboard-Widget, kein Zwang, keine Push-Notifications)
 - [ ] **GAME-08**: Dashboard-Widget zeigt heutige Quests, XP-Bar, Level, Runen und Streak
 
 ### Quest System
@@ -101,7 +101,7 @@
 | GAME-04 | Phase 33 | Complete |
 | GAME-05 | Phase 33 | Complete |
 | GAME-06 | Phase 33 | Complete |
-| GAME-07 | Phase 34 | Pending |
+| GAME-07 | Phase 34 | Complete |
 | GAME-08 | Phase 34 | Pending |
 | QUEST-01 | Phase 33 | Complete |
 | QUEST-02 | Phase 33 | Complete |

@@ -103,7 +103,7 @@ See: `milestones/v0.3-ROADMAP.md` for full phase details.
 **Milestone Goal:** Gamification als Kanzlei-Steuerungsinstrument (Quests, XP, Bossfight, Item-Shop, Team-Dashboard) + UX-Quick-Wins in der Akte-Detailansicht.
 
 - [x] **Phase 33: Gamification Schema + Quest Engine** - Prisma models, XP/Level/Streak/Runen engine, Quest DSL evaluator, nightly cron, DSGVO-compliant data architecture (completed 2026-03-02)
-- [ ] **Phase 34: Dashboard Widget + Quest Deep-Links** - GlassCard quest widget with XP bar, level, streak, Runen, opt-in visibility, quest click-to-navigate
+- [x] **Phase 34: Dashboard Widget + Quest Deep-Links** - GlassCard quest widget with XP bar, level, streak, Runen, opt-in visibility, quest click-to-navigate (completed 2026-03-02)
 - [ ] **Phase 35: Bossfight** - Team Backlog-Monster with HP bar, 4 phases, Socket.IO real-time updates, admin activation threshold
 - [ ] **Phase 36: Quick Wins** - Clickable KPI cards, OCR recovery flow, empty states, Chat KPI rename, Zeiterfassung description fix
 - [ ] **Phase 37: Klassen + Weekly + Special Quests** - Role-specific quests, weekly structural goals, time-limited admin campaigns
@@ -262,7 +262,7 @@ Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34
 | 19-27 | v0.2 | 23/23 | Complete | 2026-02-28 |
 | 28-32 | v0.3 | 13/13 | Complete | 2026-03-02 |
 | 33. Gamification Schema + Quest Engine | 3/3 | Complete    | 2026-03-02 | - |
-| 34. Dashboard Widget + Quest Deep-Links | v0.4 | 0/2 | Not started | - |
+| 34. Dashboard Widget + Quest Deep-Links | 2/2 | Complete   | 2026-03-02 | - |
 | 35. Bossfight | v0.4 | 0/2 | Not started | - |
 | 36. Quick Wins | v0.4 | 0/2 | Not started | - |
 | 37. Klassen + Weekly + Special Quests | v0.4 | 0/2 | Not started | - |

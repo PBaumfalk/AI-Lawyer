@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
-status: unknown
-last_updated: "2026-03-02T12:25:03.366Z"
+status: in-progress
+last_updated: "2026-03-02T13:01:42Z"
 progress:
   total_phases: 16
   completed_phases: 15
   total_plans: 45
-  completed_plans: 45
+  completed_plans: 47
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 33 complete, ready for Phase 34
+**Current focus:** v0.4 Quest & Polish -- Phase 34 complete, ready for Phase 35
 
 ## Current Position
 
-Phase: 33 of 41 (Gamification Schema + Quest Engine) -- 1 of 9 in milestone
-Plan: 3 of 3 in current phase (COMPLETE)
+Phase: 34 of 41 (Dashboard Widget + Quest Deep-Links) -- 2 of 9 in milestone
+Plan: 2 of 2 in current phase (COMPLETE)
 Status: Phase Complete
-Last activity: 2026-03-02 -- Completed 33-03 (BullMQ Queue + Crons + Route Hooks)
+Last activity: 2026-03-02 -- Completed 34-02 (Opt-in Toggle + Deep-Link Target)
 
-Progress: [██░░░░░░░░] 17% (3/18 plans)
+Progress: [███░░░░░░░] 28% (5/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 106 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:3)
+- Total plans completed: 108 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:5)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -68,6 +68,9 @@ Recent decisions affecting current work:
 - [33-03]: Gamification queue uses attempts:1 (idempotent, no retry needed)
 - [33-03]: Hourly dedup via jobId prevents redundant quest checks per user
 - [33-03]: Nightly safety net processes users sequentially (kanzlei-scale: <50 users)
+- [34-02]: Combined GET+PATCH in single opt-in route for fetch simplicity
+- [34-02]: Auto-create GameProfile on opt-in enable so widget works immediately
+- [34-02]: Only KalenderListe needs searchParams init -- Tickets already has server-side params
 
 ### Pending Todos
 
@@ -84,5 +87,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 33-03-PLAN.md (BullMQ Queue + Crons + Route Hooks) -- Phase 33 complete
-Resume file: None -- ready for Phase 34
+Stopped at: Completed 34-02-PLAN.md (Opt-in Toggle + Deep-Link Target) -- Phase 34 complete
+Resume file: None -- ready for Phase 35

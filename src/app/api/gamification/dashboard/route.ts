@@ -25,6 +25,8 @@ import {
   getRequiredXp,
 } from "@/lib/gamification/game-profile-service";
 import { evaluateQuestCondition } from "@/lib/gamification/quest-evaluator";
+import { getDailyRunenUsed } from "@/lib/gamification/runen-cap";
+import { getSettingTyped } from "@/lib/settings/service";
 import type { QuestCondition } from "@/lib/gamification/types";
 
 export async function GET() {
@@ -117,7 +119,13 @@ export async function GET() {
           where: {
             userId,
             questId: quest.id,
-            completedAt: { gte: dedupeStart },
+            completedDate: quest.typ === "DAILY"
+              ? todayStart  // Exact date match for DAILY
+              : quest.typ === "WEEKLY"
+                ? { gte: weekStart }
+                : quest.typ === "SPECIAL" && quest.startDatum
+                  ? { gte: quest.startDatum }
+                  : todayStart,
           },
         }),
       ]);
@@ -142,6 +150,12 @@ export async function GET() {
     }),
   );
 
+  // Fetch daily Runen cap data for cap indicator
+  const [dailyRunenUsed, dailyRunenCap] = await Promise.all([
+    getDailyRunenUsed(userId),
+    getSettingTyped<number>("gamification.daily_runen_cap", 40),
+  ]);
+
   // Group by type
   return NextResponse.json({
     profile: {
@@ -153,6 +167,8 @@ export async function GET() {
       progress,
       runen: gameProfile.runen,
       streakTage: gameProfile.streakTage,
+      dailyRunenUsed,
+      dailyRunenCap,
     },
     quests: {
       daily: questResults.filter((q) => q.typ === "DAILY"),

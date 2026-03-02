@@ -161,6 +161,34 @@ async function evaluateCountCondition(
     };
   }
 
+  // Check if this is a WV quest requiring qualified completion (30+ char Vermerk)
+  const isWvQuest =
+    condition.model === "KalenderEintrag" &&
+    (condition.where as Record<string, unknown>).typ === "WIEDERVORLAGE";
+
+  if (isWvQuest) {
+    // Prisma cannot filter by string length in COUNT -- use findMany + JS filter
+    // Ensure erledigungsgrund exists (status change evidence)
+    where.erledigungsgrund = { not: null };
+
+    // Fetch matching records with erledigungsgrund
+    const records = await prisma.kalenderEintrag.findMany({
+      where,
+      select: { id: true, erledigungsgrund: true },
+    });
+
+    // Filter by 30+ char requirement in application code
+    const qualifiedCount = records.filter(
+      (r) => (r.erledigungsgrund?.length ?? 0) >= 30,
+    ).length;
+
+    return {
+      current: qualifiedCount,
+      target: condition.count,
+      completed: qualifiedCount >= condition.count,
+    };
+  }
+
   const current = await countForModel(condition.model, where);
 
   return {

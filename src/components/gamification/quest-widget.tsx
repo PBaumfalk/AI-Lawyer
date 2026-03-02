@@ -19,6 +19,8 @@ interface DashboardProfile {
   progress: number;
   runen: number;
   streakTage: number;
+  dailyRunenUsed: number;
+  dailyRunenCap: number;
 }
 
 interface DashboardQuest {
@@ -145,6 +147,15 @@ export function QuestWidget() {
             </span>
           </div>
         </div>
+
+        {/* Daily Runen cap indicator (shown at 80%+ usage) */}
+        {profile.dailyRunenUsed >= profile.dailyRunenCap * 0.8 && (
+          <div className="mt-1 text-[10px] text-foreground/50">
+            {profile.dailyRunenUsed >= profile.dailyRunenCap
+              ? "Runen-Limit erreicht — XP wird weiterhin vergeben"
+              : `Runen ${profile.dailyRunenUsed}/${profile.dailyRunenCap}`}
+          </div>
+        )}
 
         {/* XP progress bar */}
         <div className="mt-2">

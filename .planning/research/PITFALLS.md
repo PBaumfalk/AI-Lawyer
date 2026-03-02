@@ -1,249 +1,342 @@
-# Domain Pitfalls: v0.3 Kanzlei-Collaboration
+# Domain Pitfalls: v0.4 Gamification + UX Quick Wins
 
-**Domain:** Adding real-time messaging, cross-Akte semantic search (SCAN-05), and dynamic form schemas (Falldatenblaetter) to existing Next.js + Prisma + Socket.IO + pgvector legal tech app
-**Researched:** 2026-02-28
-**Overall confidence:** HIGH (based on codebase analysis + verified patterns)
+**Domain:** Adding gamification (quests, XP, bossfight, item shop, team dashboard) and UX quick wins (empty states, OCR recovery, KPI navigation) to existing legal/enterprise Kanzleisoftware
+**Researched:** 2026-03-02
+**Overall confidence:** HIGH (based on codebase analysis, legal research, and verified enterprise gamification patterns)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, data loss, or major architectural problems.
+Mistakes that cause legal liability, employee relations crises, or architectural rewrites.
 
 ---
 
-### Pitfall 1: Socket.IO Event Namespace Collision Between Messaging and Existing Event System
+### Pitfall 1: DSGVO/Arbeitsrecht -- Gamification as Unlawful Employee Performance Monitoring
 
-**What goes wrong:** The existing Socket.IO setup uses fire-and-forget event emission for notifications (OCR complete, alert badges, Helena task progress). Adding persistent chat messaging on the same Socket.IO instance creates confusion between ephemeral events and persistent messages. Developers treat chat messages like events -- emit and forget -- without persisting to DB first, leading to message loss on disconnect/reconnect.
+**What goes wrong:** A gamification system that tracks XP, quest completions, streaks, and per-person bossfight damage constitutes a "technische Einrichtung, die dazu bestimmt ist, das Verhalten oder die Leistung der Arbeitnehmer zu ueberwachen" under section 87 Abs. 1 Nr. 6 BetrVG. Even without a Betriebsrat in a small Kanzlei, the system processes employee performance data under DSGVO Art. 6 and the upcoming Beschaeftigtendatengesetz (BeschDG, draft October 2024). German data protection authorities take the position that employee consent to performance tracking is not freely given due to the hierarchical employment relationship -- meaning consent is NOT a valid legal basis.
 
-**Why it happens:** The current codebase pattern in `src/worker.ts` and `src/lib/scanner/service.ts` emits Socket.IO events as side effects after DB writes (`getSocketEmitter().to(...).emit(...)`). This is correct for notifications (the DB is source of truth, Socket.IO is delivery). But chat messaging requires the opposite: the message MUST be persisted before it is broadcast. Developers who follow the existing "emit then move on" pattern will lose messages when clients disconnect during transmission.
+**Why it happens:** The gamification todo explicitly tracks per-user quest completions, XP, runen, streaks, and per-person bossfight damage. The Team-Dashboard (Phase 3) shows "Erfuellungsquote Kernquests nach Person" and "Bossfight-Gesamtschaden pro Person." This is textbook individual performance monitoring with per-employee metrics, even if framed as a "game."
 
 **Consequences:**
-- Messages lost during network interruptions (at-most-once delivery is Socket.IO's default)
-- Message ordering violations when rapid messages race between DB insert and Socket.IO broadcast
-- Reconnected clients see gaps in conversation history
-- Audit trail gaps (DSGVO requires complete records of internal communications)
+- Violation of section 87 Abs. 1 Nr. 6 BetrVG (Mitbestimmung) if a Betriebsrat exists or is later established
+- DSGVO Art. 5(1)(b) purpose limitation violation -- data collected for "game" used for performance evaluation
+- BeschDG section 19 draft explicitly restricts data processing for Leistungskontrolle from monitoring measures
+- Employee complaints to Datenschutzbehoerde (state data protection authority)
+- Arbeitsrechtliche Konsequenzen: employees may refuse participation; forced participation risks Kuendigung challenges
+- If an employee is terminated and gamification data is cited (even informally), the data becomes evidence and the entire system's legality is examined
 
 **Prevention:**
-1. **Write-then-emit pattern:** Always `await prisma.message.create(...)` BEFORE `io.to(room).emit("message:new", message)`. Never emit without successful persistence.
-2. **Separate namespaces:** Use a Socket.IO namespace `/messaging` for chat events, keeping the default `/` namespace for existing event types. This prevents handler conflicts and allows independent middleware.
-3. **Client-side optimistic rendering with reconciliation:** Show message instantly in UI with a `pending` state, then reconcile with the server-confirmed version (including the DB-generated `id` and `createdAt`). If the server-ack fails, mark as `failed` with retry.
-4. **Reconnection catch-up:** On Socket.IO reconnect, fetch messages since `lastMessageTimestamp` from the REST API, similar to the pattern in `notification-provider.tsx` lines 71-95.
+1. **Anonymized team-level metrics only on dashboards:** The Team-Dashboard must show aggregated team data only (total quests completed, team backlog delta, team bossfight damage). NEVER show per-person rankings, per-person scores, or per-person completion rates to anyone except the individual user themselves. This transforms the system from "Leistungskontrolle" to "Selbststeuerung."
+2. **Individual game profiles visible only to the user themselves:** A user's XP, level, runen, streak, and quest history are private. ADMIN/Quartiermeister sees ONLY team aggregates. This is the decisive legal distinction.
+3. **No leaderboards:** Leaderboards by definition rank employees against each other. This creates performance comparison pressure and is arbeitsrechtlich problematic. Remove the concept entirely. Replace with team-level progress (bossfight HP bar) where individual contributions are anonymous.
+4. **Opt-in with genuine choice:** Gamification must be opt-in per user. A user who opts out suffers no work-related disadvantage. Store `gameProfileOptedIn: Boolean @default(false)` on the profile. The dashboard shows "Gamification aktivieren" if not opted in.
+5. **DSGVO Art. 13/14 transparency:** Create a clear data privacy notice (Datenschutzhinweis) explaining exactly what data the gamification system collects, how long it is stored, and who can see what. This must be shown before first opt-in.
+6. **Data retention limits:** Quest completion history older than 12 months must be automatically deleted or anonymized (aggregated into monthly totals). Individual quest records are transient, not permanent employee files.
+7. **Komfort-Perks are NOT Verguetungsbestandteile:** The todo correctly notes this. Formulate all Item-Shop perks as "organisatorische Hilfen" (organizational aids), never as compensation or benefits. Document this in the system's terms.
 
-**Detection:** Messages appearing in one user's view but not another's. `message:new` events arriving before DB confirms insert. Gaps in message timeline after page refresh.
+**Detection:** Any endpoint or UI that displays per-person gamification metrics to another user (except the user themselves). Any API that allows querying another user's quest history without ADMIN override and audit log.
 
-**Phase:** Must be addressed in the Messaging schema/architecture phase (Phase 1 of Messaging).
+**Phase:** Must be addressed BEFORE any database schema or API work begins. This is a compliance-first design constraint that shapes the entire data model. Phase 1 (DB Schema) must encode these restrictions.
 
-**Confidence:** HIGH -- verified against existing codebase patterns in `socket-provider.tsx`, `akte-socket-bridge.tsx`, `notification-provider.tsx`, and `scanner/service.ts`.
+**Confidence:** HIGH -- verified against section 87 BetrVG, DSGVO Art. 6, BeschDG draft section 19, and German labor law commentary. Source: [KREMER LEGAL: Gamification vs. Beschaeftigtendatenschutz](https://kremer-rechtsanwaelte.de/2017/12/22/gamification-innovation-vs-beschaeftigtendatenschutz/), [Bird & Bird: DSGVO Arbeitsrecht](https://www.twobirds.com/en/insights/2025/germany/dsgvo-konturen-fr-datenschutz-im-arbeitsrecht-werden-immer-klarer), [Hogan Lovells: Draft Employee Data Act](https://www.hoganlovells.com/en/publications/germany-draft-for-employee-data-act-issued)
 
 ---
 
-### Pitfall 2: Cross-Akte Semantic Search (SCAN-05) N*M Embedding Comparison Explosion
+### Pitfall 2: Goodhart's Law -- Quest Metrics Becoming the Goal Instead of Actual Work Quality
 
-**What goes wrong:** SCAN-05 needs to compare each newly ingested Urteil against ALL active Akten to find relevance. The naive approach -- for each new Urteil, run a vector similarity query against `document_chunks` for every open Akte -- creates O(N_urteile * M_akten) embedding comparisons per cron run. With 200+ active Akten and 10-50 new Urteile per daily RSS sync, this becomes 2,000-10,000 expensive pgvector queries per run, each doing HNSW traversal.
+**What goes wrong:** The gamification system rewards specific, measurable actions: "5 Akten: naechster Schritt + Datum gesetzt" (40 XP), "12 qualif. Wiedervorlagen" (60 XP). Employees optimize for the metric (set a next step and date on 5 Akten as fast as possible) instead of the underlying goal (actually advancing cases). A Sachbearbeiter sets meaningless next steps ("Pruefen" + date tomorrow) on 5 Akten to earn XP, then resets them the next day. The Wiedervorlagen count drops (boss takes damage), but actual case progress is zero.
 
-**Why it happens:** The existing `searchUrteilChunks()` in `src/lib/urteile/ingestion.ts` searches urteil_chunks globally without Akte context. The existing `hybridSearch()` in `src/lib/embedding/hybrid-search.ts` searches document_chunks per-Akte. SCAN-05 needs the reverse: compare each new Urteil embedding against each Akte's document corpus. There is no existing function that does "given an embedding, find which Akten are semantically relevant."
+**Why it happens:** Goodhart's Law: "When a measure becomes a target, it ceases to be a good measure." The todo's quest conditions are quantitative (count-based), not qualitative. "12 qualif. Wiedervorlagen (Vermerk + Next Step)" checks for the EXISTENCE of a Vermerk, not its quality or relevance. The "Anti-Missbrauch" section mentions random audits (1-3%), but auditing 1% of actions is insufficient to deter systematic gaming.
 
 **Consequences:**
-- Scanner cron exceeds BullMQ lockDuration (currently 120s for helena-agent queue), causing duplicate jobs
-- Ollama embedding generation backlog (each comparison needs the Urteil text embedded, though the embedding already exists from ingestion)
-- PostgreSQL connection pool exhaustion from parallel raw SQL queries
-- Scanner blocks other BullMQ jobs (frist-check, inaktiv-check, anomalie-check) if they share worker concurrency
+- Data quality degradation: Akten filled with meaningless Vermerke and placeholder next-steps
+- False progress metrics: Backlog appears to shrink but cases are not actually advancing
+- Bossfight becomes a game of churning -- closing and reopening the same Wiedervorlagen
+- Loss of trust in the system data (Anwalt can no longer trust that a Wiedervorlage was "qualifiziert erledigt")
+- Schriftsaetze and filings built on polluted Akte data
 
 **Prevention:**
-1. **Akte fingerprint approach:** For each active Akte, pre-compute a "case profile embedding" -- a weighted average of the Akte's top-5 document chunk embeddings + the Sachgebiet + kurzrubrum. Store this in a new `akte_profile_embeddings` table. Then SCAN-05 only compares each new Urteil against ~200 profile vectors instead of millions of document chunks.
-2. **Two-stage filtering:** First stage: compare new Urteil embedding against Akte profiles (fast, ~200 comparisons). Second stage: only for Akten that score above threshold (e.g., cosine > 0.6), run full hybrid search against that Akte's document_chunks for confirmation.
-3. **Batch processing:** Process all new Urteile from a single RSS sync as a batch. Pre-load Akte profiles into memory, compute cosine similarities in-process (Node.js) instead of pgvector SQL for the first stage.
-4. **Incremental processing:** Track `lastScanTimestamp` in SystemSetting. Only check Urteile ingested after that timestamp against Akten that have been active (status=OFFEN) and have documents.
+1. **Minimum Vermerk length:** A Vermerk attached to a quest completion must be at least 30 characters. "Pruefen" (7 chars) does not count. This is a simple heuristic that blocks the most egregious gaming.
+2. **Cool-down per Akte:** The same Akte cannot contribute to the same quest type within 48 hours. This prevents open-close-reopen cycling. Enforce via `QuestCompletion` with a `@@unique([userId, questId, akteId, completionDate])` where `completionDate` is a date (not datetime).
+3. **Outcome-based quests over activity-based quests:** Instead of "5 Akten: naechster Schritt gesetzt" (activity), use "5 Akten: Status von AKTIV zu NAECHSTER_SCHRITT_DEFINIERT" (outcome). The distinction is: activity quests reward DOING something, outcome quests reward ACHIEVING something.
+4. **Decay and review:** Quest completions that are "undone" within 7 days (Vermerk deleted, next step removed, Wiedervorlage reopened) retroactively revoke the XP/Runen. Implement via a nightly BullMQ job that scans recent completions and validates the condition still holds.
+5. **Start with fewer quests:** Launch with 3 daily quests, not 5. Observe behavior for 2-4 weeks before adding more. The todo lists 5 daily quests -- defer 2 to Phase 2 after behavioral data exists.
 
-**Detection:** Scanner run duration exceeding 60s. BullMQ stalled jobs on the scanner queue. Database CPU spikes during scanner cron window.
+**Detection:** Users completing all daily quests within 15 minutes of login (suspicious speed). Same Akte appearing in quest completions repeatedly. Vermerk content clustering ("Pruefen", "TODO", "Nachtrag").
 
-**Phase:** Must be the core architecture decision for SCAN-05 (Phase 1 of SCAN-05). The Akte profile approach determines the schema.
+**Phase:** Quest condition design in Phase 1 (MVP). The condition JSON schema must enforce minimum quality gates from day one.
 
-**Confidence:** HIGH -- measured against existing `hybridSearch()` query patterns and `searchUrteilChunks()` in the codebase.
+**Confidence:** HIGH -- Goodhart's Law is extensively documented in gamification literature. Source: [Trophy: Productivity App Gamification That Doesn't Backfire](https://trophy.so/blog/productivity-app-gamification-doesnt-backfire), [phys.org: Workplace Gamification Erodes Moral Agency](https://phys.org/news/2026-02-workplace-gamification-erodes-employee-moral.html)
 
 ---
 
-### Pitfall 3: Falldatenblaetter Schema Explosion -- Confusing Akte.falldaten (Sachgebiet-fixed) with Template-driven Dynamic Forms
+### Pitfall 3: Extrinsic Reward Crowding Out Intrinsic Motivation (Overjustification Effect)
 
-**What goes wrong:** The existing `Akte.falldaten` field (JSON) is driven by hardcoded TypeScript schemas in `src/lib/falldaten-schemas.ts` -- one schema per Sachgebiet, immutable at runtime. The v0.3 Falldatenblaetter feature adds user-created templates with community approval workflow, meaning schemas are now dynamic and stored in the database. Developers mix up the two systems: editing the TypeScript schemas thinking they are also updating user templates, or building the template system on top of the existing `falldaten` JSON field, creating an incoherent dual-schema problem.
+**What goes wrong:** Before gamification, employees do Wiedervorlagen because it is their professional duty and they care about case outcomes. After gamification, they do Wiedervorlagen because they get 60 XP and 12 Runen. When the gamification system has a bad day (server restart, quest reset bug, reward not credited), motivation drops BELOW pre-gamification levels. The reward has replaced the original intrinsic motivation.
 
-**Why it happens:** The existing `FalldatenSchema` type and `falldatenSchemas` registry in `src/lib/falldaten-schemas.ts` are cleanly designed but fundamentally static. The `FalldatenForm` component in `src/components/akten/falldaten-form.tsx` renders these static schemas. Adding user-created templates requires a parallel system: templates stored in DB, versioned, approval-gated, with dynamic field definitions. If these two systems aren't clearly separated, the codebase becomes unmaintainable.
+**Why it happens:** The Overjustification Effect (Deci & Ryan, Self-Determination Theory): introducing extrinsic rewards for activities that were previously intrinsically motivated reduces intrinsic motivation. This is especially dangerous in professional/legal contexts where duty, ethics, and professional pride are strong intrinsic motivators. A February 2026 Carnegie Mellon study specifically warned that workplace gamification "may increase short-term productivity while hollowing out the ethical substance of professional life."
 
 **Consequences:**
-- Two different places to look for form definitions (TypeScript file vs DB table)
-- Helena auto-fill breaks because it doesn't know which schema source to use
-- Template approval changes don't take effect because the code still reads from the TypeScript file
-- Prisma schema becomes inconsistent: `Akte.falldaten` stores data for both old and new systems with different validation rules
+- Without gamification rewards, employees feel their work is "not worth it" (reward dependency)
+- Professional pride and ethical motivation erode
+- System becomes mandatory rather than supplementary -- you cannot turn it off without productivity collapse
+- In legal profession specifically: reducing case work to point-hunting undermines Berufsethos
 
 **Prevention:**
-1. **Migrate static schemas to DB:** Convert the 10 existing `falldatenSchemas` from `src/lib/falldaten-schemas.ts` into seed data for a new `FalldatenTemplate` model. Mark them as `isSystem: true` (non-deletable, non-editable by users). Keep the TypeScript file as a compile-time reference/seed source only.
-2. **Single schema source:** All form rendering reads from the `FalldatenTemplate` table, never from the TypeScript const. The `FalldatenForm` component takes a `templateId` and fetches the schema from DB.
-3. **Clear model separation:**
-   - `FalldatenTemplate` -- the form definition (fields, groups, validation rules, approval status)
-   - `Falldatenblatt` -- a filled-out instance of a template, linked to an Akte
-   - `Akte.falldaten` -- deprecated for new templates, migrated to `Falldatenblatt` entries
-4. **Versioning:** Templates must be versioned. When a template is updated, existing filled-out Falldatenblaetter keep their original schema version.
+1. **Gamification as VISIBILITY, not MOTIVATION:** Frame the system as making existing work visible and trackable, not as the reason to do the work. The dashboard headline should be "Dein Fortschritt heute" (your progress today), not "Verdiene XP" (earn XP). Quests should feel like a checklist of things you were going to do anyway.
+2. **Moderate reward values:** XP and Runen should be satisfying but not addictive. The todo's values (30-80 XP, 4-12 Runen per quest) are reasonable. Do NOT inflate rewards to drive adoption. If people are not using the system, the quests are wrong, not the rewards.
+3. **No punishments for non-completion:** A user who does not complete daily quests loses nothing (no XP deduction, no public shame). Streak breaks (with the Urlaub/pause system from the todo) should have no negative consequences beyond losing the streak multiplier.
+4. **Autonomy-preserving design:** Users choose which quests to pursue. Not all quests must be completed for a "successful day." 3 of 5 completed = great. 0 of 5 = no problem. This preserves the autonomy component of Self-Determination Theory.
+5. **Periodic gamification "holidays":** Allow the system to be paused for everyone (e.g., during trial preparation periods, year-end closings). This normalizes work-without-gamification and prevents reward dependency.
+6. **Item-Shop perks as convenience, not necessity:** The "Fokus-Siegel" (30 min focus block) must NOT create a two-tier system where gamification users get work advantages non-users don't. Make focus blocks available to everyone; the shop version just has a fancy animation.
 
-**Detection:** `FalldatenForm` still importing from `falldaten-schemas.ts` after the feature ships. Helena tools referencing `getFalldatenSchema()` instead of querying the template table.
+**Detection:** Survey employees 3 months after launch: "Would you still do your Wiedervorlagen the same way without the quest system?" If the answer is "no," the system has failed. Also: usage spikes that plateau and then decline (classic extrinsic motivation curve).
 
-**Phase:** Must be resolved in Phase 1 of Falldatenblaetter (data model design). Migration from static to DB-driven is the prerequisite.
+**Phase:** Design philosophy decision in Phase 1. Reward values and quest framing must be set before UI implementation.
 
-**Confidence:** HIGH -- directly verified against `src/lib/falldaten-schemas.ts` (410 lines, 10 Sachgebiet schemas) and `src/components/akten/falldaten-form.tsx`.
+**Confidence:** HIGH -- Self-Determination Theory and Overjustification Effect are established psychology. Source: [SHRM: Beyond Gamification](https://www.shrm.org/enterprise-solutions/insights/beyond-gamification-unlock-true-engagement-through), [Growth Engineering: Dark Side of Gamification](https://www.growthengineering.co.uk/dark-side-of-gamification/)
 
 ---
 
-### Pitfall 4: Chat Message RBAC Leaking Akten-Confidential Content into General Channels
+### Pitfall 4: Toxic Competition from Per-Person Visibility and Implicit Ranking
 
-**What goes wrong:** The existing RBAC system controls Akte access via `anwaltId`, `sachbearbeiterId`, Dezernat membership, and AdminOverride. Messaging introduces two contexts: Akte-threads (scoped to one case) and general Kanaele (kanzlei-wide). If a user @mentions an Akte or pastes case details into a general Kanal, confidential information leaks to users who don't have access to that Akte. Similarly, if search indexes chat messages without Akte-scoping, users find confidential content via Meilisearch.
+**What goes wrong:** Even without an explicit leaderboard, the Team-Dashboard that shows "Bossfight-Gesamtschaden pro Person" creates an implicit ranking. Users who contribute less damage feel publicly shamed. Users who contribute more feel entitled. In a 5-person Kanzlei, there is nowhere to hide -- everyone knows who the "bottom performer" is. This destroys team cohesion and creates resentment.
 
-**Why it happens:** General channels have no Akte-scoping. The temptation is to allow free-text messaging everywhere, but in a law firm, case confidentiality is a legal obligation (BRAO 43a, professional secrecy). A SACHBEARBEITER assigned only to Arbeitsrecht cases must not see chat content about Strafrecht cases in general channels.
-
-**Consequences:**
-- BRAO 43a / BRAO 2 violation (Verschwiegenheitspflicht / duty of confidentiality)
-- DSGVO breach if personal data from case documents leaks into unscoped channels
-- Audit trail becomes useless if Akte-confidential content is scattered across general channels
-- Malpractice liability exposure
-
-**Prevention:**
-1. **Akte-threads enforce existing RBAC:** Akte-thread membership is derived from Akte access (same logic as `akte-zugriff-check.ts`). No separate membership management needed.
-2. **General channels: content policy, not access restriction:** Allow all authenticated users in general channels, but implement a content policy layer:
-   - Prevent Akte-linking (@Akte) in general channels
-   - Warn when pasting text that looks like case content (heuristic: contains Aktenzeichen pattern)
-   - Do NOT index general channel messages in Meilisearch with Akte context
-3. **Separate message storage:** Akte-thread messages stored with `akteId` FK (inherits Akte RBAC for queries). General channel messages stored with `kanalId` FK (no Akte association).
-4. **Search isolation:** Akte-thread messages only searchable within Akte context. General channel messages searchable by all channel members but never mixed into Akte search results.
-
-**Detection:** A user seeing Akte-thread content they shouldn't have access to. Chat messages appearing in Meilisearch results for unrelated Akten.
-
-**Phase:** Must be addressed in Messaging data model phase. RBAC integration is architectural, not a bolt-on.
-
-**Confidence:** HIGH -- verified against existing RBAC patterns in `src/lib/rbac/` and Akte access check logic.
-
----
-
-### Pitfall 5: Helena Auto-Fill for Dynamic Forms Hallucinating Field Values
-
-**What goes wrong:** Helena is asked to auto-fill Falldatenblaetter from Akte documents (OCR text, emails, existing falldaten). The LLM fills in fields with plausible but fabricated values. For a Verkehrsrecht case, Helena might hallucinate a "Reparaturkosten: 4.500 EUR" that sounds reasonable but doesn't appear in any source document. In legal practice, an incorrect value in a Falldatenblatt propagates into Schriftsaetze and filings.
-
-**Why it happens:** The existing Helena agent uses `generateObject()` with Zod schemas for structured extraction (Schriftsatz pipeline). This works when the schema is fixed and the context is rich. But Falldatenblaetter have many optional fields, and the LLM has pressure to fill them all. Fields like `haftungsquote` (liability share %) or `streitwert` (amount in dispute) require precise values that may not exist in the Akte documents yet.
+**Why it happens:** The todo envisions a Team-Ansicht with "Erfuellungsquote Kernquests nach Person" and "Bossfight-Gesamtschaden pro Person." This is a leaderboard in all but name. Research shows that "if users see themselves far down the leaderboard with no hope of catching up, they may rationally stop playing." In a 5-person Kanzlei, the bottom person is always visible.
 
 **Consequences:**
-- Incorrect case data entered silently (no hallucination flag)
-- Schriftsaetze generated from hallucinated falldaten
-- Lawyer relies on "Helena filled this" without verification
-- Professional liability (Berufshaftpflicht) exposure
+- SEKRETARIAT/SACHBEARBEITER roles with fewer quest opportunities (no billing quests) will always rank lower, creating role-based resentment
+- Part-time employees (common in Kanzleien) will always have lower absolute numbers
+- Sick leave or vacation creates visible "contribution gaps"
+- Team collaboration degrades as colleagues become competitors
+- In worst case: Mobbing/bullying based on gamification scores (arbeitsrechtliches Risiko)
 
 **Prevention:**
-1. **Per-field confidence scores:** Helena returns `{ value, confidence: "high"|"medium"|"low", source: "dokumentId:chunkId" | null }` for each field. Only `high` confidence fields (with verified source reference) are auto-filled. `medium` and `low` are shown as suggestions with source quotes.
-2. **Source-grounded extraction only:** Use the existing RAG pipeline to retrieve relevant chunks first, then extract field values ONLY from retrieved text. If a field value cannot be found in any chunk, return `null` instead of guessing. This mirrors the dual-model verification pattern.
-3. **ENTWURF pattern for auto-fill:** Helena-filled Falldatenblaetter get an explicit `HELENA_ENTWURF` status. The user must review and confirm before the data is treated as authoritative. This extends the existing BRAK 2025 compliance pattern.
-4. **Field-type validation:** Currency fields must match `\d+[.,]\d{2}` pattern. Date fields must parse as valid dates. Percentage fields must be 0-100. Reject values that fail type validation regardless of LLM confidence.
-5. **Diff view for auto-fill:** Show what Helena changed vs. what was already filled, with source citations for each change. Never silently overwrite user-entered data.
+1. **Team-only aggregates in shared views (see also Pitfall 1):** The Team-Dashboard shows ONLY team totals: "Team hat heute 23 Schaden gemacht" not "Patrick: 8, Lisa: 6, Marco: 5, Sarah: 3, Tom: 1." This is both a legal requirement (Pitfall 1) and a social design choice.
+2. **Role-normalized metrics if any comparison is needed:** If individual visibility is ever added (admin-only, after legal review), normalize by role and hours worked. A SEKRETARIAT working 20h/week with 80% quest completion is performing better than an ANWALT working 40h/week with 40% completion. Raw numbers without normalization are misleading.
+3. **Bossfight is team-only:** The bossfight HP bar shows team progress. "Wir haben 23 Koepfe des Wustwurms geschlagen" -- no attribution. Individual contribution is visible only to the individual in their private profile.
+4. **Celebration is collective:** When a bossfight phase is cleared or the boss is defeated, the celebration is team-wide. No "MVP" or "top contributor" callouts. Everyone who participated gets the Trophae.
+5. **No historical comparison:** Do NOT show "this week vs. last week per person." Show only "team this week vs. team last week."
 
-**Detection:** Falldatenblatt fields with values that don't appear in any Akte document. Helena-filled fields without source references. User complaints about incorrect auto-filled values.
+**Detection:** Any UI component that renders per-person gamification data to other users. Any API endpoint that returns multiple users' game data in a single response (except team aggregates).
 
-**Phase:** Must be addressed in Falldatenblaetter Helena integration phase (not the template/schema phase).
+**Phase:** Team-Dashboard design (Phase 3). But the data model in Phase 1 must be designed so that per-person queries are only possible with the user's own ID in the WHERE clause.
 
-**Confidence:** HIGH -- verified against existing Helena patterns (`generateObject`, `SchriftsatzRetrievalLog`, ENTWURF gate in Prisma `$extends`).
+**Confidence:** HIGH -- verified against gamification psychology research. Source: [Growth Engineering: Competition Engaging or Demotivating](https://www.growthengineering.co.uk/gamification-is-competition-engaging-or-demotivating/), [Spinify: Science Behind Gamified Workplaces](https://spinify.com/blog/the-science-behind-gamified-workplaces-how-leaderboards-and-motivation-psychology-empower-teams/)
 
 ---
 
 ## Moderate Pitfalls
 
-Mistakes that cause significant rework or degraded UX, but not architectural rewrites.
+Mistakes that cause significant rework or degraded UX, but not legal/compliance crises.
 
 ---
 
-### Pitfall 6: Message Pagination and Infinite Scroll Performance Degradation
+### Pitfall 5: Race Conditions in XP/Runen Increment on Concurrent Quest Completions
 
-**What goes wrong:** Chat threads accumulate thousands of messages over months. Loading the full history on each visit or implementing naive offset-based pagination causes slow queries and janky scrolling. The existing `AktenActivity` feed uses simple `createdAt` ordering which works for ~100 entries per Akte, but chat messages in an active Akte-thread will reach 1,000+ within weeks.
+**What goes wrong:** Two quest completion events fire simultaneously (e.g., a user closes a Wiedervorlage that satisfies both "Die Chroniken entwirren" and "Ordnung im Skriptorium"). Both handlers read `xp: 500` from `UserGameProfile`, add their reward (60 XP and 40 XP respectively), and write back. One write overwrites the other. Expected: 600 XP. Actual: 560 XP or 540 XP (last write wins).
 
-**Why it happens:** Offset-based pagination (`OFFSET 500 LIMIT 50`) requires PostgreSQL to scan and skip 500 rows. With an active conversation, the offset grows linearly. The existing feed pattern in `src/components/akten/activity-feed.tsx` fetches all activities and renders them, which won't scale for messaging.
+**Why it happens:** The quest completion detection likely runs as a server-side check after a Prisma write (e.g., after updating a Wiedervorlage). If multiple quest conditions are satisfied by the same action, and each triggers an independent `prisma.userGameProfile.update({ data: { xp: currentXp + reward } })`, the classic read-modify-write race occurs. This is a known Prisma anti-pattern documented in [Prisma discussion #10709](https://github.com/prisma/prisma/discussions/10709).
+
+**Consequences:**
+- XP/Runen values drift from expected totals over time
+- Users notice missing rewards and lose trust in the system
+- Streak calculations desync if concurrent updates affect `streakTage`
+- Bossfight HP reduction miscounted
 
 **Prevention:**
-1. **Cursor-based pagination:** Use `WHERE createdAt < :cursor ORDER BY createdAt DESC LIMIT 50` with an index on `(kanalId, createdAt)` or `(akteId, createdAt)`. Return the cursor (last message's `createdAt` + `id` for tie-breaking) for the next page.
-2. **Load latest first, scroll up for history:** Chat UI loads the most recent 50 messages first. User scrolls up to load older messages (reverse infinite scroll). This matches user expectations from Slack/Teams.
-3. **Separate message table, not AktenActivity:** Do NOT store chat messages as `AktenActivity` entries. Messages have different access patterns (pagination, search, reactions, edits) than activity feed entries. Keep `AktenActivity` for its existing purpose (document events, alerts, drafts).
+1. **Use Prisma atomic increment operations:** Replace `update({ data: { xp: profile.xp + reward } })` with `update({ data: { xp: { increment: reward } } })`. Prisma translates this to SQL `SET xp = xp + 60` which is atomic at the database level.
+2. **Single quest evaluation function:** After any qualifying action (Wiedervorlage closed, Rechnung created, etc.), call a single `evaluateQuests(userId)` function that checks ALL quest conditions and awards ALL rewards in a single Prisma `$transaction`. Never run parallel independent quest checks.
+3. **Idempotent quest completion:** Before awarding XP, check if a `QuestCompletion` for this `(userId, questId, date)` already exists. Use a unique constraint `@@unique([userId, questId, completionDate])` to prevent double-completion at the DB level.
+4. **Bossfight HP decrement via atomic decrement:** `prisma.bossfight.update({ data: { aktuelleHp: { decrement: damage } } })`. Add a CHECK constraint or Prisma $extends guard to prevent HP going below 0.
 
-**Phase:** Messaging UI phase. Must decide pagination strategy before building the chat component.
+**Detection:** XP totals that don't match the sum of QuestCompletion rewards. Bossfight HP that goes negative. Duplicate QuestCompletion records for the same user/quest/day.
 
-**Confidence:** HIGH -- verified against existing activity feed patterns and PostgreSQL pagination best practices.
+**Phase:** Phase 1 (MVP) -- XP/Runen calculation logic. Must use atomic operations from day one.
+
+**Confidence:** HIGH -- verified against Prisma's atomic operations documentation and existing codebase patterns. Source: [Prisma Client API: Atomic Number Operations](https://www.prisma.io/docs/orm/reference/prisma-client-reference)
 
 ---
 
-### Pitfall 7: @Mention Notification Spam and Duplicate Alert Delivery
+### Pitfall 6: Quest Condition Evaluation Coupling to Hot Paths (Performance Degradation)
 
-**What goes wrong:** A user @mentions someone in a chat message. The system creates a Notification (existing `notifications` table), emits a Socket.IO event, and potentially creates a HelenaAlert. If the mentioned user is also in the Socket.IO room for that Akte, they receive BOTH the real-time message event AND the notification event, creating duplicates. If multiple users are @mentioned in one message, the notification creation loop can fail partway through, leaving some users notified and others not.
+**What goes wrong:** Quest conditions check whether a user has completed certain actions (e.g., "all today's Fristen checked with Vermerk"). If quest evaluation runs synchronously after every Wiedervorlage update, every Frist status change, and every Rechnung creation, it adds latency to every form submission. With 5 daily quests, each requiring a Prisma query to check completion, that is 5 additional DB queries per user action.
 
-**Why it happens:** The existing system has two notification paths: `Notification` model (persistent, fetched on load) and Socket.IO events (ephemeral, shown as toasts). The `NotificationProvider` in `src/components/notifications/notification-provider.tsx` handles both. Adding @mentions creates a third path (in-message highlight). Without deduplication, all three fire independently.
+**Why it happens:** The natural implementation is: user closes Wiedervorlage -> API handler saves to DB -> API handler calls `evaluateQuests()` -> `evaluateQuests()` runs 5 queries -> response returns. This adds 50-200ms to every qualifying action. The existing system has no such overhead on its hot paths.
+
+**Consequences:**
+- Noticeable latency increase on frequently-used actions (closing Wiedervorlagen, updating Akten)
+- Database load increase from quest condition queries
+- User frustration: "the system got slower since the gamification update"
 
 **Prevention:**
-1. **Single notification path per @mention:** An @mention creates exactly one `Notification` record and one Socket.IO emit. The chat message itself is NOT a notification -- it appears in the chat view. The notification says "X mentioned you in [channel/Akte]" with a link, not the full message.
-2. **Batch notification creation:** Parse all @mentions from a message, create all `Notification` records in a single `prisma.notification.createMany()` call (atomic), then emit Socket.IO events. If createMany fails, no notifications are sent (consistent state).
-3. **Client-side deduplication:** The `NotificationProvider` already has dedup logic (line 82-86, checking `existingIds`). Extend this to also check if the user is currently viewing the relevant chat thread -- if so, suppress the toast notification (they already see the message).
-4. **Rate limiting:** If a user @mentions someone 10 times in 5 minutes, collapse into a single notification: "X mentioned you 10 times in [channel]." Use the existing 24h deduplication pattern from `scanner/service.ts` but with a shorter window (5 minutes for @mentions).
+1. **Debounced async evaluation:** After a qualifying action, enqueue a lightweight BullMQ job on a new `quest-eval` queue with a 2-second delay and deduplication key `eval:{userId}:{date}`. If multiple actions happen within 2 seconds, only one evaluation runs. This keeps the hot path (API response) fast.
+2. **Cache quest state in Redis:** On first evaluation of the day, compute and cache all quest conditions in a Redis hash `quest:{userId}:{date}` with TTL 24h. Subsequent checks read from Redis, not Prisma. Only the nightly reset clears the cache.
+3. **Event-driven quest triggers:** Instead of checking all 5 quests after every action, map each quest to specific event types. "Die Siegel des Tages" only triggers on Frist status changes. "Praegung der Muenzen" only triggers on Rechnung creation. This reduces the evaluation scope per action.
+4. **Dashboard widget polls, not pushes:** The Quest Dashboard widget fetches quest status every 30 seconds (or on tab focus), not on every action. The user sees quest completion after a brief delay, which is acceptable for a gamification overlay.
 
-**Phase:** Messaging @mentions implementation phase.
+**Detection:** API response times increasing by >50ms after gamification deployment. BullMQ quest-eval queue depth growing during peak hours.
 
-**Confidence:** HIGH -- verified against `NotificationProvider` and `createScannerAlert` deduplication pattern.
+**Phase:** Phase 1 (MVP) -- quest evaluation architecture. Choose async vs sync before implementing any quest logic.
+
+**Confidence:** HIGH -- standard performance pattern for event-driven systems.
 
 ---
 
-### Pitfall 8: Template Approval Workflow Creating Permission Creep via RBAC Mismatch
+### Pitfall 7: Streak System Creating Anxiety and Unfairness for Part-Time and Absent Employees
 
-**What goes wrong:** The Falldatenblaetter community workflow is: User creates template -> submits to Admin -> Admin approves -> becomes standard. But the existing RBAC only has 4 roles (ADMIN, ANWALT, SACHBEARBEITER, SEKRETARIAT). There is no "template reviewer" role. If any ADMIN can approve templates, and the firm has 2 admins, the approval process has no separation of duties. Worse, if the template approval endpoint only checks `role === "ADMIN"`, a compromised admin session can approve malicious templates.
+**What goes wrong:** The streak system rewards "3 Tage Kernquest erfuellt: +10% Runen, 7 Tage: +25% Runen." This creates anxiety about breaking the streak (documented in gamification research as "streak anxiety"). Part-time employees (2-3 days/week) can never achieve a 7-day streak. Employees on sick leave (Krankheit) lose their streak, which feels punitive. The todo mentions "Urlaub/Abwesenheit -> Pause-Status, kein Streak-Bruch" but does not mention Krankheit, Fortbildung, Gerichtstage, or home office days where system access may be limited.
 
-**Why it happens:** The existing RBAC is role-based, not permission-based. Adding a new workflow (template approval) that doesn't map cleanly to existing roles forces either role overloading (ADMIN does everything) or role explosion (adding TEMPLATE_REVIEWER role).
+**Why it happens:** Streak systems are designed for daily-use consumer apps (Duolingo, fitness trackers) where the user is in control of their schedule. In employment contexts, absence is often involuntary (Krankheit, Mutterschutz, Elternzeit) or duty-related (Gerichtstage). Penalizing these absences with streak loss is both unfair and potentially discriminatory (AGG -- Allgemeines Gleichbehandlungsgesetz).
+
+**Consequences:**
+- Employees come to work sick to maintain streaks (Praesentismus -- documented health risk)
+- Part-time employees feel excluded from the streak system
+- Elternzeit/Mutterschutz absence permanently resets years of streak progress
+- Potential AGG violation if streak-based rewards systematically disadvantage protected groups
 
 **Prevention:**
-1. **Reuse ADMIN role, add audit:** Keep the existing 4 roles. Only ADMIN can approve templates. This is acceptable for a small law firm (1-5 lawyers). Log all approval actions in the audit trail with `logAuditEvent("TEMPLATE_APPROVED", ...)`.
-2. **Template status workflow:** `ENTWURF -> EINGEREICHT -> GENEHMIGT -> ARCHIVIERT`. Only ADMIN can transition `EINGEREICHT -> GENEHMIGT`. Template creator cannot approve their own template (self-approval check).
-3. **Do NOT add new roles:** Adding a TEMPLATE_REVIEWER role to the existing `UserRole` enum requires a Prisma migration, changes to every RBAC check, and complicates the auth middleware. The cost far exceeds the benefit for a feature used by 5-10 users.
-4. **Escape hatch:** ANWALT role can submit templates. SACHBEARBEITER can also submit (they often create checklists). SEKRETARIAT can view and use approved templates but cannot submit new ones.
+1. **Working-day streaks, not calendar-day streaks:** Count consecutive WORKING days with quest completion. Non-working days (weekends, Urlaub, Krankheit, Feiertage) do not break or advance the streak. Require integration with the existing Urlaubszeitraum model and Feiertagskalender.
+2. **Part-time-aware counting:** A part-time employee working Mo/Mi/Fr has a potential streak of 3 working days per week. Their 3-day streak should count the same as a full-time employee's 3-day streak. Use the user's Arbeitstage (configurable) as the streak basis.
+3. **Maximum streak cap:** Cap streak bonuses at 7 days (+25% Runen). No additional benefit for 30-day or 100-day streaks. This prevents streak anxiety from escalating and removes the "sunk cost" pressure of maintaining very long streaks.
+4. **Streak freeze tokens:** Provide automatic streak freezes for: Krankheit (linked to Abwesenheitsvermerk), Gerichtstage (linked to Kalendereintrag with type GERICHTSTERMIN), Fortbildung, and Elternzeit. No manual action required from the employee.
+5. **No streak display to others:** Streaks are visible only on the individual user's own profile. Never on team dashboards.
 
-**Phase:** Falldatenblaetter approval workflow phase.
+**Detection:** Employees logging in on sick days just to complete quests. Part-time employees never achieving streak bonuses. Streaks resetting after legitimate absences.
 
-**Confidence:** HIGH -- verified against existing RBAC in `UserRole` enum and Dezernat model.
+**Phase:** Phase 1 (MVP) -- streak logic. Must integrate with existing UrlaubZeitraum and KalenderEintrag models from day one.
+
+**Confidence:** HIGH -- streak anxiety is well-documented in gamification research. Source: [Trophy: Productivity App Gamification](https://trophy.so/blog/productivity-app-gamification-doesnt-backfire)
 
 ---
 
-### Pitfall 9: SCAN-05 Alert Fatigue from Low-Relevance Urteil Matches
+### Pitfall 8: Empty State CTAs That Lead to Dead Ends or Permission Errors
 
-**What goes wrong:** SCAN-05 finds that a new Bundesarbeitsgericht ruling about "Kuendigungsschutz" has cosine similarity > 0.5 with 30 active Arbeitsrecht Akten. It creates 30 alerts, most of which are generic matches (any employment law case will match any employment law ruling). The responsible Anwalt gets 30 nearly identical alerts, learns to ignore them, and misses the one that actually matters.
+**What goes wrong:** The Quick Wins todo adds CTAs to empty states: "E-Mail verfassen" on the E-Mail tab, "beA konfigurieren" on the Pruefprotokoll tab. But a SACHBEARBEITER clicking "beA konfigurieren" gets a 403 (only ADMIN can configure beA). A SEKRETARIAT clicking "E-Mail verfassen" lands on the compose view but cannot send because they lack the SMTP permission. The CTA creates an expectation that clicking it will lead to a successful action, but RBAC blocks it silently.
 
-**Why it happens:** Semantic similarity between legal texts in the same Rechtsgebiet is inherently high. A ruling about Kuendigungsschutz will match every Arbeitsrecht case that has a Kuendigungsschutzklage in its documents. Without domain-specific relevance filtering, the false positive rate is unacceptable.
+**Why it happens:** Empty state design focuses on "what should the user do next" without considering "what CAN this user do next." The existing RBAC is role-based with 4 roles, and not all roles can perform all actions. Empty state CTAs are designed generically without role-awareness.
+
+**Consequences:**
+- User frustration: "the system told me to do something, then said I can't"
+- Learned helplessness: users stop clicking CTAs because they expect permission errors
+- Support burden: "I clicked the button but nothing happened"
+- Worse than no CTA at all: a dead-end CTA is more frustrating than an empty state with just explanatory text
 
 **Prevention:**
-1. **Sachgebiet-aware threshold:** Higher similarity threshold for same-Sachgebiet matches (e.g., 0.75 for Arbeitsrecht Urteil vs Arbeitsrecht Akte) and lower for cross-Sachgebiet (e.g., 0.6 for a Sozialrecht ruling affecting an Arbeitsrecht case).
-2. **Specificity scoring:** After vector similarity, run a lightweight LLM check (not full ReAct, just a single generateObject call): "Does this ruling specifically affect the legal position in this case? Return YES/NO with one-sentence explanation." Only create alerts for YES results.
-3. **Alert grouping:** If the same Urteil matches multiple Akten of the same Anwalt, create ONE grouped alert: "Neues BAG-Urteil zu Kuendigungsschutz betrifft moeglicherweise 5 Ihrer Akten: [list]." Use the existing HelenaAlert `meta` JSON field for the Akte list.
-4. **Configurable per-Akte opt-in:** Not every Akte needs Urteil monitoring. Add a toggle `urteilMonitoringAktiv` on Akte (default: true for OFFEN, false for RUHEND/ARCHIVIERT). Users can disable for inactive or settled cases.
-5. **Maximum alerts per Urteil:** Cap at 5 alerts per new Urteil per cron run. If 30 Akten match, pick the top 5 by similarity score.
+1. **Role-aware CTA rendering:** Check the current user's role before rendering CTAs. `if (role !== "ADMIN") { hideBeaKonfigurierenCTA() }`. Use the existing `useSession()` hook to get the role. Render only CTAs the user can actually complete.
+2. **Fallback CTAs per role:** For a SEKRETARIAT user on the E-Mail empty state, show "E-Mail-Posteingang oeffnen" (which they CAN access) instead of "E-Mail verfassen" (which they might not be able to send). Design 2-3 CTA variants per empty state, keyed by role.
+3. **Informational empty states for restricted features:** For features the user cannot access, show an informational empty state without CTAs: "beA-Aktivitaeten werden hier angezeigt, sobald beA vom Administrator eingerichtet wurde." No button, no false promise.
+4. **Consistent permission check pattern:** Extract a `useCanPerformAction(action: string): boolean` hook that combines role check + feature flag check. Use this in all empty state components.
 
-**Detection:** More than 10 NEUES_URTEIL alerts per scanner run. Alert read rate below 50% for NEUES_URTEIL type.
+**Detection:** 403 responses after CTA clicks (log these as UX failures, not just API errors). Users clicking CTAs and immediately navigating back.
 
-**Phase:** SCAN-05 alert tuning phase. Build the matching first, then tune thresholds.
+**Phase:** Quick Wins phase -- empty state implementation. Must consider RBAC before designing CTAs.
 
-**Confidence:** MEDIUM -- threshold values are estimates, need empirical tuning with real data.
+**Confidence:** HIGH -- verified against existing RBAC roles and route permissions in the codebase.
 
 ---
 
-### Pitfall 10: Socket.IO Room Proliferation for Messaging Channels
+### Pitfall 9: OCR Recovery Flow Creating Orphaned Jobs and Inconsistent States
 
-**What goes wrong:** Each messaging channel and each Akte-thread gets its own Socket.IO room (`channel:{channelId}`, `akte-chat:{akteId}`). The existing room pattern in `src/lib/socket/rooms.ts` already has `user:*`, `role:*`, `akte:*`, and `mailbox:*` rooms. Adding messaging rooms doubles the room count per connected user. With 10 users, each in 5 channels and viewing 3 Akten, that's 10 * (1 user room + 1 role room + 5 channel rooms + 3 akte-chat rooms) = 100 rooms. Socket.IO handles this fine, but the join/leave lifecycle becomes complex.
+**What goes wrong:** The Quick Wins todo adds an OCR recovery banner with three actions: "Erneut versuchen" (re-queue OCR), "Vision-Analyse" (GPT-4o vision), and "Manuell" (text input). If a user clicks "Erneut versuchen" while the previous failed OCR job is still in the BullMQ failed state, a duplicate job is created. If the user clicks "Vision-Analyse" and the OCR retry completes simultaneously, both results try to write to the same document, creating a race condition. If "Manuell" text input is saved but OCR later succeeds on retry, the manual text is overwritten.
 
-**Why it happens:** The existing `akte:*` rooms are for document/OCR events, not chat. Adding Akte-thread messaging on the same room means chat messages arrive alongside OCR-complete events and Helena alerts. If you create separate rooms (`akte-chat:*`), users must join/leave both `akte:*` and `akte-chat:*` when navigating to/from an Akte detail page.
+**Why it happens:** The existing OCR pipeline in `src/lib/queue/processors/ocr.processor.ts` assumes a single linear flow: upload -> OCR -> success/fail. The recovery flow introduces branching: fail -> retry OR vision OR manual. These three paths are not mutually exclusive in the current implementation, and the document's `ocrStatus` field does not track which recovery path is active.
+
+**Consequences:**
+- Duplicate OCR jobs consuming Stirling-PDF resources
+- Race condition between OCR retry and Vision-Analyse writing to the same document
+- User's manual text input silently overwritten by a delayed OCR retry
+- Confusing UI state: banner shows "fehlgeschlagen" while a retry is actually in progress
+- RAG index gets multiple conflicting text versions for the same document
 
 **Prevention:**
-1. **Reuse existing `akte:*` rooms for Akte-threads:** The `akte:{akteId}` room already has the right lifecycle (join on Akte detail mount, leave on unmount, per `AkteSocketBridge`). Add chat message events to this room with a distinct event name (`message:new` vs `document:ocr-complete`). The client-side handler can filter by event type.
-2. **Add `channel:*` rooms for general channels:** New room type following the existing pattern. Join on channel view mount, leave on unmount. Auto-join the "Allgemein" channel on connect (similar to auto-joining `user:*` and `role:*` rooms).
-3. **Typing indicators: debounce aggressively:** "User is typing" events in chat rooms can flood with 200ms intervals. Debounce to 3-second intervals. Use volatile events (`socket.volatile.emit(...)`) for typing indicators so they are not buffered during disconnects.
-4. **Presence tracking:** Do NOT implement a custom presence system. Use Socket.IO's built-in room membership to determine who is online. Query `io.in("channel:123").fetchSockets()` for online member list.
+1. **State machine for OCR status:** Extend the OCR status enum to include recovery states: `PENDING | PROCESSING | COMPLETED | FAILED | RETRY_PENDING | RETRY_PROCESSING | VISION_PENDING | VISION_PROCESSING | MANUAL_INPUT`. Only one recovery action is allowed at a time. The banner renders action buttons based on the current state (e.g., if `RETRY_PENDING`, disable all buttons and show "Wird erneut versucht...").
+2. **Cancel previous job before retry:** Before enqueueing a new OCR job, check if a pending/active job exists for this document in BullMQ. If so, either wait for it or remove it. Use `ocrQueue.getJob(documentId)` pattern with the document ID as the job ID.
+3. **Manual input takes precedence:** If a user provides manual text, set `ocrSource: "MANUAL"` on the document. Future OCR retries or Vision results do NOT overwrite manual input. The user must explicitly choose "OCR erneut versuchen" to override their manual input.
+4. **Debounce retry button:** Disable the "Erneut versuchen" button for 30 seconds after click and show a loading state. This prevents accidental double-clicks from creating duplicate jobs.
 
-**Phase:** Messaging Socket.IO integration phase.
+**Detection:** Multiple active OCR jobs for the same document in BullMQ. Documents with `ocrStatus: FAILED` but text content present. RAG chunks with conflicting content for the same document.
 
-**Confidence:** HIGH -- verified against `src/lib/socket/rooms.ts` and `src/components/akten/akte-socket-bridge.tsx`.
+**Phase:** Quick Wins -- OCR recovery flow implementation.
+
+**Confidence:** HIGH -- verified against existing OCR processor and BullMQ queue patterns in `src/lib/queue/processors/ocr.processor.ts` and `src/lib/queue/queues.ts`.
+
+---
+
+### Pitfall 10: Bossfight HP Calculation Drift from Actual Backlog
+
+**What goes wrong:** The Bossfight's `maxHp` is set to the initial backlog size (e.g., 350 open Wiedervorlagen). As users close Wiedervorlagen, `aktuelleHp` decrements. But new Wiedervorlagen are also created daily. The boss HP does not account for new backlog items. After a week, the actual backlog might be 320 (not 230 as the HP bar suggests) because 120 new Wiedervorlagen were created while 130 were closed. The bossfight bar shows misleading progress.
+
+**Why it happens:** The todo models HP as a simple decrement counter: each "qualifizierte Erledigung" reduces HP. But a real backlog is a flow (inflow + outflow), not a static pool. Treating it as a countdown timer ignores new work arriving.
+
+**Consequences:**
+- Boss HP reaches 0 (boss "defeated") while the actual backlog is still large
+- Team feels they "won" but the backlog has not actually shrunk
+- Management loses trust in the metric
+- Subsequent bossfights require manual HP adjustment, undermining the system's credibility
+
+**Prevention:**
+1. **Dynamic HP based on current backlog:** Instead of a fixed `maxHp` with decrements, compute `aktuelleHp` as `currentOpenWiedervorlagen` (live query) against `maxHp` (the backlog size when the bossfight started). Progress = `1 - (current / max)`. If the backlog grows, the boss "heals" (HP goes up). This makes the bossfight honest.
+2. **Net damage display:** Show "Netto-Schaden heute: 8 (15 erledigt, 7 neue)" instead of just "23 Schaden heute." This transparently shows the inflow/outflow dynamic.
+3. **Bossfight victory condition based on threshold, not zero:** The boss is "defeated" when the backlog drops below a configurable threshold (e.g., below 100 or below 50% of starting value), not when HP reaches 0. This accounts for the reality that backlog never reaches true zero.
+4. **Periodic HP recalibration:** A nightly BullMQ job recalculates `aktuelleHp = SELECT COUNT(*) FROM wiedervorlage WHERE status = 'OFFEN'` and updates the Bossfight record. This prevents drift between the game state and reality.
+
+**Detection:** `aktuelleHp` reaching 0 while actual backlog query returns > 50. `aktuelleHp` diverging more than 20% from actual backlog count.
+
+**Phase:** Phase 1 (MVP) -- Bossfight implementation. Must decide on static-HP vs dynamic-HP before building the UI.
+
+**Confidence:** HIGH -- standard issue in any metric dashboard that models a flow as a stock.
+
+---
+
+### Pitfall 11: Socket.IO Event Namespace Pollution from Gamification Real-Time Updates
+
+**What goes wrong:** The gamification system wants real-time updates: XP bar animation on quest completion, bossfight HP reduction animation, streak milestone toasts, and level-up celebrations. Each of these is a new Socket.IO event type. The existing system already has 20+ event types (verified: `notification`, `document:ocr-complete`, `document:embedding-complete`, `email:folder-update`, `helena:alert-badge`, `helena:alert-critical`, `helena:draft-created`, `helena:draft-revision`, `helena:task-started/progress/completed/failed`, `akten-activity:new`, `message:new/edited/deleted`, `reaction:added/removed`, `typing:start/stop`). Adding 5-8 gamification events increases complexity and makes the Socket.IO contract harder to maintain.
+
+**Why it happens:** Each gamification feature (quest completion, XP gain, bossfight damage, level-up, streak milestone, item purchase, badge earned, bossfight phase transition) naturally maps to a Socket.IO event for real-time feedback. Without discipline, each feature adds its own event.
+
+**Consequences:**
+- 28+ Socket.IO event types with no central registry or type safety
+- Event handler registration sprawl across multiple bridge components
+- Difficult to debug which events are firing (no centralized event logging)
+- Client-side memory from mounting 28+ event listeners
+
+**Prevention:**
+1. **Single gamification event with type discriminator:** Emit ONE event type `game:update` with a `type` field: `{ type: "quest-complete" | "xp-gained" | "level-up" | "bossfight-damage" | "streak-milestone" | "item-purchased", payload: {...} }`. The client has one handler that routes by type. This is the same pattern as the existing `notification` event (single event, multiple notification types).
+2. **Emit to user's own room only:** Gamification events are private (per Pitfall 1). Always emit to `user:{userId}` room, never to `role:*` or broadcast. Exception: `bossfight-damage` emits team aggregate to a `team:*` room (anonymous damage amount, no user attribution).
+3. **Gamification Socket Bridge component:** Create a single `GameSocketBridge` component (similar to `AkteSocketBridge`) that manages all gamification event listeners. Mount it once in the dashboard layout.
+4. **Type-safe event registry:** Create a TypeScript `GameEventMap` type that defines all valid gamification events and their payloads. Use this with Socket.IO's typed events feature for compile-time safety.
+
+**Detection:** More than 2 new Socket.IO event type registrations in the gamification feature. Gamification events emitting to rooms other than `user:{userId}` or `team:*`.
+
+**Phase:** Phase 1 (MVP) -- when implementing the first real-time quest completion feedback.
+
+**Confidence:** HIGH -- verified against existing Socket.IO event inventory in the codebase (40+ emit calls across 14 files).
+
+---
+
+### Pitfall 12: KPI Card Navigation Breaking Browser History and Tab State
+
+**What goes wrong:** The Quick Wins todo makes KPI cards clickable: "3 Beteiligte" navigates to the Beteiligte tab. If this is implemented as `router.push()` with query parameters (e.g., `?tab=beteiligte`), clicking 5 KPI cards creates 5 history entries. The user hits browser Back 5 times expecting to leave the page, but they cycle through tab states instead. If the current tab state is stored in URL params and the user shares the link, the recipient might not have the same Akte access.
+
+**Why it happens:** The existing Akte detail page likely uses React state or URL params for tab navigation. KPI cards adding more navigation entries creates history pollution. This is a common SPA anti-pattern.
+
+**Consequences:**
+- Browser Back button becomes unusable (navigates between tabs instead of pages)
+- Shared URLs with tab state may not work for all users (different RBAC)
+- Tab state desyncs between URL params and React state on manual URL editing
+
+**Prevention:**
+1. **Use `router.replace()` not `router.push()`:** Replacing the URL preserves the same history entry. Clicking KPI cards switches tabs without adding history entries. The user's Back button still goes to the previous page.
+2. **Or use React state only (no URL params for tabs):** If tabs don't need to be shareable via URL, use component state. KPI card click calls `setActiveTab("beteiligte")`. No URL change, no history pollution. This is simpler and avoids the URL-sharing edge case entirely.
+3. **Scroll to tab content:** After switching tabs, scroll the tab panel into view. Without this, clicking a KPI card at the top of the page switches the tab but the user has to manually scroll down to see it.
+
+**Detection:** Users reporting that Back button doesn't work as expected. Multiple identical history entries with different `?tab=` parameters.
+
+**Phase:** Quick Wins -- KPI card navigation implementation.
+
+**Confidence:** HIGH -- standard SPA navigation pattern.
 
 ---
 
@@ -253,79 +346,49 @@ Mistakes that cause minor issues or technical debt, but are easily correctable.
 
 ---
 
-### Pitfall 11: Falldatenblaetter JSONB Field Size Limits with Helena Template Suggestions
+### Pitfall 13: Item-Shop IP/Trademark Risk with Fantasy Names
 
-**What goes wrong:** Helena suggests new Falldatenblatt templates based on case patterns. If the template definition (field definitions array) is stored as JSONB, very detailed templates with 50+ fields, help text, validation rules, and option lists can exceed practical JSONB processing performance. PostgreSQL can handle up to 255 MB in a JSONB column, but indexing and partial updates on deeply nested JSON degrade.
+**What goes wrong:** The todo correctly notes "IP-freie eigene Fantasy-Namen (keine Tolkien/Star Wars-Referenzen)." But developers under time pressure will use placeholder names during development ("Gandalf's Staff," "Lightsaber Focus") that accidentally ship to production. Once users see them, removing them causes disappointment and breaks references in code.
 
 **Prevention:**
-1. **Keep template schemas lean:** Cap at 40 fields per template. Most existing schemas have 15-25 fields.
-2. **Store field definitions as a flat array, not deeply nested:** The existing `FalldatenFeld` interface is already flat (key, label, typ, optionen). Maintain this simplicity.
-3. **Helena suggestions as separate proposals:** Helena-suggested templates go into a `TemplateVorschlag` table with status `VORGESCHLAGEN`, not directly into the template table. Admin reviews and promotes.
+1. **Name all items with original names from day one.** No placeholder names in seed data or fixtures. The todo already has good examples ("Fokus-Siegel," "Vorlagenrolle"). Use this naming convention consistently.
+2. **Code review checklist item:** "No third-party IP references in gamification content" as a PR review item.
+3. **Items stored in DB (seed data), not hardcoded:** Item names come from the `Quest`/`ShopItem` DB tables, not from TypeScript constants. This makes renaming possible without code changes.
 
-**Phase:** Falldatenblaetter template model design.
+**Phase:** Phase 2 -- Item-Shop implementation.
 
 **Confidence:** HIGH.
 
 ---
 
-### Pitfall 12: Message Search Indexing Conflict with Existing Meilisearch Indices
+### Pitfall 14: Zeiterfassung Description "Beschreibung hinzufuegen" UX Creating Input Fatigue
 
-**What goes wrong:** Adding chat messages to Meilisearch creates a new index alongside the existing `dokumente` index. If the index name collides or the search API returns mixed results (documents and messages), the command palette (Cmd+K) shows confusing results.
+**What goes wrong:** The Quick Wins todo adds an inline "Beschreibung hinzufuegen" link on time entries without descriptions. If the system auto-starts time tracking on Akte open (existing feature), every auto-started entry lacks a description. The user sees 10 time entries per day, each with "Beschreibung hinzufuegen." Clicking each one to add a description becomes tedious. Users start ignoring the prompts, making the feature worse than the current "---" display.
 
 **Prevention:**
-1. **Separate Meilisearch index:** `messages` index with fields `content`, `senderName`, `channelName`, `akteAktenzeichen`, `createdAt`. Completely separate from the `dokumente` index.
-2. **Search API routing:** The existing `searchDokumente()` in `src/lib/meilisearch.ts` must NOT be modified. Add a new `searchMessages()` function. The Cmd+K palette queries both indices and groups results by type.
-3. **RBAC filtering at query time:** Messages in Akte-threads must be filtered by the user's Akte access. General channel messages are visible to all. Apply the same post-filter pattern used in `hybridSearch()` lines 219-226 for cross-Akte BM25 results.
+1. **Batch description entry:** Instead of inline edit per entry, offer a "Beschreibungen ergaenzen" button that opens a modal showing all entries without descriptions. User fills them in one batch.
+2. **Auto-description from context:** When time tracking auto-starts from an Akte view, auto-populate the description with "Bearbeitung [Aktenzeichen] - [Aktenbezeichnung]." The user can edit later but at least the default is informative.
+3. **"Beschreibung hinzufuegen" only for recent entries:** Show the prompt only for entries from today and yesterday. Older entries without descriptions are shown with "Keine Beschreibung" (greyed out, no action prompt). This prevents prompt fatigue for historical data.
 
-**Phase:** Messaging search integration (late phase, after core messaging works).
+**Phase:** Quick Wins -- Zeiterfassung UX improvement.
 
-**Confidence:** MEDIUM -- depends on Meilisearch multi-index search support.
+**Confidence:** MEDIUM -- depends on actual auto-tracking usage patterns.
 
 ---
 
-### Pitfall 13: Akte Profile Embedding Staleness for SCAN-05
+### Pitfall 15: Gamification Schema Migration Complexity with 80+ Existing Prisma Models
 
-**What goes wrong:** The Akte profile embedding (used for efficient SCAN-05 matching per Pitfall 2 prevention) becomes stale as new documents are added to the Akte. A new expert opinion is uploaded, changing the case's semantic profile, but the profile embedding still reflects the old documents. New Urteile that match the updated case are missed.
-
-**Prevention:**
-1. **Recompute on document change:** Hook into the existing embedding processor (`src/lib/queue/processors/embedding.processor.ts`). After embedding a new document's chunks, trigger a profile recomputation for that Akte.
-2. **Lightweight recomputation:** The profile is the centroid (average) of the top-N chunk embeddings. This can be computed with a single SQL query (no Ollama call needed): `SELECT AVG(embedding) FROM document_chunks WHERE akteId = ... AND chunkType = 'CHILD' ORDER BY createdAt DESC LIMIT 20`.
-3. **Staleness tolerance:** Profile embeddings that are < 7 days old are "fresh enough." Only recompute if the Akte has had new documents since the last profile computation.
-
-**Phase:** SCAN-05 implementation phase.
-
-**Confidence:** MEDIUM -- pgvector AVG aggregation on vector columns needs verification.
-
----
-
-### Pitfall 14: Message Edit/Delete Breaking Audit Trail Requirements
-
-**What goes wrong:** Users want to edit and delete chat messages (standard messaging feature). But in a law firm, the audit trail must be complete. If a message is hard-deleted, it disappears from the audit log. If it's edited without history, the original content is lost.
+**What goes wrong:** Adding `UserGameProfile`, `Quest`, `QuestCompletion`, `Bossfight`, `InventarItem`, and `ShopItem` models to a schema with 80+ existing models creates a large migration. If the migration includes FK references to `User` (which has 30+ relations already), the Prisma migration diff becomes hard to review and the generated client gets noticeably larger. Prisma Client generation time increases.
 
 **Prevention:**
-1. **Soft delete only:** Messages are never hard-deleted. Add a `deletedAt` timestamp. Deleted messages show as "Nachricht geloescht" in the UI. Original content preserved in DB for audit.
-2. **Edit history:** Store edit history as a JSONB array on the message: `editHistory: [{ content, editedAt }]`. The current `content` field always has the latest version.
-3. **Time-limited edits:** Allow edits only within 15 minutes of sending. After that, the message is immutable. This prevents retroactive content manipulation.
-4. **Audit log integration:** Log message creation, edits, and deletions via the existing `logAuditEvent()` function with `NACHRICHT_ERSTELLT`, `NACHRICHT_BEARBEITET`, `NACHRICHT_GELOESCHT` event types.
+1. **Minimal FK references to User:** `UserGameProfile` has a `userId` FK to `User`. All other gamification models reference `UserGameProfile`, not `User` directly. This keeps the User model's relation count manageable.
+2. **Single migration for all gamification tables:** Create all gamification models in one Prisma migration. Do not spread across multiple migrations (creates intermediate broken states if one migration fails).
+3. **Separate the gamification seed data:** Quest definitions, shop items, and bossfight templates go into a `seed-gamification.ts` file, not the main `seed.ts`. Run it separately so gamification can be re-seeded without affecting other data.
+4. **Test migration on a DB copy first:** Before applying to the development database, test on a pg_dump copy. The schema has complex CHECK constraints and $extends hooks that may interact unexpectedly with new models.
 
-**Phase:** Messaging feature implementation.
+**Phase:** Phase 1 (MVP) -- DB schema design.
 
-**Confidence:** HIGH -- standard pattern for legal/compliance messaging.
-
----
-
-### Pitfall 15: BullMQ Queue Contention Between Scanner, Messaging, and Helena Tasks
-
-**What goes wrong:** SCAN-05 processing runs on the scanner BullMQ queue. Helena tasks run on the `helena-agent` queue. If both queues share the same worker process with limited concurrency, a long SCAN-05 run (checking 200 Akten) blocks Helena task processing. Adding message notification jobs (for offline users) to a third queue further increases contention.
-
-**Prevention:**
-1. **Dedicated queue for SCAN-05:** Create a `scan-05` queue separate from the existing `scanner` queue (which handles frist-check, inaktiv-check, anomalie-check). The scan-05 job is computationally heavy and should not block lightweight checks.
-2. **No queue for messaging notifications:** Chat notifications should be sent synchronously during message persistence (same transaction). Using BullMQ for chat notifications adds latency. Only use BullMQ for offline notification delivery (email, push) if those channels are added later.
-3. **Worker concurrency tuning:** The existing `WORKER_CONCURRENCY` env var (default: 5) in `src/worker.ts` line 42 applies to individual queues. Each queue gets its own Worker instance. Ensure SCAN-05 gets `concurrency: 1` (it processes batches internally).
-
-**Phase:** SCAN-05 infrastructure phase.
-
-**Confidence:** HIGH -- verified against `src/worker.ts` worker registration pattern.
+**Confidence:** HIGH -- verified against current schema complexity (80+ models, 30+ User relations).
 
 ---
 
@@ -333,60 +396,73 @@ Mistakes that cause minor issues or technical debt, but are easily correctable.
 
 | Phase Topic | Likely Pitfall | Mitigation |
 |---|---|---|
-| Messaging: Data Model | Pitfall 1 (write-then-emit), Pitfall 4 (RBAC leak) | Design message table with akteId FK for threads, kanalId FK for channels. Never store chat in AktenActivity. |
-| Messaging: Socket.IO Integration | Pitfall 10 (room proliferation) | Reuse existing `akte:*` rooms, add `channel:*` rooms. Separate namespace optional but recommended. |
-| Messaging: @Mentions | Pitfall 7 (notification spam) | Batch notification creation, client-side dedup, rate-limit repeat @mentions. |
-| Messaging: UI | Pitfall 6 (pagination) | Cursor-based pagination from day one. Never offset-based. |
-| Messaging: Audit | Pitfall 14 (edit/delete audit) | Soft delete, edit history JSONB, time-limited edits. |
-| SCAN-05: Architecture | Pitfall 2 (N*M explosion) | Akte profile embeddings + two-stage filtering. |
-| SCAN-05: Alert Delivery | Pitfall 9 (alert fatigue) | Sachgebiet-aware thresholds, LLM specificity check, alert grouping, per-Akte opt-in. |
-| SCAN-05: Infrastructure | Pitfall 15 (queue contention) | Dedicated BullMQ queue, concurrency: 1. |
-| SCAN-05: Freshness | Pitfall 13 (stale profiles) | Recompute on document upload, 7-day staleness tolerance. |
-| Falldatenblaetter: Data Model | Pitfall 3 (schema explosion) | Migrate static schemas to DB, single source of truth. |
-| Falldatenblaetter: Approval Workflow | Pitfall 8 (permission creep) | Reuse ADMIN role, self-approval check, audit trail. |
-| Falldatenblaetter: Helena Auto-Fill | Pitfall 5 (hallucination) | Per-field confidence, source-grounded extraction, ENTWURF status, diff view. |
-| Falldatenblaetter: Template Storage | Pitfall 11 (JSONB size) | Cap fields per template, flat schema structure. |
-| Cross-Feature: Search | Pitfall 12 (index collision) | Separate Meilisearch indices, search API routing, RBAC filtering. |
+| Gamification: DB Schema | Pitfall 1 (DSGVO/Arbeitsrecht), Pitfall 15 (migration complexity) | Design privacy-by-default into the schema: no cross-user query paths. FK through UserGameProfile, not User directly. |
+| Gamification: Quest Conditions | Pitfall 2 (Goodhart's Law), Pitfall 6 (hot-path coupling) | Quality gates in condition JSON, async evaluation via BullMQ. Start with 3 quests, not 5. |
+| Gamification: XP/Runen Logic | Pitfall 5 (race conditions), Pitfall 3 (crowding out) | Atomic increments, single evaluation function, moderate reward values. |
+| Gamification: Streak System | Pitfall 7 (anxiety/unfairness) | Working-day streaks, part-time awareness, automatic freeze for absences. |
+| Gamification: Bossfight | Pitfall 10 (HP drift) | Dynamic HP from live backlog query, net damage display, threshold-based victory. |
+| Gamification: Real-time Events | Pitfall 11 (Socket.IO pollution) | Single `game:update` event with type discriminator. Private room emission. |
+| Gamification: Team Dashboard | Pitfall 1 (DSGVO) + Pitfall 4 (toxic competition) | Team aggregates only. No per-person data visible to others. |
+| Gamification: Item-Shop | Pitfall 13 (IP risk), Pitfall 3 (perks as compensation) | Original names from day one. Perks as "organisatorische Hilfen." |
+| Quick Wins: Empty States | Pitfall 8 (RBAC-blind CTAs) | Role-aware CTA rendering. Informational fallback for restricted features. |
+| Quick Wins: OCR Recovery | Pitfall 9 (orphaned jobs) | OCR state machine. Cancel-before-retry. Manual takes precedence. |
+| Quick Wins: KPI Navigation | Pitfall 12 (history pollution) | `router.replace()` or React state only. No `router.push()`. |
+| Quick Wins: Zeiterfassung | Pitfall 14 (input fatigue) | Auto-description from context. Batch entry mode. |
 
 ---
 
 ## Integration Pitfalls (Cross-Feature)
 
-### Integration 1: Messaging + Activity Feed Confusion
+### Integration 1: Gamification Events Triggering from Helena Agent Actions
 
-**Risk:** Users expect chat messages to appear in the Akte activity feed. But AktenActivity entries are system events (document uploaded, frist created, Helena alert). Mixing user chat messages into the feed makes the feed noisy and breaks the existing "Helena vs Human Attribution" pattern.
+**Risk:** Helena autonomously performs actions that qualify as quest conditions: Helena closes a Wiedervorlage, Helena creates a Frist, Helena generates a Rechnung-Entwurf. Should these count toward the user's quests? If yes, users let Helena do the work and collect the XP (gaming). If no, users feel cheated when Helena "steals" their quest progress.
 
-**Prevention:** Keep chat and activity feed separate. The activity feed shows a "3 neue Nachrichten in Akte-Thread" summary entry when new messages are posted, linking to the chat view. Individual messages do NOT create AktenActivity entries.
+**Prevention:** Helena actions NEVER count toward quest completion. Quests require `initiatedBy: "USER"` (not `"HELENA"` or `"SYSTEM"`). This is consistent with the existing ENTWURF-gate philosophy: Helena assists, humans decide and act. The quest system reinforces this by only rewarding human actions. Document this clearly in the quest description: "Manuell erledigt (nicht automatisch durch Helena)."
 
-### Integration 2: Helena Agent Accessing Chat Context
+### Integration 2: Quest Completion Notifications Competing with Helena Alerts
 
-**Risk:** Helena's existing per-Akte memory (`HelenaMemory.content` JSON) doesn't include chat history. If users discuss case strategy in the Akte-thread and then ask Helena to draft a Schriftsatz, Helena has no context from the discussion.
+**Risk:** The notification system already delivers Helena alerts (6 types), scanner alerts, frist reminders, and general notifications. Adding "Quest abgeschlossen! +60 XP" toasts creates notification overload. A user logging in at 8 AM sees: 3 frist reminders + 2 Helena alerts + morning briefing + "3 neue Quests verfuegbar" = 7+ notifications before they start working.
 
-**Prevention:** Phase this as a follow-up. Initially, Helena does NOT read chat messages. Later, add a `read-akte-chat` tool that retrieves recent messages from the Akte-thread (with explicit user consent per DSGVO). This matches the existing tool-calling pattern (14 tools, adding a 15th).
+**Prevention:** Gamification notifications are silent by default (no toast, no sound). Quest completion feedback is shown ONLY in the gamification dashboard widget (XP bar animates, quest checks off). The only gamification toast is level-up (rare, ~weekly). Bossfight phase transitions appear as a subtle banner update, not a modal or toast.
 
-### Integration 3: SCAN-05 Alerts in Chat
+### Integration 3: Gamification Data in Audit Trail
 
-**Risk:** SCAN-05 creates a `HelenaAlert` with `typ: NEUES_URTEIL`. If messaging is active, users expect the alert to also appear as a message in the Akte-thread. But the alert system and messaging system are independent -- creating both an alert AND a chat message for the same event is redundant.
+**Risk:** The existing audit trail (`logAuditEvent()`) logs all significant actions. Quest completions, XP changes, and item purchases are significant in the gamification context but would pollute the legal audit trail (which is focused on Akten, documents, and DSGVO compliance).
 
-**Prevention:** SCAN-05 alerts remain in the alert system (HelenaAlert + AlertCenter). A "Teilen" button on the alert lets users manually post it to the Akte-thread as a message. No automatic cross-posting.
+**Prevention:** Do NOT log gamification events in the main AuditLog. Create a separate `GameAuditLog` table or use the `QuestCompletion` records themselves as the audit trail. The main AuditLog remains focused on legal/compliance events.
+
+### Integration 4: BullMQ Queue Contention with Existing 16 Queues
+
+**Risk:** The system already has 16 BullMQ queues. Adding `quest-eval` and potentially `bossfight-update` queues brings it to 18. Each queue creates a Redis connection and a Worker instance. With the default Worker setup in `src/worker.ts`, all workers share a single Node.js process. Quest evaluation jobs running frequently (every user action) could starve other workers.
+
+**Prevention:** Quest evaluation should use the EXISTING worker process and a lightweight queue with `concurrency: 3` (low priority). Bossfight HP recalculation should be a nightly cron added to the existing `scanner` queue (it is a fast DB query, not a separate queue). Do NOT create more than one new queue for gamification.
 
 ---
 
 ## Sources
 
-- Codebase analysis: `src/lib/socket/rooms.ts`, `src/components/socket-provider.tsx`, `src/components/akten/akte-socket-bridge.tsx`, `src/components/notifications/notification-provider.tsx`
-- Codebase analysis: `src/lib/embedding/hybrid-search.ts`, `src/lib/embedding/vector-store.ts`, `src/lib/urteile/ingestion.ts`
-- Codebase analysis: `src/lib/falldaten-schemas.ts`, `src/components/akten/falldaten-form.tsx`, `prisma/schema.prisma`
-- Codebase analysis: `src/lib/scanner/service.ts`, `src/lib/scanner/types.ts`, `src/worker.ts`
-- [Socket.IO with Next.js](https://socket.io/how-to/use-with-nextjs) -- official integration guide
-- [Socket.IO FAQ on message ordering](https://socket.io/docs/v4/faq/) -- delivery guarantees
-- [Scaling Socket.IO challenges](https://ably.com/topic/scaling-socketio) -- sticky sessions, connection bottlenecks
-- [Prisma JSON fields documentation](https://www.prisma.io/docs/orm/prisma-client/special-fields-and-types/working-with-json-fields) -- JSONB querying limitations
-- [EAV vs JSONB in PostgreSQL](https://www.razsamuel.com/postgresql-jsonb-vs-eav-dynamic-data/) -- dynamic form storage comparison
-- [Entity-Attribute-Value anti-pattern](https://www.cybertec-postgresql.com/en/entity-attribute-value-eav-design-in-postgresql-dont-do-it/) -- why EAV fails
-- [pgvector scaling presentation](https://pgconf.in/files/presentations/2025/954.pdf) -- HNSW index limits
-- [pgvector 0.8.0 improvements](https://aws.amazon.com/blogs/database/supercharging-vector-search-performance-and-relevance-with-pgvector-0-8-0-on-amazon-aurora-postgresql/) -- performance benchmarks
-- [LLM hallucination in data extraction](https://www.cradl.ai/post/hallucination-free-llm-data-extraction) -- dual-model verification pattern
-- [Reducing LLM hallucinations in PDF extraction](https://dev.to/parthex/reducing-hallucinations-when-extracting-data-from-pdf-using-llms-4nl5) -- confidence scoring
-- [RBAC best practices 2025](https://www.osohq.com/learn/rbac-best-practices) -- avoiding role explosion
-- [RBAC privilege escalation prevention](https://hoop.dev/blog/understanding-privilege-escalation-in-rbac-and-how-to-prevent-it/) -- separation of duties
+- [KREMER LEGAL: Gamification -- Innovation vs. Beschaeftigtendatenschutz](https://kremer-rechtsanwaelte.de/2017/12/22/gamification-innovation-vs-beschaeftigtendatenschutz/) -- German labor law analysis of gamification
+- [Bird & Bird: DSGVO Konturen im Arbeitsrecht 2025](https://www.twobirds.com/en/insights/2025/germany/dsgvo-konturen-fr-datenschutz-im-arbeitsrecht-werden-immer-klarer) -- DSGVO employment law developments
+- [Hogan Lovells: Germany Draft Employee Data Act](https://www.hoganlovells.com/en/publications/germany-draft-for-employee-data-act-issued) -- BeschDG draft overview
+- [anwalt.de: Employee Surveillance Legal Limits](https://www.anwalt.de/rechtstipps/employee-surveillance-in-the-workplace-legal-limits-and-employer-obligations-243193.html) -- German workplace monitoring case law
+- [datenschutz.org: Beschaeftigtendatenschutz 2025/2026](https://www.datenschutz.org/beschaeftigtendatenschutz/) -- current state of employee data protection law
+- [activemind: BeschDG Referentenentwurf](https://www.activemind.legal/de/guides/beschaeftigtendatenschutzgesetz/) -- detailed analysis of draft law provisions
+- [phys.org: Workplace Gamification Erodes Employee Moral Agency (2026)](https://phys.org/news/2026-02-workplace-gamification-erodes-employee-moral.html) -- Carnegie Mellon research
+- [Trophy: Productivity App Gamification That Doesn't Backfire](https://trophy.so/blog/productivity-app-gamification-doesnt-backfire) -- anti-patterns for productivity gamification
+- [Growth Engineering: The Dark Side of Gamification](https://www.growthengineering.co.uk/dark-side-of-gamification/) -- leaderboard and competition risks
+- [Growth Engineering: Competition Engaging or Demotivating](https://www.growthengineering.co.uk/gamification-is-competition-engaging-or-demotivating/) -- competition design research
+- [SHRM: Beyond Gamification](https://www.shrm.org/enterprise-solutions/insights/beyond-gamification-unlock-true-engagement-through) -- enterprise engagement alternatives
+- [Spinify: Science Behind Gamified Workplaces](https://spinify.com/blog/the-science-behind-gamified-workplaces-how-leaderboards-and-motivation-psychology-empower-teams/) -- leaderboard psychology
+- [UX Magazine: Five Steps to Enterprise Gamification](https://uxmag.com/articles/five-steps-to-enterprise-gamification) -- enterprise gamification methodology
+- [NextBee: Integrating Gamification with Existing CRM/App](https://blog.nextbee.com/2026/02/07/how-to-integrate-gamification-with-your-existing-crm-or-app/) -- integration patterns
+- [Prisma Discussion #10709: Race Condition on Concurrent Updates](https://github.com/prisma/prisma/discussions/10709) -- atomic increment documentation
+- [Prisma Client API: Atomic Number Operations](https://www.prisma.io/docs/orm/reference/prisma-client-reference) -- increment/decrement reference
+- [UXPin: Designing Empty States](https://www.uxpin.com/studio/blog/ux-best-practices-designing-the-overlooked-empty-states/) -- empty state UX best practices
+- [Toptal: Empty State UX Design](https://www.toptal.com/designers/ux/empty-state-ux-design) -- actionable empty state patterns
+- [Eleken: Empty State UX Examples](https://www.eleken.co/blog-posts/empty-state-ux) -- design rules that work
+- Codebase analysis: `src/lib/queue/queues.ts` (16 existing queues), `src/worker.ts` (worker registration), `prisma/schema.prisma` (80+ models, User with 30+ relations)
+- Codebase analysis: Socket.IO event inventory (40+ emit calls across 14 files, 20+ distinct event types)
+- Codebase analysis: `src/lib/queue/processors/ocr.processor.ts` (OCR pipeline), `src/components/ui/glass-kpi-card.tsx` (KPI cards)
+- section 87 Abs. 1 Nr. 6 BetrVG -- Mitbestimmung bei technischen Ueberwachungseinrichtungen
+- DSGVO Art. 6, 13, 14, 88 -- lawful processing, transparency, employment context
+- BeschDG Referentenentwurf section 19 -- restrictions on performance monitoring data

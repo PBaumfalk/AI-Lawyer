@@ -1,377 +1,394 @@
-# Technology Stack
+# Stack Research
 
-**Project:** AI-Lawyer v0.3 -- Kanzlei-Collaboration
-**Researched:** 2026-02-28
-**Mode:** Subsequent milestone -- stack additions for Internes Messaging, SCAN-05, Falldatenblaetter
+**Domain:** Gamification engine + UX Quick Wins for existing Kanzleisoftware
+**Researched:** 2026-03-02
+**Confidence:** HIGH
 
 ## Executive Summary
 
-v0.3 adds three features to an existing 117k LOC TypeScript codebase. The critical finding: **zero new npm packages are needed**. All three features build entirely on existing infrastructure -- Socket.IO for real-time messaging, pgvector for cross-Akte semantic search, and the existing `falldaten-schemas.ts` + `FalldatenForm` system for dynamic case data forms. The work is Prisma models, API routes, UI components, BullMQ processors, and Socket.IO room extensions.
+v0.4 adds a gamification layer (Quests, XP, Levels, Bossfight, Item Shop, Team Dashboard) and UX quick wins (clickable KPIs, empty states, OCR recovery) to a 125k LOC TypeScript codebase. Unlike v0.2 and v0.3 which were "zero new packages" milestones, v0.4 requires **two small additions**: `canvas-confetti` for quest/bossfight celebration effects and the shadcn/ui `Progress` component (backed by `@radix-ui/react-progress`) for XP bars and bossfight HP bars. Everything else -- quest engine, XP calculation, streak logic, condition evaluation, cron-based daily reset, real-time updates -- builds on existing infrastructure (Prisma, BullMQ, Socket.IO, Motion/React).
 
-This mirrors the v0.2 precedent ("Zero new npm packages") and is justified because every capability was verified against the installed dependency set.
+The gamification engine is pure server-side business logic (Prisma queries + BullMQ cron + condition evaluator) with a thin UI layer. No game engine, no external gamification SaaS, no complex state machine library. The "quest condition" system uses a JSON DSL evaluated against Prisma aggregation queries -- the same pattern already used for `HelenaAlert.meta` and `FalldatenTemplate.schema`.
 
 ---
 
 ## Recommended Stack
 
-### Core Framework
+### Core Technologies
 
-No changes. Existing stack handles all v0.3 requirements.
+No changes. Existing stack handles all v0.4 requirements.
 
-| Technology | Version | v0.3 Role | Why Sufficient |
+| Technology | Version | v0.4 Role | Why Sufficient |
 |---|---|---|---|
-| Next.js 14+ (App Router) | ^14.2.21 | API routes for messaging + templates, pages for channel UI | Existing pattern from 26+ dashboard pages |
-| TypeScript | ^5.7.2 | Type safety for new models, schemas | Already in use |
-| Tailwind CSS + shadcn/ui | ^3.4.17 | Messaging UI components | Glass UI design system already established |
+| Next.js 14+ (App Router) | ^14.2.21 | API routes for quest completion, game profile, item shop; pages for dashboard widgets, team view, profile "hero card" | 26+ dashboard pages already built with same pattern |
+| TypeScript | ^5.7.2 | Type-safe quest condition DSL, game profile types, reward calculation | Already in use, strong typing prevents XP calculation bugs |
+| Tailwind CSS + shadcn/ui | ^3.4.17 | Glass UI for gamification dashboard widgets, quest cards, bossfight banner | oklch design tokens, glass-card, glass-panel already established |
+| PostgreSQL 16 | existing | UserGameProfile, Quest, QuestCompletion, Bossfight, InventarItem tables | Relational data with JSON columns for quest conditions. Aggregation queries for condition evaluation. |
+| Prisma ORM | ^5.22.0 | New models (~7 tables), aggregation queries for quest condition checks | 80+ models managed. Same migration pattern. `$queryRaw` available for complex aggregations. |
+| BullMQ | ^5.70.1 | Daily quest reset cron (midnight), streak calculation cron, bossfight HP sync cron | 16+ workers and 8 cron jobs already registered. `upsertJobScheduler` pattern established. |
+| Socket.IO + Redis | 4.8.3 + 5.9.3 | Real-time quest completion toast, bossfight damage broadcast, XP gain animation trigger | Room system (`user:`, `role:`) already handles per-user and broadcast notifications |
+| Redis 7 | existing | BullMQ backend, Socket.IO adapter. Daily Runen cap tracking (per-user counter with TTL). | No changes needed. Redis INCR + EXPIRE for Runen-Deckel is trivial. |
+| Motion/React | ^12.34.3 | XP bar animations, level-up effects, bossfight damage numbers, quest completion transitions | Already used for GlassKpiCard count-up, sidebar animations, modal transitions |
 
-### Database
+### New Dependencies (2 packages)
 
-No changes. All new data fits PostgreSQL + Prisma.
-
-| Technology | Version | v0.3 Role | Why Sufficient |
+| Library | Version | Purpose | Why Needed |
 |---|---|---|---|
-| PostgreSQL 16 | existing | Channel, Message, FalldatenTemplate tables | Relational data with JSON columns -- perfect fit |
-| Prisma ORM | ^5.22.0 | New models (Channel, ChannelMember, Message, FalldatenTemplate) | 70+ models already managed. Same migration pattern. |
-| pgvector (HNSW) | 0.2.1 | SCAN-05: search document_chunks using urteil embedding | Existing index, existing query patterns in `vector-store.ts` |
+| `canvas-confetti` | ^1.9.4 | Quest completion celebration, bossfight phase transition, level-up effect | 6.3 kB gzipped, zero dependencies, performant canvas-based particles. The only visual celebration library needed. Motion/React handles transitions but not particle effects. |
+| `@radix-ui/react-progress` | ^1.1.0 | XP progress bar, bossfight HP bar, quest completion progress | shadcn/ui Progress component. `@radix-ui/react-avatar` and `@radix-ui/react-tooltip` already in package.json, so Radix is an established dependency. Accessible (aria-valuenow/max). |
 
-### Infrastructure
+### Existing Libraries Reused
 
-No changes. No new Docker services.
-
-| Technology | Version | v0.3 Role | Why Sufficient |
+| Library | Version | v0.4 Role | How Used |
 |---|---|---|---|
-| Socket.IO + Redis Adapter | 4.8.3 + 8.3.0 | Real-time message delivery, typing indicators | Room system already supports `user:`, `akte:`, `role:` patterns. Add `channel:{id}` room. |
-| Socket.IO Redis Emitter | 5.1.0 | Worker-to-browser message push for SCAN-05 alerts | Already used for OCR/embedding/alert notifications from worker |
-| BullMQ | ^5.70.1 | SCAN-05 processor (post-sync hook) | 16 workers already registered. Same pattern. |
-| Redis 7 | existing | Socket.IO adapter, BullMQ backend, pub/sub | No changes needed |
+| Motion/React | ^12.34.3 | XP bar spring animation, level-up scale pulse, quest card stagger animation, bossfight damage number fly-up | Already used in GlassKpiCard (count-up), sidebar (spring physics), modals. Extend with `AnimatePresence` for quest completion. |
+| Zod | ^3.23.8 | Validate quest condition JSON schema, game profile mutations, item shop transactions | Same pattern as FalldatenTemplate.schema validation |
+| date-fns | ^4.1.0 | Streak day calculation (`differenceInCalendarDays`, `startOfDay`), quest reset timing, "3 Tage Streak" formatting | Already used for Fristen, timestamps throughout UI |
+| Lucide React | ^0.468.0 | Quest icons (Sword, Shield, Scroll, Coins, Trophy, Flame, Star, Target), class icons, item rarity indicators | 100+ icons already in use. Lucide has all fantasy/achievement iconography needed. |
+| Sonner | ^1.7.1 | "+80 XP" toast on quest completion, "Level Up!" toast, "Runen erhalten" toast | Already used for all notification toasts |
+| TipTap | ^3.20.0 | NOT used for gamification. Mentioned only to confirm no new editor dependency needed. | -- |
 
-### Supporting Libraries
+### Development Tools
 
-No new libraries. Existing ones cover all needs:
+No new dev tools needed.
 
-| Library | Version | v0.3 Role | Why Sufficient |
-|---|---|---|---|
-| TipTap (StarterKit + extensions) | 3.20.0 | Message composer rich text | Already used in email compose editor (`ComposeEditor`). Reuse pattern. |
-| Vercel AI SDK v4 | ^4.3.19 | Helena auto-fill for Falldatenblaetter via `generateObject` | Same pattern as Schriftsatz pipeline |
-| Zod | ^3.23.8 | Runtime validation for user-created FalldatenTemplate schemas | Already validating AI outputs, form inputs |
-| date-fns | ^4.1.0 | Message timestamps, "2 min ago" formatting | Already used throughout UI |
-| Lucide React | ^0.468.0 | Icons for messaging UI (MessageSquare, Hash, AtSign, etc.) | Already installed, 100+ icons in use |
-| Sonner | ^1.7.1 | Toast notifications for new messages, mentions | Already installed, used for all toasts |
+| Tool | v0.4 Role | Notes |
+|---|---|---|
+| Prisma Studio | Inspect game profiles, quest completions, bossfight state during development | Already available via `npm run db:studio` |
+| Bull Board | Monitor quest-reset and streak-calculation cron jobs | Already mounted at `/admin/queues` |
+| Vitest | Unit tests for XP/Level calculation, streak logic, condition evaluator | Already in devDependencies. These are critical business logic functions (like RVG/Fristen) that warrant testing. |
+
+---
+
+## Installation
+
+```bash
+# New runtime dependencies (2 packages)
+npm install canvas-confetti @radix-ui/react-progress
+
+# TypeScript types for canvas-confetti (types NOT bundled in the package)
+npm install -D @types/canvas-confetti
+
+# Add shadcn/ui Progress component (creates src/components/ui/progress.tsx)
+npx shadcn@latest add progress
+
+# After Prisma schema changes:
+npx prisma migrate dev --name v04-gamification-profiles-quests
+npx prisma generate
+```
 
 ---
 
 ## Feature-Specific Stack Decisions
 
-### 1. Internes Messaging
+### 1. Quest Engine (Server-Side Logic, No External Library)
 
-#### Data Layer: Prisma models only
+The quest engine is a custom evaluator, not a library. It processes a JSON condition DSL stored in `Quest.bedingung` against real Prisma queries. No npm gamification library exists that matches this domain (legal Kanzlei workflows).
 
-New models (no changes to existing models):
+**Quest Condition DSL (JSON stored in `Quest.bedingung`):**
 
-```prisma
-enum ChannelTyp {
-  AKTE_THREAD    // Bound to a specific Akte
-  KANZLEI        // General Kanzlei-wide channel
-}
+```typescript
+// Type definition for quest conditions
+type QuestBedingung = {
+  typ: 'COUNT' | 'ALL' | 'THRESHOLD' | 'COMPOSITE';
+  entity: 'frist' | 'wiedervorlage' | 'rechnung' | 'akte' | 'zeiterfassung' | 'email' | 'dokument';
+  filter: Record<string, unknown>;  // Prisma where clause fragment
+  operator: 'gte' | 'eq' | 'lte';
+  value: number;
+  qualifier?: 'WITH_VERMERK' | 'WITH_NEXT_STEP' | 'DOCUMENTED';  // Anti-abuse qualifiers
+  subConditions?: QuestBedingung[];  // For COMPOSITE type
+};
 
-model Channel {
-  id          String      @id @default(cuid())
-  name        String
-  typ         ChannelTyp
-  akteId      String?     // non-null for AKTE_THREAD
-  akte        Akte?       @relation(fields: [akteId], references: [id], onDelete: Cascade)
-  createdById String
-  createdBy   User        @relation(fields: [createdById], references: [id])
-  archived    Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  members     ChannelMember[]
-  messages    Message[]
+// Example: "Alle heutigen Fristen geprueft + Vermerk"
+const siegelDesTages: QuestBedingung = {
+  typ: 'ALL',
+  entity: 'frist',
+  filter: { ende: { gte: startOfToday, lte: endOfToday }, status: 'ERLEDIGT' },
+  operator: 'eq',
+  value: 0,  // 0 remaining = all done
+  qualifier: 'WITH_VERMERK',
+};
+```
 
-  @@unique([akteId]) // One thread per Akte (for AKTE_THREAD)
-  @@index([typ])
-  @@map("channels")
-}
+**Condition Evaluator (pure function, ~150 LOC):**
 
-model ChannelMember {
-  id          String    @id @default(cuid())
-  channelId   String
-  channel     Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lastReadAt  DateTime  @default(now())
-  joinedAt    DateTime  @default(now())
-
-  @@unique([channelId, userId])
-  @@index([userId])
-  @@map("channel_members")
-}
-
-model Message {
-  id          String    @id @default(cuid())
-  channelId   String
-  channel     Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  authorId    String
-  author      User      @relation(fields: [authorId], references: [id])
-  content     String    @db.Text
-  replyToId   String?
-  replyTo     Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
-  replies     Message[] @relation("MessageReplies")
-  mentions    Json?     // Array of mentioned userId strings
-  editedAt    DateTime?
-  deletedAt   DateTime? // Soft delete
-  createdAt   DateTime  @default(now())
-
-  @@index([channelId, createdAt])
-  @@index([authorId])
-  @@map("messages")
+```typescript
+async function evaluateQuestCondition(
+  bedingung: QuestBedingung,
+  userId: string,
+  today: Date
+): Promise<{ fulfilled: boolean; current: number; target: number }> {
+  // Map entity to Prisma model + apply filter + count/aggregate
+  // Return progress for UI display
 }
 ```
 
-**Confidence:** HIGH -- follows exact same patterns as `AktenActivity`, `Notification`, `ChatNachricht` models.
+**Why custom, not a library:** Gamification libraries (e.g., `gamify`, `node-gamification`) are either abandoned, too generic (badge systems without domain logic), or SaaS-dependent (Bunchball, Badgeville). The quest conditions here are tightly coupled to Prisma models (Frist, Wiedervorlage, Rechnung, Akte). A 150-LOC evaluator is simpler and more maintainable than adapting a generic framework.
 
-**Design decision: `@@unique([akteId])` on Channel for AKTE_THREAD type.** Each Akte gets exactly one discussion thread (auto-created on first message). This prevents thread sprawl and matches the Akte-centric UX. General KANZLEI channels have `akteId = null` and no uniqueness constraint on name (users can create freely).
+**Confidence:** HIGH -- same pattern as the rule-based complexity classifier in v0.2 (pure TypeScript function, no external dependency).
 
-#### Real-time Layer: Socket.IO rooms
+### 2. XP / Level / Streak Calculation (Pure Functions)
 
-Existing rooms:
-```
-user:{userId}     -- personal notifications (auto-joined)
-role:{ROLE}        -- role-based broadcasts (auto-joined)
-akte:{akteId}      -- case-specific updates (dynamic join/leave)
-mailbox:{kontoId}  -- email real-time updates (dynamic join/leave)
-```
+```typescript
+// Level thresholds -- exponential curve
+function xpForLevel(level: number): number {
+  return Math.floor(100 * Math.pow(1.15, level - 1));
+}
 
-New room:
-```
-channel:{channelId} -- messaging channel (dynamic join/leave)
-```
+function calculateLevel(totalXp: number): { level: number; xpInLevel: number; xpToNext: number } {
+  let level = 1;
+  let remaining = totalXp;
+  while (remaining >= xpForLevel(level + 1)) {
+    remaining -= xpForLevel(level + 1);
+    level++;
+  }
+  return {
+    level,
+    xpInLevel: remaining,
+    xpToNext: xpForLevel(level + 1),
+  };
+}
 
-Socket.IO events to add:
-
-| Event | Direction | Room Target | Payload |
-|---|---|---|---|
-| `message:new` | server -> client | `channel:{id}` | `{ id, channelId, authorId, authorName, content, replyToId, createdAt }` |
-| `message:update` | server -> client | `channel:{id}` | `{ id, content, editedAt }` |
-| `message:delete` | server -> client | `channel:{id}` | `{ id }` |
-| `typing:start` | client -> server -> client | `channel:{id}` | `{ userId, userName }` |
-| `typing:stop` | client -> server -> client | `channel:{id}` | `{ userId }` |
-| `channel:unread` | server -> client | `user:{userId}` | `{ channelId, unreadCount }` |
-| `join:channel` | client -> server | - | `channelId` |
-| `leave:channel` | client -> server | - | `channelId` |
-
-**Confidence:** HIGH -- `rooms.ts` already has `join:akte` / `leave:akte`. Add `join:channel` / `leave:channel` identically.
-
-#### Message Composer: Plain textarea (not TipTap)
-
-Use the `ActivityFeedComposer` pattern: `<textarea>` with Enter-to-send, Shift+Enter-for-newline, @-mention button. TipTap is available but overkill for internal messaging -- plain text with @mentions is faster to implement and matches Slack/Teams UX where rich formatting is secondary.
-
-**@User mentions: Extend existing regex pattern.** The existing `at-mention-parser.ts` uses `/@helena\s+([\s\S]+)/i`. Add a parallel `parseUserMentions(text): string[]` function that matches `@{name}` patterns against the user list. Store mentioned userIds in `Message.mentions` JSON field. Trigger notification for each mentioned user via existing `createNotification()`.
-
-**Confidence:** HIGH -- proven pattern from v0.2 ActivityFeedComposer.
-
-#### Unread Count: Database query + Socket.IO push
-
-```sql
--- Unread count per channel for a user
-SELECT c.id, COUNT(m.id)
-FROM channels c
-JOIN channel_members cm ON cm."channelId" = c.id AND cm."userId" = $1
-LEFT JOIN messages m ON m."channelId" = c.id
-  AND m."createdAt" > cm."lastReadAt"
-  AND m."deletedAt" IS NULL
-  AND m."authorId" != $1
-GROUP BY c.id
+// Streak bonus multiplier
+function streakMultiplier(streakTage: number): number {
+  if (streakTage >= 7) return 1.25;  // +25% Runen
+  if (streakTage >= 3) return 1.10;  // +10% Runen
+  return 1.0;
+}
 ```
 
-Push updated count to `user:{userId}` room after each new message. Client receives via `channel:unread` event.
+These are pure functions with zero dependencies. Test with Vitest (same as RVG calculation tests).
 
----
+**Confidence:** HIGH -- math functions, fully deterministic.
 
-### 2. SCAN-05 Neu-Urteil-Check
+### 3. Bossfight Real-Time Updates
 
-#### Processing: BullMQ post-processor hook on urteile-sync
+Bossfight HP changes use the existing Socket.IO broadcast pattern:
 
-SCAN-05 runs automatically after the daily urteile-sync job inserts new urteil_chunks. It inverts the existing search pattern: instead of searching urteil_chunks by query embedding (what `searchUrteilChunks()` does), it searches document_chunks using the urteil's embedding as the query vector.
+```typescript
+// After qualified Wiedervorlage completion:
+await prisma.bossfight.update({
+  where: { id: activeBossfight.id },
+  data: { aktuelleHp: { decrement: 1 }, phase: calculatePhase(newHp, maxHp) },
+});
 
-**Pipeline:**
-
-```
-urteile-sync processor (existing, runs daily at 03:00)
-  -> inserts N new urteil_chunks with embeddings
-  -> on completion: emit scan-05 job with { urteilIds: [...newly inserted] }
-
-scan-05 processor (NEW)
-  -> for each new urteil:
-     -> load urteil embedding from urteil_chunks
-     -> run pgvector search against ALL document_chunks (all open Akten)
-     -> filter results by cosine similarity threshold (default 0.72)
-     -> group results by akteId
-     -> for each relevant Akte:
-        -> create HelenaAlert(typ: NEUES_URTEIL, meta: { urteilId, aktenzeichen, gericht, datum, score })
-        -> create Notification for Akte Verantwortlicher
-        -> create AktenActivity(typ: HELENA_ALERT)
+// Broadcast to all users (role:* rooms)
+emitter.to('role:ADMIN').to('role:ANWALT').to('role:SACHBEARBEITER').to('role:SEKRETARIAT')
+  .emit('bossfight:damage', {
+    bossfightId: activeBossfight.id,
+    damage: 1,
+    newHp: newHp,
+    phase: calculatePhase(newHp, maxHp),
+    userId,
+    userName,
+  });
 ```
 
-**Key SQL query (new function: `searchDocumentChunksByUrteilEmbedding`):**
+No new infrastructure. The existing `@socket.io/redis-emitter` handles worker-to-browser broadcast.
 
-```sql
-SELECT
-  dc.id,
-  dc."dokumentId",
-  d.name AS dokument_name,
-  d."akteId",
-  a.aktenzeichen AS akte_aktenzeichen,
-  a."anwaltId",
-  1 - (dc.embedding <=> $1::vector) AS score
-FROM document_chunks dc
-JOIN dokumente d ON d.id = dc."dokumentId"
-JOIN akten a ON a.id = d."akteId"
-WHERE a.status = 'OFFEN'
-  AND dc."chunkType" != 'PARENT'
-  AND dc.embedding IS NOT NULL
-  AND 1 - (dc.embedding <=> $1::vector) > $2  -- threshold
-ORDER BY dc.embedding <=> $1::vector ASC
-LIMIT 50
+**Confidence:** HIGH -- identical pattern to `alert:new` and `message:new` broadcasts.
+
+### 4. BullMQ Cron Jobs (Quest Reset + Streak)
+
+Two new cron jobs using the established `upsertJobScheduler` pattern:
+
+```typescript
+// Daily at 00:05 -- reset daily quest progress, calculate streaks
+await gamificationQueue.upsertJobScheduler(
+  'quest-daily-reset',
+  { pattern: '5 0 * * *', tz: 'Europe/Berlin' },
+  { name: 'quest-daily-reset' }
+);
+
+// Weekly on Monday 00:10 -- reset weekly quests, calculate weekly rewards
+await gamificationQueue.upsertJobScheduler(
+  'quest-weekly-reset',
+  { pattern: '10 0 * * 1', tz: 'Europe/Berlin' },
+  { name: 'quest-weekly-reset' }
+);
 ```
 
-**Confidence:** HIGH -- all infrastructure exists. This is a new processor function using existing query patterns from `hybrid-search.ts` and `vector-store.ts`.
+The processor checks each user's quest completions from the previous day/week, updates streaks, and recalculates bossfight HP from actual Wiedervorlage counts.
 
-#### Alert deduplication
+**Confidence:** HIGH -- 8 cron jobs already running with this exact pattern.
 
-The existing scanner already has deduplication in `resolveStaleAlerts()`. SCAN-05 uses the same pattern: before creating an alert, check if a `HelenaAlert` with `typ: NEUES_URTEIL` and matching `meta.urteilId + akteId` already exists. Skip if found.
+### 5. Runen-Deckel (Anti-Abuse via Redis)
 
-#### Threshold tuning
+Daily Runen cap (max 40 from Wiedervorlagen) uses Redis INCR with midnight TTL:
 
-Use `SystemSetting` key `scanner.urteil_relevance_threshold` (default: 0.72). Configurable via admin settings UI (same pattern as `scanner.frist_threshold_hours`, `scanner.inaktiv_threshold_days`).
+```typescript
+async function canEarnRunen(userId: string, amount: number): Promise<number> {
+  const key = `runen:daily:${userId}`;
+  const current = await redis.get(key);
+  const earned = current ? parseInt(current) : 0;
+  const remaining = Math.max(0, 40 - earned);
+  const actual = Math.min(amount, remaining);
+  if (actual > 0) {
+    await redis.incrby(key, actual);
+    await redis.expireat(key, endOfDay());
+  }
+  return actual;
+}
+```
 
-**Why 0.72 default:** Legal document embeddings with `multilingual-e5-large-instruct` show cosine similarity ~0.6-0.7 for loosely related topics, ~0.75-0.85 for directly relevant content. 0.72 balances recall (catching relevant decisions) against noise (irrelevant alerts). This should be calibrated after initial deployment.
+No new dependency. ioredis (^5.9.3) already provides INCR, GET, EXPIREAT.
 
-#### Performance consideration
+**Confidence:** HIGH -- standard Redis counter pattern.
 
-For N new urteile x M open Akten, the naive per-Akte approach (N x M queries) is expensive. The recommended approach: one global query per urteil (search ALL document_chunks, filter by status='OFFEN'). With HNSW index, each query is O(log n) regardless of table size. Expected runtime: ~200ms per urteil (50 results per query). With 5-20 new urteile per day, total SCAN-05 runtime: 1-4 seconds.
+### 6. Celebration Effects (canvas-confetti)
 
----
+```typescript
+import confetti from 'canvas-confetti';
 
-### 3. Falldatenblaetter
+// Quest completion -- quick burst
+export function celebrateQuestComplete() {
+  confetti({
+    particleCount: 60,
+    spread: 55,
+    origin: { y: 0.7 },
+    colors: ['#10b981', '#f59e0b', '#6366f1'],  // emerald, amber, indigo
+  });
+}
 
-#### Existing Foundation
+// Level up -- full screen
+export function celebrateLevelUp() {
+  const duration = 2000;
+  const end = Date.now() + duration;
+  (function frame() {
+    confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
+    confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
 
-The Falldaten system is already built and working:
+// Bossfight defeat -- explosion
+export function celebrateBossfightDefeat() {
+  confetti({
+    particleCount: 200,
+    spread: 160,
+    startVelocity: 45,
+    origin: { y: 0.5 },
+  });
+}
+```
 
-| Component | Location | Status |
+canvas-confetti is 6.3 kB gzipped, zero dependencies, uses a single `<canvas>` overlay. It self-cleans after animation completes. Works with `prefers-reduced-motion` (skip the call when `useReducedMotion()` returns true, already used in `GlassKpiCard`).
+
+**Confidence:** HIGH -- canvas-confetti is the de facto standard for web celebration effects (295 dependents, 6.8k GitHub stars, actively maintained, last publish 4 months ago).
+
+### 7. Progress Bars (shadcn/ui Progress)
+
+XP bar, bossfight HP bar, and quest progress indicators all need a styled, accessible progress bar. The shadcn/ui Progress component wraps `@radix-ui/react-progress` and integrates with the existing Tailwind + glass design system.
+
+```tsx
+// XP Progress Bar with animated fill
+import { Progress } from '@/components/ui/progress';
+
+function XpBar({ xpInLevel, xpToNext }: { xpInLevel: number; xpToNext: number }) {
+  const percentage = Math.round((xpInLevel / xpToNext) * 100);
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs text-muted-foreground">
+        <span>{xpInLevel} XP</span>
+        <span>{xpToNext} XP</span>
+      </div>
+      <Progress value={percentage} className="h-2 bg-muted/50" />
+    </div>
+  );
+}
+
+// Bossfight HP Bar with color phases
+function BossfightHpBar({ hp, maxHp, phase }: { hp: number; maxHp: number; phase: number }) {
+  const percentage = Math.round((hp / maxHp) * 100);
+  const phaseColor = phase >= 3 ? 'bg-rose-500' : phase >= 2 ? 'bg-amber-500' : 'bg-emerald-500';
+  return (
+    <Progress
+      value={percentage}
+      className="h-3"
+      indicatorClassName={phaseColor}
+    />
+  );
+}
+```
+
+The shadcn/ui Progress component produces `src/components/ui/progress.tsx` which integrates with existing `glass-card`, `glass-panel` wrappers. The animated fill uses CSS transitions (or Motion/React `animate` for spring physics on the width).
+
+**Confidence:** HIGH -- `@radix-ui/react-progress` is part of the Radix ecosystem already in the project (6 Radix packages installed). shadcn/ui Progress is one of the most commonly added components.
+
+### 8. Empty States Pattern (Reusable Component)
+
+No new dependency. Build a reusable `EmptyState` component using existing Lucide icons and Tailwind:
+
+```tsx
+interface EmptyStateProps {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  actions?: Array<{
+    label: string;
+    onClick?: () => void;
+    href?: string;
+    variant?: 'default' | 'outline';
+  }>;
+}
+
+function EmptyState({ icon: Icon, title, description, actions }: EmptyStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-4">
+        <Icon className="w-6 h-6 text-muted-foreground" />
+      </div>
+      <h3 className="text-sm font-medium text-foreground mb-1">{title}</h3>
+      <p className="text-sm text-muted-foreground max-w-sm mb-4">{description}</p>
+      {actions && (
+        <div className="flex gap-2">
+          {actions.map((action) => (
+            <Button key={action.label} variant={action.variant || 'outline'} size="sm" ...>
+              {action.label}
+            </Button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+The `email-empty-state.tsx` already exists as a pattern. This generalizes it.
+
+**Confidence:** HIGH -- pure UI component using existing Tailwind + shadcn/ui Button.
+
+### 9. Clickable KPI Cards (Extend Existing Component)
+
+The existing `GlassKpiCard` component needs an `onClick` or `href` prop. This is a ~10 LOC change to the existing component:
+
+```tsx
+interface GlassKpiCardProps {
+  // ... existing props
+  onClick?: () => void;  // NEW
+  href?: string;         // NEW
+}
+
+// Wrap in <button> or Next.js <Link> when onClick/href is provided
+```
+
+No new dependency. Extend existing `src/components/ui/glass-kpi-card.tsx`.
+
+**Confidence:** HIGH -- trivial component extension.
+
+### 10. OCR Recovery Flow (Existing Infrastructure)
+
+The OCR recovery flow uses existing infrastructure:
+
+| Recovery Option | Technology | Already Available |
 |---|---|---|
-| `FalldatenSchema` type | `src/lib/falldaten-schemas.ts` | 7 field types, grouping, options |
-| `FalldatenForm` component | `src/components/akten/falldaten-form.tsx` | Dynamic renderer for any schema |
-| `Akte.falldaten` JSON column | `prisma/schema.prisma` | Per-Akte case data storage |
-| `falldatenSchemas` registry | `src/lib/falldaten-schemas.ts` | 10 hardcoded schemas (Arbeitsrecht, Familienrecht, etc.) |
-| Sachgebiet enum | `prisma/schema.prisma` | 10 legal areas |
+| Retry OCR | BullMQ queue re-add to `ocr` queue | YES -- same as existing retry icon |
+| Vision Analysis | Vercel AI SDK v4 `generateText()` with image attachment | YES -- AI SDK supports image inputs. Use GPT-4o or Claude for image-to-text. |
+| Manual Input | Plain textarea form, save to `Dokument.ocrText` | YES -- Prisma update |
 
-#### What Changes for v0.3
+No new dependencies. The Vision Analysis path uses the existing multi-provider AI SDK setup with an image URL (presigned MinIO URL) passed as a user message attachment.
 
-**1. Move schemas from code to DB:**
-
-New `FalldatenTemplate` model replaces the hardcoded `falldatenSchemas` record:
-
-```prisma
-enum FalldatenTemplateStatus {
-  ENTWURF       // User draft (only visible to creator)
-  EINGEREICHT   // Submitted for admin review
-  GENEHMIGT     // Admin approved (visible to all)
-  ABGELEHNT     // Admin rejected (with reason)
-}
-
-model FalldatenTemplate {
-  id            String                   @id @default(cuid())
-  sachgebiet    String                   // Free-text, not bound to Sachgebiet enum
-  label         String
-  beschreibung  String?
-  schema        Json                     // FalldatenSchema JSON (validated by Zod)
-  status        FalldatenTemplateStatus  @default(ENTWURF)
-  isDefault     Boolean                  @default(false) // Pre-seeded system templates
-  createdById   String
-  createdBy     User                     @relation(fields: [createdById], references: [id])
-  reviewedById  String?
-  reviewedBy    User?                    @relation("TemplateReviewer", fields: [reviewedById], references: [id])
-  reviewNote    String?                  // Admin feedback on rejection
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
-
-  @@index([sachgebiet, status])
-  @@index([status])
-  @@map("falldaten_templates")
-}
-```
-
-**Seed migration:** Copy 10 existing hardcoded schemas from `falldatenSchemas` into `FalldatenTemplate` rows with `status: GENEHMIGT` and `isDefault: true`. The hardcoded file remains as fallback.
-
-**2. Community workflow:**
-
-| Action | Who | From Status | To Status |
-|---|---|---|---|
-| Create template | Any user | - | ENTWURF |
-| Edit template | Creator | ENTWURF | ENTWURF |
-| Submit for review | Creator | ENTWURF | EINGEREICHT |
-| Approve | ADMIN | EINGEREICHT | GENEHMIGT |
-| Reject (with note) | ADMIN | EINGEREICHT | ABGELEHNT |
-| Resubmit | Creator | ABGELEHNT | EINGEREICHT |
-
-**3. Schema validation with Zod:**
-
-When loading user-created templates from DB, validate JSON structure before rendering:
-
-```typescript
-const FalldatenSchemaValidator = z.object({
-  sachgebiet: z.string(),
-  label: z.string(),
-  beschreibung: z.string(),
-  felder: z.array(z.object({
-    key: z.string().regex(/^[a-zA-Z][a-zA-Z0-9_]*$/), // Safe JS key
-    label: z.string(),
-    typ: z.enum(["text", "textarea", "number", "date", "select", "boolean", "currency"]),
-    placeholder: z.string().optional(),
-    optionen: z.array(z.object({
-      value: z.string(),
-      label: z.string(),
-    })).optional(),
-    required: z.boolean().optional(),
-    gruppe: z.string().optional(),
-  })),
-});
-```
-
-**4. Helena auto-fill:**
-
-Use `generateObject()` (Vercel AI SDK v4) with Akte context to extract structured data:
-
-```typescript
-const filledData = await generateObject({
-  model: getModel(),
-  schema: dynamicZodFromFalldatenSchema(template.schema),
-  system: "Extract case data from the provided documents and party information.",
-  prompt: buildAutoFillPrompt(akteContext, template.schema),
-});
-```
-
-The `dynamicZodFromFalldatenSchema()` function converts a `FalldatenSchema` into a Zod schema at runtime. Each field type maps directly:
-
-| FalldatenFeldTyp | Zod Type |
-|---|---|
-| text | `z.string().optional()` |
-| textarea | `z.string().optional()` |
-| number | `z.number().optional()` |
-| date | `z.string().optional()` |
-| select | `z.enum([...optionen.values]).optional()` |
-| boolean | `z.boolean().optional()` |
-| currency | `z.number().optional()` |
-
-Returns partial fill -- all fields optional. User reviews and confirms in existing `FalldatenForm`.
-
-**5. Helena template suggestion:**
-
-When Helena's background scanner detects a case pattern (e.g., new Arbeitsrecht Akte with Kuendigung-related documents but no Falldatenblatt filled), create a `HelenaAlert` suggesting the user fill the appropriate template. This uses the existing alert system -- no new infrastructure.
-
-**Confidence:** HIGH -- the entire type system, form renderer, and JSON storage already exist. The change is storage location (code -> DB) and access control.
+**Confidence:** HIGH for retry and manual. MEDIUM for Vision Analysis -- the AI SDK image input pattern needs testing with the MinIO presigned URL workflow, but the capability exists in AI SDK v4.
 
 ---
 
@@ -381,200 +398,129 @@ When Helena's background scanner detects a case pattern (e.g., new Arbeitsrecht 
 
 | Model | Fields (approx.) | Purpose |
 |---|---|---|
-| `Channel` | ~10 | Messaging channels (Akte threads + Kanzlei-wide) |
-| `ChannelMember` | ~5 | Channel membership with lastReadAt |
-| `Message` | ~10 | Chat messages with replies, mentions, soft delete |
-| `FalldatenTemplate` | ~12 | DB-stored case data schemas with approval workflow |
+| `UserGameProfile` | ~10 | XP, level, Runen, streak, class per user |
+| `Quest` | ~10 | Quest definition with JSON condition, rewards, class filter |
+| `QuestCompletion` | ~7 | Track which user completed which quest when, audit flag |
+| `Bossfight` | ~8 | Active team challenge, HP tracking, phase progression |
+| `BossfightDamage` | ~5 | Per-user damage log for team dashboard attribution |
+| `ShopItem` | ~8 | Item definitions (cosmetic, comfort, trophy) with rarity/price |
+| `InventarItem` | ~5 | User's purchased/earned items |
 
 ### New Enums
 
 | Enum | Values |
 |---|---|
-| `ChannelTyp` | AKTE_THREAD, KANZLEI |
-| `FalldatenTemplateStatus` | ENTWURF, EINGEREICHT, GENEHMIGT, ABGELEHNT |
+| `Klasse` | JURIST, SCHREIBER, WAECHTER, QUARTIERMEISTER |
+| `QuestTyp` | DAILY, WEEKLY, SPECIAL, BOSSFIGHT |
+| `ItemTyp` | RELIKT (cosmetic), ARTEFAKT (comfort perk), TROPHAEE (prestige) |
+| `ItemRarität` | COMMON, RARE, EPIC, LEGENDARY |
 
-### Extended Enums
+### Relation to Existing Models
 
-| Enum | New Value | Purpose |
-|---|---|---|
-| `AktenActivityTyp` | `NACHRICHT` | Message posted in Akte thread appears in activity feed |
-
-### No Changes to Existing Models
-
-`HelenaAlertTyp.NEUES_URTEIL` already exists. No changes to User, Akte, HelenaAlert, or any other existing model.
-
----
-
-## API Routes Summary
-
-### Messaging
-
-```
-POST   /api/channels                         -- Create channel (KANZLEI only; AKTE_THREAD auto-created)
-GET    /api/channels                         -- List user's channels with unread counts
-GET    /api/channels/[id]                    -- Channel detail with members
-GET    /api/channels/[id]/messages           -- Paginated messages (cursor-based)
-POST   /api/channels/[id]/messages           -- Send message (+ @mention notification + Socket.IO)
-PATCH  /api/channels/[id]/messages/[msgId]   -- Edit message (author only)
-DELETE /api/channels/[id]/messages/[msgId]   -- Soft-delete message (author or ADMIN)
-POST   /api/channels/[id]/read              -- Mark channel as read (update lastReadAt)
-GET    /api/channels/unread                  -- All unread counts for sidebar badge
-```
-
-### Falldatenblaetter
-
-```
-GET    /api/falldaten-templates              -- List templates (filter: status, sachgebiet)
-POST   /api/falldaten-templates              -- Create template (any user)
-GET    /api/falldaten-templates/[id]         -- Template detail
-PATCH  /api/falldaten-templates/[id]         -- Update template (creator, ENTWURF only)
-POST   /api/falldaten-templates/[id]/submit  -- Submit for review (creator)
-POST   /api/falldaten-templates/[id]/approve -- Approve (ADMIN only)
-POST   /api/falldaten-templates/[id]/reject  -- Reject with note (ADMIN only)
-POST   /api/akten/[id]/falldaten/auto-fill   -- Helena auto-fill (triggers generateObject)
-```
-
-### SCAN-05
-
-No new API routes. Runs in existing worker, creates alerts via existing `HelenaAlert` + `Notification` system.
-
----
-
-## Worker Changes Summary
-
-### SCAN-05 processor
-
-```typescript
-// In worker.ts -- add post-sync hook on urteile-sync completion:
-urteileSyncWorker.on("completed", async (job) => {
-  // ... existing logging ...
-  if (job.returnvalue?.inserted > 0) {
-    await scan05Queue.add("scan-05", {
-      insertedCount: job.returnvalue.inserted,
-    });
-  }
-});
-
-// New scan-05 worker (concurrency: 1, same pattern as scanner)
-const scan05Worker = new Worker("scan-05", async () => {
-  return processScan05();
-}, {
-  connection,
-  concurrency: 1,
-  settings: {
-    backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
-  },
-});
-```
-
-### No other worker changes
-
-Messaging is synchronous (API route -> Prisma -> Socket.IO emit). No BullMQ jobs needed for message delivery.
-
----
-
-## Socket.IO Room Changes
-
-```typescript
-// In rooms.ts -- add channel room management:
-socket.on("join:channel", (channelId: string) => {
-  if (!channelId || typeof channelId !== "string") return;
-  socket.join(`channel:${channelId}`);
-  log.debug({ userId, channelId }, "Joined channel room");
-});
-
-socket.on("leave:channel", (channelId: string) => {
-  if (!channelId || typeof channelId !== "string") return;
-  socket.leave(`channel:${channelId}`);
-  log.debug({ userId, channelId }, "Left channel room");
-});
-```
-
----
-
-## UI Component Inventory
-
-### Messaging (new page: `/dashboard/nachrichten`)
-
-```
-src/components/messaging/channel-sidebar.tsx     -- Channel list with unread badges
-src/components/messaging/channel-view.tsx         -- Message thread view (scrollable)
-src/components/messaging/message-item.tsx          -- Single message bubble
-src/components/messaging/message-composer.tsx      -- Textarea with Enter-to-send, @mention
-src/components/messaging/typing-indicator.tsx      -- "User tippt..." indicator
-src/app/(dashboard)/nachrichten/page.tsx           -- Main messaging page
-src/app/(dashboard)/nachrichten/layout.tsx         -- Split layout (sidebar + thread)
-```
-
-### Messaging in Akte Detail (embedded)
-
-```
-src/components/akten/akte-thread.tsx              -- Akte discussion thread (uses Channel with typ=AKTE_THREAD)
-```
-
-This component embeds in the existing Akte detail page as a new feed type alongside the existing activity feed. The AKTE_THREAD channel is auto-created on first message.
-
-### Falldatenblaetter (extend existing)
-
-```
-src/components/falldaten/template-editor.tsx       -- Visual schema builder (add/remove/reorder fields)
-src/components/falldaten/template-list.tsx          -- Template management page
-src/components/falldaten/template-review.tsx        -- Admin review panel (approve/reject)
-src/components/falldaten/auto-fill-button.tsx       -- Helena auto-fill trigger button
-src/app/(dashboard)/admin/falldaten-templates/page.tsx  -- Admin template management
-```
-
-### SCAN-05 (zero new components)
-
-The existing `AlertCenter`, `AkteAlertsSection`, and notification system already handle `NEUES_URTEIL` alerts. The only addition is populating the `meta` JSON field with urteil details (Aktenzeichen, Gericht, Datum, relevance score) so the existing alert UI can display them.
+`UserGameProfile.userId` references `User.id` (one-to-one). No changes to existing models. The quest condition evaluator reads existing tables (Frist, Wiedervorlage, Rechnung, Akte, Zeiterfassung) via Prisma queries -- it does not modify them.
 
 ---
 
 ## Alternatives Considered
 
-| Category | Decision | Alternative | Why Not |
-|---|---|---|---|
-| Real-time messaging | Socket.IO (existing) | Server-Sent Events | Socket.IO already handles bidirectional comms, rooms, auth. SSE is one-way only. |
-| Real-time messaging | Socket.IO (existing) | Pusher / Ably / Stream Chat | Contradicts self-hosted-first constraint. Socket.IO + Redis adapter already provides horizontal scaling. |
-| Message storage | PostgreSQL (Prisma) | Redis Streams | Messages need persistence, relations (replies, mentions, channels), RBAC, soft-delete. Postgres is the right choice. |
-| Message composer | Plain textarea | TipTap with Mention extension | @tiptap/extension-mention is NOT installed. Regex-based @mention parsing on submit is proven (v0.2 pattern). TipTap adds autocomplete dropdown complexity for limited value in internal messaging. |
-| @Mention autocomplete | Regex on submit | TipTap Mention extension | Would require installing `@tiptap/extension-mention` + `@tiptap/suggestion`. Regex parsing is 10 LOC vs new dependency + suggestion popup component. Can upgrade later. |
-| Client state management | React Context + useState | Zustand / Jotai / React Query | No global state library exists in the codebase. Adding one for messaging creates two state management patterns. Context + local state is the established approach. |
-| Falldaten schemas | DB-stored JSON + Zod | JSON Schema draft-07 + ajv | FalldatenSchema type is simpler than JSON Schema. Zod validates at runtime without heavyweight JSON Schema specification. |
-| Falldaten form builder | Custom field editor | React JSON Schema Form | Would require `@rjsf/core` + UI adapter. The existing `FalldatenForm` is 237 LOC and renders all 7 field types. A template editor is an extension of this, not a new form framework. |
-| SCAN-05 trigger | Post-sync hook (event-driven) | Separate daily cron | Running immediately after new urteile arrive is more timely. Separate cron would create a 24h delay between ingestion and alerting. |
-| SCAN-05 search | Global document_chunks query per urteil | Per-Akte iteration | One pgvector query per urteil (LIMIT 50, threshold filter) is O(log n). Per-Akte iteration would be O(m * log n). Global + group-by is faster and simpler. |
-| Helena auto-fill | generateObject with dynamic Zod schema | Free-form text extraction + regex parsing | Structured output via generateObject guarantees type-safe results that map directly to FalldatenSchema fields. Regex parsing is fragile for varied legal documents. |
+| Recommended | Alternative | When to Use Alternative |
+|---|---|---|
+| Custom quest evaluator (~150 LOC) | `gamification-engine` npm packages | Never for this project. No package understands legal workflow entities (Frist, Wiedervorlage, Rechnung). Custom evaluator is tightly coupled to Prisma schema. |
+| `canvas-confetti` (6.3 kB) | `react-confetti` / `@tsparticles/confetti` | `react-confetti` renders confetti filling the entire viewport (not targeted bursts). `@tsparticles` is 50+ kB for a particle engine we use once. canvas-confetti is the right size. |
+| `canvas-confetti` (6.3 kB) | Lottie animations (lottie-react) | Lottie requires designing/sourcing JSON animation files. canvas-confetti is code-configured, no asset pipeline. For 3 celebration types, confetti is simpler. |
+| `canvas-confetti` (6.3 kB) | CSS-only animations | CSS cannot produce realistic particle physics (random spread, gravity, rotation). canvas-confetti does this in 6 kB. |
+| `@radix-ui/react-progress` (via shadcn/ui) | Custom SVG circular progress | Circular looks nice but XP bars and HP bars are traditionally linear. Linear progress is more readable at a glance. shadcn/ui gives us accessible, styled, zero-effort. |
+| `@radix-ui/react-progress` (via shadcn/ui) | HTML `<progress>` element | Unstylable in Safari/Firefox. Radix gives full CSS control + aria attributes. |
+| Redis INCR for Runen-Deckel | Prisma daily aggregate query | Redis INCR is O(1) vs Prisma COUNT which requires a DB round-trip with date filter. For a high-frequency check (every quest completion), Redis wins. |
+| BullMQ cron for daily reset | `node-cron` / `cron` npm | BullMQ already runs 8 cron jobs. Adding a separate cron library creates two scheduling systems. Use the established pattern. |
+| JSON DSL for quest conditions | Hardcoded TypeScript functions per quest | JSON DSL is stored in DB, enabling admin-created quests (Phase 2+) without code deploys. TypeScript functions would require redeployment for every new quest. |
+| Motion/React for UI animations | GSAP / react-spring / anime.js | Motion/React is already installed and used throughout. No reason to add a second animation library. |
+| Socket.IO broadcast for bossfight | HTTP polling | Real-time damage display is the "wow factor" of the bossfight. Polling every 5s would miss the moment. Socket.IO is already connected on every client. |
 
 ---
 
 ## What NOT to Add
 
-| Package/Technology | Why NOT | Use Instead |
+| Avoid | Why | Use Instead |
 |---|---|---|
-| `@tiptap/extension-mention` | Not installed. Regex @mention parsing is proven, simpler, and matches v0.2 pattern. | `parseUserMentions()` regex function |
-| `pusher` / `ably` / `stream-chat` | Cloud services, violates self-hosted constraint | Socket.IO + Redis adapter (existing) |
-| `@tanstack/react-query` | Not in codebase. Adding a query library creates two data-fetching patterns. | `fetch()` + `useEffect` + `router.refresh()` (existing pattern) |
-| `ajv` / JSON Schema validators | Overkill. FalldatenSchema is a simple type, not JSON Schema draft-07. | Zod runtime validation (existing) |
-| `slate` / `lexical` / `quill` | TipTap already installed. No reason for competing editor. | TipTap if rich text needed; plain textarea for messaging |
-| `zustand` / `jotai` | No global state management exists. Adding one mid-project is disruptive. | React Context + useState (existing pattern) |
-| `socket.io-msgpack-parser` | Binary encoding optimization for high-throughput. A Kanzlei has <20 concurrent users. | Default JSON parser (existing) |
-| Any new Docker service | 9 services is already complex. All features run on existing infrastructure. | PostgreSQL, Redis, existing services |
+| `gamify` / `node-gamification` / any gamification npm | Abandoned or too generic. None understand Prisma or legal domain entities. | Custom quest evaluator (~150 LOC) + Prisma queries |
+| `@tsparticles/engine` | 50+ kB for a full particle system. We need confetti bursts, not a particle engine. | `canvas-confetti` (6.3 kB) |
+| `lottie-react` / `@lottiefiles/react` | Requires JSON animation assets. No asset pipeline exists. canvas-confetti is code-only. | `canvas-confetti` for celebrations, Motion/React for transitions |
+| `react-spring` / `gsap` / `anime.js` | Motion/React v12 is already installed and used in 10+ components. Adding a second animation library is wasteful. | `motion/react` (existing) |
+| `zustand` / `jotai` / React Query | No global state management exists in the codebase. Game state (profile, quests) is fetched per-page via `fetch()` + `useEffect`, same as all other data. | React state + `fetch()` + `router.refresh()` (existing pattern) |
+| `node-cron` / `cron` npm | BullMQ already handles all cron scheduling with `upsertJobScheduler`. Adding a second scheduler creates confusion. | BullMQ repeatable jobs (existing) |
+| `recharts` / `chart.js` / `d3` | Team dashboard uses simple aggregate numbers (Erfuellungsquote, Backlog-Delta), not complex charts. A table or GlassKpiCards suffice for 5 users. If charts are ever needed, defer to a future milestone. | Tables + GlassKpiCard + Progress bars |
+| External gamification SaaS (Bunchball, Mambo.io) | Violates self-hosted constraint. The gamification logic is deeply coupled to Prisma data. | Custom engine |
+| `@radix-ui/react-slider` | Slider is for user input (e.g., volume control). Progress bars show read-only values. Different component. | `@radix-ui/react-progress` |
+| Database-level computed columns | PostgreSQL computed columns cannot call Prisma. XP/Level calculation stays in application code. | TypeScript pure functions |
 
 ---
 
-## Installation
+## Stack Patterns by Feature Area
 
-```bash
-# No new packages to install.
-# After Prisma schema changes:
-npx prisma migrate dev --name v03-messaging-falldaten-templates
-npx prisma generate
+**Gamification Dashboard Widget:**
+- Glass design: `glass-card` wrapper + oklch tokens (existing)
+- XP bar: `<Progress>` (new) + Motion/React `animate` for spring-fill
+- Quest list: `map()` over daily quests with completion checkmarks
+- Bossfight banner: `<Progress>` for HP + Socket.IO listener for real-time damage
 
-# Seed existing Falldaten schemas into FalldatenTemplate table:
-npx prisma db seed
-# (Add seed logic in prisma/seed.ts to import from falldaten-schemas.ts)
-```
+**Quest Completion Flow:**
+- User completes work (e.g., marks Frist as ERLEDIGT with Vermerk)
+- API route checks quest conditions → if fulfilled, creates `QuestCompletion`
+- Awards XP + Runen (with streak multiplier + Runen cap check)
+- Socket.IO push `quest:completed` to `user:{userId}`
+- Client shows toast (Sonner) + confetti (canvas-confetti)
+- If bossfight active: decrement HP + broadcast `bossfight:damage`
+
+**Level Up Flow:**
+- `calculateLevel(newTotalXp)` detects level change
+- Socket.IO push `level:up` to `user:{userId}`
+- Client shows full-screen confetti + Motion/React scale animation on level badge
+- No gameplay impact (levels are prestige, not gating)
+
+**Item Shop:**
+- Server-side Runen deduction + InventarItem creation (transactional)
+- Prisma `$transaction` ensures atomic purchase
+- No real currency, no payment integration, no external service
+
+---
+
+## Version Compatibility
+
+| Package | Compatible With | Notes |
+|---|---|---|
+| `canvas-confetti@^1.9.4` | Any React version, any browser | Pure canvas API, no React dependency. Import as ES module. |
+| `@types/canvas-confetti@^1.9.0` | `canvas-confetti@^1.9.x` | Types are from DefinitelyTyped, not bundled in the package |
+| `@radix-ui/react-progress@^1.1.0` | React 18, existing Radix packages (^1.1.x range) | Same Radix version family as react-avatar (^1.1.2), react-tooltip (^1.1.6) |
+| Motion/React ^12.34.3 (existing) | All new components | No version change needed. Already at latest. |
+| Prisma ^5.22.0 (existing) | New models follow same patterns | No version change needed. Json type, enums, relations all proven. |
+| BullMQ ^5.70.1 (existing) | New cron jobs | No version change needed. `upsertJobScheduler` available since 5.16.0. |
+
+---
+
+## Socket.IO Events (New)
+
+| Event | Direction | Room Target | Payload |
+|---|---|---|---|
+| `quest:completed` | server -> client | `user:{userId}` | `{ questId, questName, xpEarned, runenEarned, newTotalXp, newLevel? }` |
+| `quest:progress` | server -> client | `user:{userId}` | `{ questId, current, target }` |
+| `level:up` | server -> client | `user:{userId}` | `{ newLevel, title }` |
+| `bossfight:damage` | server -> client | all role rooms | `{ bossfightId, damage, newHp, maxHp, phase, userId, userName }` |
+| `bossfight:phaseChange` | server -> client | all role rooms | `{ bossfightId, newPhase, bonusActive }` |
+| `bossfight:defeated` | server -> client | all role rooms | `{ bossfightId, name }` |
+| `streak:update` | server -> client | `user:{userId}` | `{ streakTage, multiplier }` |
+
+---
+
+## BullMQ Queues (New)
+
+| Queue | Schedule | Processor Logic |
+|---|---|---|
+| `gamification` (daily reset) | `5 0 * * *` Europe/Berlin | For each user: evaluate yesterday's core quests, update streak (increment or reset), clear daily Runen counter in Redis |
+| `gamification` (weekly reset) | `10 0 * * 1` Europe/Berlin | For each user: evaluate last week's weekly quests, award weekly bonuses |
+| `gamification` (bossfight sync) | `0 3 * * *` Europe/Berlin | Recalculate bossfight HP from actual Wiedervorlage count (anti-drift, ensures HP matches reality) |
+
+All three use the same `gamification` queue with different job names, following the pattern of `fristReminderQueue` handling multiple job types.
 
 ---
 
@@ -582,38 +528,42 @@ npx prisma db seed
 
 | Area | Confidence | Reason |
 |---|---|---|
-| Messaging stack | HIGH | Socket.IO rooms, Prisma models, textarea composer -- all validated patterns from v0.2 |
-| SCAN-05 stack | HIGH | pgvector search, BullMQ processor, HelenaAlert (NEUES_URTEIL already in enum) -- all existing infrastructure |
-| Falldatenblaetter stack | HIGH | FalldatenSchema type system + FalldatenForm component already exist. Change is storage (code -> DB) + access control. |
-| Zero new packages | HIGH | Verified every capability against 80+ installed dependencies in package.json |
+| Quest engine (custom evaluator) | HIGH | Pure TypeScript, same pattern as v0.2 complexity classifier. JSON DSL + Prisma queries. |
+| XP/Level/Streak math | HIGH | Pure functions, fully testable, no external dependency |
+| canvas-confetti | HIGH | 6.8k stars, actively maintained, 1.9.4 stable, zero deps, 6.3 kB gzipped |
+| @radix-ui/react-progress | HIGH | Part of Radix ecosystem (6 Radix packages already installed), shadcn/ui component |
+| BullMQ cron for resets | HIGH | 8 cron jobs already use identical pattern |
+| Socket.IO for real-time | HIGH | 7+ event types already use identical broadcast pattern |
+| Redis Runen cap | HIGH | Standard INCR + EXPIRE pattern, ioredis already available |
+| Empty states component | HIGH | Pure UI, extends existing `email-empty-state.tsx` pattern |
+| Clickable KPI cards | HIGH | ~10 LOC change to existing component |
+| OCR Vision fallback | MEDIUM | AI SDK v4 supports image inputs, but MinIO presigned URL -> AI provider image path not yet tested |
+| Bossfight real-time | HIGH | Socket.IO broadcast to role rooms, identical to alert broadcasts |
+| Item Shop transactions | HIGH | Prisma `$transaction` for atomic Runen deduction + item creation |
 
 ---
 
 ## Sources
 
+- [canvas-confetti npm](https://www.npmjs.com/package/canvas-confetti) -- version 1.9.4, 6.3 kB gzipped, zero dependencies
+- [canvas-confetti GitHub](https://github.com/catdad/canvas-confetti) -- 6.8k stars, actively maintained
+- [@types/canvas-confetti npm](https://www.npmjs.com/package/@types/canvas-confetti) -- version 1.9.0, DefinitelyTyped
+- [shadcn/ui Progress component](https://ui.shadcn.com/docs/components/radix/progress) -- wraps @radix-ui/react-progress
+- [Radix UI Progress](https://www.radix-ui.com/primitives/docs/components/progress) -- accessible progress indicator
+- [BullMQ Job Schedulers](https://docs.bullmq.io/guide/job-schedulers) -- upsertJobScheduler pattern (v5.16.0+)
+- [BullMQ Repeat Options](https://docs.bullmq.io/guide/job-schedulers/repeat-options) -- cron pattern format
+- [Motion for React](https://motion.dev/docs/react) -- v12 stable, no breaking changes from v11
 - Codebase analysis (all HIGH confidence):
-  - `src/lib/socket/server.ts` -- Socket.IO setup with Redis adapter
-  - `src/lib/socket/rooms.ts` -- Room management patterns (user, role, akte, mailbox)
-  - `src/lib/socket/emitter.ts` -- Redis emitter for worker-to-browser push
-  - `src/components/socket-provider.tsx` -- Client Socket.IO connection
-  - `src/lib/embedding/vector-store.ts` -- pgvector search with cross-Akte support
-  - `src/lib/embedding/hybrid-search.ts` -- Hybrid BM25 + pgvector with RRF
-  - `src/lib/embedding/embedder.ts` -- Ollama embedding generation
-  - `src/lib/urteile/ingestion.ts` -- Urteil ingestion with embedding + PII gate
-  - `src/lib/queue/processors/urteile-sync.processor.ts` -- Daily RSS sync
-  - `src/workers/processors/scanner.ts` -- Background scanner pattern
-  - `src/lib/helena/tools/_write/create-alert.ts` -- Alert creation with NEUES_URTEIL type
-  - `src/lib/notifications/service.ts` -- Notification creation + Socket.IO push
-  - `src/lib/falldaten-schemas.ts` -- Complete schema type system (10 schemas, 7 field types)
-  - `src/components/akten/falldaten-form.tsx` -- Dynamic form renderer
-  - `src/components/akten/activity-feed-composer.tsx` -- Textarea composer with @Helena
-  - `src/lib/helena/at-mention-parser.ts` -- Regex @mention parsing
-  - `src/worker.ts` -- 16 BullMQ workers, startup, graceful shutdown
-  - `prisma/schema.prisma` -- 70+ models, HelenaAlert with NEUES_URTEIL enum
-  - `package.json` -- Full dependency list (80+ packages)
-- v0.2 precedent: "Zero new npm packages" decision validated successful
+  - `package.json` -- full dependency audit, confirmed 2 missing packages
+  - `src/components/ui/glass-kpi-card.tsx` -- existing KPI card with Motion/React count-up
+  - `src/components/email/email-empty-state.tsx` -- existing empty state pattern
+  - `src/lib/queue/queues.ts` -- 8 `upsertJobScheduler` calls, established cron pattern
+  - `src/worker.ts` -- 16+ BullMQ workers, startup/shutdown patterns
+  - `src/lib/socket/rooms.ts` -- room join/leave patterns
+  - `src/lib/socket/emitter.ts` -- Redis emitter for worker-to-browser broadcast
+  - `prisma/schema.prisma` -- 80+ models, Json type usage, enum patterns
 
 ---
 
-*Stack research for: AI-Lawyer v0.3 -- Kanzlei-Collaboration (Internes Messaging, SCAN-05, Falldatenblaetter)*
-*Researched: 2026-02-28*
+*Stack research for: AI-Lawyer v0.4 -- Gamification + Quick Wins*
+*Researched: 2026-03-02*

@@ -257,6 +257,26 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     category: "bea",
     label: "beA-Integration aktiviert",
   },
+
+  // Gamification category
+  {
+    key: "gamification.boss.threshold",
+    value: "30",
+    type: "number",
+    category: "gamification",
+    label: "Boss-Schwellenwert (offene Wiedervorlagen)",
+    min: 5,
+    max: 200,
+  },
+  {
+    key: "gamification.boss.cooldownHours",
+    value: "24",
+    type: "number",
+    category: "gamification",
+    label: "Boss-Abklingzeit (Stunden nach Sieg)",
+    min: 1,
+    max: 168,
+  },
 ];
 
 /** Category display labels (German) */
@@ -269,4 +289,5 @@ export const CATEGORY_LABELS: Record<string, string> = {
   ai: "KI / Helena",
   scanner: "Scanner",
   bea: "beA",
+  gamification: "Gamification",
 };

@@ -22,6 +22,7 @@ import {
   LEVEL_TITLES,
   STREAK_BONUSES,
   roleToKlasse,
+  type BossTrophy,
 } from "./types";
 
 // ─── Pure Functions ─────────────────────────────────────────────────────────
@@ -125,6 +126,29 @@ export async function awardRewards(
   });
   // Use `updated.xp` directly for level calculation -- no separate read needed
   return updated;
+}
+
+/**
+ * Award a boss victory trophy to a user's GameProfile.
+ * Appends to the trophies JSON array.
+ */
+export async function awardTrophy(userId: string, trophy: BossTrophy): Promise<void> {
+  const profile = await prisma.userGameProfile.findUnique({
+    where: { userId },
+    select: { trophies: true },
+  });
+  if (!profile) return;
+
+  const existing = (profile.trophies as BossTrophy[] | null) ?? [];
+  // Prevent duplicate trophy for the same bossfight
+  if (existing.some((t) => t.bossfightId === trophy.bossfightId)) return;
+
+  await prisma.userGameProfile.update({
+    where: { userId },
+    data: {
+      trophies: [...existing, trophy],
+    },
+  });
 }
 
 /**

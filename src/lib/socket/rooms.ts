@@ -9,6 +9,7 @@ const log = createLogger("socket:rooms");
  * Room naming conventions:
  * - `user:{userId}` — personal notifications (auto-joined on connect)
  * - `role:{ROLE}` — role-based broadcasts (auto-joined on connect)
+ * - `kanzlei:{kanzleiId}` — team-wide broadcasts like bossfight (auto-joined on connect)
  * - `akte:{akteId}` — case-specific updates (joined/left dynamically)
  * - `mailbox:{kontoId}` — email real-time updates (joined/left dynamically)
  * - `channel:{channelId}` — messaging channel updates (joined/left dynamically)
@@ -24,6 +25,13 @@ export function setupRooms(io: Server): void {
     // Auto-join role room
     const roleRoom = `role:${role}`;
     socket.join(roleRoom);
+
+    // Auto-join kanzlei room (for team-wide broadcasts like bossfight)
+    if (kanzleiId) {
+      const kanzleiRoom = `kanzlei:${kanzleiId}`;
+      socket.join(kanzleiRoom);
+      log.debug({ userId, kanzleiId }, "Joined Kanzlei room");
+    }
 
     log.info(
       { userId, role, kanzleiId, socketId: socket.id },

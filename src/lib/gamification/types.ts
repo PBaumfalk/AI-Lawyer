@@ -55,3 +55,12 @@ export const STREAK_BONUSES = [
   { minDays: 7, multiplier: 1.25 },   // +25% Runen
   { minDays: 3, multiplier: 1.10 },   // +10% Runen
 ] as const;
+
+// ─── Boss Trophy ────────────────────────────────────────────────────────────
+
+export interface BossTrophy {
+  type: "BOSS_VICTORY";
+  bossName: string;
+  date: string;       // ISO date string
+  bossfightId: string;
+}

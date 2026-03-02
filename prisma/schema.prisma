@@ -321,6 +321,11 @@ enum QuestTyp {
   SPECIAL
 }
 
+enum BossfightStatus {
+  ACTIVE
+  DEFEATED
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Kanzlei {
@@ -357,6 +362,7 @@ model Kanzlei {
   taetigkeitskategorien Taetigkeitskategorie[]
   finanzEinstellungen   FinanzEinstellung[]
   dezernate             Dezernat[]
+  bossfights            Bossfight[]
 
   @@map("kanzleien")
 }
@@ -452,6 +458,9 @@ model User {
   // Phase 33: Gamification
   gamificationOptIn  Boolean           @default(false)
   gameProfile        UserGameProfile?
+
+  // Phase 35: Bossfight
+  bossfightDamages   BossfightDamage[]
 
   @@map("users")
 }
@@ -2245,6 +2254,7 @@ model UserGameProfile {
   runen        Int         @default(0)
   streakTage   Int         @default(0)
   streakLetzte DateTime?
+  trophies     Json        @default("[]") // Array of { type: string, bossName: string, date: string, bossfightId: string }
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
@@ -2288,4 +2298,40 @@ model QuestCompletion {
   @@index([questId])
   @@unique([userId, questId, completedAt])
   @@map("quest_completions")
+}
+
+// ─── Bossfight (Phase 35) ──────────────────────────────────────────────────
+
+model Bossfight {
+  id                String           @id @default(cuid())
+  kanzleiId         String
+  kanzlei           Kanzlei          @relation(fields: [kanzleiId], references: [id], onDelete: Cascade)
+  name              String           // Random from boss name pool
+  spawnHp           Int              // HP at spawn = open WV count
+  currentHp         Int              // Current HP (decremented by damage, incremented by heals)
+  phase             Int              @default(1) // 1-4
+  status            BossfightStatus  @default(ACTIVE)
+  spawnedAt         DateTime         @default(now())
+  defeatedAt        DateTime?
+  phaseRewardsGiven Int              @default(0) // Bitmask: which phase bonuses already awarded
+
+  damages           BossfightDamage[]
+
+  @@index([kanzleiId, status])
+  @@map("bossfights")
+}
+
+model BossfightDamage {
+  id           String    @id @default(cuid())
+  bossfightId  String
+  bossfight    Bossfight @relation(fields: [bossfightId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount       Int       @default(1) // Always 1 for WV clears
+  runenEarned  Int       @default(0) // Per-hit Runen (with phase multiplier applied)
+  createdAt    DateTime  @default(now())
+
+  @@index([bossfightId, userId])
+  @@index([bossfightId, createdAt])
+  @@map("bossfight_damages")
 }

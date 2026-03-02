@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import { MessageSquare } from "lucide-react";
 import type { MessageListItem } from "@/lib/messaging/types";
+import { EmptyState } from "@/components/ui/empty-state";
 import { MessageBubble } from "./message-bubble";
 
 interface MessageListProps {
@@ -68,9 +70,11 @@ export function MessageList({
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">
-          Noch keine Nachrichten
-        </p>
+        <EmptyState
+          icon={MessageSquare}
+          title="Noch keine Nachrichten"
+          description="Starten Sie eine Konversation zu dieser Akte."
+        />
       </div>
     );
   }

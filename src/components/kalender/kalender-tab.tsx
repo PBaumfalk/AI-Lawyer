@@ -18,6 +18,8 @@ import {
   Pencil,
   MoreVertical,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
@@ -190,9 +192,22 @@ export function KalenderTab({ akteId, initialEintraege }: KalenderTabProps) {
       {/* List */}
       <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08]">
         {displayEntries.length === 0 ? (
-          <div className="p-12 text-center text-sm text-slate-400">
-            Keine Termine oder Fristen vorhanden.
-          </div>
+          <EmptyState
+            icon={CalendarDays}
+            title="Keine Termine oder Fristen"
+            description="Erstellen Sie Fristen und Termine, um Deadlines im Blick zu behalten."
+            actions={[
+              {
+                label: "Termin erstellen",
+                icon: Plus,
+                onClick: () => {
+                  setEditEintrag(null);
+                  setDialogOpen(true);
+                },
+                roles: ["ADMIN", "ANWALT", "SACHBEARBEITER"],
+              },
+            ]}
+          />
         ) : (
           <div className="divide-y divide-white/10 dark:divide-white/[0.04]">
             {displayEntries.map((ke) => {

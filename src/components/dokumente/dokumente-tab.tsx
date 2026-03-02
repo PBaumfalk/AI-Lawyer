@@ -40,6 +40,7 @@ import { DokumentStatusBadge } from "./dokument-status-badge";
 import { OcrStatusBadge } from "./ocr-status-badge";
 import { EditorDialog } from "../editor/editor-dialog";
 import { useUpload } from "@/components/providers/upload-provider";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 
 // MIME types that can be edited in ONLYOFFICE
@@ -630,24 +631,32 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
               <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" />
             </div>
           ) : filteredDokumente.length === 0 ? (
-            <div className="p-12 text-center text-sm text-slate-400 space-y-3">
-              <FileText className="w-12 h-12 mx-auto text-slate-200 dark:text-slate-700" />
-              <p>
-                {searchQuery || selectedOrdner
-                  ? "Keine Dokumente gefunden."
-                  : "Noch keine Dokumente vorhanden."}
-              </p>
-              {!searchQuery && !selectedOrdner && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setUploadOpen(true)}
-                >
-                  <Upload className="w-4 h-4 mr-1.5" />
-                  Erstes Dokument hochladen
-                </Button>
-              )}
-            </div>
+            searchQuery || selectedOrdner || selectedStatus ? (
+              <div className="p-12 text-center text-sm text-slate-400 space-y-3">
+                <FileText className="w-12 h-12 mx-auto text-slate-200 dark:text-slate-700" />
+                <p>Keine Dokumente gefunden.</p>
+              </div>
+            ) : (
+              <EmptyState
+                icon={FileText}
+                title="Noch keine Dokumente"
+                description="Laden Sie Dokumente hoch oder erstellen Sie neue mit Vorlagen."
+                actions={[
+                  {
+                    label: "Dokument hochladen",
+                    icon: Upload,
+                    onClick: () => fileInputRef.current?.click(),
+                    roles: ["ADMIN", "ANWALT", "SACHBEARBEITER", "SEKRETARIAT"],
+                  },
+                  {
+                    label: "Aus Vorlage erstellen",
+                    icon: FilePlus2,
+                    onClick: () => setVorlageOpen(true),
+                    roles: ["ADMIN", "ANWALT", "SACHBEARBEITER"],
+                  },
+                ]}
+              />
+            )
           ) : (
             <div className="divide-y divide-white/10 dark:divide-white/[0.04]">
               {filteredDokumente.map((dok) => {

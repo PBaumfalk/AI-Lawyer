@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Clock, Play, Square, Plus, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -336,7 +337,16 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
             {loading ? (
               <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Laden...</td></tr>
             ) : entries.length === 0 ? (
-              <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Keine Zeiteintraege vorhanden.</td></tr>
+              <tr><td colSpan={6} className="p-0">
+                <EmptyState
+                  icon={Clock}
+                  title="Keine Zeiteintraege"
+                  description="Starten Sie den Timer oder erfassen Sie Zeiten manuell."
+                  actions={[
+                    { label: "Manueller Eintrag", icon: Plus, onClick: () => setShowForm(true) },
+                  ]}
+                />
+              </td></tr>
             ) : entries.map((e) => (
               <tr key={e.id} className="border-b border-border/50">
                 <td className="p-3 text-muted-foreground">{formatDate(e.datum)}</td>

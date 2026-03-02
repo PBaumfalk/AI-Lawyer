@@ -112,5 +112,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Phase 32 context gathered
-Resume file: .planning/phases/32-messaging-ui/32-CONTEXT.md
+Stopped at: Phase 32 plan-phase started, researcher not yet spawned
+Resume file: .planning/phases/32-messaging-ui/.continue-here.md

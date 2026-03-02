@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.3
-milestone_name: Kanzlei-Collaboration
-status: unknown
-last_updated: "2026-03-02T09:32:03.106Z"
+milestone: v0.4
+milestone_name: Quest & Polish
+status: active
+last_updated: "2026-03-02T12:00:00.000Z"
 progress:
-  total_phases: 15
-  completed_phases: 14
-  total_plans: 42
-  completed_plans: 42
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -18,13 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Planning next milestone
+**Current focus:** v0.4 Quest & Polish — Gamification + Quick Wins
 
 ## Current Position
 
-Milestone: v0.3 SHIPPED (2026-03-02)
-Status: Milestone complete, awaiting /gsd:new-milestone
-Last activity: 2026-03-02 -- v0.3 milestone archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-02 — Milestone v0.4 started
 
 Progress: 5 milestones shipped (v3.4, v3.5, v0.1, v0.2, v0.3)
 

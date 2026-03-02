@@ -167,7 +167,42 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- Next milestone scope — to be defined -->
+<!-- Current milestone: v0.4 Quest & Polish -->
+
+## Current Milestone: v0.4 Quest & Polish
+
+**Goal:** Gamification als Kanzlei-Steuerungsinstrument (Quests, XP, Bossfight, Item-Shop, Team-Dashboard) + UX-Quick-Wins in der Akte-Detailansicht.
+
+**Target features:**
+
+**Gamification Phase 1 (MVP):**
+- [ ] DB-Schema (UserGameProfile, Quest, QuestCompletion, Bossfight)
+- [ ] 5 Daily Quests mit maschinenlesbarer Bedingungslogik
+- [ ] XP/Runen/Level-Berechnung + Streak-System
+- [ ] Dashboard-Widget (Quests + Fortschritt + XP-Bar)
+- [ ] Bossfight "Backlog-Monster" mit Team-Fortschritts-Banner
+
+**Gamification Phase 2 (Tiefe):**
+- [ ] Klassen-spezifische Quests (Jurist, Schreiber, Wächter, Quartiermeister)
+- [ ] Weekly Quests (Backlog-Reduktion, Abrechnung, Akten-Checks)
+- [ ] Anti-Missbrauch (Runen-Deckel, Random Audits, qualifizierte Erledigung)
+- [ ] Item-Shop (kosmetisch + Komfort-Perks) + Inventar
+
+**Gamification Phase 3 (Controlling):**
+- [ ] Special Quests / zeitlich begrenzte Kampagnen
+- [ ] Team-Dashboard (Erfüllungsquote, Backlog-Delta, Bossfight-Schaden pro Person)
+- [ ] Reporting (Monat: Backlog-Delta, Billing-Delta, Quest-Erfüllungsquoten)
+
+**Quick Wins:**
+- [ ] KPI-Cards anklickbar → navigiert zum jeweiligen Tab
+- [ ] OCR-Recovery-Flow (Banner + Retry + Vision-Analyse + Manuell)
+- [ ] Empty States mit Icon, Erklärtext und CTAs
+- [ ] "Nachrichten: 0" KPI-Card fix (umbenennen/ausblenden)
+- [ ] Zeiterfassung-Beschreibung sichtbar machen
+
+### Backlog
+
+<!-- Deferred to future milestones -->
 
 **BI-Dashboard + Export:**
 - [ ] KPI-Kacheln (Neue Akten, offene Posten, Fristen, Umsatz)
@@ -290,4 +325,4 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
 ---
-*Last updated: 2026-03-02 after v0.3 milestone*
+*Last updated: 2026-03-02 after v0.4 milestone start*

@@ -87,6 +87,7 @@ export async function GET() {
       },
       leaderboard,
       recentDamage: recentDamage.map((d) => ({
+        id: d.id,
         userId: d.userId,
         userName: d.user.name,
         amount: d.amount,

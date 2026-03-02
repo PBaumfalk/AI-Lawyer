@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
 import { requireAuth, requireAkteAccess } from "@/lib/rbac";
 import { enqueueQuestCheck } from "@/lib/gamification/quest-service";
+import { gamificationQueue } from "@/lib/queue/queues";
 import { z } from "zod";
 
 const updateKalenderSchema = z.object({
@@ -134,6 +135,23 @@ export async function PATCH(
   // Gamification: enqueue quest check when Frist marked as erledigt
   if (parsed.data.erledigt === true && userId) {
     enqueueQuestCheck(userId);
+
+    // Bossfight: enqueue boss damage when Wiedervorlage marked as erledigt
+    if (existing.typ === "WIEDERVORLAGE") {
+      const damageUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { kanzleiId: true, name: true },
+      });
+      if (damageUser?.kanzleiId) {
+        gamificationQueue
+          .add("boss-damage", {
+            userId,
+            kanzleiId: damageUser.kanzleiId,
+            userName: damageUser.name ?? undefined,
+          })
+          .catch(() => {}); // fire-and-forget
+      }
+    }
   }
 
   // Log general update

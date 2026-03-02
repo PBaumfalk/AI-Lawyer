@@ -14,6 +14,7 @@ import { TagManager } from "./tag-manager";
 import { AuditTimeline, type AuditItem } from "@/components/audit/audit-timeline";
 import { DokumentStatusBadge } from "./dokument-status-badge";
 import { OcrStatusBadge } from "./ocr-status-badge";
+import { OcrRecoveryBanner } from "./ocr-recovery-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -532,25 +533,35 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                       value={dokument.ordner}
                     />
                   )}
-                  <div className="flex items-start gap-2.5">
-                    <FileText className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[11px] text-slate-400 block">OCR Status</span>
-                      <OcrStatusBadge
-                        status={dokument.ocrStatus}
-                        dokumentId={dokument.id}
-                        onRetry={fetchDocument}
-                      />
-                      {dokument.ocrStatus === "ABGESCHLOSSEN" && (
-                        <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-1">
-                          OCR abgeschlossen
-                        </span>
-                      )}
-                      {dokument.ocrStatus === "NICHT_NOETIG" && (
-                        <span className="text-xs text-slate-500">Nicht noetig</span>
-                      )}
+                  {dokument.ocrStatus === "FEHLGESCHLAGEN" ? (
+                    <OcrRecoveryBanner
+                      dokumentId={dokument.id}
+                      akteId={dokument.akteId}
+                      mimeType={dokument.mimeType}
+                      ocrFehler={dokument.ocrFehler}
+                      onRecoveryComplete={fetchDocument}
+                    />
+                  ) : (
+                    <div className="flex items-start gap-2.5">
+                      <FileText className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[11px] text-slate-400 block">OCR Status</span>
+                        <OcrStatusBadge
+                          status={dokument.ocrStatus}
+                          dokumentId={dokument.id}
+                          onRetry={fetchDocument}
+                        />
+                        {dokument.ocrStatus === "ABGESCHLOSSEN" && (
+                          <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-1">
+                            OCR abgeschlossen
+                          </span>
+                        )}
+                        {dokument.ocrStatus === "NICHT_NOETIG" && (
+                          <span className="text-xs text-slate-500">Nicht noetig</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <MetadataRow
                     icon={Hash}
                     label="Versionen"

@@ -170,11 +170,11 @@ Plans:
   2. A document with failed OCR shows a recovery banner offering Retry OCR, Vision-Analyse fallback, and manual text entry
   3. Empty tabs (beA, E-Mail, Zeiterfassung, etc.) show an icon, explanation text, and role-appropriate CTAs instead of blank space
   4. The "Nachrichten" KPI card reads "Chat" and links to channel messages; Zeiterfassung shows "Keine Kategorie" and "Beschreibung hinzufuegen" for empty fields
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 36-01: KPI card click handlers + empty states with role-aware CTAs
-- [ ] 36-02: OCR recovery flow (state machine, retry, vision fallback, manual input) + minor label fixes
+- [ ] 36-01-PLAN.md -- Clickable KPI cards with tab navigation + reusable EmptyState component + empty states in 4 tabs + Chat rename
+- [ ] 36-02-PLAN.md -- OCR recovery banner (3 recovery paths: retry, vision, manual) + Vision/Manual-Text API endpoints + Zeiterfassung inline editing
 
 ### Phase 37: Klassen + Weekly + Special Quests
 **Goal**: Quests are tailored to each role and include weekly structural goals and time-limited campaigns
@@ -274,4 +274,4 @@ Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34
 
 ---
 *Roadmap created: 2026-02-24*
-*Last updated: 2026-03-02 after Phase 34 planning*
+*Last updated: 2026-03-02 after Phase 36 planning*

@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.3
 milestone_name: Kanzlei-Collaboration
-status: unknown
-last_updated: "2026-03-02T08:14:19.153Z"
+status: executing
+last_updated: "2026-03-02T08:54:33Z"
 progress:
   total_phases: 14
   completed_phases: 13
   total_plans: 40
-  completed_plans: 40
+  completed_plans: 41
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 31 - Messaging Schema + API
+**Current focus:** Phase 32 - Messaging UI
 
 ## Current Position
 
-Phase: 31 of 32 (Messaging Schema + API)
-Plan: 3 of 3 in current phase
-Status: Phase 31 Complete
-Last activity: 2026-03-02 -- completed 31-03 (Message + Reaction API Routes)
+Phase: 32 of 32 (Messaging UI)
+Plan: 1 of 2 in current phase
+Status: Executing Phase 32
+Last activity: 2026-03-02 -- completed 32-01 (Core Messaging UI)
 
-Progress: [######....] 60% (v0.3: 3/5 phases)
+Progress: [########..] 80% (v0.3: 4/5 phases)
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [######....] 60% (v0.3: 3/5 phases)
 | Phase 31 P01 | 5min | 2 tasks | 9 files |
 | Phase 31 P02 | 2min | 2 tasks | 5 files |
 | Phase 31 P03 | 4min | 2 tasks | 6 files |
+| Phase 32 P01 | 4min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting current work:
 - [31-03]: verifyChannelAccess helper encapsulates AKTE vs ALLGEMEIN access logic for channel API routes
 - [31-03]: Helena system user lookup uses module-level cached promise with idempotent upsert fallback
 - [31-03]: channelId flows through DB record (not job data) -- processor fetches from DB after completion
+- [32-01]: MentionPicker uses document-level keydown listener for Enter selection to avoid double-handling with textarea
+- [32-01]: DMS document picker fetches from /api/dokumente (global) not akte-scoped, since channels are cross-akte
+- [32-01]: Array.from(new Set()) instead of spread for Set to avoid downlevelIteration TS config
 
 ### Pending Todos
 
@@ -112,5 +116,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Phase 32 plan-phase started, researcher not yet spawned
-Resume file: .planning/phases/32-messaging-ui/.continue-here.md
+Stopped at: Completed 32-01-PLAN.md (Core Messaging UI)
+Resume file: .planning/phases/32-messaging-ui/32-01-SUMMARY.md

@@ -192,7 +192,7 @@ Phases execute in numeric order: 28 -> 28.1 -> 29 -> 30 -> 31 -> 32
 | 29. Falldatenblaetter UI | 2/2 | Complete    | 2026-02-28 | - |
 | 30. SCAN-05 Neu-Urteil-Check | 2/2 | Complete    | 2026-02-28 | - |
 | 31. Messaging Schema + API | 3/3 | Complete    | 2026-03-02 | - |
-| 32. Messaging UI | v0.3 | 0/TBD | Not started | - |
+| 32. Messaging UI | 1/2 | In Progress|  | - |
 
 ---
 *Roadmap created: 2026-02-24*

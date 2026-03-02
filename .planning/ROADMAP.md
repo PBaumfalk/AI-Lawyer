@@ -171,11 +171,11 @@ Plans:
   1. User sees unread message count badges per channel in the messaging sidebar, updating in real-time as new messages arrive
   2. User can @Helena in a channel message and a HelenaTask is created and processed, with Helena's response appearing in the channel
   3. User sees a typing indicator when another user is composing a message in the same channel
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 32-01: TBD
-- [ ] 32-02: TBD
+- [ ] 32-01-PLAN.md — Messaging page shell, split layout, channel sidebar with unread badges, message view with chat bubbles, composer, @mention picker
+- [ ] 32-02-PLAN.md — Socket.IO bridge (channel rooms, typing indicators, real-time message events), sidebar unread badge, Akte Nachrichten tab
 
 ## Progress
 

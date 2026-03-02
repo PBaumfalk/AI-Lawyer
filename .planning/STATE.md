@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
-status: executing
-last_updated: "2026-03-02T19:56:02Z"
+status: unknown
+last_updated: "2026-03-02T20:04:33.990Z"
 progress:
-  total_phases: 19
-  completed_phases: 18
-  total_plans: 52
-  completed_plans: 53
+  total_phases: 20
+  completed_phases: 19
+  total_plans: 54
+  completed_plans: 54
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 37 Plan 01 COMPLETE (Klassen + Weekly Quests Backend), Plan 02 pending
+**Current focus:** v0.4 Quest & Polish -- Phase 37 COMPLETE (Klassen + Weekly + Special Quests)
 
 ## Current Position
 
 Phase: 37 of 41 (Klassen + Weekly + Special Quests) -- 5 of 9 in milestone
-Plan: 1 of 2 in current phase
+Plan: 2 of 2 in current phase (COMPLETE)
 Status: Executing
-Last activity: 2026-03-02 -- Completed 37-01 (Klassen + Weekly + Special Quests Backend)
+Last activity: 2026-03-02 -- Completed 37-02 (Special Quest Frontend + Admin CRUD)
 
-Progress: [██████░░░░] 61% (11/18 plans)
+Progress: [██████░░░░] 67% (12/18 plans)
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [██████░░░░] 61% (11/18 plans)
 | Phase 36 P01 | 5min | 2 tasks | 8 files |
 | Phase 36 P02 | 3min | 2 tasks | 5 files |
 | Phase 37 P01 | 6min | 2 tasks | 11 files |
+| Phase 37 P02 | 4min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,8 @@ Recent decisions affecting current work:
 - [37-01]: WeeklySnapshot model with compound unique (model, weekStart, userId) for delta baselines
 - [37-01]: Dashboard API returns grouped quests { daily, weekly, special } instead of flat array
 - [37-01]: Widget temporarily flattens grouped response; Plan 02 adds proper section headers
+- [Phase 37]: QuestSection is a separate reusable component (not inlined in QuestWidget) for clean separation
+- [Phase 37]: Condition templates defined server-side and sent to client -- admin never writes raw JSON
 
 ### Pending Todos
 
@@ -117,5 +120,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 37-01-PLAN.md (Klassen + Weekly + Special Quests Backend)
-Resume file: .planning/phases/37-klassen-weekly-special-quests/37-02-PLAN.md
+Stopped at: Completed 37-02-PLAN.md (Special Quest Frontend + Admin CRUD) -- Phase 37 COMPLETE
+Resume file: Next phase

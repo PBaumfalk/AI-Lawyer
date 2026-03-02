@@ -106,7 +106,7 @@ See: `milestones/v0.3-ROADMAP.md` for full phase details.
 - [x] **Phase 34: Dashboard Widget + Quest Deep-Links** - GlassCard quest widget with XP bar, level, streak, Runen, opt-in visibility, quest click-to-navigate (completed 2026-03-02)
 - [x] **Phase 35: Bossfight** - Team Backlog-Monster with HP bar, 4 phases, Socket.IO real-time updates, admin activation threshold (completed 2026-03-02)
 - [x] **Phase 36: Quick Wins** - Clickable KPI cards, OCR recovery flow, empty states, Chat KPI rename, Zeiterfassung description fix (completed 2026-03-02)
-- [ ] **Phase 37: Klassen + Weekly + Special Quests** - Role-specific quests, weekly structural goals, time-limited admin campaigns
+- [x] **Phase 37: Klassen + Weekly + Special Quests** - Role-specific quests, weekly structural goals, time-limited admin campaigns (completed 2026-03-02)
 - [ ] **Phase 38: Anti-Missbrauch** - Qualified completion checks, Runen daily cap, random audits, atomic increments
 - [ ] **Phase 39: Item-Shop + Inventar** - 4-tier item catalog, cosmetic + comfort purchases, inventory management, level gates
 - [ ] **Phase 40: Heldenkarte** - Profile page with avatar, class, active cosmetics, badge showcase, quest history
@@ -266,7 +266,7 @@ Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34
 | 34. Dashboard Widget + Quest Deep-Links | 2/2 | Complete    | 2026-03-02 | - |
 | 35. Bossfight | 3/3 | Complete    | 2026-03-02 | - |
 | 36. Quick Wins | 2/2 | Complete    | 2026-03-02 | - |
-| 37. Klassen + Weekly + Special Quests | 1/2 | In Progress|  | - |
+| 37. Klassen + Weekly + Special Quests | 2/2 | Complete   | 2026-03-02 | - |
 | 38. Anti-Missbrauch | v0.4 | 0/2 | Not started | - |
 | 39. Item-Shop + Inventar | v0.4 | 0/2 | Not started | - |
 | 40. Heldenkarte | v0.4 | 0/1 | Not started | - |

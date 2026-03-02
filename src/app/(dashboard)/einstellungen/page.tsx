@@ -12,6 +12,7 @@ import {
   FolderTree,
   Bell,
   Stamp,
+  Swords,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VertretungUrlaubTab } from "@/components/einstellungen/vertretung-urlaub-tab";
@@ -22,6 +23,7 @@ import { VorlagenTab } from "@/components/einstellungen/vorlagen-tab";
 import { BriefkopfTab } from "@/components/einstellungen/briefkopf-tab";
 import { OrdnerSchemataTab } from "@/components/einstellungen/ordner-schemata-tab";
 import { BenachrichtigungenTab } from "@/components/einstellungen/benachrichtigungen-tab";
+import { GamificationTab } from "@/components/einstellungen/gamification-tab";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -159,6 +161,12 @@ export default function EinstellungenPage() {
               </TabsTrigger>
             )}
             {isAdmin && (
+              <TabsTrigger value="gamification">
+                <Swords className="w-4 h-4 mr-1.5" />
+                Gamification
+              </TabsTrigger>
+            )}
+            {isAdmin && (
               <TabsTrigger value="import-export">
                 <Download className="w-4 h-4 mr-1.5" />
                 Import/Export
@@ -273,6 +281,12 @@ export default function EinstellungenPage() {
           {isAdmin && (
             <TabsContent value="benachrichtigungen">
               <BenachrichtigungenTab />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="gamification">
+              <GamificationTab />
             </TabsContent>
           )}
 

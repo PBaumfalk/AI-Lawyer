@@ -14,6 +14,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { Tagesuebersicht } from "@/components/fristen/tagesuebersicht";
 import { QuestWidget } from "@/components/gamification/quest-widget";
+import { BossfightBanner } from "@/components/gamification/bossfight-banner";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -107,6 +108,9 @@ export default async function DashboardPage() {
           Hier ist Ihre Tagesübersicht.
         </p>
       </div>
+
+      {/* Bossfight Banner -- self-fetching, renders nothing when inactive */}
+      <BossfightBanner />
 
       {/* Stats Grid */}
       <section className="space-y-3">

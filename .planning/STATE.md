@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
-status: unknown
-last_updated: "2026-03-02T17:53:53.778Z"
+status: executing
+last_updated: "2026-03-02T19:56:02Z"
 progress:
   total_phases: 19
   completed_phases: 18
   total_plans: 52
-  completed_plans: 52
+  completed_plans: 53
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 36 COMPLETE (Quick Wins), all plans done, ready for next phase
+**Current focus:** v0.4 Quest & Polish -- Phase 37 Plan 01 COMPLETE (Klassen + Weekly Quests Backend), Plan 02 pending
 
 ## Current Position
 
-Phase: 36 of 41 (Quick Wins) -- 4 of 9 in milestone
-Plan: 2 of 2 in current phase (COMPLETE)
+Phase: 37 of 41 (Klassen + Weekly + Special Quests) -- 5 of 9 in milestone
+Plan: 1 of 2 in current phase
 Status: Executing
-Last activity: 2026-03-02 -- Completed 36-01 (KPI Cards + Empty States + Chat Rename)
+Last activity: 2026-03-02 -- Completed 37-01 (Klassen + Weekly + Special Quests Backend)
 
-Progress: [█████░░░░░] 56% (10/18 plans)
+Progress: [██████░░░░] 61% (11/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 113 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:10)
+- Total plans completed: 114 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:11)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -55,6 +55,7 @@ Progress: [█████░░░░░] 56% (10/18 plans)
 | Phase 35 P03 | 2min | 1 tasks | 2 files |
 | Phase 36 P01 | 5min | 2 tasks | 8 files |
 | Phase 36 P02 | 3min | 2 tasks | 5 files |
+| Phase 37 P01 | 6min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,10 @@ Recent decisions affecting current work:
 - [36-02]: Vision-Analyse only for image MIME types (not PDFs) per research pitfall guidance
 - [36-02]: Manual text entry uses inline expanding textarea (not modal) per user decision
 - [36-02]: Category dropdown saves on selection for minimal friction (no separate save button)
+- [37-01]: QuestCondition union type with optional type? field for backward compat (existing quests treated as count)
+- [37-01]: WeeklySnapshot model with compound unique (model, weekStart, userId) for delta baselines
+- [37-01]: Dashboard API returns grouped quests { daily, weekly, special } instead of flat array
+- [37-01]: Widget temporarily flattens grouped response; Plan 02 adds proper section headers
 
 ### Pending Todos
 
@@ -112,5 +117,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 36-01-PLAN.md (KPI Cards + Empty States + Chat Rename) -- Phase 36 fully COMPLETE (both plans)
-Resume file: None -- ready for next phase
+Stopped at: Completed 37-01-PLAN.md (Klassen + Weekly + Special Quests Backend)
+Resume file: .planning/phases/37-klassen-weekly-special-quests/37-02-PLAN.md

@@ -21,8 +21,8 @@
 - [x] **QUEST-01**: 5 Daily Quests mit maschinenlesbarer Bedingungslogik (JSON DSL in Quest.bedingung)
 - [x] **QUEST-02**: Quest-Bedingungen evaluieren automatisch gegen echte Prisma-Daten (Fristen, Wiedervorlagen, Rechnungen, Akten)
 - [x] **QUEST-03**: Quest-Completion wird nach Geschäftsaktion geprüft (fire-and-forget, blockiert nie Business-Logik)
-- [ ] **QUEST-04**: Klassen-spezifische Quests (unterschiedliche Quests pro RBAC-Rolle/Klasse)
-- [ ] **QUEST-05**: Weekly Quests für strukturelle Ziele (Backlog-Reduktion, Abrechnung, Akten-Checks)
+- [x] **QUEST-04**: Klassen-spezifische Quests (unterschiedliche Quests pro RBAC-Rolle/Klasse)
+- [x] **QUEST-05**: Weekly Quests für strukturelle Ziele (Backlog-Reduktion, Abrechnung, Akten-Checks)
 - [ ] **QUEST-06**: Special Quests / zeitlich begrenzte Kampagnen (Admin-konfigurierbar mit Start-/Enddatum)
 - [x] **QUEST-07**: Nightly Cron (23:55) als Safety Net für verpasste Quest-Checks und Streak-Finalisierung
 - [x] **QUEST-08**: Quest-Deep-Link: Klick auf Quest öffnet direkt die gefilterte Ansicht (z.B. heutige Fristen)
@@ -106,8 +106,8 @@
 | QUEST-01 | Phase 33 | Complete |
 | QUEST-02 | Phase 33 | Complete |
 | QUEST-03 | Phase 33 | Complete |
-| QUEST-04 | Phase 37 | Pending |
-| QUEST-05 | Phase 37 | Pending |
+| QUEST-04 | Phase 37 | Complete |
+| QUEST-05 | Phase 37 | Complete |
 | QUEST-06 | Phase 37 | Pending |
 | QUEST-07 | Phase 33 | Complete |
 | QUEST-08 | Phase 34 | Complete |

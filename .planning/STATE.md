@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 32 of 32 (Messaging UI)
-Plan: 1 of 2 in current phase
-Status: Executing Phase 32
-Last activity: 2026-03-02 -- completed 32-01 (Core Messaging UI)
+Plan: 2 of 2 in current phase
+Status: Phase 32 COMPLETE -- Milestone v0.3 COMPLETE
+Last activity: 2026-03-02 -- completed 32-02 (Real-Time Socket.IO + Akte Tab)
 
-Progress: [########..] 80% (v0.3: 4/5 phases)
+Progress: [##########] 100% (v0.3: 5/5 phases)
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [########..] 80% (v0.3: 4/5 phases)
 | Phase 31 P02 | 2min | 2 tasks | 5 files |
 | Phase 31 P03 | 4min | 2 tasks | 6 files |
 | Phase 32 P01 | 4min | 2 tasks | 10 files |
+| Phase 32 P02 | 3min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,10 @@ Recent decisions affecting current work:
 - [32-01]: MentionPicker uses document-level keydown listener for Enter selection to avoid double-handling with textarea
 - [32-01]: DMS document picker fetches from /api/dokumente (global) not akte-scoped, since channels are cross-akte
 - [32-01]: Array.from(new Set()) instead of spread for Set to avoid downlevelIteration TS config
+- [32-02]: Banner refetch for message:new (not auto-insert) -- consistent with activity-feed.tsx pattern
+- [32-02]: Typing debounce 3s: typing:start on each keystroke, typing:stop on pause
+- [32-02]: Sidebar unread badge aggregate from /api/channels, updates on message:new Socket.IO events
+- [32-02]: AkteChannelTab fixed 600px height for consistent tab layout
 
 ### Pending Todos
 
@@ -116,5 +121,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 32-01-PLAN.md (Core Messaging UI)
-Resume file: .planning/phases/32-messaging-ui/32-01-SUMMARY.md
+Stopped at: Completed 32-02-PLAN.md (Real-Time Socket.IO + Akte Tab) -- Phase 32 COMPLETE -- Milestone v0.3 COMPLETE
+Resume file: .planning/phases/32-messaging-ui/32-02-SUMMARY.md

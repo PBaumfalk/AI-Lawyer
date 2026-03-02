@@ -94,7 +94,7 @@ See: `milestones/v0.2-ROADMAP.md` for full phase details.
 - [x] **Phase 29: Falldatenblaetter UI** - User-facing form rendering with completeness tracking in Akte detail (completed 2026-02-28)
 - [x] **Phase 30: SCAN-05 Neu-Urteil-Check** - Cross-Akte semantic matching of new court decisions with proactive alerts (completed 2026-02-28)
 - [x] **Phase 31: Messaging Schema + API** - Channel/thread models, REST API, Socket.IO real-time delivery, @mentions (completed 2026-03-02)
-- [ ] **Phase 32: Messaging UI** - Channel list, message view, Akte-thread panel, unread badges, @Helena integration
+- [x] **Phase 32: Messaging UI** - Channel list, message view, Akte-thread panel, unread badges, @Helena integration (completed 2026-03-02)
 
 ## Phase Details
 
@@ -192,7 +192,7 @@ Phases execute in numeric order: 28 -> 28.1 -> 29 -> 30 -> 31 -> 32
 | 29. Falldatenblaetter UI | 2/2 | Complete    | 2026-02-28 | - |
 | 30. SCAN-05 Neu-Urteil-Check | 2/2 | Complete    | 2026-02-28 | - |
 | 31. Messaging Schema + API | 3/3 | Complete    | 2026-03-02 | - |
-| 32. Messaging UI | 1/2 | In Progress|  | - |
+| 32. Messaging UI | 2/2 | Complete   | 2026-03-02 | - |
 
 ---
 *Roadmap created: 2026-02-24*

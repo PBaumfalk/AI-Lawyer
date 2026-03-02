@@ -33,8 +33,8 @@ Requirements for v0.3 Kanzlei-Collaboration milestone. Each maps to roadmap phas
 - [x] **MSG-04**: User can discuss within an Akte-Thread (case-bound, inherits Akte RBAC)
 - [x] **MSG-05**: User can @mention other users in messages, triggering in-app notification
 - [x] **MSG-06**: User sees unread message count badges per channel
-- [ ] **MSG-07**: User can @Helena in a channel message to trigger a HelenaTask
-- [ ] **MSG-08**: User sees typing indicators when others are composing
+- [x] **MSG-07**: User can @Helena in a channel message to trigger a HelenaTask
+- [x] **MSG-08**: User sees typing indicators when others are composing
 
 ## Future Requirements
 
@@ -96,8 +96,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MSG-04 | Phase 31 | Complete |
 | MSG-05 | Phase 31 | Complete |
 | MSG-06 | Phase 32 | Complete |
-| MSG-07 | Phase 32 | Pending |
-| MSG-08 | Phase 32 | Pending |
+| MSG-07 | Phase 32 | Complete |
+| MSG-08 | Phase 32 | Complete |
 
 **Coverage:**
 - v0.3 requirements: 20 total

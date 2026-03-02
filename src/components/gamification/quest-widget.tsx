@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Flame, Gem, CheckCircle2, ChevronRight } from "lucide-react";
+import { Flame, Gem } from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/glass-card";
 import { XpProgressBar } from "./xp-progress-bar";
-import { buildQuestDeepLink } from "./quest-deep-link";
+import { QuestSection } from "./quest-section";
 import type { QuestCondition } from "@/lib/gamification/types";
 
 // ─── Response types (mirrors API shape) ────────────────────────────────────
@@ -26,6 +24,7 @@ interface DashboardProfile {
 interface DashboardQuest {
   id: string;
   name: string;
+  typ: "DAILY" | "WEEKLY" | "SPECIAL";
   beschreibung: string;
   bedingung: QuestCondition;
   xpBelohnung: number;
@@ -34,6 +33,7 @@ interface DashboardQuest {
   target: number;
   completed: boolean;
   awarded: boolean;
+  endDatum?: string;
 }
 
 interface GroupedQuests {
@@ -50,7 +50,8 @@ interface DashboardData {
 /**
  * QuestWidget -- Self-fetching client component for the dashboard.
  *
- * Shows daily quests, XP progress bar, level title, streak count, and Runen balance.
+ * Shows grouped quest sections (daily, weekly, special), XP progress bar,
+ * level title, streak count, and Runen balance.
  * Each quest row is clickable and navigates to the filtered view via deep-link.
  *
  * Graceful degradation:
@@ -59,7 +60,6 @@ interface DashboardData {
  * - Returns null until first fetch completes (absent-until-loaded, no flicker)
  */
 export function QuestWidget() {
-  const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -112,12 +112,9 @@ export function QuestWidget() {
 
   const { profile, quests } = data;
 
-  // Flatten grouped quests for rendering (Plan 02 adds proper section headers)
-  const allQuests = [
-    ...quests.daily,
-    ...quests.weekly,
-    ...quests.special,
-  ];
+  const hasDaily = quests.daily.length > 0;
+  const hasWeekly = quests.weekly.length > 0;
+  const hasSpecial = quests.special.length > 0;
 
   return (
     <GlassCard className="p-0">
@@ -159,48 +156,38 @@ export function QuestWidget() {
         </div>
       </div>
 
-      {/* Quest list */}
-      <div className="px-2 py-2">
-        {allQuests.map((quest) => (
-          <button
-            key={quest.id}
-            type="button"
-            onClick={() => router.push(buildQuestDeepLink(quest.bedingung))}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-left hover:bg-white/30 dark:hover:bg-white/[0.05] transition-colors group"
-          >
-            {/* Completion indicator */}
-            {quest.awarded ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-            ) : (
-              <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />
-            )}
+      {/* Grouped quest sections */}
 
-            {/* Quest description */}
-            <span
-              className={cn(
-                "text-sm flex-1 min-w-0 truncate",
-                quest.awarded && "line-through text-muted-foreground",
-              )}
-            >
-              {quest.beschreibung}
-            </span>
+      {/* Daily quests section */}
+      {hasDaily && (
+        <QuestSection title="Tagesquests" quests={quests.daily} />
+      )}
 
-            {/* Progress fraction */}
-            <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-              {quest.current}/{quest.target}
-            </span>
+      {/* Divider between daily and weekly (only if both exist) */}
+      {hasDaily && hasWeekly && (
+        <div className="mx-5 border-t border-[var(--glass-border-color)]" />
+      )}
 
-            {/* Reward */}
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {quest.xpBelohnung} XP
-              {quest.runenBelohnung > 0 && ` + ${quest.runenBelohnung} R`}
-            </span>
+      {/* Weekly quests section */}
+      {hasWeekly && (
+        <QuestSection title="Wochenquests" quests={quests.weekly} />
+      )}
 
-            {/* Chevron (visible on hover) */}
-            <ChevronRight className="w-4 h-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-          </button>
-        ))}
-      </div>
+      {/* Divider before special (if special exists and something is above it) */}
+      {hasSpecial && (hasDaily || hasWeekly) && (
+        <div className="mx-5 border-t border-[var(--glass-border-color)]" />
+      )}
+
+      {/* Special quests section with amber accent border */}
+      {hasSpecial && (
+        <div className="border-l-2 border-amber-500/60 ml-2">
+          <QuestSection
+            title="Special"
+            quests={quests.special}
+            showCountdown
+          />
+        </div>
+      )}
     </GlassCard>
   );
 }

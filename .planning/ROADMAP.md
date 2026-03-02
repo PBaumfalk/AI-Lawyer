@@ -127,9 +127,9 @@ See: `milestones/v0.3-ROADMAP.md` for full phase details.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 33-01-PLAN.md -- Prisma schema migration (UserGameProfile, Quest, QuestCompletion + enums) + types + quest seed
-- [ ] 33-02-PLAN.md -- GameProfile service (XP/Level/Runen/Streak) + quest evaluator + quest service + API route
-- [ ] 33-03-PLAN.md -- BullMQ gamification queue + processor + crons + business route hooks
+- [x] 33-01-PLAN.md -- Prisma schema migration (UserGameProfile, Quest, QuestCompletion + enums) + types + quest seed
+- [x] 33-02-PLAN.md -- GameProfile service (XP/Level/Runen/Streak) + quest evaluator + quest service + API route
+- [x] 33-03-PLAN.md -- BullMQ gamification queue + processor + crons + business route hooks
 
 ### Phase 34: Dashboard Widget + Quest Deep-Links
 **Goal**: Users see their gamification status at a glance and can navigate directly to quest-relevant views
@@ -139,11 +139,11 @@ Plans:
   1. Dashboard shows a Quest Widget (GlassCard) with today's quests, XP progress bar, current level, Runen balance, and streak count
   2. Widget is opt-in visible -- only appears for users who have activated gamification (no forced display)
   3. Clicking a quest opens the filtered view relevant to that quest (e.g., clicking "5 Fristen erledigen" opens today's Fristen list)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 34-01: Quest Widget GlassCard component (XP bar, quest list, streak, Runen)
-- [ ] 34-02: Quest deep-link routing + opt-in visibility toggle
+- [ ] 34-01-PLAN.md -- Combined dashboard API + QuestWidget component (XP bar, quest list, streak, Runen badges, deep-link utility) + dashboard integration
+- [ ] 34-02-PLAN.md -- Opt-in toggle (PATCH endpoint + settings UI) + KalenderListe deep-link filter initialization
 
 ### Phase 35: Bossfight
 **Goal**: The team fights a shared Backlog-Monster whose HP reflects real open Wiedervorlagen
@@ -273,4 +273,4 @@ Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34
 
 ---
 *Roadmap created: 2026-02-24*
-*Last updated: 2026-03-02 after v0.4 roadmap creation*
+*Last updated: 2026-03-02 after Phase 34 planning*

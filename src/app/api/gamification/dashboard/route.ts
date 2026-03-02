@@ -2,14 +2,19 @@
  * GET /api/gamification/dashboard
  *
  * Combined endpoint returning GameProfile (level, XP, Runen, streak)
- * plus daily quest progress with real-time evaluation.
+ * plus quest progress grouped by type (daily, weekly, special).
  *
  * Returns 401 if not authenticated, 404 if user has gamificationOptIn=false.
  * Widget uses 404 to know user is opted out and render nothing.
+ *
+ * Quest filtering:
+ * - Only universal (klasse=null) and user's class quests are returned
+ * - SPECIAL quests filtered by startDatum/endDatum date range
+ * - Type-aware dedup: DAILY=startOfDay, WEEKLY=startOfWeek, SPECIAL=startDatum
  */
 
 import { NextResponse } from "next/server";
-import { startOfDay } from "date-fns";
+import { startOfDay, startOfWeek } from "date-fns";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -48,6 +53,7 @@ export async function GET() {
 
   // Get profile data
   const gameProfile = await getOrCreateGameProfile(userId, user.role);
+  const userKlasse = gameProfile.klasse;
 
   // Compute level/XP progress (same math as profile route)
   const level = getLevelForXp(gameProfile.xp);
@@ -59,27 +65,59 @@ export async function GET() {
   const progress =
     xpNeeded > 0 ? Math.round(Math.min(xpInLevel / xpNeeded, 1) * 100) / 100 : 1;
 
-  // Load active daily quests ordered by sortierung
+  const now = new Date();
+
+  // Load active quests filtered by user's klasse (universal + class-specific)
   const quests = await prisma.quest.findMany({
-    where: { typ: "DAILY", aktiv: true },
-    orderBy: { sortierung: "asc" },
+    where: {
+      aktiv: true,
+      OR: [
+        { klasse: null },
+        { klasse: userKlasse },
+      ],
+    },
+    orderBy: [{ typ: "asc" }, { sortierung: "asc" }],
+  });
+
+  // Filter SPECIAL quests by date range
+  const activeQuests = quests.filter((q) => {
+    if (q.typ === "SPECIAL") {
+      if (q.startDatum && q.startDatum > now) return false;
+      if (q.endDatum && q.endDatum < now) return false;
+    }
+    return true;
   });
 
   // Evaluate all quests in parallel: real-time progress + completion check
-  const todayStart = startOfDay(new Date());
+  const todayStart = startOfDay(now);
+  const weekStart = startOfWeek(now, { weekStartsOn: 1 });
 
   const questResults = await Promise.all(
-    quests.map(async (quest) => {
+    activeQuests.map(async (quest) => {
       const condition = quest.bedingung as unknown as QuestCondition;
+
+      // Build campaign date range for SPECIAL quests
+      const questDateRange =
+        quest.typ === "SPECIAL" && quest.startDatum && quest.endDatum
+          ? { start: quest.startDatum, end: quest.endDatum }
+          : undefined;
+
+      // Type-aware dedup window
+      const dedupeStart =
+        quest.typ === "WEEKLY"
+          ? weekStart
+          : quest.typ === "SPECIAL" && quest.startDatum
+            ? quest.startDatum
+            : todayStart;
 
       // Run evaluation + completion check in parallel per quest
       const [evalResult, completion] = await Promise.all([
-        evaluateQuestCondition(condition, userId),
+        evaluateQuestCondition(condition, userId, now, questDateRange),
         prisma.questCompletion.findFirst({
           where: {
             userId,
             questId: quest.id,
-            completedAt: { gte: todayStart },
+            completedAt: { gte: dedupeStart },
           },
         }),
       ]);
@@ -87,6 +125,7 @@ export async function GET() {
       return {
         id: quest.id,
         name: quest.name,
+        typ: quest.typ,
         beschreibung: quest.beschreibung ?? quest.name,
         bedingung: condition,
         xpBelohnung: quest.xpBelohnung,
@@ -95,10 +134,15 @@ export async function GET() {
         target: evalResult.target,
         completed: evalResult.completed,
         awarded: completion !== null,
+        // For SPECIAL quests: include end date for countdown display
+        ...(quest.typ === "SPECIAL" && quest.endDatum
+          ? { endDatum: quest.endDatum.toISOString() }
+          : {}),
       };
     }),
   );
 
+  // Group by type
   return NextResponse.json({
     profile: {
       level,
@@ -110,6 +154,10 @@ export async function GET() {
       runen: gameProfile.runen,
       streakTage: gameProfile.streakTage,
     },
-    quests: questResults,
+    quests: {
+      daily: questResults.filter((q) => q.typ === "DAILY"),
+      weekly: questResults.filter((q) => q.typ === "WEEKLY"),
+      special: questResults.filter((q) => q.typ === "SPECIAL"),
+    },
   });
 }

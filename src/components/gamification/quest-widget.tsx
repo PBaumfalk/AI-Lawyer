@@ -36,9 +36,15 @@ interface DashboardQuest {
   awarded: boolean;
 }
 
+interface GroupedQuests {
+  daily: DashboardQuest[];
+  weekly: DashboardQuest[];
+  special: DashboardQuest[];
+}
+
 interface DashboardData {
   profile: DashboardProfile;
-  quests: DashboardQuest[];
+  quests: GroupedQuests;
 }
 
 /**
@@ -106,6 +112,13 @@ export function QuestWidget() {
 
   const { profile, quests } = data;
 
+  // Flatten grouped quests for rendering (Plan 02 adds proper section headers)
+  const allQuests = [
+    ...quests.daily,
+    ...quests.weekly,
+    ...quests.special,
+  ];
+
   return (
     <GlassCard className="p-0">
       {/* Header: Level info + badges + XP bar */}
@@ -148,7 +161,7 @@ export function QuestWidget() {
 
       {/* Quest list */}
       <div className="px-2 py-2">
-        {quests.map((quest) => (
+        {allQuests.map((quest) => (
           <button
             key={quest.id}
             type="button"

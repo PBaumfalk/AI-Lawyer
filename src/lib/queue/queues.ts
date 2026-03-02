@@ -463,4 +463,15 @@ export async function registerGamificationCrons(): Promise<void> {
       opts: { removeOnComplete: { count: 50 }, removeOnFail: { count: 20 } },
     }
   );
+
+  // Weekly snapshot at Monday 00:00 Europe/Berlin (baseline for delta quests)
+  await gamificationQueue.upsertJobScheduler(
+    "gamification-weekly-snapshot",
+    { pattern: "0 0 * * 1", tz: "Europe/Berlin" },
+    {
+      name: "weekly-snapshot",
+      data: {},
+      opts: { removeOnComplete: { count: 10 }, removeOnFail: { count: 10 } },
+    }
+  );
 }

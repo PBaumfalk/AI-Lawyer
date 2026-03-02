@@ -18,6 +18,7 @@ import { createLogger } from "@/lib/logger";
 import { checkQuestsForUser } from "@/lib/gamification/quest-service";
 import { updateStreak } from "@/lib/gamification/game-profile-service";
 import { dealBossDamage, healBoss, checkAndSpawnBoss } from "@/lib/gamification/boss-engine";
+import { createWeeklySnapshots } from "@/lib/gamification/weekly-snapshot";
 import type { GamificationJobData } from "@/lib/queue/queues";
 
 const log = createLogger("gamification-processor");
@@ -36,6 +37,8 @@ export async function processGamificationJob(job: Job<GamificationJobData>): Pro
       return handleBossHeal(job);
     case "boss-check":
       return handleBossCheck(job);
+    case "weekly-snapshot":
+      return handleWeeklySnapshot();
     default:
       log.warn({ jobName: job.name }, "Unknown gamification job type");
   }
@@ -90,6 +93,11 @@ async function handleBossCheck(job: Job<GamificationJobData>): Promise<void> {
   if (boss) {
     log.info({ kanzleiId, bossName: boss.name, hp: boss.spawnHp }, "Boss spawned");
   }
+}
+
+async function handleWeeklySnapshot(): Promise<void> {
+  await createWeeklySnapshots();
+  log.info("Weekly snapshot cron completed");
 }
 
 async function handleNightlySafetyNet(): Promise<void> {

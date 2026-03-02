@@ -1,8 +1,9 @@
 /**
  * Quest Service - Quest Check Orchestrator
  *
- * Evaluates all active daily quests for a user, awards XP+Runen for
- * newly completed ones (with dedup), and updates streak.
+ * Evaluates all active quests (DAILY, WEEKLY, SPECIAL) for a user,
+ * awards XP+Runen for newly completed ones (with type-aware dedup),
+ * and updates streak.
  *
  * Fire-and-forget pattern: enqueueQuestCheck() is the entry point for
  * business routes. It never blocks the business action.
@@ -11,9 +12,11 @@
  * - Always checks QuestCompletion before awarding to prevent double-counting (Pitfall 5)
  * - Uses atomic increment for XP/Runen (Pitfall 4)
  * - Uses return value of update() for level calculation (Pitfall 4)
+ * - Weekly quests use startOfWeek dedup (not startOfDay) to prevent 7x awards (Pitfall 1)
+ * - SPECIAL quests use startDatum dedup (one completion per campaign)
  */
 
-import { startOfDay } from "date-fns";
+import { startOfDay, startOfWeek } from "date-fns";
 
 import { prisma } from "@/lib/db";
 import { gamificationQueue } from "@/lib/queue/queues";
@@ -27,14 +30,15 @@ import {
 } from "./game-profile-service";
 
 /**
- * Main entry point: evaluate all active DAILY quests for a user.
+ * Main entry point: evaluate all active quests for a user.
  *
  * 1. Check if user has gamificationOptIn enabled
  * 2. Load/create GameProfile
- * 3. Evaluate each active DAILY quest condition
- * 4. For completed quests, check for existing completion today (dedup)
- * 5. Award XP+Runen with streak multiplier for newly completed quests
- * 6. Update streak after processing all quests
+ * 3. Load all active quests filtered by user's SpielKlasse
+ * 4. Evaluate each quest condition (DAILY, WEEKLY, SPECIAL)
+ * 5. For completed quests, check for existing completion (type-aware dedup)
+ * 6. Award XP+Runen with streak multiplier for newly completed quests
+ * 7. Update streak after processing all quests
  */
 export async function checkQuestsForUser(userId: string): Promise<void> {
   // Check opt-in status
@@ -47,33 +51,62 @@ export async function checkQuestsForUser(userId: string): Promise<void> {
 
   // Get or create GameProfile
   const profile = await getOrCreateGameProfile(userId, user.role);
+  const userKlasse = profile.klasse;
+  const now = new Date();
 
-  // Load all active DAILY quests
+  // Load all active quests matching user's class
   const quests = await prisma.quest.findMany({
-    where: { typ: "DAILY", aktiv: true },
+    where: {
+      aktiv: true,
+      OR: [
+        { klasse: null }, // Universal quests
+        { klasse: userKlasse }, // Class-specific quests
+      ],
+    },
     orderBy: { sortierung: "asc" },
   });
 
-  const today = startOfDay(new Date());
-
   for (const quest of quests) {
+    // Skip SPECIAL quests outside their date range
+    if (quest.typ === "SPECIAL") {
+      if (quest.startDatum && quest.startDatum > now) continue;
+      if (quest.endDatum && quest.endDatum < now) continue;
+    }
+
     const condition = quest.bedingung as unknown as QuestCondition;
 
-    // Evaluate quest condition against real data
-    const result = await evaluateQuestCondition(condition, userId);
+    // Build campaign date range for SPECIAL quests
+    const questDateRange =
+      quest.typ === "SPECIAL" && quest.startDatum && quest.endDatum
+        ? { start: quest.startDatum, end: quest.endDatum }
+        : undefined;
 
+    // Evaluate quest condition against real data
+    const result = await evaluateQuestCondition(
+      condition,
+      userId,
+      now,
+      questDateRange,
+    );
     if (!result.completed) continue;
 
-    // Dedup: check if already awarded today
+    // Type-aware dedup window
+    const dedupeStart =
+      quest.typ === "WEEKLY"
+        ? startOfWeek(now, { weekStartsOn: 1 })
+        : quest.typ === "SPECIAL" && quest.startDatum
+          ? quest.startDatum // One completion per campaign
+          : startOfDay(now); // DAILY: one per day
+
     const existing = await prisma.questCompletion.findFirst({
       where: {
         userId,
         questId: quest.id,
-        completedAt: { gte: today },
+        completedAt: { gte: dedupeStart },
       },
     });
 
-    if (existing) continue; // Already awarded today
+    if (existing) continue;
 
     // Calculate streak multiplier and award rewards
     const streakMultiplier = getStreakMultiplier(profile.streakTage);

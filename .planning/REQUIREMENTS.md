@@ -1,0 +1,147 @@
+# Requirements: AI-Lawyer v0.4 Quest & Polish
+
+**Defined:** 2026-03-02
+**Core Value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet — ohne dass KI-generierte Inhalte jemals automatisch versendet oder finalisiert werden.
+
+## v0.4 Requirements
+
+### Gamification Core
+
+- [ ] **GAME-01**: User hat ein GameProfile mit XP, Level, Runen, Streak-Tage und Klasse
+- [ ] **GAME-02**: XP-basiertes Level-System mit linearer Progression (sachliche Titel pro Level-Range)
+- [ ] **GAME-03**: Runen als separate Belohnungswährung (getrennt von XP, nur Runen sind ausgebbar)
+- [ ] **GAME-04**: Streak-Tracking mit automatischem Freeze bei Urlaub/Abwesenheit (kein Streak-Bruch bei Nicht-Arbeitstagen)
+- [ ] **GAME-05**: Klassen-Zuweisung basierend auf RBAC-Rolle (Jurist=ANWALT, Schreiber=SACHBEARBEITER, Wächter=SEKRETARIAT, Quartiermeister=ADMIN)
+- [ ] **GAME-06**: DSGVO-konforme Datenarchitektur (eigenes GameProfile nur selbst sichtbar, Team-Daten nur aggregiert)
+- [ ] **GAME-07**: Gamification ist opt-in sichtbar (Dashboard-Widget, kein Zwang, keine Push-Notifications)
+- [ ] **GAME-08**: Dashboard-Widget zeigt heutige Quests, XP-Bar, Level, Runen und Streak
+
+### Quest System
+
+- [ ] **QUEST-01**: 5 Daily Quests mit maschinenlesbarer Bedingungslogik (JSON DSL in Quest.bedingung)
+- [ ] **QUEST-02**: Quest-Bedingungen evaluieren automatisch gegen echte Prisma-Daten (Fristen, Wiedervorlagen, Rechnungen, Akten)
+- [ ] **QUEST-03**: Quest-Completion wird nach Geschäftsaktion geprüft (fire-and-forget, blockiert nie Business-Logik)
+- [ ] **QUEST-04**: Klassen-spezifische Quests (unterschiedliche Quests pro RBAC-Rolle/Klasse)
+- [ ] **QUEST-05**: Weekly Quests für strukturelle Ziele (Backlog-Reduktion, Abrechnung, Akten-Checks)
+- [ ] **QUEST-06**: Special Quests / zeitlich begrenzte Kampagnen (Admin-konfigurierbar mit Start-/Enddatum)
+- [ ] **QUEST-07**: Nightly Cron (23:55) als Safety Net für verpasste Quest-Checks und Streak-Finalisierung
+- [ ] **QUEST-08**: Quest-Deep-Link: Klick auf Quest öffnet direkt die gefilterte Ansicht (z.B. heutige Fristen)
+
+### Bossfight
+
+- [ ] **BOSS-01**: Bossfight-Mechanik mit HP = offene Wiedervorlagen (Team kämpft gemeinsam gegen Backlog-Monster)
+- [ ] **BOSS-02**: 4 Boss-Phasen mit eskalierenden Belohnungen (Phase 3: mehr Runen, Phase 4: Legendary-Trophäe)
+- [ ] **BOSS-03**: Team-Fortschritts-Banner auf Dashboard mit Echtzeit-Updates via Socket.IO
+- [ ] **BOSS-04**: Boss-Activation konfigurierbar (Admin setzt Schwellenwert für Backlog-Größe)
+
+### Anti-Missbrauch
+
+- [ ] **ABUSE-01**: Qualifizierte Erledigung (Wiedervorlage zählt nur mit Status-Änderung + Vermerk + ggf. Folge-WV)
+- [ ] **ABUSE-02**: Runen-Deckel (max. 40 Runen/Tag aus Wiedervorlagen, darüber nur XP)
+- [ ] **ABUSE-03**: Random Audits (1-3% Stichprobe: System fragt "Erledigung bestätigen?", bei Ablehnung Punkte zurück)
+- [ ] **ABUSE-04**: Atomic Prisma-Increments für XP/Runen (Race Condition Prevention bei gleichzeitigen Completions)
+
+### Item-Shop
+
+- [ ] **SHOP-01**: Item-Katalog mit 4 Seltenheitsstufen (Common, Rare, Epic, Legendary)
+- [ ] **SHOP-02**: Kosmetische Items kaufbar mit Runen (Avatar-Rahmen, Banner, Profil-Titel, Abschluss-Animation)
+- [ ] **SHOP-03**: Komfort-Perks kaufbar (z.B. Fokus-Siegel: 30 Min Fokuszeit-Block als interne Priorität)
+- [ ] **SHOP-04**: Inventar-Verwaltung pro User (gekaufte Items, aktive Ausrüstung)
+- [ ] **SHOP-05**: Level-Gate für Legendary Items (erst ab Level 25 mit Proof-Badge kaufbar)
+
+### Heldenkarte (Profil)
+
+- [ ] **PROFIL-01**: Profil-Seite als "Heldenkarte" (Avatar, Klasse, Level, Titel, aktive Kosmetik)
+- [ ] **PROFIL-02**: Badge-Schaukasten (nur erspielbare Badges, nie kaufbar: Fristenwächter, Bannbrecher etc.)
+- [ ] **PROFIL-03**: Quest-Historie (abgeschlossene Quests mit Datum und Belohnung)
+
+### Team-Dashboard
+
+- [ ] **TEAM-01**: Erfüllungsquote Kernquests als Team-Aggregat (kein per-Person Breakdown)
+- [ ] **TEAM-02**: Backlog-Delta pro Woche (Trend-Anzeige: steigend/fallend/stabil)
+- [ ] **TEAM-03**: Bossfight-Gesamtschaden als Team-Aggregat
+- [ ] **TEAM-04**: Monatsreporting (Backlog-Delta, Billing-Delta, Quest-Erfüllungsquoten als PDF/CSV)
+
+### Quick Wins
+
+- [ ] **QW-01**: KPI-Cards in Akte-Detail anklickbar → navigiert zum jeweiligen Tab
+- [ ] **QW-02**: OCR-Recovery-Flow mit Banner (Retry OCR + Vision-Analyse Fallback + Manuelle Texteingabe)
+- [ ] **QW-03**: Empty States mit Icon, Erklärtext und max. 2 CTAs (beA, E-Mail, Zeiterfassung etc.)
+- [ ] **QW-04**: "Nachrichten" KPI-Card umbenennen zu "Chat" und auf Channel-Messages verlinken
+- [ ] **QW-05**: Zeiterfassung: "—" → "Keine Kategorie" (grau), leere Beschreibung → "Beschreibung hinzufügen" Link
+
+## Future Requirements
+
+### Gamification Erweiterungen (v0.5+)
+
+- **GAME-F01**: Adaptive Quest-Generierung (Backlog-Größe → Quest-Schwierigkeit)
+- **GAME-F02**: Saisonale Events (Weihnachts-Quest, Jahresabschluss-Kampagne)
+- **GAME-F03**: Cross-Kanzlei Benchmark (opt-in, anonymisiert)
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Public Leaderboard (per-Person) | Leaderboard-Loser-Effect, toxische Konkurrenz in 5-Personen-Team |
+| Real-Money Rewards / Gehalts-Link | Arbeitsrecht (Vergütungsbestandteil), Overjustification Effect |
+| Mandatory Participation / Penalty | Erzwungene Gamification erzeugt Ressentiment |
+| AI-generierte Quests | Unvorhersehbar, unmöglich/trivial, Latenz — 5 Dailys sind klare Routinen |
+| Gamification von Helena-Nutzung | Incentiviert unnötige KI-Calls, verschwendet Compute |
+| Kaufbare XP / Level-Boosts | Zerstört Bedeutung der Level-Progression |
+| Push-Notifications für Quests | Werden nach einer Woche ignoriert, aktiv resented |
+| Komplexe Skill-Trees | Over-Engineering, Meta-Gaming statt echte Arbeit |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| GAME-01 | — | Pending |
+| GAME-02 | — | Pending |
+| GAME-03 | — | Pending |
+| GAME-04 | — | Pending |
+| GAME-05 | — | Pending |
+| GAME-06 | — | Pending |
+| GAME-07 | — | Pending |
+| GAME-08 | — | Pending |
+| QUEST-01 | — | Pending |
+| QUEST-02 | — | Pending |
+| QUEST-03 | — | Pending |
+| QUEST-04 | — | Pending |
+| QUEST-05 | — | Pending |
+| QUEST-06 | — | Pending |
+| QUEST-07 | — | Pending |
+| QUEST-08 | — | Pending |
+| BOSS-01 | — | Pending |
+| BOSS-02 | — | Pending |
+| BOSS-03 | — | Pending |
+| BOSS-04 | — | Pending |
+| ABUSE-01 | — | Pending |
+| ABUSE-02 | — | Pending |
+| ABUSE-03 | — | Pending |
+| ABUSE-04 | — | Pending |
+| SHOP-01 | — | Pending |
+| SHOP-02 | — | Pending |
+| SHOP-03 | — | Pending |
+| SHOP-04 | — | Pending |
+| SHOP-05 | — | Pending |
+| PROFIL-01 | — | Pending |
+| PROFIL-02 | — | Pending |
+| PROFIL-03 | — | Pending |
+| TEAM-01 | — | Pending |
+| TEAM-02 | — | Pending |
+| TEAM-03 | — | Pending |
+| TEAM-04 | — | Pending |
+| QW-01 | — | Pending |
+| QW-02 | — | Pending |
+| QW-03 | — | Pending |
+| QW-04 | — | Pending |
+| QW-05 | — | Pending |
+
+**Coverage:**
+- v0.4 requirements: 41 total
+- Mapped to phases: 0
+- Unmapped: 41
+
+---
+*Requirements defined: 2026-03-02*
+*Last updated: 2026-03-02 after initial definition*

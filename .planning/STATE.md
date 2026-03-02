@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
-status: in-progress
-last_updated: "2026-03-02T13:01:42Z"
+status: unknown
+last_updated: "2026-03-02T13:03:33.358Z"
 progress:
-  total_phases: 16
-  completed_phases: 15
-  total_plans: 45
+  total_phases: 17
+  completed_phases: 16
+  total_plans: 47
   completed_plans: 47
 ---
 
@@ -49,6 +49,7 @@ Progress: [███░░░░░░░] 28% (5/18 plans)
 **Recent Trend:**
 - Last milestone (v0.3): 13 plans, avg ~3.4 min/plan
 - Trend: Stable
+| Phase 34 P01 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,9 @@ Recent decisions affecting current work:
 - [34-02]: Combined GET+PATCH in single opt-in route for fetch simplicity
 - [34-02]: Auto-create GameProfile on opt-in enable so widget works immediately
 - [34-02]: Only KalenderListe needs searchParams init -- Tickets already has server-side params
+- [Phase 34]: Widget uses absent-until-loaded pattern (returns null until fetch completes) to avoid layout shift
+- [Phase 34]: API returns 404 for opted-out users; widget treats 404 as opt-out signal and renders nothing
+- [Phase 34]: Deep-link builder uses static MODEL_TO_PATH lookup with URLSearchParams from condition.where
 
 ### Pending Todos
 

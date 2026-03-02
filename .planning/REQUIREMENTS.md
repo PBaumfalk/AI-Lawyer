@@ -14,7 +14,7 @@
 - [x] **GAME-05**: Klassen-Zuweisung basierend auf RBAC-Rolle (Jurist=ANWALT, Schreiber=SACHBEARBEITER, Wächter=SEKRETARIAT, Quartiermeister=ADMIN)
 - [x] **GAME-06**: DSGVO-konforme Datenarchitektur (eigenes GameProfile nur selbst sichtbar, Team-Daten nur aggregiert)
 - [x] **GAME-07**: Gamification ist opt-in sichtbar (Dashboard-Widget, kein Zwang, keine Push-Notifications)
-- [ ] **GAME-08**: Dashboard-Widget zeigt heutige Quests, XP-Bar, Level, Runen und Streak
+- [x] **GAME-08**: Dashboard-Widget zeigt heutige Quests, XP-Bar, Level, Runen und Streak
 
 ### Quest System
 
@@ -25,7 +25,7 @@
 - [ ] **QUEST-05**: Weekly Quests für strukturelle Ziele (Backlog-Reduktion, Abrechnung, Akten-Checks)
 - [ ] **QUEST-06**: Special Quests / zeitlich begrenzte Kampagnen (Admin-konfigurierbar mit Start-/Enddatum)
 - [x] **QUEST-07**: Nightly Cron (23:55) als Safety Net für verpasste Quest-Checks und Streak-Finalisierung
-- [ ] **QUEST-08**: Quest-Deep-Link: Klick auf Quest öffnet direkt die gefilterte Ansicht (z.B. heutige Fristen)
+- [x] **QUEST-08**: Quest-Deep-Link: Klick auf Quest öffnet direkt die gefilterte Ansicht (z.B. heutige Fristen)
 
 ### Bossfight
 
@@ -102,7 +102,7 @@
 | GAME-05 | Phase 33 | Complete |
 | GAME-06 | Phase 33 | Complete |
 | GAME-07 | Phase 34 | Complete |
-| GAME-08 | Phase 34 | Pending |
+| GAME-08 | Phase 34 | Complete |
 | QUEST-01 | Phase 33 | Complete |
 | QUEST-02 | Phase 33 | Complete |
 | QUEST-03 | Phase 33 | Complete |
@@ -110,7 +110,7 @@
 | QUEST-05 | Phase 37 | Pending |
 | QUEST-06 | Phase 37 | Pending |
 | QUEST-07 | Phase 33 | Complete |
-| QUEST-08 | Phase 34 | Pending |
+| QUEST-08 | Phase 34 | Complete |
 | BOSS-01 | Phase 35 | Pending |
 | BOSS-02 | Phase 35 | Pending |
 | BOSS-03 | Phase 35 | Pending |

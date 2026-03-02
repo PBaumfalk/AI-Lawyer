@@ -8,7 +8,7 @@ progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 18
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -23,16 +23,16 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 33 of 41 (Gamification Schema + Quest Engine) -- 1 of 9 in milestone
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-03-02 -- Completed 33-01 (Gamification Schema + Quest Seed)
+Last activity: 2026-03-02 -- Completed 33-02 (Quest Engine Business Logic)
 
-Progress: [█░░░░░░░░░] 5% (1/18 plans)
+Progress: [█░░░░░░░░░] 11% (2/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 104 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:1)
+- Total plans completed: 105 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:2)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -63,6 +63,8 @@ Recent decisions affecting current work:
 - [v0.4 roadmap]: Team-Dashboard last (needs accumulated quest completion data)
 - [33-01]: QuestCondition DSL stores evaluation rules as JSON -- evaluator in Plan 02 will interpret
 - [33-01]: Manual migration SQL created (Docker not running) -- apply on next deploy
+- [33-02]: gamificationOptIn queried from DB in API route (not in session token)
+- [33-02]: enqueueQuestCheck uses direct .catch() fallback until Plan 03 wires BullMQ
 
 ### Pending Todos
 
@@ -72,12 +74,12 @@ Deferred from previous milestones (not in v0.4 scope):
 
 ### Blockers/Concerns
 
-- Streak Feiertagskalender: German public holidays by Bundesland not in codebase -- decide feiertagejs vs hardcoded
+- Streak Feiertagskalender: RESOLVED -- uses existing istFeiertag() from feiertagejs + Bundesland from SystemSetting
 - OCR Vision fallback: MinIO presigned URL to AI SDK v4 image attachment untested -- validate in Phase 36 planning
 - Bossfight activation trigger: manual admin vs automatic cron detection -- decide in Phase 35 planning
 
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 33-01-PLAN.md (Gamification Schema + Quest Seed)
-Resume file: None -- ready for 33-02
+Stopped at: Completed 33-02-PLAN.md (Quest Engine Business Logic)
+Resume file: None -- ready for 33-03

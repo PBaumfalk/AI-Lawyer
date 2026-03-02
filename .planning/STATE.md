@@ -8,7 +8,7 @@ progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 18
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 33: Gamification Schema + Quest Engine
+**Current focus:** v0.4 Quest & Polish -- Phase 33 complete, ready for Phase 34
 
 ## Current Position
 
 Phase: 33 of 41 (Gamification Schema + Quest Engine) -- 1 of 9 in milestone
-Plan: 2 of 3 in current phase
-Status: Executing
-Last activity: 2026-03-02 -- Completed 33-02 (Quest Engine Business Logic)
+Plan: 3 of 3 in current phase (COMPLETE)
+Status: Phase Complete
+Last activity: 2026-03-02 -- Completed 33-03 (BullMQ Queue + Crons + Route Hooks)
 
-Progress: [█░░░░░░░░░] 11% (2/18 plans)
+Progress: [██░░░░░░░░] 17% (3/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 105 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:2)
+- Total plans completed: 106 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:3)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -65,6 +65,9 @@ Recent decisions affecting current work:
 - [33-01]: Manual migration SQL created (Docker not running) -- apply on next deploy
 - [33-02]: gamificationOptIn queried from DB in API route (not in session token)
 - [33-02]: enqueueQuestCheck uses direct .catch() fallback until Plan 03 wires BullMQ
+- [33-03]: Gamification queue uses attempts:1 (idempotent, no retry needed)
+- [33-03]: Hourly dedup via jobId prevents redundant quest checks per user
+- [33-03]: Nightly safety net processes users sequentially (kanzlei-scale: <50 users)
 
 ### Pending Todos
 
@@ -81,5 +84,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 33-02-PLAN.md (Quest Engine Business Logic)
-Resume file: None -- ready for 33-03
+Stopped at: Completed 33-03-PLAN.md (BullMQ Queue + Crons + Route Hooks) -- Phase 33 complete
+Resume file: None -- ready for Phase 34

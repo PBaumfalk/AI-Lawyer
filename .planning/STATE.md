@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
-status: unknown
-last_updated: "2026-03-02T20:47:07.100Z"
+status: executing
+last_updated: "2026-03-02T22:15:00Z"
 progress:
   total_phases: 20
   completed_phases: 19
   total_plans: 54
-  completed_plans: 55
+  completed_plans: 56
 ---
 
 # Project State
@@ -22,17 +22,17 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 
 ## Current Position
 
-Phase: 38 of 41 (Anti-Missbrauch) -- 6 of 9 in milestone
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-03-02 -- Completed 38-01 (Anti-Missbrauch Core)
+Phase: 38 of 41 (Anti-Missbrauch) -- 6 of 9 in milestone COMPLETE
+Plan: 2 of 2 in current phase COMPLETE
+Status: Phase Complete
+Last activity: 2026-03-02 -- Completed 38-02 (Audit Sampling)
 
-Progress: [███████░░░] 72% (13/18 plans)
+Progress: [████████░░] 78% (14/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 115 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:12)
+- Total plans completed: 116 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:13)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -58,6 +58,7 @@ Progress: [███████░░░] 72% (13/18 plans)
 | Phase 37 P01 | 6min | 2 tasks | 11 files |
 | Phase 37 P02 | 4min | 2 tasks | 6 files |
 | Phase 38 P01 | 4min | 2 tasks | 9 files |
+| Phase 38 P02 | 2min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,9 @@ Recent decisions affecting current work:
 - [38-01]: findMany + JS filter for WV 30+ char check (Prisma lacks string length WHERE)
 - [38-01]: Runen cap on WV quests only; P2002 catch for concurrent idempotent completions
 - [38-01]: completedDate (DATE-only) replaces completedAt in unique constraint for tighter dedup
+- [38-02]: 2% audit rate (Math.random < 0.02) as midpoint of 1-3% range from CONTEXT.md
+- [38-02]: Toast duration: Infinity -- server-side 24h auto-confirm is the real timeout
+- [38-02]: Audit listener mounted in SocketProvider (global) not QuestWidget (page-specific)
 
 ### Pending Todos
 
@@ -125,5 +129,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 38-01-PLAN.md (Anti-Missbrauch Core)
-Resume file: .planning/phases/38-anti-missbrauch/38-02-PLAN.md
+Stopped at: Completed 38-02-PLAN.md (Audit Sampling) -- Phase 38 complete
+Resume file: .planning/phases/39-item-shop/39-01-PLAN.md

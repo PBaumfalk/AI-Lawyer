@@ -2265,22 +2265,25 @@ model UserGameProfile {
 }
 
 model Quest {
-  id              String    @id @default(cuid())
+  id              String        @id @default(cuid())
   name            String
   beschreibung    String?
-  typ             QuestTyp  @default(DAILY)
+  typ             QuestTyp      @default(DAILY)
+  klasse          SpielKlasse?  // null = all classes, specific = class-exclusive
   bedingung       Json
-  xpBelohnung     Int       @default(0)
-  runenBelohnung  Int       @default(0)
-  aktiv           Boolean   @default(true)
-  sortierung      Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  xpBelohnung     Int           @default(0)
+  runenBelohnung  Int           @default(0)
+  aktiv           Boolean       @default(true)
+  sortierung      Int           @default(0)
+  startDatum      DateTime?     // Only for SPECIAL: campaign start
+  endDatum        DateTime?     // Only for SPECIAL: campaign end
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   completions     QuestCompletion[]
 
   @@unique([name, typ])
-  @@index([typ, aktiv])
+  @@index([typ, aktiv, klasse])
   @@map("quests")
 }
 
@@ -2298,6 +2301,19 @@ model QuestCompletion {
   @@index([questId])
   @@unique([userId, questId, completedAt])
   @@map("quest_completions")
+}
+
+model WeeklySnapshot {
+  id        String   @id @default(cuid())
+  model     String   // QuestModel name: "Ticket", "KalenderEintrag", etc.
+  weekStart DateTime // Monday 00:00 of the snapshot week
+  userId    String?  // null for global counts (e.g. Rechnung)
+  count     Int      // Baseline count at week start
+  createdAt DateTime @default(now())
+
+  @@unique([model, weekStart, userId])
+  @@index([weekStart])
+  @@map("weekly_snapshots")
 }
 
 // ─── Bossfight (Phase 35) ──────────────────────────────────────────────────

@@ -7,20 +7,36 @@ import { SpielKlasse } from "@prisma/client";
 export type QuestModel = "KalenderEintrag" | "Ticket" | "Rechnung" | "AktenActivity";
 
 /** Time period for quest evaluation */
-export type QuestPeriod = "today" | "thisWeek" | "thisMonth";
+export type QuestPeriod = "today" | "thisWeek" | "thisMonth" | "campaign";
 
-/**
- * JSON DSL stored in Quest.bedingung (Prisma Json column).
- * Evaluator runs: prisma[model].count({ where: { ...where, [userField]: userId, [dateField]: dateRange } })
- */
-export interface QuestCondition {
+/** Base quest condition fields shared by all condition types */
+interface BaseQuestCondition {
   model: QuestModel;
   where: Record<string, string | boolean>;
   dateField: string;
   userField: string | null; // null = scoped via relation (e.g., Rechnung -> Akte)
-  count: number;
   period: QuestPeriod;
 }
+
+/** Standard count-based condition (original and default) */
+export interface CountCondition extends BaseQuestCondition {
+  type?: "count"; // Optional for backward compat with existing quests
+  count: number;
+}
+
+/** Delta/ratio condition for weekly aggregate goals */
+export interface DeltaCondition extends BaseQuestCondition {
+  type: "delta";
+  direction: "decrease" | "increase";
+  percent: number; // e.g. 20 for "reduce by 20%"
+}
+
+/**
+ * Union of all condition types.
+ * JSON DSL stored in Quest.bedingung (Prisma Json column).
+ * The evaluator branches on `type` ("count" | "delta"), treating undefined as "count".
+ */
+export type QuestCondition = CountCondition | DeltaCondition;
 
 // ─── Role-to-Class Mapping ─────────────────────────────────────────────────
 

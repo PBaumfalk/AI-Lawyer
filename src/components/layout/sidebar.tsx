@@ -62,7 +62,7 @@ const navigation: NavItem[] = [
   { name: "Helena", href: "/ki-chat", icon: Sparkles },
   { name: "Finanzen", href: "/finanzen", icon: Wallet },
   { name: "beA", href: "/bea", icon: Shield },
-  { name: "Nachrichten", href: "/nachrichten", icon: MessageSquare },
+  { name: "Nachrichten", href: "/nachrichten", icon: MessageSquare, badgeKey: "unreadMessages" },
   {
     name: "Einstellungen",
     href: "/einstellungen",
@@ -120,11 +120,31 @@ export function Sidebar() {
     }
   }, []);
 
+  // Unread messages badge count
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+
+  const fetchMessageCount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/channels");
+      if (res.ok) {
+        const data = await res.json();
+        const total = (data.channels || []).reduce(
+          (sum: number, ch: { unreadCount: number }) => sum + ch.unreadCount,
+          0
+        );
+        setUnreadMessagesCount(total);
+      }
+    } catch {
+      // Non-critical -- badge will show 0
+    }
+  }, []);
+
   // Fetch on mount and listen for Socket.IO events to update
   useEffect(() => {
     fetchDraftCount();
     fetchAlertCount();
-  }, [fetchDraftCount, fetchAlertCount]);
+    fetchMessageCount();
+  }, [fetchDraftCount, fetchAlertCount, fetchMessageCount]);
 
   useEffect(() => {
     if (!socket) return;
@@ -168,13 +188,29 @@ export function Sidebar() {
     };
   }, [socket, fetchAlertCount]);
 
+  // Socket.IO listener for message badge updates
+  useEffect(() => {
+    if (!socket) return;
+
+    function handleMessageNotification() {
+      fetchMessageCount();
+    }
+
+    socket.on("message:new", handleMessageNotification);
+
+    return () => {
+      socket.off("message:new", handleMessageNotification);
+    };
+  }, [socket, fetchMessageCount]);
+
   // Badge counts by key
   const badgeCounts: Record<string, number> = useMemo(
     () => ({
       pendingDrafts: pendingDraftsCount,
       unreadAlerts: unreadAlertsCount,
+      unreadMessages: unreadMessagesCount,
     }),
-    [pendingDraftsCount, unreadAlertsCount]
+    [pendingDraftsCount, unreadAlertsCount, unreadMessagesCount]
   );
 
   // Filter navigation items based on user role

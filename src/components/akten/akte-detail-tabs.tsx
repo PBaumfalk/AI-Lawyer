@@ -9,6 +9,8 @@ import { InvoiceList } from "@/components/finanzen/invoice-list";
 import { AkteZeiterfassungTab } from "@/components/finanzen/akte-zeiterfassung-tab";
 import { ActivityFeed } from "./activity-feed";
 import { FalldatenTab } from "./falldaten-tab";
+import { AkteChannelTab } from "@/components/messaging/akte-channel-tab";
+import { MessageSquare } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -155,6 +157,10 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
           <TabsTrigger value="falldaten">
             Falldaten{completeness.total > 0 ? ` (${completeness.percent}%)` : ""}
           </TabsTrigger>
+          <TabsTrigger value="nachrichten">
+            <MessageSquare className="w-4 h-4 mr-1.5" />
+            Nachrichten
+          </TabsTrigger>
         </TabsList>
 
         {/* --- Feed (default) ------------------------------------------------ */}
@@ -212,6 +218,11 @@ export function AkteDetailTabs({ akte }: { akte: AkteData }) {
             onCompletenessChange={setCompleteness}
             onDirtyChange={setFalldatenDirty}
           />
+        </TabsContent>
+
+        {/* --- Nachrichten (Akte channel) ---------------------------------- */}
+        <TabsContent value="nachrichten">
+          <AkteChannelTab akteId={akte.id} />
         </TabsContent>
       </Tabs>
 

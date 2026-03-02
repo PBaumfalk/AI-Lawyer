@@ -184,11 +184,11 @@ Plans:
   1. Each RBAC role sees different daily quests matching their class (ANWALT=Jurist quests, SACHBEARBEITER=Schreiber quests, etc.)
   2. Weekly quests with aggregate conditions (e.g., "Backlog -20% this week") appear on Mondays and reset weekly
   3. Admin can create time-limited Special Quests with start/end dates that appear for all or specific roles
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 37-01: Klassen-spezifische quest filtering + weekly quest type + weekly cron reset
-- [ ] 37-02: Special Quest CRUD (admin UI) + time-bounded display logic
+- [ ] 37-01-PLAN.md -- Schema (Quest.klasse, startDatum, endDatum, WeeklySnapshot) + delta evaluator + klasse-filtered quest service + weekly snapshot cron + expanded seed (~15 daily + 3 weekly)
+- [ ] 37-02-PLAN.md -- QuestWidget grouped sections (Tagesquests/Wochenquests/Special) + Special Quest CRUD API + admin form in GamificationTab
 
 ### Phase 38: Anti-Missbrauch
 **Goal**: Quest completion is quality-gated so gaming the system is harder than doing the actual work

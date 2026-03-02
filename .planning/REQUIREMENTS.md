@@ -27,9 +27,9 @@ Requirements for v0.3 Kanzlei-Collaboration milestone. Each maps to roadmap phas
 
 ### Internes Messaging
 
-- [ ] **MSG-01**: User can create a channel with name and optional description
-- [ ] **MSG-02**: User can join and leave channels
-- [ ] **MSG-03**: User can send and receive messages in a channel in real-time
+- [x] **MSG-01**: User can create a channel with name and optional description
+- [x] **MSG-02**: User can join and leave channels
+- [x] **MSG-03**: User can send and receive messages in a channel in real-time
 - [ ] **MSG-04**: User can discuss within an Akte-Thread (case-bound, inherits Akte RBAC)
 - [ ] **MSG-05**: User can @mention other users in messages, triggering in-app notification
 - [ ] **MSG-06**: User sees unread message count badges per channel
@@ -90,9 +90,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCAN-03 | Phase 30 | Complete |
 | SCAN-04 | Phase 30 | Complete |
 | SCAN-05 | Phase 30 | Complete |
-| MSG-01 | Phase 31 | Pending |
-| MSG-02 | Phase 31 | Pending |
-| MSG-03 | Phase 31 | Pending |
+| MSG-01 | Phase 31 | Complete |
+| MSG-02 | Phase 31 | Complete |
+| MSG-03 | Phase 31 | Complete |
 | MSG-04 | Phase 31 | Pending |
 | MSG-05 | Phase 31 | Pending |
 | MSG-06 | Phase 32 | Pending |

@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 30 - SCAN-05 Neu-Urteil-Check
+**Current focus:** Phase 31 - Messaging Schema + API
 
 ## Current Position
 
-Phase: 30 of 32 (SCAN-05 Neu-Urteil-Check)
-Plan: 2 of 2 in current phase
-Status: Phase Complete
-Last activity: 2026-02-28 -- completed 30-02 (Neu-Urteil Cross-Matching Engine)
+Phase: 31 of 32 (Messaging Schema + API)
+Plan: 1 of 3 in current phase
+Status: In Progress
+Last activity: 2026-03-02 -- completed 31-01 (Messaging Schema + Service Layer)
 
 Progress: [####......] 40% (v0.3: 2/5 phases)
 
@@ -55,6 +55,7 @@ Progress: [####......] 40% (v0.3: 2/5 phases)
 | Phase 29 P02 | 2min | 2 tasks | 2 files |
 | Phase 30 P01 | 4min | 2 tasks | 9 files |
 | Phase 30 P02 | 3min | 2 tasks | 4 files |
+| Phase 31 P01 | 5min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,9 @@ Recent decisions affecting current work:
 - [30-02]: Per-Urteil dedup uses Prisma JSON path query on meta.urteilChunkId (not time-based 24h)
 - [30-02]: Sachgebiet pre-filter maps Rechtsgebiet to Sachgebiet; Verfassungsrecht matches all Akten
 - [30-02]: LLM briefing uses structured 3-section format with maxTokens 500 and fallback on failure
+- [31-01]: SystemSetting guard (messaging.channels_seed_version) for seed idempotency, consistent with seedFalldatenTemplates
+- [31-01]: syncAkteChannelMembers adds missing members but never removes -- preserves explicitly added users
+- [31-01]: PrismaTransaction type derived from prisma.$transaction parameters for extended client compatibility
 
 ### Pending Todos
 
@@ -100,5 +104,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Phase 31 context gathered
-Resume file: .planning/phases/31-messaging-schema-api/31-CONTEXT.md
+Stopped at: Completed 31-01-PLAN.md (Messaging Schema + Service Layer)
+Resume file: .planning/phases/31-messaging-schema-api/31-01-SUMMARY.md

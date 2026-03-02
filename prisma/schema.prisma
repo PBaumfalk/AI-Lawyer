@@ -428,6 +428,12 @@ model User {
   falldatenTemplatesErstellt  FalldatenTemplate[]  @relation("FalldatenTemplateErsteller")
   falldatenTemplatesGeprueft  FalldatenTemplate[]  @relation("FalldatenTemplatePruefer")
 
+  // Phase 31: Messaging
+  channelsErstellt    Channel[]        @relation("ChannelErsteller")
+  channelMemberships  ChannelMember[]
+  messagesAuthored    Message[]        @relation("MessageAuthor")
+  messageReactions    MessageReaction[]
+
   @@map("users")
 }
 
@@ -760,6 +766,9 @@ model Akte {
 
   // Phase 12: RAG relations
   normen  AkteNorm[]
+
+  // Phase 31: Messaging
+  channel          Channel?          // One-to-one via @unique on Channel.akteId
 
   @@index([status])
   @@index([anwaltId])
@@ -1910,6 +1919,7 @@ model HelenaTask {
   prioritaet  Int              @default(5)  // 1-10, higher = more urgent
   steps       Json             @default("[]") // Agent trace: [{type: "thought"|"toolCall"|"toolResult"|"error", content, timestamp}]
   ergebnis    String?          @db.Text  // Final result summary
+  channelId   String?    // If triggered from channel @mention, response posts back here
   fehler      String?          @db.Text  // Error message if FAILED
 
   startedAt   DateTime?
@@ -2110,4 +2120,97 @@ model FalldatenTemplate {
   @@index([sachgebiet])
   @@index([erstelltVonId])
   @@map("falldaten_templates")
+}
+
+// --- Messaging (Phase 31) ---
+
+enum ChannelTyp {
+  ALLGEMEIN
+  AKTE
+}
+
+model Channel {
+  id            String      @id @default(cuid())
+  name          String
+  slug          String      @unique
+  beschreibung  String?     @db.Text
+  typ           ChannelTyp  @default(ALLGEMEIN)
+
+  // AKTE channels link to an Akte (nullable for ALLGEMEIN)
+  akteId        String?     @unique  // @unique ensures 1:1 Akte-to-Channel mapping
+  akte          Akte?       @relation(fields: [akteId], references: [id], onDelete: Cascade)
+
+  // Creator / ownership
+  erstelltVonId String
+  erstelltVon   User        @relation("ChannelErsteller", fields: [erstelltVonId], references: [id])
+
+  archived      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  members       ChannelMember[]
+  messages      Message[]
+
+  @@index([typ])
+  @@index([archived])
+  @@map("channels")
+}
+
+model ChannelMember {
+  id         String   @id @default(cuid())
+  channelId  String
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lastReadAt DateTime @default(now())
+  joinedAt   DateTime @default(now())
+
+  @@unique([channelId, userId])
+  @@index([userId])
+  @@map("channel_members")
+}
+
+model Message {
+  id          String    @id @default(cuid())
+  channelId   String
+  channel     Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User      @relation("MessageAuthor", fields: [authorId], references: [id])
+
+  body        String    @db.Text
+  attachments Json?     // Array of { dokumentId: string, name: string }
+  mentions    Json?     // Array of userId strings (including expanded @alle)
+
+  // Reply-to (flat, not threaded)
+  parentId    String?
+  parent      Message?  @relation("MessageReplies", fields: [parentId], references: [id])
+  replies     Message[] @relation("MessageReplies")
+
+  editedAt    DateTime?
+  deletedAt   DateTime?   // Soft delete: body cleared, this timestamp set
+
+  createdAt   DateTime  @default(now())
+
+  reactions   MessageReaction[]
+
+  @@index([channelId, createdAt])
+  @@index([channelId, deletedAt])
+  @@index([authorId])
+  @@map("messages")
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String   // Unicode emoji character
+
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@map("message_reactions")
 }

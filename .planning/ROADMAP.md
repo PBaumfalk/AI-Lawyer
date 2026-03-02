@@ -124,12 +124,12 @@ See: `milestones/v0.3-ROADMAP.md` for full phase details.
   3. Daily quests reset at 00:05 and nightly safety-net cron at 23:55 catches any missed quest completions and finalizes streaks
   4. GameProfile data is only visible to the owning user (DSGVO-compliant, no cross-user profile reads)
   5. XP awards correct level using linear progression formula; Runen are tracked separately and not conflated with XP
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 33-01: Prisma schema migration (UserGameProfile, Quest, QuestCompletion + enums) + DSGVO opt-in field
-- [ ] 33-02: Quest condition DSL evaluator + GameProfile service (XP/Level/Runen/Streak)
-- [ ] 33-03: BullMQ integration (async quest-eval queue, daily/nightly crons, streak workday awareness)
+- [ ] 33-01-PLAN.md -- Prisma schema migration (UserGameProfile, Quest, QuestCompletion + enums) + types + quest seed
+- [ ] 33-02-PLAN.md -- GameProfile service (XP/Level/Runen/Streak) + quest evaluator + quest service + API route
+- [ ] 33-03-PLAN.md -- BullMQ gamification queue + processor + crons + business route hooks
 
 ### Phase 34: Dashboard Widget + Quest Deep-Links
 **Goal**: Users see their gamification status at a glance and can navigate directly to quest-relevant views

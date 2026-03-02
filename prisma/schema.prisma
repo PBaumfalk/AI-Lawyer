@@ -306,6 +306,21 @@ enum FalldatenTemplateStatus {
   STANDARD
 }
 
+// ─── Gamification Enums (Phase 33) ──────────────────────────────────────────
+
+enum SpielKlasse {
+  JURIST          // ANWALT
+  SCHREIBER       // SACHBEARBEITER
+  WAECHTER        // SEKRETARIAT
+  QUARTIERMEISTER // ADMIN
+}
+
+enum QuestTyp {
+  DAILY
+  WEEKLY
+  SPECIAL
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Kanzlei {
@@ -433,6 +448,10 @@ model User {
   channelMemberships  ChannelMember[]
   messagesAuthored    Message[]        @relation("MessageAuthor")
   messageReactions    MessageReaction[]
+
+  // Phase 33: Gamification
+  gamificationOptIn  Boolean           @default(false)
+  gameProfile        UserGameProfile?
 
   @@map("users")
 }
@@ -2213,4 +2232,60 @@ model MessageReaction {
   @@unique([messageId, userId, emoji])
   @@index([messageId])
   @@map("message_reactions")
+}
+
+// ─── Gamification (Phase 33) ────────────────────────────────────────────────
+
+model UserGameProfile {
+  id           String      @id @default(cuid())
+  userId       String      @unique
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  klasse       SpielKlasse
+  xp           Int         @default(0)
+  runen        Int         @default(0)
+  streakTage   Int         @default(0)
+  streakLetzte DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  completions  QuestCompletion[]
+
+  @@index([userId])
+  @@map("user_game_profiles")
+}
+
+model Quest {
+  id              String    @id @default(cuid())
+  name            String
+  beschreibung    String?
+  typ             QuestTyp  @default(DAILY)
+  bedingung       Json
+  xpBelohnung     Int       @default(0)
+  runenBelohnung  Int       @default(0)
+  aktiv           Boolean   @default(true)
+  sortierung      Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  completions     QuestCompletion[]
+
+  @@unique([name, typ])
+  @@index([typ, aktiv])
+  @@map("quests")
+}
+
+model QuestCompletion {
+  id            String           @id @default(cuid())
+  userId        String
+  questId       String
+  quest         Quest            @relation(fields: [questId], references: [id], onDelete: Cascade)
+  profile       UserGameProfile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  xpVerdient    Int
+  runenVerdient Int
+  completedAt   DateTime         @default(now())
+
+  @@index([userId, completedAt])
+  @@index([questId])
+  @@unique([userId, questId, completedAt])
+  @@map("quest_completions")
 }

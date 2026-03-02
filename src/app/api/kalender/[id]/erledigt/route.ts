@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
+import { enqueueQuestCheck } from "@/lib/gamification/quest-service";
 import { gamificationQueue } from "@/lib/queue/queues";
 import { z } from "zod";
 
@@ -95,6 +96,11 @@ export async function PATCH(
       istUeberfaellig: isOverdue,
     },
   });
+
+  // Gamification: enqueue quest check when Frist/WV marked as erledigt
+  if (parsed.data.erledigt && userId) {
+    enqueueQuestCheck(userId);
+  }
 
   // Bossfight: enqueue boss damage when Wiedervorlage marked as erledigt
   if (parsed.data.erledigt && existing.typ === "WIEDERVORLAGE") {

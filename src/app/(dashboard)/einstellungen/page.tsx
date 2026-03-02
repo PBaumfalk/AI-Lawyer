@@ -23,11 +23,15 @@ import { BriefkopfTab } from "@/components/einstellungen/briefkopf-tab";
 import { OrdnerSchemataTab } from "@/components/einstellungen/ordner-schemata-tab";
 import { BenachrichtigungenTab } from "@/components/einstellungen/benachrichtigungen-tab";
 import { GlassCard } from "@/components/ui/glass-card";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 export default function EinstellungenPage() {
   const [session, setSession] = useState<any>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [gamificationOptIn, setGamificationOptIn] = useState(false);
+  const [optInLoading, setOptInLoading] = useState(true);
 
   useEffect(() => {
     // Load session info
@@ -39,6 +43,14 @@ export default function EinstellungenPage() {
         if (data?.user?.role === "ADMIN") {
           checkOnboarding();
         }
+        // Fetch gamification opt-in status
+        fetch("/api/gamification/opt-in")
+          .then((r) => r.json())
+          .then((optData) => {
+            setGamificationOptIn(optData.gamificationOptIn ?? false);
+          })
+          .catch(() => {})
+          .finally(() => setOptInLoading(false));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -60,6 +72,23 @@ export default function EinstellungenPage() {
       // If we can't check, don't show wizard (non-blocking)
     }
   };
+
+  async function handleOptInToggle(checked: boolean) {
+    try {
+      const res = await fetch("/api/gamification/opt-in", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ optIn: checked }),
+      });
+      if (!res.ok) throw new Error("Fehler beim Speichern");
+      setGamificationOptIn(checked);
+      toast.success(
+        checked ? "Gamification aktiviert" : "Gamification deaktiviert",
+      );
+    } catch {
+      toast.error("Gamification-Einstellung konnte nicht gespeichert werden");
+    }
+  }
 
   if (loading) {
     return (
@@ -163,6 +192,25 @@ export default function EinstellungenPage() {
                       {session?.user?.role}
                     </span>
                   </div>
+                </div>
+              </GlassCard>
+
+              {/* Gamification toggle */}
+              <GlassCard className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold text-foreground">
+                      Gamification
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Quest-Widget und XP-Fortschritt auf dem Dashboard anzeigen
+                    </p>
+                  </div>
+                  <Switch
+                    checked={gamificationOptIn}
+                    onCheckedChange={handleOptInToggle}
+                    disabled={optInLoading}
+                  />
                 </div>
               </GlassCard>
 

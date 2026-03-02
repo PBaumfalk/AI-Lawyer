@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Play, Square, Plus, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface TimeEntry {
   id: string;
@@ -55,6 +57,12 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
   const [timerLoading, setTimerLoading] = useState(false);
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Inline editing state
+  const [editingCell, setEditingCell] = useState<{ id: string; field: "kategorie" | "beschreibung" } | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+
   // New entry form
   const [showForm, setShowForm] = useState(false);
   const [newDauer, setNewDauer] = useState("");
@@ -80,6 +88,44 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
   }, [akteId, page]);
 
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
+
+  // Lazy-load categories when first dropdown is opened
+  const fetchCategories = async () => {
+    if (categoriesLoaded) return;
+    try {
+      const res = await fetch("/api/finanzen/taetigkeitskategorien");
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data.kategorien ?? data ?? []);
+        setCategoriesLoaded(true);
+      }
+    } catch { /* silent */ }
+  };
+
+  // Inline save for kategorie and beschreibung fields
+  const handleInlineSave = async (entryId: string, field: "kategorie" | "beschreibung", value: string) => {
+    try {
+      const res = await fetch("/api/finanzen/zeiterfassung", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: entryId,
+          [field]: field === "kategorie" ? (value || null) : value,
+        }),
+      });
+      if (res.ok) {
+        setEntries(prev => prev.map(e =>
+          e.id === entryId ? { ...e, [field]: field === "kategorie" ? (value || null) : value } : e
+        ));
+        toast.success(field === "kategorie" ? "Kategorie gespeichert" : "Beschreibung gespeichert");
+      }
+    } catch {
+      toast.error("Fehler beim Speichern");
+    } finally {
+      setEditingCell(null);
+      setEditValue("");
+    }
+  };
 
   // Fetch active timer
   const fetchTimer = useCallback(async () => {
@@ -294,8 +340,78 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
             ) : entries.map((e) => (
               <tr key={e.id} className="border-b border-border/50">
                 <td className="p-3 text-muted-foreground">{formatDate(e.datum)}</td>
-                <td className="p-3 text-foreground">{e.beschreibung}</td>
-                <td className="p-3 text-muted-foreground">{e.kategorie ?? "—"}</td>
+                <td className="p-3">
+                  {editingCell?.id === e.id && editingCell.field === "beschreibung" ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editValue}
+                      onChange={(ev) => setEditValue(ev.target.value)}
+                      onBlur={() => {
+                        if (editValue.trim()) {
+                          handleInlineSave(e.id, "beschreibung", editValue.trim());
+                        } else {
+                          setEditingCell(null);
+                        }
+                      }}
+                      onKeyDown={(ev) => {
+                        if (ev.key === "Enter" && editValue.trim()) {
+                          handleInlineSave(e.id, "beschreibung", editValue.trim());
+                        }
+                        if (ev.key === "Escape") {
+                          setEditingCell(null);
+                          setEditValue("");
+                        }
+                      }}
+                      className="w-full h-8 px-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  ) : e.beschreibung ? (
+                    <span className="text-foreground">{e.beschreibung}</span>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditingCell({ id: e.id, field: "beschreibung" });
+                        setEditValue("");
+                      }}
+                      className="text-muted-foreground/50 italic cursor-pointer hover:text-foreground transition-colors"
+                    >
+                      Beschreibung hinzufuegen
+                    </button>
+                  )}
+                </td>
+                <td className="p-3">
+                  {editingCell?.id === e.id && editingCell.field === "kategorie" ? (
+                    <select
+                      autoFocus
+                      value={editValue}
+                      onChange={(ev) => {
+                        setEditValue(ev.target.value);
+                        handleInlineSave(e.id, "kategorie", ev.target.value);
+                      }}
+                      onBlur={() => setEditingCell(null)}
+                      className="h-8 px-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">Keine Kategorie</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        fetchCategories();
+                        setEditingCell({ id: e.id, field: "kategorie" });
+                        setEditValue(e.kategorie ?? "");
+                      }}
+                      className={cn(
+                        "text-left cursor-pointer transition-colors hover:text-foreground",
+                        e.kategorie ? "text-muted-foreground" : "text-muted-foreground/50 italic"
+                      )}
+                    >
+                      {e.kategorie ?? "Keine Kategorie"}
+                    </button>
+                  )}
+                </td>
                 <td className="p-3 text-right font-mono font-semibold">{formatDauer(e.dauer)}</td>
                 <td className="p-3 text-muted-foreground">{e.userName}</td>
                 <td className="p-3">

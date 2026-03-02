@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 36 in progress (Quick Wins), Plan 02 complete
+**Current focus:** v0.4 Quest & Polish -- Phase 36 COMPLETE (Quick Wins), all plans done, ready for next phase
 
 ## Current Position
 
 Phase: 36 of 41 (Quick Wins) -- 4 of 9 in milestone
 Plan: 2 of 2 in current phase (COMPLETE)
 Status: Executing
-Last activity: 2026-03-02 -- Completed 36-02 (OCR Recovery + Zeiterfassung Inline Edit)
+Last activity: 2026-03-02 -- Completed 36-01 (KPI Cards + Empty States + Chat Rename)
 
 Progress: [█████░░░░░] 56% (10/18 plans)
 
@@ -53,7 +53,7 @@ Progress: [█████░░░░░] 56% (10/18 plans)
 | Phase 35 P01 | 14min | 2 tasks | 14 files |
 | Phase 35 P02 | 4min | 2 tasks | 9 files |
 | Phase 35 P03 | 2min | 1 tasks | 2 files |
-| Phase 36 P01 | 3min | 2 tasks | 5 files |
+| Phase 36 P01 | 5min | 2 tasks | 8 files |
 | Phase 36 P02 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
@@ -90,6 +90,9 @@ Recent decisions affecting current work:
 - [35-03]: All event shape fixes on emitter/API side only -- consumer components left untouched
 - [35-03]: totalDamage uses aggregate query across all participants for accurate defeat stats
 - [35-03]: runenEarned in boss:defeated uses VICTORY_RUNEN_BONUS constant for consistency
+- [36-01]: EmptyState in message-list.tsx (not akte-channel-tab.tsx) since MessageView has visible composer even when empty
+- [36-01]: Controlled/uncontrolled pattern for AkteDetailTabs so it works both standalone and with external KPI control
+- [36-01]: Zeiterfassung EmptyState inside td colSpan to preserve table structure
 - [36-02]: Vision-Analyse only for image MIME types (not PDFs) per research pitfall guidance
 - [36-02]: Manual text entry uses inline expanding textarea (not modal) per user decision
 - [36-02]: Category dropdown saves on selection for minimal friction (no separate save button)
@@ -109,5 +112,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 36-02-PLAN.md (OCR Recovery + Zeiterfassung Inline Edit) -- Phase 36 fully COMPLETE
+Stopped at: Completed 36-01-PLAN.md (KPI Cards + Empty States + Chat Rename) -- Phase 36 fully COMPLETE (both plans)
 Resume file: None -- ready for next phase

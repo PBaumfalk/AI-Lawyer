@@ -64,10 +64,10 @@
 
 ### Quick Wins
 
-- [ ] **QW-01**: KPI-Cards in Akte-Detail anklickbar → navigiert zum jeweiligen Tab
+- [x] **QW-01**: KPI-Cards in Akte-Detail anklickbar → navigiert zum jeweiligen Tab
 - [x] **QW-02**: OCR-Recovery-Flow mit Banner (Retry OCR + Vision-Analyse Fallback + Manuelle Texteingabe)
-- [ ] **QW-03**: Empty States mit Icon, Erklärtext und max. 2 CTAs (beA, E-Mail, Zeiterfassung etc.)
-- [ ] **QW-04**: "Nachrichten" KPI-Card umbenennen zu "Chat" und auf Channel-Messages verlinken
+- [x] **QW-03**: Empty States mit Icon, Erklärtext und max. 2 CTAs (beA, E-Mail, Zeiterfassung etc.)
+- [x] **QW-04**: "Nachrichten" KPI-Card umbenennen zu "Chat" und auf Channel-Messages verlinken
 - [x] **QW-05**: Zeiterfassung: "—" → "Keine Kategorie" (grau), leere Beschreibung → "Beschreibung hinzufügen" Link
 
 ## Future Requirements
@@ -131,10 +131,10 @@
 | TEAM-02 | Phase 41 | Pending |
 | TEAM-03 | Phase 41 | Pending |
 | TEAM-04 | Phase 41 | Pending |
-| QW-01 | Phase 36 | Pending |
+| QW-01 | Phase 36 | Complete |
 | QW-02 | Phase 36 | Complete |
-| QW-03 | Phase 36 | Pending |
-| QW-04 | Phase 36 | Pending |
+| QW-03 | Phase 36 | Complete |
+| QW-04 | Phase 36 | Complete |
 | QW-05 | Phase 36 | Complete |
 
 **Coverage:**

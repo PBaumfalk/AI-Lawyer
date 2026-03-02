@@ -154,11 +154,12 @@ Plans:
   2. Clearing Wiedervorlagen reduces Boss HP in real-time (Socket.IO broadcast) and the team can see the HP bar update live
   3. Boss progresses through 4 phases with escalating Runen rewards; Phase 4 victory grants a collective Legendary trophy
   4. Admin can configure the activation threshold (backlog size) for boss spawning
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 35-01: Bossfight schema (Bossfight, BossfightDamage) + engine (dynamic HP, phase transitions)
-- [ ] 35-02: Bossfight dashboard banner + Socket.IO real-time updates + admin config
+- [x] 35-01-PLAN.md -- Bossfight schema (Bossfight, BossfightDamage) + engine (dynamic HP, phase transitions)
+- [x] 35-02-PLAN.md -- Bossfight dashboard banner + Socket.IO real-time updates + admin config
+- [ ] 35-03-PLAN.md -- Gap closure: fix Socket.IO event payload shapes + API leaderboard field name
 
 ### Phase 36: Quick Wins
 **Goal**: Akte detail view and document management have polished UX with no dead-end states
@@ -263,7 +264,7 @@ Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34
 | 28-32 | v0.3 | 13/13 | Complete | 2026-03-02 |
 | 33. Gamification Schema + Quest Engine | 3/3 | Complete    | 2026-03-02 | - |
 | 34. Dashboard Widget + Quest Deep-Links | 2/2 | Complete    | 2026-03-02 | - |
-| 35. Bossfight | 2/2 | Complete   | 2026-03-02 | - |
+| 35. Bossfight | 2/3 | Gap Closure   | 2026-03-02 | - |
 | 36. Quick Wins | v0.4 | 0/2 | Not started | - |
 | 37. Klassen + Weekly + Special Quests | v0.4 | 0/2 | Not started | - |
 | 38. Anti-Missbrauch | v0.4 | 0/2 | Not started | - |

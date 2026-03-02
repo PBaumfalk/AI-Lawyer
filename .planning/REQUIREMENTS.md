@@ -7,18 +7,18 @@
 
 ### Gamification Core
 
-- [ ] **GAME-01**: User hat ein GameProfile mit XP, Level, Runen, Streak-Tage und Klasse
+- [x] **GAME-01**: User hat ein GameProfile mit XP, Level, Runen, Streak-Tage und Klasse
 - [ ] **GAME-02**: XP-basiertes Level-System mit linearer Progression (sachliche Titel pro Level-Range)
 - [ ] **GAME-03**: Runen als separate Belohnungswährung (getrennt von XP, nur Runen sind ausgebbar)
 - [ ] **GAME-04**: Streak-Tracking mit automatischem Freeze bei Urlaub/Abwesenheit (kein Streak-Bruch bei Nicht-Arbeitstagen)
-- [ ] **GAME-05**: Klassen-Zuweisung basierend auf RBAC-Rolle (Jurist=ANWALT, Schreiber=SACHBEARBEITER, Wächter=SEKRETARIAT, Quartiermeister=ADMIN)
-- [ ] **GAME-06**: DSGVO-konforme Datenarchitektur (eigenes GameProfile nur selbst sichtbar, Team-Daten nur aggregiert)
+- [x] **GAME-05**: Klassen-Zuweisung basierend auf RBAC-Rolle (Jurist=ANWALT, Schreiber=SACHBEARBEITER, Wächter=SEKRETARIAT, Quartiermeister=ADMIN)
+- [x] **GAME-06**: DSGVO-konforme Datenarchitektur (eigenes GameProfile nur selbst sichtbar, Team-Daten nur aggregiert)
 - [ ] **GAME-07**: Gamification ist opt-in sichtbar (Dashboard-Widget, kein Zwang, keine Push-Notifications)
 - [ ] **GAME-08**: Dashboard-Widget zeigt heutige Quests, XP-Bar, Level, Runen und Streak
 
 ### Quest System
 
-- [ ] **QUEST-01**: 5 Daily Quests mit maschinenlesbarer Bedingungslogik (JSON DSL in Quest.bedingung)
+- [x] **QUEST-01**: 5 Daily Quests mit maschinenlesbarer Bedingungslogik (JSON DSL in Quest.bedingung)
 - [ ] **QUEST-02**: Quest-Bedingungen evaluieren automatisch gegen echte Prisma-Daten (Fristen, Wiedervorlagen, Rechnungen, Akten)
 - [ ] **QUEST-03**: Quest-Completion wird nach Geschäftsaktion geprüft (fire-and-forget, blockiert nie Business-Logik)
 - [ ] **QUEST-04**: Klassen-spezifische Quests (unterschiedliche Quests pro RBAC-Rolle/Klasse)
@@ -95,15 +95,15 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GAME-01 | Phase 33 | Pending |
+| GAME-01 | Phase 33 | Complete |
 | GAME-02 | Phase 33 | Pending |
 | GAME-03 | Phase 33 | Pending |
 | GAME-04 | Phase 33 | Pending |
-| GAME-05 | Phase 33 | Pending |
-| GAME-06 | Phase 33 | Pending |
+| GAME-05 | Phase 33 | Complete |
+| GAME-06 | Phase 33 | Complete |
 | GAME-07 | Phase 34 | Pending |
 | GAME-08 | Phase 34 | Pending |
-| QUEST-01 | Phase 33 | Pending |
+| QUEST-01 | Phase 33 | Complete |
 | QUEST-02 | Phase 33 | Pending |
 | QUEST-03 | Phase 33 | Pending |
 | QUEST-04 | Phase 37 | Pending |

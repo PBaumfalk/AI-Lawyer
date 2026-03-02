@@ -17,6 +17,7 @@ import {
   CheckCheck,
   Loader2,
   Sparkles,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -48,6 +49,7 @@ const typeIcons: Record<NotificationType, React.ElementType> = {
   "scanner:admin-escalation": AlertTriangle,
   "template:approved": CheckCircle2,
   "template:rejected": XCircle,
+  "message:mention": MessageSquare,
 };
 
 /** Map notification types to icon colors */
@@ -72,6 +74,7 @@ const typeColors: Record<NotificationType, string> = {
   "scanner:admin-escalation": "text-amber-600",
   "template:approved": "text-emerald-500",
   "template:rejected": "text-rose-500",
+  "message:mention": "text-blue-500",
 };
 
 /**

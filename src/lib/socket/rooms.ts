@@ -11,6 +11,7 @@ const log = createLogger("socket:rooms");
  * - `role:{ROLE}` — role-based broadcasts (auto-joined on connect)
  * - `akte:{akteId}` — case-specific updates (joined/left dynamically)
  * - `mailbox:{kontoId}` — email real-time updates (joined/left dynamically)
+ * - `channel:{channelId}` — messaging channel updates (joined/left dynamically)
  */
 export function setupRooms(io: Server): void {
   io.on("connection", (socket: Socket) => {
@@ -59,6 +60,40 @@ export function setupRooms(io: Server): void {
       const mailboxRoom = `mailbox:${kontoId}`;
       socket.leave(mailboxRoom);
       log.debug({ userId, kontoId }, "Left mailbox room");
+    });
+
+    // Dynamic Channel room join
+    socket.on("join:channel", (channelId: string) => {
+      if (!channelId || typeof channelId !== "string") return;
+      const channelRoom = `channel:${channelId}`;
+      socket.join(channelRoom);
+      log.debug({ userId, channelId }, "Joined channel room");
+    });
+
+    // Dynamic Channel room leave
+    socket.on("leave:channel", (channelId: string) => {
+      if (!channelId || typeof channelId !== "string") return;
+      const channelRoom = `channel:${channelId}`;
+      socket.leave(channelRoom);
+      log.debug({ userId, channelId }, "Left channel room");
+    });
+
+    // Typing indicators (ephemeral, no DB persistence, 5s auto-timeout on client)
+    socket.on("typing:start", (channelId: string) => {
+      if (!channelId || typeof channelId !== "string") return;
+      socket.to(`channel:${channelId}`).emit("typing:start", {
+        channelId,
+        userId,
+        userName: socket.data.userName || userId,
+      });
+    });
+
+    socket.on("typing:stop", (channelId: string) => {
+      if (!channelId || typeof channelId !== "string") return;
+      socket.to(`channel:${channelId}`).emit("typing:stop", {
+        channelId,
+        userId,
+      });
     });
 
     // Disconnect logging (Socket.IO auto-removes from all rooms)

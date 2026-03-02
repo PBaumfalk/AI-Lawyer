@@ -5,6 +5,7 @@ import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, reg
 import { processMusterIngestionJob, processMusterIngestPending, type MusterIngestionJobData } from "@/lib/queue/processors/muster-ingestion.processor";
 import { seedAmtlicheFormulare } from "@/lib/muster/seed-amtliche";
 import { seedFalldatenTemplates } from "@/lib/falldaten/seed-templates";
+import { seedDefaultChannels } from "@/lib/messaging/channel-service";
 import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.processor";
 import { processFristReminders } from "@/workers/processors/frist-reminder";
 import { initializeDefaults, getSettingTyped } from "@/lib/settings/service";
@@ -1031,6 +1032,13 @@ async function startup() {
     await seedFalldatenTemplates();
   } catch (err) {
     log.warn({ err }, "Failed to seed Falldaten templates (non-fatal)");
+  }
+
+  // Seed default messaging channels (#allgemein, #organisation) on first boot
+  try {
+    await seedDefaultChannels();
+  } catch (err) {
+    log.warn({ err }, "Failed to seed default channels (non-fatal)");
   }
 
   // Re-queue documents that previously failed OCR (e.g. due to Stirling-PDF being unavailable).

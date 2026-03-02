@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.3
 milestone_name: Kanzlei-Collaboration
 status: unknown
-last_updated: "2026-02-28T22:44:32.020Z"
+last_updated: "2026-03-02T08:06:55.501Z"
 progress:
-  total_phases: 13
+  total_phases: 14
   completed_phases: 12
-  total_plans: 37
-  completed_plans: 37
+  total_plans: 40
+  completed_plans: 39
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 31 of 32 (Messaging Schema + API)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-03-02 -- completed 31-01 (Messaging Schema + Service Layer)
+Last activity: 2026-03-02 -- completed 31-02 (Channel API Routes)
 
 Progress: [####......] 40% (v0.3: 2/5 phases)
 
@@ -56,6 +56,7 @@ Progress: [####......] 40% (v0.3: 2/5 phases)
 | Phase 30 P01 | 4min | 2 tasks | 9 files |
 | Phase 30 P02 | 3min | 2 tasks | 4 files |
 | Phase 31 P01 | 5min | 2 tasks | 9 files |
+| Phase 31 P02 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,9 @@ Recent decisions affecting current work:
 - [31-01]: SystemSetting guard (messaging.channels_seed_version) for seed idempotency, consistent with seedFalldatenTemplates
 - [31-01]: syncAkteChannelMembers adds missing members but never removes -- preserves explicitly added users
 - [31-01]: PrismaTransaction type derived from prisma.$transaction parameters for extended client compatibility
+- [Phase 31]: Browse mode on GET /api/channels returns all non-archived ALLGEMEIN channels with joined boolean for channel discovery
+- [Phase 31]: AKTE channel lazy creation fetches kurzrubrum separately; P2002 race condition handled by catch-and-retry
+- [Phase 31]: AKTE channels reject PATCH/DELETE with 400 -- immutable from API, managed by Akte lifecycle
 
 ### Pending Todos
 
@@ -104,5 +108,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 31-01-PLAN.md (Messaging Schema + Service Layer)
-Resume file: .planning/phases/31-messaging-schema-api/31-01-SUMMARY.md
+Stopped at: Completed 31-02-PLAN.md (Channel API Routes)
+Resume file: .planning/phases/31-messaging-schema-api/31-02-SUMMARY.md

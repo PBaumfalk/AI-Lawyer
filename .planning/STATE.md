@@ -8,7 +8,7 @@ progress:
   total_phases: 14
   completed_phases: 12
   total_plans: 40
-  completed_plans: 39
+  completed_plans: 40
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 31 of 32 (Messaging Schema + API)
-Plan: 2 of 3 in current phase
-Status: In Progress
-Last activity: 2026-03-02 -- completed 31-02 (Channel API Routes)
+Plan: 3 of 3 in current phase
+Status: Phase 31 Complete
+Last activity: 2026-03-02 -- completed 31-03 (Message + Reaction API Routes)
 
-Progress: [####......] 40% (v0.3: 2/5 phases)
+Progress: [######....] 60% (v0.3: 3/5 phases)
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Progress: [####......] 40% (v0.3: 2/5 phases)
 | Phase 30 P02 | 3min | 2 tasks | 4 files |
 | Phase 31 P01 | 5min | 2 tasks | 9 files |
 | Phase 31 P02 | 2min | 2 tasks | 5 files |
+| Phase 31 P03 | 4min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Recent decisions affecting current work:
 - [Phase 31]: Browse mode on GET /api/channels returns all non-archived ALLGEMEIN channels with joined boolean for channel discovery
 - [Phase 31]: AKTE channel lazy creation fetches kurzrubrum separately; P2002 race condition handled by catch-and-retry
 - [Phase 31]: AKTE channels reject PATCH/DELETE with 400 -- immutable from API, managed by Akte lifecycle
+- [31-03]: verifyChannelAccess helper encapsulates AKTE vs ALLGEMEIN access logic for channel API routes
+- [31-03]: Helena system user lookup uses module-level cached promise with idempotent upsert fallback
+- [31-03]: channelId flows through DB record (not job data) -- processor fetches from DB after completion
 
 ### Pending Todos
 
@@ -108,5 +112,5 @@ Deferred from previous milestones (not in v0.3 scope):
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 31-02-PLAN.md (Channel API Routes)
-Resume file: .planning/phases/31-messaging-schema-api/31-02-SUMMARY.md
+Stopped at: Completed 31-03-PLAN.md (Message + Reaction API Routes) -- Phase 31 complete
+Resume file: .planning/phases/31-messaging-schema-api/31-03-SUMMARY.md

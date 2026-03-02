@@ -13,6 +13,7 @@ import { GlassKpiCard } from "@/components/ui/glass-kpi-card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { Tagesuebersicht } from "@/components/fristen/tagesuebersicht";
+import { QuestWidget } from "@/components/gamification/quest-widget";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -136,6 +137,9 @@ export default async function DashboardPage() {
           />
         </div>
       </section>
+
+      {/* Quest Widget (gamification) -- self-fetching, renders nothing if opted out */}
+      <QuestWidget />
 
       {/* Tagesuebersicht -- wrapped in GlassPanel */}
       <GlassPanel elevation="panel">

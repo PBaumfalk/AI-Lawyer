@@ -23,6 +23,9 @@ echo "==> PostgreSQL is ready"
 echo "==> Running Prisma migrate deploy..."
 node node_modules/prisma/build/index.js migrate deploy
 
+echo "==> Applying manual SQL migrations (pgvector, HNSW indexes, etc.)..."
+node prisma/apply-manual-migrations.js
+
 echo "==> Checking if database needs seeding..."
 NEEDS_SEED=$(node -e "
   const { PrismaClient } = require('@prisma/client');

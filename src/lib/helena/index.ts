@@ -202,8 +202,10 @@ export async function runHelenaAgent(
       onStepUpdate: onStepUpdate
         ? (step) => onStepUpdate({
             stepNumber: 0,
+            maxSteps: 1,
             toolName: step.stage,
-            description: step.detail,
+            resultSummary: step.detail,
+            tokenEstimate: 0,
           })
         : undefined,
     });
@@ -214,7 +216,7 @@ export async function runHelenaAgent(
         text: pipelineResult.rueckfrage ?? "Ich brauche weitere Informationen.",
         mode: actualMode,
         tier: 3,
-        steps: [{ type: "thought", content: "Schriftsatz-Pipeline: Rueckfrage", timestamp: Date.now() }],
+        steps: [{ type: "thought", content: "Schriftsatz-Pipeline: Rueckfrage", timestamp: new Date().toISOString() }],
         totalTokens: pipelineResult.totalTokens,
         finishReason: "needs-input",
         capReached: false,
@@ -227,7 +229,7 @@ export async function runHelenaAgent(
           (pipelineResult.warnungen[0]?.text ?? "Bitte versuche es erneut."),
         mode: actualMode,
         tier: 3,
-        steps: [{ type: "error", content: pipelineResult.warnungen[0]?.text ?? "Pipeline error", timestamp: Date.now() }],
+        steps: [{ type: "error", content: pipelineResult.warnungen[0]?.text ?? "Pipeline error", timestamp: new Date().toISOString() }],
         totalTokens: pipelineResult.totalTokens,
         finishReason: "error",
         capReached: false,
@@ -244,8 +246,8 @@ export async function runHelenaAgent(
       mode: actualMode,
       tier: 3,
       steps: [
-        { type: "thought", content: `Schriftsatz-Pipeline: ${pipelineResult.schriftsatz?.klageart} erstellt`, timestamp: Date.now() },
-        { type: "toolResult", content: JSON.stringify({ draftId: pipelineResult.draftId, belege: pipelineResult.retrieval_belege.length }), timestamp: Date.now() },
+        { type: "thought", content: `Schriftsatz-Pipeline: ${pipelineResult.schriftsatz?.klageart} erstellt`, timestamp: new Date().toISOString() },
+        { type: "toolResult", content: JSON.stringify({ draftId: pipelineResult.draftId, belege: pipelineResult.retrieval_belege.length }), timestamp: new Date().toISOString() },
       ],
       totalTokens: pipelineResult.totalTokens,
       finishReason: "complete",

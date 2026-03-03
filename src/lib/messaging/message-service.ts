@@ -8,7 +8,7 @@
 
 import { prisma } from "@/lib/db";
 import { createLogger } from "@/lib/logger";
-import { getSocketEmitter } from "@/lib/socket/emitter";
+import { safeEmit } from "@/lib/socket/emitter";
 import { createNotification } from "@/lib/notifications/service";
 import { hasHelenaMention, parseHelenaMention } from "@/lib/helena/at-mention-parser";
 import { createHelenaTask } from "@/lib/helena/task-service";
@@ -68,9 +68,7 @@ export async function sendMessage(params: {
     isSystem: message.author.isSystem,
   };
 
-  getSocketEmitter()
-    .to(`channel:${channelId}`)
-    .emit("message:new", payload);
+  safeEmit(`channel:${channelId}`, "message:new", payload);
 
   // 3. Process @mentions -- expand @alle, create notifications
   const rawMentions = mentions.filter((id) => id !== "__alle__");
@@ -202,9 +200,7 @@ export async function editMessage(
     editedAt: message.editedAt!.toISOString(),
   };
 
-  getSocketEmitter()
-    .to(`channel:${message.channelId}`)
-    .emit("message:edited", payload);
+  safeEmit(`channel:${message.channelId}`, "message:edited", payload);
 
   return { message };
 }
@@ -253,9 +249,7 @@ export async function softDeleteMessage(
     channelId: existing.channelId,
   };
 
-  getSocketEmitter()
-    .to(`channel:${existing.channelId}`)
-    .emit("message:deleted", payload);
+  safeEmit(`channel:${existing.channelId}`, "message:deleted", payload);
 
   return {};
 }

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: Mandantenportal
 status: unknown
-last_updated: "2026-03-03T12:57:04.000Z"
+last_updated: "2026-03-03T13:04:26.000Z"
 progress:
   total_phases: 21
-  completed_phases: 18
+  completed_phases: 19
   total_plans: 54
-  completed_plans: 51
+  completed_plans: 52
 ---
 
 # Project State
@@ -22,17 +22,17 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 
 ## Current Position
 
-Phase: 47 of 48 (Portal Messaging)
-Plan: 1 of 2 in current phase -- COMPLETE
-Status: 47-01 complete (Portal Channel Infrastructure), ready for 47-02
-Last activity: 2026-03-03 — Completed 47-01 (Portal Channel Infrastructure)
+Phase: 47 of 48 (Portal Messaging) -- COMPLETE
+Plan: 2 of 2 in current phase -- COMPLETE
+Status: Phase 47 complete (Portal Messaging), ready for Phase 48
+Last activity: 2026-03-03 — Completed 47-02 (Portal Chat UI)
 
 Progress: [######░░░░] 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 129 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:5)
+- Total plans completed: 130 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:6)
 - Average duration: ~15 min
 - Total execution time: ~30 hours
 
@@ -50,6 +50,7 @@ Progress: [######░░░░] 38%
 | Phase 46 P01 | 5min | 2 tasks | 5 files |
 | Phase 46 P02 | 3min | 2 tasks | 6 files |
 | Phase 47 P01 | 6min | 2 tasks | 13 files |
+| Phase 47 P02 | 4min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,9 @@ Recent decisions affecting current work:
 - [Phase 47]: Akte-to-Channel relation changed from one-to-one to one-to-many
 - [Phase 47]: Portal messages strip all mentions (no @Helena/@alle from Mandant side)
 - [Phase 47]: PORTAL channels use mandantUserId field (User.id) since Mandant is a User with role=MANDANT
+- [Phase 47]: 10s polling for portal messages (no Socket.IO in portal -- simpler, sufficient for Mandant MVP)
+- [Phase 47]: Reuse existing portal upload endpoint for message file attachments
+- [Phase 47]: Server-side presigned URL resolution in GET messages API for attachment downloads
 
 ### Pending Todos
 
@@ -105,5 +109,5 @@ None -- fresh milestone.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 47-01-PLAN.md (Portal Channel Infrastructure)
-Resume: Continue with Phase 47 Plan 02 (Portal Chat UI for Mandant)
+Stopped at: Completed 47-02-PLAN.md (Portal Chat UI)
+Resume: Continue with Phase 48 (next phase in milestone)

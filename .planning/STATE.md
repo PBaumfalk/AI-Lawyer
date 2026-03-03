@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: Mandantenportal
 status: unknown
-last_updated: "2026-03-03T12:48:26.768Z"
+last_updated: "2026-03-03T12:57:04.000Z"
 progress:
   total_phases: 21
   completed_phases: 18
   total_plans: 54
-  completed_plans: 50
+  completed_plans: 51
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.5 Mandantenportal — Phase 45 complete, moving to Phase 46
+**Current focus:** v0.5 Mandantenportal — Phase 47 in progress
 
 ## Current Position
 
-Phase: 46 of 48 (Portal Dokumente) -- COMPLETE
-Plan: 2 of 2 in current phase
-Status: Phase 46 complete, ready for Phase 47
-Last activity: 2026-03-03 — Completed 46-02 (Portal Download + Upload)
+Phase: 47 of 48 (Portal Messaging)
+Plan: 1 of 2 in current phase -- COMPLETE
+Status: 47-01 complete (Portal Channel Infrastructure), ready for 47-02
+Last activity: 2026-03-03 — Completed 47-01 (Portal Channel Infrastructure)
 
-Progress: [#####░░░░░] 33%
+Progress: [######░░░░] 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 128 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:4)
+- Total plans completed: 129 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:5)
 - Average duration: ~15 min
 - Total execution time: ~30 hours
 
@@ -49,6 +49,7 @@ Progress: [#####░░░░░] 33%
 | v0.5 | 6 | 13 | in progress |
 | Phase 46 P01 | 5min | 2 tasks | 5 files |
 | Phase 46 P02 | 3min | 2 tasks | 6 files |
+| Phase 47 P01 | 6min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,10 @@ Recent decisions affecting current work:
 - [Phase 46]: createdById uses Akte anwaltId for Mandant uploads (Mandant not internal User)
 - [Phase 46]: 50MB portal upload limit vs 100MB internal for portal security
 - [Phase 46]: Mandant uploads skip OCR/RAG/preview for simplified pipeline
+- [Phase 47]: Compound unique (akteId, typ, mandantUserId) replaces @unique on akteId for Channel
+- [Phase 47]: Akte-to-Channel relation changed from one-to-one to one-to-many
+- [Phase 47]: Portal messages strip all mentions (no @Helena/@alle from Mandant side)
+- [Phase 47]: PORTAL channels use mandantUserId field (User.id) since Mandant is a User with role=MANDANT
 
 ### Pending Todos
 
@@ -100,5 +105,5 @@ None -- fresh milestone.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 46-02-PLAN.md (Portal Download + Upload)
-Resume: Continue with Phase 47 (Portal Nachrichten)
+Stopped at: Completed 47-01-PLAN.md (Portal Channel Infrastructure)
+Resume: Continue with Phase 47 Plan 02 (Portal Chat UI for Mandant)

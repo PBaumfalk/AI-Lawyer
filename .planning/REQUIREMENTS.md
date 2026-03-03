@@ -33,8 +33,8 @@ Requirements for Mandantenportal milestone. Each maps to roadmap phases.
 
 ### Nachrichten
 
-- [ ] **MSG-01**: Mandant kann Nachrichten an den Anwalt senden
-- [ ] **MSG-02**: Anwalt kann Nachrichten an den Mandant im Portal-Thread senden
+- [x] **MSG-01**: Mandant kann Nachrichten an den Anwalt senden
+- [x] **MSG-02**: Anwalt kann Nachrichten an den Mandant im Portal-Thread senden
 - [ ] **MSG-03**: Mandant kann Dateien an Nachrichten anhaengen
 - [ ] **MSG-04**: Mandant erhaelt E-Mail bei neuer Nachricht vom Anwalt
 - [ ] **MSG-05**: Mandant erhaelt E-Mail bei neuem freigegebenen Dokument
@@ -91,8 +91,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DOC-03 | Phase 46 | Complete |
 | DOC-04 | Phase 46 | Complete |
 | DOC-05 | Phase 46 | Complete |
-| MSG-01 | Phase 47 | Pending |
-| MSG-02 | Phase 47 | Pending |
+| MSG-01 | Phase 47 | Complete |
+| MSG-02 | Phase 47 | Complete |
 | MSG-03 | Phase 47 | Pending |
 | MSG-04 | Phase 48 | Pending |
 | MSG-05 | Phase 48 | Pending |

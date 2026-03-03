@@ -229,10 +229,11 @@ Plans:
   1. User sees a "Heldenkarte" profile page showing their avatar, class, level, title, and any active cosmetic items
   2. The badge showcase displays earned (never purchased) badges like "Fristenwaechter" and "Bannbrecher" with earn dates
   3. Quest history tab shows all completed quests with completion date and reward amounts
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 40-01: Heldenkarte profile page (avatar, class, cosmetics, badge showcase, quest history)
+- [ ] 40-01-PLAN.md -- Badge catalog + badge service + Prisma migration (badges JSON field) + Heldenkarte API endpoint
+- [ ] 40-02-PLAN.md -- HeroCard, BadgeShowcase, QuestHistoryTable components + Heldenkarte page + sidebar entry
 
 ### Phase 41: Team-Dashboard + Reporting
 **Goal**: Admins and team leads see aggregated team health metrics without per-person breakdowns
@@ -269,7 +270,7 @@ Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34
 | 37. Klassen + Weekly + Special Quests | 2/2 | Complete    | 2026-03-02 | - |
 | 38. Anti-Missbrauch | 2/2 | Complete    | 2026-03-02 | - |
 | 39. Item-Shop + Inventar | 2/2 | Complete    | 2026-03-03 | - |
-| 40. Heldenkarte | v0.4 | 0/1 | Not started | - |
+| 40. Heldenkarte | v0.4 | 0/2 | Not started | - |
 | 41. Team-Dashboard + Reporting | v0.4 | 0/2 | Not started | - |
 
 ---

@@ -70,6 +70,22 @@ export async function checkQuestsForUser(userId: string): Promise<void> {
     orderBy: { sortierung: "asc" },
   });
 
+  // Check for active doppel-runen perk (activatedAt within last 2 hours)
+  const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+  const activeDoppelRunen = await prisma.userInventoryItem.findFirst({
+    where: {
+      userId,
+      verbraucht: true,
+      activatedAt: { gte: twoHoursAgo },
+      shopItem: {
+        metadata: {
+          path: ["perkType"],
+          equals: "doppel-runen",
+        },
+      },
+    },
+  });
+
   for (const quest of quests) {
     // Skip SPECIAL quests outside their date range
     if (quest.typ === "SPECIAL") {
@@ -145,6 +161,12 @@ export async function checkQuestsForUser(userId: string): Promise<void> {
     if (isWvQuest) {
       const capResult = await checkAndRecordRunenCap(userId, runenToCredit);
       runenToCredit = capResult.runenToCredit;
+    }
+
+    // Apply doppel-runen doubling: cap first, then double (per CONTEXT.md locked decision)
+    // Doubles Runen from ALL quest types (daily, weekly, special), not just WV
+    if (activeDoppelRunen) {
+      runenToCredit *= 2;
     }
 
     // Random audit sampling: ~2% of completions (midpoint of 1-3% per CONTEXT.md)

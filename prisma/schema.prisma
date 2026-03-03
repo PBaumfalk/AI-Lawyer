@@ -2322,6 +2322,7 @@ model UserInventoryItem {
   verbraucht   Boolean   @default(false)
   purchasedAt  DateTime  @default(now())
   activatedAt  DateTime?
+  usedForDate  DateTime? // Date the streak-schutz perk was consumed to protect a gap
 
   @@index([userId, shopItemId])
   @@index([userId, ausgeruestet])

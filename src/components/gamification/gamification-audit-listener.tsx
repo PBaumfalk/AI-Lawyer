@@ -57,9 +57,15 @@ export function GamificationAuditListener() {
       });
     }
 
+    function handleStreakSchutzUsed() {
+      toast.success("Streak-Schutz hat deinen Streak gerettet!");
+    }
+
     socket.on("gamification:audit-needed", handleAuditNeeded);
+    socket.on("gamification:streak-schutz-used", handleStreakSchutzUsed);
     return () => {
       socket.off("gamification:audit-needed", handleAuditNeeded);
+      socket.off("gamification:streak-schutz-used", handleStreakSchutzUsed);
     };
   }, [socket]);
 

@@ -208,7 +208,44 @@ export async function calculateStreak(userId: string): Promise<number> {
       if (completion) {
         streak++;
       } else {
-        break; // Workday with no completion = streak broken
+        // Check for available streak-schutz perk (unused, activated, perkType match)
+        const schutz = await prisma.userInventoryItem.findFirst({
+          where: {
+            userId,
+            verbraucht: true,
+            usedForDate: null, // Not yet consumed for a date
+            shopItem: {
+              metadata: {
+                path: ["perkType"],
+                equals: "streak-schutz",
+              },
+            },
+          },
+          orderBy: { activatedAt: "asc" }, // FIFO: consume oldest first
+        });
+
+        if (schutz) {
+          // Mark as used for this specific date
+          await prisma.userInventoryItem.update({
+            where: { id: schutz.id },
+            data: { usedForDate: startOfDay(checkDate) },
+          });
+          streak++; // Streak continues -- gap is protected
+
+          // Notify user via Socket.IO (informational, not critical)
+          try {
+            const { getSocketEmitter } = await import("@/lib/socket/emitter");
+            getSocketEmitter()
+              .to(`user:${userId}`)
+              .emit("gamification:streak-schutz-used", {
+                savedDate: startOfDay(checkDate).toISOString(),
+              });
+          } catch {
+            // Socket emit is best-effort -- don't break streak calculation
+          }
+        } else {
+          break; // No protection available -- streak ends
+        }
       }
     }
     // Non-workdays (weekend, holiday, vacation) are simply skipped

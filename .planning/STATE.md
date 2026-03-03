@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.5
-milestone_name: Mandantenportal
-status: shipped
-stopped_at: "Milestone v0.5 complete — archived"
-last_updated: "2026-03-03T22:55:00.000Z"
-last_activity: 2026-03-03 -- Milestone v0.5 Mandantenportal shipped
+milestone: v0.6
+milestone_name: Stabilisierung
+status: active
+stopped_at: ""
+last_updated: "2026-03-03T23:30:00.000Z"
+last_activity: 2026-03-03 -- Milestone v0.6 Stabilisierung started
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 14
-  completed_plans: 14
-  percent: 100
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,14 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet — und Mandanten ueber ein eigenes Portal Sachstand, Dokumente und Nachrichten einsehen koennen.
-**Current focus:** Planning next milestone
+**Current focus:** v0.6 Stabilisierung — alle Bugs fixen, Docker-Deploy stabil
 
 ## Current Position
 
-Milestone v0.5 Mandantenportal shipped. No active phase.
-Next: `/gsd:new-milestone` to define v0.6 scope.
+Phase: 51 — Systematic Bug Audit & Fix
+Plan: —
+Status: Starting audit
+Last activity: 2026-03-03 — Milestone v0.6 started
 
-Progress: [##########] 100% (v0.5 complete)
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -54,7 +56,6 @@ Progress: [##########] 100% (v0.5 complete)
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-All v0.5 decisions archived to milestones/v0.5-ROADMAP.md.
 
 ### Pending Todos
 
@@ -64,10 +65,12 @@ Deferred from previous milestones:
 
 ### Blockers/Concerns
 
-None — between milestones.
+- Middleware Edge Runtime crash — FIXED (auth.config.ts split)
+- DB schema out of sync on server — FIXED (prisma db push)
+- Multiple features broken after deploy: Helena, Messaging, Shop, Heldenkarte — INVESTIGATING
 
 ## Session Continuity
 
-Last session: 2026-03-03T22:55:00Z
-Stopped at: Milestone v0.5 complete, archived
-Resume: Run `/gsd:new-milestone` to define v0.6 scope.
+Last session: 2026-03-03T23:30:00Z
+Stopped at: Starting v0.6 audit
+Resume: Systematic bug audit in progress

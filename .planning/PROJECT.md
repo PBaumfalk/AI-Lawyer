@@ -189,7 +189,17 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- Next milestone TBD -->
+<!-- v0.6 Stabilisierung -->
+
+**Stabilisierung & Bugfixes (v0.6):**
+- [ ] Alle Feature-Bereiche funktionieren nach frischem `docker compose up`
+- [ ] Helena KI-Chat funktioniert (Conversations, Nachrichten, RAG)
+- [ ] Internes Messaging funktioniert (Kanäle, Nachrichten, @Helena)
+- [ ] Gamification funktioniert (Shop, Heldenkarte, Quests, Bossfight)
+- [ ] Mandantenportal funktioniert (Login, Dashboard, Dokumente, Nachrichten)
+- [ ] Dashboard lädt fehlerfrei (alle Widgets, KPIs)
+- [ ] Alle DB-Migrationen laufen automatisch beim Deploy
+- [ ] Docker Build + Deploy ist stabil und reproduzierbar
 
 ### Backlog
 
@@ -238,7 +248,7 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ## Context
 
-Shipped v0.5 with ~141k LOC TypeScript (60 commits in v0.5, 806+ total).
+Shipped v0.5 with ~141k LOC TypeScript (60 commits in v0.5, 806+ total). v0.6 focuses on stabilization — fixing all runtime bugs discovered during server deployment.
 Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (90+ Models including PortalInvite, portal fields on User, PORTAL ChannelTyp), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, Recharts, canvas-confetti, pdf-lib, fast-xml-parser, pgvector HNSW.
 Docker Compose deployment with 9 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice, ollama).
 Helena is an autonomous agent with ReAct-Loop, 14 tools, deterministic Schriftsatz pipeline, @-mention task system, draft-approval workflow, background scanner with 7 alert types (incl. NEUES_URTEIL), per-Akte memory, QA-gates, and channel messaging integration.

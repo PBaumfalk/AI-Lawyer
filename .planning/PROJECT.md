@@ -2,11 +2,11 @@
 
 ## What This Is
 
-Eine vollständig browserbasierte Kanzleisoftware mit autonomer KI-Agentin ("Helena") für die Kanzlei Baumfalk, Dortmund. Vereint Aktenverwaltung, Dokumentenmanagement mit OnlyOffice (Co-Editing, Track Changes, Vorlagen, Briefkopf), BGB-konforme Fristenberechnung, vollständigen E-Mail-Client (IMAP IDLE + SMTP), OCR-Pipeline mit RAG-Ingestion, Finanzen (RVG, Rechnungen, E-Rechnung, DATEV, SEPA, Zeiterfassung), beA-Integration, autonome KI-Agentin mit ReAct-Loop, Tool-Calling, deterministischem Schriftsatz-Orchestrator, proaktivem Background-Scanner mit Cross-Akte Urteil-Matching, per-Akte Memory und QA-Gates, internes Echtzeit-Messaging mit Akten-Threads und strukturierte Falldatenblaetter mit Community-Template-Workflow — RBAC mit Dezernaten, DSGVO-Compliance und Audit-Trail — alles self-hosted via Docker Compose, alles im Browser.
+Eine vollständig browserbasierte Kanzleisoftware mit autonomer KI-Agentin ("Helena") für die Kanzlei Baumfalk, Dortmund. Vereint Aktenverwaltung, Dokumentenmanagement mit OnlyOffice (Co-Editing, Track Changes, Vorlagen, Briefkopf), BGB-konforme Fristenberechnung, vollständigen E-Mail-Client (IMAP IDLE + SMTP), OCR-Pipeline mit RAG-Ingestion, Finanzen (RVG, Rechnungen, E-Rechnung, DATEV, SEPA, Zeiterfassung), beA-Integration, autonome KI-Agentin mit ReAct-Loop, Tool-Calling, deterministischem Schriftsatz-Orchestrator, proaktivem Background-Scanner mit Cross-Akte Urteil-Matching, per-Akte Memory und QA-Gates, internes Echtzeit-Messaging mit Akten-Threads, strukturierte Falldatenblaetter mit Community-Template-Workflow und Mandantenportal mit Einladungslink-Auth, Sachstand-Timeline, Dokument-Freigabe, sicherem Messaging und E-Mail-Benachrichtigungen — RBAC mit Dezernaten, DSGVO-Compliance und Audit-Trail — alles self-hosted via Docker Compose, alles im Browser.
 
 ## Core Value
 
-Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt, Schriftsätze deterministisch entwirft, proaktiv Scanner-Alerts auslöst, per-Akte Memory pflegt und als digitale Rechtsanwaltsfachangestellte mitarbeitet — ohne dass KI-generierte Inhalte jemals automatisch versendet oder finalisiert werden (BRAK 2025 / BRAO 43).
+Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt, Schriftsätze deterministisch entwirft, proaktiv Scanner-Alerts auslöst, per-Akte Memory pflegt und als digitale Rechtsanwaltsfachangestellte mitarbeitet — und Mandanten über ein eigenes Portal Sachstand, freigegebene Dokumente und sichere Nachrichten einsehen können — ohne dass KI-generierte Inhalte jemals automatisch versendet oder finalisiert werden (BRAK 2025 / BRAO 43).
 
 ## Requirements
 
@@ -176,20 +176,20 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - ✓ Team-Dashboard + Reporting (quest rate, backlog delta, bossfight damage, PDF/CSV) — v0.4
 - ✓ Quick Wins (clickable KPIs, OCR recovery, empty states, Chat rename, Zeiterfassung edit) — v0.4
 
+**Mandantenportal (v0.5):**
+- ✓ Portal-Auth: Einladungslink + Passwort (Anwalt sendet, Mandant setzt Passwort) — v0.5
+- ✓ Portal-Layout: /portal/* Route Group mit eigenem Layout (Glass UI) — v0.5
+- ✓ Sachstand-Timeline: Vereinfachte Akte-Events für Mandant (keine internen Aktivitäten) — v0.5
+- ✓ Dokument-Freigabe: Per-Dokument "Mandant sichtbar" Toggle durch Anwalt — v0.5
+- ✓ Portal-Dokumentenansicht: Freigegebene Dokumente einsehen + herunterladen — v0.5
+- ✓ Mandant-Upload: Dokumente in dedizierten "Mandant"-Ordner hochladen (MinIO) — v0.5
+- ✓ Portal-Messaging: Sichere Nachrichten zwischen Mandant und Anwalt — v0.5
+- ✓ E-Mail-Benachrichtigungen: Neues Dokument, neue Nachricht, Sachstand-Update — v0.5
+- ✓ Multi-Mandant: Jeder Beteiligter mit Rolle MANDANT wird separat eingeladen — v0.5
+
 ### Active
 
-<!-- Current milestone: v0.5 Mandantenportal -->
-
-**Mandantenportal (v0.5):**
-- [ ] Portal-Auth: Einladungslink + Passwort (Anwalt sendet, Mandant setzt Passwort)
-- [ ] Portal-Layout: /portal/* Route Group mit eigenem Layout (Glass UI)
-- [ ] Sachstand-Timeline: Vereinfachte Akte-Events für Mandant (keine internen Aktivitäten)
-- [ ] Dokument-Freigabe: Per-Dokument "Mandant sichtbar" Toggle durch Anwalt
-- [ ] Portal-Dokumentenansicht: Freigegebene Dokumente einsehen + herunterladen
-- [ ] Mandant-Upload: Dokumente in dedizierten "Mandant"-Ordner hochladen (MinIO)
-- [ ] Portal-Messaging: Sichere Nachrichten zwischen Mandant und Anwalt
-- [ ] E-Mail-Benachrichtigungen: Neues Dokument, neue Nachricht, Sachstand-Update
-- [ ] Multi-Mandant: Jeder Beteiligter mit Rolle MANDANT wird separat eingeladen
+<!-- Next milestone TBD -->
 
 ### Backlog
 
@@ -238,12 +238,13 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ## Context
 
-Shipped v0.4 with ~135k LOC TypeScript (108 commits in v0.4, 746+ total).
-Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (85+ Models including UserGameProfile, Quest, QuestCompletion, Bossfight, BossfightDamage, ShopItem, UserInventoryItem, WeeklySnapshot), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, Recharts, canvas-confetti, pdf-lib, fast-xml-parser, pgvector HNSW.
+Shipped v0.5 with ~141k LOC TypeScript (60 commits in v0.5, 806+ total).
+Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (90+ Models including PortalInvite, portal fields on User, PORTAL ChannelTyp), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, Recharts, canvas-confetti, pdf-lib, fast-xml-parser, pgvector HNSW.
 Docker Compose deployment with 9 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice, ollama).
 Helena is an autonomous agent with ReAct-Loop, 14 tools, deterministic Schriftsatz pipeline, @-mention task system, draft-approval workflow, background scanner with 7 alert types (incl. NEUES_URTEIL), per-Akte memory, QA-gates, and channel messaging integration.
-Gamification system: Quest DSL evaluator, XP/Level/Runen/Streak engine, Bossfight team mechanic, Item-Shop with 18 items (4 rarity tiers), Heldenkarte profile with 8 achievement badges, Team-Dashboard with Recharts trend charts and PDF/CSV reporting, Anti-Missbrauch guards (qualified completion, Redis Runen cap, random audits).
-Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena silent in ALLGEMEIN channels, sidebar unread badge not real-time for background, Akte stats counter shows old chatNachrichten, doppel-runen 2h window edge case.
+Gamification system: Quest DSL evaluator, XP/Level/Runen/Streak engine, Bossfight team mechanic, Item-Shop with 18 items (4 rarity tiers), Heldenkarte profile with 8 achievement badges, Team-Dashboard with Recharts trend charts and PDF/CSV reporting, Anti-Missbrauch guards.
+Mandantenportal: /portal/* route group with MANDANT role, invite-based auth, DSGVO data isolation, per-document Freigabe toggle, PORTAL messaging channels, BullMQ email notifications (3 types), tab navigation.
+Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena silent in ALLGEMEIN channels, sidebar unread badge not real-time for background, Akte stats counter shows old chatNachrichten, doppel-runen 2h window edge case, portal email deep links don't redirect post-login.
 
 ## Constraints
 
@@ -286,7 +287,7 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena
 | @Helena AKTE-only in Messaging (v0.3) | Helena braucht akteId-Kontext für sinnvolle Antworten | ✓ Good — design trade-off, ALLGEMEIN silently skipped |
 | Nightly cron für Akte-Embeddings (v0.3) | Einfacher als on-demand, 02:30 vor Urteile-Sync | ✓ Good — akzeptable Staleness für 5-Personen-Kanzlei |
 | Banner refetch statt auto-insert (v0.3) | Konsistent mit Activity Feed Pattern, verhindert Race Conditions | ✓ Good — message:new triggers refetch, not local insert |
-| Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | — Pending |
+| Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | ✓ Good — shipped in v0.5 |
 | CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending |
 
 | Zero new npm packages for v0.2 (v0.2) | All agent capabilities on existing AI SDK v4 + BullMQ + Prisma + Socket.IO | ✓ Good — no dependency bloat |
@@ -304,19 +305,6 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena
 | seedAmtlicheFormulare() at worker startup (v0.1) | Idempotent via SystemSetting guard, avoids cron complexity for one-time seed | ✓ Good — content bypasses MinIO for hardcoded templates |
 | params Promise pattern in Next.js 15 (v0.1) | Sync params pattern caused 404s on DELETE/PATCH — await params required | ✓ Good — caught by integration checker, 2-line fix applied |
 
-## Current Milestone: v0.5 Mandantenportal
-
-**Goal:** Mandanten erhalten ein eigenes Portal zum Einsehen ihres Aktenstatus, freigegebener Dokumente und zur sicheren Kommunikation mit dem Anwalt.
-
-**Target features:**
-- Portal-Auth (Einladungslink + Passwort, per Mandant-Beteiligter)
-- /portal/* Route Group mit eigenem Glass-Layout
-- Sachstand-Timeline (vereinfachte Akte-Events)
-- Dokument-Freigabe (per-Dokument Toggle) + Dokumentenansicht
-- Mandant-Upload in dedizierten DMS-Ordner
-- Sichere Nachrichten (Portal-Messaging)
-- E-Mail-Benachrichtigungen (neue Dokumente, Nachrichten, Sachstand)
-
 ## Shipped Milestones
 
 - **v3.4 Full-Featured Kanzleisoftware** — 13 phases, 38 plans (2026-02-25)
@@ -325,6 +313,7 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena
 - **v0.2 Helena Agent** — 10 phases, 23 plans (2026-02-28)
 - **v0.3 Kanzlei-Collaboration** — 5 phases, 13 plans (2026-03-02)
 - **v0.4 Quest & Polish** — 10 phases, 21 plans (2026-03-03)
+- **v0.5 Mandantenportal** — 8 phases, 14 plans (2026-03-03)
 
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
@@ -336,9 +325,13 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena
 | canvas-confetti for Bossfight (v0.4) | Only new npm dependency (6KB) for boss victory celebration | ✓ Good — fire-and-forget, no cleanup needed |
 | Recharts for backlog trend (v0.4) | LineChart with glass-style tooltip for Team Dashboard | ✓ Good — consistent with existing chart patterns |
 | Condition templates for Special Quests (v0.4) | Server-side templates prevent admin from writing raw JSON — select preset, fill values | ✓ Good — zero JSON knowledge required |
-| Mandantenportal als /portal/* Route Group (v0.5) | Gleiche Next.js App, shared Prisma/DB, eigenes Layout + Auth — minimale Infrastruktur | — Pending |
-| Einladungslink + Passwort für Mandanten (v0.5) | Einfach, sicher, kein OAuth-Setup; Magic Link als spätere Erweiterung | — Pending |
-| Per-Dokument Freigabe-Toggle (v0.5) | Granulare Kontrolle pro Dokument statt per Ordner — Anwalt entscheidet explizit | — Pending |
+| Mandantenportal als /portal/* Route Group (v0.5) | Gleiche Next.js App, shared Prisma/DB, eigenes Layout + Auth — minimale Infrastruktur | ✓ Good — zero new services, shared Prisma client |
+| Einladungslink + Passwort für Mandanten (v0.5) | Einfach, sicher, kein OAuth-Setup; Magic Link als spätere Erweiterung | ✓ Good — PortalInvite model, secure tokens, anti-enumeration |
+| Per-Dokument Freigabe-Toggle (v0.5) | Granulare Kontrolle pro Dokument statt per Ordner — Anwalt entscheidet explizit | ✓ Good — mandantSichtbar default false, explicit opt-in |
+| Server-side data isolation via Kontakt chain (v0.5) | 404 not 403 on unauthorized access, Prisma WHERE chain not client filter | ✓ Good — DSGVO compliant, no data leak |
+| 10s polling for portal messages (v0.5) | No Socket.IO in portal, simpler architecture, sufficient for Mandant MVP | ✓ Good — good enough for 5-Mandant scale |
+| BullMQ portal-notification queue (v0.5) | Async email with dedup + DSGVO gate + 3 retries, fire-and-forget from API | ✓ Good — date-based dedup prevents spam |
+| (portal-public) route group (v0.5) | Unauthenticated pages (login, activate, reset) outside guarded layout | ✓ Good — fixed redirect loops |
 
 ---
-*Last updated: 2026-03-03 after v0.5 milestone start*
+*Last updated: 2026-03-03 after v0.5 milestone*

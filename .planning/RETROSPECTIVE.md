@@ -285,6 +285,52 @@
 
 ---
 
+## Milestone: v0.5 — Mandantenportal
+
+**Shipped:** 2026-03-03
+**Phases:** 8 (43-50, incl. 2 gap-closure) | **Plans:** 14 | **Commits:** 60
+
+### What Was Built
+- Portal Infrastructure: MANDANT role in UserRole enum, /portal/* route group with Glass UI layout, auth-guarded middleware, PortalSidebar/PortalHeader with Kanzlei branding
+- Invite-based Auth: PortalInvite model with secure tokens (crypto.randomUUID), account activation, JWT session with 30min auto-logout + 5min warning, password reset flow, anti-enumeration (always 200)
+- DSGVO-compliant Data Room: Server-side isolation via Kontakt→Beteiligter chain, multi-Akte selection with auto-redirect for single-Akte, simplified timeline (mandantSichtbar flag), naechsteSchritte text with accent-border card
+- Granular Document Sharing: Per-document mandantSichtbar toggle (default false), presigned MinIO download URLs, Mandant upload to dedicated folder (50MB limit, skip OCR/RAG), Anwalt notification on upload
+- Secure Portal Messaging: PORTAL ChannelTyp with lazy creation and P2002 race handling, Mandant-Anwalt messaging, file attachments (5 files, 25MB each), 10s polling, @mention stripping
+- Transactional Email Notifications: BullMQ portal-notification queue, 3 event types (neue-nachricht, neues-dokument, sachstand-update), date-based deduplication, DSGVO einwilligungEmail gate, 3 retries with backoff
+
+### What Worked
+- **Server-side data isolation pattern:** Kontakt→Beteiligter chain enforced at Prisma query level (not client-side filter) — 404 not 403 on unauthorized access hides Akte existence
+- **Reuse of existing patterns:** Portal messaging reuses channel-service.ts/message-service.ts from v0.3, document upload reuses MinIO patterns from v3.4 — zero new libraries needed
+- **Milestone audit + gap closure phases:** Two audits identified real gaps (auth redirect loops, missing navigation). Phase 49 and 50 closed all 6 gaps cleanly
+- **10s polling instead of Socket.IO:** Simpler architecture for portal, sufficient for Mandant use case, avoids complexity of portal-side Socket.IO setup
+- **(portal-public) route group pattern:** Clean separation of unauthenticated pages (login, activate, password reset) from guarded portal pages — fixed all redirect loop issues
+
+### What Was Inefficient
+- **2 gap-closure phases needed (49 + 50):** Auth pages trapped in guarded layout (redirect loops) and missing navigation links were only caught by milestone audit, not during phase verification
+- **Portal email deep links don't redirect post-login:** Deep links in notification emails go to /portal/dashboard after login, not to the linked resource — requires post-login redirect callback (deferred)
+- **Phase 49 scope was broader than expected:** Route group restructuring required moving 7 pages, fixing URL structure, creating /portal/profil page — what seemed like a small fix touched 10 files
+
+### Patterns Established
+- **(portal-public) route group for unauthenticated pages:** Next.js route groups cleanly separate guarded vs public pages without middleware complexity
+- **Server-side Kontakt→Beteiligter chain for Mandant access:** Single query pattern for all portal API routes — `requireMandantAkteAccess()` in portal-access.ts
+- **BullMQ portal-notification with date-based dedup:** `${type}:${akteId}:${mandantId}:${YYYY-MM-DD}` key prevents duplicate notifications within 24h
+- **Tab navigation for multi-section portal pages:** PortalAkteTabs with usePathname + active underline — reusable for any portal page with sub-sections
+- **Mandant uploads skip pipeline:** erstelltDurch='mandant' marker, no OCR/RAG/preview processing — simplified pipeline for external uploads
+
+### Key Lessons
+1. **Auth page placement matters.** Login, activation, and password reset pages MUST be outside any auth-guarded layout. This seems obvious but was missed in initial implementation — always verify unauthenticated flows early.
+2. **Milestone audit is essential for portal-type features.** Portal features create E2E flows (invite→activate→login→use) that span multiple phases. Only end-to-end audit catches flow-breaking issues like redirect loops.
+3. **10s polling is good enough for portal MVP.** Socket.IO would add complexity for marginal UX improvement at kanzlei scale (<50 Mandanten). Revisit if real-time becomes a user complaint.
+4. **Per-document Freigabe (default false) is the right DSGVO pattern.** Explicit opt-in per document means Anwalt always makes a conscious decision — no accidental data exposure.
+5. **v0.5 completed in 1 day (8 phases, 14 plans).** Portal features built heavily on existing patterns (messaging, document management, auth) — reuse velocity pays off exponentially.
+
+### Cost Observations
+- Model mix: ~35% opus (execution), ~50% sonnet (planning/research), ~15% haiku (verification)
+- Sessions: ~6 sessions in 1 day
+- Notable: 14 plans in 1 day (~4 min/plan avg). Zero new npm dependencies. Pattern reuse from v0.2/v0.3 messaging enabled fastest milestone yet.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -297,6 +343,7 @@
 | v0.2 | ~10 | 10 | 23 | Zero new dependencies; gap-closure phases still ~20%; Prisma $extends for business invariants |
 | v0.3 | ~8 | 5 | 13 | Lazy channel creation; community template workflow; nightly embedding refresh at kanzlei scale |
 | v0.4 | ~8 | 10 | 21 | Quest DSL evaluator; gap-closure down to 10%; absent-until-loaded widget pattern; DSGVO opt-in from day one |
+| v0.5 | ~6 | 8 | 14 | Pattern reuse from v0.2/v0.3 enables fastest milestone; portal-public route group; server-side data isolation |
 
 ### Cumulative Quality
 
@@ -308,6 +355,7 @@
 | v0.2 | 253+ (Frist + RVG + Helena 46) | 52/53 (1 deferred) | 2 (audit + re-audit) | 5 (TS errors, stub, taskId, gate hardcodes, SCAN-05) |
 | v0.3 | 253+ (unchanged) | 20/20 | 1 | 5 (@Helena ALLGEMEIN, sidebar badge, stats counter, embedding refresh, TS errors) |
 | v0.4 | 253+ (unchanged) | 41/41 | 1 | 4 (quest-evaluator any, fire-and-forget catch, doppel-runen edge, pre-existing TS) |
+| v0.5 | 253+ (unchanged) | 25/25 | 2 (audit + re-audit) | 4 (console.error in route, email deep links, pre-existing TS, adhoc phase) |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -322,3 +370,5 @@
 9. Prisma $extends for business invariants — database-level enforcement is safer than middleware
 10. DSGVO compliance baked into schema (opt-in field, self-only visibility) prevents compliance concerns in all downstream phases
 11. Absent-until-loaded pattern for progressive enhancement — no CLS, no loading spinners, works with SSR
+12. Pattern reuse compounds — portal messaging/documents/auth built on v0.2/v0.3 patterns, enabling 14 plans in 1 day
+13. Auth pages must be outside guarded layouts — always verify unauthenticated E2E flows (invite→activate→login) before marking auth phases complete

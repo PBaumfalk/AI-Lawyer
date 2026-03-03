@@ -1,5 +1,37 @@
 # Milestones
 
+## v0.5 Mandantenportal (Shipped: 2026-03-03)
+
+**Delivered:** Mandanten erhalten ein eigenes Portal zum Einsehen ihres Aktenstatus, freigegebener Dokumente und zur sicheren Kommunikation mit dem Anwalt — komplett mit Einladungslink-Auth, DSGVO-konformer Datentrennung, granularer Dokument-Freigabe, sicherem Messaging mit Dateianhang und transaktionalen E-Mail-Benachrichtigungen.
+
+**Phases:** 8 (43-50, incl. 2 gap closure phases)
+**Plans:** 14 completed
+**Lines of Code:** ~141k LOC TypeScript (+10.8k net in v0.5)
+**Commits:** 60
+**Git range:** `feat(43-01)` → `feat(50-01)`
+**Timeline:** 2026-03-03 (1 day)
+**Requirements:** 25/25 satisfied
+
+**Key accomplishments:**
+1. Portal Infrastructure — MANDANT role in UserRole enum, /portal/* route group with Glass UI layout, auth-guarded middleware, Kanzlei-branded sidebar/header
+2. Invite-based Auth — PortalInvite model with secure tokens, account activation, JWT session with 30min auto-logout + 5min warning, password reset flow, anti-enumeration (always 200)
+3. DSGVO-compliant Data Room — Server-side isolation via Kontakt→Beteiligter chain, multi-Akte selection, simplified timeline (mandantSichtbar flag), naechste Schritte text, 404 on unauthorized access
+4. Granular Document Sharing — Per-document mandantSichtbar toggle, presigned MinIO download URLs, Mandant upload to dedicated folder (50MB limit, skip OCR/RAG), Anwalt notification on upload
+5. Secure Portal Messaging — PORTAL ChannelTyp with lazy creation, Mandant-Anwalt messaging, file attachments (5 files, 25MB each), 10s polling, @mention stripping
+6. Transactional Email Notifications — BullMQ portal-notification queue, 3 event types (neue-nachricht, neues-dokument, sachstand-update), date-based deduplication, DSGVO einwilligungEmail gate, 3 retries
+
+**Tech debt (non-blocking):**
+- console.error in naechste-schritte/route.ts instead of structured logger
+- Email deep links redirect to /portal/dashboard after login (no post-login redirect callback)
+- 7 pre-existing TypeScript errors in falldaten-tab.tsx and helena/index.ts (not from v0.5)
+
+**Archives:**
+- `milestones/v0.5-ROADMAP.md`
+- `milestones/v0.5-REQUIREMENTS.md`
+- `milestones/v0.5-MILESTONE-AUDIT.md`
+
+---
+
 ## v0.4 Quest & Polish (Shipped: 2026-03-03)
 
 **Delivered:** Gamification als Kanzlei-Steuerungsinstrument — vollständiges Quest-System mit XP/Level/Runen/Streak, Team-Bossfight gegen Backlog-Monster, Item-Shop mit 18 Items in 4 Seltenheitsstufen, Heldenkarte mit Badge-Schaukasten, Anti-Missbrauch-Guards und Team-Dashboard mit Monatsreporting. Dazu UX-Quick-Wins: klickbare KPI-Cards, OCR-Recovery-Flow und Empty States.

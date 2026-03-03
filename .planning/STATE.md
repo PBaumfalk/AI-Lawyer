@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
-status: unknown
-last_updated: "2026-03-03T09:26:00.000Z"
+status: milestone-complete
+last_updated: "2026-03-03T09:32:32.000Z"
 progress:
   total_phases: 23
-  completed_phases: 22
+  completed_phases: 23
   total_plans: 60
-  completed_plans: 61
+  completed_plans: 62
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 41 in progress (Team-Dashboard)
+**Current focus:** v0.4 Quest & Polish -- MILESTONE COMPLETE
 
 ## Current Position
 
-Phase: 41 of 41 (Team-Dashboard) -- 9 of 9 in milestone IN PROGRESS
-Plan: 1 of 2 in current phase COMPLETE
-Status: Phase 41 Plan 01 Complete
-Last activity: 2026-03-03 -- Completed 41-01 (Team Dashboard KPIs + Chart)
+Phase: 41 of 41 (Team-Dashboard) -- 9 of 9 in milestone COMPLETE
+Plan: 2 of 2 in current phase COMPLETE
+Status: v0.4 Milestone Complete
+Last activity: 2026-03-03 -- Completed 41-02 (Monthly Report Export)
 
-Progress: [█████████░] 95% (19/20 plans)
+Progress: [██████████] 100% (20/20 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 120 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:17)
+- Total plans completed: 121 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:18)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -64,6 +64,7 @@ Progress: [█████████░] 95% (19/20 plans)
 | Phase 40 P01 | 3min | 2 tasks | 5 files |
 | Phase 40 P02 | 2min | 2 tasks | 5 files |
 | Phase 41 P01 | 4min | 2 tasks | 7 files |
+| Phase 41 P02 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,9 @@ Recent decisions affecting current work:
 - [41-01]: Recharts LineChart for backlog trend visualization with custom glass-style tooltip
 - [41-01]: Traffic light trend colors: emerald=fallend, rose=steigend, amber=stabil (matching risk color system)
 - [41-01]: WeeklySnapshot uses findFirst+create/update for nullable userId (PostgreSQL NULL != NULL)
+- [41-02]: Workday-based quest rate formula for monthly aggregate: completions / (quests * users * workdays)
+- [41-02]: PDF Briefkopf follows invoice pdf-generator layout (A4, 20mm margins)
+- [41-02]: CSV semicolon delimiter for German Excel compatibility (matching audit-trail export)
 
 ### Pending Todos
 
@@ -151,5 +155,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 41-01-PLAN.md
-Resume file: .planning/phases/41-team-dashboard-reporting/41-01-SUMMARY.md
+Stopped at: Completed 41-02-PLAN.md -- v0.4 MILESTONE COMPLETE
+Resume file: .planning/phases/41-team-dashboard-reporting/41-02-SUMMARY.md

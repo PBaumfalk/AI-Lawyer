@@ -17,6 +17,7 @@ import {
   Trash2,
   Download,
   Eye,
+  EyeOff,
   MoreHorizontal,
   Pencil,
   FolderPlus,
@@ -93,6 +94,7 @@ interface DokumentItem {
   erstelltDurch: string | null;
   freigegebenDurch: { id: string; name: string } | null;
   freigegebenAm: string | null;
+  mandantSichtbar?: boolean;
   createdAt: string;
   createdBy: { name: string };
 }
@@ -130,6 +132,7 @@ function getFileIconColor(mimeType: string) {
 }
 
 const FREIGABE_ROLES = ["ADMIN", "ANWALT", "SACHBEARBEITER"];
+const MANDANT_SICHTBAR_ROLES = ["ADMIN", "ANWALT", "SACHBEARBEITER"];
 
 export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
   const router = useRouter();
@@ -338,6 +341,40 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
       toast.error(err.message);
     } finally {
       setStatusLoading(null);
+    }
+  };
+
+  const handleMandantSichtbarToggle = async (doc: DokumentItem) => {
+    const newValue = !doc.mandantSichtbar;
+    // Optimistic update
+    setDokumente((prev) =>
+      prev.map((d) =>
+        d.id === doc.id ? { ...d, mandantSichtbar: newValue } : d
+      )
+    );
+    try {
+      const res = await fetch(
+        `/api/akten/${akteId}/dokumente/${doc.id}/mandant-sichtbar`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mandantSichtbar: newValue }),
+        }
+      );
+      if (!res.ok) throw new Error("Fehler beim Umschalten");
+      toast.success(
+        newValue
+          ? "Dokument fuer Mandant sichtbar"
+          : "Dokument fuer Mandant verborgen"
+      );
+    } catch {
+      // Revert optimistic update
+      setDokumente((prev) =>
+        prev.map((d) =>
+          d.id === doc.id ? { ...d, mandantSichtbar: !newValue } : d
+        )
+      );
+      toast.error("Sichtbarkeit konnte nicht geaendert werden");
     }
   };
 
@@ -790,6 +827,29 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
                     <Badge variant="muted" className="text-[10px] flex-shrink-0 hidden sm:flex">
                       {dok.mimeType.split("/")[1]?.toUpperCase() ?? dok.mimeType}
                     </Badge>
+
+                    {/* Mandant-Sichtbar toggle (only for ADMIN/ANWALT/SACHBEARBEITER) */}
+                    {MANDANT_SICHTBAR_ROLES.includes(userRole) && (
+                      <button
+                        onClick={() => handleMandantSichtbarToggle(dok)}
+                        className={`p-1.5 rounded-md transition-colors flex-shrink-0 ${
+                          dok.mandantSichtbar
+                            ? "text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                            : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/20 dark:hover:bg-white/[0.06]"
+                        }`}
+                        title={
+                          dok.mandantSichtbar
+                            ? "Fuer Mandant sichtbar"
+                            : "Fuer Mandant unsichtbar"
+                        }
+                      >
+                        {dok.mandantSichtbar ? (
+                          <Eye className="w-4 h-4" />
+                        ) : (
+                          <EyeOff className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">

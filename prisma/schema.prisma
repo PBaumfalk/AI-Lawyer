@@ -16,6 +16,7 @@ enum UserRole {
   ANWALT
   SACHBEARBEITER
   SEKRETARIAT
+  MANDANT
 }
 
 enum KontaktTyp {
@@ -488,6 +489,13 @@ model User {
   // Phase 39: Item-Shop
   inventoryItems     UserInventoryItem[]
 
+  // Portal / Mandant
+  inviteToken       String?   @unique
+  inviteExpiresAt   DateTime?
+  inviteAcceptedAt  DateTime?
+  kontaktId         String?   @unique
+  kontakt           Kontakt?  @relation("PortalUser", fields: [kontaktId], references: [id])
+
   @@map("users")
 }
 
@@ -643,6 +651,7 @@ model Kontakt {
   kontaktDokumente    KontaktDokument[]
   beziehungenVon      KontaktBeziehung[] @relation("BeziehungVon")
   beziehungenZu       KontaktBeziehung[] @relation("BeziehungZu")
+  portalUser          User?              @relation("PortalUser")
 
   @@index([nachname, vorname])
   @@index([firma])

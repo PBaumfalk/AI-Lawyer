@@ -43,11 +43,11 @@
 
 ### Item-Shop
 
-- [ ] **SHOP-01**: Item-Katalog mit 4 Seltenheitsstufen (Common, Rare, Epic, Legendary)
-- [ ] **SHOP-02**: Kosmetische Items kaufbar mit Runen (Avatar-Rahmen, Banner, Profil-Titel, Abschluss-Animation)
-- [ ] **SHOP-03**: Komfort-Perks kaufbar (z.B. Fokus-Siegel: 30 Min Fokuszeit-Block als interne Priorität)
-- [ ] **SHOP-04**: Inventar-Verwaltung pro User (gekaufte Items, aktive Ausrüstung)
-- [ ] **SHOP-05**: Level-Gate für Legendary Items (erst ab Level 25 mit Proof-Badge kaufbar)
+- [x] **SHOP-01**: Item-Katalog mit 4 Seltenheitsstufen (Common, Rare, Epic, Legendary)
+- [x] **SHOP-02**: Kosmetische Items kaufbar mit Runen (Avatar-Rahmen, Banner, Profil-Titel, Abschluss-Animation)
+- [x] **SHOP-03**: Komfort-Perks kaufbar (z.B. Fokus-Siegel: 30 Min Fokuszeit-Block als interne Priorität)
+- [x] **SHOP-04**: Inventar-Verwaltung pro User (gekaufte Items, aktive Ausrüstung)
+- [x] **SHOP-05**: Level-Gate für Legendary Items (erst ab Level 25 mit Proof-Badge kaufbar)
 
 ### Heldenkarte (Profil)
 
@@ -119,11 +119,11 @@
 | ABUSE-02 | Phase 38 | Complete |
 | ABUSE-03 | Phase 38 | Complete |
 | ABUSE-04 | Phase 38 | Complete |
-| SHOP-01 | Phase 39 | Pending |
-| SHOP-02 | Phase 39 | Pending |
-| SHOP-03 | Phase 39 | Pending |
-| SHOP-04 | Phase 39 | Pending |
-| SHOP-05 | Phase 39 | Pending |
+| SHOP-01 | Phase 39 | Complete |
+| SHOP-02 | Phase 39 | Complete |
+| SHOP-03 | Phase 39 | Complete |
+| SHOP-04 | Phase 39 | Complete |
+| SHOP-05 | Phase 39 | Complete |
 | PROFIL-01 | Phase 40 | Pending |
 | PROFIL-02 | Phase 40 | Pending |
 | PROFIL-03 | Phase 40 | Pending |

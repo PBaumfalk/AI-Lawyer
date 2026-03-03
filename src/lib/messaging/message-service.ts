@@ -12,6 +12,7 @@ import { getSocketEmitter } from "@/lib/socket/emitter";
 import { createNotification } from "@/lib/notifications/service";
 import { hasHelenaMention, parseHelenaMention } from "@/lib/helena/at-mention-parser";
 import { createHelenaTask } from "@/lib/helena/task-service";
+import { triggerPortalNotificationForAkte } from "@/lib/portal/trigger-portal-notification";
 import type { Message } from "@prisma/client";
 import type { MessageNewPayload, MessageEditedPayload, MessageDeletedPayload } from "./types";
 
@@ -104,35 +105,51 @@ export async function sendMessage(params: {
     });
   }
 
-  // 4. Check for @Helena mention in AKTE channels
-  if (hasHelenaMention(body)) {
-    const channel = await prisma.channel.findUnique({
-      where: { id: channelId },
-      select: { typ: true, akteId: true },
+  // 4. Look up channel for Helena + portal notification checks
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    select: { typ: true, akteId: true },
+  });
+
+  // 4a. Check for @Helena mention in AKTE channels
+  if (hasHelenaMention(body) && channel?.typ === "AKTE" && channel.akteId) {
+    const instruction = parseHelenaMention(body);
+    if (instruction) {
+      // Look up author details for Helena task
+      const author = await prisma.user.findUnique({
+        where: { id: authorId },
+        select: { role: true, name: true },
+      });
+
+      createHelenaTask({
+        userId: authorId,
+        userRole: author?.role || "SACHBEARBEITER",
+        userName: author?.name || "Unbekannt",
+        akteId: channel.akteId,
+        auftrag: instruction,
+        prioritaet: 8,
+        quelle: "at-mention",
+        channelId, // Post Helena response back to this channel
+      }).catch((err) => {
+        log.warn({ err, channelId, akteId: channel.akteId }, "Failed to create Helena task from channel mention");
+      });
+    }
+  }
+
+  // 4b. MSG-04: Notify Mandant via email when internal user sends a portal message
+  if (channel?.typ === "PORTAL" && channel.akteId) {
+    // Check if author is a Mandant -- if so, skip notification (they're already in the portal)
+    const author = await prisma.user.findUnique({
+      where: { id: authorId },
+      select: { role: true },
     });
 
-    if (channel?.typ === "AKTE" && channel.akteId) {
-      const instruction = parseHelenaMention(body);
-      if (instruction) {
-        // Look up author details for Helena task
-        const author = await prisma.user.findUnique({
-          where: { id: authorId },
-          select: { role: true, name: true },
-        });
-
-        createHelenaTask({
-          userId: authorId,
-          userRole: author?.role || "SACHBEARBEITER",
-          userName: author?.name || "Unbekannt",
-          akteId: channel.akteId,
-          auftrag: instruction,
-          prioritaet: 8,
-          quelle: "at-mention",
-          channelId, // Post Helena response back to this channel
-        }).catch((err) => {
-          log.warn({ err, channelId, akteId: channel.akteId }, "Failed to create Helena task from channel mention");
-        });
-      }
+    if (author?.role !== "MANDANT") {
+      triggerPortalNotificationForAkte(
+        channel.akteId,
+        "neue-nachricht",
+        `/akten/${channel.akteId}/nachrichten`,
+      ).catch(() => {}); // Extra safety: swallow any rejected promise
     }
   }
 

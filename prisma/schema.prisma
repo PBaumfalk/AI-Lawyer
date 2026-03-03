@@ -2281,6 +2281,7 @@ model UserGameProfile {
   streakTage   Int         @default(0)
   streakLetzte DateTime?
   trophies     Json        @default("[]") // Array of { type: string, bossName: string, date: string, bossfightId: string }
+  badges       Json        @default("[]") // Array of { slug: string, earnedAt: string }
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 

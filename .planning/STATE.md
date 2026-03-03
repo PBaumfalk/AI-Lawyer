@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: Mandantenportal
 status: in-progress
-last_updated: "2026-03-03T13:15:06.000Z"
+last_updated: "2026-03-03T13:23:04.000Z"
 progress:
   total_phases: 21
-  completed_phases: 19
+  completed_phases: 20
   total_plans: 54
-  completed_plans: 53
+  completed_plans: 54
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.5 Mandantenportal — Phase 48 in progress
+**Current focus:** v0.5 Mandantenportal -- Phase 48 complete
 
 ## Current Position
 
-Phase: 48 of 48 (E-Mail Benachrichtigungen) -- IN PROGRESS
-Plan: 1 of 2 in current phase
-Status: Phase 48 Plan 01 complete (notification infrastructure), Plan 02 pending (trigger wiring)
-Last activity: 2026-03-03 — Completed 48-01 (E-Mail Benachrichtigungen Infrastructure)
+Phase: 48 of 48 (E-Mail Benachrichtigungen) -- COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase 48 complete (notification infrastructure + trigger wiring)
+Last activity: 2026-03-03 -- Completed 48-02 (E-Mail Benachrichtigungen Trigger Wiring)
 
-Progress: [######░░░░] 39%
+Progress: [##########] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 131 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:7)
+- Total plans completed: 132 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:8)
 - Average duration: ~15 min
 - Total execution time: ~30 hours
 
@@ -52,6 +52,7 @@ Progress: [######░░░░] 39%
 | Phase 47 P01 | 6min | 2 tasks | 13 files |
 | Phase 47 P02 | 4min | 2 tasks | 7 files |
 | Phase 48 P01 | 4min | 2 tasks | 5 files |
+| Phase 48 P02 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,9 @@ Recent decisions affecting current work:
 - [Phase 48]: PORTAL_EMAIL_GESENDET as AuditAktion (UPPER_SNAKE_CASE convention)
 - [Phase 48]: Date-based deduplication key (YYYY-MM-DD) prevents duplicate portal emails within 24h
 - [Phase 48]: Throw on sendEmail failure to trigger BullMQ retry (3 attempts with custom backoff)
+- [Phase 48]: Channel lookup consolidated to single query for both Helena and PORTAL checks in sendMessage()
+- [Phase 48]: MSG-06 wired into naechste-schritte route (only source of non-document mandantSichtbar activities)
+- [Phase 48]: Author role !== MANDANT check prevents self-notification when Mandant sends portal messages
 
 ### Pending Todos
 
@@ -113,5 +117,5 @@ None -- fresh milestone.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 48-01-PLAN.md (E-Mail Benachrichtigungen Infrastructure)
-Resume: Continue with 48-02-PLAN.md (trigger wiring)
+Stopped at: Completed 48-02-PLAN.md (E-Mail Benachrichtigungen Trigger Wiring)
+Resume: Phase 48 complete. All v0.5 plans executed.

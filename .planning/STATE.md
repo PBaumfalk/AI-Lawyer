@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: Mandantenportal
 status: unknown
-last_updated: "2026-03-03T12:37:33.920Z"
+last_updated: "2026-03-03T12:48:26.768Z"
 progress:
   total_phases: 21
   completed_phases: 18

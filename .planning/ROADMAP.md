@@ -141,11 +141,11 @@ See: `milestones/v0.4-ROADMAP.md` for full phase details.
   2. Prisma-Schema enthaelt MandantUser (oder Erweiterung von User) mit Portal-spezifischen Feldern (Einladungsstatus, Token)
   3. Portal-Layout ist visuell getrennt vom internen Kanzlei-Dashboard (eigene Sidebar/Header, kein Zugriff auf interne Navigation)
   4. Middleware schuetzt /portal/* Routen -- unauthentifizierte Requests werden auf /portal/login umgeleitet
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 43-01: Prisma schema + NextAuth Mandant provider
-- [ ] 43-02: Portal route group layout + middleware
+- [ ] 43-01-PLAN.md — Prisma schema (MANDANT role, portal fields on User, Kontakt FK) + RBAC update
+- [ ] 43-02-PLAN.md — Portal route group layout + middleware + login page + sidebar/header
 
 ### Phase 44: Portal-Authentifizierung
 **Goal**: Mandanten koennen sicher zum Portal eingeladen werden, sich anmelden, eingeloggt bleiben und ihr Passwort zuruecksetzen

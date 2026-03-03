@@ -111,6 +111,7 @@ See: `milestones/v0.3-ROADMAP.md` for full phase details.
 - [x] **Phase 39: Item-Shop + Inventar** - 4-tier item catalog, cosmetic + comfort purchases, inventory management, level gates (completed 2026-03-03)
 - [x] **Phase 40: Heldenkarte** - Profile page with avatar, class, active cosmetics, badge showcase, quest history (completed 2026-03-03)
 - [ ] **Phase 41: Team-Dashboard + Reporting** - Team aggregates (quest fulfillment, backlog delta, bossfight damage), monthly PDF/CSV report
+- [ ] **Phase 42: Integration Wiring Fixes** - Gap closure: seedShopItems startup, perk effects (streak-schutz, doppel-runen), WeeklySnapshot cold-start, dead code cleanup
 
 ## Phase Details
 
@@ -250,11 +251,27 @@ Plans:
 - [ ] 41-01: Team Dashboard page (fulfillment rate, backlog delta, bossfight damage aggregates)
 - [ ] 41-02: Monthly reporting export (PDF/CSV generation)
 
+### Phase 42: Integration Wiring Fixes
+**Goal**: All cross-phase integration gaps from the milestone audit are closed
+**Depends on**: Phase 39 (shop items), Phase 33 (game services)
+**Requirements**: None (integration fixes for existing requirements)
+**Gap Closure**: Closes audit gaps: seedShopItems startup, perk effects, WeeklySnapshot cold-start
+**Success Criteria** (what must be TRUE):
+  1. `seedShopItems()` is called in `worker.ts` startup — fresh deploys have a populated shop catalog
+  2. Activating a streak-schutz perk actually protects the user's streak for one missed workday
+  3. Activating a doppel-runen perk actually doubles Runen awards for 2 hours
+  4. On first startup (no Monday cron yet), `WeeklySnapshot` baselines are created so weekly delta quests can evaluate
+  5. Dead `/api/gamification/profile` endpoint is removed (dashboard uses `/api/gamification/dashboard`)
+**Plans**: 1 plan
+
+Plans:
+- [ ] 42-01: seedShopItems wiring + perk effect integration + WeeklySnapshot cold-start + dead code removal
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 33 → 34 → 35 → 36 → 37 → 38 → 39 → 40 → 41
-Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34 or 35.
+Phases execute in numeric order: 33 → 34 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42
+Note: Phase 36 (Quick Wins) is independent. Phase 42 can run before or after Phase 41.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -272,7 +289,8 @@ Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34
 | 39. Item-Shop + Inventar | 2/2 | Complete    | 2026-03-03 | - |
 | 40. Heldenkarte | 2/2 | Complete    | 2026-03-03 | - |
 | 41. Team-Dashboard + Reporting | v0.4 | 0/2 | Not started | - |
+| 42. Integration Wiring Fixes | v0.4 | 0/1 | Not started | - |
 
 ---
 *Roadmap created: 2026-02-24*
-*Last updated: 2026-03-02 after Phase 36 planning*
+*Last updated: 2026-03-03 after gap closure planning (Phases 41-42)*

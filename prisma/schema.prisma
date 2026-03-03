@@ -846,6 +846,9 @@ model Akte {
   // Phase 31: Messaging
   channel          Channel?          // One-to-one via @unique on Channel.akteId
 
+  // Phase 45: Mandantenportal Datenraum
+  naechsteSchritte  String?  @db.Text  // Mandant-facing next steps, set by Anwalt
+
   @@index([status])
   @@index([anwaltId])
   @@index([sachgebiet])
@@ -2163,10 +2166,14 @@ model AktenActivity {
   inhalt    String?          @db.Text
   meta      Json?            // Event-specific payload (dokumentId, fristId, draftId, alertId, etc.)
 
+  // Phase 45: Mandantenportal visibility flag
+  mandantSichtbar  Boolean  @default(false)
+
   createdAt DateTime         @default(now())
 
   @@index([akteId, createdAt])
   @@index([akteId, typ])
+  @@index([akteId, mandantSichtbar, createdAt])
   @@map("akten_activities")
 }
 

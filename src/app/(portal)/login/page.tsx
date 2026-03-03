@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Shield } from "lucide-react";
+import Link from "next/link";
 
 export default function PortalLoginPage() {
   const router = useRouter();
@@ -100,6 +101,15 @@ export default function PortalLoginPage() {
               {loading ? "Anmeldung..." : "Anmelden"}
             </Button>
           </form>
+
+          <div className="mt-4 text-center">
+            <Link
+              href="/portal/passwort-vergessen"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Passwort vergessen?
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { PortalSidebar } from "@/components/portal/portal-sidebar";
 import { PortalHeader } from "@/components/portal/portal-header";
+import { PortalSessionProvider } from "@/lib/portal-session";
 
 // All portal pages require auth + fresh data -- skip static generation during build
 export const dynamic = "force-dynamic";
@@ -30,15 +31,17 @@ export default async function PortalLayout({
 
   return (
     <SessionProvider>
-      <div className="flex h-screen overflow-hidden">
-        <PortalSidebar kanzleiName={kanzleiName} logoUrl={logoUrl} />
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <PortalHeader kanzleiName={kanzleiName} />
-          <main className="flex-1 overflow-y-auto p-6 bg-transparent">
-            {children}
-          </main>
+      <PortalSessionProvider>
+        <div className="flex h-screen overflow-hidden">
+          <PortalSidebar kanzleiName={kanzleiName} logoUrl={logoUrl} />
+          <div className="flex flex-col flex-1 overflow-hidden">
+            <PortalHeader kanzleiName={kanzleiName} />
+            <main className="flex-1 overflow-y-auto p-6 bg-transparent">
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
+      </PortalSessionProvider>
     </SessionProvider>
   );
 }

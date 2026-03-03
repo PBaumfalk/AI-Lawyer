@@ -70,6 +70,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           role: user.role,
           kanzleiId: user.kanzleiId,
+          kontaktId: user.kontaktId,
         };
       },
     }),
@@ -79,6 +80,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.role = (user as any).role;
         token.kanzleiId = (user as any).kanzleiId;
+        // Stamp kontaktId for MANDANT users (portal session)
+        if ((user as any).role === "MANDANT") {
+          token.kontaktId = (user as any).kontaktId;
+        }
       }
       return token;
     },
@@ -87,6 +92,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub!;
         (session.user as any).role = token.role as UserRole;
         (session.user as any).kanzleiId = token.kanzleiId as string | null;
+        // Expose kontaktId for MANDANT users
+        if (token.role === "MANDANT") {
+          (session.user as any).kontaktId = token.kontaktId as string | null;
+        }
       }
       return session;
     },

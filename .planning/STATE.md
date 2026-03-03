@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: Mandantenportal
-status: unknown
-last_updated: "2026-03-03T11:49:18.102Z"
+status: in-progress
+last_updated: "2026-03-03T11:57:01Z"
 progress:
   total_phases: 21
   completed_phases: 15
   total_plans: 54
-  completed_plans: 44
+  completed_plans: 45
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.5 Mandantenportal — Phase 43 complete, Phase 44 next
+**Current focus:** v0.5 Mandantenportal — Phase 44 in progress (Plan 01 complete)
 
 ## Current Position
 
-Phase: 43 of 48 (Portal Schema + Shell) -- COMPLETE
-Plan: 2 of 2 in current phase (all done)
-Status: Phase Complete
-Last activity: 2026-03-03 — Completed 43-02 (Portal route shell + Glass UI layout)
+Phase: 44 of 48 (Portal Authentifizierung) -- IN PROGRESS
+Plan: 1 of 2 in current phase
+Status: Plan 44-01 Complete
+Last activity: 2026-03-03 — Completed 44-01 (Portal invite system)
 
-Progress: [##░░░░░░░░] 15%
+Progress: [##░░░░░░░░] 17%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 124 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21)
+- Total plans completed: 125 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:1)
 - Average duration: ~15 min
 - Total execution time: ~30 hours
 
@@ -63,6 +63,10 @@ Recent decisions affecting current work:
 - Portal layout uses (session.user as any).role for MANDANT check
 - Shield icon for portal login to distinguish from internal Scale icon
 - Briefkopf kanzleiName fetched server-side in layout, passed as props
+- PortalInvite as separate model for multi-invite tracking (not reusing User.inviteToken)
+- crypto.randomUUID for secure invite tokens
+- Revoke existing PENDING invites before creating new one
+- BeteiligteSection in feed/overview tab for immediate visibility
 
 ### Pending Todos
 
@@ -77,5 +81,5 @@ None -- fresh milestone.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 43-02-PLAN.md (Phase 43 complete)
-Resume: `/gsd:execute-phase 44` (Portal Auth phase next)
+Stopped at: Completed 44-01-PLAN.md (Portal invite system)
+Resume: Continue with 44-02-PLAN.md (Portal activation + login)

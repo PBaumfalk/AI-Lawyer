@@ -202,11 +202,11 @@ Plans:
   1. Mandant kann im Portal Textnachrichten an den zustaendigen Anwalt senden
   2. Anwalt kann im internen Dashboard Nachrichten an den Mandant im Portal-Thread senden und sieht die gesamte Konversationshistorie
   3. Mandant kann Dateien an Nachrichten anhaengen (Upload zu MinIO, angezeigt als Attachment im Thread)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 47-01: Portal-Thread Modell + API + Anwalt-UI
-- [ ] 47-02: Mandant-Messaging-UI + Dateianhang
+- [ ] 47-01-PLAN.md — PORTAL ChannelTyp + portal channel/message API routes + Anwalt-side UI (sidebar + Akte tab)
+- [ ] 47-02-PLAN.md — Mandant-facing chat UI with message list, composer, and file attachment upload
 
 ### Phase 48: E-Mail-Benachrichtigungen
 **Goal**: Mandanten werden per E-Mail ueber relevante Ereignisse informiert, damit sie nicht staendig das Portal pruefen muessen

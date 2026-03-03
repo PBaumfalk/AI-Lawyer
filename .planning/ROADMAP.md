@@ -217,7 +217,7 @@ Plans:
   2. Mandant erhaelt eine E-Mail wenn ein neues Dokument fuer ihn freigegeben wird
   3. Mandant erhaelt eine E-Mail wenn ein Sachstand-Update in seiner Akte erfolgt (neues Timeline-Event)
   4. E-Mails enthalten einen Deep-Link zum Portal und werden mit Kanzlei-Absender versendet
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 48-01-PLAN.md — Email template system + BullMQ portal-notification queue + worker
@@ -237,7 +237,7 @@ Phases execute in numeric order: 43 -> 44 -> 45 -> 46 -> 47 -> 48
 | 19-27 | v0.2 | 23/23 | Complete | 2026-02-28 |
 | 28-32 | v0.3 | 13/13 | Complete | 2026-03-02 |
 | 33-42 | v0.4 | 21/21 | Complete | 2026-03-03 |
-| 43. Portal Schema + Shell | v0.5 | 0/2 | Not started | - |
+| 43. Portal Schema + Shell | 1/2 | In Progress|  | - |
 | 44. Portal-Authentifizierung | v0.5 | 0/2 | Not started | - |
 | 45. Mandant-Datenraum | v0.5 | 0/2 | Not started | - |
 | 46. Dokument-Freigabe + Portal-DMS | v0.5 | 0/2 | Not started | - |

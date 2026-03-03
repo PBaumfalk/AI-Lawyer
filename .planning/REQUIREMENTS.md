@@ -9,7 +9,7 @@ Requirements for Mandantenportal milestone. Each maps to roadmap phases.
 
 ### Portal-Infrastruktur
 
-- [ ] **PORTAL-01**: Mandant kann /portal/* Seiten mit eigenem Glass-Layout aufrufen
+- [x] **PORTAL-01**: Mandant kann /portal/* Seiten mit eigenem Glass-Layout aufrufen
 - [ ] **PORTAL-02**: Jeder Beteiligter mit Rolle MANDANT kann separat zum Portal eingeladen werden
 - [ ] **PORTAL-03**: Mandant sieht nur eigene Akten (strikte Datentrennung, DSGVO)
 - [ ] **PORTAL-04**: Mandant kann zwischen mehreren eigenen Akten wechseln
@@ -76,7 +76,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PORTAL-01 | Phase 43 | Pending |
+| PORTAL-01 | Phase 43 | Complete |
 | PORTAL-02 | Phase 44 | Pending |
 | PORTAL-03 | Phase 45 | Pending |
 | PORTAL-04 | Phase 45 | Pending |

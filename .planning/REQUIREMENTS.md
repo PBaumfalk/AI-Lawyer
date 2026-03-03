@@ -26,9 +26,9 @@ Requirements for Mandantenportal milestone. Each maps to roadmap phases.
 ### Dokumente
 
 - [x] **DOC-01**: Anwalt kann pro Dokument "Mandant sichtbar" aktivieren/deaktivieren
-- [x] **DOC-02**: Mandant sieht Liste aller freigegebenen Dokumente seiner Akte
-- [x] **DOC-03**: Mandant kann freigegebene Dokumente herunterladen
-- [x] **DOC-04**: Mandant kann Dokumente in dedizierten "Mandant"-Ordner hochladen
+- [ ] **DOC-02**: Mandant sieht Liste aller freigegebenen Dokumente seiner Akte
+- [ ] **DOC-03**: Mandant kann freigegebene Dokumente herunterladen
+- [ ] **DOC-04**: Mandant kann Dokumente in dedizierten "Mandant"-Ordner hochladen
 - [x] **DOC-05**: Anwalt wird bei Mandant-Upload benachrichtigt
 
 ### Nachrichten
@@ -87,9 +87,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-05 | Phase 44 | Complete |
 | AUTH-06 | Phase 49 (gap closure) | Complete |
 | DOC-01 | Phase 46 | Complete |
-| DOC-02 | Phase 46 | Complete |
-| DOC-03 | Phase 46 | Complete |
-| DOC-04 | Phase 46 | Complete |
+| DOC-02 | Phase 50 (gap closure) | Pending |
+| DOC-03 | Phase 50 (gap closure) | Pending |
+| DOC-04 | Phase 50 (gap closure) | Pending |
 | DOC-05 | Phase 46 | Complete |
 | MSG-01 | Phase 47 | Complete |
 | MSG-02 | Phase 47 | Complete |
@@ -104,6 +104,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 **Coverage:**
 - v0.5 requirements: 25 total
 - Mapped to phases: 25
+- Complete: 22
+- Pending (gap closure): 3 (DOC-02, DOC-03, DOC-04 → Phase 50)
 - Unmapped: 0
 
 ---

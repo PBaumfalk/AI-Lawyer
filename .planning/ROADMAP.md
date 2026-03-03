@@ -8,7 +8,7 @@
 - ✅ **v0.2 Helena Agent** — Phases 19-27 (shipped 2026-02-28)
 - ✅ **v0.3 Kanzlei-Collaboration** — Phases 28-32 (shipped 2026-03-02)
 - ✅ **v0.4 Quest & Polish** — Phases 33-42 (shipped 2026-03-03)
-- **v0.5 Mandantenportal** — Phases 43-48 (in progress)
+- **v0.5 Mandantenportal** — Phases 43-50 (in progress)
 
 ## Phases
 
@@ -130,6 +130,7 @@ See: `milestones/v0.4-ROADMAP.md` for full phase details.
 - [x] **Phase 47: Portal-Messaging** - Sichere Nachrichten zwischen Mandant und Anwalt mit Dateianhang (completed 2026-03-03)
 - [x] **Phase 48: E-Mail-Benachrichtigungen** - Transaktionale E-Mails bei Nachrichten, Dokumenten, Sachstand-Updates (completed 2026-03-03)
 - [x] **Phase 49: Portal Route Guard Fix + Sidebar Navigation** - Gap closure: public auth pages aus guarded layout extrahieren, Sidebar-Links reparieren (completed 2026-03-03)
+- [ ] **Phase 50: Portal Dokumente Navigation** - Gap closure: Navigationslink zu Dokumente-Seite auf Akte-Detailseite hinzufuegen
 
 ## Phase Details
 
@@ -241,6 +242,20 @@ Plans:
 Plans:
 - [ ] 49-01-PLAN.md — Extract public auth pages from guarded layout + fix sidebar navigation
 
+### Phase 50: Portal Dokumente Navigation
+**Goal**: Dokumente-Seite ist ueber die Portal-UI erreichbar -- Mandant kann von der Akte-Detailseite zur Dokumentenliste navigieren
+**Depends on**: Phase 49 (gap closure for completed phases)
+**Requirements**: DOC-02, DOC-03, DOC-04
+**Gap Closure**: Closes navigation gaps from v0.5 milestone re-audit
+**Success Criteria** (what must be TRUE):
+  1. Akte-Detailseite (/portal/akten/[id]) enthaelt einen sichtbaren Link/Card zu /portal/akten/[id]/dokumente
+  2. Mandant kann ueber normales Klicken im Portal zur Dokumentenliste navigieren (kein Deep-Link oder direkter URL noetig)
+  3. DOC-02 (Dokumentenliste), DOC-03 (Download), DOC-04 (Upload) sind ueber UI-Navigation erreichbar
+**Plans**: 1 plan
+
+Plans:
+- [ ] 50-01-PLAN.md — Add Dokumente navigation card/link on akte detail page
+
 ## Progress
 
 **Execution Order:**
@@ -262,6 +277,7 @@ Phases execute in numeric order: 43 -> 44 -> 45 -> 46 -> 47 -> 48 -> 49
 | 47. Portal-Messaging | 2/2 | Complete    | 2026-03-03 | - |
 | 48. E-Mail-Benachrichtigungen | 2/2 | Complete    | 2026-03-03 | - |
 | 49. Portal Route Guard Fix + Sidebar Navigation | 1/1 | Complete    | 2026-03-03 | - |
+| 50. Portal Dokumente Navigation | 0/1 | Pending     | - | - |
 
 ---
 *Roadmap created: 2026-02-24*

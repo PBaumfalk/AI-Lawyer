@@ -157,12 +157,11 @@ Plans:
   3. Mandant kann sich mit E-Mail und Passwort im Portal einloggen und bleibt ueber Browser-Refresh eingeloggt (JWT-Session)
   4. Mandant wird nach konfigurierbarer Inaktivitaet automatisch ausgeloggt
   5. Mandant kann ueber "Passwort vergessen" einen Reset-Link per E-Mail erhalten und neues Passwort setzen
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 44-01: Invitation generation + email sending (Anwalt-Seite)
-- [ ] 44-02: Account activation + password setup (Mandant-Seite)
-- [ ] 44-03: Login, session persistence, auto-logout, password reset
+- [ ] 44-01-PLAN.md — PortalInvite model, invite API, email template, invite button in Akte detail
+- [ ] 44-02-PLAN.md — Account activation, portal login, session + auto-logout, password reset
 
 ### Phase 45: Mandant-Datenraum
 **Goal**: Mandanten sehen ausschliesslich ihre eigenen Akten mit verstaendlichem Sachstand -- keine internen Kanzleidaten sichtbar
@@ -239,7 +238,7 @@ Phases execute in numeric order: 43 -> 44 -> 45 -> 46 -> 47 -> 48
 | 28-32 | v0.3 | 13/13 | Complete | 2026-03-02 |
 | 33-42 | v0.4 | 21/21 | Complete | 2026-03-03 |
 | 43. Portal Schema + Shell | v0.5 | 0/2 | Not started | - |
-| 44. Portal-Authentifizierung | v0.5 | 0/3 | Not started | - |
+| 44. Portal-Authentifizierung | v0.5 | 0/2 | Not started | - |
 | 45. Mandant-Datenraum | v0.5 | 0/2 | Not started | - |
 | 46. Dokument-Freigabe + Portal-DMS | v0.5 | 0/2 | Not started | - |
 | 47. Portal-Messaging | v0.5 | 0/2 | Not started | - |

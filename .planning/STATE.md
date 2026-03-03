@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: Mandantenportal
-status: defining_requirements
-last_updated: "2026-03-03T14:00:00.000Z"
+status: ready_to_plan
+last_updated: "2026-03-03T15:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
-  total_plans: 0
+  total_plans: 13
   completed_plans: 0
 ---
 
@@ -18,14 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.5 Mandantenportal — Defining requirements
+**Current focus:** v0.5 Mandantenportal — Phase 43 ready to plan
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-03 — Milestone v0.5 started
+Phase: 43 of 48 (Portal Schema + Shell)
+Plan: 0 of 2 in current phase
+Status: Ready to plan
+Last activity: 2026-03-03 — Roadmap created for v0.5 Mandantenportal (6 phases, 13 plans, 25 requirements)
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -44,25 +46,31 @@ Last activity: 2026-03-03 — Milestone v0.5 started
 | v0.2 | 10 | 23 | 2 days |
 | v0.3 | 5 | 13 | 3 days |
 | v0.4 | 10 | 21 | 2 days |
+| v0.5 | 6 | 13 | in progress |
 
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+Recent decisions affecting current work:
+
+- Mandantenportal als /portal/* Route Group (same Next.js app, shared DB, own layout + auth)
+- Einladungslink + Passwort (no OAuth setup needed for Mandanten)
+- Per-Dokument Freigabe-Toggle (granular control, Anwalt decides explicitly)
 
 ### Pending Todos
 
 Deferred from previous milestones:
-- BI-Dashboard — deferred to post-v0.5
-- Export CSV/XLSX — deferred to post-v0.5
+- BI-Dashboard -- deferred to post-v0.5
+- Export CSV/XLSX -- deferred to post-v0.5
 
 ### Blockers/Concerns
 
-None — fresh milestone.
+None -- fresh milestone.
 
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Milestone v0.5 started, defining requirements
-Resume: Continue requirements definition → roadmap
+Stopped at: Roadmap created for v0.5 (6 phases, 25 requirements mapped)
+Resume: `/gsd:plan-phase 43`

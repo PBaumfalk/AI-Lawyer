@@ -76,36 +76,36 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PORTAL-01 | — | Pending |
-| PORTAL-02 | — | Pending |
-| PORTAL-03 | — | Pending |
-| PORTAL-04 | — | Pending |
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| AUTH-04 | — | Pending |
-| AUTH-05 | — | Pending |
-| AUTH-06 | — | Pending |
-| DOC-01 | — | Pending |
-| DOC-02 | — | Pending |
-| DOC-03 | — | Pending |
-| DOC-04 | — | Pending |
-| DOC-05 | — | Pending |
-| MSG-01 | — | Pending |
-| MSG-02 | — | Pending |
-| MSG-03 | — | Pending |
-| MSG-04 | — | Pending |
-| MSG-05 | — | Pending |
-| MSG-06 | — | Pending |
-| SACH-01 | — | Pending |
-| SACH-02 | — | Pending |
-| SACH-03 | — | Pending |
+| PORTAL-01 | Phase 43 | Pending |
+| PORTAL-02 | Phase 44 | Pending |
+| PORTAL-03 | Phase 45 | Pending |
+| PORTAL-04 | Phase 45 | Pending |
+| AUTH-01 | Phase 44 | Pending |
+| AUTH-02 | Phase 44 | Pending |
+| AUTH-03 | Phase 44 | Pending |
+| AUTH-04 | Phase 44 | Pending |
+| AUTH-05 | Phase 44 | Pending |
+| AUTH-06 | Phase 44 | Pending |
+| DOC-01 | Phase 46 | Pending |
+| DOC-02 | Phase 46 | Pending |
+| DOC-03 | Phase 46 | Pending |
+| DOC-04 | Phase 46 | Pending |
+| DOC-05 | Phase 46 | Pending |
+| MSG-01 | Phase 47 | Pending |
+| MSG-02 | Phase 47 | Pending |
+| MSG-03 | Phase 47 | Pending |
+| MSG-04 | Phase 48 | Pending |
+| MSG-05 | Phase 48 | Pending |
+| MSG-06 | Phase 48 | Pending |
+| SACH-01 | Phase 45 | Pending |
+| SACH-02 | Phase 45 | Pending |
+| SACH-03 | Phase 45 | Pending |
 
 **Coverage:**
 - v0.5 requirements: 25 total
-- Mapped to phases: 0
-- Unmapped: 25
+- Mapped to phases: 25
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after initial definition*
+*Last updated: 2026-03-03 after roadmap creation (traceability complete)*

@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.4
-milestone_name: Quest & Polish
-status: shipped
-last_updated: "2026-03-03T12:00:00.000Z"
+milestone: v0.5
+milestone_name: Mandantenportal
+status: defining_requirements
+last_updated: "2026-03-03T14:00:00.000Z"
 progress:
-  total_phases: 42
-  completed_phases: 42
-  total_plans: 124
-  completed_plans: 124
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -18,16 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish — SHIPPED. Next: `/gsd:new-milestone` for v0.5.
+**Current focus:** v0.5 Mandantenportal — Defining requirements
 
 ## Current Position
 
-Phase: 42 of 42 — all phases complete
-Plan: All plans complete
-Status: Milestone v0.4 SHIPPED
-Last activity: 2026-03-03 — Milestone archived
-
-Progress: [██████████] 100% (all milestones through v0.4)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-03 — Milestone v0.5 started
 
 ## Performance Metrics
 
@@ -56,15 +54,15 @@ Decisions are logged in PROJECT.md Key Decisions table.
 ### Pending Todos
 
 Deferred from previous milestones:
-- BI-Dashboard — deferred to post-v0.4
-- Export CSV/XLSX — deferred to post-v0.4
+- BI-Dashboard — deferred to post-v0.5
+- Export CSV/XLSX — deferred to post-v0.5
 
 ### Blockers/Concerns
 
-None — milestone complete.
+None — fresh milestone.
 
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Milestone v0.4 archived
-Resume: `/gsd:new-milestone` to define v0.5 scope
+Stopped at: Milestone v0.5 started, defining requirements
+Resume: Continue requirements definition → roadmap

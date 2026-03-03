@@ -165,12 +165,7 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - ✓ SCAN-05 Neu-Urteil-Check: Cross-Akte Semantic Search + NEUES_URTEIL Alerts + Helena-Briefing — v0.3
 - ✓ Falldatenblaetter: Strukturierte Checklisten pro Falltyp + Community-Template-Workflow + Admin-Approval — v0.3
 
-### Active
-
-<!-- Next milestone: v0.5 (to be defined via /gsd:new-milestone) -->
-(No active milestone — run `/gsd:new-milestone` to define v0.5 scope)
-
-**Gamification (v0.4 — validated):**
+**Gamification (v0.4):**
 - ✓ Gamification Engine (UserGameProfile, Quest DSL, XP/Level/Runen/Streak, BullMQ crons, DSGVO opt-in) — v0.4
 - ✓ Dashboard QuestWidget (XP bar, quests, streak, Runen, deep-links, opt-in toggle) — v0.4
 - ✓ Bossfight (Team Backlog-Monster, 4 phases, Socket.IO real-time, admin threshold) — v0.4
@@ -180,6 +175,21 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - ✓ Heldenkarte (avatar, badges, quest history) — v0.4
 - ✓ Team-Dashboard + Reporting (quest rate, backlog delta, bossfight damage, PDF/CSV) — v0.4
 - ✓ Quick Wins (clickable KPIs, OCR recovery, empty states, Chat rename, Zeiterfassung edit) — v0.4
+
+### Active
+
+<!-- Current milestone: v0.5 Mandantenportal -->
+
+**Mandantenportal (v0.5):**
+- [ ] Portal-Auth: Einladungslink + Passwort (Anwalt sendet, Mandant setzt Passwort)
+- [ ] Portal-Layout: /portal/* Route Group mit eigenem Layout (Glass UI)
+- [ ] Sachstand-Timeline: Vereinfachte Akte-Events für Mandant (keine internen Aktivitäten)
+- [ ] Dokument-Freigabe: Per-Dokument "Mandant sichtbar" Toggle durch Anwalt
+- [ ] Portal-Dokumentenansicht: Freigegebene Dokumente einsehen + herunterladen
+- [ ] Mandant-Upload: Dokumente in dedizierten "Mandant"-Ordner hochladen (MinIO)
+- [ ] Portal-Messaging: Sichere Nachrichten zwischen Mandant und Anwalt
+- [ ] E-Mail-Benachrichtigungen: Neues Dokument, neue Nachricht, Sachstand-Update
+- [ ] Multi-Mandant: Jeder Beteiligter mit Rolle MANDANT wird separat eingeladen
 
 ### Backlog
 
@@ -195,12 +205,10 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - [ ] Fallzusammenfassung: Timeline + Key Facts pro Akte (KI-generiert)
 - [ ] Globaler KI-Chat: Aktenübergreifende Suche und Fragen via RAG
 
-**Mandantenportal:**
-- [ ] Freigegebene Dokumente einsehen/herunterladen
-- [ ] Sichere Nachrichten an Anwalt senden
-- [ ] Aktuellen Sachstand einsehen
-- [ ] Eigene Unterlagen hochladen
-- [ ] Authentifizierung: Einladungslink + Passwort
+**Mandantenportal Erweiterungen (nach v0.5):**
+- [ ] Rechnungen/Zahlungen im Portal einsehen
+- [ ] Magic-Link Login als Alternative
+- [ ] Portal-Benachrichtigungseinstellungen
 
 **Mahnwesen:**
 - [ ] Mahnstufen, Mahnlauf, Mahn-PDF
@@ -296,6 +304,19 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena
 | seedAmtlicheFormulare() at worker startup (v0.1) | Idempotent via SystemSetting guard, avoids cron complexity for one-time seed | ✓ Good — content bypasses MinIO for hardcoded templates |
 | params Promise pattern in Next.js 15 (v0.1) | Sync params pattern caused 404s on DELETE/PATCH — await params required | ✓ Good — caught by integration checker, 2-line fix applied |
 
+## Current Milestone: v0.5 Mandantenportal
+
+**Goal:** Mandanten erhalten ein eigenes Portal zum Einsehen ihres Aktenstatus, freigegebener Dokumente und zur sicheren Kommunikation mit dem Anwalt.
+
+**Target features:**
+- Portal-Auth (Einladungslink + Passwort, per Mandant-Beteiligter)
+- /portal/* Route Group mit eigenem Glass-Layout
+- Sachstand-Timeline (vereinfachte Akte-Events)
+- Dokument-Freigabe (per-Dokument Toggle) + Dokumentenansicht
+- Mandant-Upload in dedizierten DMS-Ordner
+- Sichere Nachrichten (Portal-Messaging)
+- E-Mail-Benachrichtigungen (neue Dokumente, Nachrichten, Sachstand)
+
 ## Shipped Milestones
 
 - **v3.4 Full-Featured Kanzleisoftware** — 13 phases, 38 plans (2026-02-25)
@@ -315,6 +336,9 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena
 | canvas-confetti for Bossfight (v0.4) | Only new npm dependency (6KB) for boss victory celebration | ✓ Good — fire-and-forget, no cleanup needed |
 | Recharts for backlog trend (v0.4) | LineChart with glass-style tooltip for Team Dashboard | ✓ Good — consistent with existing chart patterns |
 | Condition templates for Special Quests (v0.4) | Server-side templates prevent admin from writing raw JSON — select preset, fill values | ✓ Good — zero JSON knowledge required |
+| Mandantenportal als /portal/* Route Group (v0.5) | Gleiche Next.js App, shared Prisma/DB, eigenes Layout + Auth — minimale Infrastruktur | — Pending |
+| Einladungslink + Passwort für Mandanten (v0.5) | Einfach, sicher, kein OAuth-Setup; Magic Link als spätere Erweiterung | — Pending |
+| Per-Dokument Freigabe-Toggle (v0.5) | Granulare Kontrolle pro Dokument statt per Ordner — Anwalt entscheidet explizit | — Pending |
 
 ---
-*Last updated: 2026-03-03 after v0.4 milestone completion*
+*Last updated: 2026-03-03 after v0.5 milestone start*

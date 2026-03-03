@@ -63,6 +63,17 @@ export const PERMISSIONS: Record<UserRole, PermissionSet> = {
     canCreateAkte: true,
     canEditAkte: true,
   },
+  MANDANT: {
+    canFreigeben: false,
+    canLoeschen: false,
+    canSendBeA: false,
+    canReadBeA: false,
+    canUseKI: false,
+    canAccessAdmin: false,
+    canAccessEinstellungen: false,
+    canCreateAkte: false,
+    canEditAkte: false,
+  },
 };
 
 // ─── Auth Helper Types ──────────────────────────────────────────────────────
@@ -281,6 +292,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   ANWALT: "Anwalt/Anwaeltin",
   SACHBEARBEITER: "Sachbearbeiter/in",
   SEKRETARIAT: "Sekretariat",
+  MANDANT: "Mandant",
 };
 
 export const PERMISSION_LABELS: Record<keyof PermissionSet, string> = {

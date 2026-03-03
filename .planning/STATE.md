@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: Mandantenportal
 status: completed
-stopped_at: Phase 50 context gathered
-last_updated: "2026-03-03T21:27:40.131Z"
-last_activity: 2026-03-03 -- Completed 49-01 (Portal Route Guard Fix)
+stopped_at: Completed 50-01 (Portal Dokumente Navigation)
+last_updated: "2026-03-03T21:43:22Z"
+last_activity: 2026-03-03 -- Completed 50-01 (Portal Dokumente Navigation)
 progress:
   total_phases: 8
-  completed_phases: 7
-  total_plans: 13
-  completed_plans: 13
+  completed_phases: 8
+  total_plans: 14
+  completed_plans: 14
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.5 Mandantenportal -- Phase 49 complete (gap closure)
+**Current focus:** v0.5 Mandantenportal -- Phase 50 complete (portal dokumente navigation)
 
 ## Current Position
 
-Phase: 49 of 49 (Portal Route Guard Fix) -- COMPLETE
+Phase: 50 of 50 (Portal Dokumente Navigation) -- COMPLETE
 Plan: 1 of 1 in current phase
-Status: Phase 49 complete (portal route guard fix + profil page)
-Last activity: 2026-03-03 -- Completed 49-01 (Portal Route Guard Fix)
+Status: Phase 50 complete (tab navigation for portal akte detail)
+Last activity: 2026-03-03 -- Completed 50-01 (Portal Dokumente Navigation)
 
 Progress: [##########] 100%
 
@@ -57,6 +57,7 @@ Progress: [##########] 100%
 | Phase 48 P01 | 4min | 2 tasks | 5 files |
 | Phase 48 P02 | 4min | 2 tasks | 4 files |
 | Phase 49 P01 | 7min | 2 tasks | 10 files |
+| Phase 50 P01 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,9 @@ Recent decisions affecting current work:
 - [Phase 49]: Portal URL structure fixed: added /portal segment inside route groups for correct URL mapping
 - [Phase 49]: Login page split into server component (auth redirect) + PortalLoginForm client component
 - [Phase 49]: Profil page uses Adresse relation fallback to legacy Kontakt address fields
+- [Phase 50]: Defense-in-depth: page.tsx keeps MANDANT role check even though layout does auth
+- [Phase 50]: Underline tab style with border-b-2 border-primary on active tab
+- [Phase 50]: Equal-width flex-1 tabs with icon + text centered
 
 ### Pending Todos
 
@@ -124,6 +128,6 @@ None -- fresh milestone.
 
 ## Session Continuity
 
-Last session: 2026-03-03T21:27:40.128Z
-Stopped at: Phase 50 context gathered
-Resume: Phase 49 complete. All v0.5 gap closure plans executed.
+Last session: 2026-03-03T21:43:22Z
+Stopped at: Completed 50-01 (Portal Dokumente Navigation)
+Resume: Phase 50 complete. Tab navigation added to portal akte detail page.

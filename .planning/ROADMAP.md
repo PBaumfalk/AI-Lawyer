@@ -268,7 +268,7 @@ Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34
 | 36. Quick Wins | 2/2 | Complete    | 2026-03-02 | - |
 | 37. Klassen + Weekly + Special Quests | 2/2 | Complete    | 2026-03-02 | - |
 | 38. Anti-Missbrauch | 2/2 | Complete    | 2026-03-02 | - |
-| 39. Item-Shop + Inventar | 2/2 | Complete   | 2026-03-03 | - |
+| 39. Item-Shop + Inventar | 2/2 | Complete    | 2026-03-03 | - |
 | 40. Heldenkarte | v0.4 | 0/1 | Not started | - |
 | 41. Team-Dashboard + Reporting | v0.4 | 0/2 | Not started | - |
 

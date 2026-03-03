@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import {
   FolderOpen,
   MessageSquare,
-  FileText,
   User,
   LogOut,
 } from "lucide-react";
@@ -21,7 +20,6 @@ type NavItem = {
 const navItems: NavItem[] = [
   { name: "Meine Akten", href: "/portal/dashboard", icon: FolderOpen },
   { name: "Nachrichten", href: "/portal/nachrichten", icon: MessageSquare },
-  { name: "Dokumente", href: "/portal/dokumente", icon: FileText },
   { name: "Profil", href: "/portal/profil", icon: User },
 ];
 

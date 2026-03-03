@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Shield } from "lucide-react";
 import Link from "next/link";
 
-export default function PortalLoginPage() {
+export function PortalLoginForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

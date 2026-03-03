@@ -88,3 +88,31 @@ export interface BossTrophy {
   date: string;       // ISO date string
   bossfightId: string;
 }
+
+// ─── Shop Types ─────────────────────────────────────────────────────────
+export type ShopItemRarity = "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
+export type ShopItemTyp = "AVATAR_RAHMEN" | "BANNER" | "PROFIL_TITEL" | "ABSCHLUSS_ANIMATION" | "PERK";
+
+export const RARITY_LABELS: Record<ShopItemRarity, string> = {
+  COMMON: "Gewoehnlich",
+  RARE: "Selten",
+  EPIC: "Episch",
+  LEGENDARY: "Legendaer",
+};
+
+export const RARITY_COLORS: Record<ShopItemRarity, string> = {
+  COMMON: "text-zinc-400",
+  RARE: "text-blue-400",
+  EPIC: "text-purple-400",
+  LEGENDARY: "text-amber-400",
+};
+
+export const ITEM_TYP_LABELS: Record<ShopItemTyp, string> = {
+  AVATAR_RAHMEN: "Avatar-Rahmen",
+  BANNER: "Banner",
+  PROFIL_TITEL: "Profil-Titel",
+  ABSCHLUSS_ANIMATION: "Abschluss-Animation",
+  PERK: "Perk",
+};
+
+export const LEGENDARY_LEVEL_GATE = 25;

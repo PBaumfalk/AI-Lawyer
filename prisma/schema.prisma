@@ -58,6 +58,7 @@ enum KalenderTyp {
   TERMIN
   FRIST
   WIEDERVORLAGE
+  FOKUSZEIT
 }
 
 enum FristPrioritaet {
@@ -333,6 +334,21 @@ enum AuditStatus {
   DECLINED
 }
 
+enum ItemRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum ItemTyp {
+  AVATAR_RAHMEN
+  BANNER
+  PROFIL_TITEL
+  ABSCHLUSS_ANIMATION
+  PERK
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Kanzlei {
@@ -468,6 +484,9 @@ model User {
 
   // Phase 35: Bossfight
   bossfightDamages   BossfightDamage[]
+
+  // Phase 39: Item-Shop
+  inventoryItems     UserInventoryItem[]
 
   @@map("users")
 }
@@ -2269,6 +2288,43 @@ model UserGameProfile {
 
   @@index([userId])
   @@map("user_game_profiles")
+}
+
+model ShopItem {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  name          String
+  beschreibung  String?     @db.Text
+  typ           ItemTyp
+  rarity        ItemRarity
+  preis         Int
+  aktiv         Boolean     @default(true)
+  sortierung    Int         @default(0)
+  metadata      Json        @default("{}")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  inventoryItems UserInventoryItem[]
+
+  @@index([typ, aktiv])
+  @@index([rarity])
+  @@map("shop_items")
+}
+
+model UserInventoryItem {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopItemId   String
+  shopItem     ShopItem  @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
+  ausgeruestet Boolean   @default(false)
+  verbraucht   Boolean   @default(false)
+  purchasedAt  DateTime  @default(now())
+  activatedAt  DateTime?
+
+  @@index([userId, shopItemId])
+  @@index([userId, ausgeruestet])
+  @@map("user_inventory_items")
 }
 
 model Quest {

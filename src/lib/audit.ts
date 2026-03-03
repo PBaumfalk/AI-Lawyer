@@ -61,7 +61,9 @@ export type AuditAktion =
   | "BEA_SAFEID_GEAENDERT"
   | "BEA_POSTFACH_GEWECHSELT" // BEA_POSTFACH_GEWECHSELT: reserved for future multi-postbox UI
   | "NORM_VERKNUEPFT"
-  | "NORM_ENTFERNT";
+  | "NORM_ENTFERNT"
+  | "PORTAL_EINLADUNG"
+  | "PORTAL_EINLADUNG_ERNEUT";
 
 /**
  * German human-readable labels for all audit actions.
@@ -129,6 +131,8 @@ export const AKTION_LABELS: Record<string, string> = {
   BEA_POSTFACH_GEWECHSELT: "beA Postfach gewechselt",
   NORM_VERKNUEPFT: "hat Norm verknuepft",
   NORM_ENTFERNT: "hat Norm entfernt",
+  PORTAL_EINLADUNG: "hat Portal-Einladung versendet",
+  PORTAL_EINLADUNG_ERNEUT: "hat Portal-Einladung erneut versendet",
 };
 
 /**

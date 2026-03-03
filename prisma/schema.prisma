@@ -24,6 +24,13 @@ enum KontaktTyp {
   JURISTISCH
 }
 
+enum PortalInviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
 enum BeteiligterRolle {
   MANDANT
   GEGNER
@@ -495,6 +502,7 @@ model User {
   inviteAcceptedAt  DateTime?
   kontaktId         String?   @unique
   kontakt           Kontakt?  @relation("PortalUser", fields: [kontaktId], references: [id])
+  portalInvitesCreated PortalInvite[] @relation("PortalInviteCreator")
 
   @@map("users")
 }
@@ -652,6 +660,7 @@ model Kontakt {
   beziehungenVon      KontaktBeziehung[] @relation("BeziehungVon")
   beziehungenZu       KontaktBeziehung[] @relation("BeziehungZu")
   portalUser          User?              @relation("PortalUser")
+  portalInvites       PortalInvite[]
 
   @@index([nachname, vorname])
   @@index([firma])
@@ -881,9 +890,30 @@ model Beteiligter {
   createdAt DateTime        @default(now())
 
   emailMessages EmailMessage[]
+  portalInvites PortalInvite[]
 
   @@unique([akteId, kontaktId, rolle])
   @@map("beteiligte")
+}
+
+model PortalInvite {
+  id            String             @id @default(cuid())
+  token         String             @unique @default(cuid())
+  beteiligteId  String
+  beteiligter   Beteiligter        @relation(fields: [beteiligteId], references: [id], onDelete: Cascade)
+  kontaktId     String
+  kontakt       Kontakt            @relation(fields: [kontaktId], references: [id])
+  email         String             // Email to which invite was sent
+  status        PortalInviteStatus @default(PENDING)
+  expiresAt     DateTime
+  createdById   String
+  createdBy     User               @relation("PortalInviteCreator", fields: [createdById], references: [id])
+  createdAt     DateTime           @default(now())
+  usedAt        DateTime?
+
+  @@index([token])
+  @@index([beteiligteId])
+  @@map("portal_invites")
 }
 
 // ─── Dokument-Vorlagen ──────────────────────────────────────────────────────

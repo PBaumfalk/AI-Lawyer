@@ -65,7 +65,8 @@ export type AuditAktion =
   | "PORTAL_EINLADUNG"
   | "PORTAL_EINLADUNG_ERNEUT"
   | "PORTAL_AKTIVIERT"
-  | "PORTAL_PASSWORT_RESET";
+  | "PORTAL_PASSWORT_RESET"
+  | "MANDANT_UPLOAD";
 
 /**
  * German human-readable labels for all audit actions.
@@ -137,6 +138,7 @@ export const AKTION_LABELS: Record<string, string> = {
   PORTAL_EINLADUNG_ERNEUT: "hat Portal-Einladung erneut versendet",
   PORTAL_AKTIVIERT: "hat Portal-Zugang aktiviert",
   PORTAL_PASSWORT_RESET: "hat Portal-Passwort zurueckgesetzt",
+  MANDANT_UPLOAD: "Mandant hat Dokument hochgeladen",
 };
 
 /**

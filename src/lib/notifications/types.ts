@@ -23,7 +23,8 @@ export type NotificationType =
   | "scanner:admin-escalation"
   | "template:approved"
   | "template:rejected"
-  | "message:mention";
+  | "message:mention"
+  | "document:mandant-upload";
 
 /**
  * Payload for creating a new notification.

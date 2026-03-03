@@ -18,6 +18,7 @@ import {
   Loader2,
   Sparkles,
   MessageSquare,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -50,6 +51,7 @@ const typeIcons: Record<NotificationType, React.ElementType> = {
   "template:approved": CheckCircle2,
   "template:rejected": XCircle,
   "message:mention": MessageSquare,
+  "document:mandant-upload": Upload,
 };
 
 /** Map notification types to icon colors */
@@ -75,6 +77,7 @@ const typeColors: Record<NotificationType, string> = {
   "template:approved": "text-emerald-500",
   "template:rejected": "text-rose-500",
   "message:mention": "text-blue-500",
+  "document:mandant-upload": "text-emerald-500",
 };
 
 /**

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
 status: unknown
-last_updated: "2026-03-03T09:37:34.216Z"
+last_updated: "2026-03-03T10:05:44Z"
 progress:
-  total_phases: 25
-  completed_phases: 23
-  total_plans: 62
-  completed_plans: 62
+  total_phases: 26
+  completed_phases: 24
+  total_plans: 63
+  completed_plans: 63
 ---
 
 # Project State
@@ -22,17 +22,17 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 
 ## Current Position
 
-Phase: 41 of 41 (Team-Dashboard) -- 9 of 9 in milestone COMPLETE
-Plan: 2 of 2 in current phase COMPLETE
-Status: v0.4 Milestone Complete
-Last activity: 2026-03-03 -- Completed 41-02 (Monthly Report Export)
+Phase: 42 of 42 (Integration-Wiring-Fixes) -- post-milestone gap closure
+Plan: 1 of 1 in current phase COMPLETE
+Status: Phase 42 Complete (gap closure)
+Last activity: 2026-03-03 -- Completed 42-01 (Integration Wiring Fixes)
 
-Progress: [██████████] 100% (20/20 plans)
+Progress: [██████████] 100% (21/21 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 121 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:18)
+- Total plans completed: 122 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:19)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100% (20/20 plans)
 | Phase 40 P02 | 2min | 2 tasks | 5 files |
 | Phase 41 P01 | 4min | 2 tasks | 7 files |
 | Phase 41 P02 | 3min | 2 tasks | 3 files |
+| Phase 42 P01 | 2min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -139,6 +140,9 @@ Recent decisions affecting current work:
 - [41-02]: Workday-based quest rate formula for monthly aggregate: completions / (quests * users * workdays)
 - [41-02]: PDF Briefkopf follows invoice pdf-generator layout (A4, 20mm margins)
 - [41-02]: CSV semicolon delimiter for German Excel compatibility (matching audit-trail export)
+- [42-01]: Dynamic import for getSocketEmitter in calculateStreak to avoid circular deps in worker context
+- [42-01]: Doppel-runen multiplier applied AFTER WV cap (cap-then-double = max 80 Runen/day with perk)
+- [42-01]: Manual migration SQL for usedForDate (Docker not running, matches pattern from phase 33)
 
 ### Pending Todos
 
@@ -155,5 +159,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 41-02-PLAN.md -- v0.4 MILESTONE COMPLETE
-Resume file: .planning/phases/41-team-dashboard-reporting/41-02-SUMMARY.md
+Stopped at: Completed 42-01-PLAN.md -- Integration wiring fixes complete
+Resume file: .planning/phases/42-integration-wiring-fixes/42-01-SUMMARY.md

@@ -111,7 +111,7 @@ See: `milestones/v0.3-ROADMAP.md` for full phase details.
 - [x] **Phase 39: Item-Shop + Inventar** - 4-tier item catalog, cosmetic + comfort purchases, inventory management, level gates (completed 2026-03-03)
 - [x] **Phase 40: Heldenkarte** - Profile page with avatar, class, active cosmetics, badge showcase, quest history (completed 2026-03-03)
 - [x] **Phase 41: Team-Dashboard + Reporting** - Team aggregates (quest fulfillment, backlog delta, bossfight damage), monthly PDF/CSV report (completed 2026-03-03)
-- [ ] **Phase 42: Integration Wiring Fixes** - Gap closure: seedShopItems startup, perk effects (streak-schutz, doppel-runen), WeeklySnapshot cold-start, dead code cleanup
+- [x] **Phase 42: Integration Wiring Fixes** - Gap closure: seedShopItems startup, perk effects (streak-schutz, doppel-runen), WeeklySnapshot cold-start, dead code cleanup (completed 2026-03-03)
 
 ## Phase Details
 
@@ -289,7 +289,7 @@ Note: Phase 36 (Quick Wins) is independent. Phase 42 can run before or after Pha
 | 39. Item-Shop + Inventar | 2/2 | Complete    | 2026-03-03 | - |
 | 40. Heldenkarte | 2/2 | Complete    | 2026-03-03 | - |
 | 41. Team-Dashboard + Reporting | 2/2 | Complete    | 2026-03-03 | - |
-| 42. Integration Wiring Fixes | v0.4 | 0/1 | Not started | - |
+| 42. Integration Wiring Fixes | 1/1 | Complete   | 2026-03-03 | - |
 
 ---
 *Roadmap created: 2026-02-24*

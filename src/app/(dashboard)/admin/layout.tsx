@@ -16,6 +16,7 @@ const adminNavigation = [
   { name: "Audit-Trail", href: "/admin/audit-trail" },
   { name: "DSGVO", href: "/admin/dsgvo" },
   { name: "Einstellungen", href: "/admin/settings" },
+  { name: "Team-Dashboard", href: "/admin/team-dashboard" },
 ];
 
 export default async function AdminLayout({

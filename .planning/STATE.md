@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: Mandantenportal
 status: in-progress
-last_updated: "2026-03-03T12:16:37Z"
+last_updated: "2026-03-03T12:23:59Z"
 progress:
   total_phases: 21
-  completed_phases: 16
+  completed_phases: 17
   total_plans: 54
-  completed_plans: 47
+  completed_plans: 48
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.5 Mandantenportal — Phase 45 in progress, Plan 01 complete
+**Current focus:** v0.5 Mandantenportal — Phase 45 complete, moving to Phase 46
 
 ## Current Position
 
-Phase: 45 of 48 (Mandant Datenraum)
-Plan: 1 of 2 in current phase
-Status: Phase 45 In Progress
-Last activity: 2026-03-03 — Completed 45-01 (Portal API + data isolation + naechste Schritte)
+Phase: 46 of 48 (Portal Dokumente)
+Plan: 0 of ? in current phase
+Status: Phase 45 Complete, Phase 46 Pending
+Last activity: 2026-03-03 — Completed 45-02 (Portal UI pages + naechste Schritte editor)
 
-Progress: [###░░░░░░░] 22%
+Progress: [####░░░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 127 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:3)
+- Total plans completed: 128 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:4)
 - Average duration: ~15 min
 - Total execution time: ~30 hours
 
@@ -75,6 +75,10 @@ Recent decisions affecting current work:
 - 404 (not 403) on unauthorized Mandant access to hide Akte existence
 - Composite index [akteId, mandantSichtbar, createdAt] for efficient portal timeline queries
 - naechsteSchritte update creates mandantSichtbar=true STATUS_CHANGE activity
+- Server component direct Prisma queries for portal pages (no redundant API fetch from server)
+- Back link to dashboard only visible for multi-Akte Mandanten
+- NaechsteSchritteCard uses accent border for visual prominence (Mandant's #1 question: what happens next)
+- NaechsteSchritteEditor role-gated to ADMIN, ANWALT, SACHBEARBEITER (not SEKRETARIAT)
 
 ### Pending Todos
 
@@ -89,5 +93,5 @@ None -- fresh milestone.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 45-01-PLAN.md (Portal API + data isolation + naechste Schritte)
-Resume: Continue with Phase 45 Plan 02 (Portal UI)
+Stopped at: Completed 45-02-PLAN.md (Portal UI pages + naechste Schritte editor)
+Resume: Continue with Phase 46 (Portal Dokumente)

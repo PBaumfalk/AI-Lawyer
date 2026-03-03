@@ -1,12 +1,12 @@
 import NextAuth from "next-auth";
-import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { NextAuthConfig } from "next-auth";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import type { UserRole } from "@prisma/client";
 import { logAuditEvent } from "@/lib/audit";
+import { authConfig } from "./auth.config";
 
 const loginSchema = z.object({
   email: z.string().email("Ungültige E-Mail-Adresse"),
@@ -14,11 +14,8 @@ const loginSchema = z.object({
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma) as NextAuthConfig["adapter"],
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
   providers: [
     Credentials({
       name: "Anmeldedaten",
@@ -35,7 +32,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (!user || !user.aktiv) {
-          // Log failed login attempt
           logAuditEvent({
             aktion: "LOGIN_FEHLGESCHLAGEN",
             details: {
@@ -52,7 +48,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!passwordMatch) {
-          // Log failed login with wrong password
           logAuditEvent({
             userId: user.id,
             aktion: "LOGIN_FEHLGESCHLAGEN",
@@ -75,29 +70,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = (user as any).role;
-        token.kanzleiId = (user as any).kanzleiId;
-        // Stamp kontaktId for MANDANT users (portal session)
-        if ((user as any).role === "MANDANT") {
-          token.kontaktId = (user as any).kontaktId;
-        }
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub!;
-        (session.user as any).role = token.role as UserRole;
-        (session.user as any).kanzleiId = token.kanzleiId as string | null;
-        // Expose kontaktId for MANDANT users
-        if (token.role === "MANDANT") {
-          (session.user as any).kontaktId = token.kontaktId as string | null;
-        }
-      }
-      return session;
-    },
-  },
 });

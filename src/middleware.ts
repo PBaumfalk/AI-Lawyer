@@ -1,4 +1,9 @@
-export { auth as middleware } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+
+// Use edge-compatible config only (no Prisma/bcrypt)
+const { auth } = NextAuth(authConfig);
+export default auth;
 
 export const config = {
   matcher: [

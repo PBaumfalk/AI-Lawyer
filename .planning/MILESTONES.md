@@ -1,5 +1,39 @@
 # Milestones
 
+## v0.4 Quest & Polish (Shipped: 2026-03-03)
+
+**Delivered:** Gamification als Kanzlei-Steuerungsinstrument — vollständiges Quest-System mit XP/Level/Runen/Streak, Team-Bossfight gegen Backlog-Monster, Item-Shop mit 18 Items in 4 Seltenheitsstufen, Heldenkarte mit Badge-Schaukasten, Anti-Missbrauch-Guards und Team-Dashboard mit Monatsreporting. Dazu UX-Quick-Wins: klickbare KPI-Cards, OCR-Recovery-Flow und Empty States.
+
+**Phases:** 10 (33-42)
+**Plans:** 21 completed
+**Lines of Code:** ~135k LOC TypeScript (+26.1k net in v0.4)
+**Commits:** 108
+**Git range:** `feat(33-01)` → `feat(42-01)`
+**Timeline:** 2026-03-02 → 2026-03-03 (2 days)
+**Requirements:** 41/41 satisfied
+
+**Key accomplishments:**
+1. Gamification Engine — UserGameProfile, Quest DSL evaluator against Prisma data, XP/Level/Runen/Streak system, BullMQ async processing, daily reset + nightly safety-net crons, DSGVO-compliant (opt-in, self-only visibility)
+2. Bossfight — Team Backlog-Monster with dynamic HP from open Wiedervorlagen, 4-phase progression with escalating Runen rewards, Socket.IO real-time HP bar + damage feed + canvas-confetti celebration, admin activation threshold
+3. Quest Depth — Class-specific daily quests per RBAC role, weekly delta quests (WeeklySnapshot baselines), time-limited Special Quest campaigns with admin CRUD, QuestWidget with grouped sections and deep-links to filtered views
+4. Anti-Missbrauch — Qualified WV completion (30+ char Vermerk), Redis daily Runen cap (40/day), 2% random audits with Sonner action toast, atomic Prisma $transaction, P2002 idempotent dedup
+5. Item-Shop + Heldenkarte — 18-item catalog (Common/Rare/Epic/Legendary), atomic Runen purchase, cosmetic equip/unequip, comfort perks (streak-schutz, doppel-runen, fokus-siegel), badge showcase (8 achievement badges), quest history
+6. Team-Dashboard + Reporting — Admin KPIs (quest fulfillment rate, backlog delta trend with Recharts, bossfight damage aggregates), monthly PDF/CSV export with Kanzlei Briefkopf
+7. Quick Wins — Clickable KPI cards with tab navigation, OCR recovery banner (retry + Vision-Analyse + manual text), empty states in 4 tabs, Chat rename, Zeiterfassung inline editing
+
+**Tech debt (non-blocking):**
+- Record<string, any> in quest-evaluator.ts (eslint-suppressed, necessary for Prisma dynamic where)
+- Fire-and-forget .catch(() => {}) patterns in audit-listener and quest-service (intentional)
+- Doppel-runen 2h window edge case with nightly safety net (product-level, not code defect)
+- Pre-existing TS errors in falldaten-tab.tsx and helena/index.ts (not from v0.4)
+
+**Archives:**
+- `milestones/v0.4-ROADMAP.md`
+- `milestones/v0.4-REQUIREMENTS.md`
+- `milestones/v0.4-MILESTONE-AUDIT.md`
+
+---
+
 ## v0.3 Kanzlei-Collaboration (Shipped: 2026-03-02)
 
 **Delivered:** Interne Kommunikation mit Echtzeit-Messaging (Slack-Style Kanäle + Akten-Threads), proaktive Rechtsprechungsüberwachung (Cross-Akte Semantic Search gegen neue RSS-Urteile mit Helena-Briefing), und strukturierte Fallaufnahme (Falldatenblaetter mit Community-Template-Workflow und Admin-Approval).

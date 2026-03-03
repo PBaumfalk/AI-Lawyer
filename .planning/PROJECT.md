@@ -167,38 +167,19 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- Current milestone: v0.4 Quest & Polish -->
+<!-- Next milestone: v0.5 (to be defined via /gsd:new-milestone) -->
+(No active milestone — run `/gsd:new-milestone` to define v0.5 scope)
 
-## Current Milestone: v0.4 Quest & Polish
-
-**Goal:** Gamification als Kanzlei-Steuerungsinstrument (Quests, XP, Bossfight, Item-Shop, Team-Dashboard) + UX-Quick-Wins in der Akte-Detailansicht.
-
-**Target features:**
-
-**Gamification Phase 1 (MVP):**
-- [ ] DB-Schema (UserGameProfile, Quest, QuestCompletion, Bossfight)
-- [ ] 5 Daily Quests mit maschinenlesbarer Bedingungslogik
-- [ ] XP/Runen/Level-Berechnung + Streak-System
-- [ ] Dashboard-Widget (Quests + Fortschritt + XP-Bar)
-- [ ] Bossfight "Backlog-Monster" mit Team-Fortschritts-Banner
-
-**Gamification Phase 2 (Tiefe):**
-- [ ] Klassen-spezifische Quests (Jurist, Schreiber, Wächter, Quartiermeister)
-- [ ] Weekly Quests (Backlog-Reduktion, Abrechnung, Akten-Checks)
-- [ ] Anti-Missbrauch (Runen-Deckel, Random Audits, qualifizierte Erledigung)
-- [ ] Item-Shop (kosmetisch + Komfort-Perks) + Inventar
-
-**Gamification Phase 3 (Controlling):**
-- [ ] Special Quests / zeitlich begrenzte Kampagnen
-- [ ] Team-Dashboard (Erfüllungsquote, Backlog-Delta, Bossfight-Schaden pro Person)
-- [ ] Reporting (Monat: Backlog-Delta, Billing-Delta, Quest-Erfüllungsquoten)
-
-**Quick Wins:**
-- [ ] KPI-Cards anklickbar → navigiert zum jeweiligen Tab
-- [ ] OCR-Recovery-Flow (Banner + Retry + Vision-Analyse + Manuell)
-- [ ] Empty States mit Icon, Erklärtext und CTAs
-- [ ] "Nachrichten: 0" KPI-Card fix (umbenennen/ausblenden)
-- [ ] Zeiterfassung-Beschreibung sichtbar machen
+**Gamification (v0.4 — validated):**
+- ✓ Gamification Engine (UserGameProfile, Quest DSL, XP/Level/Runen/Streak, BullMQ crons, DSGVO opt-in) — v0.4
+- ✓ Dashboard QuestWidget (XP bar, quests, streak, Runen, deep-links, opt-in toggle) — v0.4
+- ✓ Bossfight (Team Backlog-Monster, 4 phases, Socket.IO real-time, admin threshold) — v0.4
+- ✓ Klassen + Weekly + Special Quests (role-specific, delta conditions, admin campaigns) — v0.4
+- ✓ Anti-Missbrauch (qualified completion, Redis Runen cap, random audits, atomic tx) — v0.4
+- ✓ Item-Shop + Inventar (18 items, 4 rarity tiers, cosmetic equip, comfort perks) — v0.4
+- ✓ Heldenkarte (avatar, badges, quest history) — v0.4
+- ✓ Team-Dashboard + Reporting (quest rate, backlog delta, bossfight damage, PDF/CSV) — v0.4
+- ✓ Quick Wins (clickable KPIs, OCR recovery, empty states, Chat rename, Zeiterfassung edit) — v0.4
 
 ### Backlog
 
@@ -249,11 +230,12 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ## Context
 
-Shipped v0.3 with ~125k LOC TypeScript (63 commits in v0.3, 638+ total).
-Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (80+ Models including Channel, ChannelMember, Message, MessageReaction, FalldatenTemplate), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, fast-xml-parser, pgvector HNSW.
+Shipped v0.4 with ~135k LOC TypeScript (108 commits in v0.4, 746+ total).
+Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (85+ Models including UserGameProfile, Quest, QuestCompletion, Bossfight, BossfightDamage, ShopItem, UserInventoryItem, WeeklySnapshot), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, Recharts, canvas-confetti, pdf-lib, fast-xml-parser, pgvector HNSW.
 Docker Compose deployment with 9 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice, ollama).
 Helena is an autonomous agent with ReAct-Loop, 14 tools, deterministic Schriftsatz pipeline, @-mention task system, draft-approval workflow, background scanner with 7 alert types (incl. NEUES_URTEIL), per-Akte memory, QA-gates, and channel messaging integration.
-Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena silent in ALLGEMEIN channels, sidebar unread badge not real-time for background, Akte stats counter shows old chatNachrichten.
+Gamification system: Quest DSL evaluator, XP/Level/Runen/Streak engine, Bossfight team mechanic, Item-Shop with 18 items (4 rarity tiers), Heldenkarte profile with 8 achievement badges, Team-Dashboard with Recharts trend charts and PDF/CSV reporting, Anti-Missbrauch guards (qualified completion, Redis Runen cap, random audits).
+Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena silent in ALLGEMEIN channels, sidebar unread badge not real-time for background, Akte stats counter shows old chatNachrichten, doppel-runen 2h window edge case.
 
 ## Constraints
 
@@ -321,8 +303,18 @@ Known tech debt: helena/index.ts TS type mismatches, search-web.ts stub, @Helena
 - **v0.1 Helena RAG** — 7 phases, 19 plans (2026-02-27)
 - **v0.2 Helena Agent** — 10 phases, 23 plans (2026-02-28)
 - **v0.3 Kanzlei-Collaboration** — 5 phases, 13 plans (2026-03-02)
+- **v0.4 Quest & Polish** — 10 phases, 21 plans (2026-03-03)
 
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
+| Gamification opt-in DSGVO (v0.4) | GameProfile only visible to owning user, opt-in toggle, no cross-user reads | ✓ Good — self-only API routes, no team-level individual data |
+| Quest DSL evaluator (v0.4) | JSON DSL in Quest.bedingung with union types (count/delta) — machine-readable, no LLM parsing | ✓ Good — evaluates against Prisma COUNT/delta queries, extensible |
+| Atomic Prisma $transaction for rewards (v0.4) | XP + Runen + QuestCompletion in single transaction — prevents drift from concurrent completions | ✓ Good — P2002 idempotent dedup catches races |
+| Redis INCR for Runen cap (v0.4) | Daily cap enforcement mirrors rate-limiter.ts pattern — fail-open on Redis errors | ✓ Good — INCR+EXPIRE atomic, 40/day WV-only cap |
+| Absent-until-loaded pattern (v0.4) | Widgets return null until fetch completes — no layout shift, no loading spinner | ✓ Good — QuestWidget, BossfightBanner, Heldenkarte all use this |
+| canvas-confetti for Bossfight (v0.4) | Only new npm dependency (6KB) for boss victory celebration | ✓ Good — fire-and-forget, no cleanup needed |
+| Recharts for backlog trend (v0.4) | LineChart with glass-style tooltip for Team Dashboard | ✓ Good — consistent with existing chart patterns |
+| Condition templates for Special Quests (v0.4) | Server-side templates prevent admin from writing raw JSON — select preset, fill values | ✓ Good — zero JSON knowledge required |
+
 ---
-*Last updated: 2026-03-02 after v0.4 milestone start*
+*Last updated: 2026-03-03 after v0.4 milestone completion*

@@ -196,6 +196,95 @@
 
 ---
 
+## Milestone: v0.3 — Kanzlei-Collaboration
+
+**Shipped:** 2026-03-02
+**Phases:** 5 (28-32) | **Plans:** 13 | **Tasks:** 25 | **Commits:** 63
+
+### What Was Built
+- Falldatenblaetter Template System: DB-backed templates with 8 field types, Gruppen-first builder, community submit/approve workflow, 10 Sachgebiet seed templates
+- In-Akte Falldaten Forms: Auto-template assignment, Pflichtfeld highlighting, completeness tracking, unsaved changes guard
+- SCAN-05 Neu-Urteil-Check: Cross-Akte semantic search (pgvector HNSW, cosine similarity + Sachgebiet pre-filter), LLM-Briefing, NEUES_URTEIL alerts
+- Messaging Backend: Channel/Message Prisma models, 14 REST routes, Socket.IO rooms, @mention notifications, @Helena channel response, AKTE-Kanal lazy-creation
+- Messaging UI: Split-layout /nachrichten page, ChannelSidebar (unread badges), MessageComposer (@mention picker, DMS attachments), TypingIndicator, AkteChannelTab
+
+### What Worked
+- **Lazy-creation pattern for AKTE channels:** Channels created on first visit with RBAC-sync from Akte permissions — zero manual setup
+- **Banner refetch pattern:** New messages trigger banner notification → click reloads list — consistent with Activity Feed pattern, prevents race conditions
+- **Community template workflow:** ENTWURF → EINGEREICHT → GENEHMIGT/ABGELEHNT mirrors draft-approval pattern from v0.2 — users intuitively understand status flow
+
+### What Was Inefficient
+- **Nightly cron for embeddings:** Akte summaryEmbedding only refreshes at 02:30 — acceptable staleness for 5-person Kanzlei but not ideal for larger teams
+- **@Helena in ALLGEMEIN channels silently ignored:** Design decision (Helena needs akteId context) but no user-facing message explaining why @Helena doesn't respond
+- **Akte stats counter stale:** Shows old chatNachrichten count instead of Channel Messages — known pre-existing issue not resolved
+
+### Patterns Established
+- **Lazy channel creation with RBAC sync:** AKTE channels auto-created on first visit, membership synced from Akte verantwortlich/dezernat
+- **Sacgebiet pre-filter for semantic search:** Cosine similarity + Sachgebiet enum reduces false positives in cross-Akte matching
+- **Community template lifecycle:** ENTWURF → EINGEREICHT → GENEHMIGT/ABGELEHNT with admin approval gate
+
+### Key Lessons
+1. **Lazy creation beats eager seed.** AKTE channels created on demand are simpler than pre-seeding channels for all Akten. Apply to future per-entity resources.
+2. **Nightly embedding refresh is acceptable at kanzlei scale.** On-demand would add complexity for marginal benefit with <50 users. Revisit if team size grows.
+3. **Silent behavior needs user communication.** @Helena ignoring ALLGEMEIN messages without explanation confuses users. Always show feedback for rejected actions.
+
+### Cost Observations
+- Model mix: ~35% opus (execution), ~50% sonnet (planning), ~15% haiku (verification)
+- Sessions: ~8 sessions across 3 days
+- Notable: 13 plans in 3 days (~4.6 min/plan avg) — messaging UI was more complex than expected (Socket.IO rooms + real-time)
+
+---
+
+## Milestone: v0.4 — Quest & Polish
+
+**Shipped:** 2026-03-03
+**Phases:** 10 (33-42) | **Plans:** 21 | **Commits:** 108
+
+### What Was Built
+- Gamification Engine: UserGameProfile + Quest + QuestCompletion Prisma models, Quest DSL evaluator (count + delta conditions), XP/Level/Runen/Streak system, BullMQ async quest processing, daily reset + nightly safety-net crons, DSGVO-compliant opt-in architecture
+- Bossfight: Team Backlog-Monster with HP = open Wiedervorlagen, 4-phase progression (escalating Runen rewards), Socket.IO real-time HP bar + damage feed + canvas-confetti celebration, admin activation threshold
+- Quest Depth: Class-specific daily quests per RBAC role (~15 daily), weekly delta quests (WeeklySnapshot baselines, Monday cron), Special Quest campaigns (admin CRUD with condition templates), QuestWidget with grouped sections and deep-links
+- Anti-Missbrauch: Qualified WV completion (30+ char Vermerk), Redis INCR daily Runen cap (40/day), 2% random audits with Sonner action toast, atomic Prisma $transaction, P2002 idempotent dedup, 24h auto-confirm BullMQ job
+- Item-Shop + Heldenkarte: 18-item catalog (5 Common, 5 Rare, 5 Epic, 3 Legendary), atomic Runen purchase, cosmetic equip/unequip, 3 comfort perks (streak-schutz, doppel-runen, fokus-siegel), Heldenkarte profile with 8 achievement badges and quest history
+- Team-Dashboard + Reporting: Admin KPIs (quest fulfillment rate, backlog delta trend with Recharts, bossfight damage aggregates), monthly PDF/CSV export with Kanzlei Briefkopf
+- Quick Wins: Clickable KPI cards, OCR recovery banner (retry + Vision-Analyse + manual text), empty states in 4 tabs, Chat rename, Zeiterfassung inline editing
+
+### What Worked
+- **Quest DSL with JSON conditions:** Machine-readable quest definitions made evaluator generic — adding new quest types (delta, count) required zero evaluator rewrites, just new condition shapes
+- **Absent-until-loaded pattern for widgets:** QuestWidget, BossfightBanner, Heldenkarte all return null until fetch completes — no layout shift, no loading spinners, clean progressive enhancement
+- **Atomic Prisma $transaction for rewards:** XP + Runen + QuestCompletion record in single transaction with P2002 catch for concurrent dedup — zero drift across all phases
+- **Condition templates for Special Quests:** Admin selects a preset template, fills values — never writes raw JSON. Server-side template definitions prevent invalid conditions
+- **Only 1 gap-closure phase (Phase 42):** Down from 2-4 in previous milestones — better upfront planning paid off
+- **Shared team-metrics.ts service:** Called by both server page and API route — avoids self-fetch pattern, single source of truth for aggregated team data
+
+### What Was Inefficient
+- **Phase 42 still needed for perk wiring:** streak-schutz and doppel-runen were tracked but not wired to actual effects until gap closure. Should have been in Phase 39's scope.
+- **Manual migration SQL:** Docker not running during dev, so all 4 Prisma migrations were created as manual SQL. Works but loses Prisma migration history tracking.
+- **Doppel-runen 2h window edge case:** If perk activates and quest check only runs via nightly safety net >2h later, doubling is missed. Product-level edge case not worth fixing at kanzlei scale.
+
+### Patterns Established
+- **Quest DSL evaluator pattern:** JSON `bedingung` → `evaluateQuestCondition()` → Prisma COUNT/delta query. Add new quest types by extending the condition union type.
+- **Redis INCR+EXPIRE for daily caps:** Mirrors rate-limiter.ts pattern. Key: `runen-cap:${userId}:${yyyymmdd}`, EXPIRE 86400s. Fail-open on Redis errors.
+- **Absent-until-loaded widget pattern:** Component returns null until first fetch completes. No loading state, no CLS, works with server-rendered pages.
+- **Kanzlei Socket.IO room:** `kanzlei:{kanzleiId}` room for team-wide broadcasts (bossfight, audits). Auto-join in SocketProvider on connect.
+- **Rarity tier design tokens:** COMMON=sky, RARE=violet, EPIC=amber, LEGENDARY=rose oklch color mapping. Consistent across ShopItemCard, RarityBadge, AvatarFrame.
+- **Traffic light trend colors:** emerald=fallend (good), rose=steigend (bad), amber=stabil — matching risk color system from Akte detail.
+- **PDF Briefkopf pattern:** Reused invoice pdf-generator layout (A4, 20mm margins) for Team Dashboard monthly report.
+
+### Key Lessons
+1. **Perk effects must be wired in the same phase as perk purchase.** Phase 39 created shop + inventory but deferred actual effect wiring to Phase 42. This is the "integration gap at feature boundary" pattern — the phase that introduces the concept should also wire its effects.
+2. **Quest DSL is extensible.** The count/delta union approach worked well for 3 quest types. If a third condition type is needed, the pattern scales cleanly.
+3. **Gap-closure phases are shrinking.** v3.4 had 4 gap phases (31%), v0.2 had 2 (20%), v0.4 had 1 (10%). Upfront planning is improving but some integration gaps remain inevitable.
+4. **DSGVO opt-in architecture pays off.** Making gamification opt-in from Phase 33 meant no DSGVO concerns surfaced in any later phase. Bake compliance into schema, not afterthought middleware.
+5. **Manual Prisma migrations are fragile.** 4 manual SQL migrations in v0.4 work but lose prisma migrate history. When Docker runs, these need to be reconciled. Consider running Docker for migration generation even if app runs outside.
+
+### Cost Observations
+- Model mix: ~35% opus (execution), ~50% sonnet (planning/research), ~15% haiku (verification)
+- Sessions: ~8 sessions across 2 days
+- Notable: 21 plans in 2 days (~4 min/plan avg). Only 1 new npm dependency (canvas-confetti, 6KB). Gap-closure phases down to 10% from 31% in v3.4.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -206,6 +295,8 @@
 | v3.5 | ~5 | 2 | 10 | Design-token-first approach; scope reduction should happen at requirements time |
 | v0.1 | ~8 | 7 | 19 | 6-chain parallel ki-chat; integration checker caught cross-phase bug missed by phase verifiers |
 | v0.2 | ~10 | 10 | 23 | Zero new dependencies; gap-closure phases still ~20%; Prisma $extends for business invariants |
+| v0.3 | ~8 | 5 | 13 | Lazy channel creation; community template workflow; nightly embedding refresh at kanzlei scale |
+| v0.4 | ~8 | 10 | 21 | Quest DSL evaluator; gap-closure down to 10%; absent-until-loaded widget pattern; DSGVO opt-in from day one |
 
 ### Cumulative Quality
 
@@ -215,15 +306,19 @@
 | v3.5 | 207+ (unchanged) | 5/18 shipped (13 deferred) | 1 | 2 (font-heading, .glass alias — non-blocking) |
 | v0.1 | 207+ (unchanged) | 16/16 | 1 (+ integration check) | 2 (processUrteilNer dead code, NER attempts:1) |
 | v0.2 | 253+ (Frist + RVG + Helena 46) | 52/53 (1 deferred) | 2 (audit + re-audit) | 5 (TS errors, stub, taskId, gate hardcodes, SCAN-05) |
+| v0.3 | 253+ (unchanged) | 20/20 | 1 | 5 (@Helena ALLGEMEIN, sidebar badge, stats counter, embedding refresh, TS errors) |
+| v0.4 | 253+ (unchanged) | 41/41 | 1 | 4 (quest-evaluator any, fire-and-forget catch, doppel-runen edge, pre-existing TS) |
 
 ### Top Lessons (Verified Across Milestones)
 
-1. Plan integration wiring explicitly — gap-closure phases are effective but reactive (~20% of phases across all milestones)
+1. Plan integration wiring explicitly — gap-closure phases are effective but reactive (trending down: 31% → 20% → 10%)
 2. Audit incrementally rather than only at milestone boundary
-3. Prisma schema as source of truth scales well across 70+ models
+3. Prisma schema as source of truth scales well across 85+ models
 4. Scope decisions belong at requirements time — both mid-milestone removals and infeasible requirements create noise
 5. Design-token-first: define tokens before migrating components — makes page migrations mechanical
 6. Integration checker is non-negotiable — phase-level verification misses cross-phase wiring defects
 7. Coordinate cross-phase implementation decisions during planning — prevents dead code from independent choices
-8. Zero-dependency milestones are possible — v0.2 added major agent capabilities with zero new npm packages
+8. Near-zero-dependency milestones are the norm — v0.4 added only canvas-confetti (6KB) across 21 plans
 9. Prisma $extends for business invariants — database-level enforcement is safer than middleware
+10. DSGVO compliance baked into schema (opt-in field, self-only visibility) prevents compliance concerns in all downstream phases
+11. Absent-until-loaded pattern for progressive enhancement — no CLS, no loading spinners, works with SSR

@@ -242,7 +242,7 @@ Phases execute in numeric order: 43 -> 44 -> 45 -> 46 -> 47 -> 48
 | 45. Mandant-Datenraum | 2/2 | Complete    | 2026-03-03 | - |
 | 46. Dokument-Freigabe + Portal-DMS | 2/2 | Complete    | 2026-03-03 | - |
 | 47. Portal-Messaging | 2/2 | Complete    | 2026-03-03 | - |
-| 48. E-Mail-Benachrichtigungen | 2/2 | Complete   | 2026-03-03 | - |
+| 48. E-Mail-Benachrichtigungen | 2/2 | Complete    | 2026-03-03 | - |
 
 ---
 *Roadmap created: 2026-02-24*

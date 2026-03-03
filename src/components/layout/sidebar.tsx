@@ -16,6 +16,7 @@ import {
   Settings,
   Scale,
   Shield,
+  Store,
   LogOut,
   ChevronLeft,
   TicketCheck,
@@ -63,6 +64,7 @@ const navigation: NavItem[] = [
   { name: "Finanzen", href: "/finanzen", icon: Wallet },
   { name: "beA", href: "/bea", icon: Shield },
   { name: "Nachrichten", href: "/nachrichten", icon: MessageSquare, badgeKey: "unreadMessages" },
+  { name: "Shop", href: "/shop", icon: Store },
   {
     name: "Einstellungen",
     href: "/einstellungen",

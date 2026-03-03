@@ -1045,6 +1045,8 @@ model Dokument {
   ocrVersuche       Int       @default(0) // Number of OCR attempts
   ocrAbgeschlossen  DateTime?             // When OCR completed successfully
   previewPfad       String?               // MinIO path for generated PDF preview (non-PDF files)
+  // Portal: Mandant document visibility (Phase 46)
+  mandantSichtbar   Boolean  @default(false)
   // Creator
   createdById String
   createdBy   User     @relation(fields: [createdById], references: [id])
@@ -1056,6 +1058,7 @@ model Dokument {
   chunks          DocumentChunk[]
 
   @@index([akteId])
+  @@index([akteId, mandantSichtbar])
   @@index([name])
   @@index([status])
   @@index([ocrStatus])

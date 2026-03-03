@@ -218,11 +218,11 @@ Plans:
   2. Mandant erhaelt eine E-Mail wenn ein neues Dokument fuer ihn freigegeben wird
   3. Mandant erhaelt eine E-Mail wenn ein Sachstand-Update in seiner Akte erfolgt (neues Timeline-Event)
   4. E-Mails enthalten einen Deep-Link zum Portal und werden mit Kanzlei-Absender versendet
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 48-01: E-Mail-Template-System + BullMQ notification jobs
-- [ ] 48-02: Trigger-Wiring (Nachricht, Dokument-Freigabe, Sachstand-Event)
+- [ ] 48-01-PLAN.md — Email template system + BullMQ portal-notification queue + worker
+- [ ] 48-02-PLAN.md — Trigger wiring (MSG-04 Nachricht, MSG-05 Dokument-Freigabe, MSG-06 Sachstand-Event)
 
 ## Progress
 

@@ -57,9 +57,9 @@
 
 ### Team-Dashboard
 
-- [ ] **TEAM-01**: Erfüllungsquote Kernquests als Team-Aggregat (kein per-Person Breakdown)
-- [ ] **TEAM-02**: Backlog-Delta pro Woche (Trend-Anzeige: steigend/fallend/stabil)
-- [ ] **TEAM-03**: Bossfight-Gesamtschaden als Team-Aggregat
+- [x] **TEAM-01**: Erfüllungsquote Kernquests als Team-Aggregat (kein per-Person Breakdown)
+- [x] **TEAM-02**: Backlog-Delta pro Woche (Trend-Anzeige: steigend/fallend/stabil)
+- [x] **TEAM-03**: Bossfight-Gesamtschaden als Team-Aggregat
 - [ ] **TEAM-04**: Monatsreporting (Backlog-Delta, Billing-Delta, Quest-Erfüllungsquoten als PDF/CSV)
 
 ### Quick Wins
@@ -127,9 +127,9 @@
 | PROFIL-01 | Phase 40 | Complete |
 | PROFIL-02 | Phase 40 | Complete |
 | PROFIL-03 | Phase 40 | Complete |
-| TEAM-01 | Phase 41 | Pending |
-| TEAM-02 | Phase 41 | Pending |
-| TEAM-03 | Phase 41 | Pending |
+| TEAM-01 | Phase 41 | Complete |
+| TEAM-02 | Phase 41 | Complete |
+| TEAM-03 | Phase 41 | Complete |
 | TEAM-04 | Phase 41 | Pending |
 | QW-01 | Phase 36 | Complete |
 | QW-02 | Phase 36 | Complete |

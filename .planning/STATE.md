@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
 status: unknown
-last_updated: "2026-03-03T07:31:07.686Z"
+last_updated: "2026-03-03T09:26:00.000Z"
 progress:
   total_phases: 23
   completed_phases: 22
   total_plans: 60
-  completed_plans: 60
+  completed_plans: 61
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 40 complete, Phase 41 next (Team-Dashboard)
+**Current focus:** v0.4 Quest & Polish -- Phase 41 in progress (Team-Dashboard)
 
 ## Current Position
 
-Phase: 40 of 41 (Heldenkarte) -- 8 of 9 in milestone COMPLETE
-Plan: 2 of 2 in current phase COMPLETE
-Status: Phase 40 Complete
-Last activity: 2026-03-03 -- Completed 40-02 (Heldenkarte UI)
+Phase: 41 of 41 (Team-Dashboard) -- 9 of 9 in milestone IN PROGRESS
+Plan: 1 of 2 in current phase COMPLETE
+Status: Phase 41 Plan 01 Complete
+Last activity: 2026-03-03 -- Completed 41-01 (Team Dashboard KPIs + Chart)
 
-Progress: [██████████] 100% (18/18 plans)
+Progress: [█████████░] 95% (19/20 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 119 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:16)
+- Total plans completed: 120 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:17)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -63,6 +63,7 @@ Progress: [██████████] 100% (18/18 plans)
 | Phase 39 P02 | 3min | 2 tasks | 6 files |
 | Phase 40 P01 | 3min | 2 tasks | 5 files |
 | Phase 40 P02 | 2min | 2 tasks | 5 files |
+| Phase 41 P01 | 4min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -130,6 +131,10 @@ Recent decisions affecting current work:
 - [40-02]: Highest-rarity equipped cosmetic determines AvatarFrame ring color (fallback COMMON)
 - [40-02]: Badge icon lookup via static BADGE_ICONS map with HelpCircle fallback (no dynamic import)
 - [40-02]: Quest type badges: DAILY=sky, WEEKLY=emerald, SPECIAL=amber for visual differentiation
+- [41-01]: Shared team-metrics.ts service called by both server page and API route (avoids self-fetch pattern)
+- [41-01]: Recharts LineChart for backlog trend visualization with custom glass-style tooltip
+- [41-01]: Traffic light trend colors: emerald=fallend, rose=steigend, amber=stabil (matching risk color system)
+- [41-01]: WeeklySnapshot uses findFirst+create/update for nullable userId (PostgreSQL NULL != NULL)
 
 ### Pending Todos
 
@@ -146,5 +151,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 40-02-PLAN.md
-Resume file: .planning/phases/40-heldenkarte/40-02-SUMMARY.md
+Stopped at: Completed 41-01-PLAN.md
+Resume file: .planning/phases/41-team-dashboard-reporting/41-01-SUMMARY.md

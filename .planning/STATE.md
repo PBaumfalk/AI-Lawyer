@@ -4,7 +4,7 @@ milestone: v0.5
 milestone_name: Mandantenportal
 status: completed
 stopped_at: Completed 49-01-PLAN.md
-last_updated: "2026-03-03T21:00:04Z"
+last_updated: "2026-03-03T21:06:26.789Z"
 last_activity: 2026-03-03 -- Completed 49-01 (Portal Route Guard Fix)
 progress:
   total_phases: 7

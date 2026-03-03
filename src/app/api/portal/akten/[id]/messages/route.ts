@@ -5,6 +5,7 @@ import { requireMandantAkteAccess } from "@/lib/portal-access";
 import { prisma } from "@/lib/db";
 import { sendMessage } from "@/lib/messaging/message-service";
 import { createPortalChannel } from "@/lib/messaging/channel-service";
+import { getDownloadUrl } from "@/lib/storage";
 import type { MessageListItem } from "@/lib/messaging/types";
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -133,44 +134,73 @@ export async function GET(
   const sliced = hasMore ? messages.slice(0, limit) : messages;
   const nextCursor = hasMore ? sliced[sliced.length - 1].id : null;
 
-  const items: MessageListItem[] = sliced.map((msg) => {
-    const reactionMap = new Map<string, string[]>();
-    for (const r of msg.reactions) {
-      const arr = reactionMap.get(r.emoji) || [];
-      arr.push(r.userId);
-      reactionMap.set(r.emoji, arr);
-    }
+  // Resolve attachment download URLs for all messages
+  const items: MessageListItem[] = await Promise.all(
+    sliced.map(async (msg) => {
+      const reactionMap = new Map<string, string[]>();
+      for (const r of msg.reactions) {
+        const arr = reactionMap.get(r.emoji) || [];
+        arr.push(r.userId);
+        reactionMap.set(r.emoji, arr);
+      }
 
-    const reactions = Array.from(reactionMap.entries()).map(([emoji, userIds]) => ({
-      emoji,
-      count: userIds.length,
-      userIds,
-    }));
+      const reactions = Array.from(reactionMap.entries()).map(([emoji, userIds]) => ({
+        emoji,
+        count: userIds.length,
+        userIds,
+      }));
 
-    return {
-      id: msg.id,
-      channelId: msg.channelId,
-      authorId: msg.authorId,
-      authorName: msg.author.name || "Unbekannt",
-      authorAvatarUrl: msg.author.avatarUrl,
-      isSystem: msg.author.isSystem,
-      body: msg.deletedAt ? "" : msg.body,
-      attachments: msg.attachments as unknown[] | null,
-      mentions: msg.mentions as string[] | null,
-      parentId: msg.parentId,
-      parent: msg.parent
-        ? {
-            id: msg.parent.id,
-            authorName: msg.parent.author.name || "Unbekannt",
-            body: msg.parent.body,
-          }
-        : null,
-      editedAt: msg.editedAt?.toISOString() ?? null,
-      deletedAt: msg.deletedAt?.toISOString() ?? null,
-      createdAt: msg.createdAt.toISOString(),
-      reactions,
-    };
-  });
+      // Resolve presigned download URLs for attachments
+      let resolvedAttachments = msg.attachments as unknown[] | null;
+      if (Array.isArray(resolvedAttachments) && resolvedAttachments.length > 0) {
+        resolvedAttachments = await Promise.all(
+          resolvedAttachments.map(async (att: unknown) => {
+            const a = att as { dokumentId?: string; name?: string };
+            if (!a.dokumentId) return att;
+
+            try {
+              // Look up the Dokument record to get dateipfad
+              const dok = await prisma.dokument.findFirst({
+                where: { id: a.dokumentId, akteId },
+                select: { dateipfad: true },
+              });
+              if (dok?.dateipfad) {
+                const url = await getDownloadUrl(dok.dateipfad);
+                return { ...a, url };
+              }
+            } catch {
+              // Non-fatal: return attachment without URL
+            }
+            return att;
+          })
+        );
+      }
+
+      return {
+        id: msg.id,
+        channelId: msg.channelId,
+        authorId: msg.authorId,
+        authorName: msg.author.name || "Unbekannt",
+        authorAvatarUrl: msg.author.avatarUrl,
+        isSystem: msg.author.isSystem,
+        body: msg.deletedAt ? "" : msg.body,
+        attachments: resolvedAttachments,
+        mentions: msg.mentions as string[] | null,
+        parentId: msg.parentId,
+        parent: msg.parent
+          ? {
+              id: msg.parent.id,
+              authorName: msg.parent.author.name || "Unbekannt",
+              body: msg.parent.body,
+            }
+          : null,
+        editedAt: msg.editedAt?.toISOString() ?? null,
+        deletedAt: msg.deletedAt?.toISOString() ?? null,
+        createdAt: msg.createdAt.toISOString(),
+        reactions,
+      };
+    })
+  );
 
   return NextResponse.json({ messages: items, nextCursor });
 }

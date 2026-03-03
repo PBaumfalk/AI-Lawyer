@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: Mandantenportal
 status: unknown
-last_updated: "2026-03-03T12:29:40.949Z"
+last_updated: "2026-03-03T12:37:33.920Z"
 progress:
   total_phases: 21
   completed_phases: 17
   total_plans: 54
-  completed_plans: 48
+  completed_plans: 49
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 46 of 48 (Portal Dokumente)
-Plan: 0 of ? in current phase
-Status: Phase 45 Complete, Phase 46 Pending
-Last activity: 2026-03-03 — Completed 45-02 (Portal UI pages + naechste Schritte editor)
+Plan: 1 of 2 in current phase
+Status: Executing Phase 46
+Last activity: 2026-03-03 — Completed 46-01 (Dokument Freigabe + Portal Dokumente)
 
 Progress: [####░░░░░░] 25%
 
@@ -47,6 +47,7 @@ Progress: [####░░░░░░] 25%
 | v0.3 | 5 | 13 | 3 days |
 | v0.4 | 10 | 21 | 2 days |
 | v0.5 | 6 | 13 | in progress |
+| Phase 46 P01 | 5min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - Back link to dashboard only visible for multi-Akte Mandanten
 - NaechsteSchritteCard uses accent border for visual prominence (Mandant's #1 question: what happens next)
 - NaechsteSchritteEditor role-gated to ADMIN, ANWALT, SACHBEARBEITER (not SEKRETARIAT)
+- [Phase 46]: mandantSichtbar defaults to false: Anwalt must explicitly opt in per document
+- [Phase 46]: Portal document API uses Prisma select (not include) to avoid exposing dateipfad
 
 ### Pending Todos
 
@@ -93,5 +96,5 @@ None -- fresh milestone.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 45-02-PLAN.md (Portal UI pages + naechste Schritte editor)
-Resume: Continue with Phase 46 (Portal Dokumente)
+Stopped at: Completed 46-01-PLAN.md (Dokument Freigabe + Portal Dokumente)
+Resume: Continue with 46-02 (Portal Download + DMS Integration)

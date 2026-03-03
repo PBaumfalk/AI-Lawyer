@@ -172,11 +172,11 @@ Plans:
   2. Mandant mit mehreren Akten kann zwischen diesen wechseln (Akte-Auswahl im Portal)
   3. Mandant sieht pro Akte eine vereinfachte Timeline mit Key Events (Frist gesetzt, Dokument eingegangen, Schriftsatz versendet) -- interne Aktivitaeten (Helena-Tasks, Entwuerfe, Interne Notizen) sind nicht sichtbar
   4. Mandant sieht pro Akte eine Uebersicht mit Sachgebiet, Gegner, Gericht und Status sowie einen vom Anwalt gesetzten "Naechste Schritte" Text
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 45-01: Data isolation layer + Akte-Auswahl
-- [ ] 45-02: Sachstand-Timeline + Akte-Uebersicht + Naechste Schritte
+- [ ] 45-01-PLAN.md — Schema extensions (mandantSichtbar, naechsteSchritte) + portal access library + portal API routes (list, detail, timeline) + Anwalt naechste Schritte API
+- [ ] 45-02-PLAN.md — Portal dashboard with Akte-Auswahl + Akte detail page (Overview, Timeline, Naechste Schritte) + Anwalt naechste Schritte editor
 
 ### Phase 46: Dokument-Freigabe + Portal-DMS
 **Goal**: Anwaelte kontrollieren granular welche Dokumente der Mandant sieht, und Mandanten koennen eigene Dokumente hochladen

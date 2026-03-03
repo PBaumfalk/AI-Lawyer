@@ -33,6 +33,7 @@ import { processHelenaTask, type HelenaTaskJobData } from "@/lib/queue/processor
 import { processScanner } from "@/workers/processors/scanner";
 import { processAkteEmbeddingJob } from "@/lib/queue/processors/akte-embedding.processor";
 import { runNeuesUrteilCheck } from "@/lib/scanner/checks/neues-urteil-check";
+import { processPortalNotification, type PortalNotificationJobData } from "@/lib/portal/portal-notification";
 import { prisma } from "@/lib/db";
 
 const log = createLogger("worker");
@@ -827,6 +828,37 @@ gamificationWorker.on("failed", (job, err) => {
 workers.push(gamificationWorker);
 log.info("[Worker] gamification processor registered");
 
+// ─── Portal Notification Queue Worker ────────────────────────────────────────
+
+const portalNotificationWorker = new Worker<PortalNotificationJobData>(
+  "portal-notification",
+  async (job) => processPortalNotification(job.data),
+  {
+    connection,
+    concurrency: 2,  // Lightweight email dispatch, allow 2 concurrent
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+portalNotificationWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info({ jobId: job.id, type: job.data.type }, "Portal notification sent");
+});
+
+portalNotificationWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error({ jobId: job.id, type: job.data.type, err: err.message }, "Portal notification failed");
+});
+
+portalNotificationWorker.on("error", (err) => {
+  log.error({ err }, "Portal notification worker error");
+});
+
+workers.push(portalNotificationWorker);
+log.info("[Worker] portal-notification processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -1140,6 +1172,7 @@ async function startup() {
         "document-ocr", "document-preview", "document-embedding",
         "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync", "ner-pii",
         "urteile-sync", "muster-ingestion", "helena-task", "akte-embedding", "scanner", "gamification",
+        "portal-notification",
       ],
       fristScanZeit: scanZeit,
     },

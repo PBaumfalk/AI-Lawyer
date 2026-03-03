@@ -1,5 +1,6 @@
 import { Queue, type JobsOptions } from "bullmq";
 import { getQueueConnection } from "@/lib/queue/connection";
+import type { PortalNotificationJobData } from "@/lib/portal/portal-notification";
 
 // ─── Gamification Job Types ─────────────────────────────────────────────────
 
@@ -233,6 +234,17 @@ export const gamificationQueue = new Queue<GamificationJobData>("gamification", 
   },
 });
 
+/** Portal-notification queue for Mandant email notifications (MSG-04/05/06) */
+export const portalNotificationQueue = new Queue<PortalNotificationJobData>("portal-notification", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    ...defaultJobOptions,
+    attempts: 3,
+    removeOnComplete: { age: 86_400 },   // 1 day
+    removeOnFail: { age: 604_800 },      // 7 days
+  },
+});
+
 /** All queues for Bull Board auto-discovery and job retry lookup */
 export const ALL_QUEUES: Queue[] = [
   testQueue,
@@ -253,6 +265,7 @@ export const ALL_QUEUES: Queue[] = [
   scannerQueue,
   akteEmbeddingQueue,
   gamificationQueue,
+  portalNotificationQueue,
 ];
 
 /**

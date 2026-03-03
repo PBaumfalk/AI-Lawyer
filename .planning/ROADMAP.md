@@ -277,7 +277,7 @@ Phases execute in numeric order: 43 -> 44 -> 45 -> 46 -> 47 -> 48 -> 49
 | 47. Portal-Messaging | 2/2 | Complete    | 2026-03-03 | - |
 | 48. E-Mail-Benachrichtigungen | 2/2 | Complete    | 2026-03-03 | - |
 | 49. Portal Route Guard Fix + Sidebar Navigation | 1/1 | Complete    | 2026-03-03 | - |
-| 50. Portal Dokumente Navigation | 1/1 | Complete   | 2026-03-03 | - |
+| 50. Portal Dokumente Navigation | 1/1 | Complete    | 2026-03-03 | - |
 
 ---
 *Roadmap created: 2026-02-24*

@@ -4,7 +4,7 @@ milestone: v0.5
 milestone_name: Mandantenportal
 status: completed
 stopped_at: Completed 50-01 (Portal Dokumente Navigation)
-last_updated: "2026-03-03T21:43:22Z"
+last_updated: "2026-03-03T21:47:49.744Z"
 last_activity: 2026-03-03 -- Completed 50-01 (Portal Dokumente Navigation)
 progress:
   total_phases: 8

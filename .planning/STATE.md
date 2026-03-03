@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
-status: in-progress
-last_updated: "2026-03-03T06:14:14Z"
+status: unknown
+last_updated: "2026-03-03T06:20:37.071Z"
 progress:
-  total_phases: 21
-  completed_phases: 20
-  total_plans: 56
-  completed_plans: 57
+  total_phases: 22
+  completed_phases: 21
+  total_plans: 58
+  completed_plans: 58
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 39 IN PROGRESS (Item-Shop + Inventar)
+**Current focus:** v0.4 Quest & Polish -- Phase 39 COMPLETE (Item-Shop + Inventar)
 
 ## Current Position
 
-Phase: 39 of 41 (Item-Shop + Inventar) -- 7 of 9 in milestone IN PROGRESS
-Plan: 1 of 2 in current phase COMPLETE
-Status: Plan 39-01 Complete
-Last activity: 2026-03-03 -- Completed 39-01 (Item-Shop Backend)
+Phase: 39 of 41 (Item-Shop + Inventar) -- 7 of 9 in milestone COMPLETE
+Plan: 2 of 2 in current phase COMPLETE
+Status: Phase 39 Complete
+Last activity: 2026-03-03 -- Completed 39-02 (Item-Shop UI)
 
-Progress: [████████░░] 83% (15/18 plans)
+Progress: [█████████░] 89% (16/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 117 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:14)
+- Total plans completed: 118 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:15)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -60,6 +60,7 @@ Progress: [████████░░] 83% (15/18 plans)
 | Phase 38 P01 | 4min | 2 tasks | 9 files |
 | Phase 38 P02 | 2min | 2 tasks | 6 files |
 | Phase 39 P01 | 4min | 2 tasks | 8 files |
+| Phase 39 P02 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,9 @@ Recent decisions affecting current work:
 - [39-01]: Level 25 gate checked inside $transaction for LEGENDARY items
 - [39-01]: Perk side-effects (streak-schutz, doppel-runen) tracked by consumed inventory item -- full integration deferred
 - [39-01]: FOKUSZEIT KalenderEintrag created on fokus-siegel activation with 30-min window
+- [39-02]: Category filter uses simple button group (not nested tabs) to avoid tab-in-tab confusion
+- [39-02]: Owned cosmetic tracking via Set for O(1) alreadyOwned check in shop grid
+- [39-02]: Inventory grouped by type label with cosmetics first, then perks
 
 ### Pending Todos
 
@@ -134,5 +138,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 39-01-PLAN.md
-Resume file: .planning/phases/39-item-shop-inventar/39-01-SUMMARY.md
+Stopped at: Completed 39-02-PLAN.md
+Resume file: .planning/phases/39-item-shop-inventar/39-02-SUMMARY.md

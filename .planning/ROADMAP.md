@@ -108,7 +108,7 @@ See: `milestones/v0.3-ROADMAP.md` for full phase details.
 - [x] **Phase 36: Quick Wins** - Clickable KPI cards, OCR recovery flow, empty states, Chat KPI rename, Zeiterfassung description fix (completed 2026-03-02)
 - [x] **Phase 37: Klassen + Weekly + Special Quests** - Role-specific quests, weekly structural goals, time-limited admin campaigns (completed 2026-03-02)
 - [x] **Phase 38: Anti-Missbrauch** - Qualified completion checks, Runen daily cap, random audits, atomic increments (completed 2026-03-02)
-- [ ] **Phase 39: Item-Shop + Inventar** - 4-tier item catalog, cosmetic + comfort purchases, inventory management, level gates
+- [x] **Phase 39: Item-Shop + Inventar** - 4-tier item catalog, cosmetic + comfort purchases, inventory management, level gates (completed 2026-03-03)
 - [ ] **Phase 40: Heldenkarte** - Profile page with avatar, class, active cosmetics, badge showcase, quest history
 - [ ] **Phase 41: Team-Dashboard + Reporting** - Team aggregates (quest fulfillment, backlog delta, bossfight damage), monthly PDF/CSV report
 
@@ -268,7 +268,7 @@ Note: Phase 36 (Quick Wins) is independent and can run in parallel with Phase 34
 | 36. Quick Wins | 2/2 | Complete    | 2026-03-02 | - |
 | 37. Klassen + Weekly + Special Quests | 2/2 | Complete    | 2026-03-02 | - |
 | 38. Anti-Missbrauch | 2/2 | Complete    | 2026-03-02 | - |
-| 39. Item-Shop + Inventar | 1/2 | In Progress|  | - |
+| 39. Item-Shop + Inventar | 2/2 | Complete   | 2026-03-03 | - |
 | 40. Heldenkarte | v0.4 | 0/1 | Not started | - |
 | 41. Team-Dashboard + Reporting | v0.4 | 0/2 | Not started | - |
 

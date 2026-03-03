@@ -9,6 +9,8 @@ import { seedAmtlicheFormulare } from "@/lib/muster/seed-amtliche";
 import { seedFalldatenTemplates } from "@/lib/falldaten/seed-templates";
 import { seedDefaultChannels } from "@/lib/messaging/channel-service";
 import { seedDailyQuests } from "@/lib/gamification/seed-quests";
+import { seedShopItems } from "@/lib/gamification/shop-items";
+import { createWeeklySnapshots } from "@/lib/gamification/weekly-snapshot";
 import { testProcessor, type TestJobData } from "@/lib/queue/processors/test.processor";
 import { processFristReminders } from "@/workers/processors/frist-reminder";
 import { initializeDefaults, getSettingTyped } from "@/lib/settings/service";
@@ -1070,6 +1072,21 @@ async function startup() {
     await seedDailyQuests();
   } catch (err) {
     log.warn({ err }, "Failed to seed daily quests (non-fatal)");
+  }
+
+  // Seed shop item catalog on startup (idempotent via SystemSetting version guard)
+  try {
+    await seedShopItems();
+  } catch (err) {
+    log.warn({ err }, "Failed to seed shop items (non-fatal)");
+  }
+
+  // Create weekly snapshot baselines on startup (idempotent via upsert)
+  // Ensures weekly delta quests can evaluate even before first Monday cron
+  try {
+    await createWeeklySnapshots();
+  } catch (err) {
+    log.warn({ err }, "Failed to create weekly snapshots (non-fatal)");
   }
 
   // Re-queue documents that previously failed OCR (e.g. due to Stirling-PDF being unavailable).

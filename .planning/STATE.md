@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
 status: unknown
-last_updated: "2026-03-03T10:05:44Z"
+last_updated: "2026-03-03T10:09:55.820Z"
 progress:
-  total_phases: 26
+  total_phases: 25
   completed_phases: 24
   total_plans: 63
   completed_plans: 63

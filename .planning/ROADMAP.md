@@ -289,7 +289,7 @@ Note: Phase 36 (Quick Wins) is independent. Phase 42 can run before or after Pha
 | 39. Item-Shop + Inventar | 2/2 | Complete    | 2026-03-03 | - |
 | 40. Heldenkarte | 2/2 | Complete    | 2026-03-03 | - |
 | 41. Team-Dashboard + Reporting | 2/2 | Complete    | 2026-03-03 | - |
-| 42. Integration Wiring Fixes | 1/1 | Complete   | 2026-03-03 | - |
+| 42. Integration Wiring Fixes | 1/1 | Complete    | 2026-03-03 | - |
 
 ---
 *Roadmap created: 2026-02-24*

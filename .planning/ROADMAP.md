@@ -241,7 +241,7 @@ Phases execute in numeric order: 43 -> 44 -> 45 -> 46 -> 47 -> 48
 | 44. Portal-Authentifizierung | 2/2 | Complete    | 2026-03-03 | - |
 | 45. Mandant-Datenraum | 2/2 | Complete    | 2026-03-03 | - |
 | 46. Dokument-Freigabe + Portal-DMS | 2/2 | Complete    | 2026-03-03 | - |
-| 47. Portal-Messaging | 2/2 | Complete   | 2026-03-03 | - |
+| 47. Portal-Messaging | 2/2 | Complete    | 2026-03-03 | - |
 | 48. E-Mail-Benachrichtigungen | v0.5 | 0/2 | Not started | - |
 
 ---

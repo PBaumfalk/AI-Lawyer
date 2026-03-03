@@ -129,7 +129,7 @@ See: `milestones/v0.4-ROADMAP.md` for full phase details.
 - [x] **Phase 46: Dokument-Freigabe + Portal-DMS** - Anwalt-Toggle, freigegebene Dokumentliste, Download, Mandant-Upload (completed 2026-03-03)
 - [x] **Phase 47: Portal-Messaging** - Sichere Nachrichten zwischen Mandant und Anwalt mit Dateianhang (completed 2026-03-03)
 - [x] **Phase 48: E-Mail-Benachrichtigungen** - Transaktionale E-Mails bei Nachrichten, Dokumenten, Sachstand-Updates (completed 2026-03-03)
-- [ ] **Phase 49: Portal Route Guard Fix + Sidebar Navigation** - Gap closure: public auth pages aus guarded layout extrahieren, Sidebar-Links reparieren
+- [x] **Phase 49: Portal Route Guard Fix + Sidebar Navigation** - Gap closure: public auth pages aus guarded layout extrahieren, Sidebar-Links reparieren (completed 2026-03-03)
 
 ## Phase Details
 
@@ -261,7 +261,7 @@ Phases execute in numeric order: 43 -> 44 -> 45 -> 46 -> 47 -> 48 -> 49
 | 46. Dokument-Freigabe + Portal-DMS | 2/2 | Complete    | 2026-03-03 | - |
 | 47. Portal-Messaging | 2/2 | Complete    | 2026-03-03 | - |
 | 48. E-Mail-Benachrichtigungen | 2/2 | Complete    | 2026-03-03 | - |
-| 49. Portal Route Guard Fix + Sidebar Navigation | 0/1 | Planned | - | - |
+| 49. Portal Route Guard Fix + Sidebar Navigation | 1/1 | Complete   | 2026-03-03 | - |
 
 ---
 *Roadmap created: 2026-02-24*

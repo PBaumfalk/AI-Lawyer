@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.5
 milestone_name: Mandantenportal
 status: completed
-stopped_at: Phase 49 context gathered
-last_updated: "2026-03-03T16:29:54.114Z"
-last_activity: 2026-03-03 -- Completed 48-02 (E-Mail Benachrichtigungen Trigger Wiring)
+stopped_at: Completed 49-01-PLAN.md
+last_updated: "2026-03-03T21:00:04Z"
+last_activity: 2026-03-03 -- Completed 49-01 (Portal Route Guard Fix)
 progress:
   total_phases: 7
-  completed_phases: 6
-  total_plans: 12
-  completed_plans: 12
+  completed_phases: 7
+  total_plans: 13
+  completed_plans: 13
   percent: 100
 ---
 
@@ -21,21 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.5 Mandantenportal -- Phase 48 complete
+**Current focus:** v0.5 Mandantenportal -- Phase 49 complete (gap closure)
 
 ## Current Position
 
-Phase: 48 of 48 (E-Mail Benachrichtigungen) -- COMPLETE
-Plan: 2 of 2 in current phase
-Status: Phase 48 complete (notification infrastructure + trigger wiring)
-Last activity: 2026-03-03 -- Completed 48-02 (E-Mail Benachrichtigungen Trigger Wiring)
+Phase: 49 of 49 (Portal Route Guard Fix) -- COMPLETE
+Plan: 1 of 1 in current phase
+Status: Phase 49 complete (portal route guard fix + profil page)
+Last activity: 2026-03-03 -- Completed 49-01 (Portal Route Guard Fix)
 
 Progress: [##########] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 132 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:8)
+- Total plans completed: 133 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:9)
 - Average duration: ~15 min
 - Total execution time: ~30 hours
 
@@ -56,6 +56,7 @@ Progress: [##########] 100%
 | Phase 47 P02 | 4min | 2 tasks | 7 files |
 | Phase 48 P01 | 4min | 2 tasks | 5 files |
 | Phase 48 P02 | 4min | 2 tasks | 4 files |
+| Phase 49 P01 | 7min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,10 @@ Recent decisions affecting current work:
 - [Phase 48]: Channel lookup consolidated to single query for both Helena and PORTAL checks in sendMessage()
 - [Phase 48]: MSG-06 wired into naechste-schritte route (only source of non-document mandantSichtbar activities)
 - [Phase 48]: Author role !== MANDANT check prevents self-notification when Mandant sends portal messages
+- [Phase 49]: (portal-public) route group for unauthenticated portal pages (login, activate, password flows)
+- [Phase 49]: Portal URL structure fixed: added /portal segment inside route groups for correct URL mapping
+- [Phase 49]: Login page split into server component (auth redirect) + PortalLoginForm client component
+- [Phase 49]: Profil page uses Adresse relation fallback to legacy Kontakt address fields
 
 ### Pending Todos
 
@@ -119,6 +124,6 @@ None -- fresh milestone.
 
 ## Session Continuity
 
-Last session: 2026-03-03T16:29:54.111Z
-Stopped at: Phase 49 context gathered
-Resume: Phase 48 complete. All v0.5 plans executed.
+Last session: 2026-03-03T21:00:04Z
+Stopped at: Completed 49-01-PLAN.md
+Resume: Phase 49 complete. All v0.5 gap closure plans executed.

@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { Target, TrendingUp, TrendingDown, Minus, Swords } from "lucide-react";
+import { format, subMonths } from "date-fns";
+import { de } from "date-fns/locale";
 
 import { auth } from "@/lib/auth";
 import { getTeamMetrics } from "@/lib/gamification/team-metrics";
@@ -7,6 +9,7 @@ import { GlassKpiCard } from "@/components/ui/glass-kpi-card";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { BacklogTrendChart } from "@/components/admin/team-dashboard/backlog-trend-chart";
 import { BossfightHistory } from "@/components/admin/team-dashboard/bossfight-history";
+import { ExportDropdown } from "@/components/admin/team-dashboard/export-dropdown";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +29,10 @@ export default async function TeamDashboardPage() {
   }
 
   const { questRate, backlog, bossfight } = await getTeamMetrics(kanzleiId);
+
+  // Month label for export button (last calendar month)
+  const lastMonth = subMonths(new Date(), 1);
+  const monthLabel = format(lastMonth, "MMMM yyyy", { locale: de });
 
   // Total damage across all bossfights
   const totalBossfightDamage = bossfight.history.reduce(
@@ -66,7 +73,7 @@ export default async function TeamDashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Team-Dashboard</h1>
-        {/* Export button will be added in Plan 02 */}
+        <ExportDropdown monthLabel={monthLabel} />
       </div>
 
       {/* KPI Row: 3 GlassKpiCards */}

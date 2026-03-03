@@ -20,9 +20,9 @@ export async function GET(
   if (result.error) return result.error;
   const { session } = result;
 
-  // Check for existing channel
-  let channel = await prisma.channel.findUnique({
-    where: { akteId },
+  // Check for existing AKTE channel
+  let channel = await prisma.channel.findFirst({
+    where: { akteId, typ: "AKTE" },
     include: {
       members: {
         include: {
@@ -37,8 +37,8 @@ export async function GET(
     await syncAkteChannelMembers(channel.id, akteId);
 
     // Refetch to include newly synced members
-    channel = await prisma.channel.findUnique({
-      where: { akteId },
+    channel = await prisma.channel.findFirst({
+      where: { akteId, typ: "AKTE" },
       include: {
         members: {
           include: {
@@ -106,13 +106,13 @@ export async function GET(
       channel: formatChannelResponse(fullChannel!),
     });
   } catch (err: unknown) {
-    // Race condition: another request created the channel concurrently (P2002 on akteId unique)
+    // Race condition: another request created the channel concurrently (P2002 on compound unique)
     if (
       typeof err === "object" && err !== null &&
       "code" in err && (err as { code: string }).code === "P2002"
     ) {
-      const existing = await prisma.channel.findUnique({
-        where: { akteId },
+      const existing = await prisma.channel.findFirst({
+        where: { akteId, typ: "AKTE" },
         include: {
           members: {
             include: {

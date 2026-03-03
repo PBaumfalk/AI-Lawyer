@@ -64,6 +64,9 @@ export async function GET(request: NextRequest) {
             take: 1,
             select: { createdAt: true },
           },
+          mandantUser: {
+            select: { id: true, name: true },
+          },
         },
       },
     },
@@ -71,7 +74,7 @@ export async function GET(request: NextRequest) {
 
   // Filter by typ if provided
   let filtered = memberships;
-  if (typFilter === "ALLGEMEIN" || typFilter === "AKTE") {
+  if (typFilter === "ALLGEMEIN" || typFilter === "AKTE" || typFilter === "PORTAL") {
     filtered = memberships.filter((m) => m.channel.typ === typFilter);
   }
 
@@ -93,6 +96,8 @@ export async function GET(request: NextRequest) {
         memberCount: ch._count.members,
         unreadCount,
         lastMessageAt: lastMsg ? lastMsg.createdAt.toISOString() : null,
+        mandantUserId: ch.mandantUser?.id ?? null,
+        mandantUserName: ch.mandantUser?.name ?? null,
       };
     })
   );

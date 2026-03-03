@@ -482,6 +482,7 @@ model User {
 
   // Phase 31: Messaging
   channelsErstellt    Channel[]        @relation("ChannelErsteller")
+  channelsMandant     Channel[]        @relation("ChannelMandant")
   channelMemberships  ChannelMember[]
   messagesAuthored    Message[]        @relation("MessageAuthor")
   messageReactions    MessageReaction[]
@@ -843,8 +844,8 @@ model Akte {
   // Phase 12: RAG relations
   normen  AkteNorm[]
 
-  // Phase 31: Messaging
-  channel          Channel?          // One-to-one via @unique on Channel.akteId
+  // Phase 31: Messaging (one-to-many: AKTE channel + PORTAL channels per Mandant)
+  channels         Channel[]
 
   // Phase 45: Mandantenportal Datenraum
   naechsteSchritte  String?  @db.Text  // Mandant-facing next steps, set by Anwalt
@@ -2234,6 +2235,7 @@ model FalldatenTemplate {
 enum ChannelTyp {
   ALLGEMEIN
   AKTE
+  PORTAL
 }
 
 model Channel {
@@ -2244,8 +2246,12 @@ model Channel {
   typ           ChannelTyp  @default(ALLGEMEIN)
 
   // AKTE channels link to an Akte (nullable for ALLGEMEIN)
-  akteId        String?     @unique  // @unique ensures 1:1 Akte-to-Channel mapping
+  akteId        String?
   akte          Akte?       @relation(fields: [akteId], references: [id], onDelete: Cascade)
+
+  // PORTAL channels: the Mandant User this channel is for (nullable for ALLGEMEIN/AKTE)
+  mandantUserId String?
+  mandantUser   User?       @relation("ChannelMandant", fields: [mandantUserId], references: [id])
 
   // Creator / ownership
   erstelltVonId String
@@ -2258,8 +2264,10 @@ model Channel {
   members       ChannelMember[]
   messages      Message[]
 
+  @@unique([akteId, typ, mandantUserId], name: "channel_akte_typ_mandant")
   @@index([typ])
   @@index([archived])
+  @@index([mandantUserId])
   @@map("channels")
 }
 

@@ -155,6 +155,79 @@ export async function seedDefaultChannels(): Promise<void> {
 }
 
 /**
+ * Create or retrieve a PORTAL channel for a specific Mandant+Akte pair.
+ *
+ * Lazy-creates the channel on first access with both Mandant and Anwalt as members.
+ * Handles P2002 race condition for concurrent creation attempts.
+ */
+export async function createPortalChannel(params: {
+  akteId: string;
+  mandantUserId: string;
+  mandantName: string;
+  anwaltUserId: string;
+  akteKurzrubrum?: string;
+}): Promise<{ channel?: Channel; error?: string; status?: number }> {
+  const { akteId, mandantUserId, mandantName, anwaltUserId, akteKurzrubrum } = params;
+
+  // Check for existing PORTAL channel for this Mandant+Akte pair
+  const existing = await prisma.channel.findFirst({
+    where: { akteId, typ: "PORTAL", mandantUserId },
+  });
+  if (existing) {
+    return { channel: existing };
+  }
+
+  const slug = generateSlug(`portal-${akteId.slice(0, 8)}-${mandantUserId.slice(0, 8)}`);
+  const channelName = `Portal: ${mandantName}${akteKurzrubrum ? ` - ${akteKurzrubrum}` : ""}`;
+
+  try {
+    const channel = await prisma.$transaction(async (tx) => {
+      const ch = await tx.channel.create({
+        data: {
+          name: channelName,
+          slug,
+          typ: "PORTAL",
+          akteId,
+          mandantUserId,
+          erstelltVonId: mandantUserId,
+        },
+      });
+
+      // Add both Mandant and Anwalt as channel members
+      const memberIds = [mandantUserId, anwaltUserId].filter(Boolean);
+      const uniqueIds = Array.from(new Set(memberIds));
+
+      await tx.channelMember.createMany({
+        data: uniqueIds.map((userId) => ({
+          channelId: ch.id,
+          userId,
+        })),
+        skipDuplicates: true,
+      });
+
+      return ch;
+    });
+
+    return { channel };
+  } catch (err: unknown) {
+    // Race condition: P2002 on compound unique (akteId + typ + mandantUserId)
+    if (
+      typeof err === "object" && err !== null &&
+      "code" in err && (err as { code: string }).code === "P2002"
+    ) {
+      const raceWinner = await prisma.channel.findFirst({
+        where: { akteId, typ: "PORTAL", mandantUserId },
+      });
+      if (raceWinner) {
+        return { channel: raceWinner };
+      }
+    }
+    log.error({ err, akteId, mandantUserId }, "Failed to create portal channel");
+    return { error: "Kanal konnte nicht erstellt werden", status: 500 };
+  }
+}
+
+/**
  * Gather unique user IDs that should have membership in an AKTE channel.
  *
  * Collects from: anwaltId, sachbearbeiterId, all Dezernat members for that Akte.

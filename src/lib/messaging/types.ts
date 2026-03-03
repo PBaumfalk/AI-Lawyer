@@ -47,12 +47,14 @@ export interface ChannelListItem {
   name: string;
   slug: string;
   beschreibung: string | null;
-  typ: "ALLGEMEIN" | "AKTE";
+  typ: "ALLGEMEIN" | "AKTE" | "PORTAL";
   akteId: string | null;
   archived: boolean;
   memberCount: number;
   unreadCount: number;
   lastMessageAt: string | null; // ISO timestamp
+  mandantUserId: string | null;
+  mandantUserName: string | null;
 }
 
 /** DTO for message list items */

@@ -6,9 +6,9 @@ status: unknown
 last_updated: "2026-03-03T12:37:33.920Z"
 progress:
   total_phases: 21
-  completed_phases: 17
+  completed_phases: 18
   total_plans: 54
-  completed_plans: 49
+  completed_plans: 50
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 
 ## Current Position
 
-Phase: 46 of 48 (Portal Dokumente)
-Plan: 1 of 2 in current phase
-Status: Executing Phase 46
-Last activity: 2026-03-03 — Completed 46-01 (Dokument Freigabe + Portal Dokumente)
+Phase: 46 of 48 (Portal Dokumente) -- COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase 46 complete, ready for Phase 47
+Last activity: 2026-03-03 — Completed 46-02 (Portal Download + Upload)
 
-Progress: [####░░░░░░] 25%
+Progress: [#####░░░░░] 33%
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Progress: [####░░░░░░] 25%
 | v0.4 | 10 | 21 | 2 days |
 | v0.5 | 6 | 13 | in progress |
 | Phase 46 P01 | 5min | 2 tasks | 5 files |
+| Phase 46 P02 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ Recent decisions affecting current work:
 - NaechsteSchritteEditor role-gated to ADMIN, ANWALT, SACHBEARBEITER (not SEKRETARIAT)
 - [Phase 46]: mandantSichtbar defaults to false: Anwalt must explicitly opt in per document
 - [Phase 46]: Portal document API uses Prisma select (not include) to avoid exposing dateipfad
+- [Phase 46]: createdById uses Akte anwaltId for Mandant uploads (Mandant not internal User)
+- [Phase 46]: 50MB portal upload limit vs 100MB internal for portal security
+- [Phase 46]: Mandant uploads skip OCR/RAG/preview for simplified pipeline
 
 ### Pending Todos
 
@@ -96,5 +100,5 @@ None -- fresh milestone.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 46-01-PLAN.md (Dokument Freigabe + Portal Dokumente)
-Resume: Continue with 46-02 (Portal Download + DMS Integration)
+Stopped at: Completed 46-02-PLAN.md (Portal Download + Upload)
+Resume: Continue with Phase 47 (Portal Nachrichten)

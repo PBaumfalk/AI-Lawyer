@@ -11,8 +11,8 @@ Requirements for Mandantenportal milestone. Each maps to roadmap phases.
 
 - [x] **PORTAL-01**: Mandant kann /portal/* Seiten mit eigenem Glass-Layout aufrufen
 - [x] **PORTAL-02**: Jeder Beteiligter mit Rolle MANDANT kann separat zum Portal eingeladen werden
-- [ ] **PORTAL-03**: Mandant sieht nur eigene Akten (strikte Datentrennung, DSGVO)
-- [ ] **PORTAL-04**: Mandant kann zwischen mehreren eigenen Akten wechseln
+- [x] **PORTAL-03**: Mandant sieht nur eigene Akten (strikte Datentrennung, DSGVO)
+- [x] **PORTAL-04**: Mandant kann zwischen mehreren eigenen Akten wechseln
 
 ### Authentifizierung
 
@@ -42,9 +42,9 @@ Requirements for Mandantenportal milestone. Each maps to roadmap phases.
 
 ### Sachstand
 
-- [ ] **SACH-01**: Mandant sieht vereinfachte Timeline mit Key Events seiner Akte
-- [ ] **SACH-02**: Anwalt kann "Naechste Schritte" Text fuer Mandant setzen
-- [ ] **SACH-03**: Mandant sieht Akte-Uebersicht (Sachgebiet, Gegner, Gericht, Status)
+- [x] **SACH-01**: Mandant sieht vereinfachte Timeline mit Key Events seiner Akte
+- [x] **SACH-02**: Anwalt kann "Naechste Schritte" Text fuer Mandant setzen
+- [x] **SACH-03**: Mandant sieht Akte-Uebersicht (Sachgebiet, Gegner, Gericht, Status)
 
 ## Future Requirements
 
@@ -78,8 +78,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | PORTAL-01 | Phase 43 | Complete |
 | PORTAL-02 | Phase 44 | Complete |
-| PORTAL-03 | Phase 45 | Pending |
-| PORTAL-04 | Phase 45 | Pending |
+| PORTAL-03 | Phase 45 | Complete |
+| PORTAL-04 | Phase 45 | Complete |
 | AUTH-01 | Phase 44 | Complete |
 | AUTH-02 | Phase 44 | Complete |
 | AUTH-03 | Phase 44 | Complete |
@@ -97,9 +97,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MSG-04 | Phase 48 | Pending |
 | MSG-05 | Phase 48 | Pending |
 | MSG-06 | Phase 48 | Pending |
-| SACH-01 | Phase 45 | Pending |
-| SACH-02 | Phase 45 | Pending |
-| SACH-03 | Phase 45 | Pending |
+| SACH-01 | Phase 45 | Complete |
+| SACH-02 | Phase 45 | Complete |
+| SACH-03 | Phase 45 | Complete |
 
 **Coverage:**
 - v0.5 requirements: 25 total

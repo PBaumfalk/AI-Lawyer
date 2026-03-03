@@ -9,6 +9,7 @@ import { InvoiceList } from "@/components/finanzen/invoice-list";
 import { AkteZeiterfassungTab } from "@/components/finanzen/akte-zeiterfassung-tab";
 import { ActivityFeed } from "./activity-feed";
 import { FalldatenTab } from "./falldaten-tab";
+import { BeteiligteSection } from "./beteiligte-section";
 import { AkteChannelTab } from "@/components/messaging/akte-channel-tab";
 import { MessageSquare } from "lucide-react";
 import {
@@ -42,6 +43,7 @@ export interface AkteData {
   beteiligte: Array<{
     id: string;
     rolle: string;
+    kontaktId: string;
     kontakt: {
       id: string;
       typ: string;
@@ -191,7 +193,10 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
 
         {/* --- Feed (default) ------------------------------------------------ */}
         <TabsContent value="feed">
-          <ActivityFeed akteId={akte.id} />
+          <div className="space-y-6">
+            <BeteiligteSection beteiligte={akte.beteiligte} akteId={akte.id} />
+            <ActivityFeed akteId={akte.id} />
+          </div>
         </TabsContent>
 
         {/* --- Dokumente ----------------------------------------------------- */}

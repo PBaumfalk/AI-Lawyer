@@ -73,10 +73,41 @@ export async function createWeeklySnapshots(): Promise<void> {
     });
   }
 
+  // Snapshot open Wiedervorlagen per kanzlei (for team dashboard backlog delta)
+  const kanzleien = await prisma.kanzlei.findMany({ select: { id: true } });
+
+  for (const k of kanzleien) {
+    const wvCount = await prisma.kalenderEintrag.count({
+      where: {
+        typ: "WIEDERVORLAGE",
+        erledigt: false,
+        akte: { kanzleiId: k.id },
+      },
+    });
+
+    // Use findFirst + create/update pattern because Prisma compound unique
+    // with nullable userId has edge cases (PostgreSQL NULL != NULL).
+    const existing = await prisma.weeklySnapshot.findFirst({
+      where: { model: "Wiedervorlage", weekStart, userId: null },
+    });
+
+    if (existing) {
+      await prisma.weeklySnapshot.update({
+        where: { id: existing.id },
+        data: { count: wvCount },
+      });
+    } else {
+      await prisma.weeklySnapshot.create({
+        data: { model: "Wiedervorlage", weekStart, userId: null, count: wvCount },
+      });
+    }
+  }
+
   log.info(
     {
       ticketSnapshots: ticketCounts.length,
       fristSnapshots: fristCounts.length,
+      wiedervorlageSnapshots: kanzleien.length,
       weekStart: weekStart.toISOString(),
     },
     "Weekly snapshots created",

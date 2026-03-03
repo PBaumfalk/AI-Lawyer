@@ -504,6 +504,10 @@ model User {
   kontakt           Kontakt?  @relation("PortalUser", fields: [kontaktId], references: [id])
   portalInvitesCreated PortalInvite[] @relation("PortalInviteCreator")
 
+  // Password Reset
+  passwordResetToken   String?   @unique
+  passwordResetExpires DateTime?
+
   @@map("users")
 }
 

@@ -63,7 +63,9 @@ export type AuditAktion =
   | "NORM_VERKNUEPFT"
   | "NORM_ENTFERNT"
   | "PORTAL_EINLADUNG"
-  | "PORTAL_EINLADUNG_ERNEUT";
+  | "PORTAL_EINLADUNG_ERNEUT"
+  | "PORTAL_AKTIVIERT"
+  | "PORTAL_PASSWORT_RESET";
 
 /**
  * German human-readable labels for all audit actions.
@@ -133,6 +135,8 @@ export const AKTION_LABELS: Record<string, string> = {
   NORM_ENTFERNT: "hat Norm entfernt",
   PORTAL_EINLADUNG: "hat Portal-Einladung versendet",
   PORTAL_EINLADUNG_ERNEUT: "hat Portal-Einladung erneut versendet",
+  PORTAL_AKTIVIERT: "hat Portal-Zugang aktiviert",
+  PORTAL_PASSWORT_RESET: "hat Portal-Passwort zurueckgesetzt",
 };
 
 /**

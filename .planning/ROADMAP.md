@@ -189,11 +189,11 @@ Plans:
   3. Mandant kann freigegebene Dokumente herunterladen (signierte MinIO-URLs, kein direkter S3-Zugriff)
   4. Mandant kann Dokumente in einen dedizierten "Mandant"-Ordner in der Akte hochladen (automatisch erstellt)
   5. Anwalt erhaelt eine Benachrichtigung (In-App oder Alert) wenn der Mandant ein Dokument hochgeladen hat
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 46-01: Freigabe-Toggle + freigegebene Dokumentliste
-- [ ] 46-02: Download + Mandant-Upload + Anwalt-Benachrichtigung
+- [ ] 46-01-PLAN.md — Schema mandantSichtbar + Freigabe-Toggle UI + Portal document list API + page
+- [ ] 46-02-PLAN.md — Download via presigned URLs + Mandant-Upload + Anwalt-Benachrichtigung
 
 ### Phase 47: Portal-Messaging
 **Goal**: Mandant und Anwalt koennen sicher und nachvollziehbar ueber das Portal kommunizieren

@@ -129,6 +129,7 @@ See: `milestones/v0.4-ROADMAP.md` for full phase details.
 - [x] **Phase 46: Dokument-Freigabe + Portal-DMS** - Anwalt-Toggle, freigegebene Dokumentliste, Download, Mandant-Upload (completed 2026-03-03)
 - [x] **Phase 47: Portal-Messaging** - Sichere Nachrichten zwischen Mandant und Anwalt mit Dateianhang (completed 2026-03-03)
 - [x] **Phase 48: E-Mail-Benachrichtigungen** - Transaktionale E-Mails bei Nachrichten, Dokumenten, Sachstand-Updates (completed 2026-03-03)
+- [ ] **Phase 49: Portal Route Guard Fix + Sidebar Navigation** - Gap closure: public auth pages aus guarded layout extrahieren, Sidebar-Links reparieren
 
 ## Phase Details
 
@@ -223,10 +224,27 @@ Plans:
 - [ ] 48-01-PLAN.md — Email template system + BullMQ portal-notification queue + worker
 - [ ] 48-02-PLAN.md — Trigger wiring (MSG-04 Nachricht, MSG-05 Dokument-Freigabe, MSG-06 Sachstand-Event)
 
+### Phase 49: Portal Route Guard Fix + Sidebar Navigation
+**Goal**: Oeffentliche Portal-Seiten (Login, Aktivierung, Passwort-Reset) aus dem guarded (portal) Layout extrahieren, damit unauthentifizierte Nutzer darauf zugreifen koennen. Sidebar-Links zu nicht existierenden Seiten reparieren.
+**Depends on**: Phase 48 (gap closure for completed phases)
+**Requirements**: AUTH-02, AUTH-03, AUTH-06
+**Gap Closure**: Closes gaps from v0.5 milestone audit
+**Success Criteria** (what must be TRUE):
+  1. Unauthentifizierter Nutzer kann /portal/login aufrufen ohne Redirect-Loop
+  2. Unauthentifizierter Nutzer kann /portal/activate?token=... aufrufen und Account aktivieren
+  3. Unauthentifizierter Nutzer kann /portal/passwort-vergessen und /portal/passwort-reset aufrufen
+  4. Authentifizierter MANDANT wird auf /portal/dashboard weitergeleitet wenn er /portal/login besucht
+  5. Sidebar-Link "Dokumente" fuehrt nicht mehr zu 404
+  6. Sidebar-Link "Profil" fuehrt nicht mehr zu 404
+**Plans**: 1 plan
+
+Plans:
+- [ ] 49-01-PLAN.md — Extract public auth pages from guarded layout + fix sidebar navigation
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 43 -> 44 -> 45 -> 46 -> 47 -> 48
+Phases execute in numeric order: 43 -> 44 -> 45 -> 46 -> 47 -> 48 -> 49
 (Phase 47 can run parallel to Phase 46 as both depend on Phase 45)
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -243,6 +261,7 @@ Phases execute in numeric order: 43 -> 44 -> 45 -> 46 -> 47 -> 48
 | 46. Dokument-Freigabe + Portal-DMS | 2/2 | Complete    | 2026-03-03 | - |
 | 47. Portal-Messaging | 2/2 | Complete    | 2026-03-03 | - |
 | 48. E-Mail-Benachrichtigungen | 2/2 | Complete    | 2026-03-03 | - |
+| 49. Portal Route Guard Fix + Sidebar Navigation | 0/1 | Planned | - | - |
 
 ---
 *Roadmap created: 2026-02-24*

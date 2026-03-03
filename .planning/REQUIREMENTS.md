@@ -17,11 +17,11 @@ Requirements for Mandantenportal milestone. Each maps to roadmap phases.
 ### Authentifizierung
 
 - [x] **AUTH-01**: Anwalt kann Einladungslink fuer Mandant-Beteiligten generieren
-- [x] **AUTH-02**: Mandant kann ueber Einladungslink Passwort setzen und Account aktivieren
-- [x] **AUTH-03**: Mandant kann sich mit E-Mail und Passwort im Portal einloggen
+- [ ] **AUTH-02**: Mandant kann ueber Einladungslink Passwort setzen und Account aktivieren
+- [ ] **AUTH-03**: Mandant kann sich mit E-Mail und Passwort im Portal einloggen
 - [x] **AUTH-04**: Mandant-Session bleibt ueber Browser-Refresh erhalten (JWT)
 - [x] **AUTH-05**: Mandant wird nach Inaktivitaet automatisch ausgeloggt
-- [x] **AUTH-06**: Mandant kann eigenes Passwort ueber E-Mail-Link zuruecksetzen
+- [ ] **AUTH-06**: Mandant kann eigenes Passwort ueber E-Mail-Link zuruecksetzen
 
 ### Dokumente
 
@@ -81,11 +81,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PORTAL-03 | Phase 45 | Complete |
 | PORTAL-04 | Phase 45 | Complete |
 | AUTH-01 | Phase 44 | Complete |
-| AUTH-02 | Phase 44 | Complete |
-| AUTH-03 | Phase 44 | Complete |
+| AUTH-02 | Phase 49 (gap closure) | Pending |
+| AUTH-03 | Phase 49 (gap closure) | Pending |
 | AUTH-04 | Phase 44 | Complete |
 | AUTH-05 | Phase 44 | Complete |
-| AUTH-06 | Phase 44 | Complete |
+| AUTH-06 | Phase 49 (gap closure) | Pending |
 | DOC-01 | Phase 46 | Complete |
 | DOC-02 | Phase 46 | Complete |
 | DOC-03 | Phase 46 | Complete |
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after roadmap creation (traceability complete)*
+*Last updated: 2026-03-03 after gap closure phase assignment (AUTH-02, AUTH-03, AUTH-06 → Phase 49)*

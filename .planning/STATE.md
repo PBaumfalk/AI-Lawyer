@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
-status: unknown
-last_updated: "2026-03-03T07:22:56.487Z"
+status: executing
+last_updated: "2026-03-03T07:26:25Z"
 progress:
   total_phases: 23
-  completed_phases: 21
+  completed_phases: 22
   total_plans: 60
-  completed_plans: 59
+  completed_plans: 60
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 40 in progress (Heldenkarte)
+**Current focus:** v0.4 Quest & Polish -- Phase 40 complete, Phase 41 next (Team-Dashboard)
 
 ## Current Position
 
-Phase: 40 of 41 (Heldenkarte) -- 8 of 9 in milestone
-Plan: 1 of 2 in current phase COMPLETE
-Status: Executing Phase 40
-Last activity: 2026-03-03 -- Completed 40-01 (Heldenkarte Backend)
+Phase: 40 of 41 (Heldenkarte) -- 8 of 9 in milestone COMPLETE
+Plan: 2 of 2 in current phase COMPLETE
+Status: Phase 40 Complete
+Last activity: 2026-03-03 -- Completed 40-02 (Heldenkarte UI)
 
-Progress: [█████████░] 94% (17/18 plans)
+Progress: [██████████] 100% (18/18 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 118 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:15)
+- Total plans completed: 119 (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:16)
 - Average duration: ~15 min
 - Total execution time: ~26 hours
 
@@ -62,6 +62,7 @@ Progress: [█████████░] 94% (17/18 plans)
 | Phase 39 P01 | 4min | 2 tasks | 8 files |
 | Phase 39 P02 | 3min | 2 tasks | 6 files |
 | Phase 40 P01 | 3min | 2 tasks | 5 files |
+| Phase 40 P02 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -126,6 +127,9 @@ Recent decisions affecting current work:
 - [Phase 40]: Separate badges JSON field on UserGameProfile for clean separation from trophies
 - [Phase 40]: Lazy badge evaluation on page load via Promise.all for parallel threshold checks
 - [Phase 40]: KalenderEintrag badge uses verantwortlichId and erledigt Boolean (fixed from plan)
+- [40-02]: Highest-rarity equipped cosmetic determines AvatarFrame ring color (fallback COMMON)
+- [40-02]: Badge icon lookup via static BADGE_ICONS map with HelpCircle fallback (no dynamic import)
+- [40-02]: Quest type badges: DAILY=sky, WEEKLY=emerald, SPECIAL=amber for visual differentiation
 
 ### Pending Todos
 
@@ -142,5 +146,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 40-01-PLAN.md
-Resume file: .planning/phases/40-heldenkarte/40-01-SUMMARY.md
+Stopped at: Completed 40-02-PLAN.md
+Resume file: .planning/phases/40-heldenkarte/40-02-SUMMARY.md

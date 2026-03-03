@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAkteAccess } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
+import { triggerPortalNotificationForAkte } from "@/lib/portal/trigger-portal-notification";
 
 // PUT /api/akten/[id]/naechste-schritte -- Anwalt sets next steps text for Mandant
 // Uses standard requireAkteAccess (internal staff access, not portal)
@@ -48,6 +49,14 @@ export async function PUT(
         mandantSichtbar: true,
       },
     });
+
+    // MSG-06: Notify Mandant via email about sachstand update
+    // (Non-document mandantSichtbar activity -- no double-notification risk with MSG-05)
+    triggerPortalNotificationForAkte(
+      akteId,
+      "sachstand-update",
+      `/akten/${akteId}`,
+    ).catch(() => {}); // Fire-and-forget
 
     return NextResponse.json(updatedAkte);
   } catch (error) {

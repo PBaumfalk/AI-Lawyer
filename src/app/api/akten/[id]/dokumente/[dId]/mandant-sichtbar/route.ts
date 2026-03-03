@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAkteAccess } from "@/lib/rbac";
 import { logAuditEvent } from "@/lib/audit";
+import { triggerPortalNotificationForAkte } from "@/lib/portal/trigger-portal-notification";
 
 /**
  * PATCH /api/akten/[id]/dokumente/[dId]/mandant-sichtbar
@@ -76,6 +77,13 @@ export async function PATCH(
         meta: { dokumentId: dId, mandantSichtbar: true },
       },
     });
+
+    // MSG-05: Notify Mandant via email when document is shared
+    triggerPortalNotificationForAkte(
+      akteId,
+      "neues-dokument",
+      `/akten/${akteId}/dokumente`,
+    ).catch(() => {}); // Fire-and-forget
   }
   // When toggling TO false: NO activity (Mandant should not see revocations)
 

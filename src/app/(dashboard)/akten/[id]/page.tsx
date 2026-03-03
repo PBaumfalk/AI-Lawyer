@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
 import { Sparkles } from "lucide-react";
 import { AkteDetailHeader } from "@/components/akten/akte-detail-header";
 import { NormenSection } from "@/components/akten/normen-section";
 import { AkteSocketBridge } from "@/components/akten/akte-socket-bridge";
 import { AkteTimerBridge } from "@/components/akten/akte-timer-bridge";
 import { AdminOverrideButton } from "@/components/admin/admin-override-button";
+import { NaechsteSchritteEditor } from "@/components/akten/naechste-schritte-editor";
 import { AkteDetailClient } from "./akte-detail-client";
 
 interface AkteDetailPageProps {
@@ -60,6 +62,12 @@ export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
 
   if (!akte) notFound();
 
+  // Get session for role-based rendering (NaechsteSchritteEditor)
+  const session = await auth();
+  const userRole = (session?.user as any)?.role as string | undefined;
+  const canEditNaechsteSchritte =
+    userRole === "ADMIN" || userRole === "ANWALT" || userRole === "SACHBEARBEITER";
+
   const serializedAkte = JSON.parse(JSON.stringify(akte));
 
   return (
@@ -90,6 +98,14 @@ export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
         akteId={id}
         initialNormen={serializedAkte.normen ?? []}
       />
+
+      {/* Naechste Schritte for Mandant -- only visible to Anwalt/Sachbearbeiter/Admin */}
+      {canEditNaechsteSchritte && (
+        <NaechsteSchritteEditor
+          akteId={id}
+          initialText={akte.naechsteSchritte ?? null}
+        />
+      )}
 
       {/* KPI stats row + tabbed content (client component for interactivity) */}
       <AkteDetailClient akte={serializedAkte} />

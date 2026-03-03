@@ -1,6 +1,6 @@
 "use client";
 
-import { Hash, FolderOpen } from "lucide-react";
+import { Hash, FolderOpen, UserCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ChannelListItem } from "@/lib/messaging/types";
 
@@ -15,7 +15,11 @@ export function ChannelListItemComponent({
   isSelected,
   onSelect,
 }: ChannelListItemProps) {
-  const Icon = channel.typ === "ALLGEMEIN" ? Hash : FolderOpen;
+  const Icon = channel.typ === "PORTAL"
+    ? UserCircle
+    : channel.typ === "AKTE"
+      ? FolderOpen
+      : Hash;
 
   return (
     <button
@@ -37,7 +41,9 @@ export function ChannelListItemComponent({
           isSelected ? "text-foreground font-medium" : "text-muted-foreground"
         }`}
       >
-        {channel.name}
+        {channel.typ === "PORTAL" && channel.mandantUserName
+          ? channel.mandantUserName
+          : channel.name}
       </span>
       {channel.unreadCount > 0 && (
         <Badge

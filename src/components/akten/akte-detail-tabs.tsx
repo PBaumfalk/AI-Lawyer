@@ -10,8 +10,8 @@ import { AkteZeiterfassungTab } from "@/components/finanzen/akte-zeiterfassung-t
 import { ActivityFeed } from "./activity-feed";
 import { FalldatenTab } from "./falldaten-tab";
 import { BeteiligteSection } from "./beteiligte-section";
-import { AkteChannelTab } from "@/components/messaging/akte-channel-tab";
-import { MessageSquare } from "lucide-react";
+import { AkteChannelTab, PortalChannelTab } from "@/components/messaging/akte-channel-tab";
+import { MessageSquare, UserCircle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -189,6 +189,10 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
             <MessageSquare className="w-4 h-4 mr-1.5" />
             Chat
           </TabsTrigger>
+          <TabsTrigger value="portal-nachrichten">
+            <UserCircle className="w-4 h-4 mr-1.5" />
+            Portal
+          </TabsTrigger>
         </TabsList>
 
         {/* --- Feed (default) ------------------------------------------------ */}
@@ -254,6 +258,11 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
         {/* --- Nachrichten (Akte channel) ---------------------------------- */}
         <TabsContent value="nachrichten">
           <AkteChannelTab akteId={akte.id} />
+        </TabsContent>
+
+        {/* --- Portal-Nachrichten (PORTAL channels for this Akte) --------- */}
+        <TabsContent value="portal-nachrichten">
+          <PortalChannelTab akteId={akte.id} />
         </TabsContent>
       </Tabs>
 

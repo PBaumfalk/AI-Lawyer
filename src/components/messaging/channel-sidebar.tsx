@@ -25,6 +25,7 @@ export function ChannelSidebar({
 }: ChannelSidebarProps) {
   const [allgemeinExpanded, setAllgemeinExpanded] = useState(true);
   const [aktenExpanded, setAktenExpanded] = useState(true);
+  const [portalExpanded, setPortalExpanded] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // Split channels by type
@@ -40,6 +41,16 @@ export function ChannelSidebar({
 
   const akteChannels = channels
     .filter((ch) => ch.typ === "AKTE")
+    .sort((a, b) => {
+      if (a.lastMessageAt && b.lastMessageAt)
+        return b.lastMessageAt.localeCompare(a.lastMessageAt);
+      if (a.lastMessageAt) return -1;
+      if (b.lastMessageAt) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+  const portalChannels = channels
+    .filter((ch) => ch.typ === "PORTAL")
     .sort((a, b) => {
       if (a.lastMessageAt && b.lastMessageAt)
         return b.lastMessageAt.localeCompare(a.lastMessageAt);
@@ -136,6 +147,39 @@ export function ChannelSidebar({
                 {aktenExpanded && (
                   <div className="px-1">
                     {akteChannels.map((ch) => (
+                      <ChannelListItemComponent
+                        key={ch.id}
+                        channel={ch}
+                        isSelected={ch.id === selectedId}
+                        onSelect={() => onSelect(ch.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* MANDANTENPORTAL section */}
+            {portalChannels.length > 0 && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => setPortalExpanded(!portalExpanded)}
+                  className="w-full flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                >
+                  {portalExpanded ? (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  )}
+                  Mandantenportal
+                  <span className="ml-auto text-muted-foreground/60">
+                    {portalChannels.length}
+                  </span>
+                </button>
+                {portalExpanded && (
+                  <div className="px-1">
+                    {portalChannels.map((ch) => (
                       <ChannelListItemComponent
                         key={ch.id}
                         channel={ch}

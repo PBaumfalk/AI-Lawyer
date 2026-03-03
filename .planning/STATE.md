@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Quest & Polish
 status: unknown
-last_updated: "2026-03-03T06:25:51.372Z"
+last_updated: "2026-03-03T07:22:56.487Z"
 progress:
-  total_phases: 22
+  total_phases: 23
   completed_phases: 21
-  total_plans: 58
-  completed_plans: 58
+  total_plans: 60
+  completed_plans: 59
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollstaendig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** v0.4 Quest & Polish -- Phase 39 COMPLETE (Item-Shop + Inventar)
+**Current focus:** v0.4 Quest & Polish -- Phase 40 in progress (Heldenkarte)
 
 ## Current Position
 
-Phase: 39 of 41 (Item-Shop + Inventar) -- 7 of 9 in milestone COMPLETE
-Plan: 2 of 2 in current phase COMPLETE
-Status: Phase 39 Complete
-Last activity: 2026-03-03 -- Completed 39-02 (Item-Shop UI)
+Phase: 40 of 41 (Heldenkarte) -- 8 of 9 in milestone
+Plan: 1 of 2 in current phase COMPLETE
+Status: Executing Phase 40
+Last activity: 2026-03-03 -- Completed 40-01 (Heldenkarte Backend)
 
-Progress: [█████████░] 89% (16/18 plans)
+Progress: [█████████░] 94% (17/18 plans)
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [█████████░] 89% (16/18 plans)
 | Phase 38 P02 | 2min | 2 tasks | 6 files |
 | Phase 39 P01 | 4min | 2 tasks | 8 files |
 | Phase 39 P02 | 3min | 2 tasks | 6 files |
+| Phase 40 P01 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -122,6 +123,9 @@ Recent decisions affecting current work:
 - [39-02]: Category filter uses simple button group (not nested tabs) to avoid tab-in-tab confusion
 - [39-02]: Owned cosmetic tracking via Set for O(1) alreadyOwned check in shop grid
 - [39-02]: Inventory grouped by type label with cosmetics first, then perks
+- [Phase 40]: Separate badges JSON field on UserGameProfile for clean separation from trophies
+- [Phase 40]: Lazy badge evaluation on page load via Promise.all for parallel threshold checks
+- [Phase 40]: KalenderEintrag badge uses verantwortlichId and erledigt Boolean (fixed from plan)
 
 ### Pending Todos
 
@@ -138,5 +142,5 @@ Deferred from previous milestones (not in v0.4 scope):
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 39-02-PLAN.md
-Resume file: .planning/phases/39-item-shop-inventar/39-02-SUMMARY.md
+Stopped at: Completed 40-01-PLAN.md
+Resume file: .planning/phases/40-heldenkarte/40-01-SUMMARY.md

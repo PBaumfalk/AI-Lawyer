@@ -51,9 +51,9 @@
 
 ### Heldenkarte (Profil)
 
-- [ ] **PROFIL-01**: Profil-Seite als "Heldenkarte" (Avatar, Klasse, Level, Titel, aktive Kosmetik)
-- [ ] **PROFIL-02**: Badge-Schaukasten (nur erspielbare Badges, nie kaufbar: Fristenwächter, Bannbrecher etc.)
-- [ ] **PROFIL-03**: Quest-Historie (abgeschlossene Quests mit Datum und Belohnung)
+- [x] **PROFIL-01**: Profil-Seite als "Heldenkarte" (Avatar, Klasse, Level, Titel, aktive Kosmetik)
+- [x] **PROFIL-02**: Badge-Schaukasten (nur erspielbare Badges, nie kaufbar: Fristenwächter, Bannbrecher etc.)
+- [x] **PROFIL-03**: Quest-Historie (abgeschlossene Quests mit Datum und Belohnung)
 
 ### Team-Dashboard
 
@@ -124,9 +124,9 @@
 | SHOP-03 | Phase 39 | Complete |
 | SHOP-04 | Phase 39 | Complete |
 | SHOP-05 | Phase 39 | Complete |
-| PROFIL-01 | Phase 40 | Pending |
-| PROFIL-02 | Phase 40 | Pending |
-| PROFIL-03 | Phase 40 | Pending |
+| PROFIL-01 | Phase 40 | Complete |
+| PROFIL-02 | Phase 40 | Complete |
+| PROFIL-03 | Phase 40 | Complete |
 | TEAM-01 | Phase 41 | Pending |
 | TEAM-02 | Phase 41 | Pending |
 | TEAM-03 | Phase 41 | Pending |

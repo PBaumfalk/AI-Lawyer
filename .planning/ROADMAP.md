@@ -254,7 +254,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 50-01-PLAN.md — Add Dokumente navigation card/link on akte detail page
+- [ ] 50-01-PLAN.md — Akte detail layout with tab navigation (Uebersicht | Dokumente | Nachrichten)
 
 ## Progress
 

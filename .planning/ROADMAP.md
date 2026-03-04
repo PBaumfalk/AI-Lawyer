@@ -139,7 +139,7 @@ See: `milestones/v0.5-ROADMAP.md` for full phase details.
 
 ## v0.6 Stabilisierung
 
-- [ ] Phase 51: Systematic Bug Audit & Fix — Fix all critical, high, and medium issues found in health audit
+- [x] Phase 51: Systematic Bug Audit & Fix — Fix all critical, high, and medium issues found in health audit (completed 2026-03-04)
 
 **Goal:** Zero TypeScript errors, consistent env vars, error boundaries on all route groups, passing test suite, build-time error checking enabled.
 
@@ -162,7 +162,7 @@ Plans:
 | 28-32 | v0.3 | 13/13 | Complete | 2026-03-02 |
 | 33-42 | v0.4 | 21/21 | Complete | 2026-03-03 |
 | 43-50 | v0.5 | 14/14 | Complete | 2026-03-03 |
-| 51 | 3/4 | In Progress|  | — |
+| 51 | 4/4 | Complete   | 2026-03-04 | — |
 
 ---
 *Roadmap created: 2026-02-24*

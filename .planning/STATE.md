@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.6
 milestone_name: Stabilisierung
 status: executing
-stopped_at: Completed 51-02-PLAN.md
-last_updated: "2026-03-04T06:35:48.000Z"
+stopped_at: Completed 51-04-PLAN.md
+last_updated: "2026-03-04T06:41:21.741Z"
 last_activity: 2026-03-04 — Plan 02 env var & ESLint cleanup complete
 progress:
   total_phases: 16
-  completed_phases: 14
+  completed_phases: 15
   total_plans: 46
-  completed_plans: 45
-  percent: 93
+  completed_plans: 46
+  percent: 98
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 51 — Systematic Bug Audit & Fix
-Plan: 01, 02, 03 (completed)
+Plan: 01, 02, 03, 04 (completed)
 Status: Executing plans
-Last activity: 2026-03-04 — Plan 02 env var & ESLint cleanup complete
+Last activity: 2026-03-04 — Plan 04 test scripts, mock fix & TS build checking complete
 
-Progress: [██████████] 98%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Progress: [██████████] 98%
 | v0.4 | 10 | 21 | 2 days |
 | v0.5 | 8 | 14 | 1 day |
 | Phase 51 P03 | 2min | 2 tasks | 6 files |
+| Phase 51 P04 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -60,6 +61,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 51]: Error boundaries use inline Tailwind glass classes (no GlassPanel import) to avoid cascading failures
 - [Phase 51-01]: Extracted CONDITION_TEMPLATES to lib/ module (shared by two route files) instead of just removing export
 - [Phase 51-02]: Standardized on OLLAMA_URL (not OLLAMA_BASE_URL) with localhost fallback; removed ESLint disable comments rather than adding plugin
+- [Phase 51-04]: Added findUnique mock + module mocks for draft-notification/draft-activity to fix create_draft_dokument test
+- [Phase 51-04]: Enabled ignoreBuildErrors: false now that all TS errors are fixed
 
 ### Pending Todos
 
@@ -75,6 +78,6 @@ Deferred from previous milestones:
 
 ## Session Continuity
 
-Last session: 2026-03-04T06:35:48Z
-Stopped at: Completed 51-02-PLAN.md
+Last session: 2026-03-04T06:41:21.738Z
+Stopped at: Completed 51-04-PLAN.md
 Resume: Continue with plan 04 in phase 51

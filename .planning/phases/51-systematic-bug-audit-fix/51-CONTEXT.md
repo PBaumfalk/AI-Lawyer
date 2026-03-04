@@ -42,7 +42,7 @@ Fix all issues found in the systematic health audit. 16 issues across 4 severity
 
 10. **Fix tools.test.ts Mock** — `src/lib/helena/__tests__/tools.test.ts:450`: `result.data` is undefined in `create_draft_dokument` test. Fix mock setup.
 
-11. **Clean Up Major Lint Warnings** — Fix the most impactful unused variable warnings. Don't aim for 0 warnings — fix the ~50 most obvious ones (unused imports).
+11. ~~**Clean Up Major Lint Warnings**~~ — Deferred. Full lint cleanup (317 warnings across 80+ files) is too broad for this stabilization phase. No partial cleanup either — focus on actual bugs.
 
 12. **Enable Build Error Checking** — After fixing TS errors: set `ignoreBuildErrors: false` in next.config.mjs. Keep `ignoreDuringBuilds: true` for now (lint warnings too numerous).
 

@@ -1,5 +1,40 @@
 # Milestones
 
+## v0.6 Stabilisierung (Shipped: 2026-03-04)
+
+**Delivered:** Zero TypeScript errors, consistent env vars, error boundaries on all route groups, passing test suite, and build-time error checking enabled — stabilizing the codebase after 7 feature milestones by fixing all P0/P1/P2 issues from the systematic health audit.
+
+**Phases:** 1 (Phase 51)
+**Plans:** 4 completed
+**Tasks:** 8 executed
+**Lines of Code:** ~141k LOC TypeScript (+3,894 / -1,393 net in v0.6)
+**Commits:** 20
+**Git range:** `e4672f1` → `0426de2`
+**Timeline:** 2026-03-04 (1 day)
+**Requirements:** No formal REQ-IDs (stabilization milestone — scope defined by health audit)
+
+**Key accomplishments:**
+1. Fixed React hooks violations, TypeScript type mismatches, non-route API exports, and Stirling PDF health check port
+2. Standardized OLLAMA_URL env var across entire codebase (4 files unified)
+3. Removed 8 invalid ESLint disable comments, fixed compose-popup auto-save stale closure
+4. Glass-styled error boundaries for root/dashboard/portal with German recovery UI + custom 404 page
+5. Added npm test scripts, fixed create_draft_dokument test mock, enabled build-time TypeScript error checking (ignoreBuildErrors: false)
+
+**Tech debt (deferred to future milestones):**
+- Prisma 5.22 → 7.x major upgrade needed
+- Next.js 14.2.35 has 5 high-severity CVEs (Next.js 15 upgrade needed)
+- 317 ESLint unused-vars warnings across 80+ files
+- ~67 API routes without explicit try-catch
+- ~80 silent .catch(() => {}) blocks
+- compose-popup needs proper draft API (auto-save removed entirely)
+- 12 Falldaten UAT tests pending
+
+**Archives:**
+- `milestones/v0.6-ROADMAP.md`
+- `milestones/v0.6-MILESTONE-AUDIT.md`
+
+---
+
 ## v0.5 Mandantenportal (Shipped: 2026-03-03)
 
 **Delivered:** Mandanten erhalten ein eigenes Portal zum Einsehen ihres Aktenstatus, freigegebener Dokumente und zur sicheren Kommunikation mit dem Anwalt — komplett mit Einladungslink-Auth, DSGVO-konformer Datentrennung, granularer Dokument-Freigabe, sicherem Messaging mit Dateianhang und transaktionalen E-Mail-Benachrichtigungen.

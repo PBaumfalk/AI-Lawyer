@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: null
-milestone_name: null
-status: idle
+milestone: v0.7
+milestone_name: "UI/UX & Stability"
+status: active
 stopped_at: null
-last_updated: "2026-03-04T09:00:00.000Z"
-last_activity: 2026-03-04 — v0.6 Stabilisierung milestone completed and archived
+last_updated: "2026-03-04T21:15:00.000Z"
+last_activity: 2026-03-04 — v0.7 UI/UX & Stability started
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
-  total_plans: 0
+  total_plans: 2
   completed_plans: 0
   percent: 0
 ---

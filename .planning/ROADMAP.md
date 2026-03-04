@@ -10,6 +10,7 @@
 - ✅ **v0.4 Quest & Polish** — Phases 33-42 (shipped 2026-03-03)
 - ✅ **v0.5 Mandantenportal** — Phases 43-50 (shipped 2026-03-03)
 - ✅ **v0.6 Stabilisierung** — Phase 51 (shipped 2026-03-04)
+- 🚧 **v0.7 UI/UX & Stability** — Phases 52-53 (in progress)
 
 ## Phases
 
@@ -165,3 +166,11 @@ See: `milestones/v0.6-ROADMAP.md` for full phase details.
 ---
 *Roadmap created: 2026-02-24*
 *Last updated: 2026-03-04 after v0.6 milestone completion*
+
+
+## v0.7 UI/UX & Stability
+
+- [ ] Phase 52: UI/UX Quick Wins
+- [ ] Phase 53: Stability & Crash Audit
+
+*Planned: 2026-03-04*

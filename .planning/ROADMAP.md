@@ -139,7 +139,17 @@ See: `milestones/v0.5-ROADMAP.md` for full phase details.
 
 ## v0.6 Stabilisierung
 
-- [ ] Phase 51: Systematic Bug Audit & Fix — Fix all critical, high, and medium issues found in health audit (16 issues across build, lint, env, error handling, dependencies)
+- [ ] Phase 51: Systematic Bug Audit & Fix — Fix all critical, high, and medium issues found in health audit
+
+**Goal:** Zero TypeScript errors, consistent env vars, error boundaries on all route groups, passing test suite, build-time error checking enabled.
+
+**Plans:** 4 plans
+
+Plans:
+- [ ] 51-01-PLAN.md — P0 critical bug fixes (hooks, TS errors, non-route export, health check port)
+- [ ] 51-02-PLAN.md — Env var standardization, ESLint cleanup, useEffect dependency fix
+- [ ] 51-03-PLAN.md — Error boundaries, loading states, and 404 page
+- [ ] 51-04-PLAN.md — Test scripts, test mock fix, enable build error checking
 
 ## Progress
 
@@ -152,8 +162,8 @@ See: `milestones/v0.5-ROADMAP.md` for full phase details.
 | 28-32 | v0.3 | 13/13 | Complete | 2026-03-02 |
 | 33-42 | v0.4 | 21/21 | Complete | 2026-03-03 |
 | 43-50 | v0.5 | 14/14 | Complete | 2026-03-03 |
-| 51 | v0.6 | 0/? | In Progress | — |
+| 51 | v0.6 | 0/4 | In Progress | — |
 
 ---
 *Roadmap created: 2026-02-24*
-*Last updated: 2026-03-03 after v0.5 milestone completion*
+*Last updated: 2026-03-04 after phase 51 planning*

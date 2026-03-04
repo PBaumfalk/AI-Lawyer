@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v0.6
 milestone_name: Stabilisierung
 status: executing
-stopped_at: Completed 51-01-PLAN.md
-last_updated: "2026-03-04T06:36:40.333Z"
-last_activity: 2026-03-04 — Plan 01 P0 critical bugs fixed
+stopped_at: Completed 51-02-PLAN.md
+last_updated: "2026-03-04T06:35:48.000Z"
+last_activity: 2026-03-04 — Plan 02 env var & ESLint cleanup complete
 progress:
   total_phases: 16
   completed_phases: 14
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 Phase: 51 — Systematic Bug Audit & Fix
 Plan: 01, 02, 03 (completed)
 Status: Executing plans
-Last activity: 2026-03-04 — Plan 01 P0 critical bugs fixed
+Last activity: 2026-03-04 — Plan 02 env var & ESLint cleanup complete
 
-Progress: [█████████░] 93%
+Progress: [██████████] 98%
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [█████████░] 93%
 Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 51]: Error boundaries use inline Tailwind glass classes (no GlassPanel import) to avoid cascading failures
 - [Phase 51-01]: Extracted CONDITION_TEMPLATES to lib/ module (shared by two route files) instead of just removing export
+- [Phase 51-02]: Standardized on OLLAMA_URL (not OLLAMA_BASE_URL) with localhost fallback; removed ESLint disable comments rather than adding plugin
 
 ### Pending Todos
 
@@ -74,6 +75,6 @@ Deferred from previous milestones:
 
 ## Session Continuity
 
-Last session: 2026-03-04T06:35:16Z
-Stopped at: Completed 51-01-PLAN.md
+Last session: 2026-03-04T06:35:48Z
+Stopped at: Completed 51-02-PLAN.md
 Resume: Continue with plan 04 in phase 51

@@ -256,7 +256,7 @@ async function createModelForName(
     default: {
       const ollamaUrl = await getSettingTyped<string>(
         "ai.ollama.url",
-        process.env.OLLAMA_BASE_URL || "http://ollama:11434",
+        process.env.OLLAMA_URL || "http://localhost:11434",
       );
       const ollama = createOllama({ baseURL: `${ollamaUrl}/api` });
       return ollama(resolvedModel);

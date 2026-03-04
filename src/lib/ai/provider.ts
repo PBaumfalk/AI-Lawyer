@@ -71,7 +71,7 @@ export async function getModel(): Promise<LanguageModel> {
   );
   const ollamaUrl = await getSettingTyped<string>(
     "ai.ollama.url",
-    process.env.OLLAMA_BASE_URL || "http://ollama:11434"
+    process.env.OLLAMA_URL || "http://localhost:11434"
   );
 
   switch (provider) {
@@ -166,8 +166,8 @@ export async function testProviderConnection(config?: {
         default: {
           const url =
             config.ollamaUrl ||
-            process.env.OLLAMA_BASE_URL ||
-            "http://ollama:11434";
+            process.env.OLLAMA_URL ||
+            "http://localhost:11434";
           model = createOllama({ baseURL: `${url}/api` })(modelName);
           break;
         }
@@ -207,7 +207,7 @@ export async function isProviderAvailable(): Promise<boolean> {
     if (provider === "ollama") {
       const ollamaUrl = await getSettingTyped<string>(
         "ai.ollama.url",
-        process.env.OLLAMA_BASE_URL || "http://ollama:11434"
+        process.env.OLLAMA_URL || "http://localhost:11434"
       );
       const res = await fetch(`${ollamaUrl}/api/version`, {
         signal: AbortSignal.timeout(5000),

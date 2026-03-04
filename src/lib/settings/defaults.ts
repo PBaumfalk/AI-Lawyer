@@ -124,7 +124,7 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
   },
   {
     key: "ai.ollama.url",
-    value: process.env.OLLAMA_BASE_URL || "http://ollama:11434",
+    value: process.env.OLLAMA_URL || "http://localhost:11434",
     type: "string",
     category: "ai",
     label: "Ollama-URL",

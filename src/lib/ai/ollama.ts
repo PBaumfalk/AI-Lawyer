@@ -20,8 +20,8 @@ export const AI_DEFAULTS = {
   topP: 0.9,
 } as const;
 
-const OLLAMA_BASE_URL =
-  process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
+const OLLAMA_URL =
+  process.env.OLLAMA_URL ?? "http://localhost:11434";
 
 // ---------------------------------------------------------------------------
 // Types (preserved for backward compatibility)
@@ -103,7 +103,7 @@ export async function ollamaHealthCheck(): Promise<{
   error?: string;
 }> {
   try {
-    const res = await fetch(`${OLLAMA_BASE_URL}/api/tags`, {
+    const res = await fetch(`${OLLAMA_URL}/api/tags`, {
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };

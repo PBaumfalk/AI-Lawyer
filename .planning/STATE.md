@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.6
 milestone_name: Stabilisierung
 status: executing
-stopped_at: Completed 51-03-PLAN.md
-last_updated: "2026-03-04T06:35:13.104Z"
-last_activity: 2026-03-04 — Plan 03 error boundaries & loading states complete
+stopped_at: Completed 51-01-PLAN.md
+last_updated: "2026-03-04T06:36:40.333Z"
+last_activity: 2026-03-04 — Plan 01 P0 critical bugs fixed
 progress:
   total_phases: 16
   completed_phases: 14
   total_plans: 46
-  completed_plans: 43
+  completed_plans: 45
   percent: 93
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 51 — Systematic Bug Audit & Fix
-Plan: 03 (completed)
+Plan: 01, 02, 03 (completed)
 Status: Executing plans
-Last activity: 2026-03-04 — Plan 03 error boundaries & loading states complete
+Last activity: 2026-03-04 — Plan 01 P0 critical bugs fixed
 
 Progress: [█████████░] 93%
 
@@ -58,6 +58,7 @@ Progress: [█████████░] 93%
 
 Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 51]: Error boundaries use inline Tailwind glass classes (no GlassPanel import) to avoid cascading failures
+- [Phase 51-01]: Extracted CONDITION_TEMPLATES to lib/ module (shared by two route files) instead of just removing export
 
 ### Pending Todos
 
@@ -73,6 +74,6 @@ Deferred from previous milestones:
 
 ## Session Continuity
 
-Last session: 2026-03-04T06:35:13.102Z
-Stopped at: Completed 51-03-PLAN.md
-Resume: Continue with next plan in phase 51
+Last session: 2026-03-04T06:35:16Z
+Stopped at: Completed 51-01-PLAN.md
+Resume: Continue with plan 04 in phase 51

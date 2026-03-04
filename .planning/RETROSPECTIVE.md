@@ -331,6 +331,50 @@
 
 ---
 
+## Milestone: v0.6 — Stabilisierung
+
+**Shipped:** 2026-03-04
+**Phases:** 1 (Phase 51) | **Plans:** 4 | **Tasks:** 8 | **Commits:** 20
+
+### What Was Built
+- Fixed React hooks violations, TypeScript type mismatches, non-route API exports, Stirling PDF health check port
+- Standardized OLLAMA_URL env var across 4 files with consistent localhost fallback
+- Removed 8 invalid ESLint disable comments referencing unconfigured rules
+- Fixed compose-popup auto-save stale closure (later removed entirely in post-phase fix)
+- Glass-styled error boundaries for root/dashboard/portal with German recovery UI + custom 404
+- Added npm test/test:watch scripts, fixed create_draft_dokument test mock (missing findUnique + module mocks)
+- Enabled build-time TypeScript error checking (ignoreBuildErrors: false)
+
+### What Worked
+- **Health audit as scope definition:** No formal requirements needed — the systematic-health-audit.md defined clear P0/P1/P2 priorities, making planning mechanical
+- **All fixes were surgical:** 4 plans, 8 tasks, 55 files — focused scope with zero feature creep
+- **Post-phase fix pattern:** Commit e21ab34 (removing compose-popup auto-save) was a clean post-phase fix that superseded the in-phase closure fix — demonstrating that verification catches real issues
+- **Error boundary self-containment:** Using inline Tailwind instead of GlassPanel imports prevents cascading failures — correct architectural choice for error recovery code
+
+### What Was Inefficient
+- **Stabilization milestone is lightweight but still requires full ceremony:** 1 phase with 4 plans + audit + milestone completion is overhead for what was essentially a focused bugfix session
+- **Phase 51 stats inflation in CLI:** gsd-tools reported "16 phases, 46 plans" because it counted all prior milestone phases — the actual v0.6 work was 1 phase, 4 plans
+- **No REQUIREMENTS.md created:** Stabilization milestones don't map well to the REQ-ID pattern — health audit findings were the de facto requirements
+
+### Patterns Established
+- **Health audit as requirements source:** For stabilization milestones, systematic health audit replaces formal REQUIREMENTS.md
+- **Inline Tailwind in error boundaries:** Never import application components in error.tsx files — cascading import failures defeat the purpose
+- **ignoreBuildErrors: false as default:** TypeScript errors caught at build time prevent silent regressions
+- **Module-level vi.mock for fire-and-forget helpers:** Test files must mock modules that import side-effect-heavy helpers (draft-notification, draft-activity)
+
+### Key Lessons
+1. **Stabilization milestones are valuable but should be lightweight.** A single health audit → fix → verify cycle is sufficient. The GSD ceremony (research, plan-check, verifier) adds overhead without proportional value for bugfix work.
+2. **Build-time TS checking should have been enabled from v3.4.** 7 milestones shipped with `ignoreBuildErrors: true` — any TS regression in those milestones was invisible until runtime. Enable immediately for all new projects.
+3. **Post-phase fixes are normal.** The compose-popup removal after phase close demonstrates that verification sometimes reveals the original fix was insufficient. Clean post-phase commits are better than reopening phases.
+4. **Tech debt should be surfaced, not just listed.** The audit cataloged Prisma 7.x upgrade, Next.js CVEs, and 317 ESLint warnings — these need dedicated milestone scope, not just bullet points.
+
+### Cost Observations
+- Model mix: ~40% opus (execution), ~40% sonnet (planning/audit), ~20% haiku (verification)
+- Sessions: ~3 sessions in 1 day
+- Notable: Fastest milestone end-to-end — 4 plans averaged ~2.5 min each. Stabilization benefits from well-defined scope.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -344,6 +388,7 @@
 | v0.3 | ~8 | 5 | 13 | Lazy channel creation; community template workflow; nightly embedding refresh at kanzlei scale |
 | v0.4 | ~8 | 10 | 21 | Quest DSL evaluator; gap-closure down to 10%; absent-until-loaded widget pattern; DSGVO opt-in from day one |
 | v0.5 | ~6 | 8 | 14 | Pattern reuse from v0.2/v0.3 enables fastest milestone; portal-public route group; server-side data isolation |
+| v0.6 | ~3 | 1 | 4 | Health audit as requirements source; stabilization is lightweight; build-time TS checking enabled |
 
 ### Cumulative Quality
 
@@ -356,6 +401,7 @@
 | v0.3 | 253+ (unchanged) | 20/20 | 1 | 5 (@Helena ALLGEMEIN, sidebar badge, stats counter, embedding refresh, TS errors) |
 | v0.4 | 253+ (unchanged) | 41/41 | 1 | 4 (quest-evaluator any, fire-and-forget catch, doppel-runen edge, pre-existing TS) |
 | v0.5 | 253+ (unchanged) | 25/25 | 2 (audit + re-audit) | 4 (console.error in route, email deep links, pre-existing TS, adhoc phase) |
+| v0.6 | 417+ (vitest enabled) | N/A (stabilization) | 1 | 10 (Prisma 7.x, Next.js CVEs, 317 ESLint warnings, 67 routes no try-catch, 80 silent catch, draft API, UAT tests, etc.) |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -372,3 +418,5 @@
 11. Absent-until-loaded pattern for progressive enhancement — no CLS, no loading spinners, works with SSR
 12. Pattern reuse compounds — portal messaging/documents/auth built on v0.2/v0.3 patterns, enabling 14 plans in 1 day
 13. Auth pages must be outside guarded layouts — always verify unauthenticated E2E flows (invite→activate→login) before marking auth phases complete
+14. Enable build-time TS checking (ignoreBuildErrors: false) from day one — silent regressions across 7 milestones were avoidable
+15. Stabilization milestones benefit from health-audit-as-requirements — skip formal REQ-IDs when scope is defined by audit findings

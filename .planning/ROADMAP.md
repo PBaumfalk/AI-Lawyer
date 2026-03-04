@@ -162,7 +162,7 @@ Plans:
 | 28-32 | v0.3 | 13/13 | Complete | 2026-03-02 |
 | 33-42 | v0.4 | 21/21 | Complete | 2026-03-03 |
 | 43-50 | v0.5 | 14/14 | Complete | 2026-03-03 |
-| 51 | v0.6 | 0/4 | In Progress | — |
+| 51 | 1/4 | In Progress|  | — |
 
 ---
 *Roadmap created: 2026-02-24*

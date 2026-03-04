@@ -1,165 +1,186 @@
 # Technology Stack
 
-**Analysis Date:** 2025-02-24
+**Analysis Date:** 2026-03-04
 
 ## Languages
 
 **Primary:**
-- TypeScript 5.7.2 - All application code, type-safe development
-- JavaScript - Configuration files, build scripts
+- TypeScript 5.7.x - All application code (Next.js, workers, scripts, tests)
 
 **Secondary:**
-- SQL - PostgreSQL queries via Prisma ORM
-- Shell - Docker entrypoint scripts (`docker-entrypoint.sh`)
+- SQL (PostgreSQL) - Raw queries via Prisma `$executeRawUnsafe` for pgvector index management
+- HTML/CSS - Tailwind CSS utility classes + oklch CSS variables in `src/app/globals.css`
 
 ## Runtime
 
 **Environment:**
-- Node.js 18-alpine - Production runtime in Docker
-- Node.js 18+ - Development
+- Node.js 20 (Alpine Linux in Docker, `node:20-alpine`)
+- Two independent Node.js processes: custom HTTP server (`src/server.ts`) and BullMQ worker (`src/worker.ts`)
 
 **Package Manager:**
-- npm - Dependency management
-- Lockfile: `package-lock.json` (present)
+- npm (lockfile: `package-lock.json` present)
 
 ## Frameworks
 
 **Core:**
-- Next.js 14.2.21 - Full-stack React framework with App Router
-- React 18.3.1 - UI library
-- TypeScript 5.7.2 - Type safety
+- Next.js 14.2.x (App Router, `^14.2.21`) - Full-stack framework, server components, API routes
+  - Output: `standalone` (self-contained Docker image)
+  - Turbopack enabled in dev (`next dev --turbo`)
+  - TypeScript build errors enforced (`ignoreBuildErrors: false`)
+- React 18.3.x - UI rendering
 
-**UI & Styling:**
-- Tailwind CSS 3.4.17 - Utility-first CSS framework
-- shadcn/ui - Component library (Radix UI + Tailwind)
-- Radix UI components:
-  - `@radix-ui/react-avatar` 1.1.2
-  - `@radix-ui/react-dialog` 1.1.4
-  - `@radix-ui/react-dropdown-menu` 2.1.4
-  - `@radix-ui/react-scroll-area` 1.2.2
-  - `@radix-ui/react-separator` 1.1.1
-  - `@radix-ui/react-slot` 1.1.1
-  - `@radix-ui/react-tooltip` 1.1.6
-- lucide-react 0.468.0 - Icon library
-- sonner 1.7.1 - Toast notifications
-- cmdk 1.0.4 - Command palette/search
+**UI Component Layer:**
+- shadcn/ui (not a package — components inlined in `src/components/ui/`)
+  - Built on Radix UI primitives (`@radix-ui/*`)
+- Tailwind CSS 3.4.x - Utility-first styling
+  - Config: `tailwind.config.ts`
+  - Plugin: `@tailwindcss/typography`
+  - Dark mode via `class` strategy
+  - Custom oklch color system (CSS variables, 4 blur tiers Glass UI)
+- Lucide React 0.468 - Icon library
+- Framer Motion (`motion` 12.x) - Animations
+- Recharts 3.7 - Charts/data visualization
 
-**Authentication:**
-- next-auth 5.0.0-beta.25 - Session management and authentication
-- @auth/prisma-adapter 2.7.4 - NextAuth + Prisma integration
-- bcryptjs 2.4.3 - Password hashing
+**Rich Text & Document Editing:**
+- Tiptap 3.20 (`@tiptap/react`, `@tiptap/starter-kit`, extensions) - Rich text editor for messages/notes
+- OnlyOffice Document Editor React 2.1.1 (`@onlyoffice/document-editor-react`) - Full office document editing (DOCX/XLSX/PPTX)
 
 **Forms & Validation:**
-- react-hook-form 7.54.1 - Form state management
-- @hookform/resolvers 3.9.1 - Validation schema integration
-- zod 3.23.8 - Schema validation library
+- React Hook Form 7.54 + `@hookform/resolvers`
+- Zod 3.23 - Schema validation (shared between client and server)
 
-**Document Editing:**
-- @onlyoffice/document-editor-react 2.1.1 - Browser-based office document editor
-- docxtemplater 3.68.2 - DOCX template processing
-- pizzip 3.2.0 - ZIP file handling (dependency for docxtemplater)
+**AI / LLM:**
+- Vercel AI SDK v4 (`ai` 4.3.x) - Unified streaming interface + `generateText`/`generateObject`
+- `@ai-sdk/openai` 1.3.x - OpenAI provider adapter
+- `@ai-sdk/anthropic` 1.2.x - Anthropic provider adapter
+- `@ai-sdk/react` 1.2.x - React hooks for streaming AI
+- `ollama-ai-provider` 1.2 - Ollama local LLM adapter
+- LangChain Core 1.1.x + LangChain Text Splitters 1.0 - Document chunking
 
-**Date/Time:**
-- date-fns 4.1.0 - Date utility functions
-- date-fns-tz 3.2.0 - Timezone support
+**Queue / Background Jobs:**
+- BullMQ 5.70 - Job queue library (19 named queues)
+- `@bull-board` 6.19 - Queue monitoring UI (Hono server adapter)
+
+**Server / Custom HTTP:**
+- Hono 4.12 - Lightweight HTTP framework (used for Bull Board API)
+- Socket.IO 4.8 - Real-time WebSocket server (attached to custom HTTP server)
+- `socket.io-client` 4.8 - Client-side Socket.IO
+- `@socket.io/redis-adapter` 8.3 - Redis pub/sub for horizontal Socket.IO scaling
+- `@socket.io/redis-emitter` 5.1 - Emit from worker process without direct server connection
+
+**Database ORM:**
+- Prisma 5.22 (`prisma`, `@prisma/client`) - ORM + migration tool
+  - 84 models in `prisma/schema.prisma`
+  - Extended client with business invariants via `$extends` in `src/lib/db.ts`
+  - `postgresqlExtensions` preview feature enabled (for pgvector)
+- `pgvector` 0.2.1 - Node.js pgvector bindings
+
+**Email:**
+- `imapflow` 1.2 - IMAP client (persistent connections via connection-manager)
+- `nodemailer` 7.0 - SMTP sending
+- `mailparser` 3.9 - Parse raw email messages
+
+**PDF & Documents:**
+- `pdf-lib` 1.17 - PDF manipulation (ZUGFeRD/XRechnung embedding)
+- `pdf-parse` 2.4 - Text extraction from PDFs
+- `pdfjs-dist` 5.4.296 (pinned) - PDF rendering in browser (`react-pdf`)
+- `react-pdf` 10.4 - PDF viewer component
+- `docxtemplater` 3.68 + `pizzip` 3.2 - DOCX template filling
+
+**Finance / Legal Standards:**
+- `sepa` 2.1 - SEPA XML generation
+- `@e-invoice-eu/core` 2.3 - EN16931/ZUGFeRD/XRechnung e-invoice generation
+- `feiertagejs` 1.5 - German public holiday calculation
+- `date-fns` 4.1 + `date-fns-tz` 3.2 - Date manipulation with timezone support
+
+**Security & Auth:**
+- `bcryptjs` 2.4 - Password hashing
+- `jsonwebtoken` 9.0 - JWT signing/verification (OnlyOffice integration)
+- `dompurify` 3.3 - HTML sanitization (client-side)
+- `sanitize-html` 2.17 - HTML sanitization (server-side)
 
 **Utilities:**
-- clsx 2.1.1 - Conditional className merging
-- tailwind-merge 2.6.0 - Tailwind CSS conflict resolution
-- jsonwebtoken 9.0.3 - JWT signing/verification for ONLYOFFICE
+- `fast-xml-parser` 5.3 - XML parsing (XJustiz, RSS feeds, CAMT banking files)
+- `date-fns` 4.1 - Date utilities
+- `clsx` 2.1 + `tailwind-merge` 2.6 - Conditional class merging
+- `class-variance-authority` 0.7 - Component variant system
+- `cmdk` 1.0 - Command palette
+- `sonner` 1.7 - Toast notifications
+- `canvas-confetti` 1.9 - Confetti animation (gamification)
+- `@tanstack/react-virtual` 3.13 - Virtual list rendering
+- `react-resizable-panels` 4.6 - Resizable panel layouts
+- `react-markdown` 10.1 + `remark-gfm` 4.0 - Markdown rendering
 
-**Testing (Dev):**
-- (None configured yet - Framework ready for Vitest/Playwright)
+**Testing:**
+- Vitest 4.0.x - Test runner (config: `vitest.config.ts`)
+  - Environment: `node`
+  - Globals: enabled
 
-**Build/Dev Tools (Dev):**
-- eslint 8.57.1 - Code linting
-- eslint-config-next 14.2.21 - Next.js ESLint rules
-- autoprefixer 10.4.20 - PostCSS vendor prefixes
-- postcss 8.4.49 - CSS transformations
-- tsx 4.19.2 - TypeScript execution for scripts
-- prisma 5.22.0 - ORM CLI and code generation
+**Build/Dev:**
+- tsx 4.19 - TypeScript execution for scripts/dev mode
+- esbuild 0.27 - Bundle `server.ts` and `worker.ts` for production
+- ESLint 8.57 + `eslint-config-next` 14 - Linting
+- PostCSS 8 + Autoprefixer 10 - CSS processing
+- pino 10.3 + pino-pretty 13 + pino-roll 4 - Structured logging with file rotation
 
 ## Key Dependencies
 
 **Critical:**
-- @prisma/client 5.22.0 - Type-safe database client, manages all data access
-- next-auth 5.0.0-beta.25 - Role-based access control (ADMIN, ANWALT, SACHBEARBEITER, SEKRETARIAT, PRAKTIKANT)
-- meilisearch 0.55.0 - Full-text search across documents
-- @onlyoffice/document-editor-react 2.1.1 - Browser-based WYSIWYG document editing
+- `next@^14.2.21` - Core framework (App Router)
+- `@prisma/client@^5.22.0` - Database access layer (84 models)
+- `ai@^4.3.19` - AI SDK for all LLM interactions
+- `bullmq@^5.70.1` - All background job processing (19 queues)
+- `socket.io@^4.8.3` - Real-time notifications
+- `next-auth@^5.0.0-beta.25` - Authentication (JWT sessions, RBAC)
+- `@onlyoffice/document-editor-react@^2.1.1` - Document editing
 
-**Storage & Integration:**
-- @aws-sdk/client-s3 3.995.0 - S3-compatible object storage (MinIO)
-- @aws-sdk/s3-request-presigner 3.995.0 - Pre-signed URL generation for downloads
-- @auth/prisma-adapter 2.7.4 - Session persistence via Prisma
-
-**Crypto & Auth:**
-- bcryptjs 2.4.3 - Secure password hashing
-- jsonwebtoken 9.0.3 - JWT creation for ONLYOFFICE integration
-
-**AI/LLM (Prepared):**
-- No npm packages for LLM at present. Integration planned via:
-  - Ollama API (REST calls, no SDK)
-  - OpenAI/Anthropic (environment-configured, direct fetch calls)
-  - LangChain.js/Vercel AI SDK (not yet added to dependencies)
+**Infrastructure:**
+- `@aws-sdk/client-s3@^3.995.0` + `@aws-sdk/s3-request-presigner` - MinIO S3-compatible storage
+- `ioredis@^5.9.3` - Redis client (BullMQ + Socket.IO adapter)
+- `meilisearch@^0.55.0` - Full-text search client
+- `pino@^10.3.1` + `pino-roll@^4.0.0` - Production logging with daily rotation
 
 ## Configuration
 
 **Environment:**
-- Configured via `.env` file (not committed)
-- `.env.example` provides required variables template
-- Docker Compose overrides via environment sections
+- All env vars injected at Docker runtime via `docker-compose.yml`
+- No `.env` file committed — Docker Compose provides env for both `app` and `worker` containers
+- Key required env vars:
+  - `DATABASE_URL` - PostgreSQL connection string
+  - `NEXTAUTH_SECRET` / `NEXTAUTH_URL` / `AUTH_TRUST_HOST`
+  - `REDIS_URL`
+  - `MINIO_ENDPOINT`, `MINIO_PORT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`, `MINIO_USE_SSL`, `MINIO_PUBLIC_URL`
+  - `MEILISEARCH_URL`, `MEILISEARCH_API_KEY`
+  - `ONLYOFFICE_URL`, `ONLYOFFICE_INTERNAL_URL`, `ONLYOFFICE_SECRET`, `APP_INTERNAL_URL`
+  - `STIRLING_PDF_URL`
+  - `OLLAMA_URL`
+  - `EMAIL_ENCRYPTION_KEY`
+  - `LOG_LEVEL`, `LOG_FILE_PATH`
+  - `WORKER_CONCURRENCY` (default: `5`)
+  - `OPENCLAW_GATEWAY_TOKEN` - Token for OpenClaw AI agent gateway (optional)
+  - `GITHUB_TOKEN` - For GitHub API (Gesetze sync, optional but recommended)
 
 **Build:**
-- `next.config.mjs` - Next.js configuration with:
-  - Standalone output mode for efficient Docker builds
-  - Security headers (X-Frame-Options: SAMEORIGIN)
-  - CORS headers for ONLYOFFICE API endpoints
-- `tsconfig.json` - TypeScript compiler options with path alias `@/*` → `./src/*`
-- `.prettierrc` - Code formatting (if present, not found in repo root)
+- `next.config.mjs` - Next.js config (standalone output, serverComponentsExternalPackages, Turbopack aliases)
+- `tsconfig.json` - TypeScript strict mode, path alias `@/*` → `./src/*`
+- `tailwind.config.ts` - Tailwind theme (oklch colors, Glass UI shadows)
+- `vitest.config.ts` - Test config (node environment, `@/` alias)
+- `postcss.config.mjs` - PostCSS (Tailwind + Autoprefixer)
 
 ## Platform Requirements
 
 **Development:**
-- Node.js 18+
-- PostgreSQL 16+ (for local dev)
-- MinIO or S3-compatible storage
-- Meilisearch instance
-- ONLYOFFICE Document Server (Docker recommended)
-- Optional: Ollama for local LLM
+- Node.js 20
+- Docker + Docker Compose (9 services)
+- Sufficient RAM for OnlyOffice (4GB limit), Stirling-PDF (4GB limit), Ollama (GPU recommended)
 
 **Production:**
-- Docker + Docker Compose
-- PostgreSQL 16 with pgvector extension
-- MinIO (or AWS S3)
-- Meilisearch
-- ONLYOFFICE Document Server
-- Networking: Internal container communication via service names
-- Deployment target: Self-hosted on-premise (Docker Compose)
-
-## Docker Build
-
-**Multi-stage Dockerfile:**
-1. **deps stage**: Installs npm dependencies
-2. **builder stage**: Compiles Next.js to standalone output, generates Prisma client
-3. **runner stage**: Minimal production image with:
-   - Non-root user (nodejs:1001)
-   - Prisma schema + seeding support
-   - Node 18-alpine base
-   - Custom entrypoint (`docker-entrypoint.sh`) for:
-     - Database readiness check
-     - Schema synchronization (`prisma db push`)
-     - Database seeding
-     - Server startup
-
-**Docker Compose Stack:**
-- `app` (Next.js) - Port 3000
-- `db` (PostgreSQL 16 with pgvector) - Port 5432
-- `minio` (S3 storage) - Ports 9000/9001
-- `meilisearch` - Port 7700
-- `onlyoffice` - Port 8080
-- Persistent volumes for data: `pgdata`, `miniodata`, `meilidata`, `onlyoffice_data`, `onlyoffice_log`
-- Health checks on all services
+- Docker Compose deployment (9 services: app, worker, db, redis, minio, meilisearch, onlyoffice, stirling-pdf, ollama)
+- Optional: LanguageTool (docker profile `full`)
+- NVIDIA GPU recommended for Ollama (local LLM inference)
+- Node.js 20 Alpine in Docker image
+- Log volume mounted at `/var/log/ai-lawyer/`
 
 ---
 
-*Stack analysis: 2025-02-24*
+*Stack analysis: 2026-03-04*

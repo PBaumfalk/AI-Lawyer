@@ -1,219 +1,193 @@
 # Architecture
 
-**Analysis Date:** 2026-02-24
+**Analysis Date:** 2026-03-04
 
 ## Pattern Overview
 
-**Overall:** Server-Driven Full-Stack Monolith (Next.js App Router) + Microservices-Ready Backend
+**Overall:** Layered monolith with two distinct runtime processes — a Next.js App Router web server (`src/server.ts`) and a BullMQ background worker (`src/worker.ts`). Both processes share the same Prisma schema and Redis instance.
 
 **Key Characteristics:**
-- Next.js 14+ (App Router) with TypeScript for frontend and API routes
-- Authentication integrated at middleware level via NextAuth.js v5
-- Prisma ORM as single source of truth for data models
-- External service integrations (MinIO, Meilisearch, OnlyOffice, Ollama) consumed via SDK clients
-- Role-Based Access Control (RBAC) embedded in session tokens
-- AI task processing decoupled via tagged task queue pattern (tags with `ai:` prefix)
-- Public/internal URL patterns for container-to-container communication (OnlyOffice, MinIO)
-
-## Layers
-
-**Presentation Layer (React/Next.js):**
-- Purpose: Server components (layouts, pages) and client components (interactive UI)
-- Location: `src/app/` (App Router structure) and `src/components/`
-- Contains: Page definitions, layouts, form components, lists, modals
-- Depends on: HTTP API routes, auth session, state providers
-- Used by: Browser clients
-- Pattern: Server-first with minimal client-side state; SessionProvider wraps dashboard; layouts auto-redirect unauthenticated users
-
-**API Routes Layer (RESTful):**
-- Purpose: HTTP endpoint definitions for CRUD operations, file handling, AI task triggering
-- Location: `src/app/api/` (nested RESTful structure following Next.js conventions)
-- Contains: Route handlers (GET/POST/PUT/DELETE), request validation via Zod, response formatting
-- Depends on: Prisma ORM, auth middleware, external services (MinIO, Meilisearch)
-- Used by: Frontend pages, external integrations (OnlyOffice callbacks, OpenClaw)
-- Pattern: One `route.ts` file per endpoint; Zod schemas for validation; auth check at handler start; JSON responses
-
-**Business Logic Layer (Services/Libraries):**
-- Purpose: Core domain logic isolated from HTTP layer
-- Location: `src/lib/` (organized by domain)
-- Contains:
-  - `auth.ts`: NextAuth.js configuration, JWT callbacks, role mapping
-  - `db.ts`: Prisma singleton with dev logging
-  - `storage.ts`: MinIO/S3 client wrapper
-  - `meilisearch.ts`: Full-text search indexing and queries
-  - `onlyoffice.ts`: Document editor config generation, JWT signing, URL rewriting
-  - `ai/`: AI task processing (prompt templates, task queue logic, Ollama client)
-  - `audit.ts`: Audit log creation
-  - `conflict-check.ts`: Conflict-of-interest checks (business rule)
-  - `aktenzeichen.ts`: Case number generation
-  - `vorlagen.ts`: Document template handling
-  - Domain-specific: `kontakte/` (contact import/vCard handling), etc.
-- Depends on: Prisma, external SDKs
-- Used by: API routes, components
-
-**Data Layer (Prisma ORM + PostgreSQL):**
-- Purpose: All database operations through single Prisma client
-- Location: `prisma/schema.prisma` (schema definition), `src/lib/db.ts` (client singleton)
-- Contains: 30+ models covering users, cases, contacts, documents, calendar, financials, audit logs
-- Depends on: PostgreSQL 16 with pgvector extension
-- Used by: All business logic
-
-**External Integrations:**
-- MinIO (S3-compatible): Document/file storage via `src/lib/storage.ts` (AWS SDK)
-- Meilisearch: Full-text document search via `src/lib/meilisearch.ts`
-- OnlyOffice Docs: WYSIWYG document editing via API config generation in `src/lib/onlyoffice.ts`
-- Ollama: Local LLM inference via `src/lib/ai/ollama.ts`
-- NextAuth.js: Authentication with Prisma adapter
-- Sonner: Toast notifications (client-side)
-- Zod: Request validation (all API routes)
-
-## Data Flow
-
-**Case Management Workflow:**
-
-1. User navigates to `/akten` page (server component)
-2. Page fetches list via `GET /api/akten?status=OFFEN` (API route)
-3. API route calls `auth()` to verify session, then `prisma.akte.findMany()`
-4. Results returned as JSON; page renders component tree with case list
-5. User clicks "New Case" → form submission to `POST /api/akten`
-6. API validates input with Zod schema, calls `generateAktenzeichen()` (business logic)
-7. Case created in DB, audit log recorded via `logAuditEvent()`
-8. Response redirects frontend; page re-fetches list (revalidation)
-
-**Document Processing Workflow:**
-
-1. User uploads file via `/akten/[id]/dokumente` (form → `POST /api/akten/[id]/dokumente`)
-2. File streamed to MinIO via `uploadFile()` from `src/lib/storage.ts`
-3. Document record created in Prisma (stores MinIO key, metadata)
-4. Async: Document indexed in Meilisearch for full-text search
-5. User edits document → OnlyOffice editor (React component + iframe)
-6. OnlyOffice calls `GET /api/onlyoffice/config/[dokumentId]` for editor config
-7. Config generation in `src/lib/onlyoffice.ts`: creates JWT-signed config with document URL
-8. OnlyOffice saves → callback to `POST /api/onlyoffice/callback`
-9. Callback updates document in MinIO and Prisma
-
-**AI Task Processing Workflow:**
-
-1. User creates Ticket with `ai:draft` tag → stored in DB with tag array
-2. External process (cron or OpenClaw) calls `GET /api/openclaw/tasks`
-3. Fetches tasks where `tags` contains `ai:*` pattern
-4. For each task: `src/lib/ai/process-tasks.ts` acquires atomic lock
-5. Load case context (Dokument records, ChatNachricht history)
-6. Call `ollamaGenerate()` with prompt built from `prompt-templates.ts`
-7. Result written as ChatNachricht (userId=null, role="assistant") with status ENTWURF
-8. Lock released; task marked with `ai:done` tag
-9. User reviews draft, manually creates Dokument with status FREIGEGEBEN before sending
-
-**State Management:**
-
-- Session state: Stored in JWT, decoded by `auth()` middleware, available to all components/routes
-- UI state: Minimal client-side state (collapsible sidebar, search filters); mostly server-derived
-- Database state: Prisma is authoritative; all mutations go through API routes
-- No client-side stores (Redux/Zustand) needed; form state via react-hook-form
-
-## Key Abstractions
-
-**Akte (Case) Model:**
-- Purpose: Central entity representing a legal case
-- Examples: `src/app/api/akten/route.ts`, `src/app/(dashboard)/akten/[id]/page.tsx`
-- Pattern: Always fetch with related contacts (beteiligte), documents, calendar entries; expose via REST
-
-**Dokument (Document) Model:**
-- Purpose: File + metadata for storage in MinIO, editing in OnlyOffice, searching in Meilisearch
-- Status field: ENTWURF → ZUR_PRUEFUNG → FREIGEGEBEN → VERSENDET (state machine)
-- Examples: `src/app/api/akten/[id]/dokumente/route.ts`, `src/components/dokumente/`
-- Pattern: Always validate status before allowing download/send; audit creator and approver
-
-**Kontakt (Contact) Model:**
-- Purpose: Party registry for cases (mandants, opponents, courts, experts)
-- Supports: Natural persons + legal entities with extended KYC, relationship mapping
-- Examples: `src/app/api/kontakte/route.ts`, `src/components/kontakte/`
-- Pattern: Flexible schema; relationships modeled via Beziehung (many-to-many)
-
-**Ticket (Task) Model:**
-- Purpose: Work item queue for lawyers, optional AI automation
-- Tags field: Array of strings; `ai:*` prefix signals AI automation intent
-- Examples: `src/app/api/tickets/route.ts`, `src/lib/ai/process-tasks.ts`
-- Pattern: Atomic lock mechanism for concurrent AI processing; status lifecycle (OFFEN → IN_BEARBEITUNG → ERLEDIGT)
-
-**KalenderEintrag (Calendar Entry) Model:**
-- Purpose: Deadlines, appointments, review dates tied to cases
-- Types: TERMIN, FRIST (deadline), WIEDERVORLAGE (reminder)
-- Examples: `src/app/api/kalender/route.ts`
-- Pattern: Linked to Akte; verantwortlichUserId for assignment
-
-## Entry Points
-
-**Web Application Root:**
-- Location: `src/app/page.tsx`
-- Triggers: User navigates to `/`
-- Responsibilities: Redirects to `/dashboard`
-
-**Dashboard Layout:**
-- Location: `src/app/(dashboard)/layout.tsx`
-- Triggers: Any route under `/dashboard/*`
-- Responsibilities:
-  - Auth check via `auth()` middleware → redirect to `/login` if missing
-  - Wrap in SessionProvider
-  - Render Sidebar, Header, CommandPalette layout
-  - Force dynamic rendering (no static generation for protected routes)
-
-**Auth Route Group:**
-- Location: `src/app/(auth)/login` (layout at `src/app/(auth)/layout.tsx`)
-- Triggers: User navigates to `/login`
-- Responsibilities: Login form, credential validation via NextAuth
-- Uses: Credentials provider (email/password stored in DB)
-
-**API Route: NextAuth Handler:**
-- Location: `src/app/api/auth/[...nextauth]/route.ts`
-- Triggers: All requests to `/api/auth/*` (login, logout, callback, session)
-- Responsibilities: NextAuth configuration, session generation
-
-**OnlyOffice Config Endpoint:**
-- Location: `src/app/api/onlyoffice/config/[dokumentId]/route.ts`
-- Triggers: OnlyOffice editor iframe requests config (browser CORS call)
-- Responsibilities: Generate JWT-signed editor configuration with secure document URL
-
-**Document Callback Endpoint:**
-- Location: `src/app/api/onlyoffice/callback`
-- Triggers: OnlyOffice server notifies app of save/version changes
-- Responsibilities: Download converted file from OnlyOffice, update MinIO + Prisma
-
-**OpenClaw AI Integration:**
-- Location: `src/app/api/openclaw/*` (multiple endpoints)
-- Triggers: External OpenClaw orchestrator queries for tasks, updates results
-- Responsibilities: Expose task queue, case context, allow draft creation (never auto-send)
-
-## Error Handling
-
-**Strategy:** Fail-safe with user-friendly messages; audit all errors
-
-**Patterns:**
-- API routes: Try-catch wraps handler, returns `NextResponse.json({ error: "..." }, { status: 500 })`
-- Validation: Zod schema parsing; `safeParse()` returns error details
-- Auth errors: 401 (unauthorized), redirect to login for session-protected routes
-- DB errors: Wrapped in try-catch; logged to audit; generic error message to user (no DB details exposed)
-- File operations (MinIO): Fallback URLs, timeout handling
-- OnlyOffice integration: Timeout for JWT generation; fallback config
-
-## Cross-Cutting Concerns
-
-**Logging:**
-- Approach: Audit log via `logAuditEvent()` for critical operations (create, update, delete)
-- Location: `src/lib/audit.ts`
-- Pattern: Injected into API routes; records userId, action, resource, timestamp
-
-**Validation:**
-- Approach: Zod schemas at API route entry points
-- Pattern: Schema defined near endpoint; `safeParse()` used; detailed error messages
-- Example: `src/app/api/kontakte/route.ts` line 6-70 (large schema for contact creation)
-
-**Authentication:**
-- Approach: NextAuth.js v5 with JWT session + Credentials provider
-- Pattern: `auth()` async function called in server components and API routes
-- Roles embedded in token (RBAC): ADMIN, ANWALT, SACHBEARBEITER, SEKRETARIAT, PRAKTIKANT
-- Middleware at `src/middleware.ts` protects routes; exemptions for auth, onlyoffice, openclaw
+- Next.js 14 App Router with co-located server components, client components, and Route Handlers
+- Two separate process executables: web server (HTTP + Socket.IO) and worker (BullMQ consumers)
+- Three distinct user surfaces: `(dashboard)` for law firm staff, `(portal)` for Mandant clients, `(portal-public)` for unauthenticated portal pages
+- Prisma `$extends` enforces BRAK 2025 / BRAO 43 business invariants at the ORM layer
+- AI agent ("Helena") runs as a ReAct loop inside BullMQ jobs, isolated from HTTP response cycle
 
 ---
 
-*Architecture analysis: 2026-02-24*
+## Layers
+
+**Route Layer (App Router):**
+- Purpose: HTTP routing, server-side rendering, auth guards
+- Location: `src/app/`
+- Contains: `page.tsx` (RSC), `layout.tsx`, route groups, `route.ts` (API handlers)
+- Depends on: `src/lib/` services, Prisma via `src/lib/db.ts`
+- Used by: Browser clients, worker process (indirectly via shared lib)
+
+**API Layer (Route Handlers):**
+- Purpose: REST endpoints consumed by client components and external integrations
+- Location: `src/app/api/`
+- Contains: `route.ts` files for each resource (`akten`, `dokumente`, `helena`, `portal`, `gamification`, etc.)
+- Auth guard: Every handler calls `requireAuth()` / `requireRole()` / `requireAkteAccess()` from `src/lib/rbac.ts` before any DB access
+- Depends on: `src/lib/rbac.ts`, `src/lib/db.ts`, domain service libs
+
+**Service Layer (`src/lib/`):**
+- Purpose: Domain logic, external integrations, shared utilities
+- Location: `src/lib/`
+- Contains: One directory per domain (helena, finance, email, gamification, portal, etc.)
+- Key singletons: `src/lib/db.ts` (Prisma), `src/lib/meilisearch.ts`, `src/lib/storage.ts` (MinIO/S3)
+- Depends on: Prisma, Redis, MinIO, Meilisearch, Ollama/OpenAI/Anthropic
+
+**Queue Layer (`src/lib/queue/`, `src/lib/queue/processors/`):**
+- Purpose: BullMQ queue definitions and job processors for all async work
+- Location: `src/lib/queue/queues.ts` (queue instances), `src/lib/queue/processors/` (processors)
+- Contains: 19 named queues (document-ocr, document-embedding, helena-task, gamification, portal-notification, etc.)
+- Depends on: `src/lib/redis.ts`, domain service libs, Socket.IO emitter
+- Used by: `src/worker.ts` (consumer), API route handlers (producer)
+
+**Worker Process (`src/worker.ts`, `src/workers/`):**
+- Purpose: Standalone Node.js process consuming all BullMQ queues
+- Location: `src/worker.ts` (entry), `src/workers/processors/` (complex processor modules)
+- Contains: Worker registration, cron scheduling, startup seeding, graceful shutdown
+- Depends on: All queue processors, `src/lib/socket/emitter.ts` for Socket.IO cross-process pub/sub
+- Used by: `dist-worker/` (compiled output run in Docker)
+
+**Component Layer (`src/components/`):**
+- Purpose: React UI components (server and client)
+- Location: `src/components/`
+- Contains: Feature-namespaced directories (`akten`, `helena`, `dokumente`, `gamification`, `portal`, etc.) + `ui/` (shadcn primitives), `layout/` (Sidebar, Header)
+- Depends on: Next.js hooks, route handler APIs, Socket.IO client (via providers)
+
+---
+
+## Data Flow
+
+**Document Upload Pipeline:**
+1. User uploads via `POST /api/akten/[id]/dokumente/neu` → file stored in MinIO via `src/lib/storage.ts`
+2. API handler enqueues `document-ocr` and `document-preview` jobs in BullMQ
+3. Worker OCR processor (`src/lib/queue/processors/ocr.processor.ts`) calls Stirling-PDF, saves text to `Dokument.ocrText`
+4. Worker embedding processor (`src/lib/queue/processors/embedding.processor.ts`) calls Ollama embedder, writes chunks to `document_chunks` table (pgvector)
+5. Worker indexes document in Meilisearch for BM25 search
+6. Socket.IO emitter sends `document:ocr-complete` to `akte:{akteId}` room and `user:{userId}` room
+7. Client UI updates via Socket.IO event
+
+**Helena AI Task Flow (background mode):**
+1. User mentions `@Helena` in Akte feed → `POST /api/akten/[id]/feed` parses mention via `src/lib/helena/at-mention-parser.ts`
+2. Feed handler calls `createHelenaTask()` in `src/lib/helena/task-service.ts` → creates `HelenaTask` DB record, enqueues `helena-task` BullMQ job
+3. Worker (`src/lib/queue/processors/helena-task.processor.ts`) picks up job, calls `runHelenaAgent()` (ReAct loop in `src/lib/helena/orchestrator.ts`)
+4. ReAct loop (max 20 steps, 3min timeout) invokes tools from `src/lib/helena/tools/` (14 tools: read-akte, search-gesetze, create-draft-dokument, etc.)
+5. Agent creates `HelenaDraft` record (`erstelltDurch: "ai"`, status forced to `ENTWURF` by Prisma `$extends`)
+6. Socket.IO emitter notifies `akte:{akteId}` room of new draft
+7. Lawyer reviews draft and manually sets `FREIGEGEBEN`
+
+**Helena Schriftsatz Pipeline (deterministic, not ReAct):**
+1. User requests legal document in chat → complexity classifier routes to schriftsatz pipeline
+2. `src/lib/helena/schriftsatz/index.ts` runs 5-stage pipeline: Intent Recognition → Slot Filling → RAG Assembly → ERV Validation → Draft Creation
+3. If slots incomplete, returns `needs_input` with `rueckfrage` question → stored as `PendingSchriftsatz`
+4. On completion, creates `HelenaDraft` with full `SchriftsatzSchema` in `meta` JSON
+
+**Real-time Notifications:**
+1. Worker processes jobs and calls `socketEmitter.to(room).emit(event)` from `src/lib/socket/emitter.ts`
+2. Emitter uses `@socket.io/redis-adapter` pub/sub so events cross process boundary (worker → web server)
+3. Web server's Socket.IO instance broadcasts to browser clients
+4. Client components subscribe via `SocketProvider` in `src/components/socket-provider.tsx`
+
+**State Management:**
+- Server state: Prisma (PostgreSQL) as single source of truth
+- Client state: React `useState`/`useContext` within feature-specific providers (no global state manager)
+- Real-time: Socket.IO rooms (user, role, kanzlei, akte, mailbox, channel)
+- Async jobs: Redis via BullMQ (durable queue, retry with exponential backoff)
+- Search state: Meilisearch (BM25 text) + pgvector (semantic)
+
+---
+
+## Key Abstractions
+
+**ExtendedPrismaClient (`src/lib/db.ts`):**
+- Purpose: Prisma client with `$extends` hooks for BRAK 2025 compliance
+- Business rules: AI-created documents forced to `ENTWURF`; cannot leave `ENTWURF` without `freigegebenDurchId`
+- Pattern: Import `{ prisma }` everywhere; never instantiate `new PrismaClient()` directly
+- Type: `ExtendedPrismaClient` / `PrismaTransactionClient` for typed transaction callbacks
+
+**RBAC Helpers (`src/lib/rbac.ts`):**
+- Purpose: Centralized auth + role + Akte access checks for all API handlers
+- Functions: `requireAuth()`, `requireRole(...roles)`, `requirePermission(permission)`, `requireAkteAccess(akteId)`, `buildAkteAccessFilter(userId, role)`
+- Pattern: Returns `{ session, error }` discriminated union — handlers early-return `if (access.error) return access.error`
+- Roles: `ADMIN`, `ANWALT`, `SACHBEARBEITER`, `SEKRETARIAT`, `MANDANT`
+
+**Portal Access Control (`src/lib/portal-access.ts`):**
+- Purpose: Separate access layer for MANDANT users in portal routes
+- Pattern: `getMandantAkten(userId)` and `requireMandantAkteAccess(akteId, userId)` traverse User→Kontakt→Beteiligter chain
+- Returns 404 (not 403) to hide Akte existence from unauthorized users
+
+**Helena Orchestrator (`src/lib/helena/orchestrator.ts`):**
+- Purpose: Bounded ReAct agent loop wrapping Vercel AI SDK `generateText({ maxSteps })`
+- Features: Stall detection, token budget FIFO truncation, step callbacks, audit logging, abort signal
+- Limits: inline=5 steps/30s, background=20 steps/3min
+
+**BullMQ Queue Layer (`src/lib/queue/queues.ts`):**
+- Purpose: Typed queue instances shared between producers (API handlers) and consumers (worker)
+- Pattern: Export named queue instances; processors are separate files in `src/lib/queue/processors/`
+- Backoff: Custom strategy — 10s, 60s, 5min (not exponential)
+
+**AI Provider Factory (`src/lib/ai/provider.ts`):**
+- Purpose: Runtime-swappable AI provider (Ollama, OpenAI, Anthropic) driven by `SystemSetting`
+- Hard limits enforced: Helena may never send emails, set FREIGEGEBEN, delete data, or modify financial records
+
+**Hybrid Search (`src/lib/embedding/hybrid-search.ts`):**
+- Purpose: BM25 (Meilisearch) + vector (pgvector) + RRF fusion + LLM reranker (Ollama)
+- Pattern: Parallel retrieval → RRF score merge → rerank → parent chunk lookup for context
+
+---
+
+## Entry Points
+
+**Web Server (`src/server.ts`):**
+- Location: `src/server.ts`
+- Triggers: `node dist-server/server.js` or `ts-node src/server.ts` in dev
+- Responsibilities: Start Next.js, attach Socket.IO to HTTP server, store `globalThis.__socketIO`
+
+**Worker Process (`src/worker.ts`):**
+- Location: `src/worker.ts`
+- Triggers: `node dist-worker/worker.js` or direct `ts-node src/worker.ts`
+- Responsibilities: Register 19 BullMQ workers, schedule cron jobs, run startup seeding (falldaten, quests, shop items, channels), start IMAP connections, graceful shutdown on SIGINT/SIGTERM
+
+**Dashboard Layout (`src/app/(dashboard)/layout.tsx`):**
+- Location: `src/app/(dashboard)/layout.tsx`
+- Triggers: All `/` routes except `/login`, `/portal/*`
+- Responsibilities: Auth redirect, inject SessionProvider > SocketProvider > NotificationProvider > UploadProvider, render Sidebar + Header
+
+**Portal Layout (`src/app/(portal)/layout.tsx`):**
+- Location: `src/app/(portal)/layout.tsx`
+- Triggers: All `/portal/*` authenticated routes
+- Responsibilities: MANDANT role check, inject PortalSessionProvider (30min inactivity logout), render PortalSidebar + PortalHeader
+
+**Edge Middleware (`src/middleware.ts`):**
+- Location: `src/middleware.ts`
+- Triggers: Every request (Next.js middleware)
+- Responsibilities: NextAuth edge-compatible session check; protects all routes except public portal pages, auth endpoints, OnlyOffice, OpenClaw, static files
+
+---
+
+## Error Handling
+
+**Strategy:** Fail-fast with discriminated union returns at service boundaries; non-fatal errors in worker startup wrapped in try/catch with `log.warn`.
+
+**Patterns:**
+- API handlers: RBAC helpers return `{ error: NextResponse }` — caller does `if (access.error) return access.error` immediately
+- Worker processors: Caught exceptions logged via pino; BullMQ retries 3× with custom backoff (10s/60s/5min)
+- Worker startup: Each seeding step in isolated try/catch; failure is non-fatal (logged, process continues)
+- AI agent: Stall detector and timeout abort; errors stored in `HelenaTask.fehler` field
+- Socket.IO notifications sent to `role:ADMIN` room on final job failure
+
+---
+
+## Cross-Cutting Concerns
+
+**Logging:** pino via `createLogger(module)` from `src/lib/logger.ts`. Dev: pino-pretty colored output. Prod: stdout + daily rotating file (`/var/log/ai-lawyer/`). Log level configurable via `SystemSetting` key `logLevel`, updated via Redis pub/sub `settings:changed` channel.
+
+**Validation:** Zod schemas at API input boundaries (e.g., login form in `src/lib/auth.ts`). Prisma schema as DB constraint layer. `src/lib/helena/schriftsatz/schemas.ts` defines `SchriftsatzSchema` (Zod) for validated AI output via `generateObject`.
+
+**Authentication:** NextAuth.js v5 with PrismaAdapter. Credentials provider (email + bcrypt). Edge middleware for route protection. Separate portal session with 30-minute inactivity auto-logout. Portal password reset via crypto token stored in `PortalInvite`.
+
+**Audit Trail:** `logAuditEvent()` from `src/lib/audit.ts` writes to `AuditLog` table on every significant action (50+ event types). RBAC access denials logged automatically. Portal notifications gated by DSGVO `einwilligungEmail` flag.

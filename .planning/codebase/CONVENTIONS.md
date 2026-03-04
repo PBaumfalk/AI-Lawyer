@@ -1,180 +1,182 @@
 # Coding Conventions
 
-**Analysis Date:** 2025-02-24
+**Analysis Date:** 2026-03-04
+
+## Language Split
+
+**Code language:** English identifiers, variable names, function names, comments.
+**UI language:** German strings, labels, error messages, button text, toast notifications.
+**German identifiers allowed in:** domain types mirroring Prisma schema (e.g. `akteId`, `kurzrubrum`, `anwaltId`, `faelligAm`), legal-domain function names (e.g. `berechneFrist`, `computeRvgFee`).
 
 ## Naming Patterns
 
 **Files:**
-- kebab-case for all files: `ticket-search-bar.tsx`, `kontakt-form.tsx`, `process-tasks.ts`
-- Domain/feature directory: `tickets/`, `kontakte/`, `lib/ai/`, `components/ui/`
-- API routes use dynamic segments: `[id]/route.ts`, `[akteId]/[dId]/route.ts`
+- React components: `kebab-case.tsx` (e.g. `activity-feed.tsx`, `akte-detail-header.tsx`)
+- Hooks: `use-kebab-case.ts` (e.g. `use-email-store.ts`, `use-keyboard-shortcuts.ts`)
+- Service/lib files: `kebab-case.ts` (e.g. `fee-table.ts`, `portal-access.ts`, `channel-service.ts`)
+- Test files: `kebab-case.test.ts` or inside `__tests__/` subfolder as `kebab-case.test.ts`
+- API routes: Next.js App Router `route.ts` files only
 
 **Functions:**
-- camelCase for all function names: `processTaggedTasks()`, `acquireLock()`, `buildCaseContext()`
-- Verb-first naming for async operations: `uploadFile()`, `getDownloadUrl()`, `deleteFile()`
-- Lowercase for exported utility functions: `cn()`, `ensureBucket()`
-- Underscore prefix for internal/private logic: `_` used for unused parameters in ESLint rule `argsIgnorePattern: "^_"`
+- camelCase for all functions and methods: `computeBaseFee`, `berechneFrist`, `createHelenaTools`, `requireAuth`
+- German domain verbs acceptable: `berechneFristRueckwaerts`, `naechsterGeschaeftstag`, `classifyDringlichkeit`
+- Factory functions prefixed with `create`: `createHelenaTools`, `createToolCache`, `createStallDetector`, `createLogger`
+- Hook functions prefixed with `use`: `useHelenaTaskProgress`, `useKeyboardShortcuts`
+- Boolean helpers prefixed with `is`/`has`: `isGeschaeftstag`, `istFeiertag`
 
 **Variables:**
-- camelCase for all variables: `ticketId`, `runnerId`, `defaultSearch`, `primaryTag`
-- German domain terms keep original case: `KontaktData`, `CustomFieldDef`, `ProcessResult`
-- Array variables: plural form: `results`, `tickets`, `akten`, `docs`, `beteiligte`
-- Config constants: UPPER_SNAKE_CASE: `MINIO_ENDPOINT`, `LOCK_STALE_MS`, `BUCKET`, `MINIO_BUCKET`
+- camelCase for local variables and parameters
+- Domain-language variables match Prisma field names: `akteId`, `anwaltId`, `kurzrubrum`, `bundesland`
 
-**Types:**
-- PascalCase for interfaces: `TicketSearchBarProps`, `KontaktFormProps`, `TabsContextValue`, `AkteOption`
-- PascalCase for exported types: `AiAction`, `PromptTemplateInput`, `ProcessResult`, `CustomFieldDef`
-- Generic type suffixes: `Props` for React component props, `Type` for custom types, `Config` for configurations
-- Discriminated unions use singular form: `status: "OFFEN" | "IN_BEARBEITUNG" | "ERLEDIGT"` (German uppercase enums)
+**Constants:**
+- Module-level constants: `UPPER_SNAKE_CASE`
+- Examples: `PERMISSIONS`, `EDITABLE_MIMETYPES`, `GERMAN_LEGAL_SEPARATORS`, `RVG_2025`, `ANDERKONTO_SCHWELLE`, `DEFAULT_SETTINGS`
+- `as const` used on tuple/array constants for type narrowing
+
+**Types / Interfaces:**
+- `interface` for prop types and data shapes: `interface ActivityFeedProps`, `interface PermissionSet`
+- `type` for unions and aliases: `type RouteParams`, `type ExtendedPrismaClient`
+- PascalCase for all type names
+- `import type` used for type-only imports to avoid circular deps: `import type { ExtendedPrismaClient } from "@/lib/db"`
+
+**React Components:**
+- PascalCase function component names: `ActivityFeed`, `ActivityFeedEntry`, `RvgCalculator`
+- One primary component export per `.tsx` file; secondary helpers are non-exported or named exports
 
 ## Code Style
 
 **Formatting:**
-- Prettier assumed but not explicitly configured (default settings likely in use)
-- 2-space indentation (ESLint config uses Next.js defaults)
-- Trailing semicolons required (TypeScript strict mode)
-- Double quotes for strings (consistent in codebase)
+- No dedicated Prettier config found; formatting is enforced via Next.js default ESLint and TypeScript strict mode
+- Indentation: 2 spaces (TypeScript/TSX files)
+- Single quotes preferred in test files; double quotes in source files (mixed, no enforcer)
 
 **Linting:**
-- ESLint extends `next/core-web-vitals`
-- Config location: `.eslintrc.json`
-- Custom rules:
-  ```json
-  "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
-  "react/no-unescaped-entities": "off"
-  ```
-- TypeScript strict mode enabled in `tsconfig.json`
-- Next.js rules built-in via `eslint-config-next`
+- Tool: `eslint-config-next` (extends `next/core-web-vitals`)
+- `no-unused-vars` is set to `warn` with `argsIgnorePattern: "^_"` — prefix unused args with `_`
+- `react/no-unescaped-entities` is turned off — German text in JSX is fine without escaping `'`
+
+**TypeScript Strictness:**
+- `strict: true` in `tsconfig.json` — all strict checks enabled
+- `any` typing is used in specific integration points (test mocks, Prisma dynamic queries): acceptable with comment
+- `as unknown as T` pattern used for type bridging between Prisma extended types and test mocks
 
 ## Import Organization
 
 **Order:**
-1. React/Next.js imports: `import React from "react"`, `import { useRouter } from "next/navigation"`
-2. Third-party packages: `import { Button } from "@/components/ui/button"`, `import { toast } from "sonner"`
-3. Local imports from lib: `import { prisma } from "@/lib/db"`, `import { auth } from "@/lib/auth"`
-4. Local imports from components/types: `import { type CustomFieldDef } from "./kontakt-form-intern"`
-5. Types imported separately: `import type { UserRole } from "@prisma/client"`
+1. Node built-ins (`path`, `crypto`)
+2. Third-party packages (`next`, `react`, `zod`, `ai`, `vitest`)
+3. Internal absolute imports via `@/` alias (`@/lib/db`, `@/components/ui/button`)
+4. Relative imports (`./activity-feed-entry`, `../fee-table`)
+5. Type-only imports — use `import type` when importing only types
 
 **Path Aliases:**
-- `@/*` maps to `./src/*` (defined in `tsconfig.json`)
-- All imports use absolute paths with `@/`: `@/lib/db`, `@/components/ui/button`, `@/types`
-- No relative imports (except within same directory for sub-components)
+- `@/*` maps to `./src/*` — use `@/` for all internal imports from `src/`
+- Relative imports used within the same directory subtree
 
-## Error Handling
+**Mocks in tests:**
+- `vi.mock(...)` calls must be declared BEFORE any `import` that transitively loads the mocked module
+- Pattern documented with comment block `// Mocks -- must be declared before any import...`
 
-**Patterns:**
-- Try-catch blocks with `error: any` type (not explicitly typed):
-  ```typescript
-  } catch (err: any) {
-    result.errors.push({ row: i + 2, error: err.message?.slice(0, 100) ?? "Unbekannter Fehler" });
-  }
-  ```
-- API routes return `Response.json()` with status codes:
-  ```typescript
-  if (!session?.user) {
-    return Response.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
-  ```
-- Error fields use German UI messages: "Nicht authentifiziert", "Ungültige E-Mail-Adresse", "Unbekannter Fehler"
-- Graceful fallbacks with nullish coalescing: `err.message?.slice(0, 100) ?? "Unbekannter Fehler"`
-- Optional error catch with `.catch(() => {})` to silence errors when not critical (e.g., audit logs)
+## Component Client/Server Boundary
+
+- All interactive/stateful components have `"use client"` as first line
+- Server components (no directive) are used for data-fetching pages in `app/` directory
+- Client components are the default for everything in `src/components/`
+
+## API Route Error Handling
+
+**Auth guard pattern** (applied at start of every route):
+```typescript
+const result = await requireAuth();
+if (result.error) return result.error; // NextResponse 401/403 already constructed
+const { session } = result;
+```
+
+**Zod validation pattern** (for POST/PUT bodies):
+```typescript
+const sendMessageSchema = z.object({
+  body: z.string().min(1).max(10000).trim(),
+});
+
+const parsed = sendMessageSchema.safeParse(body);
+if (!parsed.success) {
+  return NextResponse.json(
+    { error: "Validierungsfehler", details: parsed.error.flatten() },
+    { status: 400 }
+  );
+}
+```
+
+**JSON parse guard**:
+```typescript
+let body: unknown;
+try {
+  body = await request.json();
+} catch {
+  return NextResponse.json({ error: "Ungueltiger Request-Body" }, { status: 400 });
+}
+```
+
+**Error response shape:** `{ error: "German message" }` with appropriate HTTP status code.
+**Success response shape:** `Response.json(data)` or `NextResponse.json(data, { status: 201 })`.
+
+**Empty catch blocks** (`} catch {`) used when the failure is explicitly non-fatal and documented inline. Named catches `(err)` or `(err: any)` used when the error value is inspected.
 
 ## Logging
 
-**Framework:** `console.*` (Node.js built-in)
-
-**Patterns:**
-- `console.log()` for informational messages with context tags: `console.log("[ONLYOFFICE] Document ready")`
-- `console.error()` for error conditions with descriptive context: `console.error("[ONLYOFFICE] Editor error:", event)`
-- Context tag format: `[COMPONENT_NAME]` or `[SERVICE_NAME]` in square brackets
-- Used primarily in API routes and editors for debugging
-- Minimal logging in production (no explicit log levels, relies on `NODE_ENV` check in Prisma config)
+**Framework:** Pino (`src/lib/logger.ts`)
+**Usage pattern:**
+```typescript
+import { createLogger } from "@/lib/logger";
+const log = createLogger("my-module");
+log.info({ key: "value" }, "Human-readable message");
+log.error({ err }, "Error context message");
+```
+- Always create a module-scoped child logger with `createLogger("module-name")`
+- Do NOT use `console.log` in server-side code; use the pino logger
+- In tests, logger is mocked to a noop via `vi.mock("@/lib/logger", ...)`
 
 ## Comments
 
-**When to Comment:**
-- Complex algorithms: Lock acquisition logic in `process-tasks.ts` has multi-line JSDoc
-- Security considerations: `// Security: NEVER sends emails/beA...` in task processing
-- Non-obvious business logic: "ai: prefixed tags are system-managed" in ticket validation
-- Workflow documentation: Step-by-step process descriptions in function JSDoc
+**When to comment:**
+- Section headers using `// ─── Section Name ─────────────────────────────────────────────` divider lines
+- Legal/compliance reasoning: always comment BRAK 2025 / BRAO references explaining why a rule exists
+- Complex business logic with regulatory basis: inline comment citing legal paragraph (e.g. `// BGB 187(1): Event day not counted.`)
+- Algorithm decisions that are non-obvious
 
 **JSDoc/TSDoc:**
-- Used for complex functions and public exports
-- Single-line comments for inline clarifications:
-  ```typescript
-  // MinIO ignores this but SDK requires it
-  region: "us-east-1",
-  // Process max 20 tasks per run to avoid overload
-  take: 20,
-  ```
-- Multi-line JSDoc for exported functions:
-  ```typescript
-  /**
-   * Upload a file to MinIO.
-   * @returns The storage key (path) of the uploaded file.
-   */
-  export async function uploadFile(...): Promise<string>
-  ```
+- Used on exported library functions and module-entry functions
+- Example: `/** Create a child logger scoped to a module. */`
+- Not required on React component props interfaces
 
 ## Function Design
 
-**Size:** Generally 30-60 lines for API route handlers; 10-30 lines for utility functions
+**Size:** Functions are generally focused; large files (`worker.ts` at 1186 lines, `ki-chat/route.ts` at 1028 lines) exist for complex orchestration but are the exception.
 
-**Parameters:**
-- Named parameters for complex operations: `{ ticketId, runnerId }` for lock operations
-- Destructuring for object parameters in React: `{ basePath = "/tickets", defaultSearch, ... }: TicketSearchBarProps`
-- Default values provided at function signature: `async function acquireLock(ticketId: string, runnerId: string): Promise<boolean>`
+**Parameters:** Domain object parameters typed with interfaces; optional parameters use `?` suffix or default values.
 
 **Return Values:**
-- Explicit typed returns: `Promise<ProcessResult[]>`, `Promise<string>`, `Promise<void>`
-- API handlers return `Response.json()` with status codes or `NextResponse.json()`
-- Utility functions return plain values: `const cn = (...) => twMerge(clsx(...))`
-- Void functions for side-effects only: `await ensureBucket(): Promise<void>`
+- Service functions return discriminated union `{ data: T } | { error: string }` for caller error handling
+- API routes return `NextResponse.json(...)` directly
+- Pure lib functions return domain values (numbers, objects, dates) and throw on programmer error
+
+**Async:** Always `async/await`; no raw Promise chains.
 
 ## Module Design
 
-**Exports:**
-- Named exports for functions and types: `export function cn()`, `export async function processTaggedTasks()`
-- Type exports use `export type`: `export type CustomFieldDef`
-- Re-exports of auth handlers: `export { auth as middleware }` in middleware
-- Barrel files in UI: `src/components/ui/` exports components directly
+**Exports:** Named exports preferred over default exports in lib files. React components use named exports within `"use client"` files.
 
-**Barrel Files:**
-- Not used for api routes (each route is own file)
-- Not used for lib modules (each utility is own file)
-- UI components export individually from `src/components/ui/`
-- Considered but not consistently applied across feature domains
+**Barrel files:** Used selectively — only 4 `index.ts` barrel files exist (`src/lib/helena/tools/index.ts`, `src/lib/helena/schriftsatz/index.ts`, `src/lib/helena/index.ts`, `src/lib/fristen/index.ts`). Most modules export directly from their file; do NOT add barrel files unless a module has multiple public exports that are logically grouped.
 
-## Database & Prisma
+**Class usage:** Classes are rare — only `RvgCalculator` in `src/lib/finance/rvg/calculator.ts` uses class pattern (builder pattern). Prefer functions and plain objects.
 
-**Schema:**
-- Single source of truth: `prisma/schema.prisma`
-- German field names match domain: `akteId`, `faelligAm`, `erledigtAm`, `aiLockedAt`
-- Relationships include foreign key constraints
-- Optional fields use `?`: `schuldenstand?: String`
+## Prisma / Database Conventions
 
-**Queries:**
-- Use `prisma.` client directly (no repository pattern)
-- Select only needed fields: `select: { id: true, name: true }`
-- Include relations when needed: `include: { akte: { select: { id: true, aktenzeichen: true } } }`
-- Filter with `where` conditions, order with `orderBy`, limit with `take`
-- Atomic operations for race-critical sections: `updateMany` with WHERE conditions for lock acquisition
-
-## React Patterns
-
-**Components:**
-- "use client" directive at top for client components
-- Props interface naming: `{ComponentName}Props`
-- Functional components with hooks: `useState`, `useCallback`, `useRouter`
-- Event handlers prefixed with `handle`: `handleStatusChange()`, `handleClear()`
-- Classes for styling: Tailwind CSS utility classes, `cn()` for conditional classes
-
-**State Management:**
-- `useState()` for local state: `const [search, setSearch] = useState(defaultSearch ?? "")`
-- `useCallback()` for memoized functions: `const updateUrl = useCallback((...) => { ... }, [router, basePath])`
-- Derived state from props: `const activeTab = value ?? internalTab`
-- Form state as object: `const [form, setForm] = useState<Record<string, any>>({ ... })`
+- Always import `prisma` from `@/lib/db` (the extended client with business invariants)
+- Use `ExtendedPrismaClient` type (not raw `PrismaClient`) when typing prisma parameters
+- Use `PrismaTransactionClient` type for transaction callbacks
+- `select` clauses always enumerate only needed fields (never `include: { user: true }` without limiting fields)
 
 ---
 
-*Convention analysis: 2025-02-24*
+*Convention analysis: 2026-03-04*

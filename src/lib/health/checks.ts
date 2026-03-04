@@ -45,7 +45,7 @@ export async function checkOllama(): Promise<ServiceStatus> {
  */
 export async function checkStirlingPdf(): Promise<ServiceStatus> {
   const start = Date.now();
-  const url = process.env.STIRLING_PDF_URL || "http://localhost:8090";
+  const url = process.env.STIRLING_PDF_URL || "http://localhost:8081";
 
   try {
     const controller = new AbortController();

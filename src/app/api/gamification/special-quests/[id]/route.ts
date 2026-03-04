@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
-import { CONDITION_TEMPLATES } from "../route";
+import { CONDITION_TEMPLATES } from "@/lib/gamification/condition-templates";
 
 // ─── PATCH: Update a SPECIAL quest ──────────────────────────────────────────
 

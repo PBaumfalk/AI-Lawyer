@@ -15,13 +15,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import type { FalldatenFeldTypDB } from "@/lib/falldaten/validation";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface TemplateField {
   key: string;
   label: string;
-  typ: string;
+  typ: FalldatenFeldTypDB;
   placeholder?: string | null;
   optionen?: { value: string; label: string }[] | null;
   required?: boolean;
@@ -306,7 +307,7 @@ export function FalldatenTab({
         akteId={akteId}
         schema={{
           label: template.name,
-          beschreibung: template.beschreibung,
+          beschreibung: template.beschreibung ?? undefined,
           felder: template.schema.felder,
         }}
         initialData={initialFalldaten}

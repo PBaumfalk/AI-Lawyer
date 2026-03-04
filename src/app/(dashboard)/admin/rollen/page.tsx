@@ -56,29 +56,8 @@ export default function RollenPage() {
     load();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        Lade Rollen-Matrix...
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        Fehler beim Laden der Rollen-Daten
-      </div>
-    );
-  }
-
-  const permKeys = data.matrix.length > 0
-    ? Object.keys(data.matrix[0].permissions)
-    : [];
-
-  const selectedUser = data.users.find((u) => u.id === selectedUserId);
-
   // Toggle canSeeKanzleiFinanzen via PATCH
+  // Hook must be called unconditionally (before early returns) per Rules of Hooks
   const handleToggleFinanzen = useCallback(async (userId: string, newValue: boolean) => {
     // Optimistic update
     setData((prev) => {
@@ -122,6 +101,28 @@ export default function RollenPage() {
       });
     }
   }, []);
+
+  if (loading) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        Lade Rollen-Matrix...
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        Fehler beim Laden der Rollen-Daten
+      </div>
+    );
+  }
+
+  const permKeys = data.matrix.length > 0
+    ? Object.keys(data.matrix[0].permissions)
+    : [];
+
+  const selectedUser = data.users.find((u) => u.id === selectedUserId);
 
   return (
     <div className="space-y-8">

@@ -37,7 +37,15 @@ export async function POST(request: NextRequest) {
     if (!mappingStr) {
       return NextResponse.json({ error: "Feld-Zuordnung fehlt" }, { status: 400 });
     }
-    const mapping: ImportMapping = JSON.parse(mappingStr);
+    let mapping: ImportMapping;
+    try {
+      mapping = JSON.parse(mappingStr);
+    } catch {
+      return NextResponse.json(
+        { error: "Ungueltige Feld-Zuordnung (kein gueltiges JSON)" },
+        { status: 400 }
+      );
+    }
     return handleCsvImport(text, mapping);
   }
 

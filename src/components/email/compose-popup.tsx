@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Minimize2,
   Maximize2,
@@ -99,8 +99,6 @@ export function ComposePopup({
   >([]);
 
   const editorRef = useRef<ComposeEditorRef>(null);
-  const autoSaveTimerRef = useRef<ReturnType<typeof setInterval>>();
-  const draftIdRef = useRef<string | null>(null);
   const [signatureHtml, setSignatureHtml] = useState("");
 
   // Load user's mailboxes
@@ -139,66 +137,9 @@ export function ComposePopup({
       .catch(() => {});
   }, [kontoId]);
 
-  const saveDraft = useCallback(async () => {
-    if (!kontoId) return;
-    try {
-      const html = editorRef.current?.getHTML() || "";
-      const text = editorRef.current?.getText() || "";
-
-      const body = {
-        kontoId,
-        empfaenger,
-        cc,
-        bcc,
-        betreff: betreff || "(Kein Betreff)",
-        inhalt: html,
-        inhaltText: text,
-        sendeStatus: "ENTWURF",
-      };
-
-      if (draftIdRef.current) {
-        // Update existing draft
-        await fetch(`/api/emails/${draftIdRef.current}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      } else {
-        // Create new draft
-        const res = await fetch("/api/email-send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...body,
-            anhaenge: [],
-            prioritaet,
-            lesebestaetigung,
-            geplanterVersand: undefined,
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          draftIdRef.current = data.emailId;
-        }
-      }
-      setDirty(false);
-    } catch {
-      // Draft save failed silently
-    }
-  }, [kontoId, empfaenger, cc, bcc, betreff, prioritaet, lesebestaetigung]);
-
-  // Auto-save draft every 30 seconds
-  useEffect(() => {
-    autoSaveTimerRef.current = setInterval(() => {
-      if (dirty) {
-        saveDraft();
-      }
-    }, 30_000);
-
-    return () => {
-      if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current);
-    };
-  }, [dirty, saveDraft]);
+  // NOTE: Auto-save / draft mechanism removed — the email-send endpoint
+  // immediately queues emails for sending. A proper draft API (POST/PATCH with
+  // sendeStatus=ENTWURF) is needed before auto-save can be re-enabled.
 
   // Akte search
   useEffect(() => {

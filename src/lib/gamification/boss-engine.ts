@@ -372,7 +372,6 @@ export async function healBoss(kanzleiId: string): Promise<void> {
  * Called inside the defeat transaction.
  */
 async function awardVictoryRewards(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tx: any,
   bossfightId: string,
   bossName: string,

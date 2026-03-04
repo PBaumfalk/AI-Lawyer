@@ -35,7 +35,6 @@ export async function logRetrieval(params: {
     data: {
       schriftsatzId,
       queryHash: hashQuery(queryText),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       retrievalBelege: retrievalBelege as any, // JSON field
       promptVersion,
       modell,

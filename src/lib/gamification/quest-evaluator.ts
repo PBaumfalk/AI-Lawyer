@@ -67,7 +67,6 @@ function getDateRange(
  */
 async function countForModel(
   model: QuestModel,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   where: Record<string, any>,
 ): Promise<number> {
   switch (model) {
@@ -143,7 +142,6 @@ async function evaluateCountCondition(
   }
 
   // Build where clause: merge static condition + date range + user scope
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: Record<string, any> = {
     ...condition.where,
     [condition.dateField]: { gte: dateRange.gte, lte: dateRange.lte },
@@ -230,7 +228,6 @@ async function evaluateDeltaCondition(
   const baseline = snapshot.count;
 
   // Build where for current count (open items, NOT date-scoped)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const currentWhere: Record<string, any> = { ...condition.where };
   if (condition.userField) {
     currentWhere[condition.userField] = userId;

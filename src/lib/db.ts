@@ -57,7 +57,6 @@ export type ExtendedPrismaClient = typeof prisma;
  * Use this instead of deriving from PrismaClient['$transaction'] directly,
  * because $extends changes the client type signature.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PrismaTransactionClient = Parameters<Parameters<ExtendedPrismaClient["$transaction"]>[0]>[0];
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

@@ -25,7 +25,6 @@ export async function getNextInvoiceNumber(
   pattern?: string,
 ): Promise<string> {
   // Use raw SQL for atomic UPSERT with RETURNING
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: Array<{ sequence: number }> = await (tx as any).$queryRawUnsafe(
     `INSERT INTO nummernkreise (id, prefix, year, sequence)
      VALUES (gen_random_uuid(), $1, $2, 1)

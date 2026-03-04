@@ -45,7 +45,6 @@ export function ChatLayout({
   const initialQuerySentRef = useRef(false);
 
   // Ref to hold setMessages for use in custom fetch (avoids circular dependency).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setMessagesRef = useRef<(updater: any) => void>(null!);
 
   // Single shared useChat instance — owned here so both ChatInput and ChatMessages

@@ -139,41 +139,6 @@ export function ComposePopup({
       .catch(() => {});
   }, [kontoId]);
 
-  // Auto-save draft every 30 seconds
-  useEffect(() => {
-    autoSaveTimerRef.current = setInterval(() => {
-      if (dirty) {
-        saveDraft();
-      }
-    }, 30_000);
-
-    return () => {
-      if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current);
-    };
-  }, [dirty, kontoId, empfaenger, betreff]);
-
-  // Akte search
-  useEffect(() => {
-    if (!akteSearch || akteSearch.length < 2) {
-      setAkteResults([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `/api/akten?search=${encodeURIComponent(akteSearch)}&limit=5`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setAkteResults(Array.isArray(data) ? data : data?.data ?? []);
-        }
-      } catch {
-        setAkteResults([]);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [akteSearch]);
-
   const saveDraft = useCallback(async () => {
     if (!kontoId) return;
     try {
@@ -221,6 +186,41 @@ export function ComposePopup({
       // Draft save failed silently
     }
   }, [kontoId, empfaenger, cc, bcc, betreff, prioritaet, lesebestaetigung]);
+
+  // Auto-save draft every 30 seconds
+  useEffect(() => {
+    autoSaveTimerRef.current = setInterval(() => {
+      if (dirty) {
+        saveDraft();
+      }
+    }, 30_000);
+
+    return () => {
+      if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current);
+    };
+  }, [dirty, saveDraft]);
+
+  // Akte search
+  useEffect(() => {
+    if (!akteSearch || akteSearch.length < 2) {
+      setAkteResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/akten?search=${encodeURIComponent(akteSearch)}&limit=5`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setAkteResults(Array.isArray(data) ? data : data?.data ?? []);
+        }
+      } catch {
+        setAkteResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [akteSearch]);
 
   const handleEditorChange = () => {
     setDirty(true);

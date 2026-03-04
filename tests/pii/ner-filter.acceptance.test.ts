@@ -13,6 +13,11 @@
 
 import { runNerFilter } from "@/lib/pii/ner-filter";
 
+// Enable only when RUN_OLLAMA_TESTS=1 (requires local Ollama)
+const RUN_OLLAMA_TESTS = process.env.RUN_OLLAMA_TESTS === "1";
+const suite = RUN_OLLAMA_TESTS ? describe : describe.skip;
+
+
 // Set 60s timeout per test (Ollama qwen3.5:35b: up to 45s + buffer)
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -106,7 +111,7 @@ const URTEIL_EXCERPTS: UrteilExcerpt[] = [
 
 // ─── Acceptance tests ─────────────────────────────────────────────────────────
 
-describe("NER Filter Acceptance Test — Phase 16 success criteria", () => {
+suite("NER Filter Acceptance Test — Phase 16 success criteria", () => {
   test.each(URTEIL_EXCERPTS)(
     "$id",
     async ({ text, expectedHasPii, forbiddenInPersons, requiredInPersons }) => {

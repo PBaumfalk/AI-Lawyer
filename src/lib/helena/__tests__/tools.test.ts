@@ -72,6 +72,16 @@ vi.mock("@/lib/settings/service", () => ({
   getSettingTyped: vi.fn(async (_key: string, defaultValue: unknown) => defaultValue),
 }));
 
+// Mock @/lib/helena/draft-notification
+vi.mock("@/lib/helena/draft-notification", () => ({
+  notifyDraftCreated: vi.fn(async () => undefined),
+}));
+
+// Mock @/lib/helena/draft-activity
+vi.mock("@/lib/helena/draft-activity", () => ({
+  createDraftActivity: vi.fn(async () => undefined),
+}));
+
 // Mock ioredis -- use a class so `new Redis(...)` works
 vi.mock("ioredis", () => {
   class MockRedis {
@@ -123,6 +133,11 @@ function createMockPrisma(): ExtendedPrismaClient {
         anwalt: { name: "Dr. Muster" },
         sachbearbeiter: { name: "Frau Schmidt" },
         _count: { dokumente: 5, kalenderEintraege: 3, beteiligte: 2 },
+      })),
+      findUnique: vi.fn(async () => ({
+        id: "akte-1",
+        anwaltId: "user-1",
+        sachbearbeiterId: null,
       })),
       findMany: vi.fn(async () => []),
     },

@@ -137,6 +137,10 @@ See: `milestones/v0.5-ROADMAP.md` for full phase details.
 
 </details>
 
+## v0.6 Stabilisierung
+
+- [ ] Phase 51: Systematic Bug Audit & Fix — Fix all critical, high, and medium issues found in health audit (16 issues across build, lint, env, error handling, dependencies)
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -148,6 +152,7 @@ See: `milestones/v0.5-ROADMAP.md` for full phase details.
 | 28-32 | v0.3 | 13/13 | Complete | 2026-03-02 |
 | 33-42 | v0.4 | 21/21 | Complete | 2026-03-03 |
 | 43-50 | v0.5 | 14/14 | Complete | 2026-03-03 |
+| 51 | v0.6 | 0/? | In Progress | — |
 
 ---
 *Roadmap created: 2026-02-24*

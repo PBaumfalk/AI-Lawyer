@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { getSetting } from "@/lib/settings/service";
 import { EmailComposeView } from "@/components/email/email-compose-view";
 
 interface ComposePageProps {
@@ -43,6 +44,9 @@ export default async function EmailComposePage({
   else if (forward) mode = "forward";
 
   // Load akten for optional akte linking
+  const kanzleiEmail = await getSetting("kanzlei.email");
+  const kanzleiName = await getSetting("kanzlei.name");
+
   const akten = await prisma.akte.findMany({
     where: { status: { in: ["OFFEN", "RUHEND"] } },
     select: { id: true, aktenzeichen: true, kurzrubrum: true },
@@ -56,6 +60,8 @@ export default async function EmailComposePage({
       refEmail={refEmail ? JSON.parse(JSON.stringify(refEmail)) : null}
       akten={akten}
       defaultAkteId={akteId ?? refEmail?.akteId ?? null}
+      defaultAbsender={kanzleiEmail ?? undefined}
+      defaultAbsenderName={kanzleiName ?? undefined}
     />
   );
 }

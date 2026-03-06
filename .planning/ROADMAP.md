@@ -66,11 +66,11 @@ Plans:
   2. User can split a PDF by page ranges and reorder pages via drag-and-drop thumbnails
   3. User can rotate, compress, and watermark PDFs with operation-specific controls (degree selector, quality level, ENTWURF stamp or Kanzlei-Logo)
   4. User can auto-redact PII from a PDF for DSGVO compliance and verify the redacted result before saving
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 56-01: TBD
-- [ ] 56-02: TBD
+- [ ] 56-01-PLAN.md — Stirling-PDF tools client library + API endpoints for all PDF operations
+- [ ] 56-02-PLAN.md — PDF Tools UI with tabbed dialog, merge dialog, and drag-and-drop page thumbnails
 
 ### Phase 57: Helena Intelligence
 **Goal**: Helena can extract structured data from documents into Falldatenblatt fields, generate case summaries, answer cross-Akte questions in a global chat, and suggest templates at Akte creation

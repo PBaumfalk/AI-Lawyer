@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { FalldatenForm } from "./falldaten-form";
+import { FalldatenAutofillReview } from "./falldaten-autofill-review";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -13,7 +14,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, Loader2, RefreshCw } from "lucide-react";
+import { FileSpreadsheet, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import type { FalldatenFeldTypDB } from "@/lib/falldaten/validation";
 
@@ -68,6 +69,60 @@ export function FalldatenTab({
   const [pendingSwitchTemplate, setPendingSwitchTemplate] =
     useState<TemplateData | null>(null);
   const [switching, setSwitching] = useState(false);
+
+  // ─── Auto-Fill State ──────────────────────────────────────────────────────
+
+  const [autofillLoading, setAutofillLoading] = useState(false);
+  const [autofillSuggestions, setAutofillSuggestions] = useState<any[] | null>(
+    null
+  );
+  const [showAutofillReview, setShowAutofillReview] = useState(false);
+  const [pendingOverrides, setPendingOverrides] = useState<Record<
+    string,
+    any
+  > | null>(null);
+
+  // ─── Auto-Fill Handler ────────────────────────────────────────────────────
+
+  const handleAutofill = useCallback(async () => {
+    setAutofillLoading(true);
+    try {
+      const res = await fetch(`/api/akten/${akteId}/falldaten-autofill`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Fehler bei der KI-Extraktion");
+      }
+      const data = await res.json();
+      if (!data.suggestions || data.suggestions.length === 0) {
+        toast.info("Keine Vorschlaege gefunden -- keine OCR-Texte verfuegbar?");
+        return;
+      }
+      setAutofillSuggestions(data.suggestions);
+      setShowAutofillReview(true);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setAutofillLoading(false);
+    }
+  }, [akteId]);
+
+  const handleAutofillApply = useCallback(
+    (accepted: Record<string, any>) => {
+      setPendingOverrides(accepted);
+      setShowAutofillReview(false);
+      setAutofillSuggestions(null);
+      toast.success("Vorschlaege uebernommen -- bitte speichern");
+    },
+    []
+  );
+
+  const handleAutofillClose = useCallback(() => {
+    setShowAutofillReview(false);
+    setAutofillSuggestions(null);
+  }, []);
 
   // ─── Fetch Alternatives ──────────────────────────────────────────────────
 
@@ -288,9 +343,22 @@ export function FalldatenTab({
 
   return (
     <div className="space-y-4">
-      {/* Header with template name and switch button */}
-      {alternatives.length > 0 && (
-        <div className="flex items-center justify-end">
+      {/* Header with auto-fill and switch buttons */}
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAutofill}
+          disabled={autofillLoading}
+        >
+          {autofillLoading ? (
+            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+          ) : (
+            <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+          )}
+          Auto-Fill
+        </Button>
+        {alternatives.length > 0 && (
           <Button
             variant="outline"
             size="sm"
@@ -299,8 +367,8 @@ export function FalldatenTab({
             <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
             Template wechseln
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Form */}
       <FalldatenForm
@@ -311,9 +379,21 @@ export function FalldatenTab({
           felder: template.schema.felder,
         }}
         initialData={initialFalldaten}
+        overrides={pendingOverrides}
         onCompletenessChange={onCompletenessChange}
         onDirtyChange={onDirtyChange}
       />
+
+      {/* Auto-Fill Review Dialog */}
+      {showAutofillReview && autofillSuggestions && (
+        <FalldatenAutofillReview
+          suggestions={autofillSuggestions}
+          felder={template.schema.felder}
+          currentData={initialFalldaten ?? {}}
+          onApply={handleAutofillApply}
+          onClose={handleAutofillClose}
+        />
+      )}
 
       {/* Template Switch Dialog */}
       <AlertDialog

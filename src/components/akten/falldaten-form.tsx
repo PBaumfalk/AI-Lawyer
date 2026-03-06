@@ -37,6 +37,7 @@ interface FalldatenFormProps {
   akteId: string;
   schema: TemplateSchema;
   initialData: Record<string, any> | null;
+  overrides?: Record<string, any> | null;
   onCompletenessChange?: (completeness: { percent: number; filled: number; total: number }) => void;
   onDirtyChange?: (dirty: boolean) => void;
 }
@@ -45,6 +46,7 @@ export function FalldatenForm({
   akteId,
   schema,
   initialData,
+  overrides,
   onCompletenessChange,
   onDirtyChange,
 }: FalldatenFormProps) {
@@ -52,6 +54,15 @@ export function FalldatenForm({
   const [data, setData] = useState<Record<string, any>>(initialData ?? {});
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+
+  // ─── Merge Overrides from Auto-Fill ─────────────────────────────────────
+
+  useEffect(() => {
+    if (overrides && Object.keys(overrides).length > 0) {
+      setData((prev) => ({ ...prev, ...overrides }));
+      setDirty(true);
+    }
+  }, [overrides]);
 
   const updateField = useCallback((key: string, value: any) => {
     setData((prev) => ({ ...prev, [key]: value }));

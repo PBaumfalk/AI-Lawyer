@@ -81,11 +81,12 @@ Plans:
   2. User can view a Fallzusammenfassung as a timeline with key facts panel in the Akte detail view
   3. User can open a global KI-Chat at /ki and ask cross-Akte questions that retrieve context from multiple Akten via RAG
   4. When creating a new Akte, Helena suggests matching Falldatenblatt templates based on Sachgebiet
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 57-01: TBD
-- [ ] 57-02: TBD
+- [ ] 57-01-PLAN.md — Falldaten auto-fill extraction with per-field confidence and review UI
+- [ ] 57-02-PLAN.md — Fallzusammenfassung with timeline and key facts panel in Akte detail
+- [ ] 57-03-PLAN.md — Global KI-Chat page at /ki and template suggestions at Akte creation
 
 ### Phase 58: CalDAV-Sync
 **Goal**: Users can connect external calendars (Google, Apple) and see Fristen/Termine synchronized bidirectionally with conflict-safe rules
@@ -123,7 +124,7 @@ Phases execute in numeric order: 55 -> 56 -> 57 -> 58
 | 53-54 | v0.7 | 4/4 | Complete | 2026-03-06 |
 | 55. BI-Dashboard + Export | 4/4 | Complete    | 2026-03-06 | - |
 | 56. PDF-Tools | 2/2 | Complete    | 2026-03-06 | - |
-| 57. Helena Intelligence | v0.8 | 0/2 | Not started | - |
+| 57. Helena Intelligence | v0.8 | 0/3 | Not started | - |
 | 58. CalDAV-Sync | v0.8 | 0/3 | Not started | - |
 
 ---

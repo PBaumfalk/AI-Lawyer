@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.7
 milestone_name: UI/UX & Stability
-current_phase: 53 — ui-ux-quick-wins (Ready to plan)
-current_plan: Not started
-status: ready
-stopped_at: v0.6.1 milestone archived. Ready to plan Phase 53 (ui-ux-quick-wins) for v0.7.
-last_updated: "2026-03-06T19:45:00.000Z"
+current_phase: 53 — ui-ux-quick-wins
+current_plan: 1/1 (Plan 01 complete)
+status: active
+stopped_at: Completed 53-01-PLAN.md — Akte-Detail UX Improvements
+last_updated: "2026-03-06T20:10:00.000Z"
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  total_plans: 2
+  completed_plans: 2
   percent: 100
 ---
 
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 ## Current Position
 
-**Milestone:** v0.6.1 Adhoc Bugfixes → v0.7 UI/UX & Stability
-**Current Phase:** 53 — ui-ux-quick-wins (Ready to plan)
-**Last Completed:** Phase 52 — adhoc-bugfixes (1/1 plans)
-**Current Plan:** Not started
+**Milestone:** v0.7 UI/UX & Stability
+**Current Phase:** 53 — ui-ux-quick-wins (Plan 01 complete)
+**Last Completed:** Phase 53 Plan 01 — Akte-Detail UX Improvements
+**Current Plan:** 1/1
 
-Progress: [████████████████████] 47/47 plans (100% all-time)
+Progress: [████████████████████] 48/48 plans (100% all-time)
 
 ## Performance Metrics
 
@@ -61,6 +61,9 @@ Progress: [████████████████████] 47/47 p
 Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 52]: Prisma v5→v7 upgrade deferred — breaking changes, needs own migration sprint, no current functionality impact
 - [Phase 52]: BUG-01 to BUG-05 were already fixed prior to Phase 52 (Phase 51 + debug sessions)
+- [Phase 53-01]: Tab overflow uses simple state-based dropdown (no DropdownMenu component needed)
+- [Phase 53-01]: Chat KPI card conditionally hidden when chatNachrichten == 0 (feature not production-ready)
+- [Phase 53-01]: Key-Facts Panel renders null if akte has no relevant data (zero-state safe)
 
 ### Pending Todos
 
@@ -75,5 +78,5 @@ None currently active.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Phase 52 complete, ready to plan Phase 53 (ui-ux-quick-wins)
+Stopped at: Completed 53-01-PLAN.md (Akte-Detail UX Improvements — Tab-Reduktion, Key-Facts-Panel, Chat-KPI-Hide, Empty States)
 Resume file: None

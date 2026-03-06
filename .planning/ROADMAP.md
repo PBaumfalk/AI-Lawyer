@@ -37,8 +37,8 @@
 **Plans**: TBD
 
 Plans:
-- [ ] 53-01: Akte‑Detail UX Redesign
-- [ ] 53-02: Key‑Facts & Quick Actions
+- [x] 53-01: Akte-Detail UX Improvements (Tab-Reduktion, Key-Facts-Panel, Chat-KPI-Hide, Empty States) — completed 2026-03-06
+- [ ] 53-02: Key-Facts & Quick Actions
 
 #### Phase 54: stability-crash-audit
 **Goal**: Crash‑Audit, P0/P1 Fixes, Smoke‑Checks
@@ -67,8 +67,8 @@ Plans:
 | 43–50 | v0.5 | 14/14 | Complete | 2026-03-03 |
 | 51 | v0.6 | 4/4 | Complete | 2026-03-04 |
 | 52 | v0.6.1 | 1/1 | Complete | 2026-03-06 |
-| 53 | v0.7 | 0/2 | Not started | - |
+| 53 | v0.7 | 1/2 | In progress | - |
 | 54 | v0.7 | 0/2 | Not started | - |
 
 ---
-*Roadmap updated: 2026-03-06 — added v0.6.1 adhoc + v0.7 phases*
+*Roadmap updated: 2026-03-06 — Phase 53-01 complete (Akte-Detail UX Improvements)*

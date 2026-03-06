@@ -19,13 +19,13 @@
 
 ### Export
 
-- [ ] **EXP-01**: User kann Akten-Liste als CSV exportieren (Aktenzeichen, Sachgebiet, Status, Beteiligte, Daten)
-- [ ] **EXP-02**: User kann Akten-Liste als XLSX exportieren (formatiert, Auto-Filter, Spaltenbreiten)
-- [ ] **EXP-03**: User kann Kontakte als CSV/XLSX exportieren (Name, Firma, Adresse, Telefon, E-Mail, Typ)
-- [ ] **EXP-04**: User kann Finanzdaten als CSV/XLSX exportieren (Rechnungen, Aktenkonto-Buchungen, Zeiterfassung)
+- [x] **EXP-01**: User kann Akten-Liste als CSV exportieren (Aktenzeichen, Sachgebiet, Status, Beteiligte, Daten)
+- [x] **EXP-02**: User kann Akten-Liste als XLSX exportieren (formatiert, Auto-Filter, Spaltenbreiten)
+- [x] **EXP-03**: User kann Kontakte als CSV/XLSX exportieren (Name, Firma, Adresse, Telefon, E-Mail, Typ)
+- [x] **EXP-04**: User kann Finanzdaten als CSV/XLSX exportieren (Rechnungen, Aktenkonto-Buchungen, Zeiterfassung)
 - [ ] **EXP-05**: User kann BI-Dashboard als PDF-Report exportieren (KPIs + Charts mit Briefkopf)
 - [ ] **EXP-06**: User kann BI-Dashboard als XLSX-Report exportieren (alle KPI-Daten tabellarisch)
-- [ ] **EXP-07**: XLSX-Export nutzt ExcelJS Streaming (WorkbookWriter) in BullMQ Worker fuer grosse Datasets
+- [x] **EXP-07**: XLSX-Export nutzt ExcelJS Streaming (WorkbookWriter) in BullMQ Worker fuer grosse Datasets
 
 ### Helena Intelligence
 
@@ -104,13 +104,13 @@
 | BI-07 | Phase 55 | Complete |
 | BI-08 | Phase 55 | Complete |
 | BI-09 | Phase 55 | Complete |
-| EXP-01 | Phase 55 | Pending |
-| EXP-02 | Phase 55 | Pending |
-| EXP-03 | Phase 55 | Pending |
-| EXP-04 | Phase 55 | Pending |
+| EXP-01 | Phase 55 | Complete |
+| EXP-02 | Phase 55 | Complete |
+| EXP-03 | Phase 55 | Complete |
+| EXP-04 | Phase 55 | Complete |
 | EXP-05 | Phase 55 | Pending |
 | EXP-06 | Phase 55 | Pending |
-| EXP-07 | Phase 55 | Pending |
+| EXP-07 | Phase 55 | Complete |
 | HEL-01 | Phase 57 | Pending |
 | HEL-02 | Phase 57 | Pending |
 | HEL-03 | Phase 57 | Pending |

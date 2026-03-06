@@ -326,10 +326,11 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 - **v0.4 Quest & Polish** — 10 phases, 21 plans (2026-03-03)
 - **v0.5 Mandantenportal** — 8 phases, 14 plans (2026-03-03)
 - **v0.6 Stabilisierung** — 1 phase, 4 plans (2026-03-04)
+- **v0.6.1 Adhoc Bugfixes** — 1 phase, 1 plan (2026-03-06)
 
 ## In Progress
 
-- **v0.6.1 Adhoc Bugfixes** — Phase 52 triage complete (18 bugs classified: 7 P0/P1 in Wave 1, 3 P2 in Wave 2, 3 P3 deferred, 5 pre-fixed). Fix waves 52-02 and 52-03 ready to execute.
+- **v0.7 UI/UX & Stability** — Phases 53–54 planned. Phase 53 (ui-ux-quick-wins) ready to plan.
 
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
@@ -355,4 +356,4 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Remove compose-popup auto-save entirely (v0.6) | Stale closure was accidentally sending emails; proper draft API needed | ✓ Good — eliminated the bug class |
 
 ---
-*Last updated: 2026-03-06 after Phase 52*
+*Last updated: 2026-03-06 after v0.6.1 milestone*

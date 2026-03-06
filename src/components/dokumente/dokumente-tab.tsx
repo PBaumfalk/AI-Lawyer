@@ -32,6 +32,7 @@ import {
   ShieldCheck,
   Undo2,
   Filter,
+  Combine,
 } from "lucide-react";
 import Link from "next/link";
 import { UploadDialog } from "./upload-dialog";
@@ -42,6 +43,7 @@ import { OcrStatusBadge } from "./ocr-status-badge";
 import { EditorDialog } from "../editor/editor-dialog";
 import { useUpload } from "@/components/providers/upload-provider";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PdfMergeDialog } from "./pdf-merge-dialog";
 import { toast } from "sonner";
 
 // MIME types that can be edited in ONLYOFFICE
@@ -379,6 +381,7 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
   };
 
   const [creatingNew, setCreatingNew] = useState(false);
+  const [mergeOpen, setMergeOpen] = useState(false);
 
   const handleNeuesDokument = async () => {
     setCreatingNew(true);
@@ -603,6 +606,12 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
             <FileCheck className="w-4 h-4 mr-1.5" />
             Aus Vorlage
           </Button>
+          {dokumente.filter((d) => d.mimeType === "application/pdf").length >= 2 && (
+            <Button size="sm" variant="outline" onClick={() => setMergeOpen(true)}>
+              <Combine className="w-4 h-4 mr-1.5" />
+              PDFs zusammenfuehren
+            </Button>
+          )}
           <Button
             size="sm"
             onClick={() => fileInputRef.current?.click()}
@@ -999,6 +1008,22 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
           }}
         />
       )}
+
+      {/* PDF Merge dialog */}
+      <PdfMergeDialog
+        open={mergeOpen}
+        onOpenChange={setMergeOpen}
+        akteId={akteId}
+        documents={dokumente.map((d) => ({
+          id: d.id,
+          name: d.name,
+          mimeType: d.mimeType,
+        }))}
+        onComplete={() => {
+          fetchDokumente();
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

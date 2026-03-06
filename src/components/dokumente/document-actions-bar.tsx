@@ -18,8 +18,10 @@ import {
   Undo2,
   Loader2,
   X,
+  Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PdfToolsDialog } from "./pdf-tools-dialog";
 
 // MIME types that can be edited in OnlyOffice
 const ONLYOFFICE_EDITABLE = new Set([
@@ -83,6 +85,7 @@ export function DocumentActionsBar({
   const [showMove, setShowMove] = useState(false);
   const [moveValue, setMoveValue] = useState(dokument.ordner ?? "");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [pdfToolsOpen, setPdfToolsOpen] = useState(false);
 
   const isEditable = ONLYOFFICE_EDITABLE.has(dokument.mimeType);
   const canFreigeben = FREIGABE_ROLES.includes(userRole);
@@ -417,6 +420,19 @@ export function DocumentActionsBar({
         Herunterladen
       </Button>
 
+      {/* PDF-Tools */}
+      {dokument.mimeType === "application/pdf" && (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setPdfToolsOpen(true)}
+          className="w-full justify-start h-8 px-2 text-xs text-violet-600 dark:text-violet-400"
+        >
+          <Wrench className="w-3.5 h-3.5 mr-2" />
+          PDF-Tools
+        </Button>
+      )}
+
       {/* OnlyOffice */}
       {isEditable && (
         <Button
@@ -467,6 +483,16 @@ export function DocumentActionsBar({
         )}
         Loeschen
       </Button>
+
+      {/* PDF Tools Dialog */}
+      {dokument.mimeType === "application/pdf" && (
+        <PdfToolsDialog
+          open={pdfToolsOpen}
+          onOpenChange={setPdfToolsOpen}
+          dokument={{ id: dokument.id, name: dokument.name, akteId: dokument.akteId }}
+          onComplete={onUpdate}
+        />
+      )}
     </div>
   );
 }

@@ -199,26 +199,17 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- v0.7 active requirements — see .planning/REQUIREMENTS.md for full list -->
+<!-- v0.8 active requirements — see .planning/REQUIREMENTS.md for full list -->
 
-- [ ] STAB-01: Reproduzierbare Crashes dokumentiert & klassifiziert (Repro-Suite)
-- [ ] STAB-02: P0/P1 Crashes behoben mit Regression-Tests
-- [ ] STAB-03: Docker Deploy Smoke-Check grün (alle 9 Services healthy)
-- [ ] STAB-04: Healthchecks stabil (App/Worker/Ollama/Redis/MinIO/Meilisearch)
+- [ ] BI-Dashboard: KPI-Kacheln (Akten, Finanzen, Fristen, Helena), Trend-Charts, Filterbar
+- [ ] Export: CSV/XLSX für Akten, Kontakte, Finanzdaten, BI-Dashboard-Reports
+- [ ] Helena Intelligence: Falldaten auto-fill, Fallzusammenfassung, Globaler KI-Chat, Template-Vorschläge
+- [ ] PDF-Tools: Merge, Split, Rotate, Reorder, Compress, Watermark, Redact (via Stirling-PDF)
+- [ ] CalDAV-Sync: Bidirektionaler Sync mit externen Kalendern (Google, Outlook, Apple)
 
 ### Backlog
 
 <!-- Deferred to future milestones -->
-
-**BI-Dashboard + Export:**
-- [ ] KPI-Kacheln (Neue Akten, offene Posten, Fristen, Umsatz)
-- [ ] CSV/XLSX Export für Akten, Kontakte, Finanzdaten
-
-**Helena Intelligence:**
-- [ ] Helena befüllt existierende Falldatenblaetter automatisch aus Akte-Daten
-- [ ] Helena schlägt neue Falldatenblatt-Templates basierend auf Fallmustern vor
-- [ ] Fallzusammenfassung: Timeline + Key Facts pro Akte (KI-generiert)
-- [ ] Globaler KI-Chat: Aktenübergreifende Suche und Fragen via RAG
 
 **Mandantenportal Erweiterungen (nach v0.5):**
 - [ ] Rechnungen/Zahlungen im Portal einsehen
@@ -227,12 +218,6 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 **Mahnwesen:**
 - [ ] Mahnstufen, Mahnlauf, Mahn-PDF
-
-**CalDAV-Sync:**
-- [ ] Bidirektionaler Sync mit externen Kalendern
-
-**PDF-Tools (Stirling-PDF):**
-- [ ] Merge, Split, Reorder/Rotate, Compress, Watermark, Redact
 
 **Sonstiges:**
 - [ ] VoIP: Sipgate Anrufjournal + Zuordnung
@@ -332,18 +317,17 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 - **v0.5 Mandantenportal** — 8 phases, 14 plans (2026-03-03)
 - **v0.6 Stabilisierung** — 1 phase, 4 plans (2026-03-04)
 - **v0.6.1 Adhoc Bugfixes** — 1 phase, 1 plan (2026-03-06)
+- **v0.7 UI/UX & Stability** — 2 phases, 4 plans (2026-03-06)
 
-## Current Milestone: v0.7 UI/UX & Stability
+## Current Milestone: v0.8 Intelligence & Tools
 
-**Goal:** Zentrale Funktionen schneller erreichbar machen und reproduzierbare Crashes dokumentieren und beheben.
+**Goal:** BI-Dashboard mit KPIs und Export, Helena Intelligence (Falldaten auto-fill, Fallzusammenfassung, globaler KI-Chat), PDF-Tools via Stirling-PDF und bidirektionaler CalDAV-Sync.
 
 **Target features:**
-- UX Quick Wins: Akte-Detail Tab-Reduktion, Key-Facts Panel, Empty States, Feed-Bereinigung (Phase 53 — complete)
-- Stability Crash Audit: Crash-Docs, P0/P1 Fixes, Docker Smoke-Check, Healthcheck-Stabilisierung (Phase 54)
-
-## In Progress
-
-- **v0.7 UI/UX & Stability** — Phase 53 complete (2/2 plans). Phase 54 (stability-crash-audit) ready to plan.
+- BI-Dashboard + Export: KPI-Kacheln (Akten, Finanzen, Fristen, Helena), Trend-Charts, CSV/XLSX Export
+- Helena Intelligence: Falldaten auto-fill aus Dokumenten, Fallzusammenfassung, globaler aktenübergreifender KI-Chat, Template-Vorschläge
+- PDF-Tools: Merge, Split, Rotate, Reorder, Compress, Watermark, Redact via Stirling-PDF API
+- CalDAV-Sync: Bidirektionaler Sync (Fristen/Termine ↔ Google/Outlook/Apple Calendar)
 
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
@@ -369,4 +353,4 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Remove compose-popup auto-save entirely (v0.6) | Stale closure was accidentally sending emails; proper draft API needed | ✓ Good — eliminated the bug class |
 
 ---
-*Last updated: 2026-03-06 after v0.7 milestone formalization (REQUIREMENTS.md created)*
+*Last updated: 2026-03-06 after v0.8 milestone started (Intelligence & Tools)*

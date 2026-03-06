@@ -16,9 +16,9 @@
 ### Stability & Crash Audit
 
 - [x] **STAB-01**: Reproduzierbare Crashes sind dokumentiert, klassifiziert (P0/P1/P2) und in einer Repro-Suite erfasst
-- [ ] **STAB-02**: Alle P0/P1 Crashes sind behoben und mit Regression-Tests gesichert
-- [ ] **STAB-03**: Docker Deploy Smoke-Check läuft grün (alle 9 Services healthy nach `docker compose up`)
-- [ ] **STAB-04**: Healthchecks sind stabil (App/Worker/Ollama/Redis/MinIO/Meilisearch — kein Flapping)
+- [x] **STAB-02**: Alle P0/P1 Crashes sind behoben und mit Regression-Tests gesichert
+- [x] **STAB-03**: Docker Deploy Smoke-Check läuft grün (alle 9 Services healthy nach `docker compose up`)
+- [x] **STAB-04**: Healthchecks sind stabil (App/Worker/Ollama/Redis/MinIO/Meilisearch — kein Flapping)
 
 ## Out of Scope
 
@@ -40,9 +40,9 @@
 | UX-04 | Phase 53 | Complete |
 | UX-05 | Phase 53 | Complete |
 | STAB-01 | Phase 54 | Complete |
-| STAB-02 | Phase 54 | Pending |
-| STAB-03 | Phase 54 | Pending |
-| STAB-04 | Phase 54 | Pending |
+| STAB-02 | Phase 54 | Complete |
+| STAB-03 | Phase 54 | Complete |
+| STAB-04 | Phase 54 | Complete |
 
 **Coverage:**
 - v0.7 requirements: 9 total

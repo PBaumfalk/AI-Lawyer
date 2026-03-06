@@ -68,7 +68,7 @@ Plans:
 | 51 | v0.6 | 4/4 | Complete | 2026-03-04 |
 | 52 | v0.6.1 | 1/1 | Complete | 2026-03-06 |
 | 53 | v0.7 | 2/2 | Complete | 2026-03-06 |
-| 54 | 1/2 | In Progress|  | - |
+| 54 | 2/2 | Complete   | 2026-03-06 | - |
 
 ---
 *Roadmap updated: 2026-03-06 — Phase 54 plans created (54-01: Crash-Audit, 54-02: P0/P1 Fixes + Smoke-Check)*

@@ -3,15 +3,16 @@ gsd_state_version: 1.0
 milestone: v0.7
 milestone_name: UI/UX & Stability
 current_phase: 54 — stability-crash-audit
-current_plan: 2 of 2
-status: in-progress
-stopped_at: "54-01-PLAN.md complete. Crash triage and smoke-test suite delivered. Ready for 54-02 (fixes)."
-last_updated: "2026-03-06T20:42:00.000Z"
+current_plan: 54-02 (P1 fixes)
+status: unknown
+stopped_at: Completed 54-02-PLAN.md — all P1 stability fixes applied (worker healthcheck, Redis cooldown, OnlyOffice JWT, NER model configurable). Phase 54 complete.
+last_updated: "2026-03-06T19:38:00.857Z"
+last_activity: "2026-03-06 - Completed Phase 54 Plan 01: crash audit triage (54-TRIAGE.md + 54-SMOKE-TESTS.md)"
 progress:
-  total_phases: 3
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_phases: 2
+  completed_phases: 2
+  total_plans: 4
+  completed_plans: 4
   percent: 100
 ---
 
@@ -53,6 +54,7 @@ Progress: [████████████████████] 49/49 p
 | v0.5 | 8 | 14 | 1 day |
 | v0.6 | 1 | 4 | 1 day |
 | Phase 52-adhoc-bugfixes P01 | 8 | 3 tasks | 2 files |
+| Phase 54-stability-crash-audit P02 | 18 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -69,6 +71,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 54-01]: OnlyOffice callback unauthenticated path = P1 (C-02) — fix in 54-02
 - [Phase 54-01]: NER hardcoded model blocks embeddings when Ollama offline = P1 (C-03) — fix in 54-02
 - [Phase 54-01]: TypeScript: 0 errors, test suite 417/427 passing — codebase is clean
+- [Phase 54-02]: Redis connections for alert cooldowns are short-lived (create/disconnect in finally) — no singleton, avoids stale connection in long-lived app process
+- [Phase 54-02]: OnlyOffice JWT fix also validates query.token (additive, complete JWT coverage)
+- [Phase 54-02]: NER model key is ai.provider.model — same key used by Helena/provider chain, so NER follows operator model changes
 
 ### Pending Todos
 
@@ -88,7 +93,7 @@ None currently active.
 
 ## Session Continuity
 
-Last session: 2026-03-06
-Stopped at: Completed 54-01-PLAN.md — crash audit triage and smoke-test suite. Ready for 54-02 (P1 fixes: worker healthcheck, OnlyOffice auth, NER fallback).
+Last session: 2026-03-06T19:38:00.855Z
+Stopped at: Completed 54-02-PLAN.md — all P1 stability fixes applied (worker healthcheck, Redis cooldown, OnlyOffice JWT, NER model configurable). Phase 54 complete.
 Last activity: 2026-03-06 - Completed Phase 54 Plan 01: crash audit triage (54-TRIAGE.md + 54-SMOKE-TESTS.md)
 Resume file: None

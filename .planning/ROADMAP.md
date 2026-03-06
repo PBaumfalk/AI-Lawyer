@@ -121,7 +121,7 @@ Phases execute in numeric order: 55 -> 56 -> 57 -> 58
 | 51 | v0.6 | 4/4 | Complete | 2026-03-04 |
 | 52 | v0.6.1 | 1/1 | Complete | 2026-03-06 |
 | 53-54 | v0.7 | 4/4 | Complete | 2026-03-06 |
-| 55. BI-Dashboard + Export | v0.8 | 0/4 | Not started | - |
+| 55. BI-Dashboard + Export | 1/4 | In Progress|  | - |
 | 56. PDF-Tools | v0.8 | 0/2 | Not started | - |
 | 57. Helena Intelligence | v0.8 | 0/2 | Not started | - |
 | 58. CalDAV-Sync | v0.8 | 0/3 | Not started | - |

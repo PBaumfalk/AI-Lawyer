@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v0.8
 milestone_name: Intelligence & Tools
-current_phase: 55
-current_plan: —
-status: Ready to plan
-stopped_at: —
-last_updated: "2026-03-06"
-last_activity: "2026-03-06 — Roadmap created (4 phases, 39 requirements)"
+current_phase: 55 of 58 (BI-Dashboard + Export)
+current_plan: 2 of 4
+status: executing
+stopped_at: "Completed 55-01-PLAN.md"
+last_updated: "2026-03-06T22:27:00Z"
+last_activity: "2026-03-06 -- Completed 55-01 BI Analytics Backend"
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 10
-  completed_plans: 0
-  percent: 0
+  total_plans: 4
+  completed_plans: 1
+  percent: 25
 ---
 
 # Project State
@@ -29,12 +29,13 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Milestone:** v0.8 Intelligence & Tools
 **Current Phase:** 55 of 58 (BI-Dashboard + Export)
-**Status:** Ready to plan
-**Last activity:** 2026-03-06 -- Roadmap created (4 phases, 39 requirements)
+**Current Plan:** 2 of 4
+**Status:** Executing
+**Last activity:** 2026-03-06 -- Completed 55-01 BI Analytics Backend
 
-Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (v0.8)
+Progress: [█████░░░░░░░░░░░░░░░] 25% (v0.8)
 
-All-time: 146 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.7:4)
+All-time: 147 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.7:4 + v0.8:1)
 
 ## Performance Metrics
 
@@ -66,6 +67,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 52]: Prisma v5->v7 upgrade deferred -- breaking changes, needs own migration sprint
 - [Phase 54-02]: OnlyOffice JWT fix validates query.token (complete JWT coverage)
 - [Phase 54-02]: NER model key is ai.provider.model -- same key used by Helena/provider chain
+- [Phase 55-01]: Used betragBrutto (not gesamtBrutto) for revenue KPI; TokenUsage model for Helena token aggregation
 
 ### Pending Todos
 
@@ -78,6 +80,6 @@ None currently active.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Roadmap created for v0.8
-Last activity: 2026-03-06 -- Roadmap created (4 phases, 39 requirements)
+Stopped at: Completed 55-01-PLAN.md
+Last activity: 2026-03-06 -- Completed 55-01 BI Analytics Backend
 Resume file: None

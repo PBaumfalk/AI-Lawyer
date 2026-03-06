@@ -7,15 +7,15 @@
 
 ### BI-Dashboard
 
-- [ ] **BI-01**: User kann BI-Dashboard mit KPI-Kacheln (Akten, Finanzen, Fristen, Helena) aufrufen
-- [ ] **BI-02**: User sieht Trend-Charts (Akten-Neuzugang, Umsatz pro Monat, Fristen-Compliance) als Line/Area Charts
+- [x] **BI-01**: User kann BI-Dashboard mit KPI-Kacheln (Akten, Finanzen, Fristen, Helena) aufrufen
+- [x] **BI-02**: User sieht Trend-Charts (Akten-Neuzugang, Umsatz pro Monat, Fristen-Compliance) als Line/Area Charts
 - [ ] **BI-03**: User kann KPIs nach Zeitraum filtern (Monat, Quartal, Jahr, Custom DateRange)
 - [ ] **BI-04**: User kann KPIs nach Verantwortlichem (Anwalt) filtern
 - [ ] **BI-05**: User kann KPIs nach Sachgebiet filtern
-- [ ] **BI-06**: User sieht Month-over-Month Deltas (Pfeil + Prozent) auf jeder KPI-Kachel
-- [ ] **BI-07**: User sieht Frist-Compliance-Rate (% fristgerecht erledigt vs. ueberfaellig)
-- [ ] **BI-08**: User sieht Helena Adoption Metrics (Gespraeche, Entwuerfe, Akzeptanzrate, Token-Verbrauch)
-- [ ] **BI-09**: BI-Aggregationsqueries nutzen Redis-Cache (5min TTL) zur DB-Entlastung
+- [x] **BI-06**: User sieht Month-over-Month Deltas (Pfeil + Prozent) auf jeder KPI-Kachel
+- [x] **BI-07**: User sieht Frist-Compliance-Rate (% fristgerecht erledigt vs. ueberfaellig)
+- [x] **BI-08**: User sieht Helena Adoption Metrics (Gespraeche, Entwuerfe, Akzeptanzrate, Token-Verbrauch)
+- [x] **BI-09**: BI-Aggregationsqueries nutzen Redis-Cache (5min TTL) zur DB-Entlastung
 
 ### Export
 
@@ -95,15 +95,15 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BI-01 | Phase 55 | Pending |
-| BI-02 | Phase 55 | Pending |
+| BI-01 | Phase 55 | Complete |
+| BI-02 | Phase 55 | Complete |
 | BI-03 | Phase 55 | Pending |
 | BI-04 | Phase 55 | Pending |
 | BI-05 | Phase 55 | Pending |
-| BI-06 | Phase 55 | Pending |
-| BI-07 | Phase 55 | Pending |
-| BI-08 | Phase 55 | Pending |
-| BI-09 | Phase 55 | Pending |
+| BI-06 | Phase 55 | Complete |
+| BI-07 | Phase 55 | Complete |
+| BI-08 | Phase 55 | Complete |
+| BI-09 | Phase 55 | Complete |
 | EXP-01 | Phase 55 | Pending |
 | EXP-02 | Phase 55 | Pending |
 | EXP-03 | Phase 55 | Pending |

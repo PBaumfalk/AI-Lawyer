@@ -1,6 +1,6 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-03-04
+**Analysis Date:** 2026-03-06
 
 ---
 
@@ -63,6 +63,14 @@
 ---
 
 ## Security Considerations
+
+
+**Default credentials + dev secrets in docker-compose:**
+- Risk: `docker-compose.yml` ships hard-coded default logins (Postgres, MinIO, Meilisearch, OnlyOffice, NextAuth secret) and the README documents `admin@kanzlei.de / password123` as the seed login
+- Files: `docker-compose.yml`, `README.md`
+- Impact: If the compose file is used unchanged in any non-local environment, it exposes the stack to trivial credential stuffing and session forgery
+- Recommendations: Require an `.env` with overrides (no defaults) for all secrets; fail fast if `NEXTAUTH_SECRET` or admin seed password remain at dev defaults; add a startup check that refuses to boot in `NODE_ENV=production` with dev credentials
+
 
 **ONLYOFFICE callback endpoint accepts unauthenticated requests when no JWT is present:**
 - Risk: The callback handler at `POST /api/onlyoffice/callback` only validates the JWT when `Authorization` or `body.token` is present; if neither is sent, the endpoint proceeds without any auth check and will process any `dokumentId` passed in the query string

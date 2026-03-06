@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v0.8
 milestone_name: Intelligence & Tools
 current_phase: 55 of 58 (BI-Dashboard + Export)
-current_plan: 3 of 4
-status: executing
-stopped_at: Completed 55-02-PLAN.md
-last_updated: "2026-03-06T22:28:30Z"
-last_activity: 2026-03-06 -- Completed 55-02 CSV/XLSX Export
+current_plan: 4 of 4
+status: phase-complete
+stopped_at: Completed 55-04-PLAN.md
+last_updated: "2026-03-06T22:35:36.936Z"
+last_activity: 2026-03-06 -- Completed 55-03 BI Dashboard UI
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 50
 ---
 
@@ -29,13 +29,13 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Milestone:** v0.8 Intelligence & Tools
 **Current Phase:** 55 of 58 (BI-Dashboard + Export)
-**Current Plan:** 3 of 4
-**Status:** Executing
-**Last activity:** 2026-03-06 -- Completed 55-02 CSV/XLSX Export
+**Current Plan:** 4 of 4
+**Status:** Phase Complete
+**Last activity:** 2026-03-06 -- Completed 55-04 BI Dashboard Export
 
 Progress: [██████████░░░░░░░░░░] 50% (v0.8)
 
-All-time: 148 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.7:4 + v0.8:2)
+All-time: 150 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.7:4 + v0.8:4)
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ All-time: 148 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | v0.6 | 1 | 4 | 1 day |
 | v0.6.1 | 1 | 1 | 1 day |
 | v0.7 | 2 | 4 | 1 day |
+| Phase 55 P04 | 3min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 54-02]: NER model key is ai.provider.model -- same key used by Helena/provider chain
 - [Phase 55-01]: Used betragBrutto (not gesamtBrutto) for revenue KPI; TokenUsage model for Helena token aggregation
 - [Phase 55-02]: ExcelJS streaming WorkbookWriter for memory-efficient XLSX; semicolon CSV with UTF-8 BOM for German Excel
+- [Phase 55-03]: useState/useEffect hooks for BI data (no SWR); Recharts v3 Tooltip Number() cast for type compat
+- [Phase 55-04]: jsPDF for server-side PDF with table-based trend rendering; default Kanzlei name in Briefkopf (no settings table)
 
 ### Pending Todos
 
@@ -80,7 +83,7 @@ None currently active.
 
 ## Session Continuity
 
-Last session: 2026-03-06
-Stopped at: Completed 55-02-PLAN.md
+Last session: 2026-03-06T22:35:28.141Z
+Stopped at: Completed 55-04-PLAN.md
 Last activity: 2026-03-06 -- Completed 55-02 CSV/XLSX Export
 Resume file: None

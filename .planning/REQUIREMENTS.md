@@ -23,8 +23,8 @@
 - [x] **EXP-02**: User kann Akten-Liste als XLSX exportieren (formatiert, Auto-Filter, Spaltenbreiten)
 - [x] **EXP-03**: User kann Kontakte als CSV/XLSX exportieren (Name, Firma, Adresse, Telefon, E-Mail, Typ)
 - [x] **EXP-04**: User kann Finanzdaten als CSV/XLSX exportieren (Rechnungen, Aktenkonto-Buchungen, Zeiterfassung)
-- [ ] **EXP-05**: User kann BI-Dashboard als PDF-Report exportieren (KPIs + Charts mit Briefkopf)
-- [ ] **EXP-06**: User kann BI-Dashboard als XLSX-Report exportieren (alle KPI-Daten tabellarisch)
+- [x] **EXP-05**: User kann BI-Dashboard als PDF-Report exportieren (KPIs + Charts mit Briefkopf)
+- [x] **EXP-06**: User kann BI-Dashboard als XLSX-Report exportieren (alle KPI-Daten tabellarisch)
 - [x] **EXP-07**: XLSX-Export nutzt ExcelJS Streaming (WorkbookWriter) in BullMQ Worker fuer grosse Datasets
 
 ### Helena Intelligence
@@ -108,8 +108,8 @@
 | EXP-02 | Phase 55 | Complete |
 | EXP-03 | Phase 55 | Complete |
 | EXP-04 | Phase 55 | Complete |
-| EXP-05 | Phase 55 | Pending |
-| EXP-06 | Phase 55 | Pending |
+| EXP-05 | Phase 55 | Complete |
+| EXP-06 | Phase 55 | Complete |
 | EXP-07 | Phase 55 | Complete |
 | HEL-01 | Phase 57 | Pending |
 | HEL-02 | Phase 57 | Pending |

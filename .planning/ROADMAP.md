@@ -49,12 +49,13 @@
   3. User can view trend charts (Akten-Neuzugang, Umsatz pro Monat, Fristen-Compliance) as line/area visualizations with Recharts
   4. User can export Akten, Kontakte, and Finanzdaten as CSV or formatted XLSX from their respective list pages
   5. User can export the BI-Dashboard as a PDF report with Kanzlei-Briefkopf or as an XLSX with all KPI data tabellarisch
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 55-01: TBD
-- [ ] 55-02: TBD
-- [ ] 55-03: TBD
+- [ ] 55-01-PLAN.md — BI KPI API backend with Redis-cached aggregation queries and trend endpoints
+- [ ] 55-02-PLAN.md — Generic CSV/XLSX export library + Akten/Kontakte/Finanzen export endpoints
+- [ ] 55-03-PLAN.md — BI Dashboard UI with KPI tiles, filters, and Recharts trend charts
+- [ ] 55-04-PLAN.md — BI Dashboard PDF and XLSX report export
 
 ### Phase 56: PDF-Tools
 **Goal**: Users can perform common PDF operations (merge, split, rotate, reorder, compress, watermark, redact) directly from the DMS without leaving the browser
@@ -120,7 +121,7 @@ Phases execute in numeric order: 55 -> 56 -> 57 -> 58
 | 51 | v0.6 | 4/4 | Complete | 2026-03-04 |
 | 52 | v0.6.1 | 1/1 | Complete | 2026-03-06 |
 | 53-54 | v0.7 | 4/4 | Complete | 2026-03-06 |
-| 55. BI-Dashboard + Export | v0.8 | 0/3 | Not started | - |
+| 55. BI-Dashboard + Export | v0.8 | 0/4 | Not started | - |
 | 56. PDF-Tools | v0.8 | 0/2 | Not started | - |
 | 57. Helena Intelligence | v0.8 | 0/2 | Not started | - |
 | 58. CalDAV-Sync | v0.8 | 0/3 | Not started | - |

@@ -42,7 +42,7 @@
 - [x] **PDF-01**: User kann mehrere PDFs zu einem Dokument zusammenfuehren (Merge)
 - [x] **PDF-02**: User kann ein PDF in einzelne Seiten oder Seitenbereiche aufteilen (Split)
 - [x] **PDF-03**: User kann PDF-Seiten drehen (90/180/270 Grad)
-- [ ] **PDF-04**: User kann PDF-Seiten per Drag-and-Drop umsortieren (Reorder mit Thumbnails)
+- [x] **PDF-04**: User kann PDF-Seiten per Drag-and-Drop umsortieren (Reorder mit Thumbnails)
 - [x] **PDF-05**: User kann PDF-Dateigroesse reduzieren (Compress mit Qualitaetsstufen)
 - [x] **PDF-06**: User kann Wasserzeichen auf PDFs anwenden (ENTWURF-Stempel, Kanzlei-Logo)
 - [x] **PDF-07**: User kann PII in PDFs automatisch schwaerzen (Redact fuer DSGVO)
@@ -121,7 +121,7 @@
 | PDF-01 | Phase 56 | Complete |
 | PDF-02 | Phase 56 | Complete |
 | PDF-03 | Phase 56 | Complete |
-| PDF-04 | Phase 56 | Pending |
+| PDF-04 | Phase 56 | Complete |
 | PDF-05 | Phase 56 | Complete |
 | PDF-06 | Phase 56 | Complete |
 | PDF-07 | Phase 56 | Complete |

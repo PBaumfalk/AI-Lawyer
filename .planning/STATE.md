@@ -4,16 +4,16 @@ milestone: v0.8
 milestone_name: Intelligence & Tools
 current_phase: 56
 current_plan: 2 of 2
-status: executing
-stopped_at: Completed 56-01-PLAN.md
-last_updated: "2026-03-06T22:58:15.796Z"
-last_activity: 2026-03-06 -- Completed 56-01 PDF Tools Backend
+status: phase-complete
+stopped_at: Completed 56-02-PLAN.md
+last_updated: "2026-03-07T00:03:21Z"
+last_activity: 2026-03-07 -- Completed 56-02 PDF Tools UI
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
-  percent: 63
+  completed_plans: 6
+  percent: 75
 ---
 
 # Project State
@@ -29,13 +29,13 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Milestone:** v0.8 Intelligence & Tools
 **Current Phase:** 56
-**Current Plan:** 2 of 2
-**Status:** Executing
-**Last activity:** 2026-03-06 -- Completed 56-01 PDF Tools Backend
+**Current Plan:** 2 of 2 (phase complete)
+**Status:** Phase Complete
+**Last activity:** 2026-03-07 -- Completed 56-02 PDF Tools UI
 
-Progress: [████████████░░░░░░░░] 63% (v0.8)
+Progress: [███████████████░░░░░] 75% (v0.8)
 
-All-time: 151 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.7:4 + v0.8:5)
+All-time: 152 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.7:4 + v0.8:6)
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ All-time: 151 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | v0.7 | 2 | 4 | 1 day |
 | Phase 55 P04 | 3min | 2 tasks | 7 files |
 | Phase 56 P01 | 3min | 2 tasks | 3 files |
+| Phase 56 P02 | 4min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 55-03]: useState/useEffect hooks for BI data (no SWR); Recharts v3 Tooltip Number() cast for type compat
 - [Phase 55-04]: jsPDF for server-side PDF with table-based trend rendering; default Kanzlei name in Briefkopf (no settings table)
 - [Phase 56-01]: saveAsNew defaults true for non-destructive PDF ops; AsyncIterable<Buffer> cast for stream iteration; buildDsgvoPiiPattern combines DSGVO regex
+- [Phase 56-02]: Native HTML drag-and-drop for page reorder (no dnd-kit dep); HTML range/checkbox inputs for missing shadcn components; segmented buttons for angle/level selection
 
 ### Pending Todos
 
@@ -85,7 +87,7 @@ None currently active.
 
 ## Session Continuity
 
-Last session: 2026-03-06T22:58:14.803Z
-Stopped at: Completed 56-01-PLAN.md
-Last activity: 2026-03-06 -- Completed 56-01 PDF Tools Backend
+Last session: 2026-03-07T00:03:21Z
+Stopped at: Completed 56-02-PLAN.md
+Last activity: 2026-03-07 -- Completed 56-02 PDF Tools UI
 Resume file: None

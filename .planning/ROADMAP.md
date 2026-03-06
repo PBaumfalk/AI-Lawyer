@@ -33,7 +33,7 @@
 - Decimal phases (55.1, 55.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 55: BI-Dashboard + Export** - KPI analytics with trend charts, filters, and CSV/XLSX/PDF export for all major data domains (completed 2026-03-06)
-- [ ] **Phase 56: PDF-Tools** - Merge, split, rotate, reorder, compress, watermark, and redact via Stirling-PDF REST API
+- [x] **Phase 56: PDF-Tools** - Merge, split, rotate, reorder, compress, watermark, and redact via Stirling-PDF REST API (completed 2026-03-06)
 - [ ] **Phase 57: Helena Intelligence** - Falldaten auto-fill, Fallzusammenfassung, global KI-Chat, and template suggestions
 - [ ] **Phase 58: CalDAV-Sync** - Bidirectional calendar sync with Google and Apple Calendar via tsdav
 
@@ -122,7 +122,7 @@ Phases execute in numeric order: 55 -> 56 -> 57 -> 58
 | 52 | v0.6.1 | 1/1 | Complete | 2026-03-06 |
 | 53-54 | v0.7 | 4/4 | Complete | 2026-03-06 |
 | 55. BI-Dashboard + Export | 4/4 | Complete    | 2026-03-06 | - |
-| 56. PDF-Tools | 1/2 | In Progress|  | - |
+| 56. PDF-Tools | 2/2 | Complete   | 2026-03-06 | - |
 | 57. Helena Intelligence | v0.8 | 0/2 | Not started | - |
 | 58. CalDAV-Sync | v0.8 | 0/3 | Not started | - |
 

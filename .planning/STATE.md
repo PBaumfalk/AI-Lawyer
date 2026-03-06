@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.8
 milestone_name: Intelligence & Tools
-current_phase: Not started
+current_phase: 55
 current_plan: —
-status: Defining requirements
+status: Ready to plan
 stopped_at: —
 last_updated: "2026-03-06"
-last_activity: "2026-03-06 — Milestone v0.8 started"
+last_activity: "2026-03-06 — Roadmap created (4 phases, 39 requirements)"
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 10
   completed_plans: 0
   percent: 0
 ---
@@ -22,15 +22,15 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-03-06)
 
-**Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet — und Mandanten über ein eigenes Portal Sachstand, Dokumente und Nachrichten einsehen können.
-**Current focus:** Defining requirements for v0.8
+**Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet -- und Mandanten über ein eigenes Portal Sachstand, Dokumente und Nachrichten einsehen können.
+**Current focus:** Phase 55 - BI-Dashboard + Export
 
 ## Current Position
 
 **Milestone:** v0.8 Intelligence & Tools
-**Current Phase:** Not started (defining requirements)
-**Status:** Defining requirements
-**Last activity:** 2026-03-06 — Milestone v0.8 started
+**Current Phase:** 55 of 58 (BI-Dashboard + Export)
+**Status:** Ready to plan
+**Last activity:** 2026-03-06 -- Roadmap created (4 phases, 39 requirements)
 
 Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (v0.8)
 
@@ -63,28 +63,21 @@ All-time: 146 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-- [Phase 52]: Prisma v5→v7 upgrade deferred — breaking changes, needs own migration sprint, no current functionality impact
-- [Phase 54-02]: Redis connections for alert cooldowns are short-lived (create/disconnect in finally)
-- [Phase 54-02]: OnlyOffice JWT fix also validates query.token (additive, complete JWT coverage)
-- [Phase 54-02]: NER model key is ai.provider.model — same key used by Helena/provider chain
+- [Phase 52]: Prisma v5->v7 upgrade deferred -- breaking changes, needs own migration sprint
+- [Phase 54-02]: OnlyOffice JWT fix validates query.token (complete JWT coverage)
+- [Phase 54-02]: NER model key is ai.provider.model -- same key used by Helena/provider chain
 
 ### Pending Todos
 
-None — all moved to v0.8 scope or backlog.
+None.
 
 ### Blockers/Concerns
 
 None currently active.
 
-### Quick Tasks Completed
-
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 1 | Abarbeiten aller offenen Todos in Reihenfolge, ohne Rückfragen. | 2026-03-06 | e7d2a57 | [1-abarbeiten-aller-offenen-todos-in-reihen](./quick/1-abarbeiten-aller-offenen-todos-in-reihen/) |
-
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: —
-Last activity: 2026-03-06 — Milestone v0.8 started
+Stopped at: Roadmap created for v0.8
+Last activity: 2026-03-06 -- Roadmap created (4 phases, 39 requirements)
 Resume file: None

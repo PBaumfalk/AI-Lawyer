@@ -93,55 +93,53 @@
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BI-01 | — | Pending |
-| BI-02 | — | Pending |
-| BI-03 | — | Pending |
-| BI-04 | — | Pending |
-| BI-05 | — | Pending |
-| BI-06 | — | Pending |
-| BI-07 | — | Pending |
-| BI-08 | — | Pending |
-| BI-09 | — | Pending |
-| EXP-01 | — | Pending |
-| EXP-02 | — | Pending |
-| EXP-03 | — | Pending |
-| EXP-04 | — | Pending |
-| EXP-05 | — | Pending |
-| EXP-06 | — | Pending |
-| EXP-07 | — | Pending |
-| HEL-01 | — | Pending |
-| HEL-02 | — | Pending |
-| HEL-03 | — | Pending |
-| HEL-04 | — | Pending |
-| HEL-05 | — | Pending |
-| HEL-06 | — | Pending |
-| HEL-07 | — | Pending |
-| PDF-01 | — | Pending |
-| PDF-02 | — | Pending |
-| PDF-03 | — | Pending |
-| PDF-04 | — | Pending |
-| PDF-05 | — | Pending |
-| PDF-06 | — | Pending |
-| PDF-07 | — | Pending |
-| PDF-08 | — | Pending |
-| CAL-01 | — | Pending |
-| CAL-02 | — | Pending |
-| CAL-03 | — | Pending |
-| CAL-04 | — | Pending |
-| CAL-05 | — | Pending |
-| CAL-06 | — | Pending |
-| CAL-07 | — | Pending |
-| CAL-08 | — | Pending |
+| BI-01 | Phase 55 | Pending |
+| BI-02 | Phase 55 | Pending |
+| BI-03 | Phase 55 | Pending |
+| BI-04 | Phase 55 | Pending |
+| BI-05 | Phase 55 | Pending |
+| BI-06 | Phase 55 | Pending |
+| BI-07 | Phase 55 | Pending |
+| BI-08 | Phase 55 | Pending |
+| BI-09 | Phase 55 | Pending |
+| EXP-01 | Phase 55 | Pending |
+| EXP-02 | Phase 55 | Pending |
+| EXP-03 | Phase 55 | Pending |
+| EXP-04 | Phase 55 | Pending |
+| EXP-05 | Phase 55 | Pending |
+| EXP-06 | Phase 55 | Pending |
+| EXP-07 | Phase 55 | Pending |
+| HEL-01 | Phase 57 | Pending |
+| HEL-02 | Phase 57 | Pending |
+| HEL-03 | Phase 57 | Pending |
+| HEL-04 | Phase 57 | Pending |
+| HEL-05 | Phase 57 | Pending |
+| HEL-06 | Phase 57 | Pending |
+| HEL-07 | Phase 57 | Pending |
+| PDF-01 | Phase 56 | Pending |
+| PDF-02 | Phase 56 | Pending |
+| PDF-03 | Phase 56 | Pending |
+| PDF-04 | Phase 56 | Pending |
+| PDF-05 | Phase 56 | Pending |
+| PDF-06 | Phase 56 | Pending |
+| PDF-07 | Phase 56 | Pending |
+| PDF-08 | Phase 56 | Pending |
+| CAL-01 | Phase 58 | Pending |
+| CAL-02 | Phase 58 | Pending |
+| CAL-03 | Phase 58 | Pending |
+| CAL-04 | Phase 58 | Pending |
+| CAL-05 | Phase 58 | Pending |
+| CAL-06 | Phase 58 | Pending |
+| CAL-07 | Phase 58 | Pending |
+| CAL-08 | Phase 58 | Pending |
 
 **Coverage:**
 - v0.8 requirements: 39 total
-- Mapped to phases: 0
-- Unmapped: 39
+- Mapped to phases: 39
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-06*
-*Last updated: 2026-03-06 after initial definition*
+*Last updated: 2026-03-06 after roadmap creation (39/39 mapped)*

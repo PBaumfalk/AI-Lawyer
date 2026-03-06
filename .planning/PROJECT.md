@@ -299,6 +299,7 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Banner refetch statt auto-insert (v0.3) | Konsistent mit Activity Feed Pattern, verhindert Race Conditions | ✓ Good — message:new triggers refetch, not local insert |
 | Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | ✓ Good — shipped in v0.5 |
 | CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending |
+| Prisma v5→v7 upgrade deferred (Phase 52) | Breaking changes in major upgrade; no current functionality impact; own migration sprint needed | ⏳ Deferred — post-v0.7 |
 
 | Zero new npm packages for v0.2 (v0.2) | All agent capabilities on existing AI SDK v4 + BullMQ + Prisma + Socket.IO | ✓ Good — no dependency bloat |
 | Deterministic Schriftsatz pipeline (v0.2) | generateObject not free-form ReAct for legal filings | ✓ Good — predictable, validated output |
@@ -326,6 +327,10 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 - **v0.5 Mandantenportal** — 8 phases, 14 plans (2026-03-03)
 - **v0.6 Stabilisierung** — 1 phase, 4 plans (2026-03-04)
 
+## In Progress
+
+- **v0.6.1 Adhoc Bugfixes** — Phase 52 triage complete (18 bugs classified: 7 P0/P1 in Wave 1, 3 P2 in Wave 2, 3 P3 deferred, 5 pre-fixed). Fix waves 52-02 and 52-03 ready to execute.
+
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
 | Gamification opt-in DSGVO (v0.4) | GameProfile only visible to owning user, opt-in toggle, no cross-user reads | ✓ Good — self-only API routes, no team-level individual data |
@@ -350,4 +355,4 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Remove compose-popup auto-save entirely (v0.6) | Stale closure was accidentally sending emails; proper draft API needed | ✓ Good — eliminated the bug class |
 
 ---
-*Last updated: 2026-03-04 after v0.6 milestone*
+*Last updated: 2026-03-06 after Phase 52*

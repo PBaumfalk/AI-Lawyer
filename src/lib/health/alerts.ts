@@ -1,16 +1,22 @@
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email/send";
 import { createLogger } from "@/lib/logger";
+import { createRedisConnection } from "@/lib/redis";
 
 const log = createLogger("health-alerts");
 
 /**
- * In-memory cooldown tracker.
- * Maps service name to last alert timestamp (epoch ms).
- * 60-minute cooldown per service to prevent email spam.
+ * Cooldown TTL in seconds (60 minutes).
+ * Persisted in Redis so restarts do not reset the cooldown window.
  */
-const lastAlertTime = new Map<string, number>();
-const COOLDOWN_MS = 60 * 60 * 1000; // 60 minutes
+const COOLDOWN_TTL_SECONDS = 3600;
+
+/**
+ * In-memory fallback cooldown tracker.
+ * Used only when Redis is unavailable — prevents email spam even without Redis.
+ */
+const fallbackCooldowns = new Map<string, number>();
+const FALLBACK_COOLDOWN_MS = COOLDOWN_TTL_SECONDS * 1000;
 
 interface ServiceCheckResult {
   name: string;
@@ -19,24 +25,52 @@ interface ServiceCheckResult {
 }
 
 /**
- * Check if an alert should be sent for a given service (respects cooldown).
+ * Persist a cooldown marker in Redis for a service.
+ * Falls back to in-memory Map if Redis is unavailable.
  */
-function shouldAlert(serviceName: string): boolean {
-  const lastTime = lastAlertTime.get(serviceName);
-  if (!lastTime) return true;
-  return Date.now() - lastTime >= COOLDOWN_MS;
+async function setCooldown(serviceName: string): Promise<void> {
+  const key = `health:alert:cooldown:${serviceName}`;
+  let redisConn: ReturnType<typeof createRedisConnection> | null = null;
+  try {
+    redisConn = createRedisConnection();
+    await redisConn.set(key, "1", "EX", COOLDOWN_TTL_SECONDS);
+  } catch (err) {
+    log.warn({ err, service: serviceName }, "Redis unavailable for setCooldown — using in-memory fallback");
+    fallbackCooldowns.set(serviceName, Date.now());
+  } finally {
+    if (redisConn) {
+      try { redisConn.disconnect(); } catch { /* ignore */ }
+    }
+  }
 }
 
 /**
- * Record that an alert was sent for a service.
+ * Check if a cooldown is active for a service.
+ * Returns true if cooldown is active (suppress alert), false if alert should be sent.
+ * Falls back to in-memory Map if Redis is unavailable.
  */
-function recordAlert(serviceName: string): void {
-  lastAlertTime.set(serviceName, Date.now());
+async function hasCooldown(serviceName: string): Promise<boolean> {
+  const key = `health:alert:cooldown:${serviceName}`;
+  let redisConn: ReturnType<typeof createRedisConnection> | null = null;
+  try {
+    redisConn = createRedisConnection();
+    const val = await redisConn.get(key);
+    return val !== null;
+  } catch (err) {
+    log.warn({ err, service: serviceName }, "Redis unavailable for hasCooldown — using in-memory fallback");
+    const lastTime = fallbackCooldowns.get(serviceName);
+    if (!lastTime) return false;
+    return Date.now() - lastTime < FALLBACK_COOLDOWN_MS;
+  } finally {
+    if (redisConn) {
+      try { redisConn.disconnect(); } catch { /* ignore */ }
+    }
+  }
 }
 
 /**
  * Send email alerts to all ADMIN users when services are unhealthy.
- * Respects 60-minute cooldown per service.
+ * Respects 60-minute cooldown per service, persisted in Redis.
  *
  * Can be called from the health endpoint, admin page load, or a periodic BullMQ cron.
  */
@@ -50,7 +84,13 @@ export async function checkAndAlertHealthStatus(
   }
 
   // Filter to only services that haven't been alerted recently
-  const toAlert = unhealthy.filter((s) => shouldAlert(s.name));
+  const cooldownChecks = await Promise.all(
+    unhealthy.map(async (s) => ({ service: s, onCooldown: await hasCooldown(s.name) }))
+  );
+  const toAlert = cooldownChecks
+    .filter((c) => !c.onCooldown)
+    .map((c) => c.service);
+
   if (toAlert.length === 0) {
     return {
       alertsSent: 0,
@@ -108,7 +148,7 @@ export async function checkAndAlertHealthStatus(
       if (sent) alertsSent++;
     }
 
-    recordAlert(service.name);
+    await setCooldown(service.name);
     log.warn({ service: service.name, error: service.error }, "Health alert sent for unhealthy service");
   }
 

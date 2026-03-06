@@ -1,5 +1,27 @@
 # Milestones
 
+## v0.6.1 Adhoc Bugfixes (Shipped: 2026-03-06)
+
+**Delivered:** Structured triage of 18 accumulated bugs from 6 debug files + Phase 51 deferred items — 5 pre-fixed confirmed, 7 P0/P1 queued for Wave 1, 3 P2 for Wave 2, 3 P3 explicitly deferred with written rationale (Prisma v7 upgrade, silent catches, img-tags).
+
+**Phases:** 1 (Phase 52)
+**Plans:** 1 completed
+**Tasks:** 3 executed
+**Timeline:** 2026-03-06 (1 day)
+**Requirements:** No formal REQ-IDs (ad-hoc bugfix milestone — scope defined by bug backlog)
+
+**Key accomplishments:**
+1. Aggregated 18 bugs from 6 debug files and Phase 51 deferred items into a normalized triage list with severity, area, wave, repro notes, and source references
+2. Classified each bug: 5 pre-fixed (BUG-01 to BUG-05), 7 P0/P1 for Wave 1 (52-02), 3 P2 for Wave 2 (52-03), 3 P3 explicitly deferred
+3. Defined Phase 52 scope boundary — Wave 1 restricted to existing-file corrections only, no architectural changes
+4. Explicitly deferred Prisma v5→v7 major upgrade with written rationale (breaking changes, needs own sprint)
+5. Created CONTEXT.md with P0/P1/P2/P3 decision criteria and scope guard for fix wave execution
+
+**Archives:**
+- `milestones/v0.6.1-ROADMAP.md`
+
+---
+
 ## v0.6 Stabilisierung (Shipped: 2026-03-04)
 
 **Delivered:** Zero TypeScript errors, consistent env vars, error boundaries on all route groups, passing test suite, and build-time error checking enabled — stabilizing the codebase after 7 feature milestones by fixing all P0/P1/P2 issues from the systematic health audit.

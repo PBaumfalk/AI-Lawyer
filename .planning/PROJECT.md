@@ -199,7 +199,12 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ### Active
 
-<!-- Next milestone requirements go here -->
+<!-- v0.7 active requirements — see .planning/REQUIREMENTS.md for full list -->
+
+- [ ] STAB-01: Reproduzierbare Crashes dokumentiert & klassifiziert (Repro-Suite)
+- [ ] STAB-02: P0/P1 Crashes behoben mit Regression-Tests
+- [ ] STAB-03: Docker Deploy Smoke-Check grün (alle 9 Services healthy)
+- [ ] STAB-04: Healthchecks stabil (App/Worker/Ollama/Redis/MinIO/Meilisearch)
 
 ### Backlog
 
@@ -299,6 +304,7 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Banner refetch statt auto-insert (v0.3) | Konsistent mit Activity Feed Pattern, verhindert Race Conditions | ✓ Good — message:new triggers refetch, not local insert |
 | Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | ✓ Good — shipped in v0.5 |
 | CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending |
+| Prisma v5→v7 upgrade deferred (Phase 52) | Breaking changes in major upgrade; no current functionality impact; own migration sprint needed | ⏳ Deferred — post-v0.7 |
 
 | Zero new npm packages for v0.2 (v0.2) | All agent capabilities on existing AI SDK v4 + BullMQ + Prisma + Socket.IO | ✓ Good — no dependency bloat |
 | Deterministic Schriftsatz pipeline (v0.2) | generateObject not free-form ReAct for legal filings | ✓ Good — predictable, validated output |
@@ -325,6 +331,19 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 - **v0.4 Quest & Polish** — 10 phases, 21 plans (2026-03-03)
 - **v0.5 Mandantenportal** — 8 phases, 14 plans (2026-03-03)
 - **v0.6 Stabilisierung** — 1 phase, 4 plans (2026-03-04)
+- **v0.6.1 Adhoc Bugfixes** — 1 phase, 1 plan (2026-03-06)
+
+## Current Milestone: v0.7 UI/UX & Stability
+
+**Goal:** Zentrale Funktionen schneller erreichbar machen und reproduzierbare Crashes dokumentieren und beheben.
+
+**Target features:**
+- UX Quick Wins: Akte-Detail Tab-Reduktion, Key-Facts Panel, Empty States, Feed-Bereinigung (Phase 53 — complete)
+- Stability Crash Audit: Crash-Docs, P0/P1 Fixes, Docker Smoke-Check, Healthcheck-Stabilisierung (Phase 54)
+
+## In Progress
+
+- **v0.7 UI/UX & Stability** — Phase 53 complete (2/2 plans). Phase 54 (stability-crash-audit) ready to plan.
 
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
@@ -350,4 +369,4 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Remove compose-popup auto-save entirely (v0.6) | Stale closure was accidentally sending emails; proper draft API needed | ✓ Good — eliminated the bug class |
 
 ---
-*Last updated: 2026-03-04 after v0.6 milestone*
+*Last updated: 2026-03-06 after v0.7 milestone formalization (REQUIREMENTS.md created)*

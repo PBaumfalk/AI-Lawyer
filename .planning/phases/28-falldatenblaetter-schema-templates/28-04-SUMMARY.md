@@ -59,7 +59,7 @@ Each task was committed atomically:
 
 1. **Task 1: Add ADMIN visibility override to GET /api/falldaten-templates** - `07d0127` (fix)
 
-**Plan metadata:** pending (docs: complete plan)
+**Plan metadata:** `315722d` (docs: complete plan)
 
 ## Files Created/Modified
 - `src/app/api/falldaten-templates/route.ts` - Added userRole extraction and ADMIN bypass branch in visibility logic

@@ -46,8 +46,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 1 });
   }
 
-  // Verify JWT if present in the request body or Authorization header
+  // Verify JWT — mandatory: reject if no token present in any expected location.
+  // OnlyOffice expects HTTP 200 with {error:1} for rejection — NOT 4xx/5xx
+  // (4xx causes OnlyOffice to retry the callback indefinitely).
   const authHeader = request.headers.get("Authorization");
+  const queryToken = new URL(request.url).searchParams.get("token");
+  if (!authHeader?.startsWith("Bearer ") && !body.token && !queryToken) {
+    return NextResponse.json({ error: 1 });
+  }
   if (authHeader?.startsWith("Bearer ")) {
     try {
       verifyToken(authHeader.substring(7));
@@ -57,6 +63,12 @@ export async function POST(request: NextRequest) {
   } else if (body.token) {
     try {
       verifyToken(body.token as string);
+    } catch {
+      return NextResponse.json({ error: 1 });
+    }
+  } else if (queryToken) {
+    try {
+      verifyToken(queryToken);
     } catch {
       return NextResponse.json({ error: 1 });
     }

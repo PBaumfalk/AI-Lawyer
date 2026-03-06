@@ -375,6 +375,46 @@
 
 ---
 
+## Milestone: v0.6.1 — Adhoc Bugfixes
+
+**Shipped:** 2026-03-06
+**Phases:** 1 (Phase 52) | **Plans:** 1 | **Tasks:** 3
+
+### What Was Built
+- Normalized 18-bug triage list with severity, area, wave, repro notes, source references
+- Wave 1 (52-02): 7 P0/P1 bugs queued for execution (React Hooks, TS errors, Ollama env var, Stirling port, error boundaries)
+- Wave 2 (52-03): 3 P2 tech-debt items queued
+- Explicit deferrals with rationale: Prisma v7 upgrade, silent catches, img-tags (P3)
+- Phase 52 CONTEXT.md with scope boundary and decision criteria per severity level
+
+### What Worked
+- **Bug triage as standalone plan:** Separating triage from execution (52-01 vs 52-02/03) gives a clear artifact (TRIAGE.md) that survives context resets
+- **Wave-based assignment:** P0/P1 in Wave 1, P2 in Wave 2 — prevents scope creep into bugfix sprints
+- **Written deferrals:** Documenting WHY each P3 item is deferred prevents re-discussion in future sessions
+- **Phase boundary guard:** CONTEXT.md restricting Wave 1 to "existing-file corrections only" is a proven scope protection pattern
+
+### What Was Inefficient
+- **Phase 52 contained only triage (1 plan), not fixes:** The actual bug fixes (52-02, 52-03) were planned but not executed in this milestone. v0.6.1 ships as a triage artifact, not a fix artifact — the naming is slightly misleading
+- **Full milestone ceremony for 1 plan:** roadmap archive, MILESTONES.md entry, git tag, retrospective — high overhead for triage-only scope
+- **gsd-tools milestone complete couldn't extract accomplishments:** SUMMARY.md format diverged from what the CLI expects — manual update required
+
+### Patterns Established
+- **Triage-first bugfix milestone:** Create a dedicated "triage" plan before any fix plans — normalized bug list survives context resets and can be handed off
+- **Wave assignment in triage:** P0/P1 Wave 1, P2 Wave 2, P3 explicit deferral with rationale — becomes the execution contract for fix waves
+- **Phase scope guard document:** CONTEXT.md per phase for bugfix sprints defines what's in/out before any code is touched
+
+### Key Lessons
+1. **Triage and execution should be separate phases, not separate plans.** 52-01 (triage) shipping alone as a milestone is architecturally correct but semantically odd. Future approach: complete fix waves before closing the milestone.
+2. **Bugfix milestones are lightweight — skip the audit.** No REQUIREMENTS.md, no audit needed. Health audit already happened in v0.6; bug triage is the new requirements source.
+3. **Written deferrals are first-class artifacts.** The Prisma v7 deferral rationale in TRIAGE.md will prevent re-discussion in v0.7 planning.
+
+### Cost Observations
+- Model mix: ~60% sonnet (triage analysis), ~40% haiku (extraction/verification)
+- Sessions: 1 session, 8 minutes
+- Notable: Shortest plan execution in project history. Pure analysis/planning output with no code changes.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -389,6 +429,7 @@
 | v0.4 | ~8 | 10 | 21 | Quest DSL evaluator; gap-closure down to 10%; absent-until-loaded widget pattern; DSGVO opt-in from day one |
 | v0.5 | ~6 | 8 | 14 | Pattern reuse from v0.2/v0.3 enables fastest milestone; portal-public route group; server-side data isolation |
 | v0.6 | ~3 | 1 | 4 | Health audit as requirements source; stabilization is lightweight; build-time TS checking enabled |
+| v0.6.1 | 1 | 1 | 1 | Triage-first bugfix milestone; wave-based assignment; written deferrals as scope artifacts |
 
 ### Cumulative Quality
 
@@ -402,6 +443,7 @@
 | v0.4 | 253+ (unchanged) | 41/41 | 1 | 4 (quest-evaluator any, fire-and-forget catch, doppel-runen edge, pre-existing TS) |
 | v0.5 | 253+ (unchanged) | 25/25 | 2 (audit + re-audit) | 4 (console.error in route, email deep links, pre-existing TS, adhoc phase) |
 | v0.6 | 417+ (vitest enabled) | N/A (stabilization) | 1 | 10 (Prisma 7.x, Next.js CVEs, 317 ESLint warnings, 67 routes no try-catch, 80 silent catch, draft API, UAT tests, etc.) |
+| v0.6.1 | 417+ (unchanged) | N/A (triage only) | 1 | 10 (same as v0.6; fix waves 52-02/03 ready to execute in v0.7) |
 
 ### Top Lessons (Verified Across Milestones)
 

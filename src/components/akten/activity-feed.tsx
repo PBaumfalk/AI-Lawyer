@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Filter, ChevronDown, Loader2, RefreshCw } from "lucide-react";
+import { Filter, ChevronDown, Loader2, RefreshCw, Mail, MessageSquare, Clock, MailOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ActivityFeedEntry, type FeedEntryData } from "./activity-feed-entry";
@@ -99,6 +99,74 @@ function useHelenaTaskProgress(akteId: string) {
   }, [socket, akteId]);
 
   return activeTasks;
+}
+
+// Contextual empty state based on active filter
+function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: string }) {
+  if (filterLabel === "E-Mails") {
+    return (
+      <div className="glass-card rounded-xl p-10 text-center space-y-3">
+        <div className="flex justify-center">
+          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <MailOpen className="w-6 h-6 text-slate-400" />
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-foreground">Noch keine E-Mails verknuepft</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            E-Mails koennen direkt aus dem Posteingang zu dieser Akte hinzugefuegt werden.
+          </p>
+        </div>
+        <div className="flex justify-center gap-2 flex-wrap">
+          <a
+            href="/posteingang"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            Posteingang oeffnen
+          </a>
+          <a
+            href={`/akten/${akteId}/emails`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-muted/50 transition-colors text-foreground"
+          >
+            Alle E-Mails anzeigen
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (filterLabel === "Helena") {
+    return (
+      <div className="glass-card rounded-xl p-10 text-center space-y-3">
+        <div className="flex justify-center">
+          <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
+            <MessageSquare className="w-6 h-6 text-violet-400" />
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-foreground">Noch keine Helena-Aktivitaeten</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Starten Sie eine Anfrage an Helena, um KI-gestuetzte Entwuerfe und Analysen zu erhalten.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass-card rounded-xl p-12 text-center space-y-2">
+      <div className="flex justify-center">
+        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+          <Clock className="w-6 h-6 text-slate-400" />
+        </div>
+      </div>
+      <p className="text-sm font-medium text-foreground">Keine Aktivitaeten vorhanden</p>
+      <p className="text-xs text-muted-foreground">
+        Neue Aktivitaeten erscheinen hier automatisch.
+      </p>
+    </div>
+  );
 }
 
 export function ActivityFeed({ akteId }: ActivityFeedProps) {
@@ -262,9 +330,7 @@ export function ActivityFeed({ akteId }: ActivityFeedProps) {
         {loading && entries.length === 0 ? (
           <ActivityFeedSkeleton />
         ) : entries.length === 0 ? (
-          <div className="glass-card rounded-xl p-12 text-center text-sm text-slate-400">
-            Keine Aktivitaeten vorhanden.
-          </div>
+          <FeedEmptyState filterLabel={feedFilters[activeFilter]?.label ?? "Alle"} akteId={akteId} />
         ) : (
           entries.map((entry) => (
             <ActivityFeedEntry key={entry.id} entry={entry} />

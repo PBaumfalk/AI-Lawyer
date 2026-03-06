@@ -17,8 +17,22 @@ import { isInstitutionName } from "./institution-whitelist";
 const log = createLogger("ner-filter");
 
 const OLLAMA_URL = process.env.OLLAMA_URL ?? "http://localhost:11434";
-const NER_MODEL = "qwen3.5:35b";
+const NER_MODEL_FALLBACK = "qwen3.5:35b";
 const NER_TIMEOUT_MS = 45_000; // BRAO §43a compliance — hard kill, never silent pass
+
+/**
+ * Resolve the NER model from SystemSettings (ai.provider.model).
+ * Falls back to the hardcoded default to preserve existing behavior when
+ * the settings service is unavailable — never breaks the DSGVO gate.
+ */
+async function getNerModel(): Promise<string> {
+  try {
+    const { getSettingTyped } = await import("@/lib/settings/service");
+    return await getSettingTyped("ai.provider.model", NER_MODEL_FALLBACK);
+  } catch {
+    return NER_MODEL_FALLBACK; // Graceful degradation — never break the DSGVO gate
+  }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -111,13 +125,14 @@ ${text}`;
  */
 export async function runNerFilter(text: string): Promise<NerResult> {
   const prompt = buildNerPrompt(text);
+  const model = await getNerModel();
 
   // POST to Ollama with grammar-constrained JSON output and hard 45s timeout
   const response = await fetch(`${OLLAMA_URL}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: NER_MODEL,
+      model,
       prompt,
       stream: false,
       format: "json",    // Grammar-constrained JSON output — defense 1 against <think> leakage

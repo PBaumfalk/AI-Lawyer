@@ -29,9 +29,9 @@
 
 ### Helena Intelligence
 
-- [ ] **HEL-01**: Helena kann Falldatenblatt-Felder automatisch aus Akte-Dokumenten extrahieren (generateObject)
-- [ ] **HEL-02**: Auto-Fill zeigt pro Feld Konfidenz (HOCH/MITTEL/NIEDRIG) und Quell-Excerpt
-- [ ] **HEL-03**: Auto-Fill Ergebnisse sind VORSCHLAG — User akzeptiert oder verwirft pro Feld, nie auto-save
+- [x] **HEL-01**: Helena kann Falldatenblatt-Felder automatisch aus Akte-Dokumenten extrahieren (generateObject)
+- [x] **HEL-02**: Auto-Fill zeigt pro Feld Konfidenz (HOCH/MITTEL/NIEDRIG) und Quell-Excerpt
+- [x] **HEL-03**: Auto-Fill Ergebnisse sind VORSCHLAG — User akzeptiert oder verwirft pro Feld, nie auto-save
 - [x] **HEL-04**: User sieht Fallzusammenfassung als Timeline + Key Facts Panel in Akte-Detail
 - [x] **HEL-05**: User kann globalen KI-Chat aufrufen (/ki) fuer aktenuebergreifende Fragen via RAG
 - [x] **HEL-06**: Globaler KI-Chat nutzt search_alle_akten Tool mit Multi-Akte Kontext
@@ -111,9 +111,9 @@
 | EXP-05 | Phase 55 | Complete |
 | EXP-06 | Phase 55 | Complete |
 | EXP-07 | Phase 55 | Complete |
-| HEL-01 | Phase 57 | Pending |
-| HEL-02 | Phase 57 | Pending |
-| HEL-03 | Phase 57 | Pending |
+| HEL-01 | Phase 57 | Complete |
+| HEL-02 | Phase 57 | Complete |
+| HEL-03 | Phase 57 | Complete |
 | HEL-04 | Phase 57 | Complete |
 | HEL-05 | Phase 57 | Complete |
 | HEL-06 | Phase 57 | Complete |

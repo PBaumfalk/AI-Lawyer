@@ -58,6 +58,59 @@ function severityBorderClass(severity?: number): string {
   return "border-l-2 border-l-emerald-500";
 }
 
+// MIME type → human-readable file type label
+const MIME_LABELS: Record<string, string> = {
+  "application/pdf": "PDF",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "Word-Dokument",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "Excel-Tabelle",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": "PowerPoint",
+  "application/msword": "Word-Dokument",
+  "application/vnd.ms-excel": "Excel-Tabelle",
+  "application/vnd.ms-powerpoint": "PowerPoint",
+  "application/zip": "ZIP-Archiv",
+  "image/jpeg": "JPEG-Bild",
+  "image/png": "PNG-Bild",
+  "image/gif": "GIF-Bild",
+  "image/webp": "WebP-Bild",
+  "image/tiff": "TIFF-Bild",
+  "text/plain": "Textdatei",
+  "text/html": "HTML-Dokument",
+  "text/csv": "CSV-Datei",
+  "application/rtf": "RTF-Dokument",
+  "application/octet-stream": "Datei",
+};
+
+function mimeToLabel(mime: string): string {
+  return MIME_LABELS[mime.toLowerCase().trim()] ?? "Dokument";
+}
+
+// Sanitize technically-formatted text into human-readable form
+function sanitizeTitel(titel: string): string {
+  // "mimeType: application/vnd...." or "mimeType:application/pdf"
+  const mimeMatch = titel.match(/^mimeType\s*:\s*(\S+)/i);
+  if (mimeMatch) {
+    return `${mimeToLabel(mimeMatch[1])} hochgeladen`;
+  }
+
+  // UUID chains like "xxx → yyy" where xxx/yyy look like cuid/uuid
+  // Replace with nothing (keep surrounding text)
+  const cleaned = titel.replace(/[a-z0-9]{20,}/gi, (match) => {
+    // Only strip if it looks like a pure ID (no spaces, mostly hex/alphanumeric)
+    if (/^[a-z0-9]{20,}$/i.test(match)) return "[ID]";
+    return match;
+  });
+
+  return cleaned !== titel ? cleaned : titel;
+}
+
+// Sanitize inhalt for display (strip raw mimeType lines, etc.)
+function sanitizeInhalt(inhalt: string | null): string | null {
+  if (!inhalt) return null;
+  // Remove lines that are purely "mimeType: ..."
+  const lines = inhalt.split("\n").filter((l) => !/^mimeType\s*:/i.test(l.trim()));
+  return lines.join("\n").trim() || null;
+}
+
 // German relative time formatting
 function relativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -95,6 +148,10 @@ export function ActivityFeedEntry({ entry }: ActivityFeedEntryProps) {
 
   const isHelena = entry.user === null;
   const Icon = typIcons[entry.typ] ?? FileText;
+
+  // Sanitized display values
+  const displayTitel = sanitizeTitel(entry.titel);
+  const displayInhalt = sanitizeInhalt(entry.inhalt);
 
   // Border styling based on Helena vs Human and entry type
   const borderClass = isHelena
@@ -136,7 +193,7 @@ export function ActivityFeedEntry({ entry }: ActivityFeedEntryProps) {
         {/* Title + attribution */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground truncate">
-            {entry.titel}
+            {displayTitel}
           </p>
           <div className="flex items-center gap-2 text-xs text-slate-500">
             {isHelena ? (
@@ -156,7 +213,7 @@ export function ActivityFeedEntry({ entry }: ActivityFeedEntryProps) {
       {/* Expanded content */}
       {expanded && (
         <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800">
-          <ExpandedContent entry={entry} />
+          <ExpandedContent entry={{ ...entry, inhalt: displayInhalt }} />
 
           {/* Source display for Helena draft entries */}
           {entry.typ === "HELENA_DRAFT" && <SourceDisplay entry={entry} />}

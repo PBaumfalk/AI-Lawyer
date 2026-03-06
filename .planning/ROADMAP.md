@@ -78,7 +78,7 @@ Plans:
 | 33–42 | v0.4 | 21/21 | Complete | 2026-03-03 |
 | 43–50 | v0.5 | 14/14 | Complete | 2026-03-03 |
 | 51 | v0.6 | 4/4 | Complete | 2026-03-04 |
-| 52 | v0.6.1 | 0/3 | Not started | - |
+| 52 | 1/1 | Complete   | 2026-03-06 | - |
 | 53 | v0.7 | 0/2 | Not started | - |
 | 54 | v0.7 | 0/2 | Not started | - |
 

@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: null
-milestone_name: null
-status: idle
-stopped_at: null
-last_updated: "2026-03-04T09:00:00.000Z"
-last_activity: 2026-03-04 — v0.6 Stabilisierung milestone completed and archived
+milestone: v0.7
+milestone_name: UI/UX & Stability
+status: unknown
+stopped_at: Completed 52-adhoc-bugfixes-01-PLAN.md
+last_updated: "2026-03-06T18:15:17.717Z"
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_phases: 3
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
   percent: 0
 ---
 
@@ -48,12 +47,15 @@ Progress: [          ] 0%
 | v0.4 | 10 | 21 | 2 days |
 | v0.5 | 8 | 14 | 1 day |
 | v0.6 | 1 | 4 | 1 day |
+| Phase 52-adhoc-bugfixes P01 | 8 | 3 tasks | 2 files |
 
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+- [Phase 52-adhoc-bugfixes]: Wave 1 (52-02) contains only P0/P1 bugs with strict scope boundary — no architectural changes
+- [Phase 52-adhoc-bugfixes]: Prisma major upgrade (v5->v7) explicitly deferred — needs own migration sprint, no current functionality impact
 
 ### Pending Todos
 
@@ -67,6 +69,6 @@ None currently active.
 
 ## Session Continuity
 
-Last session: 2026-03-04
-Stopped at: v0.6 milestone completed
+Last session: 2026-03-06T18:15:17.715Z
+Stopped at: Completed 52-adhoc-bugfixes-01-PLAN.md
 Resume: Run `/gsd:new-milestone` to define next milestone

@@ -239,6 +239,54 @@ source: debug/*, systematic-health-audit
 
 ---
 
+## Fix Waves
+
+### Wave 1 — 52-02: P0/P1 Kritische Fixes
+
+Enthält nur Bugs mit direktem Funktionsausfall, Crash-Risiko, oder falschen Daten.
+Kein Scope-Creep, keine neuen Features.
+
+| Bug | Titel | Severity | Rationale |
+|-----|-------|----------|-----------|
+| BUG-06 | React Hooks Violation rollen/page.tsx | P0 | Rules-of-Hooks-Verletzung → Runtime-Crash möglich |
+| BUG-07 | TypeScript-Fehler falldaten-tab.tsx | P1 | Build-Fehler nach Phase 51 (ignoreBuildErrors: false) |
+| BUG-08 | special-quests Route-Export | P1 | Unerlaubter Export in Next.js Route-Datei → Runtime-Risiko |
+| BUG-09 | compose-popup.tsx TS2448 saveDraft | P1 | Deferred von Phase 51; TypeScript-Compilerfehler im Email-Compose |
+| BUG-10 | Ollama Env-Var-Inkonsistenz | P1 | Helena + KI-Features fallen auf falsche Defaults zurück in Docker/Local |
+| BUG-11 | Stirling-PDF Health-Check Port 8090 | P1 | Health-Dashboard immer falsch → falsche Betriebswahrnehmung |
+| BUG-12 | Fehlende Error Boundaries | P1 | Unbehandelte Fehler → blank/generic Crash-Screens ohne Recovery |
+
+**Scope-Grenze Wave 1:** Nur Korrekturen an bestehenden Dateien. Kein Umbau, keine Architekturänderungen.
+
+---
+
+### Wave 2 — 52-03: P2 Tech Debt (niedrig-riskant)
+
+Enthält Verbesserungen, die kein Crash-Risiko haben, aber Code-Qualität und Sicherheit verbessern.
+Erlaubt wenn Low-Risk (kein Umbau, keine Breaking Changes).
+
+| Bug | Titel | Severity | Rationale |
+|-----|-------|----------|-----------|
+| BUG-13 | npm Security Vulnerabilities (5 high) | P2 | Security-Patching nach Risikoabschätzung; Upgrade-Pfad prüfen |
+| BUG-14 | ESLint-Config @typescript-eslint fehlt | P2 | Verhindert korrekte Lint-Auswertung; einfacher Config-Fix |
+| BUG-15 | 317 ESLint Warnings (no-unused-vars) | P2 | Code-Hygiene; nach BUG-14 fix sinnvoller zu bereinigen |
+
+**Scope-Grenze Wave 2:** Keine neuen Features. Keine Major-Upgrades (Prisma, Next.js Major). Low-Risk-Fixes only.
+
+---
+
+### Deferred — P3 / Hohe Komplexität
+
+Items explizit deferred mit Begründung. Nicht Teil von Phase 52.
+
+| Bug | Titel | Rationale für Deferral |
+|-----|-------|------------------------|
+| BUG-16 | Prisma Major Upgrade (v5 → v7) | Major-Upgrade mit Breaking Changes, benötigt eigenen Migrationssprint. Kein unmittelbarer Ausfall. |
+| BUG-17 | 80 Silent `.catch(() => {})` Blöcke | Viele sind korrekt (Fire-and-Forget). Vollständiger Audit risikoreich, eigener Refactoring-Sprint nötig. |
+| BUG-18 | `<img>` statt `next/image` | Rein performativ, kein Funktionsausfall. Passend für v0.7 UI/UX-Sprint. |
+
+---
+
 ## Summary
 
 | Wave | Bugs | Anzahl |

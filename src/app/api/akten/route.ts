@@ -17,6 +17,7 @@ const createAkteSchema = z.object({
   anwaltId: z.string().optional(),
   sachbearbeiterId: z.string().optional(),
   notizen: z.string().optional(),
+  falldatenTemplateId: z.string().optional(),
 });
 
 // GET /api/akten -- list cases (filtered by RBAC access)
@@ -109,6 +110,7 @@ export async function POST(request: NextRequest) {
       sachbearbeiterId: parsed.data.sachbearbeiterId || null,
       kanzleiId: kanzleiId || null,
       notizen: parsed.data.notizen || null,
+      falldatenTemplateId: parsed.data.falldatenTemplateId || null,
     },
     include: {
       anwalt: { select: { name: true } },

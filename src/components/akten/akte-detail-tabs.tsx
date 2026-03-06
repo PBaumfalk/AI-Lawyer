@@ -11,7 +11,8 @@ import { ActivityFeed } from "./activity-feed";
 import { FalldatenTab } from "./falldaten-tab";
 import { BeteiligteSection } from "./beteiligte-section";
 import { AkteChannelTab, PortalChannelTab } from "@/components/messaging/akte-channel-tab";
-import { MessageSquare, UserCircle, MoreHorizontal, Mail, ExternalLink } from "lucide-react";
+import { CaseSummaryPanel } from "./case-summary-panel";
+import { MessageSquare, UserCircle, MoreHorizontal, Mail, ExternalLink, FileBarChart } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -207,6 +208,10 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
             <TabsTrigger value="falldaten">
               Falldaten{completeness.total > 0 ? ` (${completeness.percent}%)` : ""}
             </TabsTrigger>
+            <TabsTrigger value="zusammenfassung" className="flex items-center gap-1.5">
+              <FileBarChart className="w-3.5 h-3.5" />
+              KI-Analyse
+            </TabsTrigger>
           </TabsList>
 
           {/* Overflow menu for secondary tabs */}
@@ -307,6 +312,11 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
             onCompletenessChange={setCompleteness}
             onDirtyChange={setFalldatenDirty}
           />
+        </TabsContent>
+
+        {/* --- Zusammenfassung (KI-Analyse) -------------------------------- */}
+        <TabsContent value="zusammenfassung">
+          <CaseSummaryPanel akteId={akte.id} />
         </TabsContent>
 
         {/* --- Nachrichten (Akte channel) ---------------------------------- */}

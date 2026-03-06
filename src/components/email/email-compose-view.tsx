@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,8 @@ interface EmailComposeViewProps {
   refEmail: RefEmail | null;
   akten: AkteOption[];
   defaultAkteId: string | null;
+  defaultAbsender?: string;
+  defaultAbsenderName?: string;
 }
 
 export function EmailComposeView({
@@ -49,6 +52,8 @@ export function EmailComposeView({
   refEmail,
   akten,
   defaultAkteId,
+  defaultAbsender,
+  defaultAbsenderName,
 }: EmailComposeViewProps) {
   const router = useRouter();
 
@@ -129,6 +134,10 @@ export function EmailComposeView({
 
   async function handleSend() {
     if (!an.trim() || !betreff.trim()) return;
+    if (!defaultAbsender) {
+      toast.error("Bitte zuerst Kanzlei-E-Mail in den Einstellungen hinterlegen");
+      return;
+    }
     setSending(true);
 
     try {
@@ -147,8 +156,8 @@ export function EmailComposeView({
         body: JSON.stringify({
           richtung: "AUSGEHEND",
           betreff,
-          absender: "info@kanzlei-baumfalk.de", // TODO: from user/kanzlei settings
-          absenderName: "Kanzlei Baumfalk",
+          absender: defaultAbsender,
+          absenderName: defaultAbsenderName ?? null,
           empfaenger: empfaenger,
           cc: ccList,
           inhaltText: inhalt,

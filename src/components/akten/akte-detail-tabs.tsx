@@ -11,7 +11,16 @@ import { ActivityFeed } from "./activity-feed";
 import { FalldatenTab } from "./falldaten-tab";
 import { BeteiligteSection } from "./beteiligte-section";
 import { AkteChannelTab, PortalChannelTab } from "@/components/messaging/akte-channel-tab";
-import { MessageSquare, UserCircle } from "lucide-react";
+import { MessageSquare, MoreHorizontal, UserCircle, Mail } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -120,6 +129,7 @@ interface AkteDetailTabsProps {
 }
 
 export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: AkteDetailTabsProps) {
+  const router = useRouter();
   const [internalTab, setInternalTab] = useState("feed");
   const currentTab = externalTab ?? internalTab;
   const setTab = useCallback((tab: string) => {
@@ -174,7 +184,7 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
     <>
       <Tabs defaultValue="feed" value={currentTab} onValueChange={handleTabChange}>
         <TabsList className="w-full justify-start">
-          <TabsTrigger value="feed">Aktivitaeten</TabsTrigger>
+          <TabsTrigger value="feed">Aktivitäten</TabsTrigger>
           <TabsTrigger value="dokumente">
             Dokumente ({akte.dokumente.length})
           </TabsTrigger>
@@ -182,17 +192,36 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
             Termine & Fristen ({akte.kalenderEintraege.length})
           </TabsTrigger>
           <TabsTrigger value="finanzen">Finanzen</TabsTrigger>
-          <TabsTrigger value="falldaten">
-            Falldaten{completeness.total > 0 ? ` (${completeness.percent}%)` : ""}
-          </TabsTrigger>
-          <TabsTrigger value="nachrichten">
-            <MessageSquare className="w-4 h-4 mr-1.5" />
-            Chat
-          </TabsTrigger>
-          <TabsTrigger value="portal-nachrichten">
-            <UserCircle className="w-4 h-4 mr-1.5" />
-            Portal
-          </TabsTrigger>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+              >
+                Mehr
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-[220px]">
+              <DropdownMenuLabel>Weitere Bereiche</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setTab("falldaten")}>
+                Falldaten{completeness.total > 0 ? ` (${completeness.percent}%)` : ""}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTab("nachrichten")}>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Chat
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTab("portal-nachrichten")}>
+                <UserCircle className="w-4 h-4 mr-2" />
+                Portal
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push(`/email?akteId=${akte.id}`)}>
+                <Mail className="w-4 h-4 mr-2" />
+                E-Mails
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TabsList>
 
         {/* --- Feed (default) ------------------------------------------------ */}

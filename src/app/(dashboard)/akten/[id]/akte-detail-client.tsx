@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Users,
   FileText,
@@ -54,7 +55,6 @@ const TAB_MAP: Record<string, string> = {
   "Beteiligte": "feed",
   "Dokumente": "dokumente",
   "Termine/Fristen": "kalender",
-  "E-Mails": "email",
   "Zeiterfassung": "finanzen",
   "Chat": "nachrichten",
 };
@@ -64,13 +64,16 @@ interface AkteDetailClientProps {
 }
 
 export function AkteDetailClient({ akte }: AkteDetailClientProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("feed");
 
   const handleKpiClick = useCallback((label: string) => {
+    if (label === "E-Mails") {
+      router.push(`/email?akteId=${akte.id}`);
+      return;
+    }
     const tab = TAB_MAP[label];
     if (!tab) return;
-    // E-Mails has no tab in AkteDetailTabs -- ignore click
-    if (label === "E-Mails") return;
     setActiveTab(tab);
     // For Zeiterfassung, scroll after tab switch
     if (label === "Zeiterfassung") {
@@ -79,7 +82,7 @@ export function AkteDetailClient({ akte }: AkteDetailClientProps) {
           ?.scrollIntoView({ behavior: "smooth" });
       }, 150);
     }
-  }, []);
+  }, [router, akte.id]);
 
   return (
     <>
@@ -107,6 +110,7 @@ export function AkteDetailClient({ akte }: AkteDetailClientProps) {
           icon={Mail}
           label="E-Mails"
           value={akte._count?.emailMessages ?? 0}
+          onClick={() => handleKpiClick("E-Mails")}
         />
         <StatMini
           icon={Clock}

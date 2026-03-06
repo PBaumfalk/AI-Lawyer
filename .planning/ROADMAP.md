@@ -34,7 +34,7 @@
   1. Akte‑Detail Tabs reduziert + Aktivitäten fokussiert
   2. Key‑Facts Panel + Quick Actions sichtbar
   3. E‑Mail Zugang aus Akte prominent erreichbar
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [x] 53-01: Akte-Detail UX Improvements (Tab-Reduktion, Key-Facts-Panel, Chat-KPI-Hide, Empty States) — completed 2026-03-06
@@ -48,11 +48,11 @@ Plans:
   1. Reproduzierbare Crashes dokumentiert & behoben
   2. Docker Deploy Smoke‑Check grün
   3. Healthchecks stabil (App/Worker/Ollama)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 54-01: Crash‑Logs & Repro‑Suite
-- [ ] 54-02: P0/P1 Fixes + Smoke‑Check
+- [ ] 54-01-PLAN.md — Crash-Audit: Triage aller Crash-Vektoren + Smoke-Test-Suite erstellen
+- [ ] 54-02-PLAN.md — P0/P1 Fixes: Worker-Healthcheck, Redis-Cooldown, OnlyOffice-Auth, NER-Provider + Docker Smoke-Check
 
 ## Progress
 
@@ -68,7 +68,7 @@ Plans:
 | 51 | v0.6 | 4/4 | Complete | 2026-03-04 |
 | 52 | v0.6.1 | 1/1 | Complete | 2026-03-06 |
 | 53 | v0.7 | 2/2 | Complete | 2026-03-06 |
-| 54 | v0.7 | 0/2 | Not started | - |
+| 54 | v0.7 | 0/2 | In planning | - |
 
 ---
-*Roadmap updated: 2026-03-06 — Phase 53 complete (2/2 plans: UX Improvements + Event-Text-Sanitierung)*
+*Roadmap updated: 2026-03-06 — Phase 54 plans created (54-01: Crash-Audit, 54-02: P0/P1 Fixes + Smoke-Check)*

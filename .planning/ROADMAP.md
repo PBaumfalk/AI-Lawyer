@@ -11,7 +11,7 @@
 - ✅ **v0.5 Mandantenportal** — Phases 43–50 (shipped 2026-03-03)
 - ✅ **v0.6 Stabilisierung** — Phase 51 (shipped 2026-03-04)
 - ✅ **v0.6.1 Adhoc Bugfixes** — Phase 52 (shipped 2026-03-06)
-- 📋 **v0.7 UI/UX & Stability** — Phases 53–54 (planned)
+- 🚧 **v0.7 UI/UX & Stability** — Phases 53–54 (Phase 53 complete, Phase 54 in planning)
 
 ## Phases
 
@@ -38,7 +38,7 @@
 
 Plans:
 - [x] 53-01: Akte-Detail UX Improvements (Tab-Reduktion, Key-Facts-Panel, Chat-KPI-Hide, Empty States) — completed 2026-03-06
-- [ ] 53-02: Key-Facts & Quick Actions
+- [x] 53-02: ActivityFeed Event-Texte Bereinigung (MIME-Types, UUID-Ketten) — completed 2026-03-06
 
 #### Phase 54: stability-crash-audit
 **Goal**: Crash‑Audit, P0/P1 Fixes, Smoke‑Checks
@@ -67,8 +67,8 @@ Plans:
 | 43–50 | v0.5 | 14/14 | Complete | 2026-03-03 |
 | 51 | v0.6 | 4/4 | Complete | 2026-03-04 |
 | 52 | v0.6.1 | 1/1 | Complete | 2026-03-06 |
-| 53 | v0.7 | 1/2 | In progress | - |
+| 53 | v0.7 | 2/2 | Complete | 2026-03-06 |
 | 54 | v0.7 | 0/2 | Not started | - |
 
 ---
-*Roadmap updated: 2026-03-06 — Phase 53-01 complete (Akte-Detail UX Improvements)*
+*Roadmap updated: 2026-03-06 — Phase 53 complete (2/2 plans: UX Improvements + Event-Text-Sanitierung)*

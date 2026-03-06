@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.7
 milestone_name: UI/UX & Stability
-current_phase: 54 — stability-crash-audit (Ready to plan)
-current_plan: Not started
-status: ready
-stopped_at: Phase 53 complete (2 plans). Ready to plan Phase 54 (stability-crash-audit).
-last_updated: "2026-03-06T21:30:00.000Z"
+current_phase: 54 — stability-crash-audit
+current_plan: 2 of 2
+status: in-progress
+stopped_at: "54-01-PLAN.md complete. Crash triage and smoke-test suite delivered. Ready for 54-02 (fixes)."
+last_updated: "2026-03-06T20:42:00.000Z"
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 3
+  completed_plans: 3
   percent: 100
 ---
 
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 **Milestone:** v0.7 UI/UX & Stability
-**Current Phase:** 54 — stability-crash-audit (Ready to plan)
-**Last Completed:** Phase 53 — ui-ux-quick-wins (2/2 plans complete)
-**Current Plan:** Not started
+**Current Phase:** 54 — stability-crash-audit
+**Last Completed:** Phase 54 Plan 01 — crash-audit-triage (1/2 plans complete)
+**Current Plan:** 54-02 (P1 fixes)
 
 Progress: [████████████████████] 49/49 plans (100% all-time)
 
@@ -64,6 +64,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 53-01]: Tab overflow uses simple state-based dropdown (no DropdownMenu component needed)
 - [Phase 53-01]: Chat KPI card conditionally hidden when chatNachrichten == 0 (feature not production-ready)
 - [Phase 53-01]: Key-Facts Panel renders null if akte has no relevant data (zero-state safe)
+- [Phase 54-01]: NER ECONNREFUSED (10 test failures) = INFO/by-design, not a crash — requires-ollama tag
+- [Phase 54-01]: Worker missing Docker healthcheck = P1 (C-01) — fix in 54-02
+- [Phase 54-01]: OnlyOffice callback unauthenticated path = P1 (C-02) — fix in 54-02
+- [Phase 54-01]: NER hardcoded model blocks embeddings when Ollama offline = P1 (C-03) — fix in 54-02
+- [Phase 54-01]: TypeScript: 0 errors, test suite 417/427 passing — codebase is clean
 
 ### Pending Todos
 
@@ -84,6 +89,6 @@ None currently active.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Phase 53 complete — Tab-Reduktion, Key-Facts-Panel, Event-Text-Sanitierung, Empty States. Ready for Phase 54 (stability-crash-audit).
-Last activity: 2026-03-06 - Completed quick task 1: Abarbeiten aller offenen Todos in Reihenfolge, ohne Rückfragen.
+Stopped at: Completed 54-01-PLAN.md — crash audit triage and smoke-test suite. Ready for 54-02 (P1 fixes: worker healthcheck, OnlyOffice auth, NER fallback).
+Last activity: 2026-03-06 - Completed Phase 54 Plan 01: crash audit triage (54-TRIAGE.md + 54-SMOKE-TESTS.md)
 Resume file: None

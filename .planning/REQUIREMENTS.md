@@ -39,14 +39,14 @@
 
 ### PDF-Tools
 
-- [ ] **PDF-01**: User kann mehrere PDFs zu einem Dokument zusammenfuehren (Merge)
-- [ ] **PDF-02**: User kann ein PDF in einzelne Seiten oder Seitenbereiche aufteilen (Split)
-- [ ] **PDF-03**: User kann PDF-Seiten drehen (90/180/270 Grad)
+- [x] **PDF-01**: User kann mehrere PDFs zu einem Dokument zusammenfuehren (Merge)
+- [x] **PDF-02**: User kann ein PDF in einzelne Seiten oder Seitenbereiche aufteilen (Split)
+- [x] **PDF-03**: User kann PDF-Seiten drehen (90/180/270 Grad)
 - [ ] **PDF-04**: User kann PDF-Seiten per Drag-and-Drop umsortieren (Reorder mit Thumbnails)
-- [ ] **PDF-05**: User kann PDF-Dateigroesse reduzieren (Compress mit Qualitaetsstufen)
-- [ ] **PDF-06**: User kann Wasserzeichen auf PDFs anwenden (ENTWURF-Stempel, Kanzlei-Logo)
-- [ ] **PDF-07**: User kann PII in PDFs automatisch schwaerzen (Redact fuer DSGVO)
-- [ ] **PDF-08**: Alle PDF-Operationen nutzen Stirling-PDF REST API (kein neuer Docker-Service)
+- [x] **PDF-05**: User kann PDF-Dateigroesse reduzieren (Compress mit Qualitaetsstufen)
+- [x] **PDF-06**: User kann Wasserzeichen auf PDFs anwenden (ENTWURF-Stempel, Kanzlei-Logo)
+- [x] **PDF-07**: User kann PII in PDFs automatisch schwaerzen (Redact fuer DSGVO)
+- [x] **PDF-08**: Alle PDF-Operationen nutzen Stirling-PDF REST API (kein neuer Docker-Service)
 
 ### CalDAV-Sync
 
@@ -118,14 +118,14 @@
 | HEL-05 | Phase 57 | Pending |
 | HEL-06 | Phase 57 | Pending |
 | HEL-07 | Phase 57 | Pending |
-| PDF-01 | Phase 56 | Pending |
-| PDF-02 | Phase 56 | Pending |
-| PDF-03 | Phase 56 | Pending |
+| PDF-01 | Phase 56 | Complete |
+| PDF-02 | Phase 56 | Complete |
+| PDF-03 | Phase 56 | Complete |
 | PDF-04 | Phase 56 | Pending |
-| PDF-05 | Phase 56 | Pending |
-| PDF-06 | Phase 56 | Pending |
-| PDF-07 | Phase 56 | Pending |
-| PDF-08 | Phase 56 | Pending |
+| PDF-05 | Phase 56 | Complete |
+| PDF-06 | Phase 56 | Complete |
+| PDF-07 | Phase 56 | Complete |
+| PDF-08 | Phase 56 | Complete |
 | CAL-01 | Phase 58 | Pending |
 | CAL-02 | Phase 58 | Pending |
 | CAL-03 | Phase 58 | Pending |

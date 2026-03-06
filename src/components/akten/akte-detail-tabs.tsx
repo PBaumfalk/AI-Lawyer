@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DokumenteTab } from "@/components/dokumente/dokumente-tab";
 import { KalenderTab } from "@/components/kalender/kalender-tab";
@@ -11,7 +11,7 @@ import { ActivityFeed } from "./activity-feed";
 import { FalldatenTab } from "./falldaten-tab";
 import { BeteiligteSection } from "./beteiligte-section";
 import { AkteChannelTab, PortalChannelTab } from "@/components/messaging/akte-channel-tab";
-import { MessageSquare, UserCircle } from "lucide-react";
+import { MessageSquare, UserCircle, MoreHorizontal, Mail, ExternalLink } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -170,30 +170,84 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
     return () => window.removeEventListener("beforeunload", handler);
   }, [falldatenDirty]);
 
+  // Overflow menu for secondary tabs (Chat, Portal)
+  const overflowTabs = [
+    { value: "nachrichten", label: "Chat", icon: MessageSquare },
+    { value: "portal-nachrichten", label: "Portal", icon: UserCircle },
+  ];
+  const overflowActive = overflowTabs.some((t) => t.value === currentTab);
+
+  const [overflowOpen, setOverflowOpen] = useState(false);
+  const overflowRef = useRef<HTMLDivElement>(null);
+
+  // Close overflow on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) {
+        setOverflowOpen(false);
+      }
+    };
+    if (overflowOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [overflowOpen]);
+
   return (
     <>
       <Tabs defaultValue="feed" value={currentTab} onValueChange={handleTabChange}>
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="feed">Aktivitaeten</TabsTrigger>
-          <TabsTrigger value="dokumente">
-            Dokumente ({akte.dokumente.length})
-          </TabsTrigger>
-          <TabsTrigger value="kalender">
-            Termine & Fristen ({akte.kalenderEintraege.length})
-          </TabsTrigger>
-          <TabsTrigger value="finanzen">Finanzen</TabsTrigger>
-          <TabsTrigger value="falldaten">
-            Falldaten{completeness.total > 0 ? ` (${completeness.percent}%)` : ""}
-          </TabsTrigger>
-          <TabsTrigger value="nachrichten">
-            <MessageSquare className="w-4 h-4 mr-1.5" />
-            Chat
-          </TabsTrigger>
-          <TabsTrigger value="portal-nachrichten">
-            <UserCircle className="w-4 h-4 mr-1.5" />
-            Portal
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex items-center gap-1">
+          <TabsList className="flex-1 justify-start">
+            <TabsTrigger value="feed">Aktivitaeten</TabsTrigger>
+            <TabsTrigger value="dokumente">
+              Dokumente ({akte.dokumente.length})
+            </TabsTrigger>
+            <TabsTrigger value="kalender">
+              Termine & Fristen ({akte.kalenderEintraege.length})
+            </TabsTrigger>
+            <TabsTrigger value="finanzen">Finanzen</TabsTrigger>
+            <TabsTrigger value="falldaten">
+              Falldaten{completeness.total > 0 ? ` (${completeness.percent}%)` : ""}
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Overflow menu for secondary tabs */}
+          <div ref={overflowRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setOverflowOpen((v) => !v)}
+              aria-label="Weitere Tabs"
+              className={`flex items-center justify-center h-9 w-9 rounded-md border text-sm font-medium transition-colors
+                ${overflowActive
+                  ? "bg-background text-foreground border-border shadow-sm"
+                  : "bg-transparent text-muted-foreground border-transparent hover:bg-muted hover:text-foreground"
+                }`}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+
+            {overflowOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-md border border-border bg-popover shadow-md p-1">
+                {overflowTabs.map(({ value, label, icon: Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => {
+                      handleTabChange(value);
+                      setOverflowOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-sm transition-colors
+                      ${currentTab === value
+                        ? "bg-accent text-accent-foreground"
+                        : "hover:bg-accent hover:text-accent-foreground text-foreground"
+                      }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* --- Feed (default) ------------------------------------------------ */}
         <TabsContent value="feed">

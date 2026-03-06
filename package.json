@@ -79,6 +79,7 @@
     "imapflow": "^1.2.10",
     "ioredis": "^5.9.3",
     "jsonwebtoken": "^9.0.3",
+    "jspdf": "^4.2.0",
     "lucide-react": "^0.468.0",
     "mailparser": "^3.9.3",
     "meilisearch": "^0.55.0",

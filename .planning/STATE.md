@@ -61,6 +61,7 @@ All-time: 155 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | Phase 55 P04 | 3min | 2 tasks | 7 files |
 | Phase 56 P01 | 3min | 2 tasks | 3 files |
 | Phase 56 P02 | 4min | 2 tasks | 5 files |
+| Phase 57 P01 | 4min | 2 tasks | 5 files |
 | Phase 57 P02 | 4min | 2 tasks | 4 files |
 | Phase 57 P03 | 3min | 2 tasks | 4 files |
 
@@ -78,6 +79,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 55-04]: jsPDF for server-side PDF with table-based trend rendering; default Kanzlei name in Briefkopf (no settings table)
 - [Phase 56-01]: saveAsNew defaults true for non-destructive PDF ops; AsyncIterable<Buffer> cast for stream iteration; buildDsgvoPiiPattern combines DSGVO regex
 - [Phase 56-02]: Native HTML drag-and-drop for page reorder (no dnd-kit dep); HTML range/checkbox inputs for missing shadcn components; segmented buttons for angle/level selection
+- [Phase 57-01]: ExtendedPrismaClient for Prisma v5 compat; AiFunktion CHAT for autofill tracking (no enum change); overrides prop pattern for merging AI suggestions into form state
+- [Phase 57-02]: BRIEFING funktion for case summary token tracking; on-demand AI generation via button (no auto-fetch); ExtendedPrismaClient for Prisma v5 compat
 - [Phase 57-03]: Reused existing /api/ki-chat with crossAkte=true for global chat (no new endpoint); existing /api/falldaten-templates for template suggestions; added falldatenTemplateId to POST /api/akten
 
 ### Pending Todos

@@ -17,9 +17,9 @@ Requirements for v0.9 Security, Migration & Productivity. Each maps to roadmap p
 ### Migration
 
 - [x] **MIG-01**: Admin kann J-Lawyer REST API Verbindung konfigurieren (URL + Credentials)
-- [ ] **MIG-02**: System importiert alle Akten mit Metadaten, Aktenzeichen und Zustaendigkeiten
-- [ ] **MIG-03**: System importiert alle Kontakte/Adressen mit Deduplizierung
-- [ ] **MIG-04**: System importiert Beteiligte mit korrekter Rollen-Zuordnung je Akte
+- [x] **MIG-02**: System importiert alle Akten mit Metadaten, Aktenzeichen und Zustaendigkeiten
+- [x] **MIG-03**: System importiert alle Kontakte/Adressen mit Deduplizierung
+- [x] **MIG-04**: System importiert Beteiligte mit korrekter Rollen-Zuordnung je Akte
 - [ ] **MIG-05**: System importiert Dokumente (Binary nach MinIO, Metadaten nach DB)
 - [ ] **MIG-06**: System importiert Kalendereintraege, Fristen und Wiedervorlagen
 - [x] **MIG-07**: Migration ist idempotent (Re-Run ueberschreibt statt dupliziert via jlawyer_id)
@@ -69,9 +69,9 @@ Deferred to post-v0.9 milestones.
 | AUTH-03 | Phase 59 | Complete |
 | AUTH-04 | Phase 59 | Complete |
 | MIG-01 | Phase 60 | Complete |
-| MIG-02 | Phase 60 | Pending |
-| MIG-03 | Phase 60 | Pending |
-| MIG-04 | Phase 60 | Pending |
+| MIG-02 | Phase 60 | Complete |
+| MIG-03 | Phase 60 | Complete |
+| MIG-04 | Phase 60 | Complete |
 | MIG-05 | Phase 60 | Pending |
 | MIG-06 | Phase 60 | Pending |
 | MIG-07 | Phase 60 | Complete |

@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v0.9
 milestone_name: Security, Migration & Productivity
 current_phase: 60
-current_plan: 2 of 3
+current_plan: 3
 status: executing
-stopped_at: Completed 60-01-PLAN.md
-last_updated: "2026-03-07T04:49:10.507Z"
+stopped_at: Completed 60-02-PLAN.md
+last_updated: "2026-03-07T04:52:45.724Z"
 last_activity: 2026-03-07
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 10
-  completed_plans: 6
+  completed_plans: 7
   percent: 96
 ---
 
@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Milestone:** v0.9 Security, Migration & Productivity
 **Current Phase:** 60
-**Current Plan:** 2 of 3
+**Current Plan:** 3
 **Total Plans in Phase:** 3
-**Status:** Executing
+**Status:** Ready to execute
 **Last activity:** 2026-03-07
 
 Progress: [██████████] 96% (v0.9)
@@ -62,6 +62,7 @@ All-time: 178 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | v0.8 | 4 | 12 | 1 day |
 | v0.9 (so far) | 1 | 5 | in progress |
 | Phase 60 P01 | 4min | 2 tasks | 4 files |
+| Phase 60 P02 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ See milestones/ archives for per-milestone decision history.
 - [Phase 59-05]: Edge middleware 2FA enforcement uses JWT totpEnabled claim (not DB) + TOTP_REQUIRED_ROLES env var for role configuration
 - [Phase 60]: PostgreSQL unique index on jlawyerId allows multiple NULLs for records without J-Lawyer origin
 - [Phase 60]: Migration SQL created manually (Docker not running); validated with prisma validate + prisma generate
+- [Phase 60]: mapSachgebiet uses case-insensitive substring matching for resilience against J-Lawyer label variations
+- [Phase 60]: Email fallback deduplication in migrateKontakte handles pre-existing contacts without creating duplicates
+- [Phase 60]: migrateBeteiligte accepts pre-built Map params from runner keeping ETL functions stateless and testable
 
 ### Pending Todos
 
@@ -94,6 +98,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T04:49:09.153Z
-Stopped at: Completed 60-01-PLAN.md
+Last session: 2026-03-07T04:52:45.721Z
+Stopped at: Completed 60-02-PLAN.md
 Resume file: None

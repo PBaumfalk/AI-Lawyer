@@ -30,8 +30,8 @@ Requirements for v0.9 Security, Migration & Productivity. Each maps to roadmap p
 - [x] **FEED-01**: Historie-Tab heisst "Aktivitaeten" und ist Default-Tab beim Oeffnen einer Akte
 - [x] **FEED-02**: Event-Texte sind menschenlesbar (keine IDs, keine MIME-Types)
 - [x] **FEED-03**: Filterchips oberhalb des Feeds (Alle, Fristen, Dokumente, Kommunikation, Zeit, System)
-- [ ] **FEED-04**: Composer am Feed-Ende fuer Notizen, Telefonnotizen und Aufgaben
-- [ ] **FEED-05**: Telefonnotiz-Overlay mit Beteiligtem, Ergebnis, Stichworte, naechster Schritt
+- [x] **FEED-04**: Composer am Feed-Ende fuer Notizen, Telefonnotizen und Aufgaben
+- [x] **FEED-05**: Telefonnotiz-Overlay mit Beteiligtem, Ergebnis, Stichworte, naechster Schritt
 - [ ] **FEED-06**: Tab-Reduktion von 11 auf 4-5 sichtbare Tabs mit Overflow-Menue
 - [ ] **FEED-07**: Key-Facts-Panel sticky oberhalb Tabs (Gegenstandswert, Gericht, Phase, naechste Frist, Mandant/Gegner)
 
@@ -79,8 +79,8 @@ Deferred to post-v0.9 milestones.
 | FEED-01 | Phase 61 | Complete |
 | FEED-02 | Phase 61 | Complete |
 | FEED-03 | Phase 61 | Complete |
-| FEED-04 | Phase 62 | Pending |
-| FEED-05 | Phase 62 | Pending |
+| FEED-04 | Phase 62 | Complete |
+| FEED-05 | Phase 62 | Complete |
 | FEED-06 | Phase 63 | Pending |
 | FEED-07 | Phase 63 | Pending |
 

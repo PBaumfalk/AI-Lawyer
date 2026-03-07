@@ -41,7 +41,7 @@
 - [x] **Phase 59: 2FA/TOTP** - Users secure their accounts with TOTP authenticator apps, backup codes, and admin-enforceable 2FA policies (completed 2026-03-07)
 - [x] **Phase 60: J-Lawyer Migration ETL** - Admin imports all cases, contacts, documents, and calendar from J-Lawyer via REST API (completed 2026-03-07)
 - [x] **Phase 61: Feed Cleanup + Filterchips** - Akte activity feed becomes the default tab with human-readable events and category filters (completed 2026-03-07)
-- [ ] **Phase 62: Composer + Telefonnotiz** - Users create notes, phone notes, and tasks inline at the feed bottom
+- [x] **Phase 62: Composer + Telefonnotiz** - Users create notes, phone notes, and tasks inline at the feed bottom (completed 2026-03-07)
 - [ ] **Phase 63: Tab-Reduktion + Key-Facts-Panel** - Akte detail tabs collapse to 4-5 visible with overflow, sticky key-facts panel above tabs
 
 ## Phase Details
@@ -138,7 +138,7 @@ Plans:
 | 59 | 5/5 | Complete    | 2026-03-07 | - |
 | 60 | 5/5 | Complete    | 2026-03-07 | - |
 | 61 | 2/2 | Complete    | 2026-03-07 | - |
-| 62 | v0.9 | 0/1 | Not started | - |
+| 62 | 1/1 | Complete   | 2026-03-07 | - |
 | 63 | v0.9 | 0/? | Not started | - |
 
 ---

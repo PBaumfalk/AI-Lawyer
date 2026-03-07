@@ -98,12 +98,12 @@ Plans:
   3. Sync runs automatically every 15 minutes via BullMQ cron with a manual sync button, using ETag/CTag for incremental updates
   4. External calendar events from connected accounts are visible in the Kanzlei Tagesuebersicht alongside internal entries
   5. CalDAV credentials are stored encrypted following the existing EmailKonto pattern
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 58-01: TBD
-- [ ] 58-02: TBD
-- [ ] 58-03: TBD
+- [ ] 58-01-PLAN.md — CalDavKonto model, tsdav client library, encrypted credentials, CRUD API endpoints
+- [ ] 58-02-PLAN.md — Sync engine with Frist export, bidirectional Termine, ETag/CTag tracking, BullMQ cron worker
+- [ ] 58-03-PLAN.md — CalDAV settings tab and external events in Kanzlei Tagesuebersicht
 
 ## Progress
 

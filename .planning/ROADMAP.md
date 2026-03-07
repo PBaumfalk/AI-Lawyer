@@ -116,7 +116,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Akte detail shows 4-5 primary tabs with remaining tabs accessible via an overflow menu
   2. A sticky Key-Facts panel above the tabs displays Gegenstandswert, Gericht, Phase, naechste Frist, and Mandant/Gegner at a glance
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 63-01-PLAN.md — Move KI-Analyse and Falldaten into the overflow menu (4 primary tabs)
+- [ ] 63-02-PLAN.md — Add Gericht + Status to Key-Facts panel, fix label, make panel sticky
 
 ## Progress
 
@@ -139,7 +143,7 @@ Plans:
 | 60 | 5/5 | Complete    | 2026-03-07 | - |
 | 61 | 2/2 | Complete    | 2026-03-07 | - |
 | 62 | 1/1 | Complete    | 2026-03-07 | - |
-| 63 | v0.9 | 0/? | Not started | - |
+| 63 | v0.9 | 0/2 | Not started | - |
 
 ---
-*Last updated: 2026-03-07 after phase 62 planning*
+*Last updated: 2026-03-07 after phase 63 planning*

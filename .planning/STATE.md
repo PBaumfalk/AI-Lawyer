@@ -4,15 +4,15 @@ milestone: v0.9
 milestone_name: Security, Migration & Productivity
 current_phase: 59 - 2FA/TOTP (Phase 1 of 5)
 current_plan: 5
-status: executing
-stopped_at: Completed 59-03-PLAN.md (TOTP login challenge flow)
-last_updated: "2026-03-07T04:31:36.558Z"
+status: verifying
+stopped_at: Completed 59-05-PLAN.md (2FA enforcement + setup-required page)
+last_updated: "2026-03-07T04:35:07.402Z"
 last_activity: 2026-03-07
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 10
 ---
 
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 **Current Phase:** 59 - 2FA/TOTP (Phase 1 of 5)
 **Current Plan:** 5
 **Total Plans in Phase:** 5
-**Status:** Ready to execute
+**Status:** Phase complete — ready for verification
 **Last activity:** 2026-03-07
 
 Progress: [██░░░░░░░░░░░░░░░░░░] 10% (v0.9)
@@ -63,6 +63,7 @@ All-time: 172 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | v0.9 (so far) | 1 | 2 | in progress |
 | Phase 59 P04 | 5 | 2 tasks | 3 files |
 | Phase 59 P03 | 8 | 2 tasks | 6 files |
+| Phase 59-05 P05 | 6 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,7 @@ See milestones/ archives for per-milestone decision history.
 - [Phase 59]: TOTP nonce stored in DB (totpNonce field) consumed one-time in auth.ts authorize — avoids storing credentials client-side
 - [Phase 59]: Login page calls /api/auth/totp/init before NextAuth signIn to detect 2FA requirement without modifying NextAuth internals
 - [Phase 59]: TOTP:nonce prefix in Credentials password field distinguishes second-factor path in authorize without additional providers
+- [Phase 59-05]: Edge middleware 2FA enforcement uses JWT totpEnabled claim (not DB) + TOTP_REQUIRED_ROLES env var for role configuration
 
 ### Pending Todos
 
@@ -92,6 +94,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T04:31:36.556Z
-Stopped at: Completed 59-03-PLAN.md (TOTP login challenge flow)
+Last session: 2026-03-07T04:35:07.400Z
+Stopped at: Completed 59-05-PLAN.md (2FA enforcement + setup-required page)
 Resume file: None

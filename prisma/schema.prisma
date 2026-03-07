@@ -521,6 +521,12 @@ model User {
   passwordResetToken   String?   @unique
   passwordResetExpires DateTime?
 
+  // 2FA / TOTP
+  totpSecret      String?
+  totpEnabled     Boolean   @default(false)
+  totpVerifiedAt  DateTime?
+  backupCodes     String[]  @default([])  // hashed backup codes
+
   // CalDAV Sync
   caldavKonten         CalDavKonto[]
 

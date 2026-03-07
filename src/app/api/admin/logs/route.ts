@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { readFile } from "fs/promises";
+import { open, stat } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
 
@@ -13,6 +13,8 @@ interface LogEntry {
 }
 
 // Pino level numbers to labels
+const MAX_LOG_BYTES = 2 * 1024 * 1024;
+
 const LEVEL_LABELS: Record<number, string> = {
   10: "TRACE",
   20: "DEBUG",
@@ -57,7 +59,16 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const content = await readFile(logFilePath, "utf-8");
+    const { size } = await stat(logFilePath);
+    const readSize = Math.min(size, MAX_LOG_BYTES);
+    const start = Math.max(0, size - readSize);
+
+    const file = await open(logFilePath, "r");
+    const buffer = Buffer.alloc(readSize);
+    await file.read(buffer, 0, readSize, start);
+    await file.close();
+
+    const content = buffer.toString("utf-8");
     const lines = content.trim().split("\n").filter(Boolean);
 
     let entries: LogEntry[] = [];

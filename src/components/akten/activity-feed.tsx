@@ -17,12 +17,11 @@ interface ActivityFeedProps {
 // Filter chip definitions mapping to AktenActivityTyp values
 const feedFilters = [
   { label: "Alle", types: null },
-  { label: "Dokumente", types: ["DOKUMENT"] },
   { label: "Fristen", types: ["FRIST"] },
-  { label: "E-Mails", types: ["EMAIL"] },
-  { label: "Helena", types: ["HELENA_DRAFT", "HELENA_ALERT"] },
-  { label: "Notizen", types: ["NOTIZ"] },
-  { label: "Status", types: ["BETEILIGTE", "STATUS_CHANGE"] },
+  { label: "Dokumente", types: ["DOKUMENT"] },
+  { label: "Kommunikation", types: ["EMAIL", "NOTIZ"] },
+  { label: "Zeit", types: ["ZEITERFASSUNG"] },   // no DB entries yet — chip shows empty feed
+  { label: "System", types: ["BETEILIGTE", "STATUS_CHANGE", "HELENA_ALERT", "HELENA_DRAFT"] },
 ] as const;
 
 // Custom hook for Helena task progress tracking via Socket.IO
@@ -103,7 +102,7 @@ function useHelenaTaskProgress(akteId: string) {
 
 // Contextual empty state based on active filter
 function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: string }) {
-  if (filterLabel === "E-Mails") {
+  if (filterLabel === "Kommunikation") {
     return (
       <div className="glass-card rounded-xl p-10 text-center space-y-3">
         <div className="flex justify-center">
@@ -136,7 +135,7 @@ function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: 
     );
   }
 
-  if (filterLabel === "Helena") {
+  if (filterLabel === "System") {
     return (
       <div className="glass-card rounded-xl p-10 text-center space-y-3">
         <div className="flex justify-center">

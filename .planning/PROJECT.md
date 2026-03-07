@@ -235,10 +235,11 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - [ ] Mapping J-Lawyer Datenmodell auf AI-Lawyer Prisma-Schema
 - [ ] Validierung und Fehlerreporting beim Import
 
-**Mahnwesen (v0.9):**
-- [ ] Mahnstufen-Konfiguration (1./2./3. Mahnung + Mahngebuehren)
-- [ ] Automatischer Mahnlauf mit Faelligkeitspruefung
-- [ ] Mahn-PDF mit Kanzlei-Briefkopf
+**Akte-Detail Feed-Umbau (v0.9):**
+- [ ] Historie-Tab als "Aktivitaeten" Default-Tab mit gesaeuberten Event-Texten
+- [ ] Composer (Notiz, Telefonnotiz, Aufgabe) persistent am Feed-Ende
+- [ ] Tab-Reduktion von 11 auf 4-5 sichtbare Tabs mit Overflow-Menu
+- [ ] Key-Facts-Panel sticky oberhalb Tabs (Gegenstandswert, Gericht, naechste Frist)
 
 ### Backlog
 
@@ -252,6 +253,11 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - [ ] Rechnungen/Zahlungen im Portal einsehen
 - [ ] Magic-Link Login als Alternative
 - [ ] Portal-Benachrichtigungseinstellungen
+
+**Mahnwesen (nach v0.9):**
+- [ ] Mahnstufen-Konfiguration (1./2./3. Mahnung + Mahngebuehren)
+- [ ] Automatischer Mahnlauf mit Faelligkeitspruefung
+- [ ] Mahn-PDF mit Kanzlei-Briefkopf
 
 **Sonstiges:**
 - [ ] VoIP: Sipgate Anrufjournal + Zuordnung
@@ -383,4 +389,4 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Remove compose-popup auto-save entirely (v0.6) | Stale closure was accidentally sending emails; proper draft API needed | ✓ Good — eliminated the bug class |
 
 ---
-*Last updated: 2026-03-07 after v0.9 scope refinement (2FA + J-Lawyer Migration + Mahnwesen, Helena Sprache deferred)*
+*Last updated: 2026-03-07 after v0.9 scope refinement (2FA + J-Lawyer Migration + Akte-Detail Feed-Umbau, Mahnwesen + Helena Sprache deferred)*

@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Eine vollständig browserbasierte Kanzleisoftware mit autonomer KI-Agentin ("Helena") für die Kanzlei Baumfalk, Dortmund. Vereint Aktenverwaltung, Dokumentenmanagement mit OnlyOffice (Co-Editing, Track Changes, Vorlagen, Briefkopf), BGB-konforme Fristenberechnung, vollständigen E-Mail-Client (IMAP IDLE + SMTP), OCR-Pipeline mit RAG-Ingestion, Finanzen (RVG, Rechnungen, E-Rechnung, DATEV, SEPA, Zeiterfassung), beA-Integration, autonome KI-Agentin mit ReAct-Loop, Tool-Calling, deterministischem Schriftsatz-Orchestrator, proaktivem Background-Scanner mit Cross-Akte Urteil-Matching, per-Akte Memory und QA-Gates, internes Echtzeit-Messaging mit Akten-Threads, strukturierte Falldatenblaetter mit Community-Template-Workflow und Mandantenportal mit Einladungslink-Auth, Sachstand-Timeline, Dokument-Freigabe, sicherem Messaging und E-Mail-Benachrichtigungen — RBAC mit Dezernaten, DSGVO-Compliance und Audit-Trail — alles self-hosted via Docker Compose, alles im Browser.
+Eine vollständig browserbasierte Kanzleisoftware mit autonomer KI-Agentin ("Helena") für die Kanzlei Baumfalk, Dortmund. Vereint Aktenverwaltung, Dokumentenmanagement mit OnlyOffice (Co-Editing, Track Changes, Vorlagen, Briefkopf), BGB-konforme Fristenberechnung, vollständigen E-Mail-Client (IMAP IDLE + SMTP), OCR-Pipeline mit RAG-Ingestion, Finanzen (RVG, Rechnungen, E-Rechnung, DATEV, SEPA, Zeiterfassung), beA-Integration, autonome KI-Agentin mit ReAct-Loop, Tool-Calling, deterministischem Schriftsatz-Orchestrator, proaktivem Background-Scanner mit Cross-Akte Urteil-Matching, per-Akte Memory und QA-Gates, internes Echtzeit-Messaging mit Akten-Threads, strukturierte Falldatenblaetter mit Community-Template-Workflow, Mandantenportal mit Einladungslink-Auth, Sachstand-Timeline, Dokument-Freigabe, sicherem Messaging und E-Mail-Benachrichtigungen, BI-Dashboard mit KPI-Analytics und CSV/XLSX/PDF-Export, PDF-Tools (Merge/Split/Rotate/Compress/Watermark/Redact) via Stirling-PDF, Helena Intelligence (Falldaten-Auto-Fill, Fallzusammenfassung, globaler KI-Chat, Template-Vorschlaege) und bidirektionaler CalDAV-Sync mit Google/Apple Calendar — RBAC mit Dezernaten, DSGVO-Compliance und Audit-Trail — alles self-hosted via Docker Compose, alles im Browser.
 
 ## Core Value
 
@@ -197,15 +197,52 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - ✓ E-Mail-Benachrichtigungen: Neues Dokument, neue Nachricht, Sachstand-Update — v0.5
 - ✓ Multi-Mandant: Jeder Beteiligter mit Rolle MANDANT wird separat eingeladen — v0.5
 
+**BI-Dashboard + Export (v0.8):**
+- ✓ BI-Dashboard mit KPI-Kacheln (Akten, Finanzen, Fristen, Helena), Trend-Charts, Zeitraum/Anwalt/Sachgebiet-Filter — v0.8
+- ✓ CSV/XLSX-Export fuer Akten, Kontakte, Finanzdaten (ExcelJS Streaming WorkbookWriter) — v0.8
+- ✓ BI-Dashboard PDF-Report (jsPDF mit Briefkopf) und XLSX-Report — v0.8
+- ✓ Redis-cached Aggregation Queries (5min TTL) — v0.8
+
+**PDF-Tools (v0.8):**
+- ✓ PDF Merge, Split, Rotate, Compress, Watermark, Redact via Stirling-PDF REST API — v0.8
+- ✓ Tabbed PDF Tools Dialog mit Drag-and-Drop Page Thumbnails — v0.8
+- ✓ DSGVO PII Auto-Redact mit Regex-Pattern-Matching — v0.8
+
+**Helena Intelligence (v0.8):**
+- ✓ Falldaten Auto-Fill: AI-Extraktion aus Dokumenten mit per-Feld Konfidenz (HOCH/MITTEL/NIEDRIG) und Quell-Excerpt — v0.8
+- ✓ Fallzusammenfassung als Timeline + Key Facts Panel in Akte-Detail — v0.8
+- ✓ Globaler KI-Chat (/ki) fuer aktenuebergreifende RAG-Fragen — v0.8
+- ✓ Falldatenblatt-Template-Vorschlaege bei Akte-Anlage (Sachgebiet-Matching) — v0.8
+
+**CalDAV-Sync (v0.8):**
+- ✓ Google Calendar OAuth2 + Apple iCloud App-Passwort Verbindung — v0.8
+- ✓ Fristen als read-only Export, Termine bidirektional (create/update/delete) — v0.8
+- ✓ BullMQ 15min Cron + manueller Sync, ETag/CTag inkrementell — v0.8
+- ✓ Externe Kalender-Events in Kanzlei-Tagesuebersicht — v0.8
+- ✓ Verschluesselte CalDAV-Credentials (AES-256-GCM, domain-separated salt) — v0.8
+
 ### Active
 
-<!-- v0.8 active requirements — see .planning/REQUIREMENTS.md for full list -->
+<!-- Current milestone: v0.9 Security, Migration & Productivity -->
 
-- [ ] BI-Dashboard: KPI-Kacheln (Akten, Finanzen, Fristen, Helena), Trend-Charts, Filterbar
-- [ ] Export: CSV/XLSX für Akten, Kontakte, Finanzdaten, BI-Dashboard-Reports
-- [ ] Helena Intelligence: Falldaten auto-fill, Fallzusammenfassung, Globaler KI-Chat, Template-Vorschläge
-- [ ] PDF-Tools: Merge, Split, Rotate, Reorder, Compress, Watermark, Redact (via Stirling-PDF)
-- [ ] CalDAV-Sync: Bidirektionaler Sync mit externen Kalendern (Google, Outlook, Apple)
+**2FA (v0.9):**
+- [ ] TOTP Authenticator-App Login (zweiter Faktor)
+- [ ] 2FA Setup-Flow mit QR-Code und Recovery-Codes
+- [ ] 2FA-Enforcement pro Rolle (Admin kann erzwingen)
+
+**J-Lawyer Migration (v0.9):**
+- [ ] Import von Akten, Beteiligten, Dokumenten und Kalender aus J-Lawyer
+- [ ] Mapping J-Lawyer Datenmodell auf AI-Lawyer Prisma-Schema
+- [ ] Validierung und Fehlerreporting beim Import
+
+**Helena Sprache (v0.9):**
+- [ ] Spracheingabe via Whisper (Diktat zu Text)
+- [ ] Sprachausgabe via TTS (Helena liest Antworten vor)
+
+**Mahnwesen (v0.9):**
+- [ ] Mahnstufen-Konfiguration (1./2./3. Mahnung + Mahngebuehren)
+- [ ] Automatischer Mahnlauf mit Faelligkeitspruefung
+- [ ] Mahn-PDF mit Kanzlei-Briefkopf
 
 ### Backlog
 
@@ -238,13 +275,13 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 
 ## Context
 
-Shipped v0.6 with ~141k LOC TypeScript (826+ total commits). v0.6 completed stabilization — zero TypeScript errors, error boundaries on all route groups, consistent env vars, passing test suite, build-time error checking enabled. All P0/P1/P2 issues from health audit resolved.
-Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (90+ Models including PortalInvite, portal fields on User, PORTAL ChannelTyp), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, Recharts, canvas-confetti, pdf-lib, fast-xml-parser, pgvector HNSW.
+Shipped v0.8 with ~155k LOC TypeScript (868+ total commits). v0.8 added BI-Dashboard with KPI analytics and export, PDF-Tools via Stirling-PDF, Helena Intelligence (auto-fill, case summary, global KI-Chat), and bidirectional CalDAV sync with Google/Apple Calendar.
+Tech stack: Next.js 14+ (App Router), TypeScript, Tailwind CSS (oklch), shadcn/ui, PostgreSQL 16 + Prisma (90+ Models including CalDavKonto, CalDavSyncMapping), MinIO, Meilisearch, OnlyOffice Docs (Docker), Redis + BullMQ, Socket.IO, Stirling-PDF, Vercel AI SDK v4 (Ollama/qwen3.5:35b / OpenAI / Anthropic), bea.expert, Motion/React v11, Recharts, ExcelJS, jsPDF, tsdav, canvas-confetti, pdf-lib, fast-xml-parser, pgvector HNSW.
 Docker Compose deployment with 9 services (app, worker, postgres, redis, minio, meilisearch, stirling-pdf, onlyoffice, ollama).
-Helena is an autonomous agent with ReAct-Loop, 14 tools, deterministic Schriftsatz pipeline, @-mention task system, draft-approval workflow, background scanner with 7 alert types (incl. NEUES_URTEIL), per-Akte memory, QA-gates, and channel messaging integration.
+Helena is an autonomous agent with ReAct-Loop, 14 tools, deterministic Schriftsatz pipeline, @-mention task system, draft-approval workflow, background scanner with 7 alert types (incl. NEUES_URTEIL), per-Akte memory, QA-gates, channel messaging integration, Falldaten auto-fill with confidence scoring, case summary generation, and global cross-Akte KI-Chat.
 Gamification system: Quest DSL evaluator, XP/Level/Runen/Streak engine, Bossfight team mechanic, Item-Shop with 18 items (4 rarity tiers), Heldenkarte profile with 8 achievement badges, Team-Dashboard with Recharts trend charts and PDF/CSV reporting, Anti-Missbrauch guards.
 Mandantenportal: /portal/* route group with MANDANT role, invite-based auth, DSGVO data isolation, per-document Freigabe toggle, PORTAL messaging channels, BullMQ email notifications (3 types), tab navigation.
-Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js 15 upgrade), 317 ESLint unused-vars warnings, ~67 API routes without explicit try-catch, ~80 silent .catch(() => {}) blocks, compose-popup needs proper draft API, search-web.ts stub, @Helena silent in ALLGEMEIN channels, sidebar unread badge not real-time for background, Akte stats counter shows old chatNachrichten, doppel-runen 2h window edge case, portal email deep links don't redirect post-login.
+Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js 15 upgrade), 317 ESLint unused-vars warnings, ~67 API routes without explicit try-catch, ~80 silent .catch(() => {}) blocks, compose-popup needs proper draft API, search-web.ts stub, @Helena silent in ALLGEMEIN channels, sidebar unread badge not real-time for background, Akte stats counter shows old chatNachrichten, doppel-runen 2h window edge case, portal email deep links don't redirect post-login, virtual EXTERN typ in CalDAV API (no Prisma enum change).
 
 ## Constraints
 
@@ -288,8 +325,13 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Nightly cron für Akte-Embeddings (v0.3) | Einfacher als on-demand, 02:30 vor Urteile-Sync | ✓ Good — akzeptable Staleness für 5-Personen-Kanzlei |
 | Banner refetch statt auto-insert (v0.3) | Konsistent mit Activity Feed Pattern, verhindert Race Conditions | ✓ Good — message:new triggers refetch, not local insert |
 | Mandantenportal mit Einladungslink + Passwort | Einfach, sicher, kein OAuth-Setup für Mandanten | ✓ Good — shipped in v0.5 |
-| CalDAV-Sync bidirektional | Integration mit bestehenden Kalender-Systemen | — Pending |
-| Prisma v5→v7 upgrade deferred (Phase 52) | Breaking changes in major upgrade; no current functionality impact; own migration sprint needed | ⏳ Deferred — post-v0.7 |
+| CalDAV-Sync bidirektional (v0.8) | Integration mit bestehenden Kalender-Systemen | ✓ Good — tsdav client, Google OAuth2 + Apple app-password, BullMQ 15min cron |
+| Remote wins on BIDI conflict (v0.8) | Deterministic UID pattern for own-event detection; remote authoritative | ✓ Good — no data loss, clear conflict resolution |
+| Redis-cached BI queries (v0.8) | 5min TTL prevents DB overload on repeated dashboard loads | ✓ Good — cachedQuery wrapper reusable |
+| ExcelJS streaming for XLSX export (v0.8) | Memory-efficient for large datasets via WorkbookWriter | ✓ Good — semicolon CSV with UTF-8 BOM for German Excel |
+| Reuse existing /api/ki-chat for global chat (v0.8) | crossAkte=true flag, no new endpoint needed | ✓ Good — minimal code, maximum reuse |
+| Virtual EXTERN typ in API (v0.8) | No Prisma enum change for CalDAV external events | ✓ Good — externalData Json cache on CalDavSyncMapping |
+| Prisma v5→v7 upgrade deferred (Phase 52) | Breaking changes in major upgrade; no current functionality impact; own migration sprint needed | ⏳ Deferred — still pending |
 
 | Zero new npm packages for v0.2 (v0.2) | All agent capabilities on existing AI SDK v4 + BullMQ + Prisma + Socket.IO | ✓ Good — no dependency bloat |
 | Deterministic Schriftsatz pipeline (v0.2) | generateObject not free-form ReAct for legal filings | ✓ Good — predictable, validated output |
@@ -318,16 +360,7 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 - **v0.6 Stabilisierung** — 1 phase, 4 plans (2026-03-04)
 - **v0.6.1 Adhoc Bugfixes** — 1 phase, 1 plan (2026-03-06)
 - **v0.7 UI/UX & Stability** — 2 phases, 4 plans (2026-03-06)
-
-## Current Milestone: v0.8 Intelligence & Tools
-
-**Goal:** BI-Dashboard mit KPIs und Export, Helena Intelligence (Falldaten auto-fill, Fallzusammenfassung, globaler KI-Chat), PDF-Tools via Stirling-PDF und bidirektionaler CalDAV-Sync.
-
-**Target features:**
-- BI-Dashboard + Export: KPI-Kacheln (Akten, Finanzen, Fristen, Helena), Trend-Charts, CSV/XLSX Export
-- Helena Intelligence: Falldaten auto-fill aus Dokumenten, Fallzusammenfassung, globaler aktenübergreifender KI-Chat, Template-Vorschläge
-- PDF-Tools: Merge, Split, Rotate, Reorder, Compress, Watermark, Redact via Stirling-PDF API
-- CalDAV-Sync: Bidirektionaler Sync (Fristen/Termine ↔ Google/Outlook/Apple Calendar)
+- **v0.8 Intelligence & Tools** — 4 phases, 12 plans (2026-03-07)
 
 **LLM Strategy:** Hybrid — Ollama (qwen3.5:35b) default, Cloud-Provider (Claude/GPT-4) optional pro Task, konfigurierbar in Settings.
 
@@ -353,4 +386,4 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Remove compose-popup auto-save entirely (v0.6) | Stale closure was accidentally sending emails; proper draft API needed | ✓ Good — eliminated the bug class |
 
 ---
-*Last updated: 2026-03-06 after v0.8 milestone started (Intelligence & Tools)*
+*Last updated: 2026-03-07 after v0.9 milestone start (Security, Migration & Productivity)*

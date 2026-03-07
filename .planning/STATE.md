@@ -1,48 +1,48 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.8
-milestone_name: Intelligence & Tools
-current_phase: 58
+milestone: v0.9
+milestone_name: Security, Migration & Productivity
+current_phase: 59
 current_plan: Not started
-status: completed
-stopped_at: Completed 58-03-PLAN.md
-last_updated: "2026-03-07T00:47:05.377Z"
-last_activity: 2026-03-07 -- Completed 58-02 CalDAV Sync Engine
+status: defining_requirements
+stopped_at: null
+last_updated: "2026-03-07"
+last_activity: 2026-03-07 -- Milestone v0.9 started
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
-  percent: 67
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-06)
+See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet -- und Mandanten über ein eigenes Portal Sachstand, Dokumente und Nachrichten einsehen können.
-**Current focus:** Phase 57 - Helena Intelligence (complete)
+**Current focus:** Defining requirements for v0.9
 
 ## Current Position
 
-**Milestone:** v0.8 Intelligence & Tools
-**Current Phase:** 58
-**Current Plan:** Not started
-**Status:** Milestone complete
-**Last activity:** 2026-03-07 -- Completed 58-02 CalDAV Sync Engine
+**Milestone:** v0.9 Security, Migration & Productivity
+**Current Phase:** Not started (defining requirements)
+**Current Plan:** N/A
+**Status:** Defining requirements
+**Last activity:** 2026-03-07 -- Milestone v0.9 started
 
-Progress: [█████████████░░░░░░░] 67% (Phase 58)
+Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (v0.9 STARTED)
 
-All-time: 157 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.7:4 + v0.8:11)
+All-time: 169 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.6.1:1 + v0.7:4 + v0.8:12 + adhoc:10)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 146
-- Average duration: ~15 min
-- Total execution time: ~36 hours
+- Total plans completed: 169
+- Average duration: ~4 min/plan
+- Total execution time: ~11 hours
 
 **By Milestone:**
 
@@ -58,36 +58,14 @@ All-time: 157 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | v0.6 | 1 | 4 | 1 day |
 | v0.6.1 | 1 | 1 | 1 day |
 | v0.7 | 2 | 4 | 1 day |
-| Phase 55 P04 | 3min | 2 tasks | 7 files |
-| Phase 56 P01 | 3min | 2 tasks | 3 files |
-| Phase 56 P02 | 4min | 2 tasks | 5 files |
-| Phase 57 P01 | 4min | 2 tasks | 5 files |
-| Phase 57 P02 | 4min | 2 tasks | 4 files |
-| Phase 57 P03 | 3min | 2 tasks | 4 files |
-| Phase 58 P01 | 4min | 2 tasks | 7 files |
-| Phase 58 P02 | 4min | 2 tasks | 6 files |
-| Phase 58 P03 | 4min | 1 tasks | 6 files |
+| v0.8 | 4 | 12 | 1 day |
 
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-- [Phase 52]: Prisma v5->v7 upgrade deferred -- breaking changes, needs own migration sprint
-- [Phase 54-02]: OnlyOffice JWT fix validates query.token (complete JWT coverage)
-- [Phase 54-02]: NER model key is ai.provider.model -- same key used by Helena/provider chain
-- [Phase 55-01]: Used betragBrutto (not gesamtBrutto) for revenue KPI; TokenUsage model for Helena token aggregation
-- [Phase 55-02]: ExcelJS streaming WorkbookWriter for memory-efficient XLSX; semicolon CSV with UTF-8 BOM for German Excel
-- [Phase 55-03]: useState/useEffect hooks for BI data (no SWR); Recharts v3 Tooltip Number() cast for type compat
-- [Phase 55-04]: jsPDF for server-side PDF with table-based trend rendering; default Kanzlei name in Briefkopf (no settings table)
-- [Phase 56-01]: saveAsNew defaults true for non-destructive PDF ops; AsyncIterable<Buffer> cast for stream iteration; buildDsgvoPiiPattern combines DSGVO regex
-- [Phase 56-02]: Native HTML drag-and-drop for page reorder (no dnd-kit dep); HTML range/checkbox inputs for missing shadcn components; segmented buttons for angle/level selection
-- [Phase 57-01]: ExtendedPrismaClient for Prisma v5 compat; AiFunktion CHAT for autofill tracking (no enum change); overrides prop pattern for merging AI suggestions into form state
-- [Phase 57-02]: BRIEFING funktion for case summary token tracking; on-demand AI generation via button (no auto-fetch); ExtendedPrismaClient for Prisma v5 compat
-- [Phase 57-03]: Reused existing /api/ki-chat with crossAkte=true for global chat (no new endpoint); existing /api/falldaten-templates for template suggestions; added falldatenTemplateId to POST /api/akten
-- [Phase 58-01]: Reused EmailAuthTyp enum for CalDavKonto; domain-separated salt for CalDAV crypto; tsdav DAVClient class for provider auth
-- [Phase 58-02]: Remote wins on BIDI conflict; deterministic UID pattern for own-event detection; PULL mappings with null kalenderEintragId
-- [Phase 58]: Virtual EXTERN typ in API response (no Prisma enum change); externalData Json cache on CalDavSyncMapping; CalDAV tab for all users
+See milestones/ archives for per-milestone decision history.
 
 ### Pending Todos
 
@@ -99,7 +77,7 @@ None currently active.
 
 ## Session Continuity
 
-Last session: 2026-03-07T00:44:07.074Z
-Stopped at: Completed 58-03-PLAN.md
-Last activity: 2026-03-07 -- Completed 58-02 CalDAV Sync Engine
+Last session: 2026-03-07
+Stopped at: v0.8 milestone archived
+Last activity: 2026-03-07 -- v0.8 milestone completed and archived
 Resume file: None

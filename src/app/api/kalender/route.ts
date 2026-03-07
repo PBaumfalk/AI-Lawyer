@@ -117,7 +117,54 @@ export async function GET(request: NextRequest) {
     orderBy: { datum: "asc" },
   });
 
-  return NextResponse.json(eintraege);
+  // ─── External CalDAV events (PULL mappings with externalData) ─────────
+  let externalItems: any[] = [];
+  try {
+    const pullMappings = await (prisma as any).calDavSyncMapping.findMany({
+      where: {
+        konto: { userId: session.user.id, aktiv: true },
+        richtung: "PULL",
+        externalData: { not: null },
+      },
+      include: {
+        konto: { select: { name: true, provider: true } },
+      },
+    });
+
+    for (const mapping of pullMappings) {
+      const ext = mapping.externalData as any;
+      if (!ext?.summary || !ext?.dtstart) continue;
+
+      const dtstart = new Date(ext.dtstart);
+
+      // Apply same date filter as internal items
+      if (von && dtstart < new Date(von)) continue;
+      if (bis && dtstart > new Date(bis)) continue;
+
+      externalItems.push({
+        id: mapping.id,
+        typ: "EXTERN",
+        titel: ext.summary,
+        beschreibung: ext.description ?? null,
+        datum: dtstart.toISOString(),
+        datumBis: ext.dtend ? new Date(ext.dtend).toISOString() : null,
+        ganztaegig: ext.allDay ?? false,
+        erledigt: false,
+        prioritaet: "NORMAL",
+        istNotfrist: false,
+        akteId: null,
+        verantwortlichId: session.user.id,
+        akte: null,
+        verantwortlich: null,
+        kontoName: mapping.konto?.name ?? null,
+        kontoProvider: mapping.konto?.provider ?? null,
+      });
+    }
+  } catch {
+    // External events are non-critical -- silently skip on error
+  }
+
+  return NextResponse.json([...eintraege, ...externalItems]);
 }
 
 // POST /api/kalender -- create new calendar entry with enhanced fields

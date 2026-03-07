@@ -412,7 +412,7 @@ async function syncTermineBidi(
     });
 
     if (!allMappingsForUid) {
-      // New external event -- create PULL mapping
+      // New external event -- create PULL mapping with cached externalData
       try {
         await (prisma as any).calDavSyncMapping.create({
           data: {
@@ -422,6 +422,13 @@ async function syncTermineBidi(
             etag: remoteEvent.etag ?? null,
             richtung: "PULL",
             letzterSync: new Date(),
+            externalData: {
+              summary: remoteEvent.summary,
+              description: remoteEvent.description ?? null,
+              dtstart: remoteEvent.dtstart,
+              dtend: remoteEvent.dtend ?? null,
+              allDay: remoteEvent.allDay,
+            },
           },
         });
         result.pulled++;
@@ -441,7 +448,17 @@ async function syncTermineBidi(
 
           await (prisma as any).calDavSyncMapping.update({
             where: { id: allMappingsForUid.id },
-            data: { etag: remoteEvent.etag, letzterSync: new Date() },
+            data: {
+              etag: remoteEvent.etag,
+              letzterSync: new Date(),
+              externalData: allMappingsForUid.richtung === "PULL" ? {
+                summary: remoteEvent.summary,
+                description: remoteEvent.description ?? null,
+                dtstart: remoteEvent.dtstart,
+                dtend: remoteEvent.dtend ?? null,
+                allDay: remoteEvent.allDay,
+              } : undefined,
+            },
           });
           result.pulled++;
         } catch (err) {

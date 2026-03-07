@@ -13,6 +13,7 @@ import {
   Bell,
   Stamp,
   Swords,
+  Calendar,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VertretungUrlaubTab } from "@/components/einstellungen/vertretung-urlaub-tab";
@@ -24,6 +25,7 @@ import { BriefkopfTab } from "@/components/einstellungen/briefkopf-tab";
 import { OrdnerSchemataTab } from "@/components/einstellungen/ordner-schemata-tab";
 import { BenachrichtigungenTab } from "@/components/einstellungen/benachrichtigungen-tab";
 import { GamificationTab } from "@/components/einstellungen/gamification-tab";
+import { CalDavTab } from "@/components/einstellungen/caldav-tab";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -160,6 +162,10 @@ export default function EinstellungenPage() {
                 Benachrichtigungen
               </TabsTrigger>
             )}
+            <TabsTrigger value="kalender">
+              <Calendar className="w-4 h-4 mr-1.5" />
+              Kalender
+            </TabsTrigger>
             {isAdmin && (
               <TabsTrigger value="gamification">
                 <Swords className="w-4 h-4 mr-1.5" />
@@ -283,6 +289,10 @@ export default function EinstellungenPage() {
               <BenachrichtigungenTab />
             </TabsContent>
           )}
+
+          <TabsContent value="kalender">
+            <CalDavTab />
+          </TabsContent>
 
           {isAdmin && (
             <TabsContent value="gamification">

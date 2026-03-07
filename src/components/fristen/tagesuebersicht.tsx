@@ -15,12 +15,13 @@ import {
   Printer,
   ChevronRight,
   Loader2,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 
 interface KalenderItem {
   id: string;
-  typ: "TERMIN" | "FRIST" | "WIEDERVORLAGE";
+  typ: "TERMIN" | "FRIST" | "WIEDERVORLAGE" | "EXTERN";
   titel: string;
   datum: string;
   datumBis: string | null;
@@ -31,6 +32,8 @@ interface KalenderItem {
   verantwortlichId: string;
   akte: { id: string; aktenzeichen: string; kurzrubrum: string } | null;
   verantwortlich: { id: string; name: string } | null;
+  kontoName?: string | null;
+  kontoProvider?: string | null;
 }
 
 /**
@@ -47,6 +50,7 @@ export function Tagesuebersicht() {
   const [fristen, setFristen] = useState<KalenderItem[]>([]);
   const [wiedervorlagen, setWiedervorlagen] = useState<KalenderItem[]>([]);
   const [termine, setTermine] = useState<KalenderItem[]>([]);
+  const [externeTermine, setExterneTermine] = useState<KalenderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [erledigungDialog, setErledigungDialog] = useState<{
     id: string;
@@ -103,6 +107,7 @@ export function Tagesuebersicht() {
       setFristen(items.filter((i) => i.typ === "FRIST"));
       setWiedervorlagen(items.filter((i) => i.typ === "WIEDERVORLAGE"));
       setTermine(items.filter((i) => i.typ === "TERMIN"));
+      setExterneTermine(items.filter((i) => i.typ === "EXTERN"));
     } catch {
       toast.error("Tagesuebersicht konnte nicht geladen werden");
     } finally {
@@ -171,7 +176,7 @@ export function Tagesuebersicht() {
     );
   }
 
-  const totalItems = fristen.length + wiedervorlagen.length + termine.length;
+  const totalItems = fristen.length + wiedervorlagen.length + termine.length + externeTermine.length;
 
   return (
     <>
@@ -350,6 +355,44 @@ export function Tagesuebersicht() {
                         {termin.akte && (
                           <span className="text-xs text-muted-foreground block">
                             {termin.akte.aktenzeichen}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Externe Kalender Section */}
+            {externeTermine.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-foreground flex items-center gap-1.5 mb-2">
+                  <Globe className="w-4 h-4 text-purple-500" />
+                  Externe Kalender ({externeTermine.length})
+                </h3>
+                <div className="space-y-1.5">
+                  {externeTermine.map((ext) => (
+                    <div
+                      key={ext.id}
+                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/30 dark:hover:bg-white/[0.05] transition-colors"
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-foreground truncate block">
+                          {ext.titel}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(ext.datum), "HH:mm", {
+                            locale: de,
+                          })}{" "}
+                          Uhr
+                          {ext.datumBis &&
+                            ` -- ${format(new Date(ext.datumBis), "HH:mm", { locale: de })} Uhr`}
+                        </span>
+                        {ext.kontoName && (
+                          <span className="text-[10px] text-muted-foreground block">
+                            {ext.kontoName}
                           </span>
                         )}
                       </div>

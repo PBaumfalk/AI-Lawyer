@@ -1325,6 +1325,7 @@ model CalDavSyncMapping {
   externalUid         String           // CalDAV UID of the external event
   etag                String?          // Event ETag for change detection
   richtung            String           // "PUSH" | "PULL" | "BIDI"
+  externalData        Json?            // Cached external event data: { summary, description, dtstart, dtend, allDay }
   letzterSync         DateTime
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt

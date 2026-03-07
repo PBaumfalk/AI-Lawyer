@@ -21,6 +21,28 @@ export default function LoginPage() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
+    // Step 1: Check credentials and whether TOTP is required
+    const initRes = await fetch("/api/auth/totp/init", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!initRes.ok) {
+      setLoading(false);
+      setError("Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.");
+      return;
+    }
+
+    const initData = await initRes.json();
+
+    if (initData.requireTotp) {
+      // 2FA required — redirect to TOTP challenge page
+      router.push("/login/totp");
+      return;
+    }
+
+    // Step 2: No TOTP — proceed with normal NextAuth signIn
     const result = await signIn("credentials", {
       email,
       password,

@@ -526,6 +526,7 @@ model User {
   totpEnabled     Boolean   @default(false)
   totpVerifiedAt  DateTime?
   backupCodes     String[]  @default([])  // hashed backup codes
+  totpNonce       String?   @unique       // one-time nonce for completing TOTP login flow
 
   // CalDAV Sync
   caldavKonten         CalDavKonto[]

@@ -13,6 +13,12 @@ const loginSchema = z.object({
   password: z.string().min(1, "Passwort ist erforderlich"),
 });
 
+// Schema for TOTP nonce path (second step after TOTP challenge)
+const totpNonceSchema = z.object({
+  email: z.string().email(),
+  password: z.string().startsWith("TOTP:"),
+});
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma) as NextAuthConfig["adapter"],
@@ -24,6 +30,46 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Passwort", type: "password" },
       },
       async authorize(credentials, request) {
+        // TOTP nonce path: called after successful TOTP challenge verification
+        const parsedNonce = totpNonceSchema.safeParse(credentials);
+        if (parsedNonce.success) {
+          const nonce = parsedNonce.data.password.slice(5); // strip "TOTP:" prefix
+          const user = await prisma.user.findFirst({
+            where: {
+              email: parsedNonce.data.email,
+              totpNonce: nonce,
+              aktiv: true,
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              kanzleiId: true,
+              kontaktId: true,
+              totpNonce: true,
+            },
+          });
+
+          if (!user) return null;
+
+          // Consume the nonce (one-time use)
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { totpNonce: null },
+          });
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            kanzleiId: user.kanzleiId,
+            kontaktId: user.kontaktId,
+          };
+        }
+
+        // Normal password path
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 

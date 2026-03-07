@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { totpSecret: true, totpEnabled: true, backupCodes: true },
+    select: { email: true, totpSecret: true, totpEnabled: true, backupCodes: true, totpNonce: true },
   });
 
   if (!user?.totpEnabled || !user.totpSecret) {
@@ -72,8 +72,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Clear the pending cookie on success
-  const response = NextResponse.json({ success: true });
+  // Clear the pending cookie on success and return nonce + email for NextAuth signIn
+  const response = NextResponse.json({
+    success: true,
+    nonce: user.totpNonce,
+    email: user.email,
+  });
   response.cookies.set(TOTP_PENDING_COOKIE, "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

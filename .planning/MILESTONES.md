@@ -1,5 +1,35 @@
 # Milestones
 
+## v0.8 Intelligence & Tools (Shipped: 2026-03-07)
+
+**Delivered:** BI-Dashboard mit KPI-Kacheln, Trend-Charts und Filtern plus CSV/XLSX/PDF-Export fuer alle Datenbereiche, PDF-Tools (Merge/Split/Rotate/Compress/Watermark/Redact) via Stirling-PDF, Helena Intelligence mit Falldaten-Auto-Fill, Fallzusammenfassung, globalem aktenuebergreifendem KI-Chat und Template-Vorschlaegen sowie bidirektionalem CalDAV-Sync mit Google und Apple Calendar.
+
+**Phases:** 4 (55-58)
+**Plans:** 12 completed
+**Commits:** 42
+**Files changed:** 89 (+13,873 / -160)
+**Timeline:** 2026-03-06 -> 2026-03-07 (1 day)
+**Requirements:** 39/39 satisfied
+
+**Key accomplishments:**
+1. BI-Dashboard with KPI tiles (Akten, Finanzen, Fristen, Helena) with month-over-month deltas, Recharts trend charts, and Zeitraum/Anwalt/Sachgebiet filters -- Redis-cached aggregation queries (5min TTL)
+2. Generic CSV/XLSX export library (ExcelJS streaming WorkbookWriter) with export endpoints for Akten, Kontakte, Finanzdaten plus BI-Dashboard PDF/XLSX report export with Kanzlei-Briefkopf
+3. PDF-Tools via Stirling-PDF REST API: merge, split, rotate, compress, watermark (ENTWURF/Logo), and DSGVO PII auto-redact -- tabbed dialog UI with drag-and-drop page thumbnails
+4. Helena Falldaten Auto-Fill: AI extraction from Akte documents with per-field confidence (HOCH/MITTEL/NIEDRIG), source excerpts, and individual accept/reject -- never auto-saved (BRAK 2025)
+5. Fallzusammenfassung as timeline + key facts panel in Akte detail, plus global KI-Chat at /ki for cross-Akte RAG queries and template suggestions at Akte creation
+6. Bidirectional CalDAV sync: Google OAuth2 + Apple app-password, Fristen as read-only export, Termine bidirectional (create/update/delete), BullMQ 15min cron + manual sync, ETag/CTag incremental tracking, external events in Tagesuebersicht
+
+**Tech debt (non-blocking):**
+- Prisma v5->v7 upgrade still deferred
+- tsdav added as new dependency (first new npm package since v0.2)
+- Virtual EXTERN typ in API response (no Prisma enum change for CalDAV events)
+
+**Archives:**
+- `milestones/v0.8-ROADMAP.md`
+- `milestones/v0.8-REQUIREMENTS.md`
+
+---
+
 ## v0.6.1 Adhoc Bugfixes (Shipped: 2026-03-06)
 
 **Delivered:** Structured triage of 18 accumulated bugs from 6 debug files + Phase 51 deferred items — 5 pre-fixed confirmed, 7 P0/P1 queued for Wave 1, 3 P2 for Wave 2, 3 P3 explicitly deferred with written rationale (Prisma v7 upgrade, silent catches, img-tags).

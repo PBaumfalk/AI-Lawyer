@@ -415,6 +415,57 @@
 
 ---
 
+## Milestone: v0.8 — Intelligence & Tools
+
+**Shipped:** 2026-03-07
+**Phases:** 4 (55-58) | **Plans:** 12 | **Commits:** 42 | **Files changed:** 89 (+13,873 / -160)
+
+### What Was Built
+- BI-Dashboard with KPI tiles (Akten, Finanzen, Fristen, Helena), Recharts trend charts, Zeitraum/Anwalt/Sachgebiet filters, Redis-cached aggregation queries (5min TTL)
+- Generic CSV/XLSX export library (ExcelJS streaming WorkbookWriter) with endpoints for Akten, Kontakte, Finanzdaten plus BI-Dashboard PDF (jsPDF) and XLSX report export
+- PDF-Tools via Stirling-PDF REST API: merge, split, rotate, compress, watermark, DSGVO PII auto-redact — tabbed dialog UI with native HTML drag-and-drop page thumbnails
+- Helena Falldaten Auto-Fill: AI extraction (generateObject) with per-field confidence (HOCH/MITTEL/NIEDRIG), source excerpts, individual accept/reject — never auto-saved (BRAK 2025)
+- Fallzusammenfassung as timeline + key facts panel in Akte detail, on-demand AI generation via button
+- Global KI-Chat at /ki: cross-Akte RAG queries reusing existing /api/ki-chat with crossAkte=true flag
+- Falldatenblatt template suggestions at Akte creation (Sachgebiet-matching)
+- Bidirectional CalDAV sync: CalDavKonto model, tsdav client wrapper, Google OAuth2 + Apple app-password, Fristen read-only export, Termine bidirectional, BullMQ 15min cron, ETag/CTag incremental tracking, external events in Tagesuebersicht
+
+### What Worked
+- **Maximum reuse:** Global KI-Chat reused existing /api/ki-chat endpoint with crossAkte=true — zero new backend for chat feature. Template suggestions reused existing /api/falldaten-templates.
+- **Parallel independent phases:** All 4 phases (BI, PDF, Helena, CalDAV) had no inter-dependencies, enabling clean parallel planning and execution
+- **ExcelJS streaming pattern:** WorkbookWriter for memory-efficient XLSX generation — handles arbitrarily large datasets without memory pressure
+- **Existing encryption pattern reuse:** CalDAV credentials reused EmailKonto AES-256-GCM pattern with domain-separated salt — proven crypto, zero new library
+- **Native HTML drag-and-drop:** PDF page reorder used native DnD instead of adding dnd-kit — zero new dependencies for a single use case
+- **Virtual type pattern:** EXTERN KalenderEintragTyp in API response without Prisma enum change — clean API extension without migration
+
+### What Was Inefficient
+- **No milestone audit:** Skipped audit in yolo mode — acceptable for well-scoped milestone but means no formal gap verification
+- **tsdav is first new npm package since canvas-confetti (v0.4):** Unavoidable for CalDAV protocol but breaks the zero-new-dependency streak
+- **ExtendedPrismaClient workaround:** Multiple plans needed the same Prisma v5 compat workaround — tech debt from deferred Prisma v7 upgrade continues to create friction
+
+### Patterns Established
+- **cachedQuery Redis wrapper:** Generic `cachedQuery<T>(key, ttl, queryFn)` pattern for database query caching — reusable for any expensive aggregation
+- **ExcelJS streaming export:** WorkbookWriter + BullMQ worker pattern for server-side XLSX generation — apply to any future export feature
+- **Stirling-PDF per-operation client:** FormData-based client with operation-specific parameters — extensible for future PDF operations
+- **generateObject for structured extraction:** AI SDK v4 generateObject with Zod schema for Falldaten field extraction — reusable pattern for any document-to-struct extraction
+- **On-demand AI generation:** Button-triggered AI calls instead of auto-fetch — correct UX for expensive operations, BRAK-compliant
+- **Remote-wins BIDI conflict resolution:** Deterministic UID pattern (`ailawyer-{typ}-{id}`) for own-event detection; remote calendar authoritative on conflict
+- **Virtual API types without enum migration:** Return computed types in API responses without touching Prisma enum — useful when adding read-only virtual entities
+
+### Key Lessons
+1. **Reuse compounds exponentially.** Global KI-Chat, template suggestions, and CalDAV crypto all built on existing patterns with minimal new code. The codebase is now mature enough that most features are assemblies of existing building blocks.
+2. **Independent phases execute fastest.** Zero inter-phase dependencies meant each phase could be planned and executed without waiting — 4 phases, 12 plans in 1 day.
+3. **Virtual types avoid migration overhead.** The EXTERN CalDAV type pattern (API-only, no Prisma enum change) is cleaner than adding unused enum values that need migration.
+4. **Prisma v5 compat workarounds are accumulating.** ExtendedPrismaClient appears in 3+ new files this milestone. The Prisma v7 upgrade is increasingly justified.
+5. **Stirling-PDF is a Swiss Army knife.** 7 PDF operations (merge, split, rotate, compress, watermark, redact) all via REST API calls — no new PDF processing library needed.
+
+### Cost Observations
+- Model mix: ~40% opus (execution), ~50% sonnet (planning), ~10% haiku (verification)
+- Sessions: ~4 sessions in 1 day
+- Notable: 12 plans in 1 day (~3.5 min/plan avg). Only 1 new npm dependency (tsdav). Highest LOC-per-plan ratio (1,156 LOC/plan) due to feature density.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -430,6 +481,8 @@
 | v0.5 | ~6 | 8 | 14 | Pattern reuse from v0.2/v0.3 enables fastest milestone; portal-public route group; server-side data isolation |
 | v0.6 | ~3 | 1 | 4 | Health audit as requirements source; stabilization is lightweight; build-time TS checking enabled |
 | v0.6.1 | 1 | 1 | 1 | Triage-first bugfix milestone; wave-based assignment; written deferrals as scope artifacts |
+| v0.7 | ~3 | 2 | 4 | UI/UX quick wins + crash audit; lightweight stability milestone |
+| v0.8 | ~4 | 4 | 12 | Maximum reuse (global chat reuses existing endpoint); independent phases execute fastest; virtual API types avoid migration |
 
 ### Cumulative Quality
 
@@ -444,6 +497,8 @@
 | v0.5 | 253+ (unchanged) | 25/25 | 2 (audit + re-audit) | 4 (console.error in route, email deep links, pre-existing TS, adhoc phase) |
 | v0.6 | 417+ (vitest enabled) | N/A (stabilization) | 1 | 10 (Prisma 7.x, Next.js CVEs, 317 ESLint warnings, 67 routes no try-catch, 80 silent catch, draft API, UAT tests, etc.) |
 | v0.6.1 | 417+ (unchanged) | N/A (triage only) | 1 | 10 (same as v0.6; fix waves 52-02/03 ready to execute in v0.7) |
+| v0.7 | 417+ (unchanged) | N/A (UI/UX) | 1 | 10 (same; UI/UX focus) |
+| v0.8 | 417+ (unchanged) | 39/39 | 0 (yolo) | 11 (inherited + virtual EXTERN typ, ExtendedPrismaClient in 3+ new files) |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -462,3 +517,6 @@
 13. Auth pages must be outside guarded layouts — always verify unauthenticated E2E flows (invite→activate→login) before marking auth phases complete
 14. Enable build-time TS checking (ignoreBuildErrors: false) from day one — silent regressions across 7 milestones were avoidable
 15. Stabilization milestones benefit from health-audit-as-requirements — skip formal REQ-IDs when scope is defined by audit findings
+16. Independent phases with zero inter-dependencies execute fastest — 4 phases in 1 day when no phase blocks another
+17. Virtual API types (computed in response, no Prisma enum change) avoid migration overhead for read-only entities
+18. Reuse compounds exponentially — mature codebase enables feature assembly from existing building blocks (global chat = existing endpoint + flag)

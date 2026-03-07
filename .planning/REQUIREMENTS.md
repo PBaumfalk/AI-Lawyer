@@ -28,8 +28,8 @@ Requirements for v0.9 Security, Migration & Productivity. Each maps to roadmap p
 ### Feed-Umbau
 
 - [x] **FEED-01**: Historie-Tab heisst "Aktivitaeten" und ist Default-Tab beim Oeffnen einer Akte
-- [ ] **FEED-02**: Event-Texte sind menschenlesbar (keine IDs, keine MIME-Types)
-- [ ] **FEED-03**: Filterchips oberhalb des Feeds (Alle, Fristen, Dokumente, Kommunikation, Zeit, System)
+- [x] **FEED-02**: Event-Texte sind menschenlesbar (keine IDs, keine MIME-Types)
+- [x] **FEED-03**: Filterchips oberhalb des Feeds (Alle, Fristen, Dokumente, Kommunikation, Zeit, System)
 - [ ] **FEED-04**: Composer am Feed-Ende fuer Notizen, Telefonnotizen und Aufgaben
 - [ ] **FEED-05**: Telefonnotiz-Overlay mit Beteiligtem, Ergebnis, Stichworte, naechster Schritt
 - [ ] **FEED-06**: Tab-Reduktion von 11 auf 4-5 sichtbare Tabs mit Overflow-Menue
@@ -77,8 +77,8 @@ Deferred to post-v0.9 milestones.
 | MIG-07 | Phase 60 | Complete |
 | MIG-08 | Phase 60 | Complete |
 | FEED-01 | Phase 61 | Complete |
-| FEED-02 | Phase 61 | Pending |
-| FEED-03 | Phase 61 | Pending |
+| FEED-02 | Phase 61 | Complete |
+| FEED-03 | Phase 61 | Complete |
 | FEED-04 | Phase 62 | Pending |
 | FEED-05 | Phase 62 | Pending |
 | FEED-06 | Phase 63 | Pending |

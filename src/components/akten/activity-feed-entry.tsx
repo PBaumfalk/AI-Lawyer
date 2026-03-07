@@ -595,7 +595,7 @@ function ExpandedContent({ entry }: { entry: FeedEntryData }) {
           {meta?.kontaktName && (
             <p className="text-xs text-slate-500 mt-1">
               Kontakt: {meta.kontaktName}
-              {meta?.rolle && ` (${meta.rolle})`}
+              {meta?.rolle && ` (${ROLLE_LABELS[meta.rolle] ?? meta.rolle})`}
             </p>
           )}
         </div>
@@ -606,9 +606,9 @@ function ExpandedContent({ entry }: { entry: FeedEntryData }) {
         <div className="text-sm text-foreground/80">
           {meta?.alt && meta?.neu && (
             <p className="text-xs">
-              <span className="text-slate-400 line-through">{meta.alt}</span>
+              <span className="text-slate-400 line-through">{STATUS_LABELS[meta.alt] ?? meta.alt}</span>
               <span className="text-slate-400 mx-2">&rarr;</span>
-              <span className="text-foreground">{meta.neu}</span>
+              <span className="text-foreground">{STATUS_LABELS[meta.neu] ?? meta.neu}</span>
             </p>
           )}
           {entry.inhalt && !meta?.alt && <p>{entry.inhalt}</p>}

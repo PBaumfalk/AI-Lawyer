@@ -50,12 +50,12 @@
 
 ### CalDAV-Sync
 
-- [ ] **CAL-01**: User kann Google Calendar via OAuth2 verbinden
-- [ ] **CAL-02**: User kann Apple iCloud Kalender via App-Passwort verbinden
+- [x] **CAL-01**: User kann Google Calendar via OAuth2 verbinden
+- [x] **CAL-02**: User kann Apple iCloud Kalender via App-Passwort verbinden
 - [ ] **CAL-03**: Fristen werden als read-only Events in externen Kalender exportiert (kein Rueckschreiben)
 - [ ] **CAL-04**: Termine werden bidirektional synchronisiert (Erstellen, Aendern, Loeschen)
 - [ ] **CAL-05**: Sync laeuft als BullMQ Cron-Job (alle 15min) mit manuellem Sync-Button
-- [ ] **CAL-06**: CalDAV-Credentials werden verschluesselt gespeichert (analog EmailKonto-Pattern)
+- [x] **CAL-06**: CalDAV-Credentials werden verschluesselt gespeichert (analog EmailKonto-Pattern)
 - [ ] **CAL-07**: Sync nutzt ETag/CTag Tracking fuer inkrementelle Updates (kein Full-Sync)
 - [ ] **CAL-08**: Externe Kalender-Events sind in der Kanzlei-Tagesuebersicht sichtbar
 
@@ -126,12 +126,12 @@
 | PDF-06 | Phase 56 | Complete |
 | PDF-07 | Phase 56 | Complete |
 | PDF-08 | Phase 56 | Complete |
-| CAL-01 | Phase 58 | Pending |
-| CAL-02 | Phase 58 | Pending |
+| CAL-01 | Phase 58 | Complete |
+| CAL-02 | Phase 58 | Complete |
 | CAL-03 | Phase 58 | Pending |
 | CAL-04 | Phase 58 | Pending |
 | CAL-05 | Phase 58 | Pending |
-| CAL-06 | Phase 58 | Pending |
+| CAL-06 | Phase 58 | Complete |
 | CAL-07 | Phase 58 | Pending |
 | CAL-08 | Phase 58 | Pending |
 

@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v0.8
 milestone_name: Intelligence & Tools
 current_phase: 58
-current_plan: Not started
-status: planning
-stopped_at: Completed 57-01-PLAN.md
-last_updated: "2026-03-06T23:47:01.758Z"
-last_activity: 2026-03-07 -- Completed 57-03 Global KI-Chat & Template Suggestions
+current_plan: 1 of 3
+status: executing
+stopped_at: Completed 58-01-PLAN.md
+last_updated: "2026-03-07T00:30:00Z"
+last_activity: 2026-03-07 -- Completed 58-01 CalDAV Konto & Client Foundation
 progress:
   total_phases: 4
   completed_phases: 3
@@ -29,13 +29,13 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Milestone:** v0.8 Intelligence & Tools
 **Current Phase:** 58
-**Current Plan:** Not started
-**Status:** Ready to plan
-**Last activity:** 2026-03-07 -- Completed 57-03 Global KI-Chat & Template Suggestions
+**Current Plan:** 1 of 3
+**Status:** executing
+**Last activity:** 2026-03-07 -- Completed 58-01 CalDAV Konto & Client Foundation
 
-Progress: [████████████████████] 100% (v0.8)
+Progress: [███████░░░░░░░░░░░░░] 33% (Phase 58)
 
-All-time: 155 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.7:4 + v0.8:9)
+All-time: 156 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.7:4 + v0.8:10)
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ All-time: 155 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | Phase 57 P01 | 4min | 2 tasks | 5 files |
 | Phase 57 P02 | 4min | 2 tasks | 4 files |
 | Phase 57 P03 | 3min | 2 tasks | 4 files |
+| Phase 58 P01 | 4min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 57-01]: ExtendedPrismaClient for Prisma v5 compat; AiFunktion CHAT for autofill tracking (no enum change); overrides prop pattern for merging AI suggestions into form state
 - [Phase 57-02]: BRIEFING funktion for case summary token tracking; on-demand AI generation via button (no auto-fetch); ExtendedPrismaClient for Prisma v5 compat
 - [Phase 57-03]: Reused existing /api/ki-chat with crossAkte=true for global chat (no new endpoint); existing /api/falldaten-templates for template suggestions; added falldatenTemplateId to POST /api/akten
+- [Phase 58-01]: Reused EmailAuthTyp enum for CalDavKonto; domain-separated salt for CalDAV crypto; tsdav DAVClient class for provider auth
 
 ### Pending Todos
 
@@ -93,7 +95,7 @@ None currently active.
 
 ## Session Continuity
 
-Last session: 2026-03-06T23:42:17Z
-Stopped at: Completed 57-01-PLAN.md
-Last activity: 2026-03-07 -- Completed 57-01 Falldaten Auto-Fill
+Last session: 2026-03-07T00:25:08Z
+Stopped at: Completed 58-01-PLAN.md
+Last activity: 2026-03-07 -- Completed 58-01 CalDAV Konto & Client Foundation
 Resume file: None

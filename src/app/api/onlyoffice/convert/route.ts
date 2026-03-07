@@ -11,6 +11,7 @@ const APP_INTERNAL_URL =
   process.env.APP_INTERNAL_URL ?? "http://host.docker.internal:3000";
 const ONLYOFFICE_SECRET = process.env.ONLYOFFICE_SECRET ?? "";
 const ONLYOFFICE_TIMEOUT_MS = 30000;
+const ONLYOFFICE_MAX_RETRIES = 3;
 
 /**
  * POST /api/onlyoffice/convert -- Convert document via OnlyOffice Conversion API.
@@ -121,6 +122,11 @@ export async function POST(request: NextRequest) {
 
       if (!convResponse.ok) {
         const errorText = await convResponse.text();
+        const retryable = convResponse.status >= 500 || convResponse.status === 429;
+        if (retryable && attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500 * Math.min(attempts, ONLYOFFICE_MAX_RETRIES)));
+          continue;
+        }
         console.error(
           `[Conversion] API error ${convResponse.status}: ${errorText}`
         );

@@ -8,6 +8,28 @@ import { requireAuth, requireAkteAccess } from "@/lib/rbac";
 const APP_INTERNAL_URL =
   process.env.APP_INTERNAL_URL ?? "http://host.docker.internal:3000";
 const ONLYOFFICE_TIMEOUT_MS = 30000;
+const ONLYOFFICE_MAX_RETRIES = 3;
+
+async function fetchWithRetry(url: string, options: RequestInit) {
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= ONLYOFFICE_MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(url, {
+        ...options,
+        signal: AbortSignal.timeout(ONLYOFFICE_TIMEOUT_MS),
+      });
+      if (res.ok) return res;
+      const retryable = res.status >= 500 || res.status === 429;
+      if (!retryable || attempt === ONLYOFFICE_MAX_RETRIES) return res;
+    } catch (err) {
+      lastError = err;
+      if (attempt === ONLYOFFICE_MAX_RETRIES) throw err;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+  }
+  throw lastError ?? new Error("OnlyOffice request failed");
+}
+
 
 /**
  * POST /api/dokumente/[id]/pdf -- convert a document to PDF using ONLYOFFICE conversion API.
@@ -95,7 +117,7 @@ export async function POST(
   const token = signPayload(conversionPayload);
 
   try {
-    const conversionRes = await fetch(
+    const conversionRes = await fetchWithRetry(
       `${ONLYOFFICE_INTERNAL_URL}/ConvertService.ashx`,
       {
         method: "POST",
@@ -142,9 +164,7 @@ export async function POST(
     // Download the converted PDF from ONLYOFFICE
     // Rewrite URL so it's reachable from the app container (not localhost)
     const pdfFetchUrl = rewriteOnlyOfficeUrl(conversionResult.fileUrl);
-    const pdfResponse = await fetch(pdfFetchUrl, {
-      signal: AbortSignal.timeout(ONLYOFFICE_TIMEOUT_MS),
-    });
+    const pdfResponse = await fetchWithRetry(pdfFetchUrl, {});
     if (!pdfResponse.ok) {
       return NextResponse.json(
         { error: "Konvertierte PDF konnte nicht heruntergeladen werden" },

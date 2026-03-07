@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v0.9
 milestone_name: Security, Migration & Productivity
 current_phase: 60
-current_plan: Not started
-status: planning
-stopped_at: Completed 59-05-PLAN.md (2FA enforcement + setup-required page)
-last_updated: "2026-03-07T04:39:39.424Z"
+current_plan: 2 of 3
+status: executing
+stopped_at: Completed 60-01-PLAN.md
+last_updated: "2026-03-07T04:49:10.507Z"
 last_activity: 2026-03-07
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
-  percent: 10
+  total_plans: 10
+  completed_plans: 6
+  percent: 96
 ---
 
 # Project State
@@ -29,14 +29,14 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Milestone:** v0.9 Security, Migration & Productivity
 **Current Phase:** 60
-**Current Plan:** Not started
-**Total Plans in Phase:** 5
-**Status:** Ready to plan
+**Current Plan:** 2 of 3
+**Total Plans in Phase:** 3
+**Status:** Executing
 **Last activity:** 2026-03-07
 
-Progress: [████░░░░░░░░░░░░░░░░] 20% (v0.9)
+Progress: [██████████] 96% (v0.9)
 
-All-time: 177 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.6.1:1 + v0.7:4 + v0.8:12 + v0.9:7 + adhoc:10)
+All-time: 178 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.6.1:1 + v0.7:4 + v0.8:12 + v0.9:8 + adhoc:10)
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ All-time: 177 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | v0.7 | 2 | 4 | 1 day |
 | v0.8 | 4 | 12 | 1 day |
 | v0.9 (so far) | 1 | 5 | in progress |
+| Phase 60 P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ See milestones/ archives for per-milestone decision history.
 - [Phase 59]: Login page calls /api/auth/totp/init before NextAuth signIn to detect 2FA requirement without modifying NextAuth internals
 - [Phase 59]: TOTP:nonce prefix in Credentials password field distinguishes second-factor path in authorize without additional providers
 - [Phase 59-05]: Edge middleware 2FA enforcement uses JWT totpEnabled claim (not DB) + TOTP_REQUIRED_ROLES env var for role configuration
+- [Phase 60]: PostgreSQL unique index on jlawyerId allows multiple NULLs for records without J-Lawyer origin
+- [Phase 60]: Migration SQL created manually (Docker not running); validated with prisma validate + prisma generate
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07
-Stopped at: Phase 59 complete, ready to plan Phase 60
+Last session: 2026-03-07T04:49:09.153Z
+Stopped at: Completed 60-01-PLAN.md
 Resume file: None

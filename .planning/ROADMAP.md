@@ -129,7 +129,7 @@ Plans:
 | 53-54 | v0.7 | 4/4 | Complete | 2026-03-06 |
 | 55-58 | v0.8 | 12/12 | Complete | 2026-03-07 |
 | 59 | 5/5 | Complete    | 2026-03-07 | - |
-| 60 | v0.9 | 0/? | Not started | - |
+| 60 | 1/5 | In Progress|  | - |
 | 61 | v0.9 | 0/? | Not started | - |
 | 62 | v0.9 | 0/? | Not started | - |
 | 63 | v0.9 | 0/? | Not started | - |

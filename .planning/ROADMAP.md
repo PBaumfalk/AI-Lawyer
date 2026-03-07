@@ -125,7 +125,7 @@ Phases execute in numeric order: 55 -> 56 -> 57 -> 58
 | 55. BI-Dashboard + Export | 4/4 | Complete    | 2026-03-06 | - |
 | 56. PDF-Tools | 2/2 | Complete    | 2026-03-06 | - |
 | 57. Helena Intelligence | 3/3 | Complete    | 2026-03-06 | - |
-| 58. CalDAV-Sync | 3/3 | Complete   | 2026-03-07 | - |
+| 58. CalDAV-Sync | 3/3 | Complete    | 2026-03-07 | - |
 
 ---
 *Roadmap created: 2026-03-06 -- v0.8 Intelligence & Tools (4 phases, 39 requirements)*

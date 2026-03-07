@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { authenticator } from "otplib";
 import {
   generateTotpSecret,
   verifyTotpCode,
@@ -13,21 +14,19 @@ describe("TOTP Service", () => {
       expect(result.secret).toBeDefined();
       expect(result.secret.length).toBeGreaterThanOrEqual(20);
       expect(result.otpauthUrl).toMatch(/^otpauth:\/\/totp\//);
-      expect(result.otpauthUrl).toContain("test@example.com");
+      expect(result.otpauthUrl).toContain("test%40example.com");
       expect(result.qrCodeDataUrl).toMatch(/^data:image\/png;base64,/);
     });
   });
 
   describe("verifyTotpCode", () => {
-    it("returns true for a valid current TOTP code", async () => {
-      const { authenticator } = await import("otplib");
+    it("returns true for a valid current TOTP code", () => {
       const secret = authenticator.generateSecret(20);
       const code = authenticator.generate(secret);
       expect(verifyTotpCode(secret, code)).toBe(true);
     });
 
-    it("returns false for an invalid code", async () => {
-      const { authenticator } = await import("otplib");
+    it("returns false for an invalid code", () => {
       const secret = authenticator.generateSecret(20);
       expect(verifyTotpCode(secret, "000000")).toBe(false);
     });

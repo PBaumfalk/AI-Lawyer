@@ -170,6 +170,18 @@ enum EmailSyncStatus {
   GETRENNT
 }
 
+enum CalDavProvider {
+  GOOGLE
+  APPLE
+}
+
+enum CalDavSyncStatus {
+  GETRENNT
+  VERBUNDEN
+  FEHLER
+  SYNCHRONISIEREND
+}
+
 enum TicketStatus {
   OFFEN
   IN_BEARBEITUNG
@@ -508,6 +520,9 @@ model User {
   // Password Reset
   passwordResetToken   String?   @unique
   passwordResetExpires DateTime?
+
+  // CalDAV Sync
+  caldavKonten         CalDavKonto[]
 
   @@map("users")
 }
@@ -1268,7 +1283,56 @@ model KalenderEintrag {
   @@index([prioritaet])
   @@index([istNotfrist])
   @@index([hauptfristId])
+  caldavMappings   CalDavSyncMapping[]
+
   @@map("kalender_eintraege")
+}
+
+// ─── CalDAV Sync ────────────────────────────────────────────────────────────
+
+model CalDavKonto {
+  id                  String           @id @default(cuid())
+  userId              String
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider            CalDavProvider
+  name                String           // Display name e.g. "Mein Google Kalender"
+  serverUrl           String           // CalDAV server URL
+  benutzername        String           // Email / Apple-ID
+  passwortEnc         String?          // AES-256-GCM encrypted app-password (Apple)
+  oauthTokens         Json?            // { accessToken, refreshToken, expiresAt } (Google)
+  authTyp             EmailAuthTyp     @default(PASSWORT)
+  selectedCalendarUrl String?          // Specific calendar URL chosen by user
+  aktiv               Boolean          @default(true)
+  syncStatus          CalDavSyncStatus @default(GETRENNT)
+  letzterSync         DateTime?
+  ctag                String?          // Calendar CTag for incremental sync
+  fehlerLog           Json?            // Last 5 errors array
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  syncMappings        CalDavSyncMapping[]
+
+  @@index([userId])
+  @@map("caldav_konten")
+}
+
+model CalDavSyncMapping {
+  id                  String           @id @default(cuid())
+  kontoId             String
+  konto               CalDavKonto      @relation(fields: [kontoId], references: [id], onDelete: Cascade)
+  kalenderEintragId   String?
+  kalenderEintrag     KalenderEintrag? @relation(fields: [kalenderEintragId], references: [id], onDelete: SetNull)
+  externalUid         String           // CalDAV UID of the external event
+  etag                String?          // Event ETag for change detection
+  richtung            String           // "PUSH" | "PULL" | "BIDI"
+  letzterSync         DateTime
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@unique([kontoId, externalUid])
+  @@unique([kontoId, kalenderEintragId])
+  @@index([kontoId])
+  @@map("caldav_sync_mappings")
 }
 
 model FristPreset {

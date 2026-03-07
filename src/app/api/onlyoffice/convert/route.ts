@@ -10,6 +10,8 @@ import {
 const APP_INTERNAL_URL =
   process.env.APP_INTERNAL_URL ?? "http://host.docker.internal:3000";
 const ONLYOFFICE_SECRET = process.env.ONLYOFFICE_SECRET ?? "";
+const ONLYOFFICE_TIMEOUT_MS = 30000;
+const ONLYOFFICE_MAX_RETRIES = 3;
 
 /**
  * POST /api/onlyoffice/convert -- Convert document via OnlyOffice Conversion API.
@@ -115,10 +117,16 @@ export async function POST(request: NextRequest) {
           Accept: "application/json",
         },
         body: JSON.stringify(conversionPayload),
+        signal: AbortSignal.timeout(ONLYOFFICE_TIMEOUT_MS),
       });
 
       if (!convResponse.ok) {
         const errorText = await convResponse.text();
+        const retryable = convResponse.status >= 500 || convResponse.status === 429;
+        if (retryable && attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500 * Math.min(attempts, ONLYOFFICE_MAX_RETRIES)));
+          continue;
+        }
         console.error(
           `[Conversion] API error ${convResponse.status}: ${errorText}`
         );
@@ -154,7 +162,9 @@ export async function POST(request: NextRequest) {
     );
 
     // Download the converted file
-    const fileResponse = await fetch(fileUrl);
+    const fileResponse = await fetch(fileUrl, {
+      signal: AbortSignal.timeout(ONLYOFFICE_TIMEOUT_MS),
+    });
     if (!fileResponse.ok) {
       console.error(
         `[Conversion] Failed to download converted file: ${fileResponse.status}`

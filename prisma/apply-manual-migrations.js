@@ -2,13 +2,15 @@
  * Apply manual SQL migration files that Prisma migrate deploy cannot handle.
  * All statements are idempotent (IF NOT EXISTS / EXCEPTION WHEN duplicate_object).
  * Called from docker-entrypoint.sh after prisma migrate deploy.
+ *
+ * Each statement runs in its own try/catch to avoid 25P02 transaction-abort
+ * cascading across statements.
  */
 const { PrismaClient } = require("@prisma/client");
 const fs = require("fs");
 const path = require("path");
 
 async function main() {
-  const prisma = new PrismaClient();
   const migrationsDir = path.join(__dirname, "migrations");
 
   const manualFiles = fs
@@ -23,19 +25,32 @@ async function main() {
     const sql = fs.readFileSync(filePath, "utf8").trim();
     if (!sql) continue;
 
-    try {
-      await prisma.$executeRawUnsafe(sql);
+    const statements = sql
+      .split(/;\s*(?:\r?\n|$)/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    let fileOk = true;
+    for (const statement of statements) {
+      // Frische Prisma-Instanz pro Statement, damit ein Fehler nicht die
+      // Transaction fuer nachfolgende Statements blockiert (25P02).
+      const prisma = new PrismaClient();
+      try {
+        await prisma.$executeRawUnsafe(statement);
+      } catch (err) {
+        fileOk = false;
+        console.error(`    ⚠ ${file}: ${err.message}`);
+      } finally {
+        await prisma.$disconnect();
+      }
+    }
+    if (fileOk) {
       console.log(`    ✓ ${file}`);
-    } catch (err) {
-      // Log but don't fail — statements are idempotent, some may partially apply
-      console.error(`    ⚠ ${file}: ${err.message}`);
     }
   }
-
-  await prisma.$disconnect();
 }
 
 main().catch((err) => {
   console.error("Manual migration failed:", err.message);
-  process.exit(0); // Non-fatal — prisma db push may have already applied these
+  process.exit(0); // Non-fatal
 });

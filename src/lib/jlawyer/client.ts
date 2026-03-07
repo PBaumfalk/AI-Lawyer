@@ -18,11 +18,37 @@ export class JLawyerClient {
       Buffer.from(
         `${credentials.username}:${credentials.password}`,
       ).toString("base64");
+
+
+  private readonly timeoutMs = 15000;
+  private readonly maxRetries = 3;
+
+  private async fetchWithRetry(url: string, options: RequestInit): Promise<Response> {
+    let lastError: unknown = null;
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        const res = await fetch(url, {
+          ...options,
+          signal: AbortSignal.timeout(this.timeoutMs),
+        });
+
+        if (res.ok) return res;
+        const retryable = res.status >= 500 || res.status === 429;
+        if (!retryable || attempt === this.maxRetries) return res;
+      } catch (err) {
+        lastError = err;
+        if (attempt === this.maxRetries) throw err;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+    }
+    throw lastError ?? new Error("J-Lawyer request failed");
+  }
   }
 
   private async get<T>(path: string): Promise<T> {
     const url = `${this.baseUrl}${path}`;
-    const res = await fetch(url, {
+    const res = await this.fetchWithRetry(url, {
       headers: {
         Authorization: this.authHeader,
         Accept: "application/json",
@@ -76,7 +102,7 @@ export class JLawyerClient {
     docId: string,
   ): Promise<ArrayBuffer> {
     const url = `${this.baseUrl}/j-lawyer/api/v2/cases/${caseId}/documents/${docId}`;
-    const res = await fetch(url, {
+    const res = await this.fetchWithRetry(url, {
       headers: { Authorization: this.authHeader },
       cache: "no-store",
     });

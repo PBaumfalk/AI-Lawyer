@@ -5,8 +5,8 @@ milestone_name: Security, Migration & Productivity
 current_phase: 60
 current_plan: 3
 status: verifying
-stopped_at: Completed 60-03-PLAN.md
-last_updated: "2026-03-07T04:53:05.118Z"
+stopped_at: Completed 60-02-PLAN.md
+last_updated: "2026-03-07T04:53:45.572Z"
 last_activity: 2026-03-07
 progress:
   total_phases: 5
@@ -64,6 +64,7 @@ All-time: 178 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | Phase 60 P01 | 4min | 2 tasks | 4 files |
 | Phase 60 P02 | 2 | 2 tasks | 2 files |
 | Phase 60 P03 | 2 | 2 tasks | 2 files |
+| Phase 60 P02 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,9 @@ See milestones/ archives for per-milestone decision history.
 - [Phase 60]: migrateBeteiligte accepts pre-built Map params from runner keeping ETL functions stateless and testable
 - [Phase 60]: Array.from(map.entries()) pattern for Map iteration — TypeScript default target (ES3) blocks direct for...of on Map without --downlevelIteration
 - [Phase 60]: KalenderEintrag idempotency uses findFirst+update/create (not upsert) because jlawyerId is @@index not @unique
+- [Phase 60]: mapSachgebiet uses case-insensitive substring matching for resilience against J-Lawyer label variations
+- [Phase 60]: Email fallback dedup in migrateKontakte claims existing records with jlawyerId=null to avoid duplicates
+- [Phase 60]: migrateBeteiligte takes pre-built Maps from runner to stay stateless and testable
 
 ### Pending Todos
 
@@ -101,6 +105,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T04:53:05.116Z
-Stopped at: Completed 60-03-PLAN.md
+Last session: 2026-03-07T04:53:45.570Z
+Stopped at: Completed 60-02-PLAN.md
 Resume file: None

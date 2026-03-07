@@ -20,8 +20,8 @@ Requirements for v0.9 Security, Migration & Productivity. Each maps to roadmap p
 - [x] **MIG-02**: System importiert alle Akten mit Metadaten, Aktenzeichen und Zustaendigkeiten
 - [x] **MIG-03**: System importiert alle Kontakte/Adressen mit Deduplizierung
 - [x] **MIG-04**: System importiert Beteiligte mit korrekter Rollen-Zuordnung je Akte
-- [ ] **MIG-05**: System importiert Dokumente (Binary nach MinIO, Metadaten nach DB)
-- [ ] **MIG-06**: System importiert Kalendereintraege, Fristen und Wiedervorlagen
+- [x] **MIG-05**: System importiert Dokumente (Binary nach MinIO, Metadaten nach DB)
+- [x] **MIG-06**: System importiert Kalendereintraege, Fristen und Wiedervorlagen
 - [x] **MIG-07**: Migration ist idempotent (Re-Run ueberschreibt statt dupliziert via jlawyer_id)
 - [ ] **MIG-08**: System zeigt Abschlussbericht (X Akten, Y Kontakte, Z Dokumente, N Fehler)
 
@@ -72,8 +72,8 @@ Deferred to post-v0.9 milestones.
 | MIG-02 | Phase 60 | Complete |
 | MIG-03 | Phase 60 | Complete |
 | MIG-04 | Phase 60 | Complete |
-| MIG-05 | Phase 60 | Pending |
-| MIG-06 | Phase 60 | Pending |
+| MIG-05 | Phase 60 | Complete |
+| MIG-06 | Phase 60 | Complete |
 | MIG-07 | Phase 60 | Complete |
 | MIG-08 | Phase 60 | Pending |
 | FEED-01 | Phase 61 | Pending |

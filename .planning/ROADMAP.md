@@ -74,7 +74,14 @@ Plans:
   3. System imports Kalendereintraege, Fristen, and Wiedervorlagen with correct dates and types
   4. Migration is idempotent -- re-running updates existing records via jlawyer_id without creating duplicates
   5. System displays a completion report showing counts of imported Akten, Kontakte, Dokumente, and errors
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 60-01-PLAN.md — Prisma schema jlawyerId fields + J-Lawyer API client library
+- [ ] 60-02-PLAN.md — ETL for Akten, Kontakte, and Beteiligte with idempotent upserts
+- [ ] 60-03-PLAN.md — ETL for Dokumente (MinIO upload) and Kalendereintraege/Fristen/Wiedervorlagen
+- [ ] 60-04-PLAN.md — Admin API routes: connection config, connectivity test, migration trigger and report
+- [ ] 60-05-PLAN.md — Admin UI page: connection form, migration control, completion report
 
 ### Phase 61: Feed Cleanup + Filterchips
 **Goal**: Akte activity feed is the default view with clean, human-readable events and category filtering

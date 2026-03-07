@@ -14,6 +14,7 @@ import {
   Stamp,
   Swords,
   Calendar,
+  ShieldCheck,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VertretungUrlaubTab } from "@/components/einstellungen/vertretung-urlaub-tab";
@@ -26,6 +27,7 @@ import { OrdnerSchemataTab } from "@/components/einstellungen/ordner-schemata-ta
 import { BenachrichtigungenTab } from "@/components/einstellungen/benachrichtigungen-tab";
 import { GamificationTab } from "@/components/einstellungen/gamification-tab";
 import { CalDavTab } from "@/components/einstellungen/caldav-tab";
+import { ZweiFaktorTab } from "@/components/einstellungen/zwei-faktor-tab";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -178,6 +180,10 @@ export default function EinstellungenPage() {
                 Import/Export
               </TabsTrigger>
             )}
+            <TabsTrigger value="sicherheit">
+              <ShieldCheck className="w-4 h-4 mr-1.5" />
+              Sicherheit
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="allgemein">
@@ -305,6 +311,10 @@ export default function EinstellungenPage() {
               <ImportExportTab />
             </TabsContent>
           )}
+
+          <TabsContent value="sicherheit">
+            <ZweiFaktorTab />
+          </TabsContent>
         </Tabs>
       </div>
     </>

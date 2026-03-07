@@ -109,6 +109,7 @@
     "socket.io-client": "^4.8.3",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.6.0",
+    "tsdav": "^2.1.8",
     "zod": "^3.23.8"
   },
   "devDependencies": {

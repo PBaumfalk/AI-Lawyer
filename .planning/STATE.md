@@ -5,14 +5,14 @@ milestone_name: Security, Migration & Productivity
 current_phase: 60
 current_plan: 3
 status: verifying
-stopped_at: Completed 60-04-PLAN.md
-last_updated: "2026-03-07T04:56:35.118Z"
+stopped_at: Completed 60-05-PLAN.md
+last_updated: "2026-03-07T04:59:21.627Z"
 last_activity: 2026-03-07
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
   percent: 96
 ---
 
@@ -66,6 +66,7 @@ All-time: 178 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | Phase 60 P03 | 2 | 2 tasks | 2 files |
 | Phase 60 P02 | 3min | 2 tasks | 2 files |
 | Phase 60 P04 | 5 | 2 tasks | 5 files |
+| Phase 60 P05 | 2 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ See milestones/ archives for per-milestone decision history.
 - [Phase 60]: migrateBeteiligte takes pre-built Maps from runner to stay stateless and testable
 - [Phase 60]: ETL pipeline runs synchronously in POST /api/admin/jlawyer/migrate (no background jobs — admin one-shot operation)
 - [Phase 60]: etl-akten and etl-kontakte return Maps alongside stats using spread return pattern for pipeline wiring
+- [Phase 60]: Polling uses useRef to hold interval ID, cleared on unmount and on done/error status to avoid leaks
+- [Phase 60]: Admin migration page pattern: Config -> Test -> Trigger -> Report in three GlassPanels
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T04:56:35.116Z
-Stopped at: Completed 60-04-PLAN.md
+Last session: 2026-03-07T04:59:21.625Z
+Stopped at: Completed 60-05-PLAN.md
 Resume file: None

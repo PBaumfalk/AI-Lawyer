@@ -55,7 +55,14 @@
   2. User must enter a TOTP code after password login before accessing the dashboard
   3. User can generate backup codes and use one as a fallback when authenticator is unavailable
   4. Admin can configure per-role 2FA enforcement so that users without 2FA are redirected to setup
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 59-01-PLAN.md — Install otplib/qrcode, extend Prisma schema with TOTP fields, create TOTP service library
+- [ ] 59-02-PLAN.md — Create TOTP API routes (setup, verify-setup, disable, verify, backup-codes)
+- [ ] 59-03-PLAN.md — Two-step login flow: init route, TOTP challenge page, auth.ts nonce handling
+- [ ] 59-04-PLAN.md — Einstellungen > Sicherheit tab with QR setup UI, backup code management
+- [ ] 59-05-PLAN.md — Admin 2FA enforcement via TOTP_REQUIRED_ROLES, middleware redirect, setup-required page
 
 ### Phase 60: J-Lawyer Migration ETL
 **Goal**: Admin can migrate an entire Kanzlei from J-Lawyer into AI-Lawyer in one operation
@@ -114,11 +121,11 @@
 | 52 | v0.6.1 | 1/1 | Complete | 2026-03-06 |
 | 53-54 | v0.7 | 4/4 | Complete | 2026-03-06 |
 | 55-58 | v0.8 | 12/12 | Complete | 2026-03-07 |
-| 59 | v0.9 | 0/? | Not started | - |
+| 59 | v0.9 | 0/5 | In progress | - |
 | 60 | v0.9 | 0/? | Not started | - |
 | 61 | v0.9 | 0/? | Not started | - |
 | 62 | v0.9 | 0/? | Not started | - |
 | 63 | v0.9 | 0/? | Not started | - |
 
 ---
-*Last updated: 2026-03-07 after v0.9 roadmap creation*
+*Last updated: 2026-03-07 after phase 59 planning*

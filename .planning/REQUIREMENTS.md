@@ -57,7 +57,7 @@
 - [x] **CAL-05**: Sync laeuft als BullMQ Cron-Job (alle 15min) mit manuellem Sync-Button
 - [x] **CAL-06**: CalDAV-Credentials werden verschluesselt gespeichert (analog EmailKonto-Pattern)
 - [x] **CAL-07**: Sync nutzt ETag/CTag Tracking fuer inkrementelle Updates (kein Full-Sync)
-- [ ] **CAL-08**: Externe Kalender-Events sind in der Kanzlei-Tagesuebersicht sichtbar
+- [x] **CAL-08**: Externe Kalender-Events sind in der Kanzlei-Tagesuebersicht sichtbar
 
 ## v2 Requirements
 
@@ -133,7 +133,7 @@
 | CAL-05 | Phase 58 | Complete |
 | CAL-06 | Phase 58 | Complete |
 | CAL-07 | Phase 58 | Complete |
-| CAL-08 | Phase 58 | Pending |
+| CAL-08 | Phase 58 | Complete |
 
 **Coverage:**
 - v0.8 requirements: 39 total

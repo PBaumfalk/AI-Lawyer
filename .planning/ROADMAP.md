@@ -35,7 +35,7 @@
 - [x] **Phase 55: BI-Dashboard + Export** - KPI analytics with trend charts, filters, and CSV/XLSX/PDF export for all major data domains (completed 2026-03-06)
 - [x] **Phase 56: PDF-Tools** - Merge, split, rotate, reorder, compress, watermark, and redact via Stirling-PDF REST API (completed 2026-03-06)
 - [x] **Phase 57: Helena Intelligence** - Falldaten auto-fill, Fallzusammenfassung, global KI-Chat, and template suggestions (completed 2026-03-06)
-- [ ] **Phase 58: CalDAV-Sync** - Bidirectional calendar sync with Google and Apple Calendar via tsdav
+- [x] **Phase 58: CalDAV-Sync** - Bidirectional calendar sync with Google and Apple Calendar via tsdav (completed 2026-03-07)
 
 ## Phase Details
 
@@ -125,7 +125,7 @@ Phases execute in numeric order: 55 -> 56 -> 57 -> 58
 | 55. BI-Dashboard + Export | 4/4 | Complete    | 2026-03-06 | - |
 | 56. PDF-Tools | 2/2 | Complete    | 2026-03-06 | - |
 | 57. Helena Intelligence | 3/3 | Complete    | 2026-03-06 | - |
-| 58. CalDAV-Sync | 2/3 | In Progress|  | - |
+| 58. CalDAV-Sync | 3/3 | Complete   | 2026-03-07 | - |
 
 ---
 *Roadmap created: 2026-03-06 -- v0.8 Intelligence & Tools (4 phases, 39 requirements)*

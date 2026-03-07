@@ -7,6 +7,7 @@ import { requireAuth, requireAkteAccess } from "@/lib/rbac";
 
 const APP_INTERNAL_URL =
   process.env.APP_INTERNAL_URL ?? "http://host.docker.internal:3000";
+const ONLYOFFICE_TIMEOUT_MS = 30000;
 
 /**
  * POST /api/dokumente/[id]/pdf -- convert a document to PDF using ONLYOFFICE conversion API.
@@ -103,6 +104,7 @@ export async function POST(
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ ...conversionPayload, token }),
+        signal: AbortSignal.timeout(ONLYOFFICE_TIMEOUT_MS),
       }
     );
 
@@ -140,7 +142,9 @@ export async function POST(
     // Download the converted PDF from ONLYOFFICE
     // Rewrite URL so it's reachable from the app container (not localhost)
     const pdfFetchUrl = rewriteOnlyOfficeUrl(conversionResult.fileUrl);
-    const pdfResponse = await fetch(pdfFetchUrl);
+    const pdfResponse = await fetch(pdfFetchUrl, {
+      signal: AbortSignal.timeout(ONLYOFFICE_TIMEOUT_MS),
+    });
     if (!pdfResponse.ok) {
       return NextResponse.json(
         { error: "Konvertierte PDF konnte nicht heruntergeladen werden" },

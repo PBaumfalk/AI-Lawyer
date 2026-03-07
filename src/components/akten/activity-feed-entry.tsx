@@ -58,6 +58,28 @@ function severityBorderClass(severity?: number): string {
   return "border-l-2 border-l-emerald-500";
 }
 
+// Status enum → human label
+const STATUS_LABELS: Record<string, string> = {
+  OFFEN: "Offen",
+  IN_BEARBEITUNG: "In Bearbeitung",
+  LAUFEND: "Laufend",
+  ABGESCHLOSSEN: "Abgeschlossen",
+  ARCHIVIERT: "Archiviert",
+  WARTEND: "Wartend",
+  RUHEND: "Ruhend",
+};
+
+// Rolle enum → human label
+const ROLLE_LABELS: Record<string, string> = {
+  MANDANT: "Mandant",
+  GEGNER: "Gegner",
+  GEGNERVERTRETER: "Gegnervertreter",
+  GERICHT: "Gericht",
+  ZEUGE: "Zeuge",
+  SACHVERSTAENDIGER: "Sachverstaendiger",
+  SONSTIGER: "Sonstiger",
+};
+
 // MIME type → human-readable file type label
 const MIME_LABELS: Record<string, string> = {
   "application/pdf": "PDF",
@@ -84,8 +106,20 @@ function mimeToLabel(mime: string): string {
   return MIME_LABELS[mime.toLowerCase().trim()] ?? "Dokument";
 }
 
+// Replace known enum values with human-readable labels
+function replaceEnumValues(text: string): string {
+  let result = text;
+  for (const [key, val] of Object.entries(STATUS_LABELS)) {
+    result = result.replace(new RegExp(`\\b${key}\\b`, "g"), val);
+  }
+  for (const [key, val] of Object.entries(ROLLE_LABELS)) {
+    result = result.replace(new RegExp(`\\b${key}\\b`, "g"), val);
+  }
+  return result;
+}
+
 // Sanitize technically-formatted text into human-readable form
-function sanitizeTitel(titel: string): string {
+export function sanitizeTitel(titel: string): string {
   // "mimeType: application/vnd...." or "mimeType:application/pdf"
   const mimeMatch = titel.match(/^mimeType\s*:\s*(\S+)/i);
   if (mimeMatch) {
@@ -100,15 +134,18 @@ function sanitizeTitel(titel: string): string {
     return match;
   });
 
-  return cleaned !== titel ? cleaned : titel;
+  const base = cleaned !== titel ? cleaned : titel;
+  return replaceEnumValues(base);
 }
 
-// Sanitize inhalt for display (strip raw mimeType lines, etc.)
-function sanitizeInhalt(inhalt: string | null): string | null {
+// Sanitize inhalt for display (strip raw mimeType lines, translate enums)
+export function sanitizeInhalt(inhalt: string | null): string | null {
   if (!inhalt) return null;
   // Remove lines that are purely "mimeType: ..."
   const lines = inhalt.split("\n").filter((l) => !/^mimeType\s*:/i.test(l.trim()));
-  return lines.join("\n").trim() || null;
+  const cleaned = lines.join("\n").trim() || null;
+  if (!cleaned) return null;
+  return replaceEnumValues(cleaned);
 }
 
 // German relative time formatting

@@ -79,22 +79,52 @@ export async function POST(
   try {
     const body = await request.json();
     const text = body?.text;
+    const typ = (body?.typ as string) ?? "NOTIZ";
+    const meta = body?.meta as Record<string, unknown> | undefined;
 
-    if (!text || typeof text !== "string" || text.trim().length === 0) {
-      return NextResponse.json(
-        { error: "Text erforderlich" },
-        { status: 400 }
-      );
+    // Validate by typ
+    if (typ === "TELEFONNOTIZ") {
+      if (!meta?.beteiligter || typeof meta.beteiligter !== "string" || !String(meta.beteiligter).trim()) {
+        return NextResponse.json({ error: "Beteiligter erforderlich" }, { status: 400 });
+      }
+      if (!meta?.ergebnis || typeof meta.ergebnis !== "string" || !String(meta.ergebnis).trim()) {
+        return NextResponse.json({ error: "Ergebnis erforderlich" }, { status: 400 });
+      }
+    } else if (typ === "AUFGABE") {
+      if (!meta?.titel || typeof meta.titel !== "string" || !String(meta.titel).trim()) {
+        return NextResponse.json({ error: "Titel erforderlich" }, { status: 400 });
+      }
+    } else {
+      // NOTIZ -- text required
+      if (!text || typeof text !== "string" || text.trim().length === 0) {
+        return NextResponse.json({ error: "Text erforderlich" }, { status: 400 });
+      }
     }
 
-    // 1. Always create NOTIZ activity entry
+    // Determine titel and inhalt based on typ
+    let titel: string;
+    let inhalt: string | null;
+
+    if (typ === "TELEFONNOTIZ") {
+      titel = `Telefonnotiz: ${String(meta!.beteiligter).trim()}`;
+      inhalt = (meta?.stichworte as string) || null;
+    } else if (typ === "AUFGABE") {
+      titel = String(meta!.titel).trim().slice(0, 100);
+      inhalt = (meta?.beschreibung as string) || null;
+    } else {
+      titel = text!.slice(0, 100);
+      inhalt = text!;
+    }
+
+    // 1. Create activity entry
     const activity = await prisma.aktenActivity.create({
       data: {
         akteId,
         userId: session.user.id,
-        typ: "NOTIZ",
-        titel: text.slice(0, 100),
-        inhalt: text,
+        typ: typ as AktenActivityTyp,
+        titel,
+        inhalt,
+        ...(meta ? { meta: meta as Prisma.InputJsonValue } : {}),
       },
       include: { user: { select: { id: true, name: true } } },
     });
@@ -112,25 +142,27 @@ export async function POST(
       // Socket.IO not available -- non-critical
     }
 
-    // 2. Check for @Helena mention
+    // 2. Check for @Helena mention (only for NOTIZ typ)
     let taskId: string | null = null;
-    const helenaInstruction = parseHelenaMention(text);
+    if (typ === "NOTIZ") {
+      const helenaInstruction = parseHelenaMention(text!);
 
-    if (helenaInstruction) {
-      try {
-        const task = await createHelenaTask({
-          userId: session.user.id,
-          userRole: session.user.role as UserRole,
-          userName: session.user.name ?? "Benutzer",
-          akteId,
-          auftrag: helenaInstruction,
-          prioritaet: 8, // Manual @-tag gets high priority
-          quelle: "at-mention",
-        });
-        taskId = task.id;
-      } catch (error) {
-        // Fail-open: note was created, just Helena task failed
-        console.error("[FEED] Failed to create Helena task:", error);
+      if (helenaInstruction) {
+        try {
+          const task = await createHelenaTask({
+            userId: session.user.id,
+            userRole: session.user.role as UserRole,
+            userName: session.user.name ?? "Benutzer",
+            akteId,
+            auftrag: helenaInstruction,
+            prioritaet: 8, // Manual @-tag gets high priority
+            quelle: "at-mention",
+          });
+          taskId = task.id;
+        } catch (error) {
+          // Fail-open: note was created, just Helena task failed
+          console.error("[FEED] Failed to create Helena task:", error);
+        }
       }
     }
 

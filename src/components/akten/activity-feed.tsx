@@ -17,9 +17,9 @@ interface ActivityFeedProps {
 // Filter chip definitions mapping to AktenActivityTyp values
 const feedFilters = [
   { label: "Alle", types: null },
-  { label: "Fristen", types: ["FRIST"] },
+  { label: "Fristen", types: ["FRIST", "AUFGABE"] },
   { label: "Dokumente", types: ["DOKUMENT"] },
-  { label: "Kommunikation", types: ["EMAIL", "NOTIZ"] },
+  { label: "Kommunikation", types: ["EMAIL", "NOTIZ", "TELEFONNOTIZ"] },
   { label: "Zeit", types: ["ZEITERFASSUNG"] },   // no DB entries yet — chip shows empty feed
   { label: "System", types: ["BETEILIGTE", "STATUS_CHANGE", "HELENA_ALERT", "HELENA_DRAFT"] },
 ] as const;

@@ -10,6 +10,8 @@ import {
   StickyNote,
   UserPlus,
   ArrowRightLeft,
+  Phone,
+  CheckSquare,
   ChevronRight,
   ChevronDown,
   ExternalLink,
@@ -46,6 +48,8 @@ const typIcons: Record<string, React.ElementType> = {
   HELENA_DRAFT: Bot,
   HELENA_ALERT: Bell,
   NOTIZ: StickyNote,
+  TELEFONNOTIZ: Phone,
+  AUFGABE: CheckSquare,
   BETEILIGTE: UserPlus,
   STATUS_CHANGE: ArrowRightLeft,
 };
@@ -584,6 +588,38 @@ function ExpandedContent({ entry }: { entry: FeedEntryData }) {
         <div className="text-sm text-foreground/80">
           {entry.inhalt && (
             <p className="whitespace-pre-wrap">{entry.inhalt}</p>
+          )}
+        </div>
+      );
+
+    case "TELEFONNOTIZ":
+      return (
+        <div className="text-sm text-foreground/80 space-y-1">
+          {meta?.beteiligter && (
+            <p className="text-xs"><span className="font-medium">Beteiligter:</span> {meta.beteiligter}</p>
+          )}
+          {meta?.ergebnis && (
+            <p className="text-xs"><span className="font-medium">Ergebnis:</span> {meta.ergebnis}</p>
+          )}
+          {meta?.stichworte && (
+            <p className="text-xs"><span className="font-medium">Stichworte:</span> {meta.stichworte}</p>
+          )}
+          {meta?.naechsterSchritt && (
+            <p className="text-xs"><span className="font-medium">Naechster Schritt:</span> {meta.naechsterSchritt}</p>
+          )}
+        </div>
+      );
+
+    case "AUFGABE":
+      return (
+        <div className="text-sm text-foreground/80 space-y-1">
+          {meta?.beschreibung && (
+            <p className="whitespace-pre-wrap">{meta.beschreibung}</p>
+          )}
+          {meta?.faelligAm && (
+            <p className="text-xs text-slate-500 mt-1">
+              Faellig: {new Date(meta.faelligAm as string).toLocaleDateString("de-DE")}
+            </p>
           )}
         </div>
       );

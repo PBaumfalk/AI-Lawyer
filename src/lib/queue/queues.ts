@@ -234,6 +234,21 @@ export const gamificationQueue = new Queue<GamificationJobData>("gamification", 
   },
 });
 
+/** CalDAV-Sync queue for periodic and on-demand CalDAV synchronization */
+export const caldavSyncQueue = new Queue<CalDavSyncJobData>("caldav-sync", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: "custom" },
+    removeOnComplete: { age: 86_400 },   // 24h
+    removeOnFail: { age: 604_800 },      // 7 days
+  },
+});
+
+export interface CalDavSyncJobData {
+  kontoId?: string; // If provided, sync specific konto; if omitted, sync all active konten
+}
+
 /** Portal-notification queue for Mandant email notifications (MSG-04/05/06) */
 export const portalNotificationQueue = new Queue<PortalNotificationJobData>("portal-notification", {
   connection: getQueueConnection(),
@@ -266,6 +281,7 @@ export const ALL_QUEUES: Queue[] = [
   akteEmbeddingQueue,
   gamificationQueue,
   portalNotificationQueue,
+  caldavSyncQueue,
 ];
 
 /**
@@ -486,6 +502,32 @@ export async function registerGamificationCrons(): Promise<void> {
       name: "weekly-snapshot",
       data: {},
       opts: { removeOnComplete: { count: 10 }, removeOnFail: { count: 10 } },
+    }
+  );
+}
+
+/**
+ * Register the repeatable CalDAV sync cron job.
+ * Runs every 15 minutes to sync all active CalDAV accounts.
+ *
+ * @param cronPattern - Cron expression (default: every 15 min)
+ */
+export async function registerCalDavSyncJob(
+  cronPattern = "*/15 * * * *"
+): Promise<void> {
+  await caldavSyncQueue.upsertJobScheduler(
+    "caldav-sync-periodic",
+    {
+      pattern: cronPattern,
+      tz: "Europe/Berlin",
+    },
+    {
+      name: "sync-all-caldav",
+      data: {},
+      opts: {
+        removeOnComplete: { count: 50 },
+        removeOnFail: { count: 20 },
+      },
     }
   );
 }

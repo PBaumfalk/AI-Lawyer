@@ -1,7 +1,9 @@
 import { Worker } from "bullmq";
 import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
-import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerAkteEmbeddingJob, registerUrteileSyncJob, registerScannerJob, registerGamificationCrons, ocrQueue } from "@/lib/queue/queues";
+import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerAkteEmbeddingJob, registerUrteileSyncJob, registerScannerJob, registerGamificationCrons, registerCalDavSyncJob, ocrQueue } from "@/lib/queue/queues";
+import type { CalDavSyncJobData } from "@/lib/queue/queues";
+import { processCalDavSync } from "@/lib/queue/processors/caldav-sync.processor";
 import type { GamificationJobData } from "@/lib/queue/queues";
 import { processGamificationJob } from "@/lib/queue/processors/gamification.processor";
 import { processMusterIngestionJob, processMusterIngestPending, type MusterIngestionJobData } from "@/lib/queue/processors/muster-ingestion.processor";
@@ -859,6 +861,53 @@ portalNotificationWorker.on("error", (err) => {
 workers.push(portalNotificationWorker);
 log.info("[Worker] portal-notification processor registered");
 
+// ─── CalDAV Sync Queue Worker ─────────────────────────────────────────────
+
+const caldavSyncWorker = new Worker<CalDavSyncJobData>(
+  "caldav-sync",
+  async (job) => processCalDavSync(job),
+  {
+    connection,
+    concurrency: 1, // Avoid parallel syncs conflicting on same calendar
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+caldavSyncWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info(
+    { jobId: job.id, kontoId: job.data.kontoId },
+    "CalDAV sync job completed"
+  );
+});
+
+caldavSyncWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, kontoId: job.data.kontoId, err: err.message, attemptsMade: job.attemptsMade },
+    "CalDAV sync job failed"
+  );
+
+  // Notify admins on final failure
+  if (job.attemptsMade >= (job.opts.attempts ?? 2)) {
+    socketEmitter.to("role:ADMIN").emit("notification", {
+      type: "job:failed",
+      title: "CalDAV-Sync fehlgeschlagen",
+      message: `CalDAV-Sync fehlgeschlagen: ${err.message}`,
+      data: { jobId: job.id, queue: "caldav-sync", kontoId: job.data.kontoId },
+    });
+  }
+});
+
+caldavSyncWorker.on("error", (err) => {
+  log.error({ err }, "CalDAV sync worker error");
+});
+
+workers.push(caldavSyncWorker);
+log.info("[Worker] caldav-sync processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -1044,6 +1093,14 @@ async function startup() {
     log.warn({ err }, "Failed to register gamification crons (non-fatal)");
   }
 
+  // Register CalDAV sync cron job (every 15 minutes)
+  try {
+    await registerCalDavSyncJob();
+    log.info("CalDAV sync job registered (*/15 * * * * Europe/Berlin)");
+  } catch (err) {
+    log.warn({ err }, "Failed to register CalDAV sync job (non-fatal)");
+  }
+
   // Recover any Muster rows stuck in NER_RUNNING from a previous crashed worker
   try {
     await recoverStuckNerJobs();
@@ -1173,6 +1230,7 @@ async function startup() {
         "ai-scan", "ai-briefing", "ai-proactive", "gesetze-sync", "ner-pii",
         "urteile-sync", "muster-ingestion", "helena-task", "akte-embedding", "scanner", "gamification",
         "portal-notification",
+        "caldav-sync",
       ],
       fristScanZeit: scanZeit,
     },

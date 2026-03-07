@@ -39,11 +39,12 @@ function mapBeteiligterRolle(role: string): BeteiligterRolle {
  */
 export async function migrateKontakte(
   client: JLawyerClient,
-): Promise<Pick<JLawyerMigrationStats, "kontakte" | "errors">> {
+): Promise<Pick<JLawyerMigrationStats, "kontakte" | "errors"> & { kontakteMap: Map<string, string> }> {
   const stats: Pick<JLawyerMigrationStats, "kontakte" | "errors"> = {
     kontakte: 0,
     errors: [],
   };
+  const kontakteMap = new Map<string, string>();
 
   const contacts = await client.listContacts();
 
@@ -84,18 +85,20 @@ export async function migrateKontakte(
             where: { id: existingByEmail.id },
             data,
           });
+          kontakteMap.set(jlContact.id, existingByEmail.id);
           stats.kontakte += 1;
           continue;
         }
       }
 
       // Primary upsert by jlawyerId
-      await prisma.kontakt.upsert({
+      const kontakt = await prisma.kontakt.upsert({
         where: { jlawyerId: jlContact.id },
         create: data,
         update: data,
       });
 
+      kontakteMap.set(jlContact.id, kontakt.id);
       stats.kontakte += 1;
     } catch (err) {
       stats.errors.push({
@@ -106,7 +109,7 @@ export async function migrateKontakte(
     }
   }
 
-  return stats;
+  return { ...stats, kontakteMap };
 }
 
 /**

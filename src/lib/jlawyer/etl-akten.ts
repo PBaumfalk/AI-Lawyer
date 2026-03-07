@@ -46,11 +46,12 @@ function mapAkteStatus(status: string): AkteStatus {
 export async function migrateAkten(
   client: JLawyerClient,
   kanzleiId: string | null,
-): Promise<Pick<JLawyerMigrationStats, "akten" | "errors">> {
+): Promise<Pick<JLawyerMigrationStats, "akten" | "errors"> & { aktenMap: Map<string, string> }> {
   const stats: Pick<JLawyerMigrationStats, "akten" | "errors"> = {
     akten: 0,
     errors: [],
   };
+  const aktenMap = new Map<string, string>();
 
   const cases = await client.listCases();
 
@@ -64,7 +65,7 @@ export async function migrateAkten(
       const status = mapAkteStatus(jlCase.status ?? "");
       const angelegt = jlCase.dateCreated ? new Date(jlCase.dateCreated) : new Date();
 
-      await prisma.akte.upsert({
+      const akte = await prisma.akte.upsert({
         where: { jlawyerId: jlCase.id },
         create: {
           aktenzeichen,
@@ -86,6 +87,7 @@ export async function migrateAkten(
         },
       });
 
+      aktenMap.set(jlCase.id, akte.id);
       stats.akten += 1;
     } catch (err) {
       stats.errors.push({
@@ -96,5 +98,5 @@ export async function migrateAkten(
     }
   }
 
-  return stats;
+  return { ...stats, aktenMap };
 }

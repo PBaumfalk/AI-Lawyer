@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v0.9
 milestone_name: Security, Migration & Productivity
 current_phase: 59 - 2FA/TOTP (Phase 1 of 5)
-current_plan: 2
+current_plan: 4
 status: executing
-stopped_at: Completed 59-02-PLAN.md (TOTP API routes)
-last_updated: "2026-03-07T04:27:04.628Z"
+stopped_at: Completed 59-04-PLAN.md (2FA settings UI)
+last_updated: "2026-03-07T04:31:03.789Z"
 last_activity: 2026-03-07
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
+  completed_plans: 3
   percent: 10
 ---
 
@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Milestone:** v0.9 Security, Migration & Productivity
 **Current Phase:** 59 - 2FA/TOTP (Phase 1 of 5)
-**Current Plan:** 3
+**Current Plan:** 4
 **Total Plans in Phase:** 5
-**Status:** executing
+**Status:** Ready to execute
 **Last activity:** 2026-03-07
 
 Progress: [██░░░░░░░░░░░░░░░░░░] 10% (v0.9)
@@ -61,6 +61,7 @@ All-time: 172 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | v0.7 | 2 | 4 | 1 day |
 | v0.8 | 4 | 12 | 1 day |
 | v0.9 (so far) | 1 | 2 | in progress |
+| Phase 59 P04 | 5 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 See milestones/ archives for per-milestone decision history.
 - [Phase 59]: Login challenge state stored in signed JWT httpOnly cookie (totp_pending) rather than server-side session for stateless verify route
 - [Phase 59]: MANDANT role blocked from enabling 2FA (403) on all TOTP management routes
+- [Phase 59]: Sicherheit tab has no role guard — all authenticated users can manage their own 2FA; MANDANT blocked at API level
+- [Phase 59]: Inline confirm pattern used for 2FA disable and backup code regen (no modal dialog, code input revealed inline)
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T04:27:04.626Z
-Stopped at: Completed 59-02-PLAN.md (TOTP API routes)
+Last session: 2026-03-07T04:31:03.787Z
+Stopped at: Completed 59-04-PLAN.md (2FA settings UI)
 Resume file: None

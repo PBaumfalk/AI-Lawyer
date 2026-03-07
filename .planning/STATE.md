@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v0.9
 milestone_name: Security, Migration & Productivity
 current_phase: 59 - 2FA/TOTP (Phase 1 of 5)
-current_plan: 4
+current_plan: 5
 status: executing
-stopped_at: Completed 59-04-PLAN.md (2FA settings UI)
-last_updated: "2026-03-07T04:31:03.789Z"
+stopped_at: Completed 59-03-PLAN.md (TOTP login challenge flow)
+last_updated: "2026-03-07T04:31:36.558Z"
 last_activity: 2026-03-07
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
   percent: 10
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Milestone:** v0.9 Security, Migration & Productivity
 **Current Phase:** 59 - 2FA/TOTP (Phase 1 of 5)
-**Current Plan:** 4
+**Current Plan:** 5
 **Total Plans in Phase:** 5
 **Status:** Ready to execute
 **Last activity:** 2026-03-07
@@ -62,6 +62,7 @@ All-time: 172 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 | v0.8 | 4 | 12 | 1 day |
 | v0.9 (so far) | 1 | 2 | in progress |
 | Phase 59 P04 | 5 | 2 tasks | 3 files |
+| Phase 59 P03 | 8 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,9 @@ See milestones/ archives for per-milestone decision history.
 - [Phase 59]: MANDANT role blocked from enabling 2FA (403) on all TOTP management routes
 - [Phase 59]: Sicherheit tab has no role guard — all authenticated users can manage their own 2FA; MANDANT blocked at API level
 - [Phase 59]: Inline confirm pattern used for 2FA disable and backup code regen (no modal dialog, code input revealed inline)
+- [Phase 59]: TOTP nonce stored in DB (totpNonce field) consumed one-time in auth.ts authorize — avoids storing credentials client-side
+- [Phase 59]: Login page calls /api/auth/totp/init before NextAuth signIn to detect 2FA requirement without modifying NextAuth internals
+- [Phase 59]: TOTP:nonce prefix in Credentials password field distinguishes second-factor path in authorize without additional providers
 
 ### Pending Todos
 
@@ -88,6 +92,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T04:31:03.787Z
-Stopped at: Completed 59-04-PLAN.md (2FA settings UI)
+Last session: 2026-03-07T04:31:36.556Z
+Stopped at: Completed 59-03-PLAN.md (TOTP login challenge flow)
 Resume file: None

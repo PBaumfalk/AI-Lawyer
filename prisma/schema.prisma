@@ -676,6 +676,7 @@ model Kontakt {
   anonymisiertVon String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  jlawyerId    String?    @unique  // J-Lawyer contact ID for idempotent migration
 
   // Relations
   beteiligte          Beteiligter[]
@@ -830,6 +831,7 @@ model Akte {
   angelegt         DateTime    @default(now())
   geaendert        DateTime    @updatedAt
   archiviert       DateTime?
+  jlawyerId        String?          @unique  // J-Lawyer case ID for idempotent migration
 
   // Phase 30: Summary embedding for Neu-Urteil matching (SCAN-05)
   summaryEmbedding     Unsupported("vector(1024)")?
@@ -1075,6 +1077,7 @@ model Dokument {
   createdBy   User     @relation(fields: [createdById], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  jlawyerId   String?  // J-Lawyer document ID for idempotent migration
 
   chatNachrichten ChatNachricht[] @relation("BezugDokument")
   versionen       DokumentVersion[]
@@ -1085,6 +1088,7 @@ model Dokument {
   @@index([name])
   @@index([status])
   @@index([ocrStatus])
+  @@index([jlawyerId])
   @@map("dokumente")
 }
 
@@ -1282,6 +1286,7 @@ model KalenderEintrag {
   fristHistorie    Json?           // Array of {altesEnde, neuesEnde, grund, datum}
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
+  jlawyerId        String?         // J-Lawyer calendar entry ID for idempotent migration
 
   @@index([datum])
   @@index([verantwortlichId])
@@ -1290,6 +1295,7 @@ model KalenderEintrag {
   @@index([prioritaet])
   @@index([istNotfrist])
   @@index([hauptfristId])
+  @@index([jlawyerId])
   caldavMappings   CalDavSyncMapping[]
 
   @@map("kalender_eintraege")

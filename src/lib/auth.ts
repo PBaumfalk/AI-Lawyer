@@ -66,6 +66,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: user.role,
             kanzleiId: user.kanzleiId,
             kontaktId: user.kontaktId,
+            totpEnabled: true, // They just verified TOTP — compliant
           };
         }
 
@@ -112,6 +113,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           kanzleiId: user.kanzleiId,
           kontaktId: user.kontaktId,
+          totpEnabled: user.totpEnabled,
         };
       },
     }),

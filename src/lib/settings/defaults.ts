@@ -90,6 +90,15 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     max: 14,
   },
 
+  // Security category
+  {
+    key: "auth.totp.requiredRoles",
+    value: "[]",
+    type: "json",
+    category: "security",
+    label: "2FA-Pflicht: Rollen (ENV: TOTP_REQUIRED_ROLES, z.B. ADMIN,ANWALT)",
+  },
+
   // System category
   {
     key: "system.maintenance",
@@ -294,6 +303,7 @@ export const CATEGORY_LABELS: Record<string, string> = {
   logging: "Logging",
   notifications: "Benachrichtigungen",
   fristen: "Fristen",
+  security: "Sicherheit",
   system: "System",
   ai: "KI / Helena",
   scanner: "Scanner",

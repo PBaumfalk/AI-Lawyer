@@ -226,9 +226,9 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 <!-- Current milestone: v0.9 Security, Migration & Productivity -->
 
 **2FA (v0.9):**
-- [ ] TOTP Authenticator-App Login (zweiter Faktor)
-- [ ] 2FA Setup-Flow mit QR-Code und Recovery-Codes
-- [ ] 2FA-Enforcement pro Rolle (Admin kann erzwingen)
+- ✓ TOTP Authenticator-App Login (zweiter Faktor) — v0.9
+- ✓ 2FA Setup-Flow mit QR-Code und Recovery-Codes — v0.9
+- ✓ 2FA-Enforcement pro Rolle (Admin kann erzwingen) — v0.9
 
 **J-Lawyer Migration (v0.9):**
 - [ ] Import von Akten, Beteiligten, Dokumenten und Kalender aus J-Lawyer
@@ -389,4 +389,9 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Remove compose-popup auto-save entirely (v0.6) | Stale closure was accidentally sending emails; proper draft API needed | ✓ Good — eliminated the bug class |
 
 ---
-*Last updated: 2026-03-07 after v0.9 scope refinement (2FA + J-Lawyer Migration + Akte-Detail Feed-Umbau, Mahnwesen + Helena Sprache deferred)*
+| otplib v12 for TOTP (v0.9) | v13 breaking API change; v12 has stable authenticator API | ✓ Good — speakeasy-compatible |
+| Edge middleware 2FA via JWT claim (v0.9) | Prisma unavailable in Edge runtime; totpEnabled in JWT + TOTP_REQUIRED_ROLES env var | ✓ Good — no DB call in middleware |
+| TOTP nonce one-time consume (v0.9) | Stateless verify via signed JWT cookie + DB nonce prevents replay | ✓ Good — consumed atomically in authorize |
+
+---
+*Last updated: 2026-03-07 after Phase 59 (2FA/TOTP complete)*

@@ -121,7 +121,7 @@ Plans:
 | 52 | v0.6.1 | 1/1 | Complete | 2026-03-06 |
 | 53-54 | v0.7 | 4/4 | Complete | 2026-03-06 |
 | 55-58 | v0.8 | 12/12 | Complete | 2026-03-07 |
-| 59 | 1/5 | In Progress|  | - |
+| 59 | 2/5 | In Progress|  | - |
 | 60 | v0.9 | 0/? | Not started | - |
 | 61 | v0.9 | 0/? | Not started | - |
 | 62 | v0.9 | 0/? | Not started | - |

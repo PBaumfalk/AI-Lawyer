@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
@@ -108,7 +109,9 @@ export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
       )}
 
       {/* KPI stats row + tabbed content (client component for interactivity) */}
-      <AkteDetailClient akte={serializedAkte} />
+      <Suspense fallback={null}>
+        <AkteDetailClient akte={serializedAkte} />
+      </Suspense>
     </div>
   );
 }

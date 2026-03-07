@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Users,
   FileText,
@@ -152,13 +152,23 @@ function KeyFactsPanel({ akte }: { akte: AkteData }) {
   );
 }
 
+const VALID_TABS = new Set([
+  "feed", "dokumente", "kalender", "finanzen",
+  "falldaten", "zusammenfassung", "nachrichten", "portal-nachrichten",
+]);
+
 interface AkteDetailClientProps {
   akte: AkteData;
 }
 
 export function AkteDetailClient({ akte }: AkteDetailClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("feed");
+  const searchParams = useSearchParams();
+  const initialTab = (() => {
+    const t = searchParams.get("tab");
+    return t && VALID_TABS.has(t) ? t : "feed";
+  })();
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   const handleKpiClick = useCallback((label: string) => {
     if (label === "E-Mails") {

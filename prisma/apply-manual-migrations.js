@@ -23,8 +23,15 @@ async function main() {
     const sql = fs.readFileSync(filePath, "utf8").trim();
     if (!sql) continue;
 
+    const statements = sql
+      .split(/;\s*(?:\r?\n|$)/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     try {
-      await prisma.$executeRawUnsafe(sql);
+      for (const statement of statements) {
+        await prisma.$executeRawUnsafe(statement);
+      }
       console.log(`    ✓ ${file}`);
     } catch (err) {
       // Log but don't fail — statements are idempotent, some may partially apply

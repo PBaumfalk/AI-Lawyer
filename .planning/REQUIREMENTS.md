@@ -9,9 +9,9 @@ Requirements for v0.9 Security, Migration & Productivity. Each maps to roadmap p
 
 ### Authentifizierung
 
-- [ ] **AUTH-01**: User kann TOTP 2FA in Profil-Einstellungen aktivieren (QR-Code scannen, Code verifizieren)
-- [ ] **AUTH-02**: User muss nach Passwort-Login einen 6-stelligen TOTP-Code eingeben
-- [ ] **AUTH-03**: User kann Backup-Codes generieren und als Fallback verwenden
+- [x] **AUTH-01**: User kann TOTP 2FA in Profil-Einstellungen aktivieren (QR-Code scannen, Code verifizieren)
+- [x] **AUTH-02**: User muss nach Passwort-Login einen 6-stelligen TOTP-Code eingeben
+- [x] **AUTH-03**: User kann Backup-Codes generieren und als Fallback verwenden
 - [ ] **AUTH-04**: Admin kann 2FA-Pflicht pro Rolle konfigurieren (z.B. ANWALT + ADMIN muessen 2FA haben)
 
 ### Migration
@@ -64,9 +64,9 @@ Deferred to post-v0.9 milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 59 | Pending |
-| AUTH-02 | Phase 59 | Pending |
-| AUTH-03 | Phase 59 | Pending |
+| AUTH-01 | Phase 59 | Complete |
+| AUTH-02 | Phase 59 | Complete |
+| AUTH-03 | Phase 59 | Complete |
 | AUTH-04 | Phase 59 | Pending |
 | MIG-01 | Phase 60 | Pending |
 | MIG-02 | Phase 60 | Pending |

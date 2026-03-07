@@ -67,7 +67,11 @@ export type AuditAktion =
   | "PORTAL_AKTIVIERT"
   | "PORTAL_PASSWORT_RESET"
   | "MANDANT_UPLOAD"
-  | "PORTAL_EMAIL_GESENDET";
+  | "PORTAL_EMAIL_GESENDET"
+  | "TOTP_AKTIVIERT"
+  | "TOTP_DEAKTIVIERT"
+  | "TOTP_LOGIN_ERFOLG"
+  | "TOTP_BACKUP_CODES_REGENERIERT";
 
 /**
  * German human-readable labels for all audit actions.
@@ -141,6 +145,10 @@ export const AKTION_LABELS: Record<string, string> = {
   PORTAL_PASSWORT_RESET: "hat Portal-Passwort zurueckgesetzt",
   MANDANT_UPLOAD: "Mandant hat Dokument hochgeladen",
   PORTAL_EMAIL_GESENDET: "Portal-E-Mail versendet",
+  TOTP_AKTIVIERT: "hat Zwei-Faktor-Authentifizierung aktiviert",
+  TOTP_DEAKTIVIERT: "hat Zwei-Faktor-Authentifizierung deaktiviert",
+  TOTP_LOGIN_ERFOLG: "hat sich mit Zwei-Faktor-Authentifizierung eingeloggt",
+  TOTP_BACKUP_CODES_REGENERIERT: "hat Backup-Codes neu generiert",
 };
 
 /**

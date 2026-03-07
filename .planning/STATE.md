@@ -4,12 +4,12 @@ milestone: v0.9
 milestone_name: Security, Migration & Productivity
 current_phase: 59
 current_plan: Not started
-status: defining_requirements
+status: ready_to_plan
 stopped_at: null
 last_updated: "2026-03-07"
-last_activity: 2026-03-07 -- Milestone v0.9 started
+last_activity: 2026-03-07 -- Roadmap created for v0.9
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -22,18 +22,18 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-03-07)
 
-**Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet -- und Mandanten über ein eigenes Portal Sachstand, Dokumente und Nachrichten einsehen können.
-**Current focus:** Defining requirements for v0.9
+**Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
+**Current focus:** Phase 59 - 2FA/TOTP
 
 ## Current Position
 
 **Milestone:** v0.9 Security, Migration & Productivity
-**Current Phase:** Not started (defining requirements)
+**Current Phase:** 59 - 2FA/TOTP (Phase 1 of 5)
 **Current Plan:** N/A
-**Status:** Defining requirements
-**Last activity:** 2026-03-07 -- Milestone v0.9 started
+**Status:** Ready to plan
+**Last activity:** 2026-03-07 -- Roadmap created for v0.9
 
-Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (v0.9 STARTED)
+Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (v0.9)
 
 All-time: 169 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.6.1:1 + v0.7:4 + v0.8:12 + adhoc:10)
 
@@ -73,11 +73,11 @@ None.
 
 ### Blockers/Concerns
 
-None currently active.
+- Next.js 14.2.35 has 5 high-severity CVEs (deferred, not blocking v0.9)
+- Prisma v5->v7 upgrade still pending (deferred, not blocking v0.9)
 
 ## Session Continuity
 
 Last session: 2026-03-07
-Stopped at: v0.8 milestone archived
-Last activity: 2026-03-07 -- v0.8 milestone completed and archived
+Stopped at: v0.9 roadmap created (5 phases, 19 requirements mapped)
 Resume file: None

@@ -34,7 +34,72 @@
 
 </details>
 
+### v0.9 Security, Migration & Productivity (In Progress)
+
+**Milestone Goal:** Harden login security with TOTP 2FA, enable one-shot migration from J-Lawyer, and transform the Akte detail page into a clean activity-feed-centric layout with inline composition and at-a-glance key facts.
+
+- [ ] **Phase 59: 2FA/TOTP** - Users secure their accounts with TOTP authenticator apps, backup codes, and admin-enforceable 2FA policies
+- [ ] **Phase 60: J-Lawyer Migration ETL** - Admin imports all cases, contacts, documents, and calendar from J-Lawyer via REST API
+- [ ] **Phase 61: Feed Cleanup + Filterchips** - Akte activity feed becomes the default tab with human-readable events and category filters
+- [ ] **Phase 62: Composer + Telefonnotiz** - Users create notes, phone notes, and tasks inline at the feed bottom
+- [ ] **Phase 63: Tab-Reduktion + Key-Facts-Panel** - Akte detail tabs collapse to 4-5 visible with overflow, sticky key-facts panel above tabs
+
+## Phase Details
+
+### Phase 59: 2FA/TOTP
+**Goal**: Users can secure their accounts with a second authentication factor
+**Depends on**: Nothing (first phase of v0.9)
+**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04
+**Success Criteria** (what must be TRUE):
+  1. User can enable TOTP in profile settings by scanning a QR code and verifying a 6-digit code
+  2. User must enter a TOTP code after password login before accessing the dashboard
+  3. User can generate backup codes and use one as a fallback when authenticator is unavailable
+  4. Admin can configure per-role 2FA enforcement so that users without 2FA are redirected to setup
+**Plans**: TBD
+
+### Phase 60: J-Lawyer Migration ETL
+**Goal**: Admin can migrate an entire Kanzlei from J-Lawyer into AI-Lawyer in one operation
+**Depends on**: Phase 59
+**Requirements**: MIG-01, MIG-02, MIG-03, MIG-04, MIG-05, MIG-06, MIG-07, MIG-08
+**Success Criteria** (what must be TRUE):
+  1. Admin can configure J-Lawyer REST API connection (URL + credentials) and test connectivity
+  2. System imports Akten with metadata, Kontakte with deduplication, Beteiligte with correct role mapping, and Dokumente into MinIO
+  3. System imports Kalendereintraege, Fristen, and Wiedervorlagen with correct dates and types
+  4. Migration is idempotent -- re-running updates existing records via jlawyer_id without creating duplicates
+  5. System displays a completion report showing counts of imported Akten, Kontakte, Dokumente, and errors
+**Plans**: TBD
+
+### Phase 61: Feed Cleanup + Filterchips
+**Goal**: Akte activity feed is the default view with clean, human-readable events and category filtering
+**Depends on**: Phase 60
+**Requirements**: FEED-01, FEED-02, FEED-03
+**Success Criteria** (what must be TRUE):
+  1. Opening an Akte lands on the "Aktivitaeten" tab by default (not a different tab)
+  2. All event texts in the feed are human-readable (no raw IDs, enum values, or MIME types visible)
+  3. User can filter the feed by category chips (Alle, Fristen, Dokumente, Kommunikation, Zeit, System)
+**Plans**: TBD
+
+### Phase 62: Composer + Telefonnotiz
+**Goal**: Users can create notes, phone notes, and tasks directly from the activity feed
+**Depends on**: Phase 61
+**Requirements**: FEED-04, FEED-05
+**Success Criteria** (what must be TRUE):
+  1. A persistent composer at the bottom of the feed lets users create Notizen, Telefonnotizen, and Aufgaben
+  2. Telefonnotiz overlay captures Beteiligter, Ergebnis, Stichworte, and naechster Schritt -- and the entry appears in the feed immediately
+**Plans**: TBD
+
+### Phase 63: Tab-Reduktion + Key-Facts-Panel
+**Goal**: Akte detail page is streamlined with fewer visible tabs and at-a-glance case facts
+**Depends on**: Phase 62
+**Requirements**: FEED-06, FEED-07
+**Success Criteria** (what must be TRUE):
+  1. Akte detail shows 4-5 primary tabs with remaining tabs accessible via an overflow menu
+  2. A sticky Key-Facts panel above the tabs displays Gegenstandswert, Gericht, Phase, naechste Frist, and Mandant/Gegner at a glance
+**Plans**: TBD
+
 ## Progress
+
+**Execution Order:** 59 -> 60 -> 61 -> 62 -> 63
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -49,6 +114,11 @@
 | 52 | v0.6.1 | 1/1 | Complete | 2026-03-06 |
 | 53-54 | v0.7 | 4/4 | Complete | 2026-03-06 |
 | 55-58 | v0.8 | 12/12 | Complete | 2026-03-07 |
+| 59 | v0.9 | 0/? | Not started | - |
+| 60 | v0.9 | 0/? | Not started | - |
+| 61 | v0.9 | 0/? | Not started | - |
+| 62 | v0.9 | 0/? | Not started | - |
+| 63 | v0.9 | 0/? | Not started | - |
 
 ---
-*Last updated: 2026-03-07 after v0.8 milestone completion*
+*Last updated: 2026-03-07 after v0.9 roadmap creation*

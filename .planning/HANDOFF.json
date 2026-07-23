@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-07-23T16:45:00Z",
+  "phase": "new-milestone-v1.0",
+  "phase_name": "Production Hardening",
+  "phase_dir": ".planning",
+  "plan": null,
+  "task": 9,
+  "total_tasks": 11,
+  "status": "paused",
+  "completed_tasks": [
+    {"id": 1, "name": "Milestone goals gathered + confirmed (v1.0 Production Hardening, 3 Phasen)", "status": "done", "commit": "b7a2ff7"},
+    {"id": 2, "name": "PROJECT.md Current Milestone + Evolution section", "status": "done", "commit": "b7a2ff7"},
+    {"id": 3, "name": "STATE.md milestone-switch to v1.0", "status": "done", "commit": "b7a2ff7"},
+    {"id": 4, "name": "Research decision: skipped (keine neuen Features)", "status": "done", "commit": null},
+    {"id": 5, "name": "Requirements entworfen (15 REQ-IDs, im Chat präsentiert, NICHT bestätigt, NICHT geschrieben)", "status": "in_progress", "progress": "Draft vollständig im Chat: BAK-01..03, MIG-09..10, AUTH-05, SEC-01, POL-01..03, PERF-01, UAT-01..06"}
+  ],
+  "remaining_tasks": [
+    {"id": 6, "name": "Requirements bestätigen (User-Freigabe des 15-REQ-Drafts)", "status": "not_started"},
+    {"id": 7, "name": "REQUIREMENTS.md schreiben + committen", "status": "not_started"},
+    {"id": 8, "name": "Roadmapper spawnen (Phasen 64-66, Nummerierung weiter ab 64)", "status": "not_started"},
+    {"id": 9, "name": "Roadmap-Approval + Commit", "status": "not_started"},
+    {"id": 10, "name": "Pending Todos mit resolves_phase verlinken", "status": "not_started"},
+    {"id": 11, "name": "Execution starten: /gsd-discuss-phase 64 oder /gsd-plan-phase 64", "status": "not_started"}
+  ],
+  "blockers": [],
+  "async_jobs": [],
+  "human_actions_pending": [
+    {"action": "15-Requirement-Draft bestätigen oder anpassen", "context": "Draft liegt vollständig im Chat von 2026-07-23 vor (BAK/MIG/AUTH/SEC/POL/PERF/UAT)", "blocking": true}
+  ],
+  "decisions": [
+    {"decision": "v1.0 ohne beA/ERV (bleibt in j-lawyer)", "rationale": "Komplexität; Betriebsregel: AI-Lawyer führend für Akten/Dokumente/Fristen/Finanzen/E-Mail, j-lawyer nur beA-Postfach", "phase": "v1.0"},
+    {"decision": "Backup-Cron ist Task Nr. 1 vor jedem Datenimport", "rationale": "Kein Backup vorhanden; echte Mandatsdaten nur mit Rettungsleine", "phase": "64"},
+    {"decision": "Research übersprungen", "rationale": "Keine neuen Features, nur Härtung bestehender Module", "phase": "v1.0"},
+    {"decision": "Prisma v5→v7 NICHT in v1.0", "rationale": "Separater Milestone, zu groß für Hardening", "phase": "v1.0"}
+  ],
+  "uncommitted_files": [],
+  "next_action": "User fragt nach Bestätigung des 15-Requirement-Drafts (im Chat 2026-07-23), dann REQUIREMENTS.md schreiben, dann gsd-roadmapper für Phasen 64-66 spawnen",
+  "context_notes": "new-milestone-Workflow Step 9 von 11. Milestone v0.9 wurde heute komplett abgeschlossen (Phase 63 + Audit + 2 Blocker-Fixes + Tag v0.9 gepusht). Der Requirements-Draft wurde dem User präsentiert, der statt Antwort /gsd-pause-work aufrief — keine inhaltliche Rückmeldung zum Draft erhalten."
+}

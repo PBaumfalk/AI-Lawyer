@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.9
-milestone_name: Security, Migration & Productivity
-status: Awaiting next milestone
-stopped_at: Phase 63 complete (verification passed), starting milestone v0.9 lifecycle
-last_updated: "2026-07-23T14:37:13.372Z"
+milestone: v1.0
+milestone_name: Production Hardening
+status: planning
+last_updated: "2026-07-23T15:01:57.141Z"
 last_activity: 2026-07-23
-last_activity_desc: Milestone v0.9 completed and archived
 progress:
-  total_phases: 5
-  completed_phases: 4
-  total_plans: 13
-  completed_plans: 13
-  percent: 80
-current_phase: 63
-current_plan: Not started
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 ## Current Position
 
-Phase: Milestone v0.9 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-07-23 — Milestone v0.9 completed and archived
+Status: Defining requirements
+Last activity: 2026-07-23 — Milestone v1.0 started
 
 ## Performance Metrics
 

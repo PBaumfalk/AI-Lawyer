@@ -8,6 +8,17 @@ Eine vollständig browserbasierte Kanzleisoftware mit autonomer KI-Agentin ("Hel
 
 Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, während eine autonome KI-Agentin aktenübergreifend lernt, Schriftsätze deterministisch entwirft, proaktiv Scanner-Alerts auslöst, per-Akte Memory pflegt und als digitale Rechtsanwaltsfachangestellte mitarbeitet — und Mandanten über ein eigenes Portal Sachstand, freigegebene Dokumente und sichere Nachrichten einsehen können — ohne dass KI-generierte Inhalte jemals automatisch versendet oder finalisiert werden (BRAK 2025 / BRAO 43).
 
+## Current Milestone: v1.0 Production Hardening
+
+**Goal:** AI-Lawyer wird produktiv in der Kanzlei Baumfalk eingesetzt — mit echten Daten, Backups und bewährtem Tagesgeschäft (ohne beA/ERV).
+
+**Target features:**
+- Phase 64 — Daten & Rettungsleine: Backup-Automatisierung (pg_dump + MinIO, Restore-Test), J-Lawyer-Migration mit Realdaten, Next.js-Patch-Upgrade
+- Phase 65 — Tagesgeschäft-Bug-Polish: 4 Debug-Sessions abarbeiten, 2FA-Livetest, Performance-Messung, Info-Findings sichten
+- Phase 66 — Pilot-UAT: 5 Kern-Workflows mit Realdaten durchspielen und Befunde fixen
+
+**Betriebsregel:** AI-Lawyer führend für Akten/Dokumente/Fristen/Finanzen/E-Mail; j-lawyer nur beA-Postfach.
+
 ## Requirements
 
 ### Validated
@@ -393,5 +404,22 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | Edge middleware 2FA via JWT claim (v0.9) | Prisma unavailable in Edge runtime; totpEnabled in JWT + TOTP_REQUIRED_ROLES env var | ✓ Good — no DB call in middleware |
 | TOTP nonce one-time consume (v0.9) | Stateless verify via signed JWT cookie + DB nonce prevents replay | ✓ Good — consumed atomically in authorize |
 
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-07-23 after Phase 63 (Tab-Reduktion + Key-Facts-Panel complete — v0.9 all phases done)*
+*Last updated: 2026-07-23 — Milestone v1.0 Production Hardening started*

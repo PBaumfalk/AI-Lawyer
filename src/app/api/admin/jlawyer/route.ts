@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
+import { encryptJLawyerPassword } from "@/lib/jlawyer/credentials";
+import { validateJLawyerBaseUrl } from "@/lib/jlawyer/validate-url";
 
 // GET — return current config (password masked)
 export async function GET() {
@@ -32,9 +34,16 @@ export async function POST(req: NextRequest) {
   };
 
   const upserts: Array<{ key: string; value: string }> = [];
-  if (url !== undefined) upserts.push({ key: "jlawyer.url", value: url });
+  if (url !== undefined) {
+    // SSRF guard: do not persist URLs the client would later reject
+    const validation = validateJLawyerBaseUrl(url);
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+    upserts.push({ key: "jlawyer.url", value: url });
+  }
   if (username !== undefined) upserts.push({ key: "jlawyer.username", value: username });
-  if (password !== undefined && password !== "") upserts.push({ key: "jlawyer.password", value: password });
+  if (password !== undefined && password !== "") upserts.push({ key: "jlawyer.password", value: encryptJLawyerPassword(password) });
 
   for (const { key, value } of upserts) {
     await prisma.systemSetting.upsert({

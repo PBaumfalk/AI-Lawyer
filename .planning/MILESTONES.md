@@ -1,5 +1,31 @@
 # Milestones
 
+## v0.9 Security, Migration & Productivity (Shipped: 2026-07-23)
+
+**Closeout:** override_closeout — Known verification overrides: 14 (see STATE.md Deferred Items: 4 historical debug sessions, UAT Phase 29 deferred, verification human_needed Phases 28/32, 1 quick task, 16 pending todos partially already shipped)
+
+**Phases completed:** 5 phases, 13 plans, 25 tasks
+
+**Key accomplishments:**
+
+- TOTP service with otplib authenticator, QR code generation, and bcrypt-hashed backup codes plus User schema 2FA fields
+- 5 Next.js route handlers for the full 2FA lifecycle: setup, activation, login challenge, backup code regeneration, and disabling — all with session guards, role checks, and audit logging
+- Complete TOTP login challenge flow: /api/auth/totp/init sets pending cookie + nonce, /login/totp challenge page verifies code, authorize accepts TOTP:nonce for session creation
+- ZweiFaktorTab component with QR-code setup, backup code display, regen, and disable flows wired to TOTP API routes, integrated as Sicherheit tab in Einstellungen
+- Admin-configurable 2FA enforcement via TOTP_REQUIRED_ROLES env var with Edge-compatible JWT claim check and /2fa-setup-required redirect landing page
+- Prisma jlawyerId tracking fields on 4 models and JLawyerClient REST API client with full TypeScript types
+- Idempotent ETL pipeline for J-Lawyer cases, contacts, and participants using prisma.upsert by jlawyerId with email fallback deduplication and 7-role BeteiligterRolle mapping
+- MinIO binary upload for migrated documents and idempotent KalenderEintrag migration for Termine/Fristen/Wiedervorlagen via findFirst upsert pattern
+- Three Next.js admin API route files providing CRUD config, connectivity test, and full ETL pipeline trigger with status/report retrieval for J-Lawyer migration
+- Client-side admin UI for J-Lawyer migration — connection config with inline test, migration trigger with 5s live polling, and completion report with 5 stat cards and expandable error list
+- 6-category filter chip bar (Alle/Fristen/Dokumente/Kommunikation/Zeit/System) with STATUS_LABELS and ROLLE_LABELS enum translation in feed entries
+- useSearchParams reads ?tab= param on akte detail page, defaulting to feed with VALID_TABS guard
+- Feed composer with Notiz/Telefonnotiz/Aufgabe type selector, structured phone note form with beteiligter/ergebnis/stichworte fields, and AUFGABE task creation
+- Task 1: Move KI-Analyse and Falldaten into the overflow menu
+- Sticky Key-Facts panel above Akte tabs now shows all five FEED-07 facts — Gegenstandswert (Euro), Phase (Offen/Ruhend/Archiviert), Gericht from rolle=GERICHT Beteiligte, naechste Frist with urgency warning, Mandant/Gegner — and stays pinned during scroll
+
+---
+
 ## v0.8 Intelligence & Tools (Shipped: 2026-03-07)
 
 **Delivered:** BI-Dashboard mit KPI-Kacheln, Trend-Charts und Filtern plus CSV/XLSX/PDF-Export fuer alle Datenbereiche, PDF-Tools (Merge/Split/Rotate/Compress/Watermark/Redact) via Stirling-PDF, Helena Intelligence mit Falldaten-Auto-Fill, Fallzusammenfassung, globalem aktenuebergreifendem KI-Chat und Template-Vorschlaegen sowie bidirektionalem CalDAV-Sync mit Google und Apple Calendar.
@@ -12,6 +38,7 @@
 **Requirements:** 39/39 satisfied
 
 **Key accomplishments:**
+
 1. BI-Dashboard with KPI tiles (Akten, Finanzen, Fristen, Helena) with month-over-month deltas, Recharts trend charts, and Zeitraum/Anwalt/Sachgebiet filters -- Redis-cached aggregation queries (5min TTL)
 2. Generic CSV/XLSX export library (ExcelJS streaming WorkbookWriter) with export endpoints for Akten, Kontakte, Finanzdaten plus BI-Dashboard PDF/XLSX report export with Kanzlei-Briefkopf
 3. PDF-Tools via Stirling-PDF REST API: merge, split, rotate, compress, watermark (ENTWURF/Logo), and DSGVO PII auto-redact -- tabbed dialog UI with drag-and-drop page thumbnails
@@ -20,11 +47,13 @@
 6. Bidirectional CalDAV sync: Google OAuth2 + Apple app-password, Fristen as read-only export, Termine bidirectional (create/update/delete), BullMQ 15min cron + manual sync, ETag/CTag incremental tracking, external events in Tagesuebersicht
 
 **Tech debt (non-blocking):**
+
 - Prisma v5->v7 upgrade still deferred
 - tsdav added as new dependency (first new npm package since v0.2)
 - Virtual EXTERN typ in API response (no Prisma enum change for CalDAV events)
 
 **Archives:**
+
 - `milestones/v0.8-ROADMAP.md`
 - `milestones/v0.8-REQUIREMENTS.md`
 
@@ -41,6 +70,7 @@
 **Requirements:** No formal REQ-IDs (ad-hoc bugfix milestone — scope defined by bug backlog)
 
 **Key accomplishments:**
+
 1. Aggregated 18 bugs from 6 debug files and Phase 51 deferred items into a normalized triage list with severity, area, wave, repro notes, and source references
 2. Classified each bug: 5 pre-fixed (BUG-01 to BUG-05), 7 P0/P1 for Wave 1 (52-02), 3 P2 for Wave 2 (52-03), 3 P3 explicitly deferred
 3. Defined Phase 52 scope boundary — Wave 1 restricted to existing-file corrections only, no architectural changes
@@ -48,6 +78,7 @@
 5. Created CONTEXT.md with P0/P1/P2/P3 decision criteria and scope guard for fix wave execution
 
 **Archives:**
+
 - `milestones/v0.6.1-ROADMAP.md`
 
 ---
@@ -66,6 +97,7 @@
 **Requirements:** No formal REQ-IDs (stabilization milestone — scope defined by health audit)
 
 **Key accomplishments:**
+
 1. Fixed React hooks violations, TypeScript type mismatches, non-route API exports, and Stirling PDF health check port
 2. Standardized OLLAMA_URL env var across entire codebase (4 files unified)
 3. Removed 8 invalid ESLint disable comments, fixed compose-popup auto-save stale closure
@@ -73,6 +105,7 @@
 5. Added npm test scripts, fixed create_draft_dokument test mock, enabled build-time TypeScript error checking (ignoreBuildErrors: false)
 
 **Tech debt (deferred to future milestones):**
+
 - Prisma 5.22 → 7.x major upgrade needed
 - Next.js 14.2.35 has 5 high-severity CVEs (Next.js 15 upgrade needed)
 - 317 ESLint unused-vars warnings across 80+ files
@@ -82,6 +115,7 @@
 - 12 Falldaten UAT tests pending
 
 **Archives:**
+
 - `milestones/v0.6-ROADMAP.md`
 - `milestones/v0.6-MILESTONE-AUDIT.md`
 
@@ -100,6 +134,7 @@
 **Requirements:** 25/25 satisfied
 
 **Key accomplishments:**
+
 1. Portal Infrastructure — MANDANT role in UserRole enum, /portal/* route group with Glass UI layout, auth-guarded middleware, Kanzlei-branded sidebar/header
 2. Invite-based Auth — PortalInvite model with secure tokens, account activation, JWT session with 30min auto-logout + 5min warning, password reset flow, anti-enumeration (always 200)
 3. DSGVO-compliant Data Room — Server-side isolation via Kontakt→Beteiligter chain, multi-Akte selection, simplified timeline (mandantSichtbar flag), naechste Schritte text, 404 on unauthorized access
@@ -108,11 +143,13 @@
 6. Transactional Email Notifications — BullMQ portal-notification queue, 3 event types (neue-nachricht, neues-dokument, sachstand-update), date-based deduplication, DSGVO einwilligungEmail gate, 3 retries
 
 **Tech debt (non-blocking):**
+
 - console.error in naechste-schritte/route.ts instead of structured logger
 - Email deep links redirect to /portal/dashboard after login (no post-login redirect callback)
 - 7 pre-existing TypeScript errors in falldaten-tab.tsx and helena/index.ts (not from v0.5)
 
 **Archives:**
+
 - `milestones/v0.5-ROADMAP.md`
 - `milestones/v0.5-REQUIREMENTS.md`
 - `milestones/v0.5-MILESTONE-AUDIT.md`
@@ -132,6 +169,7 @@
 **Requirements:** 41/41 satisfied
 
 **Key accomplishments:**
+
 1. Gamification Engine — UserGameProfile, Quest DSL evaluator against Prisma data, XP/Level/Runen/Streak system, BullMQ async processing, daily reset + nightly safety-net crons, DSGVO-compliant (opt-in, self-only visibility)
 2. Bossfight — Team Backlog-Monster with dynamic HP from open Wiedervorlagen, 4-phase progression with escalating Runen rewards, Socket.IO real-time HP bar + damage feed + canvas-confetti celebration, admin activation threshold
 3. Quest Depth — Class-specific daily quests per RBAC role, weekly delta quests (WeeklySnapshot baselines), time-limited Special Quest campaigns with admin CRUD, QuestWidget with grouped sections and deep-links to filtered views
@@ -141,12 +179,14 @@
 7. Quick Wins — Clickable KPI cards with tab navigation, OCR recovery banner (retry + Vision-Analyse + manual text), empty states in 4 tabs, Chat rename, Zeiterfassung inline editing
 
 **Tech debt (non-blocking):**
+
 - Record<string, any> in quest-evaluator.ts (eslint-suppressed, necessary for Prisma dynamic where)
 - Fire-and-forget .catch(() => {}) patterns in audit-listener and quest-service (intentional)
 - Doppel-runen 2h window edge case with nightly safety net (product-level, not code defect)
 - Pre-existing TS errors in falldaten-tab.tsx and helena/index.ts (not from v0.4)
 
 **Archives:**
+
 - `milestones/v0.4-ROADMAP.md`
 - `milestones/v0.4-REQUIREMENTS.md`
 - `milestones/v0.4-MILESTONE-AUDIT.md`
@@ -167,6 +207,7 @@
 **Requirements:** 20/20 satisfied
 
 **Key accomplishments:**
+
 1. Falldatenblaetter Template System — Database-backed templates with 8 field types, Gruppen-first builder, community submit/approve workflow (ENTWURF→EINGEREICHT→GENEHMIGT/ABGELEHNT), 10 Sachgebiet-Seed-Templates als single source of truth
 2. In-Akte Falldaten Forms — FalldatenTab mit Auto-Template-Zuweisung (STANDARD by Sachgebiet), Pflichtfeld-Highlighting (amber border), Completeness-Tracking (Prozent-Badge im Tab), Unsaved-Changes-Guard (AlertDialog)
 3. SCAN-05 Neu-Urteil-Check — Akte summaryEmbedding (pgvector HNSW, nightly cron 02:30), Cross-Matching-Engine (Cosine Similarity + Sachgebiet-Pre-Filter), LLM-Briefing (3-Sektionen-Prompt), NEUES_URTEIL-Alerts im Alert-Center (violet Scale icon), Admin Threshold-Slider
@@ -174,6 +215,7 @@
 5. Messaging UI — /nachrichten Seite mit Split-Layout, ChannelSidebar (ALLGEMEIN/AKTE-Sektionen, unread Badges), MessageView (Paginierung, Banner-Refetch), MessageComposer (@mention picker, DMS Attachments, @Helena Button), TypingIndicator (5s auto-cleanup), AkteChannelTab im Akte-Detail
 
 **Tech debt (non-blocking):**
+
 - @Helena in ALLGEMEIN channels silently ignored (design: Helena braucht akteId-Kontext)
 - Sidebar unread badge nicht real-time für Hintergrund-Nachrichten (Update bei page load/channel visit)
 - Akte Stats-Counter zeigt chatNachrichten statt Channel Messages
@@ -181,6 +223,7 @@
 - Pre-existing TS errors in helena/index.ts (StepUpdate type mismatch)
 
 **Archives:**
+
 - `milestones/v0.3-ROADMAP.md`
 - `milestones/v0.3-REQUIREMENTS.md`
 - `milestones/v0.3-MILESTONE-AUDIT.md`
@@ -201,6 +244,7 @@
 **Requirements:** 52/53 satisfied (SCAN-05 deferred)
 
 **Key accomplishments:**
+
 1. ReAct Agent-Loop mit 14 Tools (9 read + 5 write), bounded execution (5/20 steps inline/background), Ollama response guard, token budget manager, complexity classifier, rate limiter — 46 unit/integration tests pass
 2. Deterministic Schriftsatz-Orchestrator: Intent-Router (Klageart/Stadium/Gerichtszweig), Slot-Filling mit automatischer Rueckfrage, RAG Assembly (4000 chars/section), ERV/beA-Validator, Zod-typisiertes SchriftsatzSchema, multi-turn via PendingSchriftsatz
 3. @Helena Task-System: @-mention parsing, BullMQ helena-task queue (lockDuration:120s), Socket.IO progress events, task abort, REST API (create/list/detail/abort)
@@ -210,15 +254,18 @@
 7. Activity Feed UI: Akte-Detail Feed ersetzt 8 Tabs (921→152 LOC), Composer mit @Helena tagging, Helena vs Human Attribution, inline Draft-Review, QA-Dashboard mit Goldset (20 Queries), Retrieval-Metriken, Release-Gates
 
 **Known Gaps:**
+
 - SCAN-05: Neu-Urteil-Check deferred (requires cross-Akte semantic search)
 
 **Tech debt (non-blocking):**
+
 - Pre-existing TS errors in helena/index.ts (StepUpdate adapter type mismatches)
 - search-web.ts intentional stub (placeholder pending web search config)
 - helenaTaskId not propagated to ToolContext (drafts lack task traceability)
 - Release gate hardcodes hallucination/Vollstaendigkeit to 0/pass without goldset run
 
 **Archives:**
+
 - `milestones/v0.2-ROADMAP.md`
 - `milestones/v0.2-REQUIREMENTS.md`
 - `milestones/v0.2-MILESTONE-AUDIT.md`
@@ -238,6 +285,7 @@
 **Timeline:** 2026-02-24 → 2026-02-25 (2 days)
 
 **Key accomplishments:**
+
 1. Redis + BullMQ + Socket.IO infrastructure with real-time notifications and admin monitoring
 2. BGB-compliant Fristenberechnung (50+ unit tests), Vorlagen with auto-placeholders, Briefkopf, OnlyOffice co-editing with Track Changes
 3. Full IMAP IDLE + SMTP email client with three-pane inbox, compose, Veraktung, and ticket creation
@@ -247,18 +295,19 @@
 7. RBAC enforcement with Dezernate, DSGVO compliance (anonymization, Auskunftsrecht), system-wide Audit-Trail, Versand-Gate, health checks
 
 **Known tech debt (minor, non-blocking):**
+
 - Bull Board PUT handler returns 501 (stub)
 - Briefkopf OnlyOffice editing mode deferred (form mode works)
 - bea.expert JS library requires commercial registration (user setup)
 - middleware.ts excludes /api/ki routes from session enforcement (auth handled internally)
 
 **Archives:**
+
 - `milestones/v3.4-ROADMAP.md`
 - `milestones/v3.4-REQUIREMENTS.md`
 - `milestones/v3.4-MILESTONE-AUDIT.md`
 
 ---
-
 
 ## v3.5 Production Ready (Shipped: 2026-02-26)
 
@@ -272,6 +321,7 @@
 **Git range:** `fix(10-01)` → `feat(11-07)`
 
 **Key accomplishments:**
+
 1. Docker production build fixed — Next.js compiles clean, pino-roll build-safe, hardened next.config.mjs
 2. All 9 Docker services run healthy — production entrypoint (prisma migrate deploy + conditional seed), IPv4 Alpine healthchecks, date-fns Docker copy, Ollama as core service
 3. Complete oklch glass design system — 4 blur tiers (8px/16px/24px/40px), gradient mesh background, macOS scrollbars, full dark mode CSS token structure
@@ -280,21 +330,23 @@
 6. All 26 dashboard pages migrated to glass design — 0 `font-heading` in any page file, UI/form/list requirements all satisfied
 
 **Known Gaps (intentionally deferred to TODO):**
+
 - FD-01–FD-04: Falldatenblaetter per-Rechtsgebiet Feldschemas
 - BI-01–BI-05: BI-Dashboard KPI-Kacheln
 - EXP-01–EXP-04: CSV/XLSX Export für Akten, Kontakte, Finanzen
 
 **Tech debt (non-blocking):**
+
 - 62× `font-heading` in sub-components (dialogs, tab components) — outside page-scope SC
 - 77× `.glass` alias in sub-components — renders correctly via @apply glass-card
 
 **Archives:**
+
 - `milestones/v3.5-ROADMAP.md`
 - `milestones/v3.5-REQUIREMENTS.md`
 - `milestones/v3.5-MILESTONE-AUDIT.md`
 
 ---
-
 
 ## v0.1 Helena RAG (Shipped: 2026-02-27)
 
@@ -308,6 +360,7 @@
 **Timeline:** 2026-02-26 → 2026-02-27 (2 days)
 
 **Key accomplishments:**
+
 1. Hybrid Search via Reciprocal Rank Fusion (BM25 + pgvector, k=60, N=50) + Cross-Encoder Reranking via Ollama (top-50 → top-10, 3s timeout fallback) — Helena retrieves substantively better context
 2. Bundesgesetze-RAG: bundestag/gesetze GitHub-Sync in law_chunks, täglicher BullMQ-Cron 02:00, Encoding-Smoke-Test; Helena zitiert §§ mit "nicht amtlich"-Disclaimer und Quellenlink
 3. §§-Verknüpfung in Akte: Suchmodal über law_chunks, Chip-Liste in Akte-Detailseite, pinned Normen als höchste Priorität in Helenas System-Kontext (Chain A)
@@ -316,13 +369,14 @@
 6. Muster-RAG + Admin Upload UI: amtliche Formulare mit {{PLATZHALTER}} in muster_chunks, Admin-UI /admin/muster (MinIO-Upload, NER-Status-Badge, Retry), 1.3× Kanzlei-Boost, Helena erstellt ENTWURF-Schriftsätze mit Rubrum/Anträge/Begründung
 
 **Tech debt (non-blocking):**
+
 - `processUrteilNer()` in ner-pii.processor.ts ist dead code — Phase 17 nutzt inline `runNerFilter()` stattdessen
 - NER queue `attempts:1` — Ollama-Timeout erfordert manuellen "Erneut prüfen"-Klick
 
 **Archives:**
+
 - `milestones/v0.1-ROADMAP.md`
 - `milestones/v0.1-REQUIREMENTS.md`
 - `milestones/v0.1-MILESTONE-AUDIT.md`
 
 ---
-

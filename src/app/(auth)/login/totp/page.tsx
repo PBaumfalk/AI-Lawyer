@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -14,15 +14,9 @@ export default function TotpChallengePage() {
   const [loading, setLoading] = useState(false);
   const [useBackupCode, setUseBackupCode] = useState(false);
 
-  // If there is no totp_pending cookie the user should not be here
-  useEffect(() => {
-    const hasPendingCookie = document.cookie
-      .split(";")
-      .some((c) => c.trim().startsWith("totp_pending="));
-    if (!hasPendingCookie) {
-      router.push("/login");
-    }
-  }, [router]);
+  // NOTE: No client-side cookie guard here. totp_pending is httpOnly and thus
+  // invisible to document.cookie — a JS-side check bounces the legitimate flow.
+  // The /api/auth/totp/verify route enforces the cookie server-side (401 without it).
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

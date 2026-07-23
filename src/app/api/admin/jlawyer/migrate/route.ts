@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { JLawyerClient } from "@/lib/jlawyer/client";
+import { decryptJLawyerPassword } from "@/lib/jlawyer/credentials";
 import { migrateAkten } from "@/lib/jlawyer/etl-akten";
 import { migrateKontakte, migrateBeteiligte } from "@/lib/jlawyer/etl-kontakte";
 import { migrateDokumente } from "@/lib/jlawyer/etl-dokumente";
@@ -81,7 +82,7 @@ export async function POST() {
     const client = new JLawyerClient({
       baseUrl: map["jlawyer.url"],
       username: map["jlawyer.username"],
-      password: map["jlawyer.password"],
+      password: decryptJLawyerPassword(map["jlawyer.password"]),
     });
 
     // Get kanzleiId from first admin user's kanzleiId

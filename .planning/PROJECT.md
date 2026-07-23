@@ -231,15 +231,15 @@ Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im 
 - ✓ 2FA-Enforcement pro Rolle (Admin kann erzwingen) — v0.9
 
 **J-Lawyer Migration (v0.9):**
-- [ ] Import von Akten, Beteiligten, Dokumenten und Kalender aus J-Lawyer
-- [ ] Mapping J-Lawyer Datenmodell auf AI-Lawyer Prisma-Schema
-- [ ] Validierung und Fehlerreporting beim Import
+- ✓ Import von Akten, Beteiligten, Dokumenten und Kalender aus J-Lawyer — v0.9
+- ✓ Mapping J-Lawyer Datenmodell auf AI-Lawyer Prisma-Schema — v0.9
+- ✓ Validierung und Fehlerreporting beim Import — v0.9
 
 **Akte-Detail Feed-Umbau (v0.9):**
-- [ ] Historie-Tab als "Aktivitaeten" Default-Tab mit gesaeuberten Event-Texten
-- [ ] Composer (Notiz, Telefonnotiz, Aufgabe) persistent am Feed-Ende
-- [ ] Tab-Reduktion von 11 auf 4-5 sichtbare Tabs mit Overflow-Menu
-- [ ] Key-Facts-Panel sticky oberhalb Tabs (Gegenstandswert, Gericht, naechste Frist)
+- ✓ Historie-Tab als "Aktivitaeten" Default-Tab mit gesaeuberten Event-Texten — v0.9
+- ✓ Composer (Notiz, Telefonnotiz, Aufgabe) persistent am Feed-Ende — v0.9
+- ✓ Tab-Reduktion von 11 auf 4-5 sichtbare Tabs mit Overflow-Menu — v0.9
+- ✓ Key-Facts-Panel sticky oberhalb Tabs (Gegenstandswert, Gericht, naechste Frist) — v0.9
 
 ### Backlog
 
@@ -394,4 +394,4 @@ Known tech debt: Prisma 5.22→7.x upgrade needed, Next.js 14.2.35 CVEs (Next.js
 | TOTP nonce one-time consume (v0.9) | Stateless verify via signed JWT cookie + DB nonce prevents replay | ✓ Good — consumed atomically in authorize |
 
 ---
-*Last updated: 2026-03-07 after Phase 59 (2FA/TOTP complete)*
+*Last updated: 2026-07-23 after Phase 63 (Tab-Reduktion + Key-Facts-Panel complete — v0.9 all phases done)*

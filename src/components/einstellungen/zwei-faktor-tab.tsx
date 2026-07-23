@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -28,6 +29,7 @@ type Status =
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function ZweiFaktorTab() {
+  const { update: updateSession } = useSession();
   const [status, setStatus] = useState<Status>("loading");
   const [backupCodeCount, setBackupCodeCount] = useState(0);
 
@@ -108,6 +110,9 @@ export function ZweiFaktorTab() {
       const data = await res.json();
       setBackupCodes(data.backupCodes ?? []);
       setStatus("backup-codes-display");
+      // Refresh JWT totpEnabled claim so edge middleware enforcement
+      // sees the new state without forcing a re-login.
+      await updateSession({ totpEnabled: true });
       toast.success("2FA erfolgreich aktiviert");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Unbekannter Fehler");
@@ -171,6 +176,7 @@ export function ZweiFaktorTab() {
       setShowDisableConfirm(false);
       setDisableCode("");
       setRegenNewCodes([]);
+      await updateSession({ totpEnabled: false });
       toast.success("2FA wurde deaktiviert");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Unbekannter Fehler");

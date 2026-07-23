@@ -12,7 +12,7 @@ import { FalldatenTab } from "./falldaten-tab";
 import { BeteiligteSection } from "./beteiligte-section";
 import { AkteChannelTab, PortalChannelTab } from "@/components/messaging/akte-channel-tab";
 import { CaseSummaryPanel } from "./case-summary-panel";
-import { MessageSquare, UserCircle, MoreHorizontal, Mail, ExternalLink, FileBarChart } from "lucide-react";
+import { MessageSquare, UserCircle, MoreHorizontal, Mail, ExternalLink, FileBarChart, FileText } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -118,9 +118,18 @@ interface AkteDetailTabsProps {
   akte: AkteData;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  // Registers the guarded tab-change handler so the parent can route
+  // external tab switches (KPI cards, ?tab= param) through the
+  // unsaved-changes guard instead of bypassing it.
+  registerTabChange?: (fn: (tab: string) => void) => void;
+  // Registers a guarded generic-navigation handler so the parent can route
+  // soft navigations (e.g. router.push from KPI cards) through the same
+  // Falldaten unsaved-changes guard. beforeunload does not fire on App
+  // Router client-side navigation, so without this the guard is bypassed.
+  registerGuardedNavigation?: (fn: (action: () => void) => void) => void;
 }
 
-export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: AkteDetailTabsProps) {
+export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange, registerTabChange, registerGuardedNavigation }: AkteDetailTabsProps) {
   const [internalTab, setInternalTab] = useState("feed");
   const currentTab = externalTab ?? internalTab;
   const setTab = useCallback((tab: string) => {
@@ -135,6 +144,9 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
   }>({ percent: 0, filled: 0, total: 0 });
   const [falldatenDirty, setFalldatenDirty] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
+  // Deferred non-tab navigation (e.g. router.push) awaiting confirmation in
+  // the unsaved-changes dialog.
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
   // Sync external tab changes into internal state
@@ -159,6 +171,33 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
     [currentTab, falldatenDirty, setTab]
   );
 
+  // Expose the guarded handler so external navigation (KPI cards) goes
+  // through the same unsaved-changes guard as tab triggers / overflow menu.
+  useEffect(() => {
+    registerTabChange?.(handleTabChange);
+  }, [registerTabChange, handleTabChange]);
+
+  // Guarded generic navigation for soft navigations that bypass both the
+  // tab guard and beforeunload (App Router client-side routing, e.g.
+  // router.push from the E-Mails KPI card). Runs the action immediately
+  // unless Falldaten is dirty, in which case the action is deferred until
+  // the user confirms in the unsaved-changes dialog.
+  const requestGuardedNavigation = useCallback(
+    (action: () => void) => {
+      if (currentTab === "falldaten" && falldatenDirty) {
+        setPendingAction(() => action);
+        setShowUnsavedDialog(true);
+        return;
+      }
+      action();
+    },
+    [currentTab, falldatenDirty]
+  );
+
+  useEffect(() => {
+    registerGuardedNavigation?.(requestGuardedNavigation);
+  }, [registerGuardedNavigation, requestGuardedNavigation]);
+
   // ─── Browser beforeunload Guard ──────────────────────────────────────────
 
   useEffect(() => {
@@ -171,8 +210,10 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
     return () => window.removeEventListener("beforeunload", handler);
   }, [falldatenDirty]);
 
-  // Overflow menu for secondary tabs (Chat, Portal)
+  // Overflow menu for secondary tabs (Falldaten, KI-Analyse, Chat, Portal)
   const overflowTabs = [
+    { value: "falldaten", label: "Falldaten", icon: FileText },
+    { value: "zusammenfassung", label: "KI-Analyse", icon: FileBarChart },
     { value: "nachrichten", label: "Chat", icon: MessageSquare },
     { value: "portal-nachrichten", label: "Portal", icon: UserCircle },
   ];
@@ -205,13 +246,6 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
               Termine & Fristen ({akte.kalenderEintraege.length})
             </TabsTrigger>
             <TabsTrigger value="finanzen">Finanzen</TabsTrigger>
-            <TabsTrigger value="falldaten">
-              Falldaten{completeness.total > 0 ? ` (${completeness.percent}%)` : ""}
-            </TabsTrigger>
-            <TabsTrigger value="zusammenfassung" className="flex items-center gap-1.5">
-              <FileBarChart className="w-3.5 h-3.5" />
-              KI-Analyse
-            </TabsTrigger>
           </TabsList>
 
           {/* Overflow menu for secondary tabs */}
@@ -336,14 +370,15 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
           <AlertDialogHeader>
             <AlertDialogTitle>Ungespeicherte Aenderungen</AlertDialogTitle>
             <AlertDialogDescription>
-              Sie haben ungespeicherte Aenderungen in den Falldaten. Moechten Sie
-              den Tab trotzdem wechseln? Ihre Aenderungen gehen verloren.
+              Sie haben ungespeicherte Aenderungen in den Falldaten. Moechten
+              Sie trotzdem fortfahren? Ihre Aenderungen gehen verloren.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={() => {
                 setPendingTab(null);
+                setPendingAction(null);
                 setShowUnsavedDialog(false);
               }}
             >
@@ -352,12 +387,14 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange }: Ak
             <AlertDialogAction
               onClick={() => {
                 if (pendingTab) setTab(pendingTab);
+                else pendingAction?.();
                 setPendingTab(null);
+                setPendingAction(null);
                 setShowUnsavedDialog(false);
                 setFalldatenDirty(false);
               }}
             >
-              Trotzdem wechseln
+              Trotzdem fortfahren
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

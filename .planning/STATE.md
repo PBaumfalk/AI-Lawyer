@@ -2,18 +2,19 @@
 gsd_state_version: 1.0
 milestone: v0.9
 milestone_name: Security, Migration & Productivity
-current_phase: 63
-current_plan: Not started
-status: planning
-stopped_at: Completed 62-01-PLAN.md
-last_updated: "2026-03-07T05:43:36.326Z"
-last_activity: 2026-03-07
+status: Awaiting next milestone
+stopped_at: Phase 63 complete (verification passed), starting milestone v0.9 lifecycle
+last_updated: "2026-07-23T14:37:13.372Z"
+last_activity: 2026-07-23
+last_activity_desc: Milestone v0.9 completed and archived
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 13
   completed_plans: 13
-  percent: 96
+  percent: 80
+current_phase: 63
+current_plan: Not started
 ---
 
 # Project State
@@ -23,24 +24,19 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Core value:** Ein Anwalt kann Akten, Dokumente, Fristen, E-Mails und Finanzen vollständig im Browser verwalten, waehrend eine autonome KI-Agentin aktenuebergreifend lernt und als digitale Rechtsanwaltsfachangestellte mitarbeitet.
-**Current focus:** Phase 63 - Tab-Reduktion + Key-Facts-Panel
+**Current focus:** Phase 63 — Tab-Reduktion + Key-Facts-Panel
 
 ## Current Position
 
-**Milestone:** v0.9 Security, Migration & Productivity
-**Current Phase:** 63
-**Current Plan:** Not started
-**Total Plans in Phase:** 3
-**Status:** Ready to plan
-**Last activity:** 2026-03-07
-
-Progress: [██████████] 100% (v0.9)
-
-All-time: 180 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 + v0.4:21 + v0.5:14 + v0.6:4 + v0.6.1:1 + v0.7:4 + v0.8:12 + v0.9:10 + adhoc:10)
+Phase: Milestone v0.9 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-07-23 — Milestone v0.9 completed and archived
 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 172
 - Average duration: ~4 min/plan
 - Total execution time: ~11 hours
@@ -80,6 +76,7 @@ All-time: 180 plans completed (v3.4:38 + v3.5:10 + v0.1:19 + v0.2:23 + v0.3:13 +
 
 Decisions are logged in PROJECT.md Key Decisions table.
 See milestones/ archives for per-milestone decision history.
+
 - [Phase 59]: Login challenge state stored in signed JWT httpOnly cookie (totp_pending) rather than server-side session for stateless verify route
 - [Phase 59]: MANDANT role blocked from enabling 2FA (403) on all TOTP management routes
 - [Phase 59]: Sicherheit tab has no role guard — all authenticated users can manage their own 2FA; MANDANT blocked at API level
@@ -119,6 +116,28 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07
-Stopped at: Phase 62 complete, ready to plan Phase 63
+Last session: 2026-07-23
+Stopped at: Phase 63 complete (verification passed), starting milestone v0.9 lifecycle
 Resume file: None
+
+## Deferred Items
+
+Items acknowledged and deferred at milestone close on 2026-07-23:
+
+| Category | Item | Status |
+|----------|------|--------|
+| debug | briefkopf-not-applied | awaiting_human_verify |
+| debug | docx-preview-broken | awaiting_human_verify |
+| debug | fresh-comprehensive-audit | awaiting_human_verify |
+| debug | systematic-health-audit | diagnosed |
+| quick_task | 1-abarbeiten-aller-offenen-todos-in-reihen | unknown |
+| uat | Phase 29 (29-UAT.md) | deferred — 12 open scenarios |
+| verification | Phase 28 (28-VERIFICATION.md) | human_needed |
+| verification | Phase 32 (32-VERIFICATION.md) | human_needed |
+| todos | 16 pending todos (5 shown: 2fa-login, feed-umbau, rag-arbeitswissen, bi-dashboard, export + 11 more) | pending — partially already shipped in v0.8/v0.9 |
+
+Known verification overrides: 14
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

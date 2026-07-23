@@ -466,6 +466,40 @@
 
 ---
 
+## Milestone: v0.9 — Security, Migration & Productivity
+
+**Shipped:** 2026-07-23
+**Phases:** 5 | **Plans:** 13 | **Tasks:** 25
+
+### What Was Built
+- TOTP-2FA komplett: otplib-Service, QR-Setup, Backup-Codes (bcrypt), Login-Challenge mit Nonce-Flow, Admin-Enforcement pro Rolle via Edge-Middleware
+- J-Lawyer Migration ETL: REST-Client, idempotente Pipelines (Akten, Kontakte, Beteiligte, Dokumente→MinIO, Kalender) via jlawyerId, Admin-UI mit Live-Polling und Abschlussbericht
+- Akte-Detail-Umbau: Aktivitaeten-Feed als Default-Tab mit Filterchips und menschenlesbaren Events, Composer (Notiz/Telefonnotiz/Aufgabe), Tab-Reduktion 6→4 mit Overflow-Menue, sticky Key-Facts-Panel (Gegenstandswert, Gericht, Phase, Frist, Mandant/Gegner)
+
+### What Worked
+- Milestone-Audit mit Integration-Checker hat 2 echte Produktions-Blocker gefunden (2FA-Login-Lockout durch httpOnly-Cookie-Guard, Enforcement-Redirect-Loop), die die Phase-59-Verifizierung falsch eingeschaetzt hatte — Cross-Phase-Verifikation zahlt sich aus
+- Code-Review-Chain (3 Iterationen) hat kritische Findings iterativ geschlossen (Unsaved-Guard-Bypass, SSRF-Haertung, Passwort-Verschluesselung)
+- Worktree-parallele Executor mit Manifest-basiertem Cleanup; add/add-Konflikt in deferred-items.md sauber aufgeloest
+
+### What Was Inefficient
+- Pre-existing Build-Brecher (Brace-Bug in jlawyer/client.ts aus Phase 60) blieb ~4,5 Monate unentdeckt, weil zwischen den Sessions kein vollstaendiger Build lief — tsconfig-Include-Falle (untracked Scaffold brach den Build zusaetzlich)
+- Veraltete Artefakte (stale .continue-here.md, 16 pending todos, alte Debug-Sessions) haben den Milestone-Close verkompliziert
+
+### Patterns Established
+- Session-Update-Trigger fuer JWT-Claims (totpEnabled) statt erzwungenem Re-Login
+- SSRF-Validierung als eigener Lib-Wrapper mit Opt-in-ENV fuer private URLs
+- Guarded-Navigation-Pattern (registerGuardedNavigation) fuer Dirty-State-Protection bei Soft-Navigation
+
+### Key Lessons
+- Client-seitige Cookie-Checks gegen httpOnly-Cookies sind still toedlich — Server-seitig erzwingen
+- Enforcement-Redirects muessen ihre eigenen Zielseiten exempten (sonst Loop)
+- Nach Schema-Aenderungen immer prisma generate + vollstaendiger tsc-Lauf vor Session-Ende
+
+### Cost Observations
+- Model mix: ~70% opus (Executor/Reviewer/Fixer), ~30% sonnet (Verifier, Integration-Checker)
+- Sessions: 2 (Planung 2026-03-07, Ausfuehrung+Lifecycle 2026-07-23)
+- Notable: Review-Fix-Loop (3 Iterationen) teurer als die Ausfuehrung selbst, hat aber 8 Findings geschlossen
+
 ## Cross-Milestone Trends
 
 ### Process Evolution

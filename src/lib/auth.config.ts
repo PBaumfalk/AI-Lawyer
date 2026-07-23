@@ -20,6 +20,11 @@ export const authConfig = {
       // Allow the 2FA setup-required page itself (no redirect loop)
       if (url.pathname === "/2fa-setup-required") return true;
 
+      // Allow the settings area so enforced users can actually reach the 2FA
+      // setup UI (the setup-required page links to /einstellungen?tab=sicherheit).
+      // Without this exemption the enforcement redirect loops forever.
+      if (url.pathname.startsWith("/einstellungen")) return true;
+
       // 2FA enforcement: roles configured via TOTP_REQUIRED_ROLES env var (comma-separated)
       // Edge middleware cannot query the DB — totpEnabled is stored in JWT at login time
       const requiredRolesEnv = process.env.TOTP_REQUIRED_ROLES || "";
@@ -35,7 +40,7 @@ export const authConfig = {
 
       return !!auth;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = (user as any).role;
         token.kanzleiId = (user as any).kanzleiId;
@@ -43,6 +48,11 @@ export const authConfig = {
         if ((user as any).role === "MANDANT") {
           token.kontaktId = (user as any).kontaktId;
         }
+      }
+      // Session update after 2FA setup/disable: refresh the stale totpEnabled
+      // claim so edge middleware enforcement sees the new state without re-login.
+      if (trigger === "update" && typeof (session as any)?.totpEnabled === "boolean") {
+        token.totpEnabled = (session as any).totpEnabled;
       }
       return token;
     },

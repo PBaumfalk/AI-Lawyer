@@ -6,19 +6,25 @@ import type {
   JLawyerDocument,
   JLawyerCalendarEntry,
 } from "./types";
+import { validateJLawyerBaseUrl } from "./validate-url";
 
 export class JLawyerClient {
   private baseUrl: string;
   private authHeader: string;
 
   constructor(credentials: JLawyerCredentials) {
+    // SSRF guard: only https + public hosts unless explicitly opted in
+    const validation = validateJLawyerBaseUrl(credentials.baseUrl);
+    if (!validation.ok) {
+      throw new Error(validation.error);
+    }
     this.baseUrl = credentials.baseUrl.replace(/\/$/, "");
     this.authHeader =
       "Basic " +
       Buffer.from(
         `${credentials.username}:${credentials.password}`,
       ).toString("base64");
-
+  }
 
   private readonly timeoutMs = 15000;
   private readonly maxRetries = 3;
@@ -44,7 +50,6 @@ export class JLawyerClient {
     }
     throw lastError ?? new Error("J-Lawyer request failed");
   }
-  }
 
   private async get<T>(path: string): Promise<T> {
     const url = `${this.baseUrl}${path}`;
@@ -57,9 +62,10 @@ export class JLawyerClient {
       cache: "no-store",
     });
     if (!res.ok) {
-      throw new Error(
-        `J-Lawyer API error ${res.status} at ${path}: ${await res.text()}`,
-      );
+      // Do not include the response body — error messages are reflected
+      // back to API callers and a body could leak data fetched from an
+      // attacker-chosen URL (SSRF credential-reflection).
+      throw new Error(`J-Lawyer API error ${res.status} at ${path}`);
     }
     return res.json() as Promise<T>;
   }

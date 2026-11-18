@@ -3,6 +3,26 @@
 Die Versionen entsprechen den Meilensteinen der Entwicklung. Die Tags `v3.4` und
 `v3.5` stammen aus einer früheren Zählung und liegen zeitlich vor `v0.1`.
 
+## Unveröffentlicht – Betriebsreife
+
+- **Kein bekanntes Startpasswort mehr:** Eine Produktionsinstallation legt nur
+  noch ein Administratorkonto mit `INITIAL_ADMIN_PASSWORD` an (von `setup.sh`
+  zufällig erzeugt). Beispielkonten mit `password123` nur noch mit `SEED_DEMO=true`.
+- **Benutzerverwaltung** unter Admin → Benutzer: Konten anlegen, Rollen ändern,
+  deaktivieren, Passwort und Zwei-Faktor zurücksetzen. Eigenes Passwort ändern
+  unter Einstellungen → Sicherheit.
+- **Sitzungen folgen dem Konto:** Deaktivieren, Rollenwechsel und
+  Passwortwechsel wirken sofort statt erst nach Ablauf des 30-Tage-JWT.
+- **Anmeldeschutz:** höchstens 10 Versuche je Konto und 50 je IP in 15 Minuten,
+  ebenso für Zwei-Faktor-Codes. `/api/auth/totp/init` prüfte Passwörter vorher
+  ohne Begrenzung.
+- **Zwei-Faktor-Umgehung geschlossen:** Konten mit TOTP ließen sich mit dem
+  Passwort allein anmelden, wenn man die Anmeldeseite umging.
+- **Datensicherung:** `scripts/backup.sh` und `scripts/restore.sh` mit
+  Rundlauftest `scripts/test-backup-restore.sh`.
+- **Abhängigkeiten:** Sicherheitslücken in Produktionspaketen von 49 auf 20
+  (kritisch 5 → 1) ohne Major-Updates.
+
 ## v0.9 – Sicherheit, Migration & Produktivität (2026-07-23)
 
 - **Zwei-Faktor-Anmeldung (TOTP)** mit QR-Einrichtung, Backup-Codes, Pflicht je

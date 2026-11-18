@@ -26,54 +26,85 @@ Drei Dinge, und nur zusammen sind sie eine brauchbare Sicherung:
 2. **Die MinIO-Daten** (Volume `miniodata`). Die Datenbank enthält nur die Pfade der Dateien; ohne MinIO sind alle Dokumente weg.
 3. **Die Geheimnisse:** Ihre `.env`, gegebenenfalls eine eigene Zusatzdatei (z. B. `docker-compose.kanzlei.yml`) und vor allem `EMAIL_ENCRYPTION_KEY`. Ohne diesen Schlüssel lassen sich die gespeicherten Zugangsdaten für E-Mail, CalDAV und j-lawyer, die KI-API-Schlüssel und die Zwei-Faktor-Geheimnisse der Benutzer nicht mehr entschlüsseln ([Kapitel 20](20-konfiguration.md#anmeldung-und-sicherheit)). Bewahren Sie die Geheimnisse getrennt von den Daten auf, etwa im Passwortmanager der Kanzlei.
 
-Der Dump enthält Mandantendaten im Klartext. Zugangsdaten, KI-API-Schlüssel und Zwei-Faktor-Geheimnisse liegen darin verschlüsselt (mit `EMAIL_ENCRYPTION_KEY`); Zwei-Faktor-Geheimnisse aus der Zeit vor dieser Verschlüsselung bleiben im Klartext, bis der Benutzer die Zwei-Faktor-Anmeldung neu einrichtet. Verschlüsseln Sie Sicherungen, bevor sie den Server verlassen, und lagern Sie sie nie zusammen mit der `.env`.
+Der Dump enthält Mandantendaten im Klartext. Zugangsdaten, KI-API-Schlüssel und Zwei-Faktor-Geheimnisse liegen darin verschlüsselt (mit `EMAIL_ENCRYPTION_KEY`); Zwei-Faktor-Geheimnisse aus der Zeit vor dieser Verschlüsselung bleiben im Klartext, bis der Benutzer die Zwei-Faktor-Anmeldung neu einrichtet. `scripts/backup.sh` legt eine Kopie der `.env` mit in den Sicherungsordner, damit eine Wiederherstellung auf dem Server vollständig ist. Bevor Sicherungen den Server verlassen, verschlüsseln Sie sie oder nehmen die `.env` heraus und bewahren sie getrennt auf.
 
 **Meilisearch** muss nicht gesichert werden: Der Index entsteht aus der Datenbank (Name, Ordner, Schlagwörter, OCR-Text). Nach einer Wiederherstellung bauen Sie ihn neu auf (siehe [Suchindex neu aufbauen](#suchindex-neu-aufbauen)).
 
 **Redis** muss nicht gesichert werden. Die zeitgesteuerten Jobs registriert der Worker bei jedem Start neu. Verloren gehen nur Jobs, die zum Zeitpunkt des Ausfalls warteten. Dokumente mit fehlgeschlagener OCR stellt der Worker beim Start selbst wieder in die Warteschlange.
 
-## Sicherung von Hand
+## Sicherung
+
+`scripts/backup.sh` sichert alles Nötige mit einem Befehl:
 
 ```bash
-# 1. Datenbank (laufend, konsistent)
-mkdir -p /srv/backup/ai-lawyer
-docker compose exec -T db pg_dump -U ailawyer -Fc ailawyer \
-  > /srv/backup/ai-lawyer/db-$(date +%F).dump
-
-# 2. Dateien (kurz anhalten, damit nichts halb geschrieben ist)
-docker compose stop app worker
-docker run --rm -v ai-lawyer_miniodata:/data:ro -v /srv/backup/ai-lawyer:/backup \
-  alpine tar czf /backup/minio-$(date +%F).tar.gz -C /data .
-docker compose start app worker
-
-# 3. Konfiguration (getrennt von den Daten aufbewahren)
-cp .env /srv/backup/ai-lawyer/
+scripts/backup.sh
 ```
 
-Den Dump nimmt `pg_dump` im laufenden Betrieb konsistent. Für MinIO halten Sie App und Worker kurz an, damit während der Sicherung keine neuen Dateien entstehen. Wer den Stillstand vermeiden will, spiegelt den Bucket mit dem MinIO-Client (`mc mirror`) und nimmt kleine Abweichungen zwischen Dump und Dateien in Kauf.
+Das Skript legt `backups/<JJJJMMTT-HHMMSS>/` an mit:
 
-Planen Sie die Befehle als nächtlichen Cron-Job außerhalb der Zeiten, in denen der Worker selbst arbeitet (01:00–03:00, siehe [Hintergrund-Jobs](#hintergrund-jobs)), und halten Sie mehrere Generationen vor. Eine eingebaute Sicherungsfunktion hat AI-Lawyer nicht. Die Seite **Einstellungen** bietet einen Export und Import der Einstellungen, das ist keine Datensicherung ([Kapitel 16](16-einstellungen-und-vorlagen.md)).
+| Datei | Inhalt |
+| --- | --- |
+| `db.dump` | Datenbank (`pg_dump -Fc`, im laufenden Betrieb konsistent) |
+| `minio.tar.gz` | das ganze Volume `miniodata` (Dateien, Versionen, Bucket-Einstellungen) |
+| `.env` | Kopie der Konfiguration, Rechte `600`, **enthält alle Schlüssel** |
+| `INFO.txt` | Zeitpunkt, Git-Stand, Projektname |
+| `SHA256SUMS` | Prüfsummen aller Dateien |
+
+Für die Dateisicherung hält das Skript `app`, `worker` und `minio` kurz an (bei wenigen GB einige Sekunden) und startet danach nur die Dienste wieder, die vorher liefen, auch bei einem Fehler. Es prüft den Dump (`pg_restore -l`) und das Archiv, schreibt erst in einen Ordner `….partial` und benennt ihn erst nach Erfolg um. Der Exit-Code ist bei jedem Fehler ungleich 0.
+
+| Variable | Standard | Bedeutung |
+| --- | --- | --- |
+| `BACKUP_DIR` | `./backups` | Zielordner |
+| `BACKUP_KEEP` | `14` | so viele Sicherungen bleiben, ältere löscht das Skript (`0` = alle behalten) |
+| `BACKUP_STOP` | `1` | `0` sichert MinIO ohne Anhalten; gleichzeitige Uploads können dann fehlen |
+| `ENV_FILE` | `./.env` | zu sichernde Konfiguration |
+| `COMPOSE_FILE`, `COMPOSE_PROJECT_NAME` | | werden wie bei `docker compose` beachtet |
+
+**Nächtlich per Cron** (z. B. `crontab -e` des Benutzers, der Docker bedienen darf), außerhalb der Worker-Nachtjobs (01:00–03:30, siehe [Hintergrund-Jobs](#hintergrund-jobs)):
+
+```cron
+30 23 * * * cd /srv/ai-lawyer && COMPOSE_FILE=docker-compose.yml BACKUP_DIR=/srv/backup/ai-lawyer scripts/backup.sh >> /var/log/ai-lawyer-backup.log 2>&1
+```
+
+Cron kennt die Umgebung der Anmelde-Shell nicht; setzen Sie `COMPOSE_FILE` in der Zeile so wie in Ihrer Installation. Prüfen Sie das Protokoll und den Exit-Code (z. B. über eine Überwachung, die bei fehlender neuer Sicherung warnt).
+
+**Wichtig:**
+
+- Die Sicherung enthält Mandantendaten im Klartext (siehe [Was gesichert werden muss](#was-gesichert-werden-muss)), und die mitgesicherte `.env` enthält `EMAIL_ENCRYPTION_KEY`. Wer beides hat, hat alles. Verschlüsseln Sie Sicherungen, bevor sie den Server verlassen (z. B. `restic`, `borg` oder `age`), und bewahren Sie die `.env` zusätzlich getrennt auf, etwa im Passwortmanager der Kanzlei. Ohne `EMAIL_ENCRYPTION_KEY` sind die verschlüsselten Einstellungen nicht wiederherstellbar ([Kapitel 20](20-konfiguration.md#anmeldung-und-sicherheit)).
+- Eine eigene Zusatzdatei (z. B. `docker-compose.kanzlei.yml`) sichert das Skript nicht mit; sie gehört ins Git-Repository der Kanzlei oder in die getrennte Ablage.
+- Eine Kopie auf derselben Platte schützt nicht vor Plattenausfall. Kopieren Sie `BACKUP_DIR` regelmäßig auf ein anderes Gerät.
+
+Die Seite **Einstellungen** bietet zusätzlich einen Export und Import der Einstellungen, das ist keine Datensicherung ([Kapitel 16](16-einstellungen-und-vorlagen.md)).
 
 ## Wiederherstellung
 
-1. Auf dem Zielserver AI-Lawyer in **derselben Version** installieren ([Kapitel 19](19-installation.md)) und die gesicherte `.env` (Rechte `600`) sowie eine eventuelle Zusatzdatei zurücklegen.
-2. Nur die Datenbank starten: `docker compose up -d db`.
-3. Dump einspielen:
-   ```bash
-   docker compose exec -T db pg_restore -U ailawyer -d ailawyer --clean --if-exists \
-     < /srv/backup/ai-lawyer/db-2026-11-18.dump
-   ```
-4. Dateien zurückspielen:
-   ```bash
-   docker compose up -d minio && docker compose stop minio
-   docker run --rm -v ai-lawyer_miniodata:/data -v /srv/backup/ai-lawyer:/backup \
-     alpine sh -c "rm -rf /data/* /data/.minio.sys && tar xzf /backup/minio-2026-11-18.tar.gz -C /data"
-   ```
-5. Alles starten: `docker compose up -d`. Vor MinIO läuft `minio-init` und passt die Besitzrechte der zurückgespielten Dateien an das MinIO-Image an (UID 65532). Das Entrypoint-Skript findet Benutzer vor und überspringt den Seed.
-6. Suchindex neu aufbauen (nächster Abschnitt) und KI-Modelle laden, falls `ollama_data` neu ist.
-7. Stichprobe: anmelden, eine Akte öffnen, ein Dokument herunterladen und im Editor öffnen.
+```bash
+scripts/restore.sh backups/20261118-233000          # fragt nach, Bestätigung mit „ja“
+scripts/restore.sh --yes backups/20261118-233000    # ohne Rückfrage
+```
 
-Üben Sie das einmal mit einer Testinstallation, bevor Sie sich darauf verlassen.
+Das Skript
+
+1. prüft die Prüfsummen und bricht bei Abweichung ab, ohne etwas zu verändern,
+2. hält `app` und `worker` an,
+3. spielt den Dump in eine frische Datenbank `ailawyer_restore` ein (eine Transaktion) und tauscht sie erst nach Erfolg gegen `ailawyer` aus; bei einem Fehler bleibt die bisherige Datenbank unverändert, und es bleiben keine Tabellen aus späteren Updates zurück,
+4. ersetzt den Inhalt des Volumes `miniodata` und startet MinIO (`minio-init` passt die Besitzrechte an),
+5. verwirft den Meilisearch-Index `dokumente`,
+6. startet `app` und `worker`.
+
+Danach von Hand: **Suchindex neu aufbauen** (nächster Abschnitt), denn das geschieht nicht automatisch, und eine Stichprobe machen (anmelden, Akte öffnen, Dokument herunterladen und im Editor öffnen). Die Datenbank braucht während der Wiederherstellung kurz doppelten Platz.
+
+**Auf einem neuen Server:** AI-Lawyer in **derselben Version** installieren ([Kapitel 19](19-installation.md)), aber noch nicht starten; die Sicherung auf den Server kopieren und `scripts/restore.sh` aufrufen. Fehlt die `.env`, legt das Skript die gesicherte Kopie mit Rechten `600` an. Dann `docker compose up -d` für die übrigen Dienste und KI-Modelle laden, falls `ollama_data` neu ist. Das Entrypoint-Skript findet die Benutzer vor und überspringt den Seed.
+
+### Wiederherstellung testen
+
+```bash
+scripts/test-backup-restore.sh
+```
+
+Der Test startet nur `db`, `minio` und `meilisearch` unter dem eigenen Projektnamen `ailawyer-backuptest` (eigene Container und Volumes, keine Ports, Wegwerf-`.env`) und berührt eine laufende Installation nicht. Er legt Testdaten an, sichert, prüft die Aufbewahrungsregel, lässt eine beschädigte Sicherung ablehnen, stellt über veränderte Daten (inklusive Verwerfen des Suchindex) und nach dem Löschen aller Volumes wieder her und vergleicht jeweils Datenbankinhalt und Datei-Prüfsumme. Zum Schluss räumt er alles ab und meldet `ERGEBNIS: BESTANDEN` (Exit-Code 0). Er dauert unter einer Minute.
+
+Der Test belegt die Mechanik, nicht Ihre Sicherungen. Spielen Sie zusätzlich regelmäßig (z. B. vierteljährlich) eine echte Sicherung auf einem Testrechner ein.
 
 ## Suchindex neu aufbauen
 
@@ -87,7 +118,7 @@ Die Antwort lautet z. B. `{ success: true, indexed: 412, message: "412 Dokumente
 
 ## Updates
 
-1. **Sichern** (siehe oben). Vor jedem Update, ohne Ausnahme.
+1. **Sichern** mit `scripts/backup.sh` ([Sicherung](#sicherung)). Vor jedem Update, ohne Ausnahme.
 2. Neue Version holen und das [Änderungsprotokoll](../../CHANGELOG.md) lesen:
    ```bash
    git fetch --tags && git pull
@@ -104,7 +135,7 @@ Ein zusätzlicher Abgleich mit `db push` ist nicht mehr nötig und soll unterble
 
 **Umstieg von einer älteren Installation:** Die Compose-Datei liest seit dieser Version alle Werte aus der `.env` und verlangt dort `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `MINIO_SECRET_KEY` und `MEILISEARCH_API_KEY`. Tragen Sie für PostgreSQL und MinIO die **bisherigen** Werte ein (früher fest `ailawyer` bzw. `ailawyer123`), denn ein neuer Wert ändert die Zugangsdaten in bestehenden Daten nicht; das Passwort danach gezielt ändern ([Kapitel 20](20-konfiguration.md#datenbank-und-redis)). Für Redis und Meilisearch dürfen Sie neue Werte wählen; der Suchindex ist danach gegebenenfalls neu aufzubauen ([Suchindex neu aufbauen](#suchindex-neu-aufbauen)). Das MinIO-Image wechselt auf `cgr.dev/chainguard/minio`; `minio-init` passt dabei die Besitzrechte des Volumes an.
 
-**Rückweg:** Image der vorigen Version bauen (`git checkout <alter Tag>`, `docker compose up -d --build`) und, falls das neue Update die Datenbank verändert hat, den Dump von vorher einspielen. Ein Downgrade der Datenbank ohne Dump gibt es nicht.
+**Rückweg:** Image der vorigen Version bauen (`git checkout <alter Tag>`, `docker compose up -d --build`) und, falls das neue Update die Datenbank verändert hat, die Sicherung von vorher mit `scripts/restore.sh` einspielen. Ein Downgrade der Datenbank ohne Dump gibt es nicht.
 
 Die Fremd-Images stehen größtenteils auf `latest` (MinIO, OnlyOffice, Stirling-PDF, Ollama, Redis-Hauptversion 7). `docker compose pull` holt dort jeweils die neueste Version. Für vorhersehbare Updates tragen Sie in einer Zusatzdatei feste Versionen ein (für MinIO genügt `MINIO_IMAGE` in der `.env`).
 

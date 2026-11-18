@@ -12,19 +12,22 @@ Wer nicht Administrator ist und eine Admin-Adresse aufruft, landet ohne Meldung 
 
 ## Benutzer anlegen, deaktivieren, Passwort zurücksetzen
 
-Ehrlich vorweg: **Eine Benutzerverwaltung für Kanzleimitarbeitende gibt es in der Oberfläche derzeit nicht.** Es gibt keinen Knopf zum Anlegen, Einladen, Deaktivieren oder zum Zurücksetzen eines Passworts. Die Seite **Rollen** zeigt Benutzer nur an.
+Unter **Admin → Benutzer** verwalten Administratoren alle Kanzleikonten.
 
-Was es gibt:
+| Vorgang | So geht es |
+| --- | --- |
+| Konto anlegen | **Neues Konto**, Name, E-Mail (Anmeldename) und Rolle eintragen, **Konto anlegen**. AI-Lawyer erzeugt ein Startpasswort (Form `xxxx-xxxx-xxxx-xxxx`) und zeigt es **nur dieses eine Mal** an. Persönlich weitergeben. |
+| Rolle ändern | In der Liste die Rolle wählen. Wirkt sofort, auch für bereits angemeldete Personen. |
+| Konto deaktivieren | Schalter **Aktiv** ausschalten. Laufende Sitzungen enden sofort; Akten, Dokumente und der Audit-Trail bleiben erhalten. Wieder einschalten stellt den Zugang her. |
+| Passwort vergessen | **Passwort zurücksetzen**: neues Startpasswort, alle Sitzungen des Kontos werden beendet, eine Anmeldesperre wird aufgehoben. Bei verlorenem Smartphone zusätzlich **Zwei-Faktor-Anmeldung ebenfalls zurücksetzen** wählen. |
+| Eigenes Passwort ändern | Jede Person selbst unter **Einstellungen → Sicherheit → Passwort ändern** (mindestens 12 Zeichen). Danach neu anmelden; andere Geräte werden abgemeldet. |
+| Mandanten-Zugang | Über die Portal-Einladung in der Akte, siehe [Kapitel 12](12-mandantenportal.md). Mandantenkonten erscheinen nicht in dieser Liste. |
 
-| Vorgang | Stand im Code | Wie es heute geht |
-| --- | --- | --- |
-| Mitarbeitende anlegen | Kein Dialog, keine Schnittstelle | Nur über die Datenbank. Die Beispieldaten (`npm run db:seed`) legen drei Testkonten an (Administrator, Anwältin, Sachbearbeiterin) mit dem Passwort `password123`. Diese Passwörter vor dem Echtbetrieb ändern. |
-| Mandanten-Zugang | Einladung aus der Akte | Über das Mandantenportal, siehe [Kapitel 12](12-mandantenportal.md). Nur so entstehen Konten mit der Rolle Mandant. |
-| Benutzer deaktivieren | Feld `aktiv` im Benutzerdatensatz | Nur über die Datenbank. Ein deaktiviertes Konto kann sich nicht mehr anmelden; der Versuch wird im Audit-Trail als *Fehlgeschlagener Login-Versuch* mit Grund „Konto deaktiviert“ vermerkt. |
-| Passwort vergessen (Mitarbeitende) | Keine Funktion | Die IT setzt in der Datenbank einen neuen bcrypt-Hash im Feld `passwordHash` (Tabelle `users`). |
-| Passwort vergessen (Mandant) | Vorhanden | Im Portal über **Passwort vergessen**, siehe [Kapitel 12](12-mandantenportal.md). |
+Schutzregeln: Das letzte aktive Administratorkonto lässt sich weder deaktivieren noch herabstufen, das eigene Konto nicht deaktivieren. Konten werden nicht gelöscht, nur deaktiviert, weil Akten, Fristen und Audit-Einträge auf sie verweisen. Jede Änderung steht im Audit-Trail (*Benutzerkonto angelegt/geändert*, *Passwort zurückgesetzt*).
 
-Für Arbeiten direkt in der Datenbank bringt AI-Lawyer `npm run db:studio` (Prisma Studio) mit. Das ist Sache der IT ([Kapitel 20](20-konfiguration.md)).
+### Anmeldesperre
+
+Nach **10 Anmeldeversuchen in 15 Minuten** für dasselbe Konto (oder 50 von derselben IP-Adresse) weist AI-Lawyer weitere Versuche ab, auch mit richtigem Passwort, und meldet „Zu viele Anmeldeversuche“. Die Sperre endet nach 15 Minuten von selbst oder sofort durch **Passwort zurücksetzen**. Für falsche Zwei-Faktor-Codes gilt dieselbe Grenze. Konten mit Zwei-Faktor-Anmeldung kommen nur über Passwort **und** Code hinein, auch wenn jemand die Anmeldeseite umgeht.
 
 ## Die fünf Rollen
 

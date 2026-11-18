@@ -28,7 +28,6 @@ j-lawyer-Migration. Die folgenden Tabellen nennen nur, was heute noch offen ist.
 
 | Einschränkung | Auswirkung | Umgehung |
 | --- | --- | --- |
-| **Keine Benutzerverwaltung in der Oberfläche.** Es gibt keine Maske, um Kanzleikonten anzulegen, zu deaktivieren, ihre Rolle oder ihr Passwort zu ändern oder die Zwei-Faktor-Anmeldung zurückzusetzen. Nur Mandanten können ihr Portal-Passwort ändern. | Die Beispielkonten aus dem Seed mit dem öffentlich bekannten Passwort `password123` lassen sich nur über die Datenbank ändern. | SQL-Befehle in [Kapitel 19](19-installation.md) ([Kapitel 15](15-benutzer-und-rollen.md)). |
 | **Redis-Verbindungsversuche beim Build.** `src/lib/queue/queues.ts` legt die BullMQ-Warteschlangen schon beim Laden des Moduls an, also auch während `next build`. | Im Build-Protokoll können Verbindungsfehler zu Redis erscheinen, weil beim Bauen kein Redis läuft. | Meldungen beim Build nicht als Fehler des laufenden Systems werten. |
 | **`docker-compose.portainer.yml` ist nicht auf dem Stand von `docker-compose.yml`.** Redis läuft dort ohne Passwort; `POSTGRES_PASSWORD`, `MINIO_SECRET_KEY` und `MEILISEARCH_API_KEY` haben öffentlich bekannte Standardwerte; der MinIO-Port 9000 ist nicht veröffentlicht; der Worker bekommt keine SMTP-Werte. | Ohne eigene Werte unsichere Zugangsdaten, Downloads aus MinIO scheitern ohne zusätzlichen Proxy, keine Fristerinnerungen per Mail aus dem Worker. | Alle Geheimnisse ausdrücklich setzen oder `docker-compose.yml` mit `.env` verwenden ([Kapitel 19](19-installation.md)). |
 | **App, MinIO-API und OnlyOffice lauschen standardmäßig auf allen Schnittstellen.** `PUBLIC_BIND` ist in `.env.example` `0.0.0.0`; die internen Dienste (Datenbank, Redis, Meilisearch, Ollama u. a.) sind nur an `127.0.0.1` gebunden. | Ohne Reverse Proxy sind die Ports 3000, 9000 und 8080 aus dem Netz erreichbar; Docker umgeht `ufw`. | Hinter einem Reverse Proxy `PUBLIC_BIND="127.0.0.1"` setzen ([Kapitel 19](19-installation.md), [Kapitel 20](20-konfiguration.md)). |
@@ -90,7 +89,7 @@ Für das Standardmodell `qwen3.5:35b` in vertretbarer Geschwindigkeit ja, als Ri
 
 ### Wie legen wir neue Mitarbeitende an oder ändern Passwörter?
 
-Derzeit nur über die Datenbank, siehe [Kapitel 19](19-installation.md#erste-anmeldung-und-beispielkonten). Ändern Sie die Passwörter der Beispielkonten vor allem anderen. Mandantenkonten entstehen dagegen über Einladungen im Portal ([Kapitel 12](12-mandantenportal.md)).
+Unter **Admin → Benutzer**: Konto anlegen, Rolle ändern, deaktivieren, Passwort zurücksetzen ([Kapitel 15](15-benutzer-und-rollen.md)). Das eigene Passwort ändert jede Person unter **Einstellungen → Sicherheit**. Mandantenkonten entstehen über Einladungen im Portal ([Kapitel 12](12-mandantenportal.md)).
 
 ### Kann Helena selbst Schriftsätze verschicken oder freigeben?
 

@@ -112,17 +112,15 @@ docker compose -f docker-compose.portainer.yml up -d --build --force-recreate
 <details>
 <summary><strong>🔑 Erste Anmeldung</strong></summary>
 
-Beim ersten Start legt AI-Lawyer Beispielkonten an:
+Beim ersten Start legt AI-Lawyer **ein** Administratorkonto an: Anmeldename
+`INITIAL_ADMIN_EMAIL`, Passwort `INITIAL_ADMIN_PASSWORD` aus der `.env`
+(`./setup.sh` erzeugt es zufällig, anzeigen mit `grep INITIAL_ADMIN_PASSWORD .env`).
+Ein bekanntes Standardpasswort gibt es nicht.
 
-| E-Mail | Rolle | Passwort |
-| --- | --- | --- |
-| `admin@kanzlei.de` | Admin | `password123` |
-| `anwalt@kanzlei.de` | Anwalt | `password123` |
-| `sachbearbeiter@kanzlei.de` | Sachbearbeitung | `password123` |
-
-**Ändern Sie diese Passwörter sofort.** Eine Benutzerverwaltung in der
-Oberfläche gibt es noch nicht; Passwörter und neue Konten werden derzeit über
-die Datenbank gepflegt ([Kapitel 19](docs/handbuch/19-installation.md#erste-anmeldung-und-beispielkonten)).
+Danach unter **Einstellungen → Sicherheit** ein eigenes Passwort setzen und unter
+**Admin → Benutzer** die Mitarbeitenden anlegen. Beispielkonten und eine
+Beispielakte zum Ausprobieren: `SEED_DEMO=true` vor dem ersten Start
+([Kapitel 19](docs/handbuch/19-installation.md#erste-anmeldung)).
 Zwei-Faktor-Anmeldung lässt sich über `TOTP_REQUIRED_ROLES` je Rolle
 verpflichtend machen.
 </details>
@@ -326,8 +324,8 @@ E-Mail-Anhänge, j-lawyer-Migration u. a., jeweils mit Tests). Offen sind:
 - **beA:** Die kommerzielle Bibliothek von bea.expert ist nicht eingebunden.
   Ohne sie scheitern Anmeldung, Versand und eEB mit klarer Meldung; es wird
   nichts als gesendet gespeichert.
-- **Fehlende Masken:** Benutzerverwaltung (Konten, Passwörter, Rollen) und
-  „Rechnung anlegen/bearbeiten“ gibt es in der Oberfläche noch nicht.
+- **Fehlende Maske:** „Rechnung anlegen/bearbeiten“ gibt es in der Oberfläche
+  noch nicht.
 - **KI-Einwilligung:** Das Feld „KI-Verarbeitung erlaubt“ am Kontakt wird
   gespeichert, aber nicht ausgewertet. Die Regel muss die Kanzlei festlegen.
 - **Next.js 14** ist veraltet; der Umstieg ist für v1.0 geplant.

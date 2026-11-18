@@ -10,7 +10,7 @@ die Kanzlei-Admins, Teil C an die IT, die AI-Lawyer installiert und betreibt.
 > Zugriffsrechten ist geschlossen: Aktenliste, Aktenansicht, Suche, Helena und
 > die übrigen Schnittstellen prüfen die Aktenrechte, Mandantenkonten kommen nur
 > ins Portal. Offen sind unter anderem beA (die Bibliothek von bea.expert fehlt)
-> und eine Benutzerverwaltung in der Oberfläche. Was bekannt nicht oder nur
+> und eine Maske zum Anlegen von Rechnungen. Was bekannt nicht oder nur
 > teilweise funktioniert, steht in [Kapitel 23](23-einschraenkungen-und-fragen.md).
 > Die Kapitel beschreiben jeweils offen, wo eine Funktion noch fehlt.
 

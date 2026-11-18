@@ -265,45 +265,29 @@ Bei jedem Start (`set -e`) gilt: Schlägt Schritt 2 oder 3 fehl, startet der Con
 
 Beim ersten Worker-Start legt der Worker außerdem Standardeinstellungen an (dabei die KI-Startwerte aus `AI_PROVIDER`, `AI_MODEL` und dem passenden API-Schlüssel), dazu amtliche Formulare, Falldaten-Vorlagen, die Kanäle für Team-Nachrichten, Quests und Shop-Artikel, und er registriert die zeitgesteuerten Jobs ([Kapitel 21](21-betrieb-und-sicherung.md#hintergrund-jobs)).
 
-## Erste Anmeldung und Beispielkonten
+## Erste Anmeldung
 
 Öffnen Sie `NEXTAUTH_URL` im Browser.
 
 ![Anmeldeseite von AI-Lawyer](../screenshots/login.png)
 
-Der Seed hat angelegt:
+Beim allerersten Start (leere Datenbank) legt AI-Lawyer genau **ein** Konto an:
 
-| E-Mail | Rolle | Passwort |
-| --- | --- | --- |
-| `admin@kanzlei.de` | ADMIN | `password123` |
-| `anwalt@kanzlei.de` | ANWALT | `password123` |
-| `sachbearbeiter@kanzlei.de` | SACHBEARBEITER | `password123` |
+| Variable in `.env` | Bedeutung |
+| --- | --- |
+| `INITIAL_ADMIN_EMAIL` | Anmeldename des Administratorkontos (Standard `admin@kanzlei.de`) |
+| `INITIAL_ADMIN_PASSWORD` | Startpasswort, mindestens 12 Zeichen. `./setup.sh` erzeugt es zufällig; anzeigen mit `grep INITIAL_ADMIN_PASSWORD .env` |
+| `KANZLEI_NAME` | Name der Kanzlei |
 
-Dazu die Kanzlei „Kanzlei Baumfalk“, einige Beispielkontakte und eine Beispielakte sowie den Systembenutzer `helena@system.local` (nicht anmeldbar).
+Fehlt `INITIAL_ADMIN_PASSWORD`, erzeugt der erste Start ein Zufallspasswort und schreibt es einmalig ins Log (`docker compose logs app | grep -A1 "Einmaliges Passwort"`). Ein zu kurzer Wert (etwa der Platzhalter `ÄNDERN`) bricht den Start mit einer Meldung ab. Dazu kommt der Systembenutzer `helena@system.local`, der sich nicht anmelden kann.
 
-> **Passwörter sofort ändern.** Das Passwort `password123` steht öffentlich im Repository. Die Oberfläche bietet für Kanzleikonten derzeit **keine** Funktion, ein Passwort zu ändern oder ein neues Konto anzulegen (nur Mandanten im Portal können ihr Passwort ändern). Bis das nachgerüstet ist, geht beides nur über die Datenbank.
+Danach:
 
-Passwort ändern:
+1. Mit dem Startpasswort anmelden, unter **Einstellungen → Sicherheit → Passwort ändern** ein eigenes setzen und den Eintrag `INITIAL_ADMIN_PASSWORD` aus `.env` löschen.
+2. Unter **Admin → Benutzer** die Mitarbeitenden anlegen ([Kapitel 15](15-benutzer-und-rollen.md)).
+3. Empfohlen: Zwei-Faktor-Anmeldung einrichten und über `TOTP_REQUIRED_ROLES` verpflichtend machen.
 
-```bash
-HASH=$(docker compose exec -T app node -e \
-  "console.log(require('bcryptjs').hashSync(process.argv[1], 12))" 'NeuesLangesPasswort')
-docker compose exec -T db psql -U ailawyer -d ailawyer -c \
-  "UPDATE users SET \"passwordHash\"='$HASH' WHERE email='admin@kanzlei.de';"
-```
-
-Eigenes Konto anlegen (Rolle `ADMIN`, `ANWALT`, `SACHBEARBEITER` oder `SEKRETARIAT`):
-
-```bash
-docker compose exec -T db psql -U ailawyer -d ailawyer -c \
-  "INSERT INTO users (id, email, name, \"passwordHash\", role, aktiv, \"kanzleiId\", \"createdAt\", \"updatedAt\")
-   SELECT 'u' || md5(random()::text), 'ra.mustermann@kanzlei.example', 'Max Mustermann', '$HASH', 'ANWALT', true, \"kanzleiId\", now(), now()
-   FROM users WHERE email='admin@kanzlei.de';"
-```
-
-Beispielkonten abschalten: `UPDATE users SET aktiv=false WHERE email IN ('anwalt@kanzlei.de','sachbearbeiter@kanzlei.de');`. Ein deaktiviertes Konto kann sich nicht mehr anmelden (`src/lib/auth.ts`). Die Beispielakte und -kontakte löschen Sie in der Oberfläche. Rollen und Rechte erklärt [Kapitel 15](15-benutzer-und-rollen.md).
-
-Richten Sie für die Admin-Konten die Zwei-Faktor-Anmeldung ein und erzwingen Sie sie über `TOTP_REQUIRED_ROLES` ([Kapitel 20](20-konfiguration.md#adresse-und-anmeldung)).
+**Zum Ausprobieren** gibt es Beispieldaten: `SEED_DEMO=true` in `.env` vor dem ersten Start legt zusätzlich zwei Beispielkonten, Kontakte, eine Akte und E-Mails an. Alle Beispielkonten haben das öffentlich bekannte Passwort `password123`. Nie in einer Installation mit echten Daten verwenden. In der Entwicklung (`npm run db:seed` ohne `NODE_ENV=production`) ist der Demo-Modus Standard.
 
 ## KI einrichten und Modelle laden
 

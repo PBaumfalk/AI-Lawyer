@@ -66,3 +66,6 @@ target/
 .ralph_backup_*
 .claude/worktrees/
 /node_modules
+
+# Datensicherungen (scripts/backup.sh)
+/backups/

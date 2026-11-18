@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildAkteAccessFilter } from "@/lib/rbac";
+import { resolveBiRequest } from "@/lib/bi/request";
 import {
-  parseBiFilters,
   getAktenKpis,
   getFinanzenKpis,
   getFristenKpis,
@@ -14,21 +13,17 @@ const log = createLogger("api-bi-kpis");
 
 // GET /api/bi/kpis -- return all KPI tiles for BI dashboard
 export async function GET(request: NextRequest) {
-  const result = await requireAuth();
-  if (result.error) return result.error;
-  const { session } = result;
+  const bi = await resolveBiRequest(request);
+  if (bi.error) return bi.error;
+  const { filters, scope, userId } = bi;
 
   try {
-    const { searchParams } = new URL(request.url);
-    const filters = parseBiFilters(searchParams);
-    const accessFilter = buildAkteAccessFilter(session.user.id, session.user.role);
-    const userId = session.user.id;
 
     const [akten, finanzen, fristen, helena] = await Promise.all([
-      getAktenKpis(filters, accessFilter, userId),
-      getFinanzenKpis(filters, accessFilter, userId),
-      getFristenKpis(filters, accessFilter, userId),
-      getHelenaKpis(filters, accessFilter, userId),
+      getAktenKpis(filters, scope, userId),
+      getFinanzenKpis(filters, scope, userId),
+      getFristenKpis(filters, scope, userId),
+      getHelenaKpis(filters, scope, userId),
     ]);
 
     const response: BiKpiResponse = {

@@ -49,7 +49,7 @@ export default function PortalError({
             Erneut versuchen
           </button>
           <Link
-            href="/portal"
+            href="/portal/dashboard"
             className="inline-flex items-center justify-center rounded-lg border border-border/40 bg-card/40 px-4 py-2.5 text-sm font-medium text-foreground hover:bg-card/60 transition-colors"
           >
             Zum Portal

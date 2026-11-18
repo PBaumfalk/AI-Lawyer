@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyChannelAccess } from "@/lib/messaging/channel-access";
 import { z } from "zod";
 import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
@@ -22,29 +23,14 @@ const removeReactionSchema = z.object({
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Verify the user is a member of the channel (or ADMIN).
- */
+/** Same gate as messages: Akte access for Akte-bound channels, else membership. */
 async function verifyMembership(
   channelId: string,
   userId: string,
   userRole: string,
 ): Promise<NextResponse | null> {
-  if (userRole === "ADMIN") return null;
-
-  const membership = await prisma.channelMember.findUnique({
-    where: { channelId_userId: { channelId, userId } },
-    select: { id: true },
-  });
-
-  if (!membership) {
-    return NextResponse.json(
-      { error: "Du bist kein Mitglied dieses Kanals" },
-      { status: 403 },
-    );
-  }
-
-  return null;
+  const r = await verifyChannelAccess(channelId, userId, userRole);
+  return r.error ?? null;
 }
 
 // ---------------------------------------------------------------------------

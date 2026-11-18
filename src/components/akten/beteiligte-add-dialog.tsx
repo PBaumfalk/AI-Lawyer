@@ -8,26 +8,23 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { X, Search, Loader2, User, Building2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import {
+  kontakteListUrl,
+  anschriftOrt,
+  kontaktAnzeigename,
+  type KontakteListItem,
+  type KontakteListResponse,
+} from "@/lib/kontakte/liste";
+import {
+  BETEILIGTEN_ROLLEN as ROLLEN,
+  beteiligteUrl,
+  conflictCheckUrl,
+  type AddBeteiligterBody,
+  type BeteiligtenRolle,
+} from "@/lib/kontakte/beteiligte";
+import type { ConflictResult } from "@/lib/conflict-check";
 
-const ROLLEN = [
-  { value: "MANDANT", label: "Mandant" },
-  { value: "GEGNER", label: "Gegner" },
-  { value: "GEGNERVERTRETER", label: "Gegnervertreter" },
-  { value: "GERICHT", label: "Gericht" },
-  { value: "ZEUGE", label: "Zeuge" },
-  { value: "SACHVERSTAENDIGER", label: "Sachverständiger" },
-  { value: "SONSTIGER", label: "Sonstiger" },
-];
-
-interface KontaktOption {
-  id: string;
-  typ: string;
-  vorname: string | null;
-  nachname: string | null;
-  firma: string | null;
-  ort: string | null;
-  email: string | null;
-}
+type KontaktOption = KontakteListItem;
 
 interface BeteiligteAddDialogProps {
   akteId: string;
@@ -46,7 +43,7 @@ export function BeteiligteAddDialog({
   const [selectedKontakt, setSelectedKontakt] = useState<KontaktOption | null>(
     null
   );
-  const [rolle, setRolle] = useState("MANDANT");
+  const [rolle, setRolle] = useState<BeteiligtenRolle>("MANDANT");
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
@@ -63,33 +60,35 @@ export function BeteiligteAddDialog({
 
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
     const timer = setTimeout(() => {
-      if (search.length >= 2) {
-        setSearching(true);
-        fetch(`/api/kontakte?q=${encodeURIComponent(search)}`)
-          .then((r) => r.json())
-          .then(setKontakte)
-          .catch(() => {})
-          .finally(() => setSearching(false));
-      } else {
-        // Load all contacts when no search
-        setSearching(true);
-        fetch("/api/kontakte")
-          .then((r) => r.json())
-          .then(setKontakte)
-          .catch(() => {})
-          .finally(() => setSearching(false));
-      }
+      setSearching(true);
+      // Without at least two characters: first contacts alphabetically.
+      fetch(kontakteListUrl({ q: search.trim().length >= 2 ? search.trim() : undefined, take: 30 }))
+        .then(async (r) => {
+          if (!r.ok) throw new Error("Kontakte konnten nicht geladen werden");
+          return (await r.json()) as KontakteListResponse;
+        })
+        .then((data) => {
+          if (!cancelled) setKontakte(data.kontakte);
+        })
+        .catch((err: Error) => {
+          if (!cancelled) {
+            setKontakte([]);
+            toast.error(err.message);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setSearching(false);
+        });
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [search, open]);
 
-  function kontaktLabel(k: KontaktOption) {
-    if (k.typ === "NATUERLICH") {
-      return `${k.vorname ?? ""} ${k.nachname ?? ""}`.trim();
-    }
-    return k.firma ?? "";
-  }
+  const kontaktLabel = (k: KontaktOption) => kontaktAnzeigename(k);
 
   async function handleSubmit(forceAdd = false) {
     if (!selectedKontakt) return;
@@ -99,15 +98,17 @@ export function BeteiligteAddDialog({
     try {
       // Check for conflicts first (unless user already confirmed)
       if (!forceAdd) {
-        const checkRes = await fetch(
-          `/api/akten/${akteId}/conflict-check?kontaktId=${selectedKontakt.id}&rolle=${rolle}`
-        );
-        if (checkRes.ok) {
-          const result = await checkRes.json();
+        const checkRes = await fetch(conflictCheckUrl(akteId, selectedKontakt.id, rolle));
+        if (!checkRes.ok) {
+          // Never add silently without the conflict check having run.
+          throw new Error("Kollisionspruefung fehlgeschlagen");
+        }
+        {
+          const result = (await checkRes.json()) as ConflictResult;
           if (result.hasConflict) {
             const conflictDetails = result.conflicts
               .map(
-                (c: any) =>
+                (c) =>
                   `${c.kontaktName} ist ${c.existingRolle} in Akte ${c.aktenzeichen} (${c.kurzrubrum})`
               )
               .join("; ");
@@ -120,13 +121,11 @@ export function BeteiligteAddDialog({
         }
       }
 
-      const res = await fetch(`/api/akten/${akteId}/beteiligte`, {
+      const body: AddBeteiligterBody = { kontaktId: selectedKontakt.id, rolle };
+      const res = await fetch(beteiligteUrl(akteId), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kontaktId: selectedKontakt.id,
-          rolle,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -173,7 +172,10 @@ export function BeteiligteAddDialog({
             <Label>Rolle</Label>
             <Select
               value={rolle}
-              onChange={(e) => setRolle(e.target.value)}
+              onChange={(e) => {
+                setRolle(e.target.value as BeteiligtenRolle);
+                setConflictWarning(null);
+              }}
             >
               {ROLLEN.map((r) => (
                 <option key={r.value} value={r.value}>
@@ -215,14 +217,17 @@ export function BeteiligteAddDialog({
                 <p className="text-sm font-medium text-brand-700 dark:text-brand-300">
                   {kontaktLabel(selectedKontakt)}
                 </p>
-                {selectedKontakt.ort && (
+                {anschriftOrt(selectedKontakt.anschrift) && (
                   <p className="text-xs text-brand-500">
-                    {selectedKontakt.ort}
+                    {anschriftOrt(selectedKontakt.anschrift)}
                   </p>
                 )}
               </div>
               <button
-                onClick={() => setSelectedKontakt(null)}
+                onClick={() => {
+                  setSelectedKontakt(null);
+                  setConflictWarning(null);
+                }}
                 className="text-brand-400 hover:text-brand-600"
               >
                 <X className="w-4 h-4" />
@@ -260,7 +265,7 @@ export function BeteiligteAddDialog({
                         {kontaktLabel(k)}
                       </p>
                       <p className="text-xs text-slate-500 truncate">
-                        {[k.ort, k.email].filter(Boolean).join(" · ")}
+                        {[anschriftOrt(k.anschrift), k.email].filter(Boolean).join(" · ")}
                       </p>
                     </div>
                   </button>

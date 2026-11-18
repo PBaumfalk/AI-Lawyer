@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { DOKUMENT_TAGS_URL, type DokumentTagsResponse } from "@/lib/dokument-tags";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -44,8 +45,8 @@ export function TagManager({
 
   // Fetch tag categories on mount
   useEffect(() => {
-    fetch("/api/dokumente/tags")
-      .then((res) => res.json())
+    fetch(DOKUMENT_TAGS_URL)
+      .then((res) => res.json() as Promise<DokumentTagsResponse>)
       .then((data) => setKategorien(data.tags ?? []))
       .catch(() => {});
   }, []);

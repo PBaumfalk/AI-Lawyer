@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/rbac";
 import { z } from "zod";
+import {
+  hauptAnschrift,
+  kontakteWhere,
+  parseKontakteListQuery,
+  KONTAKT_ADRESSEN_INCLUDE,
+  type KontakteListResponse,
+} from "@/lib/kontakte/liste";
 
 const createKontaktSchema = z.object({
   typ: z.enum(["NATUERLICH", "JURISTISCH"]),
@@ -83,48 +90,31 @@ const createKontaktSchema = z.object({
 );
 
 // GET /api/kontakte -- search/list contacts (shared, no Akte-level restriction)
+// Query/response contract: src/lib/kontakte/liste.ts
 export async function GET(request: NextRequest) {
   const result = await requireAuth();
   if (result.error) return result.error;
 
-  const { searchParams } = new URL(request.url);
-  const q = searchParams.get("q");
-  const typ = searchParams.get("typ");
-  const tag = searchParams.get("tag");
-  const take = Math.min(parseInt(searchParams.get("take") ?? "50"), 100);
-  const skip = parseInt(searchParams.get("skip") ?? "0");
+  const query = parseKontakteListQuery(new URL(request.url).searchParams);
+  const where = kontakteWhere(query);
 
-  const where: any = {};
-  if (typ) where.typ = typ;
-  if (tag) where.tags = { has: tag };
-  if (q) {
-    where.OR = [
-      { nachname: { contains: q, mode: "insensitive" } },
-      { vorname: { contains: q, mode: "insensitive" } },
-      { firma: { contains: q, mode: "insensitive" } },
-      { kurzname: { contains: q, mode: "insensitive" } },
-      { email: { contains: q, mode: "insensitive" } },
-      { ort: { contains: q, mode: "insensitive" } },
-      { telefon: { contains: q, mode: "insensitive" } },
-      { mandantennummer: { contains: q, mode: "insensitive" } },
-      { ustIdNr: { contains: q, mode: "insensitive" } },
-    ];
-  }
-
-  const [kontakte, total] = await Promise.all([
+  const [rows, total] = await Promise.all([
     prisma.kontakt.findMany({
       where,
       orderBy: [{ nachname: "asc" }, { firma: "asc" }],
-      take,
-      skip,
+      take: query.take,
+      skip: query.skip,
       include: {
+        ...KONTAKT_ADRESSEN_INCLUDE,
         _count: { select: { beteiligte: true } },
       },
     }),
     prisma.kontakt.count({ where }),
   ]);
 
-  return NextResponse.json({ kontakte, total });
+  const kontakte = rows.map((k) => ({ ...k, anschrift: hauptAnschrift(k) }));
+  const body: KontakteListResponse = { kontakte, total };
+  return NextResponse.json(body);
 }
 
 // POST /api/kontakte -- create new contact

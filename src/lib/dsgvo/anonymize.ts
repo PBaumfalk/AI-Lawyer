@@ -246,18 +246,16 @@ export async function anonymizeKontakt(
 
       const namePattern = buildNameRegex(kontakt);
       for (const log of auditLogs) {
-        if (!log.details) continue;
-        const detailsStr = JSON.stringify(log.details);
-        if (namePattern && namePattern.test(detailsStr)) {
-          const anonymized = detailsStr.replace(namePattern, "Anonymisiert");
-          try {
-            await tx.auditLog.update({
-              where: { id: log.id },
-              data: { details: JSON.parse(anonymized) },
-            });
-          } catch {
-            // Skip malformed JSON
-          }
+        if (!log.details || !namePattern) continue;
+        // Replace inside the string values of the JSON (not in its serialized
+        // form): names with quotes/backslashes cannot corrupt the JSON, so no
+        // entry is skipped.
+        const { value, changed } = anonymizeJsonValue(log.details, namePattern);
+        if (changed) {
+          await tx.auditLog.update({
+            where: { id: log.id },
+            data: { details: value as Prisma.InputJsonValue },
+          });
         }
       }
     }
@@ -301,8 +299,43 @@ function buildNameRegex(kontakt: {
 
   if (patterns.length === 0) return null;
 
+  // Longest first so "Max Muster" is replaced as a whole, not word by word.
+  patterns.sort((a, b) => b.length - a.length);
   return new RegExp(patterns.join("|"), "gi");
 }
+
+/**
+ * Replace every match of `pattern` in all string values (and object keys) of
+ * a JSON value. Uses String.replace only, which is independent of the
+ * pattern's lastIndex, so a global regex can be reused across entries.
+ */
+export function anonymizeJsonValue(
+  input: unknown,
+  pattern: RegExp,
+  replacement = "Anonymisiert"
+): { value: unknown; changed: boolean } {
+  let changed = false;
+  const walk = (v: unknown): unknown => {
+    if (typeof v === "string") {
+      const r = v.replace(pattern, replacement);
+      if (r !== v) changed = true;
+      return r;
+    }
+    if (Array.isArray(v)) return v.map(walk);
+    if (v && typeof v === "object") {
+      const out: Record<string, unknown> = {};
+      for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+        out[walk(k) as string] = walk(val);
+      }
+      return out;
+    }
+    return v;
+  };
+  const value = walk(input);
+  return { value, changed };
+}
+
+export { buildNameRegex };
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

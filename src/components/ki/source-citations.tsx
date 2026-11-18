@@ -48,7 +48,7 @@ export function SourceCitations({ sources }: SourceCitationsProps) {
           <div className="min-w-0 flex-1">
             {/* Document name (link) */}
             <Link
-              href={`/dokumente/${src.dokumentId}`}
+              href={`/dokumente/${src.dokumentId}/bearbeiten`}
               className="flex items-center gap-1 text-brand-600 dark:text-brand-400 hover:underline font-medium"
             >
               <FileText className="w-3 h-3 flex-shrink-0" />

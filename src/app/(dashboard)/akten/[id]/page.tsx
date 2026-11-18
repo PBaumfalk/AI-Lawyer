@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { KONTAKT_ADRESSEN_INCLUDE } from "@/lib/kontakte/liste";
 import { auth } from "@/lib/auth";
 import { canAccessAkte } from "@/lib/rbac";
 import { Sparkles } from "lucide-react";
@@ -34,7 +35,7 @@ export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
       sachbearbeiter: { select: { id: true, name: true, email: true } },
       kanzlei: { select: { name: true } },
       beteiligte: {
-        include: { kontakt: true },
+        include: { kontakt: { include: KONTAKT_ADRESSEN_INCLUDE } },
         orderBy: { createdAt: "asc" },
       },
       dokumente: {

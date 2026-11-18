@@ -711,7 +711,7 @@ export function TemplateBuilder({
           </Button>
         )}
         <a
-          href="/dashboard/falldaten-templates"
+          href="/falldaten-templates"
           className="text-sm text-muted-foreground hover:text-foreground transition-colors ml-2"
         >
           Abbrechen

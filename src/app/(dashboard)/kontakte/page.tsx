@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, Building2 } from "lucide-react";
 import { prisma } from "@/lib/db";
+import { anschriftOrt, hauptAnschrift, kontakteWhere, KONTAKT_ADRESSEN_INCLUDE } from "@/lib/kontakte/liste";
 import { KontakteSearchBar } from "@/components/kontakte/kontakte-search-bar";
 import { KontakteToolbar } from "@/components/kontakte/kontakte-toolbar";
 import { GlassPanel } from "@/components/ui/glass-panel";
@@ -16,22 +17,11 @@ export default async function KontaktePage({
 }: KontaktePageProps) {
   const { q, typ, tag } = await searchParams;
 
-  const where: any = {};
-  if (typ) where.typ = typ;
-  if (tag) where.tags = { has: tag };
-  if (q) {
-    where.OR = [
-      { nachname: { contains: q, mode: "insensitive" } },
-      { vorname: { contains: q, mode: "insensitive" } },
-      { firma: { contains: q, mode: "insensitive" } },
-      { kurzname: { contains: q, mode: "insensitive" } },
-      { email: { contains: q, mode: "insensitive" } },
-      { ort: { contains: q, mode: "insensitive" } },
-      { telefon: { contains: q, mode: "insensitive" } },
-      { mandantennummer: { contains: q, mode: "insensitive" } },
-      { ustIdNr: { contains: q, mode: "insensitive" } },
-    ];
-  }
+  const where = kontakteWhere({
+    q: q?.trim() || undefined,
+    typ: typ === "NATUERLICH" || typ === "JURISTISCH" ? typ : undefined,
+    tag: tag || undefined,
+  });
 
   const [kontakte, total, allKontakteTags] = await Promise.all([
     prisma.kontakt.findMany({
@@ -39,6 +29,7 @@ export default async function KontaktePage({
       orderBy: [{ nachname: "asc" }, { firma: "asc" }],
       take: 50,
       include: {
+        ...KONTAKT_ADRESSEN_INCLUDE,
         _count: { select: { beteiligte: true } },
       },
     }),
@@ -162,9 +153,7 @@ export default async function KontaktePage({
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-foreground/80 hidden md:table-cell">
-                      {kontakt.ort
-                        ? `${kontakt.plz ? kontakt.plz + " " : ""}${kontakt.ort}`
-                        : "—"}
+                      {anschriftOrt(hauptAnschrift(kontakt)) || "—"}
                     </td>
                     <td className="px-6 py-4 hidden lg:table-cell">
                       <div className="space-y-0.5">

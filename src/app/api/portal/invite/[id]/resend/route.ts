@@ -71,6 +71,11 @@ export async function POST(
     );
   }
 
+  // --- DSGVO: same e-mail consent gate as portal notifications ---
+  if (!invite.beteiligter.kontakt.einwilligungEmail) {
+    return NextResponse.json({ error: "Kontakt hat der Kontaktaufnahme per E-Mail nicht zugestimmt (Einwilligung E-Mail). Bitte Einwilligung im Kontakt erfassen oder Zugang auf anderem Weg uebermitteln." }, { status: 400 });
+  }
+
   if (invite.status === "REVOKED") {
     return NextResponse.json(
       { error: "Einladung wurde widerrufen" },

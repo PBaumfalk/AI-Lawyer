@@ -3,27 +3,11 @@ import { requireAuth, buildAkteAccessFilter } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { acceptDraft, rejectDraft, editDraft } from "@/lib/helena/draft-service";
 import { createHelenaTask } from "@/lib/helena/task-service";
-import { z } from "zod";
+import { DraftActionSchema as ActionSchema } from "@/lib/helena/draft-actions";
 
 // ---------------------------------------------------------------------------
 // Zod schema for PATCH actions
 // ---------------------------------------------------------------------------
-
-const ActionSchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("accept") }),
-  z.object({
-    action: z.literal("reject"),
-    categories: z.array(z.string()).optional(),
-    text: z.string().optional(),
-    noRevise: z.boolean().optional(),
-  }),
-  z.object({
-    action: z.literal("edit"),
-    titel: z.string().optional(),
-    inhalt: z.string().optional(),
-    meta: z.record(z.unknown()).optional(),
-  }),
-]);
 
 // ---------------------------------------------------------------------------
 // GET /api/helena/drafts/[id] -- single draft with full detail

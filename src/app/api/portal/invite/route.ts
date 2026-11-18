@@ -91,6 +91,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // --- DSGVO: same e-mail consent gate as portal notifications ---
+  if (!beteiligter.kontakt.einwilligungEmail) {
+    return NextResponse.json({ error: "Kontakt hat der Kontaktaufnahme per E-Mail nicht zugestimmt (Einwilligung E-Mail). Bitte Einwilligung im Kontakt erfassen oder Zugang auf anderem Weg uebermitteln." }, { status: 400 });
+  }
+
   // --- Check if Kontakt already has a portal User ---
   const existingPortalUser = await prisma.user.findFirst({
     where: {

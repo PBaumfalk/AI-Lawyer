@@ -59,12 +59,23 @@ export async function generateBackupCodes(count = 10): Promise<{
   return { plain, hashed };
 }
 
+/**
+ * Backup codes are 8 characters from BACKUP_CODE_CHARS (upper case, no
+ * separator). Users type them with spaces/hyphens ("abcd-2345") or in lower
+ * case; normalise before comparing against the bcrypt hashes.
+ */
+export function normalizeBackupCode(input: string): string {
+  return input.replace(/[\s\-_]/g, "").toUpperCase();
+}
+
 export async function verifyBackupCode(
   plain: string,
   hashedCodes: string[]
 ): Promise<{ valid: boolean; remainingCodes: string[] }> {
+  const code = normalizeBackupCode(plain);
+  if (code.length !== BACKUP_CODE_LENGTH) return { valid: false, remainingCodes: hashedCodes };
   for (let i = 0; i < hashedCodes.length; i++) {
-    const match = await bcrypt.compare(plain, hashedCodes[i]);
+    const match = await bcrypt.compare(code, hashedCodes[i]);
     if (match) {
       const remainingCodes = hashedCodes.filter((_, idx) => idx !== i);
       return { valid: true, remainingCodes };

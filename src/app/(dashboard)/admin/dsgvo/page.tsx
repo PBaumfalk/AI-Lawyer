@@ -20,6 +20,7 @@ import {
   Building2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { kontakteListUrl, type KontakteListResponse } from "@/lib/kontakte/liste";
 
 interface KontaktResult {
   id: string;
@@ -83,10 +84,10 @@ export default function AdminDsgvoPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/kontakte?search=${encodeURIComponent(query)}&take=10`);
+      const res = await fetch(kontakteListUrl({ q: query, take: 10 }));
       if (!res.ok) return;
-      const data = await res.json();
-      setResults(data.kontakte ?? data ?? []);
+      const data = (await res.json()) as KontakteListResponse;
+      setResults(data.kontakte as unknown as KontaktResult[]);
     } catch {
       // Silently handle
     } finally {

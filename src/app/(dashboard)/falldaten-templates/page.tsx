@@ -189,7 +189,7 @@ export default function FalldatenTemplatesPage() {
             Vorlagen fuer strukturierte Falldatenerfassung
           </p>
         </div>
-        <Link href="/dashboard/falldaten-templates/neu">
+        <Link href="/falldaten-templates/neu">
           <Button>
             <Plus className="w-4 h-4 mr-2" />
             Neues Template erstellen
@@ -216,7 +216,7 @@ export default function FalldatenTemplatesPage() {
             Erstellen Sie Ihr erstes Template fuer die strukturierte
             Falldatenerfassung.
           </p>
-          <Link href="/dashboard/falldaten-templates/neu">
+          <Link href="/falldaten-templates/neu">
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               Erstes Template erstellen
@@ -281,7 +281,7 @@ export default function FalldatenTemplatesPage() {
                   {t.status === "ENTWURF" && (
                     <>
                       <Link
-                        href={`/dashboard/falldaten-templates/${t.id}/bearbeiten`}
+                        href={`/falldaten-templates/${t.id}/bearbeiten`}
                       >
                         <Button variant="outline" size="sm">
                           <Pencil className="w-3.5 h-3.5 mr-1" />
@@ -316,7 +316,7 @@ export default function FalldatenTemplatesPage() {
                   {t.status === "ABGELEHNT" && (
                     <>
                       <Link
-                        href={`/dashboard/falldaten-templates/${t.id}/bearbeiten`}
+                        href={`/falldaten-templates/${t.id}/bearbeiten`}
                       >
                         <Button variant="outline" size="sm">
                           <Pencil className="w-3.5 h-3.5 mr-1" />

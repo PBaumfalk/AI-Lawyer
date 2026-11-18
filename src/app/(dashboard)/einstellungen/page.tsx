@@ -17,6 +17,9 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { EINSTELLUNGEN_TABS, resolveEinstellungenTab } from "@/lib/einstellungen-tabs";
+
+const NON_ADMIN_TABS = ["allgemein", "kalender", "sicherheit"] as const;
 import { VertretungUrlaubTab } from "@/components/einstellungen/vertretung-urlaub-tab";
 import { ImportExportTab } from "@/components/einstellungen/import-export-tab";
 import { OnboardingWizard } from "@/components/einstellungen/onboarding-wizard";
@@ -33,6 +36,12 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 export default function EinstellungenPage() {
+  // ?tab=… deep link (e.g. /2fa-setup-required → einstellungenUrl("sicherheit")).
+  // Read in an effect so the page needs no Suspense boundary for useSearchParams.
+  const [requestedTab, setRequestedTab] = useState<string | null>(null);
+  useEffect(() => {
+    setRequestedTab(new URLSearchParams(window.location.search).get("tab"));
+  }, []);
   const [session, setSession] = useState<any>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -105,6 +114,8 @@ export default function EinstellungenPage() {
   }
 
   const isAdmin = session?.user?.role === "ADMIN";
+  const visibleTabs = isAdmin ? EINSTELLUNGEN_TABS : NON_ADMIN_TABS;
+  const activeTab = resolveEinstellungenTab(requestedTab, visibleTabs);
 
   return (
     <>
@@ -122,7 +133,7 @@ export default function EinstellungenPage() {
           </p>
         </div>
 
-        <Tabs defaultValue="allgemein">
+        <Tabs defaultValue="allgemein" value={activeTab} onValueChange={setRequestedTab}>
           <TabsList>
             <TabsTrigger value="allgemein">
               <Settings className="w-4 h-4 mr-1.5" />

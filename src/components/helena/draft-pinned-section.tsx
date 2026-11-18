@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { ChevronDown, ChevronRight, Sparkles, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -153,9 +153,11 @@ export function DraftPinnedSection({
     []
   );
 
+  // "Bearbeiten" opens the detail modal in inline edit mode (PATCH action "edit").
+  const [editRequested, setEditRequested] = useState<string | null>(null);
   const handleEdit = useCallback((draftId: string) => {
-    // Navigate to edit -- for now open in the akte page with draft param
-    window.location.href = `?draft=${draftId}&edit=true`;
+    setEditRequested(draftId);
+    void handleOpenDetailRef.current?.(draftId);
   }, []);
 
   const handleReject = useCallback(
@@ -193,6 +195,8 @@ export function DraftPinnedSection({
     },
     []
   );
+  const handleOpenDetailRef = useRef(handleOpenDetail);
+  handleOpenDetailRef.current = handleOpenDetail;
 
   const handleNavigate = useCallback(
     (draftId: string) => {
@@ -337,7 +341,8 @@ export function DraftPinnedSection({
         allDraftIds={allDraftIds}
         currentIndex={currentIndex}
         onAccept={handleAccept}
-        onEdit={handleEdit}
+        startEditing={!!selectedDraft && editRequested === selectedDraft.id}
+        onEdited={() => setEditRequested(null)}
         onReject={handleReject}
         onNavigate={handleNavigate}
         onClose={handleCloseModal}

@@ -63,6 +63,9 @@ export async function enqueuePortalNotification(
  * 4. Send via SMTP
  * 5. Audit log
  */
+/** Portal account that may receive portal notifications. */
+export const PORTAL_ACCOUNT_ACTIVE = { aktiv: true, role: "MANDANT" } as const;
+
 export async function processPortalNotification(
   data: PortalNotificationJobData
 ): Promise<void> {
@@ -77,11 +80,18 @@ export async function processPortalNotification(
       einwilligungEmail: true,
       vorname: true,
       nachname: true,
+      portalUser: { select: { aktiv: true, role: true } },
     },
   });
 
   if (!kontakt) {
     log.warn({ mandantKontaktId }, "Kontakt not found, skipping notification");
+    return;
+  }
+
+  // Re-checked at send time (account may have been deactivated since enqueue).
+  if (!kontakt.portalUser?.aktiv || kontakt.portalUser.role !== PORTAL_ACCOUNT_ACTIVE.role) {
+    log.info({ mandantKontaktId, type }, "No active portal account, skipping notification");
     return;
   }
 

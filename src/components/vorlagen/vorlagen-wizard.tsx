@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { vorlageGenerierenUrl, type VorlageGenerierenBody } from "@/lib/vorlagen-generieren";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -153,15 +154,17 @@ export function VorlagenWizard({
     if (!selectedVorlageId || !selectedAkteId) return;
     setGenerating(true);
     try {
-      const res = await fetch(`/api/vorlagen/${selectedVorlageId}/generieren`, {
+      const body: VorlageGenerierenBody = {
+        akteId: selectedAkteId,
+        customFelderValues: customValues,
+        dateiname: fileName || undefined,
+        // null = "Kein Briefkopf" (the select's empty option)
+        briefkopfId: selectedBriefkopfId || null,
+      };
+      const res = await fetch(vorlageGenerierenUrl(selectedVorlageId), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          akteId: selectedAkteId,
-          customFelder: customValues,
-          dateiname: fileName || undefined,
-          briefkopfId: selectedBriefkopfId || undefined,
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

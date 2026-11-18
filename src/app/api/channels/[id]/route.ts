@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { accessViaAkte } from "@/lib/messaging/channel-access";
 import { requireAuth, requireAkteAccess } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { generateSlug } from "@/lib/messaging/channel-service";
@@ -44,9 +45,9 @@ export async function GET(
   const isAdmin = session.user.role === "ADMIN";
 
   if (!isMember && !isAdmin) {
-    // For AKTE channels, also validate via requireAkteAccess
-    if (channel.typ === "AKTE" && channel.akteId) {
-      const akteResult = await requireAkteAccess(channel.akteId);
+    // AKTE channels (and PORTAL channels for staff): Akte access decides
+    if (accessViaAkte(channel, session.user.role)) {
+      const akteResult = await requireAkteAccess(channel.akteId!);
       if (akteResult.error) {
         return NextResponse.json(
           { error: "Kanal nicht gefunden" },

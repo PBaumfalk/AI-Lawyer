@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkConflicts } from "@/lib/conflict-check";
 import { requireAkteAccess } from "@/lib/rbac";
+import { conflictCheckQuerySchema } from "@/lib/kontakte/beteiligte";
 
 // GET /api/akten/[id]/conflict-check?kontaktId=xxx&rolle=MANDANT
 export async function GET(
@@ -14,16 +15,18 @@ export async function GET(
   if (access.error) return access.error;
 
   const { searchParams } = new URL(request.url);
-  const kontaktId = searchParams.get("kontaktId");
-  const rolle = searchParams.get("rolle");
+  const parsed = conflictCheckQuerySchema.safeParse({
+    kontaktId: searchParams.get("kontaktId"),
+    rolle: searchParams.get("rolle"),
+  });
 
-  if (!kontaktId || !rolle) {
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "kontaktId und rolle sind erforderlich" },
+      { error: "kontaktId und gueltige rolle sind erforderlich" },
       { status: 400 }
     );
   }
 
-  const result = await checkConflicts(akteId, kontaktId, rolle);
+  const result = await checkConflicts(akteId, parsed.data.kontaktId, parsed.data.rolle);
   return NextResponse.json(result);
 }

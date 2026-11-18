@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyChannelAccess } from "@/lib/messaging/channel-access";
 import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 
@@ -18,16 +19,10 @@ export async function GET(
 
   const { id: channelId } = await params;
 
-  // Verify user is member or ADMIN
-  const isMember = await prisma.channelMember.findUnique({
-    where: { channelId_userId: { channelId, userId: session.user.id } },
-  });
-
-  if (!isMember && session.user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Kanal nicht gefunden" },
-      { status: 404 },
-    );
+  // Same gate as messages (Akte access for Akte-bound channels)
+  const access = await verifyChannelAccess(channelId, session.user.id, session.user.role);
+  if (access.error) {
+    return NextResponse.json({ error: "Kanal nicht gefunden" }, { status: 404 });
   }
 
   const members = await prisma.channelMember.findMany({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { draftUrl, type DraftAction } from "@/lib/helena/draft-actions";
 import {
   Dialog,
   DialogContent,
@@ -56,7 +57,10 @@ interface DraftDetailModalProps {
   allDraftIds: string[];
   currentIndex: number;
   onAccept: (draftId: string) => Promise<{ createdId: string; typ: string } | void>;
-  onEdit: (draftId: string) => void;
+  /** Called after an inline edit was saved, with the new titel/inhalt. */
+  onEdited?: (draftId: string, changes: { titel: string; inhalt: string }) => void;
+  /** Open directly in edit mode (e.g. "Bearbeiten" on a draft card). */
+  startEditing?: boolean;
   onReject: (draftId: string, data: RejectFormData) => Promise<void>;
   onNavigate: (draftId: string) => void;
   onClose: () => void;
@@ -94,12 +98,50 @@ export function DraftDetailModal({
   allDraftIds,
   currentIndex,
   onAccept,
-  onEdit,
+  onEdited,
+  startEditing = false,
   onReject,
   onNavigate,
   onClose,
   open,
 }: DraftDetailModalProps) {
+  const [editing, setEditing] = useState(false);
+  const [editTitel, setEditTitel] = useState("");
+  const [editInhalt, setEditInhalt] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [shown, setShown] = useState<{ titel: string; inhalt: string } | null>(null);
+
+  function beginEdit() {
+    if (!draft) return;
+    setEditTitel(shown?.titel ?? draft.titel);
+    setEditInhalt(shown?.inhalt ?? draft.inhalt);
+    setEditing(true);
+  }
+
+  async function saveEdit() {
+    if (!draft) return;
+    const body: DraftAction = { action: "edit", titel: editTitel, inhalt: editInhalt };
+    setSavingEdit(true);
+    try {
+      const res = await fetch(draftUrl(draft.id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Speichern fehlgeschlagen");
+      }
+      setShown({ titel: editTitel, inhalt: editInhalt });
+      setEditing(false);
+      onEdited?.(draft.id, { titel: editTitel, inhalt: editInhalt });
+      toast.success("Entwurf gespeichert");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Speichern fehlgeschlagen");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lockError, setLockError] = useState<string | null>(null);
@@ -110,7 +152,15 @@ export function DraftDetailModal({
     setShowRejectForm(false);
     setIsSubmitting(false);
     setLockError(null);
-  }, [draft?.id]);
+    setShown(null);
+    setEditing(false);
+    if (startEditing && draft) {
+      setEditTitel(draft.titel);
+      setEditInhalt(draft.inhalt);
+      setEditing(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft?.id, startEditing]);
 
   // Lock acquisition on open, release on close
   useEffect(() => {
@@ -176,7 +226,7 @@ export function DraftDetailModal({
         case "b":
           if (!showRejectForm && draft!.status === "PENDING") {
             e.preventDefault();
-            onEdit(draft!.id);
+            beginEdit();
           }
           break;
         case "r":
@@ -294,7 +344,7 @@ export function DraftDetailModal({
           <div className="flex items-center gap-2">
             <TypeIcon className="w-5 h-5 text-violet-600 dark:text-violet-400" />
             <DialogTitle className="text-lg">
-              {typeLabel}-Entwurf: {draft.titel}
+              {typeLabel}-Entwurf: {shown?.titel ?? draft.titel}
             </DialogTitle>
           </div>
           <DialogDescription>
@@ -358,11 +408,35 @@ export function DraftDetailModal({
               "rounded-lg border p-4 bg-muted/20"
             )}
           >
-            {draft.typ === "NOTIZ" || draft.typ === "ALERT" ? (
+            {editing ? (
+              <div className="space-y-2 not-prose">
+                <input
+                  value={editTitel}
+                  onChange={(e) => setEditTitel(e.target.value)}
+                  className="w-full rounded-md border bg-background px-2 py-1 text-sm"
+                  aria-label="Titel"
+                />
+                <textarea
+                  value={editInhalt}
+                  onChange={(e) => setEditInhalt(e.target.value)}
+                  rows={14}
+                  className="w-full rounded-md border bg-background px-2 py-1 text-sm font-mono"
+                  aria-label="Inhalt"
+                />
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setEditing(false)} disabled={savingEdit}>
+                    Abbrechen
+                  </Button>
+                  <Button size="sm" onClick={saveEdit} disabled={savingEdit || !editTitel.trim()}>
+                    Speichern
+                  </Button>
+                </div>
+              </div>
+            ) : draft.typ === "NOTIZ" || draft.typ === "ALERT" ? (
               // Render markdown-like content (simple whitespace preservation)
-              <div className="whitespace-pre-wrap text-sm">{draft.inhalt}</div>
+              <div className="whitespace-pre-wrap text-sm">{shown?.inhalt ?? draft.inhalt}</div>
             ) : (
-              <div className="text-sm">{draft.inhalt}</div>
+              <div className="whitespace-pre-wrap text-sm">{shown?.inhalt ?? draft.inhalt}</div>
             )}
           </div>
         </div>
@@ -425,8 +499,8 @@ export function DraftDetailModal({
             <Button
               variant="ghost"
               size="sm"
-              disabled={!isPending || isSubmitting || !!lockError}
-              onClick={() => onEdit(draft.id)}
+              disabled={!isPending || isSubmitting || !!lockError || editing}
+              onClick={beginEdit}
             >
               <Pencil className="w-4 h-4 mr-1.5" />
               Bearbeiten

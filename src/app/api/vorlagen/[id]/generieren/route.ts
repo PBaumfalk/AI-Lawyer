@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { vorlageGenerierenSchema } from "@/lib/vorlagen-generieren";
 import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -45,22 +46,23 @@ export async function POST(
 
   const { id } = await params;
 
-  let body: {
-    akteId?: string;
-    customFelderValues?: Record<string, string>;
-    briefkopfId?: string;
-    openInEditor?: boolean;
-    targetOrdner?: string;
-    dateiname?: string;
-  };
+  let raw: unknown;
   try {
-    body = await request.json();
+    raw = await request.json();
   } catch {
     return NextResponse.json(
       { error: "Ungueltiger Request-Body" },
       { status: 400 }
     );
   }
+  const parsed = vorlageGenerierenSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Ungueltiger Request-Body" },
+      { status: 400 }
+    );
+  }
+  const body = parsed.data;
 
   const { akteId, customFelderValues, briefkopfId, openInEditor, targetOrdner, dateiname } = body;
 
@@ -194,8 +196,8 @@ export async function POST(
         where: { id: briefkopfId },
       });
     }
-    if (!briefkopf) {
-      // Try to load default Briefkopf
+    if (!briefkopf && briefkopfId === undefined) {
+      // No choice made: use the Standard-Briefkopf. null = "Kein Briefkopf".
       briefkopf = await prisma.briefkopf.findFirst({
         where: { istStandard: true },
       });

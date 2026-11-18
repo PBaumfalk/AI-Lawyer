@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildAkteAccessFilter } from "@/lib/rbac";
-import { parseBiFilters, getTrendData } from "@/lib/bi/kpi-queries";
+import { resolveBiRequest } from "@/lib/bi/request";
+import { getTrendData } from "@/lib/bi/kpi-queries";
 import type { BiTrendResponse } from "@/lib/bi/types";
 import { createLogger } from "@/lib/logger";
 
@@ -8,17 +8,13 @@ const log = createLogger("api-bi-trends");
 
 // GET /api/bi/trends -- return trend series for BI dashboard charts
 export async function GET(request: NextRequest) {
-  const result = await requireAuth();
-  if (result.error) return result.error;
-  const { session } = result;
+  const bi = await resolveBiRequest(request);
+  if (bi.error) return bi.error;
+  const { filters, scope, userId } = bi;
 
   try {
-    const { searchParams } = new URL(request.url);
-    const filters = parseBiFilters(searchParams);
-    const accessFilter = buildAkteAccessFilter(session.user.id, session.user.role);
-    const userId = session.user.id;
 
-    const series = await getTrendData(filters, accessFilter, userId);
+    const series = await getTrendData(filters, scope, userId);
 
     const response: BiTrendResponse = {
       series,

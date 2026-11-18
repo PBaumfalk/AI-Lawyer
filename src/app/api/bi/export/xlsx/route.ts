@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildAkteAccessFilter } from "@/lib/rbac";
+import { resolveBiRequest } from "@/lib/bi/request";
 import {
-  parseBiFilters,
   getAktenKpis,
   getFinanzenKpis,
   getFristenKpis,
@@ -15,23 +14,19 @@ const log = createLogger("api-bi-export-xlsx");
 
 // GET /api/bi/export/xlsx -- generate and download BI XLSX report
 export async function GET(request: NextRequest) {
-  const result = await requireAuth();
-  if (result.error) return result.error;
-  const { session } = result;
+  const bi = await resolveBiRequest(request);
+  if (bi.error) return bi.error;
+  const { filters, scope, userId } = bi;
 
   try {
-    const { searchParams } = new URL(request.url);
-    const filters = parseBiFilters(searchParams);
-    const accessFilter = buildAkteAccessFilter(session.user.id, session.user.role);
-    const userId = session.user.id;
 
     // Fetch all KPI data and trends in parallel
     const [akten, finanzen, fristen, helena, trends] = await Promise.all([
-      getAktenKpis(filters, accessFilter, userId),
-      getFinanzenKpis(filters, accessFilter, userId),
-      getFristenKpis(filters, accessFilter, userId),
-      getHelenaKpis(filters, accessFilter, userId),
-      getTrendData(filters, accessFilter, userId),
+      getAktenKpis(filters, scope, userId),
+      getFinanzenKpis(filters, scope, userId),
+      getFristenKpis(filters, scope, userId),
+      getHelenaKpis(filters, scope, userId),
+      getTrendData(filters, scope, userId),
     ]);
 
     const tiles = [...akten, ...finanzen, ...fristen, ...helena];

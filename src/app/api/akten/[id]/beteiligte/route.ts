@@ -2,21 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
 import { requireAkteAccess } from "@/lib/rbac";
-import { z } from "zod";
-
-const addBeteiligterSchema = z.object({
-  kontaktId: z.string().min(1, "Kontakt ist erforderlich"),
-  rolle: z.enum([
-    "MANDANT",
-    "GEGNER",
-    "GEGNERVERTRETER",
-    "GERICHT",
-    "ZEUGE",
-    "SACHVERSTAENDIGER",
-    "SONSTIGER",
-  ]),
-  notizen: z.string().optional(),
-});
+import { addBeteiligterSchema } from "@/lib/kontakte/beteiligte";
 
 // POST /api/akten/[id]/beteiligte -- add party to case
 export async function POST(

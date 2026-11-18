@@ -16,6 +16,7 @@ import {
   type PortalNotificationJobData,
 } from "@/lib/portal/portal-notification";
 import { createLogger } from "@/lib/logger";
+import { PORTAL_ACCOUNT_ACTIVE } from "@/lib/portal/portal-notification";
 
 const log = createLogger("portal-trigger");
 
@@ -43,6 +44,9 @@ export async function triggerPortalNotificationForAkte(
         akteId,
         rolle: "MANDANT",
         ...(excludeKontaktId ? { kontaktId: { not: excludeKontaktId } } : {}),
+        // Only clients who actually have an active portal account: the e-mail
+        // links into the portal, a Kontakt without account cannot follow it.
+        kontakt: { portalUser: { is: PORTAL_ACCOUNT_ACTIVE } },
       },
       select: {
         kontaktId: true,

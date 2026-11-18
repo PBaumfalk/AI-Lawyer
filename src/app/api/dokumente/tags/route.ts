@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { loeschenVerweigert, requirePermission } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import type { DokumentTagsResponse } from "@/lib/dokument-tags";
 
 /**
  * GET /api/dokumente/tags - List all tag categories ordered by sortierung.
@@ -24,7 +25,8 @@ export async function GET() {
     orderBy: { sortierung: "asc" },
   });
 
-  return NextResponse.json({ tags });
+  const body: DokumentTagsResponse = { tags };
+  return NextResponse.json(body);
 }
 
 /**

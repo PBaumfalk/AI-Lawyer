@@ -3,10 +3,24 @@ import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { JLawyerClient } from "@/lib/jlawyer/client";
 import { decryptJLawyerPassword } from "@/lib/jlawyer/credentials";
+import { buildBenutzerabgleich } from "@/lib/jlawyer/benutzer";
 import { migrateAkten } from "@/lib/jlawyer/etl-akten";
 import { migrateKontakte, migrateBeteiligte } from "@/lib/jlawyer/etl-kontakte";
 import { migrateDokumente } from "@/lib/jlawyer/etl-dokumente";
 import { migrateKalender } from "@/lib/jlawyer/etl-kalender";
+import {
+  leererBericht,
+  type MigrationStartResponse,
+  type MigrationStatusResponse,
+} from "@/lib/jlawyer/migration-status";
+import {
+  ABBRUCH_UNTERBROCHEN,
+  MIGRATION_KEYS,
+  acquireMigrationLock,
+  readMigrationStatus,
+  startHeartbeat,
+  upsertSetting,
+} from "@/lib/jlawyer/migration-lock";
 import type { JLawyerMigrationStats } from "@/lib/jlawyer/types";
 
 // GET — return current migration status and report
@@ -14,45 +28,23 @@ export async function GET() {
   const result = await requireRole("ADMIN");
   if (result.error) return result.error;
 
-  const settings = await prisma.systemSetting.findMany({
-    where: {
-      key: {
-        in: [
-          "jlawyer.migration.status",
-          "jlawyer.migration.report",
-          "jlawyer.migration.startedAt",
-          "jlawyer.migration.finishedAt",
-        ],
-      },
-    },
-  });
-  const map = Object.fromEntries(settings.map((s) => [s.key, s.value]));
-
-  const status = map["jlawyer.migration.status"] ?? "idle";
-  const report = map["jlawyer.migration.report"]
-    ? (JSON.parse(map["jlawyer.migration.report"]) as JLawyerMigrationStats)
-    : null;
-
-  return NextResponse.json({
-    status,
-    startedAt: map["jlawyer.migration.startedAt"] ?? null,
-    finishedAt: map["jlawyer.migration.finishedAt"] ?? null,
-    report,
-  });
+  const body: MigrationStatusResponse = await readMigrationStatus();
+  return NextResponse.json(body);
 }
 
-async function upsertSetting(key: string, value: string) {
-  await prisma.systemSetting.upsert({
-    where: { key },
-    create: { key, value, type: "string", category: "jlawyer" },
-    update: { value },
-  });
+function merge(report: JLawyerMigrationStats, part: Partial<JLawyerMigrationStats>) {
+  for (const k of ["akten", "kontakte", "beteiligte", "dokumente", "kalender"] as const) {
+    if (typeof part[k] === "number") report[k] += part[k]!;
+  }
+  report.errors.push(...(part.errors ?? []));
+  report.hinweise.push(...(part.hinweise ?? []));
 }
 
 // POST — trigger migration
 export async function POST() {
   const result = await requireRole("ADMIN");
   if (result.error) return result.error;
+  const admin = result.session.user;
 
   // Load credentials
   const settings = await prisma.systemSetting.findMany({
@@ -61,86 +53,77 @@ export async function POST() {
   const map = Object.fromEntries(settings.map((s) => [s.key, s.value]));
 
   if (!map["jlawyer.url"] || !map["jlawyer.username"] || !map["jlawyer.password"]) {
-    return NextResponse.json(
-      { error: "J-Lawyer Verbindungsdaten nicht konfiguriert" },
-      { status: 400 }
-    );
+    const body: MigrationStartResponse = { error: "J-Lawyer Verbindungsdaten nicht konfiguriert" };
+    return NextResponse.json(body, { status: 400 });
   }
 
-  // Prevent concurrent runs
-  const currentStatus = await prisma.systemSetting.findUnique({
-    where: { key: "jlawyer.migration.status" },
-  });
-  if (currentStatus?.value === "running") {
-    return NextResponse.json({ error: "Migration läuft bereits" }, { status: 409 });
+  // Prevent concurrent runs (atomic; a dead run's lease expires)
+  const lock = await acquireMigrationLock();
+  if (!lock.ok) {
+    const body: MigrationStartResponse = { error: "Migration läuft bereits" };
+    return NextResponse.json(body, { status: 409 });
   }
+  const stopHeartbeat = startHeartbeat();
 
-  await upsertSetting("jlawyer.migration.status", "running");
-  await upsertSetting("jlawyer.migration.startedAt", new Date().toISOString());
+  const report = leererBericht();
+  if (lock.uebernommen) {
+    report.hinweise.push({ entity: "Migration", id: "-", message: ABBRUCH_UNTERBROCHEN });
+  }
+  const saveReport = () => upsertSetting(MIGRATION_KEYS.report, JSON.stringify(report));
 
   try {
+    await upsertSetting(MIGRATION_KEYS.startedAt, new Date().toISOString());
+    await saveReport();
+
     const client = new JLawyerClient({
       baseUrl: map["jlawyer.url"],
       username: map["jlawyer.username"],
       password: decryptJLawyerPassword(map["jlawyer.password"]),
     });
 
-    // Get kanzleiId from first admin user's kanzleiId
-    const adminUser = await prisma.user.findFirst({
-      where: { role: "ADMIN", aktiv: true, isSystem: false },
-      select: { id: true, kanzleiId: true },
+    const adminUser = await prisma.user.findUniqueOrThrow({
+      where: { id: admin.id },
+      select: { id: true, name: true, kanzleiId: true },
     });
-    const kanzleiId = adminUser?.kanzleiId ?? null;
+    const kanzleiId = adminUser.kanzleiId ?? null;
 
-    // Get or create system user for createdById
-    const systemUser = await prisma.user.findFirst({
-      where: { isSystem: true },
-      select: { id: true },
-    });
-    if (!systemUser) {
-      throw new Error("System user not found — required for migration authorship");
-    }
-    const systemUserId = systemUser.id;
+    const benutzer = await buildBenutzerabgleich(client, adminUser.id, report.hinweise);
 
-    // Run ETL pipeline in sequence
-    const aktenResult = await migrateAkten(client, kanzleiId);
-    const aktenMap: Map<string, string> = aktenResult.aktenMap ?? new Map();
+    // Run ETL pipeline in sequence; persist partial progress after each step
+    const aktenResult = await migrateAkten(client, kanzleiId, benutzer);
+    merge(report, aktenResult);
+    await saveReport();
 
     const kontakteResult = await migrateKontakte(client);
-    const kontakteMap: Map<string, string> = kontakteResult.kontakteMap ?? new Map();
+    merge(report, kontakteResult);
+    await saveReport();
 
-    const beteiligteResult = await migrateBeteiligte(client, aktenMap, kontakteMap);
-    const dokumenteResult = await migrateDokumente(client, aktenMap, systemUserId);
-    const kalenderResult = await migrateKalender(client, aktenMap, systemUserId);
+    merge(report, await migrateBeteiligte(client, aktenResult.aktenMap, kontakteResult.kontakteMap));
+    await saveReport();
 
-    // Aggregate stats
-    const report: JLawyerMigrationStats = {
-      akten: aktenResult.akten ?? 0,
-      kontakte: kontakteResult.kontakte ?? 0,
-      beteiligte: beteiligteResult.beteiligte ?? 0,
-      dokumente: dokumenteResult.dokumente ?? 0,
-      kalender: kalenderResult.kalender ?? 0,
-      errors: [
-        ...(aktenResult.errors ?? []),
-        ...(kontakteResult.errors ?? []),
-        ...(beteiligteResult.errors ?? []),
-        ...(dokumenteResult.errors ?? []),
-        ...(kalenderResult.errors ?? []),
-      ],
-    };
+    merge(report, await migrateDokumente(client, aktenResult.aktenMap, adminUser));
+    await saveReport();
 
-    await upsertSetting("jlawyer.migration.report", JSON.stringify(report));
-    await upsertSetting("jlawyer.migration.status", "done");
-    await upsertSetting("jlawyer.migration.finishedAt", new Date().toISOString());
-
-    return NextResponse.json({ success: true, report });
-  } catch (e) {
-    await upsertSetting("jlawyer.migration.status", "error");
-    await upsertSetting("jlawyer.migration.finishedAt", new Date().toISOString());
-    await upsertSetting(
-      "jlawyer.migration.report",
-      JSON.stringify({ error: (e as Error).message })
+    merge(
+      report,
+      await migrateKalender(client, aktenResult.aktenMap, aktenResult.anwaltMap, benutzer),
     );
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+
+    await saveReport();
+    await upsertSetting(MIGRATION_KEYS.finishedAt, new Date().toISOString());
+    await upsertSetting(MIGRATION_KEYS.status, "done");
+
+    const body: MigrationStartResponse = { success: true, report };
+    return NextResponse.json(body);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    report.errors.push({ entity: "Migration", id: "-", message });
+    await saveReport();
+    await upsertSetting(MIGRATION_KEYS.finishedAt, new Date().toISOString());
+    await upsertSetting(MIGRATION_KEYS.status, "error");
+    const body: MigrationStartResponse = { error: message, report };
+    return NextResponse.json(body, { status: 500 });
+  } finally {
+    stopHeartbeat();
   }
 }

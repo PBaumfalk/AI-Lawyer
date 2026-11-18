@@ -13,7 +13,7 @@ Dieses Kapitel beschreibt, wo Sie AI-Lawyer an Ihre Kanzlei anpassen: persönlic
 | `/vorlagen` | Vorlagen durchsuchen, Dokument erzeugen | nur über die Adresse | alle angemeldeten Benutzer |
 | `/einstellungen/ki` | KI-Provider, Token-Budget, Automatisierung | nur über die Adresse | Admin |
 | `/einstellungen/email` | Postfächer, Kanzlei-Signatur, Sync-Status, Zuweisung | nur über die Adresse | Admin |
-| `/einstellungen/dokument-tags` | Tag-Kategorien für Dokumente | nur über die Adresse | Anlegen/Löschen nur Admin |
+| `/einstellungen/dokument-tags` | Tag-Kategorien für Dokumente | nur über die Adresse | alle außer Sekretariat; Anlegen/Löschen nur Admin |
 | `/falldaten-templates` | eigene Falldaten-Templates anlegen und einreichen | nur über die Adresse | alle angemeldeten Benutzer |
 | `/admin/falldaten-templates` | eingereichte Templates prüfen | Admin-Leiste **Falldaten** | Admin |
 | `/admin/muster` | Schriftsatzmuster für Helena | Admin-Leiste **Muster** | Admin |
@@ -59,7 +59,7 @@ Danach zeigt der Reiter **2FA aktiv** und wie viele Backup-Codes noch übrig sin
 - **Backup-Codes neu generieren**: aktuellen Code aus der App eingeben, **Bestätigen**. Die alten Codes werden dabei ungültig, die neuen erscheinen einmalig.
 - **2FA deaktivieren**: aktuellen Code eingeben, **Deaktivieren bestätigen**.
 
-Ist für Ihre Rolle 2FA vorgeschrieben (Umgebungsvariable `TOTP_REQUIRED_ROLES`, [Kapitel 20](20-konfiguration.md)), leitet AI-Lawyer Sie nach der Anmeldung so lange auf einen Hinweis um, bis 2FA eingerichtet ist. Die Einstellungen bleiben dabei erreichbar. Der Reiter öffnet sich allerdings immer auf **Allgemein**; klicken Sie selbst auf **Sicherheit**.
+Ist für Ihre Rolle 2FA vorgeschrieben (Umgebungsvariable `TOTP_REQUIRED_ROLES`, [Kapitel 20](20-konfiguration.md)), leitet AI-Lawyer Sie nach der Anmeldung so lange auf einen Hinweis um, bis 2FA eingerichtet ist. Die Einstellungen bleiben dabei erreichbar; **Zu den Sicherheitseinstellungen** öffnet direkt den Reiter **Sicherheit**.
 
 ### Kalender verbinden (Reiter „Kalender“)
 
@@ -89,9 +89,9 @@ In der Liste zeigt jede Verbindung ihren Status (**Verbunden**, **Fehler**, **Ge
 
 **Import/Export.** **Einstellungen exportieren** lädt eine JSON-Datei mit allen Systemeinstellungen, Fristen-Presets, Briefkopf-Angaben und Ordner-Schemata. Logos, Briefkopf-DOCX und Vorlagendateien sind nicht enthalten. Beim Import wählen Sie die Datei, prüfen die **Vorschau** und bestätigen mit **Jetzt importieren**; *Bestehende Einstellungen werden ueberschrieben.*
 
-> **Vorsicht mit der Exportdatei:** Sie enthält alle Systemeinstellungen im Klartext, also auch einen dort hinterlegten KI-API-Schlüssel. Behandeln Sie die Datei wie ein Passwort.
+Geheime Werte wie der KI-API-Schlüssel sind in der Exportdatei **nicht** enthalten (das Feld ist leer). Beim Import bleibt ein schon gespeicherter Schlüssel dann erhalten; auf einer neuen Installation tragen Sie ihn danach unter `/einstellungen/ki` neu ein. Die Datei enthält trotzdem Kanzleidaten und sollte nicht weitergegeben werden.
 
-**„Auf Standard zuruecksetzen“** gibt es in mehreren Reitern. Die Wirkung ist je Reiter verschieden: Unter **Briefkoepfe** werden alle Briefköpfe außer dem ersten in der Liste gelöscht, unter **Vertretung & Urlaub** alle Vertretungen entfernt, unter **Fristen** und **Benachrichtigungen** die Werte auf die Vorgaben gesetzt. Die Aktion lässt sich nicht rückgängig machen.
+**„Auf Standard zuruecksetzen“** gibt es in mehreren Reitern. Die Wirkung ist je Reiter verschieden: Unter **Briefkoepfe** werden alle Briefköpfe außer dem ersten in der Liste gelöscht, unter **Vertretung & Urlaub** alle Vertretungen entfernt, unter **Vorlagen** alle Freigaben zurückgezogen, unter **Fristen** und **Benachrichtigungen** die Werte auf die Vorgaben gesetzt. Die Aktion lässt sich nicht rückgängig machen.
 
 ## Der Einrichtungsassistent
 
@@ -113,11 +113,11 @@ Die Kanzleidaten, die in Vorlagen (`{{kanzlei.…}}`), Rechnungen und Exporten e
 
 ## KI, E-Mail und Dokument-Tags
 
-**KI-Einstellungen** (`/einstellungen/ki`, nur Admin; andere werden auf `/einstellungen` zurückgeleitet). Unter **Provider-Konfiguration** wählen Sie den **KI-Provider** (**Ollama (Lokal)**, **OpenAI**, **Anthropic**), das **Modell**, bei Ollama die **Ollama-URL**, sonst den **API-Schluessel**. **Verbindung testen** meldet *Verbunden (… ms)* oder den Fehler. Unter **Automatisierung** stehen **Monatliches Token-Budget** (0 = unbegrenzt; bei Erreichen pausiert Helena), **Proaktive Aktenanalyse**, **Tagesbriefing** und **Briefing-Uhrzeit**. **Token-Verbrauch** zeigt den Verbrauch für **Heute**, **Woche** oder **Monat**, aufgeteilt nach Funktion und Benutzer. Am Ende **Einstellungen speichern**; Erfolg zeigt **Gespeichert**, ein Fehler wird nicht gemeldet. Was Helena mit diesen Einstellungen macht, steht in [Kapitel 9](09-helena.md).
+**KI-Einstellungen** (`/einstellungen/ki`, nur Admin; andere werden auf `/einstellungen` zurückgeleitet). Unter **Provider-Konfiguration** wählen Sie den **KI-Provider** (**Ollama (Lokal)**, **OpenAI**, **Anthropic**), das **Modell**, bei Ollama die **Ollama-URL**, sonst den **API-Schluessel**. **Verbindung testen** meldet *Verbunden (… ms)* oder den Fehler. Ein gespeicherter Schlüssel wird nie wieder angezeigt; das Feld zeigt dann „Gespeichert. Leer lassen, um den Schlüssel zu behalten.“ Lassen Sie es beim Speichern leer, bleibt der alte Schlüssel erhalten. AI-Lawyer speichert den Schlüssel verschlüsselt (mit `EMAIL_ENCRYPTION_KEY`, [Kapitel 20](20-konfiguration.md)) und gibt ihn nicht an den Browser heraus. Unter **Automatisierung** stehen **Monatliches Token-Budget** (0 = unbegrenzt; bei Erreichen pausiert Helena), **Proaktive Aktenanalyse**, **Tagesbriefing** und **Briefing-Uhrzeit**. **Token-Verbrauch** zeigt den Verbrauch für **Heute**, **Woche** oder **Monat**, aufgeteilt nach Funktion und Benutzer. Am Ende **Einstellungen speichern**; Erfolg zeigt **Gespeichert**, ein Fehler wird nicht gemeldet. Was Helena mit diesen Einstellungen macht, steht in [Kapitel 9](09-helena.md).
 
 **E-Mail-Einstellungen** (`/einstellungen/email`, nur Admin) mit den Reitern **Postfaecher**, **Signatur** (kanzleiweite HTML-Signatur mit Platzhaltern), **Sync-Status** und **Zuweisung**. Die Bedienung beschreibt [Kapitel 7](07-email-und-tickets.md).
 
-**Dokument-Tags** (`/einstellungen/dokument-tags`). Sind noch keine Tags vorhanden, legt die Seite beim ersten Aufruf acht System-Tags an (Schriftsatz, Vertrag, Rechnung, Gutachten, Korrespondenz, Vollmacht, Bescheid, Sonstiges). Mit **Neuer Tag** legen Sie weitere an (Name und Farbe, **Erstellen**). System-Tags tragen das Kennzeichen **System** und lassen sich umbenennen, aber nicht löschen. Anlegen und Löschen dürfen nur Admins.
+**Dokument-Tags** (`/einstellungen/dokument-tags`). Die kanzleiweiten Tag-Kategorien gehören zur Kanzleikonfiguration: Die Seite erreichen nur Rollen mit dem Recht **Einstellungen** (Administrator, Anwalt/Anwältin, Sachbearbeiter/in); das Sekretariat wird auf `/einstellungen` zurückgeleitet. Sind noch keine Tags vorhanden, legt die Seite beim ersten Aufruf acht System-Tags an (Schriftsatz, Vertrag, Rechnung, Gutachten, Korrespondenz, Vollmacht, Bescheid, Sonstiges). Mit **Neuer Tag** legen Sie weitere an (Name und Farbe, **Erstellen**). System-Tags tragen das Kennzeichen **System** und lassen sich umbenennen, aber nicht löschen. Umbenennen dürfen alle mit Zugang zur Seite, Anlegen und Löschen nur Admins.
 
 ## Briefkopf-Editor
 
@@ -190,17 +190,17 @@ Unter `/vorlagen` sehen Sie **Favoriten** (Stern auf der Karte), **Zuletzt verwe
 
 Das neue Dokument liegt mit Status Entwurf in der Akte, im Ordner passend zur Kategorie (z. B. Schriftsaetze, Vollmachten, Korrespondenz). Ohne eigenen Dateinamen heißt es `Aktenzeichen_Kategorie_Mandant_Datum.docx`. Wie Sie es weiter bearbeiten, steht in [Kapitel 5](05-dokumente.md).
 
-Derzeit gilt:
+Zu beachten:
 
-- Die Auswahl **Kein Briefkopf** verhindert den Briefkopf nicht; AI-Lawyer setzt dann den Standard-Briefkopf ein, sofern einer besteht.
-- **In OnlyOffice oeffnen** hat keine Wirkung; öffnen Sie das Dokument aus der Akte.
-- Werte im Schritt **Felder** werden nicht in das Dokument übernommen. Zusatzfelder lassen sich in der Oberfläche ohnehin nicht anlegen.
+- Unter **Briefkopf** ist der Standard-Briefkopf vorausgewählt (gibt es keinen, der erste in der Liste). Mit **Kein Briefkopf** entsteht das Dokument ohne Briefkopf.
+- Werte aus dem Schritt **Felder** werden in das Dokument übernommen. Zusatzfelder für eine Vorlage lassen sich in der Oberfläche allerdings nicht anlegen; ausfüllen können Sie nur Felder, die die IT für eine Vorlage hinterlegt hat.
+- **In OnlyOffice oeffnen** hat derzeit keine Wirkung; öffnen Sie das Dokument aus der Akte.
 
 ### Freigabe
 
-Im Reiter **Einstellungen → Vorlagen** gibt ein Admin eine Vorlage mit **Freigeben** frei (*Vorlage freigegeben*). Laut Schnittstelle dürfen das Admins und Anwälte; den Reiter sieht aber nur die Admin-Rolle. Die Freigabe ist derzeit nur eine Kennzeichnung. Das Zurückziehen über **Zurueckziehen** schlägt fehl (*Vorlage ist bereits freigegeben*); ebenso hebt **Auf Standard zuruecksetzen** dort keine Freigaben auf.
+Im Reiter **Einstellungen → Vorlagen** gibt ein Admin eine Vorlage mit **Freigeben** frei (*Vorlage freigegeben*). Laut Schnittstelle dürfen das Admins und Anwälte; den Reiter sieht aber nur die Admin-Rolle. Mit **Zurueckziehen** nehmen Sie eine Freigabe wieder zurück; **Auf Standard zuruecksetzen** zieht alle Freigaben zurück. Die Freigabe ist derzeit nur eine Kennzeichnung.
 
-Hochladen, Ändern und Löschen von Vorlagen ist für alle angemeldeten Benutzer möglich. Löschen entfernt auch alle früheren Versionen der Datei.
+Hochladen und Ändern von Vorlagen ist für alle angemeldeten Benutzer möglich. Löschen setzt das Recht **Loeschen** voraus (nicht Sekretariat, [Kapitel 15](15-benutzer-und-rollen.md)) und entfernt auch alle früheren Versionen der Datei.
 
 ## Falldaten-Templates
 
@@ -212,7 +212,7 @@ Falldaten-Templates legen fest, welche strukturierten Angaben zu einer Akte erfa
 
 Die Seite `/falldaten-templates` zeigt Ihre eigenen Templates in jedem Status und die genehmigten Templates der anderen.
 
-> **Bekannter Fehler:** Die Knöpfe **Neues Template erstellen**, **Erstes Template erstellen** und **Bearbeiten** sowie die Rücksprünge nach dem Speichern führen auf `/dashboard/falldaten-templates/…`, eine Adresse, die es nicht gibt. Rufen Sie stattdessen direkt `/falldaten-templates/neu` bzw. `/falldaten-templates/<ID>/bearbeiten` auf und kehren Sie über `/falldaten-templates` zur Liste zurück.
+Ein neues Template beginnen Sie mit **Neues Template erstellen** (bzw. **Erstes Template erstellen**), ein vorhandenes ändern Sie mit **Bearbeiten**. Nach dem Speichern kehrt die Seite zur Liste zurück.
 
 1. Unter **Template-Informationen** **Name** (z. B. *Verkehrsunfall Personenschaden*), **Beschreibung** und **Sachgebiet** eintragen.
 2. Unter **Gruppen & Felder** mit **Gruppe hinzufuegen** eine Gruppe anlegen (z. B. *Unfallhergang*).
@@ -277,7 +277,7 @@ Die wichtigsten Einträge, deren Wirkung im Code belegt ist:
 
 Ohne nachweisbare Wirkung sind derzeit: **Worker-Parallelitaet**, **Maximale Wiederholungen**, **Log-Level**, **Standard-Benachrichtigungston**, **Aufbewahrung Benachrichtigungen (Tage)**, **Wartungsmodus**, **beA-API-URL**, **beA-Integration aktiviert** und **2FA-Pflicht: Rollen**. Die 2FA-Pflicht steuert allein die Umgebungsvariable `TOTP_REQUIRED_ROLES` ([Kapitel 20](20-konfiguration.md)).
 
-Die Seite zeigt außerdem Einträge, die andere Reiter angelegt haben (z. B. Kanzleidaten aus dem Assistenten oder Werte aus dem Reiter **Fristen**). Diese lassen sich hier nicht speichern (*Unbekannte Einstellung: …*). Ein hinterlegter API-Schlüssel steht hier im Klartext im Eingabefeld.
+Die Seite zeigt außerdem Einträge, die andere Reiter angelegt haben (z. B. Kanzleidaten aus dem Assistenten oder Werte aus dem Reiter **Fristen**). Diese lassen sich hier nicht speichern (*Unbekannte Einstellung: …*). Ein hinterlegter API-Schlüssel wird auch hier nicht angezeigt; ein leeres Feld beim Speichern behält ihn.
 
 ## Wenn etwas nicht klappt
 
@@ -289,13 +289,12 @@ Die Seite zeigt außerdem Einträge, die andere Reiter angelegt haben (z. B. Kan
 | *Fehler beim Setzen als Standard* | Bekannter Fehler beim Briefkopf. | Neuen Briefkopf mit **Als Standard-Briefkopf setzen** anlegen. |
 | *Name ist erforderlich* | Briefkopf oder Vorlage ohne Namen. | Namen eintragen. |
 | *Nur DOCX-Dateien werden unterstützt* | Falsches Dateiformat beim Vorlagen-Upload. | Datei als .docx speichern. |
-| *Vorlage ist bereits freigegeben* | Bekannter Fehler beim **Zurueckziehen**. | Freigabe bleibt bestehen; die IT kann sie zurücknehmen. |
+| *Vorlage ist bereits freigegeben* | Die Vorlage wurde schon freigegeben. | Nichts zu tun; zum Zurücknehmen **Zurueckziehen** verwenden. |
 | *Nur ADMIN oder ANWALT duerfen Vorlagen freigeben* | Ihre Rolle darf nicht freigeben. | Admin oder Anwalt bitten. |
 | Im Dokument steht „undefined“ | Platzhalter falsch geschrieben. | Schreibweise mit der [Platzhalterliste](#platzhalter) vergleichen, Vorlage neu hochladen. |
 | *Feld-Key existiert bereits in einem anderen Feld* | Zwei Felder im Template haben denselben Key. | Key ändern. |
 | *Mindestens ein Feld ist erforderlich* | Template ohne Felder. | Mindestens ein Feld anlegen. |
 | *4-Augen-Prinzip: Eigene Templates koennen nicht selbst genehmigt werden* | Sie haben das Template selbst erstellt. | Ein anderer Admin genehmigt. |
-| Seite nicht gefunden nach Klick auf **Neues Template erstellen** | Bekannter Fehler (falsche Adresse). | `/falldaten-templates/neu` direkt aufrufen. |
 | *Ungültiger Dateityp: … Erlaubt: PDF und DOCX* | Muster in anderem Format. | Als PDF oder DOCX hochladen. |
 | *Unbekannte Einstellung: …* | Eintrag unter `/admin/settings`, der dort nicht vorgesehen ist. | Im zuständigen Reiter unter **Einstellungen** ändern. |
 | *Ungueltige Import-Datei: Fehlende Version* | Die Datei stammt nicht aus **Einstellungen exportieren**. | Eine exportierte Datei verwenden. |

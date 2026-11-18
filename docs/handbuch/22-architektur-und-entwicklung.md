@@ -4,7 +4,7 @@ Dieses Kapitel erklärt, wie AI-Lawyer aufgebaut ist, wo im Code was liegt und w
 
 ## Überblick
 
-AI-Lawyer ist eine TypeScript-Anwendung auf Basis von Next.js 14 (App Router). Rund 155 000 Zeilen in `src/`, 220 API-Routen, 86 Datenmodelle. Zwei eigene Prozesse und sieben Fremddienste arbeiten zusammen:
+AI-Lawyer ist eine TypeScript-Anwendung auf Basis von Next.js 14 (App Router). Rund 158 000 Zeilen in `src/`, 220 API-Routen, 86 Datenmodelle. Zwei eigene Prozesse und sieben Fremddienste arbeiten zusammen:
 
 ```
 Browser ──HTTPS──► app (Next.js, Port 3000) ──► db (PostgreSQL 16 + pgvector)
@@ -20,14 +20,14 @@ Browser ──HTTPS──► app (Next.js, Port 3000) ──► db (PostgreSQL 1
 
 | Prozess | Einstieg | Aufgabe |
 | --- | --- | --- |
-| **app** | `src/server.ts` (eigener Server) bzw. im Docker-Image der Next.js-Standalone-Server | Seiten, API-Routen, Anmeldung; mit `src/server.ts` zusätzlich Socket.IO am selben HTTP-Server |
+| **app** | `src/server.ts` (eigener Server), gebündelt nach `dist-server/index.js` | Seiten, API-Routen, Anmeldung und Socket.IO am selben HTTP-Server |
 | **worker** | `src/worker.ts`, gebündelt nach `dist-worker/index.js` | 20 BullMQ-Warteschlangen, Cron-Jobs, dauerhafte IMAP-Verbindungen ([Kapitel 21](21-betrieb-und-sicherung.md#hintergrund-jobs)) |
 
 **Eigener Server und Socket.IO.** `src/server.ts` startet Next.js und hängt Socket.IO mit Redis-Adapter an denselben HTTP-Server (`src/lib/socket/server.ts`). Die Anmeldung am Socket prüft das NextAuth-JWT aus dem Cookie (`src/lib/socket/auth.ts`). Räume: `user:{id}`, `role:{ROLLE}`, `kanzlei:{id}` automatisch, `akte:{id}`, `mailbox:{id}`, `channel:{id}` bei Bedarf (`src/lib/socket/rooms.ts`). Der Worker sendet Ereignisse über `@socket.io/redis-emitter` (`src/lib/socket/emitter.ts`).
 
-Das `Dockerfile` baut zwar `dist-server/index.js`, startet aber mit `CMD ["node", "server.js"]` den Standalone-Server von Next.js. Laut Commit `be3f97f` lädt der eigene Server im Standalone-Modus webpack, das dort fehlt. Folge: **Im Docker-Betrieb läuft kein Socket.IO-Server**; Echtzeit-Ereignisse kommen nicht an ([Kapitel 23](23-einschraenkungen-und-fragen.md#bekannte-einschränkungen)). In der Entwicklung mit `npm run dev:server` ist Socket.IO aktiv.
+Das `Dockerfile` startet mit `CMD ["node", "dist-server/index.js"]` den eigenen Server. Er läuft auf der Standalone-Ausgabe von Next.js und übergibt wie der generierte Standalone-Server die beim Build eingefrorene Next-Konfiguration, damit Next.js zur Laufzeit kein webpack nachladen muss. Damit ist Socket.IO auch im Docker-Betrieb aktiv. In der Entwicklung startet `npm run dev:server` denselben Server.
 
-**Build.** Das `Dockerfile` hat drei Stufen: Abhängigkeiten (`npm ci`), Build (`prisma generate`, `next build` mit `output: "standalone"`, esbuild-Bündel für Server und Worker), Laufzeit auf `node:20-alpine` als Benutzer `nextjs` (UID 1001). App und Worker nutzen dasselbe Image. Typfehler brechen den Build ab (`typescript.ignoreBuildErrors: false`), ESLint läuft beim Build nicht.
+**Build.** Das `Dockerfile` hat drei Stufen: Abhängigkeiten (`npm ci`), Build (`prisma generate`, `next build` mit `output: "standalone"`, esbuild-Bündel für Server und Worker), Laufzeit auf `node:20-alpine` als Benutzer `nextjs` (UID 1001). App und Worker nutzen dasselbe Image. `NEXT_PUBLIC_KANZLEI_NAME` ist ein Build-Argument (in `docker-compose.yml` aus `KANZLEI_NAME`), weil Next.js `NEXT_PUBLIC_*`-Werte beim Build einsetzt. Typfehler brechen den Build ab (`typescript.ignoreBuildErrors: false`), ESLint läuft beim Build nicht.
 
 ## Verzeichnisstruktur
 
@@ -40,12 +40,12 @@ Das `Dockerfile` baut zwar `dist-server/index.js`, startet aber mit `CMD ["node"
 | `src/components` | React-Komponenten nach Bereich, `ui/` mit shadcn/ui-Bausteinen |
 | `src/lib` | Fachlogik: `fristen/` (Fristenrechner), `finance/` (RVG, Rechnungen, DATEV, SEPA), `helena/` (Agent), `ai/` (Anbieter, Scans), `email/`, `bea/`, `jlawyer/`, `portal/`, `queue/`, `socket/`, `gamification/`, `xjustiz/`, `rbac.ts`, `db.ts`, `storage.ts`, `logger.ts` |
 | `src/workers/processors`, `src/lib/queue/processors` | Job-Verarbeitung für den Worker |
-| `src/middleware.ts` | Anmeldepflicht und Zwei-Faktor-Pflicht für alle Routen außer den ausgenommenen |
-| `prisma/` | `schema.prisma`, `migrations/` (Prisma plus `manual_*.sql`), `seed.ts`, `apply-manual-migrations.js` |
+| `src/middleware.ts` | Anmeldepflicht und Zwei-Faktor-Pflicht für alle Routen außer den ausgenommenen; Mandantenkonten nur im Portal; API-Aufrufe ohne Sitzung erhalten 401 |
+| `prisma/` | `schema.prisma`, `migrations/` (Prisma-Migrationen plus `manual_*.sql` für pgvector-Indizes), `seed.ts`, `apply-manual-migrations.js` |
 | `scripts/` | esbuild-Skripte für Server und Worker |
-| `tests/` | Akzeptanztest der PII-Erkennung |
+| `tests/` | `integration/` (gegen echte PostgreSQL und Redis), `arch/` (Architekturtests), `pii/` (Akzeptanztest der PII-Erkennung); Unit-Tests liegen als `*.test.ts` neben dem Code in `src/` |
 | `docs/` | dieses Handbuch, Screenshots |
-| `.github/workflows/ci.yml` | Typecheck und Tests |
+| `.github/workflows/ci.yml` | Typecheck, Lint, Unit-, Architektur- und Integrationstests, Produktions-Build, Prüfung der Compose-Dateien |
 
 ## Datenmodell
 
@@ -65,7 +65,7 @@ Das `Dockerfile` baut zwar `dist-server/index.js`, startet aber mit `CMD ["node"
 | Portal | `PortalInvite` |
 | Gamification | `UserGameProfile`, `Quest`, `QuestCompletion`, `Bossfight`, `ShopItem`, `WeeklySnapshot` |
 
-Die HNSW-Indizes für die Vektorsuche und einige Tabellen der Gamification stehen nicht in Prisma-Migrationen, sondern in `prisma/migrations/manual_*.sql`. Sie werden beim Containerstart idempotent eingespielt.
+Die Prisma-Migrationen bilden das Schema vollständig ab; die Migration `20261118120000_schema_sync` hat alles nachgeholt, was früher nur per `db push` oder über manuelle SQL-Dateien in Datenbanken kam (Portal, Gamification, Einladungs- und Reset-Felder). Nur die HNSW-Indizes für die Vektorsuche stehen weiterhin in `prisma/migrations/manual_*.sql`. Sie werden beim Containerstart idempotent eingespielt; ein Fehler bricht den Start ab. Ein Integrationstest (`tests/integration/schema-drift.test.ts`) prüft, dass Migrationen und `schema.prisma` übereinstimmen.
 
 ## Fachliche Sperren in der Datenbankschicht
 
@@ -80,7 +80,7 @@ Weitere feste Grenzen stehen im Kopf von `src/lib/ai/provider.ts`: Helena versen
 
 ## Rechte
 
-Die Rechte je Rolle stehen fest im Code (`src/lib/rbac.ts`, `PERMISSIONS`) und sind nicht konfigurierbar. API-Routen prüfen sie mit `requireAuth`, `requireRole`, `requirePermission` und `requireAkteAccess`. Der Admin-Bereich prüft die Rolle zusätzlich im Layout (`src/app/(dashboard)/admin/layout.tsx`). Einzelheiten für Anwender: [Kapitel 15](15-benutzer-und-rollen.md).
+Die Rechte je Rolle stehen fest im Code (`src/lib/rbac.ts`, `PERMISSIONS`) und sind nicht konfigurierbar. API-Routen prüfen sie mit `requireAuth`, `requireRole`, `requirePermission` und `requireAkteAccess` (wertet auch `requireEdit` und `requireDelete` aus). Listen und Suchen filtern zentral nach Aktenrechten (`aktenListWhere`, `ticketAccessWhere`, Volltextsuche nur über `searchDokumenteForUser`). Löschen ohne Aktenbezug sperrt `loeschenVerweigert()` für Rollen ohne `canLoeschen`. Die Middleware hält Mandantenkonten aus allen Bereichen außerhalb des Portals heraus, das Dashboard-Layout sperrt sie zusätzlich. Der Admin-Bereich prüft die Rolle zusätzlich im Layout (`src/app/(dashboard)/admin/layout.tsx`). Architekturtests in `tests/arch/` prüfen, dass jede Route mit Aktenbezug und jeder DELETE-Handler eine solche Prüfung enthält. Einzelheiten für Anwender: [Kapitel 15](15-benutzer-und-rollen.md).
 
 ## Helena in Kürze
 
@@ -106,10 +106,11 @@ Voraussetzungen: Node.js 20, npm, Docker.
    docker compose up -d db redis minio meilisearch
    ```
    OnlyOffice, Stirling-PDF und Ollama brauchen Sie nur, wenn Sie diese Bereiche anfassen.
-3. `.env` aus `.env.example` anlegen. Die Vorlage ist auf `localhost` ausgelegt. Für Ollama auf dem eigenen Rechner `OLLAMA_URL=http://localhost:11434`, für OnlyOffice in Docker `APP_INTERNAL_URL=http://host.docker.internal:3000` (macOS/Windows).
+   Die Compose-Datei verlangt dafür eine `.env` mit allen Geheimnissen (Schritt 3 vorher ausführen).
+3. `.env` mit `./setup.sh` (Start ablehnen) oder aus `.env.example` anlegen. Der Abschnitt „Nur lokale Entwicklung“ ist auf `localhost` ausgelegt; `DATABASE_URL` und `REDIS_URL` müssen die Passwörter aus `POSTGRES_PASSWORD` und `REDIS_PASSWORD` enthalten (`setup.sh` trägt sie selbst ein). Für Ollama auf dem eigenen Rechner `OLLAMA_URL=http://localhost:11434`, für OnlyOffice in Docker `APP_INTERNAL_URL=http://host.docker.internal:3000` (macOS/Windows).
 4. Datenbank aufbauen, manuelle SQL einspielen, Beispieldaten anlegen:
    ```bash
-   npx prisma migrate deploy && npm run db:push
+   npx prisma migrate deploy
    node prisma/apply-manual-migrations.js
    npm run db:seed
    ```
@@ -130,25 +131,47 @@ Die Skripte aus `package.json`:
 | `build:server`, `build:worker`, `build:custom` | esbuild nach `dist-server/` bzw. `dist-worker/` | Bündel für den eigenen Server und den Worker |
 | `lint` | `next lint` | ESLint |
 | `db:migrate` | `prisma migrate dev` | neue Migration erzeugen |
-| `db:push` | `prisma db push` | Schema ohne Migration übernehmen |
+| `db:push` | `prisma db push` | Schema ohne Migration übernehmen; nur für Experimente, nicht für Datenbanken, die mit Migrationen weiterlaufen sollen |
 | `db:seed` | `prisma db seed` (`tsx prisma/seed.ts`) | Beispieldaten |
 | `db:studio` | `prisma studio` | Datenbank im Browser ansehen |
 | `db:generate` | `prisma generate` | Prisma-Client erzeugen |
-| `test` / `test:watch` | `vitest run` / `vitest` | Unit-Tests |
+| `test` / `test:watch` | `vitest run` / `vitest` | Unit- und Architekturtests |
+| `test:integration` | `vitest run --config vitest.integration.config.ts` | Integrationstests gegen PostgreSQL und Redis |
 
-Für Schemaänderungen: Modell in `schema.prisma` ändern, `npm run db:migrate -- --name <beschreibung>` ausführen und die erzeugte Migration mit einchecken. Die Lücken in den bisherigen Migrationen (siehe [Kapitel 23](23-einschraenkungen-und-fragen.md)) sollen dabei nicht größer werden.
+Für Schemaänderungen: Modell in `schema.prisma` ändern, `npm run db:migrate -- --name <beschreibung>` ausführen und die erzeugte Migration mit einchecken. Nie `db push` statt einer Migration verwenden: Der Schema-Drift-Test der Integrationstests schlägt dann fehl.
 
 ## Tests
 
-Unit-Tests laufen mit vitest (`vitest.config.ts`: Umgebung `node`, Alias `@` auf `src`). Stand dieses Handbuchs: 15 Testdateien, **442 Tests bestanden, 10 übersprungen**, Laufzeit wenige Sekunden. Abgedeckt sind vor allem Fristenrechner, RVG-Berechnung, Rechnungen und E-Rechnung, Aktenkonto, DATEV-Export, XJustiz, beA-Hilfen, Helena-Bausteine, Gamification, Systemwarnungen und TOTP. Der Akzeptanztest der PII-Erkennung in `tests/pii/` braucht ein laufendes Ollama und läuft nur mit `RUN_OLLAMA_TESTS=1`, sonst wird er übersprungen. Oberflächen- und End-to-End-Tests gibt es nicht. Gemessen an der Codegröße ist die Abdeckung gering.
+Es gibt zwei Testläufe mit vitest:
+
+**Unit- und Architekturtests** (`vitest.config.ts`: Umgebung `node`, Alias `@` auf `src`, Integrationstests ausgeschlossen). Stand dieses Handbuchs: 26 Testdateien, **599 Tests bestanden, 10 übersprungen**, Laufzeit rund 15 Sekunden. Abgedeckt sind vor allem Fristenrechner und Feiertage, RVG-Berechnung, Rechnungen und E-Rechnung, Aktenkonto, DATEV-Export, XJustiz, beA-Hilfen, Helena-Bausteine, Gamification, Systemwarnungen, TOTP, die Middleware und die Zugriffsregeln. Architekturtests prüfen den Code selbst, z. B. dass jede API-Route mit Aktenbezug den Aktenzugriff prüft und jeder DELETE-Handler das Löschrecht. Der Akzeptanztest der PII-Erkennung in `tests/pii/` braucht ein laufendes Ollama und läuft nur mit `RUN_OLLAMA_TESTS=1`, sonst wird er übersprungen.
+
+**Integrationstests** (`vitest.integration.config.ts`, Dateien in `tests/integration/`) laufen gegen eine echte PostgreSQL-Datenbank mit pgvector und gegen Redis. Die Vorbereitung leert die Testdatenbank und baut das Schema genau wie der Container auf (`prisma migrate deploy` plus manuelle SQL). Darunter sind der **Schema-Drift-Test** (Migrationen ergeben exakt `schema.prisma`) und der **Raw-SQL-Test** (jede rohe SQL-Abfrage im Code wird per `PREPARE` gegen das echte Schema geprüft), dazu Tests für Aktenzugriff, Löschrecht, Finanzen, Kalender und Fristen, E-Mail-Versand, beA-Versand, Portal, BI, DSGVO, Vorlagen, Helena und die j-lawyer-Migration. Stand dieses Handbuchs: 22 Testdateien, 188 Tests.
+
+Oberflächen- und End-to-End-Tests im Browser gibt es nicht.
 
 ```bash
-npm test                 # einmal
+npx vitest run           # Unit- und Architekturtests (wie npm test)
 npm run test:watch       # bei Änderungen
 npx tsc --noEmit         # Typecheck
+
+# Integrationstests: leere Testdatenbank, wird dabei gelöscht!
+TEST_DATABASE_URL=postgresql://test:test@localhost:55433/test \
+TEST_REDIS_URL=redis://localhost:6379 \
+  npm run test:integration
 ```
 
-**CI:** `.github/workflows/ci.yml` („Tests & Typecheck“) läuft bei jedem Push auf `main` und bei Pull Requests auf `ubuntu-latest` mit Node 20: `npm ci`, `npx prisma generate`, `npx tsc --noEmit`, `npx vitest run`. Zeitlimit 20 Minuten. Docker-Build und Lint laufen in der CI nicht.
+Verwenden Sie für `TEST_DATABASE_URL` nie die Datenbank der Kanzlei: Die Vorbereitung löscht ihren Inhalt.
+
+**CI:** `.github/workflows/ci.yml` („Tests & Typecheck“) läuft bei jedem Push auf `main` und bei Pull Requests auf `ubuntu-latest` mit Node 20, in drei Jobs:
+
+| Job | Inhalt |
+| --- | --- |
+| **Typecheck, Lint, Unit-Tests** (`unit`) | `npm ci`, `npx prisma generate`, `npx tsc --noEmit`, `npx next lint --max-warnings 347`, `npx vitest run` |
+| **Integrationstests (PostgreSQL + Redis)** (`integration`) | Dienste `pgvector/pgvector:pg16` und `redis:7-alpine`, dann `npm run test:integration` (inkl. Schema-Drift) |
+| **Produktions-Build und Compose-Dateien** (`build`) | `npm run build`, `npm run build:custom` (Server- und Worker-Bündel), `docker compose config --quiet` für `docker-compose.yml`, dieselbe mit `docker-compose.gpu.yml` und `docker-compose.portainer.yml` |
+
+Das Docker-Image selbst baut die CI nicht. Die Lint-Schwelle von 347 Warnungen entspricht dem heutigen Bestand; neue Warnungen lassen den Job scheitern.
 
 ## Beitragen
 
@@ -156,7 +179,7 @@ AI-Lawyer steht unter der MIT-Lizenz. Eine eigene Beitragsrichtlinie gibt es nic
 
 1. Fehler oder Vorschlag zuerst als Issue im Repository beschreiben.
 2. Änderungen auf einem eigenen Branch, kleine Commits.
-3. Vor dem Pull Request lokal `npx tsc --noEmit` und `npm test` ausführen; die CI prüft dasselbe.
+3. Vor dem Pull Request lokal `npx tsc --noEmit`, `npm test` und nach Möglichkeit `npm run test:integration` ausführen; die CI prüft dasselbe.
 4. Oberflächentexte auf Deutsch, Kommentare im Code auf Englisch, wie im Bestand.
 5. Für Fachlogik mit Rechtsbezug (Fristen, Gebühren, Freigaben) Tests mitliefern.
 6. Keine Zugangsdaten oder Mandantendaten in Commits, Issues oder Testdaten.

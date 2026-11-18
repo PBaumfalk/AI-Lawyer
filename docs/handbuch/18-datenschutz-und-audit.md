@@ -17,11 +17,11 @@ AI-Lawyer läuft auf Ihren eigenen Servern. Ohne Cloud-KI verlassen Akteninhalte
 | Redis | Warteschlangen der Hintergrundaufgaben, kurzlebig |
 | Protokolldateien | Technische Logs (siehe [Logs](#logs)) |
 
-Wer als Kanzleimitarbeiter angemeldet ist, sieht alle Kontakte. Akten sieht man nur mit Zugriff ([Kapitel 15](15-benutzer-und-rollen.md#wie-aktenzugriff-entsteht)).
+Wer als Kanzleimitarbeiter angemeldet ist, sieht alle Kontakte. Akten, ihre Dokumente und Treffer der Volltextsuche sieht man nur mit Zugriff auf die Akte ([Kapitel 15](15-benutzer-und-rollen.md#wie-aktenzugriff-entsteht)). Mandantenkonten kommen nur ins Mandantenportal.
 
 ## Verschlüsselung
 
-**Zugangsdaten** zu fremden Systemen speichert AI-Lawyer verschlüsselt, mit AES-256-GCM. Der Schlüssel wird aus der Umgebungsvariablen `EMAIL_ENCRYPTION_KEY` abgeleitet (mindestens 32 Zeichen).
+**Zugangsdaten und Geheimnisse** speichert AI-Lawyer verschlüsselt, mit AES-256-GCM. Der Schlüssel wird aus der Umgebungsvariablen `EMAIL_ENCRYPTION_KEY` abgeleitet (mindestens 32 Zeichen).
 
 | Feld | Verschlüsselt |
 | --- | --- |
@@ -30,12 +30,12 @@ Wer als Kanzleimitarbeiter angemeldet ist, sieht alle Kontakte. Akten sieht man 
 | j-lawyer-Passwort | ja, AES-256-GCM |
 | Anmeldepasswörter der Benutzer | nicht umkehrbar gespeichert (bcrypt-Hash) |
 | 2FA-Backup-Codes | bcrypt-Hash |
-| 2FA-Geheimnis (TOTP) | **nein**, im Klartext in der Datenbank |
-| API-Schlüssel des KI-Anbieters | **nein**, im Klartext in den Systemeinstellungen |
+| 2FA-Geheimnis (TOTP) | ja, AES-256-GCM (vor der Umstellung gespeicherte Geheimnisse bleiben im Klartext lesbar, bis 2FA neu eingerichtet wird) |
+| API-Schlüssel des KI-Anbieters | ja, AES-256-GCM; wird nie an den Browser ausgeliefert, nicht exportiert und nicht im Klartext über Redis verteilt |
 
 Wichtig für die IT:
 
-- Geht `EMAIL_ENCRYPTION_KEY` verloren oder wird er geändert, lassen sich die gespeicherten Passwörter nicht mehr entschlüsseln. Postfächer, CalDAV-Konten und j-lawyer-Zugang müssen dann neu eingegeben werden. Den Schlüssel deshalb mit der Sicherung aufbewahren, aber getrennt von ihr ([Kapitel 21](21-betrieb-und-sicherung.md)).
+- Geht `EMAIL_ENCRYPTION_KEY` verloren oder wird er geändert, lassen sich die gespeicherten Passwörter und Geheimnisse nicht mehr entschlüsseln. Postfächer, CalDAV-Konten, j-lawyer-Zugang und KI-API-Schlüssel müssen dann neu eingegeben werden; wer 2FA nutzt, kann sich nicht mehr mit der App anmelden, und die IT muss 2FA zurücksetzen ([Kapitel 15](15-benutzer-und-rollen.md#backup-codes-und-verlorenes-handy)). Den Schlüssel deshalb mit der Sicherung aufbewahren, aber getrennt von ihr ([Kapitel 21](21-betrieb-und-sicherung.md)).
 - **Akteninhalte, Dokumente und Kontaktdaten sind nicht feldweise verschlüsselt.** Die Datenbank und der Dokumentenspeicher liegen im Klartext auf den Datenträgern. Schutz bieten hier nur Festplattenverschlüsselung, Zugriffsschutz des Servers und verschlüsselte Sicherungen. Das ist Aufgabe des Betriebs.
 
 ## Audit-Trail
@@ -122,7 +122,7 @@ Was dabei passiert:
 
 - Name wird zu „Geloeschter Mandant“, bei Organisationen zu „Anonymisierte Organisation“.
 - Geleert werden unter anderem E-Mail, Telefonnummern, Geburtsdaten, Anschrift, Beruf, Steuer- und Registerdaten, Bankverbindung, beA-SAFE-ID, Mandantennummer, Notizen, Tags und eigene Felder. Weitere Adressen werden geleert und „Anonymisiert“ genannt.
-- In Protokolleinträgen der zugehörigen Akten wird der Name durch „Anonymisiert“ ersetzt.
+- In Protokolleinträgen der zugehörigen Akten wird der Name durch „Anonymisiert“ ersetzt, und zwar in jedem Textwert der Protokolldetails.
 
 **Aufbewahrungsfrist.** AI-Lawyer rechnet zehn Jahre ab dem **Anlagedatum des Kontakts**, nicht ab Mandatsende. Vor Ablauf ist der Knopf gesperrt („Aufbewahrungsfrist laeuft noch - Admin-Override erforderlich“). Sie können ihn mit dem Haken **Aufbewahrungsfrist ueberschreiben** („Ich bestaetige, dass eine vorzeitige Anonymisierung rechtlich zulaessig ist.“) freigeben. Ob die Frist im Einzelfall länger oder kürzer ist (§ 50 BRAO, steuerliche Fristen), entscheidet die Kanzlei, nicht das Programm.
 
@@ -130,14 +130,14 @@ Was dabei passiert:
 
 Die Liste **Anonymisierte Kontakte** zeigt die letzten 50 Vorgänge mit Grund und, falls die Frist überschrieben wurde, dem Hinweis **Override**.
 
-**Bekannter Fehler:** Die Kontaktsuche auf dieser Seite filtert derzeit nicht nach dem eingegebenen Begriff, sondern zeigt die ersten zehn Kontakte in alphabetischer Reihenfolge. Prüfen Sie vor **PDF generieren** und **Vorschau** genau, ob Sie den richtigen Kontakt erwischt haben. Steht er nicht in der Liste, ist er auf dieser Seite derzeit nicht erreichbar.
+Die Kontaktsuche in beiden Bereichen durchsucht dieselben Felder wie die Kontaktliste (u. a. Name, Firma, E-Mail, Ort, Telefon, Mandantennummer) und zeigt bis zu zehn Treffer. Prüfen Sie vor **PDF generieren** und **Vorschau** trotzdem genau, ob Sie den richtigen Kontakt gewählt haben, etwa bei Namensgleichheit.
 
 ### Einwilligungen am Kontakt
 
 Im Kontakt gibt es die Haken **E-Mail-Kommunikation erlaubt**, **Newsletter-Versand erlaubt** und **KI-Verarbeitung erlaubt** ([Kapitel 4](04-kontakte.md)).
 
-- **E-Mail-Kommunikation erlaubt** wirkt: Benachrichtigungen aus dem Mandantenportal gehen nur an Kontakte mit diesem Haken.
-- **KI-Verarbeitung erlaubt** wird gespeichert und angezeigt, **hat aber derzeit keine Wirkung**. Helena verarbeitet Akten auch dann, wenn der Haken fehlt.
+- **E-Mail-Kommunikation erlaubt** wirkt: Eine Einladung ins Mandantenportal und Benachrichtigungen aus dem Portal gehen nur an Kontakte mit diesem Haken ([Kapitel 12](12-mandantenportal.md)).
+- **KI-Verarbeitung erlaubt** wird gespeichert und angezeigt, **hat aber keine Wirkung**. Helena verarbeitet Akten auch dann, wenn der Haken fehlt. Ob und wie die Kanzlei KI-Einwilligungen einholt und beachtet, muss sie organisatorisch regeln ([Kapitel 23](23-einschraenkungen-und-fragen.md)).
 
 ## Datenflüsse der KI
 
@@ -165,7 +165,7 @@ Mandanten sehen im Portal nur, was für sie bestimmt ist ([Kapitel 12](12-mandan
 - Fremde Akten liefern *Nicht gefunden*, nicht *Keine Berechtigung*.
 - Benachrichtigungs-E-Mails enthalten keine Aktendetails, Dokumentnamen oder Nachrichteninhalte.
 
-**Bekannte Lücke:** Ein Mandantenkonto ist technisch ein normales Benutzerkonto. Der Kanzleibereich (`/dashboard` usw.) und einige Schnittstellen, die nur die Anmeldung prüfen, sind für angemeldete Mandanten derzeit nicht gesperrt. Akten bleiben durch den Aktenfilter geschützt, die Kontaktliste der Kanzlei aber nicht. Bis das behoben ist, sollten Sie das Portal nur mit dieser Einschränkung im Blick einsetzen ([Kapitel 23](23-einschraenkungen-und-fragen.md)).
+- Mandantenkonten kommen ausschließlich ins Portal. Ruft ein Mandant eine Seite des Kanzleibereichs auf (auch nach Anmeldung über die Kanzlei-Anmeldung), leitet AI-Lawyer ihn ins Portal um; Kanzlei-Schnittstellen antworten mit *Keine Berechtigung*. Die Kontaktliste, die Volltextsuche und das BI-Dashboard der Kanzlei sind für Mandanten damit gesperrt.
 
 ## Gamification
 
@@ -197,7 +197,7 @@ Logs können Aktenzeichen, Dateinamen und Fehlermeldungen mit Inhalten enthalten
 | *Grund ist erforderlich* | Feld **Grund der Anonymisierung** leer. | Grund eintragen. |
 | *Kontakt nicht gefunden* | Der Kontakt wurde inzwischen gelöscht oder die Auswahl ist veraltet. | Seite neu laden, erneut suchen. |
 | *Vorschau fehlgeschlagen* / *Anonymisierung fehlgeschlagen* | Server- oder Netzwerkfehler. | Erneut versuchen; bleibt es, Systemprotokoll prüfen. |
-| Gesuchter Kontakt erscheint nicht | Bekannter Fehler der Suche auf der DSGVO-Seite. | Siehe [Anonymisierung](#anonymisierung-löschkonzept). |
+| Gesuchter Kontakt erscheint nicht | Weniger als zwei Zeichen eingegeben, oder mehr als zehn Treffer. | Suchbegriff verlängern, z. B. Nachname und Ort oder die E-Mail-Adresse. |
 | Export des Audit-Trails passiert nicht | Der Export ist fehlgeschlagen, ohne Meldung. | Zeitraum verkleinern, erneut versuchen. |
 | *EMAIL_ENCRYPTION_KEY muss mindestens 32 Zeichen lang sein. Bitte in .env setzen.* | Schlüssel fehlt oder ist zu kurz. | IT setzt den Schlüssel ([Kapitel 20](20-konfiguration.md)). |
 

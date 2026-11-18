@@ -38,7 +38,8 @@ ok "Docker daemon running"
 echo ""
 
 # ─── Disk space ───────────────────────────────────────────────────────────────
-AVAILABLE_GB=$(df -BG . | awk 'NR==2 {gsub("G",""); print $4}')
+# POSIX df (-P, 1K blocks) works on Linux and macOS; df -BG is GNU-only.
+AVAILABLE_GB=$(df -Pk . | awk 'NR==2 {print int($4/1048576)}')
 if [ "$AVAILABLE_GB" -lt 15 ]; then
   warn "Less than 15 GB free (${AVAILABLE_GB} GB). Docker images + Ollama model require ~15-20 GB."
 else
@@ -213,7 +214,7 @@ FINAL_URL=$(grep NEXTAUTH_URL .env | cut -d'"' -f2 | head -1)
 echo -e "${BOLD}Fertig.${NC}"
 echo ""
 echo -e "  App:           ${GREEN}${FINAL_URL}${NC}"
-echo -e "  MinIO Console: ${FINAL_URL%:*}:9001"
+echo -e "  MinIO-Konsole: nur auf dem Server erreichbar (http://127.0.0.1:9001)"
 echo ""
 echo -e "  ${BOLD}Zugangsdaten${NC}"
 echo -e "  admin@kanzlei.de          → ADMIN"

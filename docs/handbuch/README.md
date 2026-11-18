@@ -5,11 +5,14 @@ der KI-Kollegin Helena. Teil A ist für alle, die in der Kanzlei mit AI-Lawyer
 arbeiten. Technische Vorkenntnisse sind dafür nicht nötig. Teil B richtet sich an
 die Kanzlei-Admins, Teil C an die IT, die AI-Lawyer installiert und betreibt.
 
-> AI-Lawyer ist noch in Entwicklung (Version 0.9) und **nicht für echte
-> Mandantendaten freigegeben**: Unter anderem prüfen Aktenliste und Aktenansicht
-> derzeit keine Zugriffsrechte. Was bekannt nicht oder nur teilweise
-> funktioniert, steht in [Kapitel 23](23-einschraenkungen-und-fragen.md). Die
-> Kapitel beschreiben jeweils offen, wo eine Funktion noch fehlt.
+> AI-Lawyer ist noch in Entwicklung (Version 0.9) und **noch nicht für den
+> Produktivbetrieb freigegeben**. Die früher hier genannte Lücke bei den
+> Zugriffsrechten ist geschlossen: Aktenliste, Aktenansicht, Suche, Helena und
+> die übrigen Schnittstellen prüfen die Aktenrechte, Mandantenkonten kommen nur
+> ins Portal. Offen sind unter anderem beA (die Bibliothek von bea.expert fehlt)
+> und eine Benutzerverwaltung in der Oberfläche. Was bekannt nicht oder nur
+> teilweise funktioniert, steht in [Kapitel 23](23-einschraenkungen-und-fragen.md).
+> Die Kapitel beschreiben jeweils offen, wo eine Funktion noch fehlt.
 
 ![Dashboard mit Tagesübersicht](../screenshots/dashboard.png)
 
@@ -58,13 +61,16 @@ die Kanzlei-Admins, Teil C an die IT, die AI-Lawyer installiert und betreibt.
 1. AI-Lawyer im Browser öffnen und anmelden ([Kapitel 2](02-erste-schritte.md)).
 2. Links auf **Akten** und dann **Neue Akte** klicken. Kurzrubrum und Sachgebiet
    eintragen, **Akte anlegen** ([Kapitel 3](03-akten.md)).
-3. Unter **Kontakte** den Mandanten anlegen ([Kapitel 4](04-kontakte.md)).
+3. Unter **Kontakte** den Mandanten anlegen ([Kapitel 4](04-kontakte.md)) und ihn
+   in der Akte unter **Beteiligte** mit **Hinzufügen** als Mandanten eintragen.
+   Dabei läuft die Kollisionsprüfung ([Kapitel 3](03-akten.md)).
 4. Im **Kalender** eine Frist zur Akte anlegen und das Datum prüfen ([Kapitel 6](06-fristen-und-kalender.md)).
 5. Links **Helena** öffnen, die Akte auswählen und um eine Zusammenfassung bitten
    ([Kapitel 9](09-helena.md)).
 
 ## Für die IT in einem Satz
 
-`git clone`, `./setup.sh` ausführen (fragt Adresse und KI-Anbieter ab und erzeugt
-alle Geheimnisse), dann die Beispielpasswörter ändern. Vorher bitte die Hinweise
-zu Migrationen und MinIO-Image in [Kapitel 19](19-installation.md) lesen.
+`git clone`, `./setup.sh` ausführen (fragt Adresse und KI-Anbieter ab, erzeugt
+alle Geheimnisse in `.env`, erkennt eine NVIDIA-GPU und startet den Stack), dann
+die Passwörter der Beispielkonten ändern. Einzelheiten in
+[Kapitel 19](19-installation.md).

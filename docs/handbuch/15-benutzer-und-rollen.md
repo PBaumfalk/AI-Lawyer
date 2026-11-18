@@ -59,14 +59,14 @@ Wo das im Programm tatsächlich geprüft wird:
 | Berechtigung | Wirkt auf |
 | --- | --- |
 | **Freigeben** | Dokument freigeben und Freigabe zurücknehmen. Ausnahme: Vorlagen freigeben dürfen nur Administrator und Anwalt/Anwältin. |
-| **Loeschen** | Dokumente löschen. |
+| **Loeschen** | Alle Löschvorgänge: Dokumente, Kalendereinträge und Fristen, Beteiligte und Normen einer Akte, Kontakte samt Anschriften, Beziehungen, Vollmachten und KYC-Angaben, Rechnungen, Tickets, Vorlagen, Briefköpfe, Fristen-Vorlagen, Ordner-Schemata, Dokument-Tags und die Zuordnung einer E-Mail zu einer Akte. Sekretariat und Mandanten erhalten beim Löschen *Keine Berechtigung*. |
 | **beA senden** | beA-Nachrichten senden und ändern. Das elektronische Empfangsbekenntnis (eEB) dürfen nur Anwalt/Anwältin und Administrator abgeben ([Kapitel 8](08-bea.md)). |
 | **beA lesen** | beA-Posteingang, Nachrichten öffnen, automatische Zuordnung. |
 | **KI nutzen** | KI-Entwürfe. Welche Werkzeuge Helena verwenden darf, hängt zusätzlich von der Rolle ab: Sekretariat darf nur lesen und Notizen anlegen ([Kapitel 9](09-helena.md)). |
 | **Administration** | Der gesamte Admin-Bereich. |
-| **Einstellungen** | Für das Sekretariat blendet die Seitenleiste **Einstellungen** aus. Die Seite selbst sperrt der Code nicht. Die meisten Reiter dort sieht ohnehin nur der Administrator. |
+| **Einstellungen** | Für das Sekretariat blendet die Seitenleiste **Einstellungen** aus. Die Seite selbst sperrt der Code nicht; die meisten Reiter dort sieht ohnehin nur der Administrator. Die kanzleiweiten Tag-Kategorien für Dokumente (anlegen, ändern, löschen) setzen dieses Recht voraus. |
 | **Akte erstellen** | Neue Akte anlegen. |
-| **Akte bearbeiten** | Steht in der Matrix, wird im Code derzeit nicht gesondert geprüft. Maßgeblich ist der Aktenzugriff (nächster Abschnitt). |
+| **Akte bearbeiten** | Ändernde Aktionen in einer Akte setzen dieses Recht zusätzlich zum Aktenzugriff (nächster Abschnitt) voraus. Alle Kanzleirollen haben es. |
 
 Daneben gibt es Funktionen, die fest dem Administrator vorbehalten sind, etwa Buchungsperioden und Kostenstellen ([Kapitel 10](10-zeiterfassung-und-abrechnung.md)), Sonder-Quests ([Kapitel 14](14-gamification.md)) und das Neuindizieren von Dokumenten.
 
@@ -80,11 +80,11 @@ Wer welche Akten sieht, regelt nicht die Rolle allein, sondern die Zuordnung. Es
 2. **Dezernat.** Wer Mitglied eines Dezernats ist, sieht alle Akten, die diesem Dezernat zugewiesen sind (siehe unten).
 3. **Administrator.** Sieht immer alle Akten.
 
-Alle anderen bekommen eine Akte, auf die sie keinen Zugriff haben, gar nicht erst angezeigt. Ruft jemand sie über die Schnittstelle auf, lautet die Antwort *Nicht gefunden*, nicht *Keine Berechtigung*, damit nicht einmal die Existenz der Akte verraten wird.
+Alle anderen bekommen eine Akte, auf die sie keinen Zugriff haben, gar nicht erst angezeigt. Das gilt überall: in der Aktenliste, in Auswahllisten, in der Suche und im BI-Dashboard ([Kapitel 13](13-suche-und-auswertung.md)), bei Tickets und in allen Funktionen innerhalb der Akte (Dokumente, Kalender, Rechnungen, Aktenkonto, Helena, Zeiterfassung, beA-Zuordnung). Ruft jemand die Detailseite einer fremden Akte (`/akten/<ID>`) direkt auf, erscheint die Seite „nicht gefunden“; die Schnittstelle antwortet *Nicht gefunden*, nicht *Keine Berechtigung*, damit nicht einmal die Existenz der Akte verraten wird.
 
-**Wichtig:** Eine Akte ohne eingetragenen Anwalt, ohne Sachbearbeiter/in und ohne Dezernat sieht nur der Administrator. Das betrifft insbesondere alle Akten aus der j-lawyer-Übernahme ([Kapitel 17](17-migration-aus-j-lawyer.md)).
+Mandantenkonten kommen ausschließlich ins Mandantenportal ([Kapitel 12](12-mandantenportal.md)). Meldet sich ein Mandant über die Kanzlei-Anmeldung an oder ruft er eine Kanzleiseite auf, leitet AI-Lawyer ihn ins Portal um; Kanzlei-Schnittstellen antworten ihm mit *Keine Berechtigung*.
 
-**Bekannte Lücke:** Die Aktenliste, die Suche und die Schnittstellen filtern nach diesen Regeln. Die Detailseite einer Akte (`/akten/<ID>`) prüft den Zugriff derzeit nicht selbst. Wer die genaue Adresse einer fremden Akte kennt, kann sie öffnen.
+**Wichtig:** Eine Akte ohne eingetragenen Anwalt, ohne Sachbearbeiter/in und ohne Dezernat sieht nur der Administrator. Bei der j-lawyer-Übernahme ordnet AI-Lawyer Anwalt und Sachbearbeiter/in per Benutzerabgleich oder dem gewählten Standard-Verantwortlichen zu ([Kapitel 17](17-migration-aus-j-lawyer.md)); prüfen Sie die Zuordnung trotzdem nach der Übernahme.
 
 ### Zugriff prüfen
 
@@ -158,9 +158,8 @@ Die Rollennamen sind die technischen: `ADMIN`, `ANWALT`, `SACHBEARBEITER`, `SEKR
 
 So wirkt die Pflicht: Wer zu einer genannten Rolle gehört und 2FA noch nicht eingerichtet hat, wird bei jedem Seitenaufruf auf die Seite **Zwei-Faktor-Authentifizierung erforderlich** umgeleitet („Ihre Rolle erfordert eine aktive Zwei-Faktor-Authentifizierung.“). Nur die Einstellungen bleiben erreichbar.
 
-1. **Zu den Sicherheitseinstellungen** klicken.
-2. Die Einstellungen öffnen sich auf dem Reiter **Allgemein**. Auf den Reiter **Sicherheit** wechseln (der direkte Sprung dorthin funktioniert derzeit nicht).
-3. **2FA aktivieren**, QR-Code scannen, Code eingeben, **Bestätigen**, Backup-Codes sichern, **Fertig**.
+1. **Zu den Sicherheitseinstellungen** klicken. Die Einstellungen öffnen sich direkt auf dem Reiter **Sicherheit**.
+2. **2FA aktivieren**, QR-Code scannen, Code eingeben, **Bestätigen**, Backup-Codes sichern, **Fertig**.
 
 Danach gilt die Pflicht sofort als erfüllt, ohne neue Anmeldung.
 
@@ -172,7 +171,9 @@ Hinweise:
 
 ### Backup-Codes und verlorenes Handy
 
-Beim Einrichten erzeugt AI-Lawyer zehn Backup-Codes aus je acht Zeichen (Großbuchstaben und Ziffern). Jeder Code gilt einmal. Bei der Anmeldung führt **Backup-Code verwenden** zur Eingabe. Den Code ohne Bindestrich und in Großbuchstaben eingeben, auch wenn das Feld „xxxx-xxxx“ als Muster zeigt.
+Beim Einrichten erzeugt AI-Lawyer zehn zufällige Backup-Codes aus je acht Zeichen (Großbuchstaben und Ziffern). Jeder Code gilt einmal. Bei der Anmeldung führt **Backup-Code verwenden** zur Eingabe. Groß- und Kleinschreibung, Leerzeichen und Bindestriche spielen dabei keine Rolle; „abcd-1234“ wird wie „ABCD1234“ angenommen.
+
+Das Geheimnis der Authenticator-App speichert AI-Lawyer verschlüsselt in der Datenbank, die Backup-Codes nur als Hash.
 
 Neue Codes erzeugt jeder Benutzer selbst unter **Einstellungen → Sicherheit → Backup-Codes neu generieren** (mit aktuellem App-Code).
 

@@ -1,6 +1,6 @@
 # 8 — beA
 
-Das besondere elektronische Anwaltspostfach (beA) ist in AI-Lawyer als Bereich **beA** angelegt: Anmeldung, Posteingang und Postausgang, Zuordnung zu Akten, Versand und Empfangsbekenntnis. Dieses Kapitel beschreibt, was davon heute tatsächlich funktioniert. Die kurze Antwort: **Ohne eine eingebundene, kostenpflichtige bea.expert-Bibliothek funktioniert die Verbindung zum beA nicht, und einige Teile sind auch mit ihr noch unfertig.** Verlassen Sie sich für Fristsachen bis auf Weiteres auf Ihre bisherige beA-Software.
+Das besondere elektronische Anwaltspostfach (beA) ist in AI-Lawyer als Bereich **beA** angelegt: Anmeldung, Posteingang und Postausgang, Zuordnung zu Akten, Versand und Empfangsbekenntnis. Dieses Kapitel beschreibt, was davon heute tatsächlich funktioniert. Die kurze Antwort: **Ohne eine eingebundene, kostenpflichtige bea.expert-Bibliothek funktioniert die Verbindung zum beA nicht.** AI-Lawyer meldet das ehrlich: Ohne Bibliothek ist keine Anmeldung möglich, und eine Nachricht oder ein Empfangsbekenntnis wird nur dann als erledigt gespeichert, wenn bea.expert den Vorgang bestätigt hat. Auch mit Bibliothek sind einige Teile noch unvollständig (etwa der Abruf von Nachrichteninhalten). Verlassen Sie sich für Fristsachen bis auf Weiteres auf Ihre bisherige beA-Software.
 
 ## Wie die Anbindung gedacht ist
 
@@ -19,9 +19,11 @@ AI-Lawyer spricht nicht selbst mit dem beA-Server der BRAK. Es nutzt die Program
 
 | Aktion | Rollen |
 | --- | --- |
-| beA-Bereich öffnen, Nachrichten lesen und Akten zuordnen | alle Kanzleirollen (Admin, Anwalt, Sachbearbeiter, Sekretariat) |
+| beA-Bereich öffnen, Nachrichten lesen und Akten zuordnen | alle Kanzleirollen (Admin, Anwalt, Sachbearbeiter, Sekretariat) mit dem Recht *beA lesen* |
 | Neue Nachricht schreiben (Knopf **Neue Nachricht**, Seite `/bea/compose`) | nur **Anwalt** |
 | Empfangsbekenntnis bestätigen | nur **Anwalt** in der Oberfläche (die Schnittstelle erlaubt zusätzlich den Admin) |
+
+Die beA-Liste zeigt allen Rollen mit *beA lesen* sämtliche gespeicherten beA-Nachrichten der Kanzlei, unabhängig davon, ob sie auf die zugeordnete Akte zugreifen dürfen ([Kapitel 23](23-einschraenkungen-und-fragen.md)). Wer eine Nachricht einer Akte zuordnet, braucht dagegen Zugriff auf diese Akte.
 
 Eine Besonderheit: Beim **Synchronisieren** werden neue Nachrichten in AI-Lawyer gespeichert. Das gelingt nach aktuellem Stand nur Admins und Anwälten. Bei Sachbearbeitung und Sekretariat werden neue Nachrichten zwar abgerufen, aber nicht gespeichert, sie sehen nur bereits vorhandene.
 
@@ -45,7 +47,7 @@ Nach der Anmeldung sehen Sie die Reiter **Posteingang** und **Postausgang**, ein
 | **Eingang** | Neu eingegangen. |
 | **Gelesen** | Geöffnet. |
 | **Zugeordnet** | Einer Akte zugeordnet. |
-| **Gesendet** | Von hier verschickt (siehe Warnung unter [Versand](#nachricht-senden)). |
+| **Gesendet** | Von hier verschickt; bea.expert hat den Versand mit einer beA-Nachrichten-ID bestätigt. |
 | **Fehler** | Verarbeitung gescheitert. |
 
 **Synchronisieren** holt die letzten 50 Nachrichten des beA-Posteingangs. Dabei werden derzeit nur **Kopfdaten** übernommen: Betreff, Absender, Empfänger, Datum und ob ein Empfangsbekenntnis angefordert ist. **Nachrichtentext, Anhänge und Prüfprotokoll werden beim Synchronisieren nicht gespeichert.** Lesen Sie den Inhalt deshalb weiterhin in Ihrer beA-Software. Ohne geladene bea.expert-Bibliothek zeigt **Synchronisieren** nur die bereits gespeicherten Nachrichten.
@@ -66,12 +68,13 @@ Wenn AI-Lawyer eine beA-Nachricht speichert, sucht es eine passende Akte, in die
 2. **SAFE-ID des Absenders** gehört zu einem Kontakt, der an einer nicht geschlossenen Akte beteiligt ist: *wahrscheinlich*.
 3. **Gerichtsaktenzeichen** (z. B. `3 Ca 567/25`, `12 U 456/24`) im Text stimmt mit dem Gerichtsaktenzeichen in den Falldaten einer nicht geschlossenen Akte überein: *wahrscheinlich*.
 
-Nach aktuellem Stand ordnet AI-Lawyer die Nachricht nicht nur bei *sicher*, sondern auch bei *wahrscheinlich* direkt zu, und bei mehreren passenden Akten nimmt es die erste. **Prüfen Sie deshalb jede automatisch zugeordnete Nachricht.** Eine falsch zugeordnete Nachricht kann eine Frist in der falschen Akte landen lassen.
+Direkt zugeordnet wird eine Nachricht nur bei einem *sicheren* Treffer; sie erhält dann den Status **Zugeordnet**. Ein *wahrscheinlicher* Treffer (SAFE-ID, Gerichtsaktenzeichen oder mehrere passende Aktenzeichen) bleibt ein Vorschlag: Die Nachricht bleibt **Nicht zugeordnet**, bis jemand sie bestätigt ([Von Hand](#von-hand)). Prüfen Sie trotzdem auch automatisch zugeordnete Nachrichten. Eine falsch zugeordnete Nachricht kann eine Frist in der falschen Akte landen lassen.
 
 ### Von Hand
 
 1. In der Liste bei einer nicht zugeordneten Nachricht **Zuordnen** klicken.
 2. Im Fenster **Nachricht einer Akte zuordnen** entweder **Automatische Zuordnung versuchen** oder eine Akte suchen (**Aktenzeichen oder Rubrum suchen...**) und wählen.
+3. Findet die automatische Zuordnung nur einen *wahrscheinlichen* Treffer, fragt AI-Lawyer nach: *„Zuordnungsvorschlag (nicht eindeutig): … Nachricht dieser Akte zuordnen?“* Erst mit **OK** wird die Nachricht der Akte zugeordnet. Gibt es gar keinen Treffer, nennt AI-Lawyer den Grund.
 
 In der Nachrichtenansicht zeigt das Feld **Akte** bei fehlender Zuordnung **Nicht zugeordnet** mit **Zuordnen**.
 
@@ -81,15 +84,7 @@ Die Kette *Nachricht → Akte → Ticket → Bearbeiter* gibt es derzeit nur im 
 
 ## Nachricht senden
 
-**Achtung, der Versand ist derzeit nicht verlässlich:**
-
-- Die Seite **Neue beA-Nachricht** (`/bea/compose`) bricht nach aktuellem Stand mit einem Fehler ab, weil ihr die beA-Sitzung der Übersichtsseite nicht zur Verfügung steht.
-- Auch wo sie läuft, übergibt AI-Lawyer **keine Anhänge** an bea.expert.
-- Schlägt der Versand bei bea.expert fehl, speichert AI-Lawyer die Nachricht trotzdem als **Gesendet**, zeigt *„Nachricht gesendet – Die Nachricht wurde erfolgreich versendet und gespeichert.“* und setzt die angehängten Dokumente auf **Versendet**.
-
-Diese Erfolgsmeldung ist deshalb **kein Versandnachweis**. Versenden Sie Schriftsätze über Ihre bisherige beA-Software und prüfen Sie dort die Eingangsbestätigung ([Kapitel 23](23-einschraenkungen-und-fragen.md)).
-
-So ist der Ablauf vorgesehen, sobald die Fehler behoben sind:
+Der Versand setzt eine eingebundene bea.expert-Bibliothek und eine aktive beA-Sitzung voraus. Die Sitzung, mit der Sie sich auf der beA-Seite angemeldet haben, gilt auch für **Neue beA-Nachricht** (`/bea/compose`) und die Nachrichtenansicht, solange Sie im selben Tab bleiben.
 
 1. Auf der beA-Seite **Neue Nachricht** klicken (nur Anwälte).
 2. Empfänger über **Name oder SAFE-ID eingeben...** aus den Kontakten wählen oder unter **Oder SAFE-ID direkt eingeben:** eintragen (Form `DE.BRAK....`).
@@ -97,13 +92,21 @@ So ist der Ablauf vorgesehen, sobald die Fehler behoben sind:
 4. Unter **Dokumente anhaengen** mit **Dokument hinzufuegen** Dokumente aus einer Akte wählen. *„Nur freigegebene Dokumente koennen angehaengt werden. Nicht freigegebene Dokumente koennen hier direkt freigegeben werden.“* Nicht freigegebene sind mit **Noch nicht freigegeben** markiert und haben den Knopf **Freigeben**. Geben Sie ein Dokument nur frei, wenn Sie es geprüft haben.
 5. **Senden**.
 
-AI-Lawyer prüft beim Speichern, dass alle Anhänge freigegeben sind. Sonst: *„Nicht freigegebene Dokumente koennen nicht versendet werden“*.
+So läuft der Versand ab:
+
+- **Vor** dem Versand prüft AI-Lawyer, dass alle Anhänge freigegeben sind und Sie auf die Akte zugreifen dürfen. Sonst bricht es mit *„Versand nicht moeglich. …“* ab und nennt die betroffenen Dokumente; es wird nichts verschickt.
+- Die Anhänge werden mit der Nachricht an bea.expert übergeben und versendet.
+- Als **Gesendet** gespeichert wird die Nachricht nur, wenn bea.expert den Versand mit einer beA-Nachrichten-ID bestätigt. Dann erscheint *„Nachricht gesendet – Die Nachricht wurde erfolgreich versendet und gespeichert.“*, und die angehängten Dokumente erhalten den Status **Versendet**.
+- Schlägt der Versand fehl oder kommt keine Nachrichten-ID zurück, zeigt AI-Lawyer die Fehlermeldung (z. B. *„beA hat den Versand nicht bestaetigt (keine Nachrichten-ID erhalten).“*) und speichert nichts.
+- Ging die Nachricht hinaus, konnte AI-Lawyer sie aber nicht speichern, lautet die Meldung *„Die Nachricht wurde ueber beA versendet (Nachrichten-ID …), konnte aber nicht gespeichert werden: … Bitte manuell in der Akte vermerken.“* Vermerken Sie den Versand dann von Hand.
+
+Prüfen Sie bei Fristsachen trotzdem die Eingangsbestätigung im beA.
 
 ## Empfangsbekenntnis (eEB)
 
 Fordert ein Gericht ein elektronisches Empfangsbekenntnis an, zeigt die Nachrichtenansicht einen eigenen Bereich. Anwältinnen und Anwälte sehen dort **Empfangsbekenntnis bestaetigen**, alle anderen den Hinweis *„Nur Anwaelte koennen Empfangsbekenntnisse bestaetigen.“* Nach der Bestätigung steht dort *„Bestaetigt am …“*.
 
-**Auch hier gilt derzeit:** Die Nachrichtenansicht (`/bea/<id>`) hat keinen Zugriff auf die beA-Sitzung. Bei einer offenen eEB-Anforderung kann die Seite deshalb mit einem Fehler abbrechen. Und wenn bea.expert das eEB nicht abgeben kann, vermerkt AI-Lawyer es trotzdem als bestätigt. Geben Sie Empfangsbekenntnisse daher in Ihrer bisherigen beA-Software ab. Das Datum des eEB ist für den Fristbeginn maßgeblich; tragen Sie die daraus folgenden Fristen selbst ein und lassen Sie sie prüfen ([Kapitel 6](06-fristen-und-kalender.md)).
+Als bestätigt vermerkt AI-Lawyer das eEB nur, wenn bea.expert die Abgabe bestätigt hat. Ohne Bibliothek, ohne aktive Sitzung oder bei einem Fehler erscheint die Fehlermeldung (z. B. *„eEB wurde von beA nicht bestaetigt und daher nicht gespeichert.“*), und es wird nichts gespeichert. Nachrichten ohne beA-Nachrichten-ID können kein eEB erhalten (*„Nachricht hat keine beA-Nachrichten-ID; eEB nicht moeglich.“*). Solange die Bibliothek nicht eingebunden ist, geben Sie Empfangsbekenntnisse in Ihrer bisherigen beA-Software ab. Das Datum des eEB ist für den Fristbeginn maßgeblich; tragen Sie die daraus folgenden Fristen selbst ein und lassen Sie sie prüfen ([Kapitel 6](06-fristen-und-kalender.md)).
 
 ## Was es nicht gibt
 
@@ -125,7 +128,10 @@ Fordert ein Gericht ein elektronisches Empfangsbekenntnis an, zeigt die Nachrich
 | *Empfaenger-SAFE-ID und Betreff sind erforderlich* | Pflichtfeld leer. | Ausfüllen. |
 | *Nicht freigegebene Dokumente koennen nicht versendet werden* | Anhang nicht freigegeben. | Dokument prüfen und freigeben lassen. |
 | *Empfangsbekenntnis wurde bereits bestaetigt* | eEB schon vermerkt. | Nichts. |
-| *Zuordnung fehlgeschlagen* | Akte nicht gefunden oder Serverfehler. | Erneut versuchen. |
+| *Zuordnung fehlgeschlagen* | Akte nicht gefunden, kein Zugriff auf die Akte oder Serverfehler. | Erneut versuchen bzw. Aktenzugriff klären. |
+| *Versand nicht moeglich. …* | Ein Anhang ist nicht freigegeben oder Sie haben keinen Zugriff auf die Akte. | Genannte Dokumente prüfen und freigeben lassen. |
+| *beA hat den Versand nicht bestaetigt …* | bea.expert hat keine Nachrichten-ID geliefert. | Nachricht wurde nicht als gesendet gespeichert. Im beA prüfen, ob sie hinausging. |
+| *eEB wurde von beA nicht bestaetigt und daher nicht gespeichert.* | eEB-Abgabe gescheitert. | eEB über die bisherige beA-Software abgeben. |
 | Weiterleitung von `/bea/compose` zurück zur beA-Seite | Sie sind nicht in der Rolle Anwalt. | Anwältin oder Anwalt versenden lassen. |
 
 ---

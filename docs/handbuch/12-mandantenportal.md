@@ -8,7 +8,7 @@ Das Prinzip: Im Portal erscheint nur, was die Kanzlei ausdrücklich freigibt. In
 
 ### Einen Mandanten einladen
 
-Voraussetzungen: Der Mandant ist in der Akte als Beteiligter mit der Rolle **Mandant** eingetragen, und am Kontakt ist eine E-Mail-Adresse hinterlegt ([Kapitel 4](04-kontakte.md)). Einladen dürfen nur **Anwalt** und **Administrator**.
+Voraussetzungen: Der Mandant ist in der Akte als Beteiligter mit der Rolle **Mandant** eingetragen, am Kontakt ist eine E-Mail-Adresse hinterlegt, und das Häkchen für die **E-Mail-Einwilligung** ist gesetzt ([Kapitel 4](04-kontakte.md)). Einladen dürfen nur **Anwalt** und **Administrator**.
 
 1. Öffnen Sie die Akte, Reiter **Aktivitaeten**. Oben stehen die Beteiligten.
 2. Klicken Sie beim Mandanten auf **Portal-Einladung**.
@@ -20,7 +20,7 @@ Der Mandant bekommt eine E-Mail „Einladung zum Mandantenportal — <Kanzleinam
 Gut zu wissen:
 
 - Ein Mandant hat **ein** Portalkonto. Er sieht darin **alle Akten**, in denen sein Kontakt als Mandant eingetragen ist, auch spätere und auch abgeschlossene. Eine zweite Einladung für eine weitere Akte ist weder nötig noch möglich (*„Mandant hat bereits einen Portal-Account“*).
-- Die Einladungs-E-Mail wird unabhängig vom Häkchen für die E-Mail-Einwilligung am Kontakt verschickt.
+- Ohne **E-Mail-Einwilligung** am Kontakt verschickt AI-Lawyer keine Einladung, sondern meldet *„Kontakt hat der Kontaktaufnahme per E-Mail nicht zugestimmt (Einwilligung E-Mail). …“*. Erfassen Sie die Einwilligung im Kontakt oder übermitteln Sie den Zugang auf anderem Weg.
 - Einen Knopf zum erneuten Senden, eine Übersicht offener Einladungen oder eine Möglichkeit, ein Portalkonto zu sperren, gibt es in der Oberfläche derzeit nicht. Abgelaufen? Einfach erneut **Portal-Einladung** klicken, solange das Konto noch nicht aktiviert ist.
 
 ### Dokumente freigeben
@@ -63,7 +63,7 @@ Nachrichten des Mandanten sehen Sie an zwei Stellen:
 
 Die Unterhaltung entsteht erst, wenn der Mandant im Portal **Nachrichten** öffnet. Vorher steht im Reiter **Portal** „Noch keine Portal-Nachrichten – Mandanten koennen ueber das Portal Nachrichten senden.“ Sie können also nicht von sich aus die erste Portal-Nachricht schreiben; nutzen Sie dafür E-Mail oder Telefon.
 
-Mitglieder der Unterhaltung sind der Mandant und die zuständige Anwältin bzw. der zuständige Anwalt der Akte (dazu Administratoren). Andere Kolleginnen und Kollegen sehen die Unterhaltung im Reiter **Portal**, können aber nicht schreiben (*„Du bist kein Mitglied dieses Kanals“*). Hat die Akte keinen zuständigen Anwalt, kann der Mandant keine Nachrichten schreiben.
+Mitglieder der Unterhaltung sind der Mandant und die zuständige Anwältin bzw. der zuständige Anwalt der Akte; nur bei ihnen erscheint sie unter **Nachrichten**. Lesen und antworten dürfen aber alle Mitarbeiter mit Zugriff auf die Akte, also auch Sachbearbeitung und Dezernatskollegen, über den Reiter **Portal** der Akte. Hat die Akte keinen zuständigen Anwalt, kann der Mandant keine Nachrichten schreiben.
 
 Anhänge des Mandanten landen als Dokumente in der Akte im Ordner **Mandant**. Die zuständige Anwältin bzw. der zuständige Anwalt bekommt dazu die Benachrichtigung „Mandant-Upload“.
 
@@ -77,7 +77,7 @@ AI-Lawyer schickt Mandanten bei drei Ereignissen eine kurze E-Mail mit Link ins 
 | Ein Dokument wird freigegeben. | [<Kanzleiname>] Neues Dokument in Ihrem Portal verfuegbar |
 | Die nächsten Schritte werden gespeichert. | [<Kanzleiname>] Aktualisierung zu Ihrem Verfahren |
 
-Die E-Mails enthalten bewusst keine Inhalte aus der Akte, nur den Hinweis und den Link. Sie gehen nur an Kontakte, bei denen die **E-Mail-Einwilligung** gesetzt ist ([Kapitel 4](04-kontakte.md)). Pro Anlass, Mandant und Akte geht höchstens eine E-Mail am Tag hinaus; wer am selben Tag drei Dokumente freigibt, löst eine E-Mail aus.
+Die E-Mails enthalten bewusst keine Inhalte aus der Akte, nur den Hinweis und den Link. Sie gehen nur an Kontakte, bei denen die **E-Mail-Einwilligung** gesetzt ist ([Kapitel 4](04-kontakte.md)) und die ein **aktives Portalkonto** haben; wer die Einladung noch nicht angenommen hat oder dessen Konto deaktiviert ist, bekommt keine Hinweise. Pro Anlass, Mandant und Akte geht höchstens eine E-Mail am Tag hinaus; wer am selben Tag drei Dokumente freigibt, löst eine E-Mail aus.
 
 Beachten Sie: Die E-Mails gehen an **alle** Beteiligten mit Rolle Mandant in der Akte, die eine E-Mail-Einwilligung haben, auch an solche ohne Portalkonto. Geben Sie deshalb nichts frei, bevor der Mandant eingeladen ist, oder rechnen Sie mit Rückfragen.
 
@@ -158,6 +158,8 @@ Die Trennung zwischen Mandanten geschieht auf dem Server, nicht nur in der Anzei
 
 Wird der Mandant aus der Akte als Beteiligter entfernt oder seine Rolle geändert, verschwindet die Akte sofort aus seinem Portal.
 
+Mandantenkonten kommen nur ins Portal. Ruft ein Mandant eine Seite der Kanzlei-Oberfläche auf, leitet AI-Lawyer ihn ins Portal um; Schnittstellen der Kanzlei-Oberfläche antworten ihm mit „keine Berechtigung“. Auch jede Detailseite des Portals prüft die Akte selbst, nicht nur die Übersicht.
+
 ## Wenn etwas nicht klappt
 
 | Meldung | Bedeutung | Was tun? |
@@ -174,7 +176,8 @@ Wird der Mandant aus der Akte als Beteiligter entfernt oder seine Rolle geänder
 | *Maximale Dateigroesse: 50 MB* | Datei zu groß. | Datei verkleinern oder aufteilen. |
 | *Akte hat keinen zustaendigen Anwalt* | Mandant kann keine Nachrichten schreiben. | In der Akte einen Anwalt eintragen. |
 | *Sie haben derzeit keine aktiven Vorgaenge.* | Kein Kontakt mit Rolle Mandant verknüpft. | Beteiligte der Akte prüfen. |
-| Mandant bekommt keine Hinweis-E-Mails | E-Mail-Einwilligung am Kontakt fehlt, oder es ging heute schon eine E-Mail zu diesem Anlass hinaus. | Einwilligung prüfen; Versand der Kanzlei-E-Mails prüfen lassen ([Kapitel 7](07-email-und-tickets.md)). |
+| Mandant bekommt keine Hinweis-E-Mails | E-Mail-Einwilligung am Kontakt fehlt, das Portalkonto ist noch nicht aktiviert, oder es ging heute schon eine E-Mail zu diesem Anlass hinaus. | Einwilligung und Portalkonto prüfen; Versand der Kanzlei-E-Mails prüfen lassen ([Kapitel 7](07-email-und-tickets.md)). |
+| *Kontakt hat der Kontaktaufnahme per E-Mail nicht zugestimmt …* | Einladung ohne E-Mail-Einwilligung. | Einwilligung im Kontakt erfassen oder Zugang auf anderem Weg übermitteln. |
 
 ---
 

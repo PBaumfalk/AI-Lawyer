@@ -35,10 +35,9 @@ Die Daten bleiben auf Ihrem Server. Die KI kann vollständig lokal laufen
 AI-Lawyer ist ein **aktives Entwicklungsprojekt, noch nicht für den
 Produktivbetrieb freigegeben.** Version 0.9 ist funktional weit
 (rund 141 000 Zeilen TypeScript, 86 Datenmodelle, 196 API-Endpunkte), der
-nächste Meilenstein v1.0 „Production Hardening“ ist in Planung. **Bitte nicht
-mit echten Mandantendaten einsetzen:** Unter anderem prüfen Aktenliste und
-Aktenansicht derzeit keine Zugriffsrechte, und mehrere Funktionen (beA,
-Rechnungen, E-Mail-Anhänge) sind nur teilweise fertig. Was bekannt offen ist,
+nächste Meilenstein v1.0 „Production Hardening“ ist in Planung. Vor dem Einsatz mit echten Mandantendaten bitte
+Installation, Sicherung und Berechtigungen selbst prüfen; beA ist noch nicht
+angebunden. Was bekannt offen ist,
 steht unter [Bekannte Grenzen](#bekannte-grenzen) und ausführlich in
 [Kapitel 23 des Handbuchs](docs/handbuch/23-einschraenkungen-und-fragen.md).
 
@@ -81,10 +80,7 @@ Das Skript fragt nach der Adresse der Anwendung (z. B.
 API-Schlüssel), OpenAI oder Anthropic. Danach erzeugt es Geheimnisse in einer
 `.env`, baut die Images und startet die Dienste.
 
-**Achtung:** Die dabei verwendete `docker-compose.yml` liest diese `.env` derzeit
-nicht, die Container laufen mit Entwicklungswerten. Für einen Server bitte den
-Weg über `docker-compose.portainer.yml` aus
-[Kapitel 19](docs/handbuch/19-installation.md) nehmen.
+Mit NVIDIA-GPU nimmt das Skript `docker-compose.gpu.yml` automatisch dazu.
 </details>
 
 <details>
@@ -211,10 +207,9 @@ nach zwölf Monaten wird gelöscht.
   nicht überall (siehe unten).
 - Zwei-Faktor-Anmeldung (TOTP) mit Backup-Codes, je Rolle erzwingbar.
 - Zugangsdaten für E-Mail und beA werden verschlüsselt gespeichert (AES-256).
-- Das Mandantenportal zeigt nur freigegebene Akten und Dokumente. **Achtung,
-  derzeit offen:** Die Aktenliste und die Aktenansicht der Kanzleioberfläche
-  prüfen die Zugriffsrechte nicht, und Mandantenkonten können sich auch dort
-  anmelden (siehe [Bekannte Grenzen](#bekannte-grenzen)).
+- Mandanten sehen ausschließlich das Portal und dort nur ihre freigegebenen
+  Akten und Dokumente; Kanzleiseiten und -APIs sind für Mandantenkonten
+  gesperrt (Middleware und serverseitige Prüfung, mit Tests abgesichert).
 - Audit-Trail für Akten, Freigaben und Admin-Eingriffe, DSGVO-Anonymisierung
   von Kontakten.
 
@@ -324,40 +319,21 @@ steht im [Änderungsprotokoll](CHANGELOG.md).
 
 ## Bekannte Grenzen
 
+Behoben im Branch `fix/stabilisierung` (Aktenzugriff, Mandantentrennung,
+Migrationen, MinIO-Image, Socket.IO im Image, BI, Rechnungen, Fristen,
+E-Mail-Anhänge, j-lawyer-Migration u. a., jeweils mit Tests). Offen sind:
+
+- **beA:** Die kommerzielle Bibliothek von bea.expert ist nicht eingebunden.
+  Ohne sie scheitern Anmeldung, Versand und eEB mit klarer Meldung; es wird
+  nichts als gesendet gespeichert.
+- **Fehlende Masken:** Benutzerverwaltung (Konten, Passwörter, Rollen) und
+  „Rechnung anlegen/bearbeiten“ gibt es in der Oberfläche noch nicht.
+- **KI-Einwilligung:** Das Feld „KI-Verarbeitung erlaubt“ am Kontakt wird
+  gespeichert, aber nicht ausgewertet. Die Regel muss die Kanzlei festlegen.
+- **Next.js 14** ist veraltet; der Umstieg ist für v1.0 geplant.
+
 Die vollständige Liste steht in
 [Kapitel 23 des Handbuchs](docs/handbuch/23-einschraenkungen-und-fragen.md).
-Die wichtigsten Punkte:
-
-- **Sicherheitslücke beim Aktenzugriff:** Aktenliste und Aktenansicht laden
-  Akten ohne Rechteprüfung. Jeder angemeldete Benutzer sieht alle Akten, auch
-  ein Mandantenkonto, das sich über `/login` statt über das Portal anmeldet.
-  Die Dokumentensuche prüft die Aktenrechte ebenfalls nicht. **Nicht mit
-  echten Mandantendaten und Portalzugängen betreiben, bis das behoben ist.**
-- **Rechnungen:** Die Rechnungsliste stürzt ab, mehrere Knöpfe der
-  Rechnungsansicht (Bezahlt, Mahnung, Bearbeiten) funktionieren nicht.
-  Details in [Handbuch, Kapitel 10](docs/handbuch/10-zeiterfassung-und-abrechnung.md).
-
-- **Datenbank-Migrationen unvollständig:** Einige Tabellen und Spalten aus
-  v0.4 und v0.5 haben keine Prisma-Migration. Bei einer frischen Installation
-  bitte vorerst `npx prisma db push` statt `migrate deploy` verwenden. Wird in
-  v1.0 behoben.
-- **MinIO-Image:** `minio/minio:latest` ist auf Docker Hub nicht mehr frei
-  verfügbar. Bis zur Umstellung ein eigenes oder gespiegeltes Image eintragen.
-- **BI-Dashboard:** Die Kennzahlen laden derzeit nicht, weil eine Abfrage einen
-  falschen Tabellennamen verwendet.
-- **beA** ist derzeit nicht nutzbar: Die Bibliothek von bea.expert ist nicht
-  eingebunden, und fehlgeschlagene Sendungen werden trotzdem als gesendet
-  gespeichert. Für den späteren Betrieb ist eine kommerzielle Registrierung bei
-  bea.expert nötig.
-- **E-Mail-Anhänge** werden beim Versand nicht mitgeschickt.
-- **Fristen** lassen sich in der Oberfläche kaum als erledigt markieren
-  (überfällige gar nicht).
-- **Echtzeit:** Das Docker-Image startet ohne Socket.IO, neue Nachrichten
-  erscheinen erst nach dem Neuladen.
-- **Benutzerverwaltung** fehlt in der Oberfläche.
-- **Next.js 14** ist veraltet. Der Umstieg auf eine aktuelle Version mit den
-  zugehörigen Sicherheitskorrekturen ist für v1.0 geplant.
-- Die Testabdeckung ist im Verhältnis zur Codegröße gering.
 
 ## Lizenz
 

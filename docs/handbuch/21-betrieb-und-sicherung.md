@@ -24,9 +24,9 @@ Drei Dinge, und nur zusammen sind sie eine brauchbare Sicherung:
 
 1. **Die PostgreSQL-Datenbank** als Dump.
 2. **Die MinIO-Daten** (Volume `miniodata`). Die Datenbank enthält nur die Pfade der Dateien; ohne MinIO sind alle Dokumente weg.
-3. **Die Geheimnisse:** Ihre `.env`, die Zusatzdatei (z. B. `docker-compose.kanzlei.yml`) und vor allem `EMAIL_ENCRYPTION_KEY`. Ohne diesen Schlüssel lassen sich die gespeicherten Zugangsdaten für E-Mail, CalDAV und j-lawyer nicht mehr entschlüsseln ([Kapitel 20](20-konfiguration.md#anmeldung-und-sicherheit)). Bewahren Sie die Geheimnisse getrennt von den Daten auf, etwa im Passwortmanager der Kanzlei.
+3. **Die Geheimnisse:** Ihre `.env`, gegebenenfalls eine eigene Zusatzdatei (z. B. `docker-compose.kanzlei.yml`) und vor allem `EMAIL_ENCRYPTION_KEY`. Ohne diesen Schlüssel lassen sich die gespeicherten Zugangsdaten für E-Mail, CalDAV und j-lawyer, die KI-API-Schlüssel und die Zwei-Faktor-Geheimnisse der Benutzer nicht mehr entschlüsseln ([Kapitel 20](20-konfiguration.md#anmeldung-und-sicherheit)). Bewahren Sie die Geheimnisse getrennt von den Daten auf, etwa im Passwortmanager der Kanzlei.
 
-Der Dump enthält Mandantendaten, die Zwei-Faktor-Geheimnisse der Benutzer und den API-Schlüssel eines Cloud-KI-Anbieters im Klartext (Tabelle `system_settings`). Verschlüsseln Sie Sicherungen, bevor sie den Server verlassen.
+Der Dump enthält Mandantendaten im Klartext. Zugangsdaten, KI-API-Schlüssel und Zwei-Faktor-Geheimnisse liegen darin verschlüsselt (mit `EMAIL_ENCRYPTION_KEY`); Zwei-Faktor-Geheimnisse aus der Zeit vor dieser Verschlüsselung bleiben im Klartext, bis der Benutzer die Zwei-Faktor-Anmeldung neu einrichtet. Verschlüsseln Sie Sicherungen, bevor sie den Server verlassen, und lagern Sie sie nie zusammen mit der `.env`.
 
 **Meilisearch** muss nicht gesichert werden: Der Index entsteht aus der Datenbank (Name, Ordner, Schlagwörter, OCR-Text). Nach einer Wiederherstellung bauen Sie ihn neu auf (siehe [Suchindex neu aufbauen](#suchindex-neu-aufbauen)).
 
@@ -46,8 +46,8 @@ docker run --rm -v ai-lawyer_miniodata:/data:ro -v /srv/backup/ai-lawyer:/backup
   alpine tar czf /backup/minio-$(date +%F).tar.gz -C /data .
 docker compose start app worker
 
-# 3. Konfiguration
-cp .env docker-compose.kanzlei.yml /srv/backup/ai-lawyer/
+# 3. Konfiguration (getrennt von den Daten aufbewahren)
+cp .env /srv/backup/ai-lawyer/
 ```
 
 Den Dump nimmt `pg_dump` im laufenden Betrieb konsistent. Für MinIO halten Sie App und Worker kurz an, damit während der Sicherung keine neuen Dateien entstehen. Wer den Stillstand vermeiden will, spiegelt den Bucket mit dem MinIO-Client (`mc mirror`) und nimmt kleine Abweichungen zwischen Dump und Dateien in Kauf.
@@ -56,7 +56,7 @@ Planen Sie die Befehle als nächtlichen Cron-Job außerhalb der Zeiten, in denen
 
 ## Wiederherstellung
 
-1. Auf dem Zielserver AI-Lawyer in **derselben Version** installieren ([Kapitel 19](19-installation.md)) und die gesicherte `.env` sowie die Zusatzdatei zurücklegen.
+1. Auf dem Zielserver AI-Lawyer in **derselben Version** installieren ([Kapitel 19](19-installation.md)) und die gesicherte `.env` (Rechte `600`) sowie eine eventuelle Zusatzdatei zurücklegen.
 2. Nur die Datenbank starten: `docker compose up -d db`.
 3. Dump einspielen:
    ```bash
@@ -69,7 +69,7 @@ Planen Sie die Befehle als nächtlichen Cron-Job außerhalb der Zeiten, in denen
    docker run --rm -v ai-lawyer_miniodata:/data -v /srv/backup/ai-lawyer:/backup \
      alpine sh -c "rm -rf /data/* /data/.minio.sys && tar xzf /backup/minio-2026-11-18.tar.gz -C /data"
    ```
-5. Alles starten: `docker compose up -d`. Das Entrypoint-Skript findet Benutzer vor und überspringt den Seed.
+5. Alles starten: `docker compose up -d`. Vor MinIO läuft `minio-init` und passt die Besitzrechte der zurückgespielten Dateien an das MinIO-Image an (UID 65532). Das Entrypoint-Skript findet Benutzer vor und überspringt den Seed.
 6. Suchindex neu aufbauen (nächster Abschnitt) und KI-Modelle laden, falls `ollama_data` neu ist.
 7. Stichprobe: anmelden, eine Akte öffnen, ein Dokument herunterladen und im Editor öffnen.
 
@@ -98,19 +98,15 @@ Die Antwort lautet z. B. `{ success: true, indexed: 412, message: "412 Dokumente
    docker compose logs -f app
    ```
    Beim Start führt `docker-entrypoint.sh` `prisma migrate deploy` und die manuellen SQL-Dateien aus ([Kapitel 19](19-installation.md#erster-start-was-docker-entrypointsh-tut)).
-4. Wegen der unvollständigen Migrationen gleichen Sie nach einem Update mit Schemaänderungen zusätzlich ab:
-   ```bash
-   docker compose run --rm --entrypoint node app \
-     node_modules/prisma/build/index.js db push --skip-generate
-   docker compose restart app worker
-   ```
-5. Prüfen: **System** (`/admin/system`) zeigt „Alle Systeme betriebsbereit“, der **Job-Monitor** zeigt keine neuen Fehler.
+4. Prüfen: **System** (`/admin/system`) zeigt „Alle Systeme betriebsbereit“, der **Job-Monitor** zeigt keine neuen Fehler.
 
-> **Achtung bei künftigen Versionen.** Datenbanken, die mit `db push` ergänzt wurden, können mit einer späteren Migration kollidieren, die dieselbe Tabelle anlegen will (z. B. `portal_invites`). `migrate deploy` bricht dann ab, und der Container startet in einer Schleife neu. Lesen Sie vor dem Update auf v1.0 die Hinweise im Änderungsprotokoll und halten Sie eine frische Sicherung bereit.
+Ein zusätzlicher Abgleich mit `db push` ist nicht mehr nötig und soll unterbleiben: Die Migrationen bilden das Schema vollständig ab. Installationen, die früher per `db push` ergänzt wurden, bringt die idempotente Migration `20261118120000_schema_sync` beim ersten Start der neuen Version auf denselben Stand. Bricht `migrate deploy` oder `apply-manual-migrations.js` ab, startet der Container nicht und meldet die Ursache in `docker compose logs app`; spielen Sie dann die Sicherung von vorher ein, statt die Datenbank von Hand anzupassen.
+
+**Umstieg von einer älteren Installation:** Die Compose-Datei liest seit dieser Version alle Werte aus der `.env` und verlangt dort `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `MINIO_SECRET_KEY` und `MEILISEARCH_API_KEY`. Tragen Sie für PostgreSQL und MinIO die **bisherigen** Werte ein (früher fest `ailawyer` bzw. `ailawyer123`), denn ein neuer Wert ändert die Zugangsdaten in bestehenden Daten nicht; das Passwort danach gezielt ändern ([Kapitel 20](20-konfiguration.md#datenbank-und-redis)). Für Redis und Meilisearch dürfen Sie neue Werte wählen; der Suchindex ist danach gegebenenfalls neu aufzubauen ([Suchindex neu aufbauen](#suchindex-neu-aufbauen)). Das MinIO-Image wechselt auf `cgr.dev/chainguard/minio`; `minio-init` passt dabei die Besitzrechte des Volumes an.
 
 **Rückweg:** Image der vorigen Version bauen (`git checkout <alter Tag>`, `docker compose up -d --build`) und, falls das neue Update die Datenbank verändert hat, den Dump von vorher einspielen. Ein Downgrade der Datenbank ohne Dump gibt es nicht.
 
-Die Fremd-Images stehen größtenteils auf `latest` (OnlyOffice, Stirling-PDF, Ollama, Redis-Hauptversion 7). `docker compose pull` holt dort jeweils die neueste Version. Für vorhersehbare Updates tragen Sie in der Zusatzdatei feste Versionen ein.
+Die Fremd-Images stehen größtenteils auf `latest` (MinIO, OnlyOffice, Stirling-PDF, Ollama, Redis-Hauptversion 7). `docker compose pull` holt dort jeweils die neueste Version. Für vorhersehbare Updates tragen Sie in einer Zusatzdatei feste Versionen ein (für MinIO genügt `MINIO_IMAGE` in der `.env`).
 
 ## Hintergrund-Jobs
 
@@ -187,7 +183,7 @@ Pegel 50 ist `error`, 60 `fatal`. `LOG_LEVEL` steuert, wie viel geschrieben wird
 | Anzeige | Bedeutung | Was tun |
 | --- | --- | --- |
 | Worker „No workers registered“ | Worker läuft nicht oder hängt beim Start | `docker compose logs worker`; oft wartet er auf einen Dienst, z. B. Ollama oder Stirling-PDF |
-| Ollama *unhealthy* | Ollama nicht erreichbar | `docker compose logs ollama`; GPU-Treiber prüfen |
+| Ollama *unhealthy* | Ollama nicht erreichbar | `docker compose logs ollama`; bei `docker-compose.gpu.yml` GPU-Treiber und NVIDIA Container Toolkit prüfen |
 | Viele fehlgeschlagene Jobs in `document-embedding` | Einbettungsmodell fehlt | `docker compose exec ollama ollama pull blaifa/multilingual-e5-large-instruct` |
 | Fehlgeschlagene Jobs in `gesetze-sync` mit Ratenlimit | GitHub-Limit ohne Token | `GITHUB_TOKEN` setzen |
 | Helena-Aufgabe mit dem Fehler „Worker wurde neu gestartet — Task war noch in Bearbeitung“ | Worker wurde während der Aufgabe neu gestartet; beim Start setzt er laufende Aufgaben auf fehlgeschlagen | Aufgabe neu stellen |

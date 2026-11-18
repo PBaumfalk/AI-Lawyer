@@ -14,7 +14,7 @@ Links steht die Liste **Kanaele** in drei Gruppen, jede auf- und zuklappbar:
 | --- | --- | --- |
 | **Allgemein** | Kanzleiweite Kanäle. Ab Werk gibt es „Allgemein“ und „Organisation“. | Bei den beiden Standardkanälen alle Benutzer, die beim ersten Start schon angelegt waren; später angelegte Benutzer werden nicht automatisch Mitglied. Bei neuen Kanälen zunächst nur, wer ihn angelegt hat. |
 | **Akten** | Ein Kanal je Akte, Name „Akte: <Kurzrubrum>“. Erscheint erst, wenn der Kanal einmal geöffnet wurde. | Zuständige Anwältin, Sachbearbeiter und die Mitglieder der Dezernate der Akte. |
-| **Mandantenportal** | Unterhaltungen mit Mandanten aus dem Portal ([Kapitel 12](12-mandantenportal.md)). | Der Mandant und die zuständige Anwältin bzw. der zuständige Anwalt. |
+| **Mandantenportal** | Unterhaltungen mit Mandanten aus dem Portal ([Kapitel 12](12-mandantenportal.md)). | In dieser Liste: der Mandant und die zuständige Anwältin bzw. der zuständige Anwalt. Lesen und antworten dürfen außerdem alle Mitarbeiter mit Zugriff auf die Akte, über den Reiter **Portal** der Akte. |
 
 Die Zahl hinter einem Kanal nennt die ungelesenen Nachrichten. Beim Öffnen der Seite ist der erste Kanal ausgewählt. Sobald Sie einen Kanal öffnen, gilt er für Sie als gelesen.
 
@@ -124,7 +124,8 @@ Nachrichten im Team-Chat und Erwähnungen werden nicht an Vertreter weitergeleit
 | Meldung | Bedeutung | Was tun? |
 | --- | --- | --- |
 | *Fehler beim Senden* | Die Nachricht wurde nicht gespeichert. | Text ist noch im Feld; erneut senden. |
-| *Du bist kein Mitglied dieses Kanals* | Sie sind nicht Mitglied, z. B. in einem Portal-Kanal, der nur der zuständigen Anwältin gehört. | Zuständige Person bitten oder Administration fragen. |
+| *Du bist kein Mitglied dieses Kanals* | Sie sind nicht Mitglied eines allgemeinen Kanals. | Ein Mitglied oder die Administration fragen. |
+| *Kein Zugriff auf diese Akte* (Akten- oder Portal-Kanal) | Sie haben keinen Zugriff auf die Akte des Kanals. | Zugriff auf die Akte prüfen lassen ([Kapitel 15](15-benutzer-und-rollen.md)). |
 | *Ein Kanal mit diesem Namen existiert bereits* | Kanalname ist schon vergeben. | Anderen Namen wählen. |
 | *Kanal konnte nicht geladen werden* (Reiter **Chat** der Akte) | Kein Zugriff auf die Akte oder Serverfehler. | **Erneut versuchen**; sonst Zugriff auf die Akte prüfen lassen. |
 | Ein Aktenkanal fehlt unter **Nachrichten** | Der Kanal wurde noch nie geöffnet. | Einmal den Reiter **Chat** der Akte öffnen. |

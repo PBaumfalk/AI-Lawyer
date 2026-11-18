@@ -31,12 +31,12 @@ Sobald Sie tippen, sucht AI-Lawyer nach einer kurzen Pause (0,3 Sekunden) gleich
 | Gruppe | Wo gesucht wird | Was angezeigt wird |
 | --- | --- | --- |
 | **Akten** | Aktenzeichen, Kurzrubrum, „wegen“ | Aktenzeichen — Kurzrubrum und der Status (z. B. `OFFEN`, `RUHEND`) |
-| **Kontakte** | Nachname, Vorname, Firma, Kurzname, E-Mail, Ort, Telefon, Mandantennummer, USt-IdNr. | Name, **Person** oder **Firma**, E-Mail |
+| **Kontakte** | Nachname, Vorname, Firma, Kurzname, E-Mail, Ort, PLZ, Straße, Telefon, Mandantennummer, USt-IdNr. | Name, **Person** oder **Firma**, E-Mail |
 | **Dokumente** | Volltext über den Suchdienst (siehe unten) | Dateiname mit markiertem Suchbegriff, OCR-Hinweis, Aktenzeichen |
 
 Unter den Dokumenttreffern steht **Alle Ergebnisse anzeigen**. Das öffnet die ausführliche Dokumentensuche mit demselben Begriff.
 
-Bei Akten sehen Sie nur Akten, auf die Sie Zugriff haben ([Kapitel 15](15-benutzer-und-rollen.md)). Findet keiner der drei Bereiche etwas, erscheint *Keine Ergebnisse gefunden.*
+Bei Akten und Dokumenten sehen Sie nur Treffer aus Akten, auf die Sie Zugriff haben ([Kapitel 15](15-benutzer-und-rollen.md)). Findet keiner der drei Bereiche etwas, erscheint *Keine Ergebnisse gefunden.*
 
 ## Die Dokumentensuche
 
@@ -84,11 +84,11 @@ Das Symbol mit den Schiebereglern rechts im Suchfeld (**Filter ein-/ausblenden**
 
 **Filter zuruecksetzen** löscht alle Filter, der Suchbegriff bleibt stehen.
 
-Hinweis zum Feld **Bis**: Es zählt bis zum Beginn des gewählten Tages. Dokumente vom Bis-Tag selbst fehlen deshalb. Wählen Sie den Folgetag, wenn der letzte Tag mitzählen soll.
+Das Feld **Bis** schließt den gewählten Tag ein: Dokumente, die an diesem Tag angelegt wurden, werden mitgefunden.
 
 ### Wer was findet
 
-Die Dokumentensuche steht allen Kanzleirollen offen (nicht dem Mandantenportal). Anders als die Aktenliste schränkt sie die Treffer derzeit nicht auf die Akten ein, für die Sie freigeschaltet sind: Wer angemeldet ist, sieht Dateinamen und Textausschnitte aller indizierten Dokumente. Ob Sie das Dokument danach öffnen dürfen, prüft die Akte selbst. Wenn Ihre Kanzlei mit getrennten Dezernaten arbeitet, berücksichtigen Sie das ([Kapitel 23](23-einschraenkungen-und-fragen.md)).
+Die Dokumentensuche steht allen Kanzleirollen offen (nicht dem Mandantenportal). Sie zeigt nur Dokumente aus Akten, auf die Sie Zugriff haben, nach denselben Regeln wie die Aktenliste ([Kapitel 15](15-benutzer-und-rollen.md)). Der **Administrator** findet Dokumente aus allen Akten. Wählen Sie im Filter **Akte** eine Akte, für die Sie nicht freigeschaltet sind, bleibt die Trefferliste leer.
 
 ### Wenn etwas nicht klappt
 
@@ -96,33 +96,31 @@ Die Dokumentensuche steht allen Kanzleirollen offen (nicht dem Mandantenportal).
 | --- | --- | --- |
 | *Keine Dokumente gefunden* | Kein Treffer für Begriff und Filter. | Andere Begriffe versuchen, Filter lockern. |
 | *Keine Dokumente gefunden*, obwohl das Dokument existiert | Der Suchdienst ist nicht erreichbar (die Seite meldet das nicht eigens), oder die Texterkennung ist noch nicht fertig. | Im Dokument den OCR-Stand prüfen. Bleibt die Suche ganz leer, die IT bitten, Meilisearch zu prüfen und den Index neu aufzubauen ([Kapitel 21](21-betrieb-und-sicherung.md)). |
-| Seite bricht beim Öffnen der Filterleiste mit einem Fehler ab | Bekannter Fehler: Die Tag-Liste wird im falschen Format gelesen. | Ohne Filterleiste suchen oder in der Schnellsuche einschränken; Fehler ist an die Entwicklung gemeldet. |
+| Ein Dokument fehlt, obwohl es im Index sein müsste | Es liegt in einer Akte, auf die Sie keinen Zugriff haben. | Bei der zuständigen Anwältin bzw. dem zuständigen Anwalt oder dem Administrator nachfragen ([Kapitel 15](15-benutzer-und-rollen.md)). |
 | Dokument aus einer bestimmten Akte fehlt in der Auswahl **Akte** | Die Auswahl lädt nur 100 Akten. | Aktenzeichen als Suchbegriff eingeben, es ist ebenfalls durchsuchbar. |
 
 ## Das BI-Dashboard
 
 Das **BI-Dashboard** (Seitenleiste **BI-Dashboard**, Adresse `/bi`) zeigt *Kanzlei-Analytics im Ueberblick*: Kennzahlen zu Akten, Finanzen, Fristen und Helena, jeweils mit Vergleich zur Vorperiode, dazu drei Verlaufsdiagramme.
 
-> **Bekannter Fehler:** Die Kennzahlen laden derzeit nicht, sobald im gewählten Zeitraum Fristen liegen. Die Abfrage für die Fristen-Compliance verwendet intern einen falschen Tabellennamen („KalenderEintrag“ statt `kalender_eintraege`). Dann erscheint *KPI-Fehler: KPI-Abfrage fehlgeschlagen (500)*, und auch **PDF-Report** und **Excel-Report** schlagen fehl. Die Diagramme darunter sind davon nicht betroffen. Siehe [Kapitel 23](23-einschraenkungen-und-fragen.md).
-
 ### Wer was sieht
 
-Das BI-Dashboard steht allen Kanzleirollen offen. Die Zahlen hängen von der Rolle ab:
+Das BI-Dashboard steht allen Kanzleirollen offen; Mandantenkonten haben keinen Zugriff. Die Zahlen hängen von der Rolle ab:
 
 - **Administrator** sieht die Zahlen der ganzen Kanzlei.
-- Alle anderen sehen nur Akten, bei denen sie als Anwalt oder Sachbearbeiter eingetragen sind oder die zu einem ihrer Dezernate gehören, sowie Rechnungen, Fristen und Helena-Aufgaben dieser Akten.
+- Alle anderen sehen nur Akten, auf die sie Zugriff haben (als Anwalt oder Sachbearbeiter eingetragen oder über ein Dezernat freigeschaltet, siehe [Kapitel 15](15-benutzer-und-rollen.md)), sowie Rechnungen, Fristen und Helena-Aufgaben dieser Akten.
 
-Ausnahme: **Token-Verbrauch** zählt immer kanzleiweit.
+**Token-Verbrauch** zählt beim Administrator kanzleiweit, bei allen anderen nur den eigenen Verbrauch.
 
 ### Filter
 
 | Filter | Wirkung |
 | --- | --- |
 | **Zeitraum** | **Monat**, **Quartal**, **Jahr** (jeweils das laufende) oder **Benutzerdefiniert** mit den Feldern **Von** und **Bis**. Verglichen wird mit dem gleich langen Zeitraum davor. |
-| **Anwalt** | **Alle Anwaelte** oder eine bestimmte Person. Derzeit bleibt die Liste leer, weil die Personenauswahl nicht geladen wird; es gibt nur **Alle Anwaelte**. |
+| **Anwalt** | **Alle Anwaelte** oder eine bestimmte Person mit der Rolle Anwalt. Gezählt werden dann nur Akten, bei denen diese Person als Anwalt eingetragen ist. |
 | **Sachgebiet** | **Alle Sachgebiete** oder z. B. **Arbeitsrecht**, **Familienrecht**, **Verkehrsrecht**, **Mietrecht**, **Strafrecht**, **Erbrecht**, **Sozialrecht**, **Inkasso**, **Handelsrecht**, **Verwaltungsrecht**, **Sonstiges** |
 
-**Anwalt** und **Sachgebiet** wirken auf die Kennzahlen zu Akten und Finanzen. Auf Fristen, Helena und die Diagramme wirken sie nicht.
+**Anwalt** und **Sachgebiet** wirken auf alle Kennzahlen und auf die Diagramme. Beim **Token-Verbrauch** zählen dann nur Token, die einer passenden Akte zugeordnet sind.
 
 ### Die Kennzahlen
 
@@ -166,9 +164,10 @@ Beide berücksichtigen die gesetzten Filter.
 
 | Meldung | Bedeutung | Was tun? |
 | --- | --- | --- |
-| *KPI-Fehler: KPI-Abfrage fehlgeschlagen (500)* | Die Kennzahlen konnten nicht berechnet werden, derzeit meist wegen des bekannten Fehlers oben. | Diagramme nutzen; die IT informieren. |
+| *KPI-Fehler: KPI-Abfrage fehlgeschlagen (400)* | Ein Filterwert ist ungültig, meist ein unvollständiger benutzerdefinierter Zeitraum. | **Von** und **Bis** prüfen oder einen anderen **Zeitraum** wählen. |
+| *KPI-Fehler: KPI-Abfrage fehlgeschlagen (500)* | Die Kennzahlen konnten nicht berechnet werden. | Seite neu laden; bleibt es, die IT informieren (Server-Protokoll). |
 | *Trend-Fehler: …* | Die Verläufe konnten nicht geladen werden. | Seite neu laden; bleibt es, die IT informieren. |
-| *Fehler beim Erstellen des PDF-Reports* / *Fehler beim Erstellen des Excel-Reports* | Der Bericht konnte nicht erzeugt werden (dieselbe Ursache wie bei den Kennzahlen). | Wie oben. |
+| *Fehler beim Erstellen des PDF-Reports* / *Fehler beim Erstellen des Excel-Reports* | Der Bericht konnte nicht erzeugt werden. | Filter prüfen, Seite neu laden; bleibt es, die IT informieren. |
 
 ## Exporte im Überblick
 

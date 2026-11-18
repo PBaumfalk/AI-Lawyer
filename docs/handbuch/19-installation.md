@@ -6,26 +6,27 @@ Dieses Kapitel führt vom leeren Linux-Server bis zur ersten Anmeldung. Es richt
 
 ## Was installiert wird
 
-AI-Lawyer besteht aus neun Docker-Diensten, dazu einem optionalen zehnten:
+AI-Lawyer besteht aus neun Docker-Diensten, dazu einem einmaligen Hilfsdienst und einem optionalen Dienst:
 
 | Dienst | Image | Aufgabe |
 | --- | --- | --- |
-| `app` | eigener Build (`Dockerfile`) | Oberfläche und API, Port 3000 |
+| `app` | eigener Build (`Dockerfile`) | Oberfläche, API und Socket.IO, Port 3000 |
 | `worker` | derselbe Build, Befehl `node dist-worker/index.js` | Hintergrund-Jobs (OCR, E-Mail, Fristen, KI) |
 | `db` | `pgvector/pgvector:pg16` | PostgreSQL 16 mit pgvector |
-| `redis` | `redis:7-alpine` | Warteschlangen (BullMQ) |
-| `minio` | `minio/minio:latest` | Dateispeicher (S3-kompatibel) |
+| `redis` | `redis:7-alpine` | Warteschlangen (BullMQ), mit Passwort |
+| `minio-init` | wie `minio` | läuft einmal vor MinIO und passt die Besitzrechte im Volume an, dann endet er |
+| `minio` | `cgr.dev/chainguard/minio:latest` (änderbar über `MINIO_IMAGE`) | Dateispeicher (S3-kompatibel) |
 | `meilisearch` | `getmeili/meilisearch:v1.11` | Volltextsuche |
 | `onlyoffice` | `onlyoffice/documentserver:latest` | Bearbeiten von Dokumenten im Browser |
 | `stirling-pdf` | `stirlingtools/stirling-pdf:latest-fat` | OCR und PDF-Werkzeuge |
-| `ollama` | `ollama/ollama:latest` | lokale KI-Modelle |
+| `ollama` | `ollama/ollama:latest` | lokale KI-Modelle; GPU nur mit `docker-compose.gpu.yml` |
 | `languagetool` | `erikvl87/languagetool:latest` | nur mit `--profile full`, im Code derzeit nicht angebunden |
 
 Den Aufbau im Einzelnen erklärt [Kapitel 22](22-architektur-und-entwicklung.md).
 
 ## Voraussetzungen
 
-**Software:** ein aktuelles 64-Bit-Linux (z. B. Debian 12 oder Ubuntu 24.04), Docker Engine mit dem Plugin Docker Compose V2 (`docker compose`, nicht `docker-compose`), `git` und `openssl`. `setup.sh` bricht ab, wenn Docker, Compose V2 oder der Docker-Dienst fehlen.
+**Software:** ein aktuelles 64-Bit-Linux (z. B. Debian 12 oder Ubuntu 24.04), Docker Engine mit dem Plugin Docker Compose V2 (`docker compose`, nicht `docker-compose`), `git` und `openssl`. `setup.sh` bricht ab, wenn Docker, Compose V2, der Docker-Dienst oder `openssl` fehlen.
 
 **Speicherplatz:** `setup.sh` warnt unter 15 GB freiem Platz („Docker images + Ollama model require ~15-20 GB“). Das ist knapp bemessen: Die Images von OnlyOffice und Stirling-PDF (Variante `latest-fat`) sind groß, das Standardmodell kommt dazu, und Dokumente wachsen mit. Planen Sie mindestens 100 GB auf SSD ein.
 
@@ -37,9 +38,9 @@ Den Aufbau im Einzelnen erklärt [Kapitel 22](22-architektur-und-entwicklung.md)
 | Kanzleibetrieb mit lokalem Standardmodell `qwen3.5:35b` | 8 Kerne | 64 GB | NVIDIA mit 24 GB VRAM oder mehr |
 | Lokales Modell ohne GPU | 16 Kerne | 64 GB | keine (Antworten dauern dann sehr lange) |
 
-**Warum Ollama auch bei Cloud-KI nötig ist:** Unabhängig vom gewählten KI-Anbieter laufen drei Funktionen immer über Ollama (`OLLAMA_URL`): die Einbettungen für die Wissenssuche (`src/lib/embedding/embedder.ts`, Modell `blaifa/multilingual-e5-large-instruct`), das Reranking der Suchtreffer (`src/lib/ai/reranker.ts`, fest `qwen3.5:35b`) und die Erkennung personenbezogener Daten in Schriftsatzmustern (`src/lib/pii/ner-filter.ts`). Außerdem startet `app` erst, wenn der Ollama-Container gesund ist.
+**Warum Ollama auch bei Cloud-KI nötig ist:** Unabhängig vom gewählten KI-Anbieter laufen drei Funktionen immer über Ollama (`OLLAMA_URL`): die Einbettungen für die Wissenssuche (`src/lib/embedding/embedder.ts`, Modell `blaifa/multilingual-e5-large-instruct`), das Reranking der Suchtreffer (`src/lib/ai/reranker.ts`, fest `qwen3.5:35b`) und die Erkennung personenbezogener Daten in Schriftsatzmustern (`src/lib/pii/ner-filter.ts`). Der Worker startet erst, wenn der Ollama-Container gesund ist.
 
-**GPU:** `docker-compose.yml` reserviert für Ollama alle NVIDIA-GPUs (`driver: nvidia`). Dafür muss auf dem Server der NVIDIA-Treiber und das NVIDIA Container Toolkit installiert sein. Ohne beides scheitert `docker compose up` beim Ollama-Container. Abhilfe steht unter [Bekannte Stolpersteine](#bekannte-stolpersteine).
+**GPU:** `docker-compose.yml` selbst reserviert keine GPU; Ollama läuft damit auf der CPU. Für eine NVIDIA-GPU nehmen Sie `docker-compose.gpu.yml` dazu. Dafür müssen auf dem Server der NVIDIA-Treiber und das NVIDIA Container Toolkit installiert sein. `setup.sh` erkennt das selbst: Findet es `nvidia-smi` und meldet `docker info` die NVIDIA-Laufzeit, nimmt es die GPU-Datei automatisch dazu („NVIDIA-GPU erkannt – Ollama nutzt die GPU“), sonst warnt es „Keine NVIDIA-GPU – Ollama läuft auf der CPU (langsam für große Modelle)“.
 
 **Netz:** Eine eigene Domain mit drei Hostnamen ist für den Betrieb mit HTTPS am einfachsten, etwa `ailawyer.kanzlei.example` (Anwendung), `office.kanzlei.example` (OnlyOffice) und `dateien.kanzlei.example` (MinIO für Downloads). Warum drei, erklärt der Abschnitt [Reverse Proxy mit HTTPS](#reverse-proxy-mit-https).
 
@@ -47,29 +48,27 @@ Den Aufbau im Einzelnen erklärt [Kapitel 22](22-architektur-und-entwicklung.md)
 
 ## Zwei Compose-Dateien
 
-Im Repository liegen zwei Compose-Dateien. Sie unterscheiden sich mehr, als die Namen vermuten lassen:
+Im Repository liegen zwei Compose-Dateien und eine Ergänzung für die GPU:
 
-| Punkt | `docker-compose.yml` | `docker-compose.portainer.yml` |
+| Punkt | `docker-compose.yml` (+ `docker-compose.gpu.yml`) | `docker-compose.portainer.yml` |
 | --- | --- | --- |
-| Geheimnisse und Passwörter | fest eingetragen (`dev-secret-change-in-production-abc123xyz` usw.) | aus Variablen; `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `EMAIL_ENCRYPTION_KEY` sind Pflicht (`:?` – sonst bricht Compose ab) |
-| Liest die `.env`? | nein, die Datei enthält keine `${…}`-Platzhalter | ja, für alle Platzhalter |
-| `POSTGRES_PASSWORD`, `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`, `MEILISEARCH_API_KEY` | fest `ailawyer` / `ailawyer123` / `ailawyer-meili-key` | einstellbar, gleiche Standardwerte |
-| Veröffentlichte Ports | 3000, 5432, 6379, 9000, 9001, 7700, 8080, 8081, 11434 (LanguageTool 8010) | nur 3000, 5432, 9001, 8080 |
-| `MINIO_PUBLIC_URL` | `http://localhost:9000` | gleich `NEXTAUTH_URL` |
-| `ONLYOFFICE_URL` | `http://localhost:8080` | `${NEXTAUTH_URL}:8080` |
-| Meilisearch | `MEILI_ENV: development` | `MEILI_ENV: production` |
-| Ollama | reserviert alle NVIDIA-GPUs | ohne GPU, Speichergrenze 8 GB |
+| Liest die `.env`? | ja, alle Werte | ja bzw. die Stack-Variablen in Portainer |
+| Pflichtwerte (`:?` – sonst bricht Compose mit Meldung ab) | `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `EMAIL_ENCRYPTION_KEY`, `ONLYOFFICE_SECRET`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `MINIO_SECRET_KEY`, `MEILISEARCH_API_KEY` | `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `EMAIL_ENCRYPTION_KEY`, `ONLYOFFICE_SECRET` |
+| `POSTGRES_PASSWORD`, `MINIO_SECRET_KEY`, `MEILISEARCH_API_KEY` ohne Angabe | Abbruch | Standardwerte `ailawyer` / `ailawyer123` / `ailawyer-meili-key` |
+| Redis | mit Passwort (`REDIS_PASSWORD`) | ohne Passwort |
+| Ports für den Browser | 3000 (App), 8080 (OnlyOffice), 9000 (MinIO) auf `PUBLIC_BIND` (Standard `0.0.0.0`) | 3000 und 8080 auf allen Schnittstellen; MinIO 9000 nicht veröffentlicht |
+| Interne Ports | nur `127.0.0.1`: 5432, 6379, 7700, 8081, 9001, 11434 (LanguageTool 8010) | nur `127.0.0.1`: 5432, 9001 |
+| `MINIO_PUBLIC_URL` | `.env`, Standard `http://localhost:9000` | Variable, Standard `NEXTAUTH_URL` |
+| `ONLYOFFICE_URL` | `.env`, Standard `http://localhost:8080` | Variable, Standard `${NEXTAUTH_URL}:8080` |
+| Ollama | ohne GPU; mit `docker-compose.gpu.yml` alle NVIDIA-GPUs | ohne GPU, Speichergrenze `OLLAMA_MEMORY_LIMIT` (Standard 8 GB) |
 | Stirling-PDF | `latest-fat` | `latest` |
-| OnlyOffice-Speichergrenzen | 4 GB / 2 GB reserviert | keine |
-| Worker | Healthcheck, wartet auch auf Stirling-PDF | ohne Healthcheck |
+| Worker | Healthcheck, wartet auch auf Stirling-PDF; erhält KI-Startwerte und SMTP | ohne Healthcheck; ohne SMTP- und KI-Startwerte |
+| Kanzleiname (`KANZLEI_NAME`) | Build-Argument | nicht vorgesehen |
 | LanguageTool | als Profil `full` | fehlt |
-| `AI_PROVIDER`, `AI_MODEL`, API-Schlüssel | nicht gesetzt | gesetzt, aber vom Code nicht gelesen ([Kapitel 20](20-konfiguration.md#ki)) |
 
-**Empfehlung:** Für einen Server mit echten Daten nehmen Sie `docker-compose.portainer.yml` mit einer `.env` und ergänzen eine eigene, kleine Zusatzdatei (siehe [Schritt für Schritt](#installation-schritt-für-schritt)). `docker-compose.yml` eignet sich zum Ausprobieren auf einem einzelnen Rechner.
+**Empfehlung:** Für einen Server mit echten Daten nehmen Sie `docker-compose.yml` mit einer `.env` (bei NVIDIA-GPU zusätzlich `docker-compose.gpu.yml`). Die Portainer-Datei ist für den Weg über die Portainer-Oberfläche gedacht und hat die oben genannten Lücken.
 
-> **Achtung bei `setup.sh`.** Das Skript schreibt eine `.env` mit frisch erzeugten Geheimnissen, startet aber `docker compose build` und `docker compose up -d` ohne `-f`, also mit `docker-compose.yml`. Diese Datei liest die `.env` nicht. Die Container laufen dann mit den fest eingetragenen Entwicklungs-Geheimnissen, der Adresse `http://localhost:3000` und ohne die gewählte KI-Einstellung. Für einen Test auf dem eigenen Rechner ist das in Ordnung, für einen Server nicht.
-
-## Schnellstart mit setup.sh (nur zum Ausprobieren)
+## Schnellstart mit setup.sh
 
 So läuft das Skript ab:
 
@@ -82,11 +81,14 @@ So läuft das Skript ab:
 2. Das Skript prüft Docker, Docker Compose V2, ob der Docker-Dienst läuft, und den freien Platz.
 3. Gibt es schon eine `.env`, fragt es „Overwrite and reconfigure? [y/N]“. Mit **Enter** bleibt die alte Datei.
 4. Es fragt nach der **App URL** (Standard `http://localhost:3000`) und dem KI-Anbieter: **1** Ollama (`qwen3.5:35b`), **2** OpenAI (`gpt-4o`, mit API-Schlüssel), **3** Anthropic (`claude-sonnet-4-6`, mit API-Schlüssel).
-5. Es erzeugt mit `openssl` `NEXTAUTH_SECRET`, `EMAIL_ENCRYPTION_KEY` und `ONLYOFFICE_SECRET`, kopiert `.env.example` nach `.env` und trägt die Werte ein.
-6. Nach „Jetzt bauen und starten? [Y/n]“ baut es die Images (erster Build 5–10 Minuten) und startet alle Dienste.
-7. Es wartet bis zu fünf Minuten, bis der Container `ailawyer-app` als *healthy* gilt, und zeigt dann die Adressen und die Beispielkonten.
+5. Es kopiert `.env.example` nach `.env` und erzeugt mit `openssl` alle Geheimnisse: `NEXTAUTH_SECRET`, `EMAIL_ENCRYPTION_KEY`, `ONLYOFFICE_SECRET`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `MINIO_SECRET_KEY` und `MEILISEARCH_API_KEY`. Dazu trägt es `MINIO_PUBLIC_URL` (App-Adresse mit Port 9000), `ONLYOFFICE_URL` (Port 8080), die KI-Wahl sowie passende `DATABASE_URL` und `REDIS_URL` für die lokale Entwicklung ein. Die Datei erhält die Rechte `600`. Bleibt ein Platzhalter „ÄNDERN“ stehen, bricht das Skript ab.
+6. Es prüft auf eine NVIDIA-GPU (siehe [Voraussetzungen](#voraussetzungen)).
+7. Nach „Jetzt bauen und starten? [Y/n]“ baut es die Images (erster Build 5–10 Minuten) und startet alle Dienste mit `docker-compose.yml`, bei GPU zusätzlich mit `docker-compose.gpu.yml`.
+8. Es wartet bis zu fünf Minuten, bis der Container `ailawyer-app` als *healthy* gilt, und zeigt dann die Adressen und die Beispielkonten.
 
-Die Angaben aus Schritt 4 wirken wegen der Achtung oben nicht auf die Container. Den KI-Anbieter stellen Sie nach dem Login ohnehin in der Oberfläche ein (siehe [KI einrichten](#ki-einrichten-und-modelle-laden)).
+Die KI-Wahl aus Schritt 4 übernimmt der Worker beim allerersten Start in **Einstellungen → KI**. Danach gilt nur noch die Oberfläche (siehe [KI einrichten](#ki-einrichten-und-modelle-laden)).
+
+Für einen Server hinter einem Reverse Proxy passen Sie anschließend in der `.env` die Adressen an (`NEXTAUTH_URL`, `MINIO_PUBLIC_URL`, `ONLYOFFICE_URL`, `PUBLIC_BIND=127.0.0.1`) und erzeugen die Container mit `docker compose up -d` neu (Schritt 2 und 4 im nächsten Abschnitt).
 
 ## Installation Schritt für Schritt
 
@@ -95,79 +97,41 @@ Die Angaben aus Schritt 4 wirken wegen der Achtung oben nicht auf die Container.
    git clone https://github.com/PBaumfalk/AI-Lawyer.git /opt/ai-lawyer
    cd /opt/ai-lawyer
    ```
-2. **`.env` anlegen.** Die Datei liegt neben den Compose-Dateien und wird von `docker compose` für die Platzhalter gelesen. Mindestens:
+2. **`.env` anlegen**, am einfachsten mit `./setup.sh` (Start am Ende mit **n** ablehnen) oder von Hand mit `cp .env.example .env` und dem Ersetzen aller Werte „ÄNDERN“ (z. B. `openssl rand -hex 32`). Für den Betrieb hinter HTTPS zusätzlich:
    ```bash
-   NEXTAUTH_URL=https://ailawyer.kanzlei.example
-   NEXTAUTH_SECRET=<openssl rand -base64 32>
-   EMAIL_ENCRYPTION_KEY=<openssl rand -hex 32>
-   ONLYOFFICE_SECRET=<openssl rand -hex 24>
-   POSTGRES_PASSWORD=<langes Passwort>
-   MINIO_ACCESS_KEY=ailawyer
-   MINIO_SECRET_KEY=<langes Passwort>
-   MEILISEARCH_API_KEY=<openssl rand -hex 24>
-   COMPOSE_FILE=docker-compose.portainer.yml:docker-compose.kanzlei.yml
+   NEXTAUTH_URL="https://ailawyer.kanzlei.example"
+   MINIO_PUBLIC_URL="https://dateien.kanzlei.example"
+   ONLYOFFICE_URL="https://office.kanzlei.example"
+   PUBLIC_BIND="127.0.0.1"
+   KANZLEI_NAME="Kanzlei Mustermann"
+   TOTP_REQUIRED_ROLES="ADMIN,ANWALT"
+   SMTP_HOST="smtp.kanzlei.example"
+   SMTP_USER="ailawyer@kanzlei.example"
+   SMTP_PASS="…"
+   SMTP_FROM="ailawyer@kanzlei.example"
    ```
-   `ONLYOFFICE_SECRET` ist in der Portainer-Datei formal optional, praktisch aber Pflicht: Ohne Wert erhält OnlyOffice das Geheimnis `changeme`, die App signiert gar nicht, und der Editor öffnet keine Dokumente. Mit `COMPOSE_FILE` braucht später kein Befehl mehr `-f`. Alle Variablen erklärt [Kapitel 20](20-konfiguration.md). Schützen Sie die Datei mit `chmod 600 .env`.
-3. **Zusatzdatei `docker-compose.kanzlei.yml` anlegen.** Sie trägt ein, was die Portainer-Datei nicht anbietet, und bindet die Ports nur an `127.0.0.1`, damit sie ausschließlich über den Reverse Proxy erreichbar sind. `!override` und `!reset` setzen Docker Compose 2.24.4 oder neuer voraus.
-   ```yaml
-   services:
-     app:
-       ports: !override
-         - "127.0.0.1:3000:3000"
-       environment:
-         ONLYOFFICE_URL: https://office.kanzlei.example
-         MINIO_PUBLIC_URL: https://dateien.kanzlei.example
-         TOTP_REQUIRED_ROLES: ADMIN,ANWALT
-         SMTP_HOST: smtp.kanzlei.example
-         SMTP_PORT: "587"
-         SMTP_USER: ailawyer@kanzlei.example
-         SMTP_PASS: ${SMTP_PASS}
-         SMTP_FROM: ailawyer@kanzlei.example
-     worker:
-       environment:
-         SMTP_HOST: smtp.kanzlei.example
-         SMTP_PORT: "587"
-         SMTP_USER: ailawyer@kanzlei.example
-         SMTP_PASS: ${SMTP_PASS}
-         SMTP_FROM: ailawyer@kanzlei.example
-     db:
-       ports: !reset []
-     minio:
-       image: <Ihr MinIO-Image, siehe Stolpersteine>
-       ports: !override
-         - "127.0.0.1:9000:9000"
-     onlyoffice:
-       ports: !override
-         - "127.0.0.1:8080:80"
-     ollama:
-       deploy: !override
-         resources:
-           reservations:
-             devices:
-               - driver: nvidia
-                 count: all
-                 capabilities: [gpu]
-   ```
-   Den `ollama`-Block lassen Sie weg, wenn der Server keine NVIDIA-GPU hat. Die Speichergrenze von 8 GB aus der Portainer-Datei bleibt dann bestehen. Für `qwen3.5:35b` reicht sie nicht; ersetzen Sie sie dann durch einen höheren Wert oder nutzen Sie ein kleineres Modell (siehe unten). Die MinIO-Konsole (Port 9001) brauchen Sie nur zur Fehlersuche; ohne Eintrag bleibt sie auf allen Schnittstellen offen.
-4. **Prüfen**, ob Compose die Dateien zusammenbekommt:
+   `PUBLIC_BIND=127.0.0.1` bindet App, OnlyOffice und MinIO nur an die lokale Schnittstelle, sodass sie ausschließlich über den Reverse Proxy erreichbar sind; alle anderen Dienste hören ohnehin nur auf `127.0.0.1`. Bei NVIDIA-GPU ergänzen Sie `COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml`; dann braucht kein Befehl mehr `-f`. Alle Variablen erklärt [Kapitel 20](20-konfiguration.md). Die Datei muss die Rechte `600` haben (`chmod 600 .env`; `setup.sh` setzt sie selbst).
+3. **Prüfen**, ob Compose alle Pflichtwerte findet:
    ```bash
    docker compose config --quiet && echo OK
    ```
-5. **Bauen und starten:**
+   Fehlt ein Pflichtwert, meldet Compose z. B. „POSTGRES_PASSWORD fehlt in .env“.
+4. **Bauen und starten:**
    ```bash
    docker compose up -d --build
    docker compose logs -f app
    ```
-6. **Reverse Proxy einrichten** (nächster Abschnitt) und **Migrationslücke schließen** (Abschnitt [Erster Start](#erster-start-was-docker-entrypointsh-tut)).
+   `KANZLEI_NAME` wird als Build-Argument in das Image eingebaut. Ändern Sie den Namen später, bauen Sie mit `--build` neu.
+5. **Reverse Proxy einrichten** (Abschnitt [Reverse Proxy mit HTTPS](#reverse-proxy-mit-https)).
 
 ## Mit Portainer
 
 1. Portainer → **Stacks** → **Add stack** → **Repository**.
 2. Repository-URL `https://github.com/PBaumfalk/AI-Lawyer`, Compose-Pfad `docker-compose.portainer.yml`.
-3. Unter **Environment variables** mindestens `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `EMAIL_ENCRYPTION_KEY` und `ONLYOFFICE_SECRET` setzen, besser auch `POSTGRES_PASSWORD`, `MINIO_SECRET_KEY` und `MEILISEARCH_API_KEY`.
+3. Unter **Environment variables** die Pflichtwerte `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `EMAIL_ENCRYPTION_KEY` und `ONLYOFFICE_SECRET` setzen, unbedingt auch `POSTGRES_PASSWORD`, `MINIO_SECRET_KEY` und `MEILISEARCH_API_KEY` (sonst gelten die öffentlich bekannten Standardwerte). Die Browser-Adressen `MINIO_PUBLIC_URL` und `ONLYOFFICE_URL` lassen sich ebenfalls als Variablen setzen.
 4. **Deploy the stack**. Das Image wird auf dem Server gebaut, der erste Lauf dauert entsprechend.
 
-Grenzen dieses Wegs: Alles, was nicht als Variable in der Datei steht (`MINIO_PUBLIC_URL`, `ONLYOFFICE_URL`, SMTP, `TOTP_REQUIRED_ROLES`, ein anderes MinIO-Image), lässt sich in Portainer nicht ohne Änderung der Compose-Datei setzen. Dafür brauchen Sie einen eigenen Fork des Repositorys oder den Weg über die Kommandozeile oben.
+Grenzen dieses Wegs: Redis läuft ohne Passwort, der MinIO-Port 9000 wird nicht veröffentlicht (Downloads brauchen dann einen Reverse Proxy im selben Docker-Netz), der Worker erhält keine SMTP-Werte (keine Fristerinnerungen per Mail) und keine KI-Startwerte. Wer das braucht, nimmt den Weg über die Kommandozeile oben.
 
 ## Reverse Proxy mit HTTPS
 
@@ -282,33 +246,24 @@ Dazu jeweils ein `server`-Block auf Port 80, der auf HTTPS umleitet. Die Antwort
 
 **Interne Wege bleiben im Docker-Netz:** OnlyOffice holt Dokumente und schickt Speicherstände über `APP_INTERNAL_URL` (`http://app:3000`, Pfad `/api/onlyoffice/…`), die App spricht OnlyOffice über `ONLYOFFICE_INTERNAL_URL` (`http://onlyoffice:80`) an. Diese Wege laufen nicht über den Proxy.
 
-**Socket.IO:** Der Block `/socket.io/` ist für die Echtzeit-Aktualisierungen gedacht. Im aktuellen Docker-Image läuft Socket.IO allerdings nicht (siehe [Kapitel 23](23-einschraenkungen-und-fragen.md#bekannte-einschränkungen)). Der Block schadet nicht und ist vorbereitet, wenn das behoben ist.
+**Socket.IO:** Der Block `/socket.io/` ist für die Echtzeit-Aktualisierungen nötig (Team-Nachrichten, Benachrichtigungen, neue E-Mails). Das Docker-Image startet den eigenen Server `dist-server/index.js`, der Socket.IO am selben Port 3000 bereitstellt. Ohne WebSocket-Weiterleitung am Proxy kommen diese Ereignisse nicht an.
 
-**Firewall:** Docker schreibt eigene iptables-Regeln und umgeht dabei `ufw`. Ein Port, den Compose auf `0.0.0.0` veröffentlicht, ist auch dann von außen erreichbar, wenn `ufw` ihn sperrt. Deshalb die Bindung an `127.0.0.1` in Schritt 3. Redis hat kein Passwort, Meilisearch und MinIO haben Standardschlüssel. Prüfen Sie mit `ss -tlnp` von einem anderen Rechner aus, was offen ist.
+**Firewall:** Docker schreibt eigene iptables-Regeln und umgeht dabei `ufw`. Ein Port, den Compose auf `0.0.0.0` veröffentlicht, ist auch dann von außen erreichbar, wenn `ufw` ihn sperrt. `docker-compose.yml` bindet deshalb Datenbank, Redis, Meilisearch, Stirling-PDF, Ollama und die MinIO-Konsole fest an `127.0.0.1`; App, OnlyOffice und MinIO folgen `PUBLIC_BIND`. Setzen Sie hinter einem Reverse Proxy `PUBLIC_BIND=127.0.0.1` (Schritt 2). Redis, Meilisearch und MinIO sind zusätzlich mit den in der `.env` erzeugten Geheimnissen geschützt. Prüfen Sie von einem anderen Rechner aus (z. B. mit `nmap`), welche Ports tatsächlich offen sind.
 
 ## Erster Start: was docker-entrypoint.sh tut
 
 Beide Container `app` und `worker` starten über `docker-entrypoint.sh`. Das Skript:
 
 1. wartet bis zu 30 × 2 Sekunden auf PostgreSQL (`db:5432`),
-2. führt `prisma migrate deploy` aus und bricht bei einem Fehler ab (`set -e`; der Container startet dann neu),
-3. spielt die Dateien `prisma/migrations/manual_*.sql` ein (pgvector, HNSW-Indizes, Gamification-Tabellen u. a.). Jede Anweisung läuft einzeln, Fehler werden nur protokolliert (`⚠ <Datei>: …`),
-4. prüft, ob es Benutzer gibt. Wenn nicht, läuft `prisma/seed.ts`. Ein Fehler hier ist nicht fatal („Seed failed (non-fatal)“),
+2. führt `prisma migrate deploy` aus. Die Migrationen bilden das Schema vollständig ab; die Migration `20261118120000_schema_sync` holt alles nach, was frühere Installationen nur per `db push` erhalten hatten, und ist so geschrieben, dass sie auch auf solchen Datenbanken durchläuft. Ein `db push` ist nicht mehr nötig,
+3. spielt mit `prisma/apply-manual-migrations.js` die Dateien `prisma/migrations/manual_*.sql` ein (pgvector-Erweiterung und HNSW-Indizes für die Vektorsuche). Alle Anweisungen sind idempotent. Scheitert eine, bricht das Skript mit „Manual migration failed: …“ ab, und der Container startet neu,
+4. prüft, ob es Benutzer gibt. Wenn nicht, läuft **nur im App-Container** `prisma/seed.ts`. Ein Fehler im Seed ist fatal: Der Container startet nicht, denn ohne Seed gäbe es kein Konto zum Anmelden,
 5. **nur im Worker:** prüft, ob Ollama die Modelle `qwen3.5:35b` und `blaifa/multilingual-e5-large-instruct` hat, und lädt fehlende herunter,
-6. startet den eigentlichen Prozess.
+6. startet den eigentlichen Prozess: in `app` den eigenen Server mit Socket.IO (`node dist-server/index.js`), im Worker `node dist-worker/index.js`.
 
-Beim ersten Worker-Start legt der Worker außerdem Standardeinstellungen, amtliche Formulare, Falldaten-Vorlagen, die Kanäle für Team-Nachrichten, Quests und Shop-Artikel an und registriert die zeitgesteuerten Jobs ([Kapitel 21](21-betrieb-und-sicherung.md#hintergrund-jobs)).
+Bei jedem Start (`set -e`) gilt: Schlägt Schritt 2 oder 3 fehl, startet der Container nicht und Docker versucht es erneut. Die Ursache steht in `docker compose logs app`.
 
-> **Pflichtschritt: Migrationslücke schließen.** Die Prisma-Migrationen sind unvollständig. Unter anderem fehlen die Tabelle `portal_invites` und die Spalte `users.inviteToken`. `migrate deploy` allein ergibt deshalb eine Datenbank, in der das Mandantenportal und weitere Funktionen nicht arbeiten. Gleichen Sie die Datenbank nach dem ersten Start einmal mit dem Schema ab:
->
-> ```bash
-> docker compose run --rm --entrypoint node app \
->   node_modules/prisma/build/index.js db push --skip-generate
-> docker compose run --rm --entrypoint node app prisma/apply-manual-migrations.js
-> docker compose restart app worker
-> ```
->
-> Die Reihenfolge ist wichtig: Erst muss `migrate deploy` (beim ersten Start) gelaufen sein, damit die Tabelle `_prisma_migrations` existiert. Sonst bricht `migrate deploy` bei späteren Starts ab, weil die Datenbank „nicht leer“ ist. Fragt `db push` nach Datenverlust, brechen Sie ab und klären Sie die Ursache; auf einer frischen Installation sollte das nicht vorkommen. Nach dem Neustart legt das Entrypoint-Skript die Beispielkonten an, falls der Seed beim ersten Mal an fehlenden Tabellen gescheitert ist. Die Lücke soll mit v1.0 geschlossen werden.
+Beim ersten Worker-Start legt der Worker außerdem Standardeinstellungen an (dabei die KI-Startwerte aus `AI_PROVIDER`, `AI_MODEL` und dem passenden API-Schlüssel), dazu amtliche Formulare, Falldaten-Vorlagen, die Kanäle für Team-Nachrichten, Quests und Shop-Artikel, und er registriert die zeitgesteuerten Jobs ([Kapitel 21](21-betrieb-und-sicherung.md#hintergrund-jobs)).
 
 ## Erste Anmeldung und Beispielkonten
 
@@ -352,10 +307,10 @@ Richten Sie für die Admin-Konten die Zwei-Faktor-Anmeldung ein und erzwingen Si
 
 ## KI einrichten und Modelle laden
 
-Welchen KI-Anbieter Helena nutzt, steht **nicht** in Umgebungsvariablen, sondern in der Datenbank. Ein Admin stellt ihn unter **Einstellungen → KI** (`/einstellungen/ki`) ein:
+Welchen KI-Anbieter Helena nutzt, steht in der Datenbank. Beim allerersten Start übernimmt der Worker die Werte `AI_PROVIDER`, `AI_MODEL` und `OPENAI_API_KEY` bzw. `ANTHROPIC_API_KEY` aus der `.env` als Startwerte (so wirkt die Wahl in `setup.sh`). Danach haben diese Variablen keine Wirkung mehr; ein Admin ändert die Einstellung unter **Einstellungen → KI** (`/einstellungen/ki`):
 
 1. **KI-Provider** wählen: **Ollama (Lokal)**, **OpenAI** oder **Anthropic**.
-2. Bei OpenAI oder Anthropic den **API-Schluessel** eintragen.
+2. Bei OpenAI oder Anthropic den **API-Schluessel** eintragen. Er wird verschlüsselt gespeichert und nie an den Browser zurückgegeben; ein leeres Feld behält den gespeicherten Schlüssel („Gespeichert. Leer lassen, um den Schlüssel zu behalten.“).
 3. **Modell** eintragen. Standard ist `qwen3.5:35b` für Ollama, `gpt-4o` für OpenAI, `claude-sonnet-4-20250514` für Anthropic (`src/lib/ai/provider.ts`).
 4. Bei Ollama die **Ollama-URL** prüfen (in Docker `http://ollama:11434`).
 5. **Verbindung testen**, dann **Einstellungen speichern**.
@@ -368,7 +323,7 @@ docker compose exec ollama ollama pull blaifa/multilingual-e5-large-instruct
 docker compose exec ollama ollama list
 ```
 
-Das Einbettungsmodell ist fest mit 1024 Dimensionen in der Datenbank verankert (`vector(1024)`). Ändern Sie `EMBEDDING_MODEL` nicht auf ein Modell mit anderer Dimension; der Wert `nomic-embed-text` aus `.env.example` passt nicht ([Kapitel 20](20-konfiguration.md#ki)).
+Das Einbettungsmodell ist fest mit 1024 Dimensionen in der Datenbank verankert (`vector(1024)`). Ändern Sie `EMBEDDING_MODEL` nicht auf ein Modell mit anderer Dimension ([Kapitel 20](20-konfiguration.md#ki)).
 
 Ein kleineres Chat-Modell (z. B. für einen Server ohne GPU) können Sie mit `ollama pull` laden und unter **Modell** eintragen. Das Reranking verlangt aber weiter `qwen3.5:35b`; fehlt es, scheitert dieser Schritt der Wissenssuche.
 
@@ -378,11 +333,14 @@ Was Helena kann und welche Grenzen gelten, steht in [Kapitel 9](09-helena.md). K
 
 | Problem | Ursache | Workaround |
 | --- | --- | --- |
-| `pull access denied` oder kein Download für `minio/minio:latest` | Das Image ist auf Docker Hub nicht mehr frei verfügbar. | In der Zusatzdatei unter `minio: image:` ein eigenes, gespiegeltes oder fest versioniertes Image eintragen, das Sie vorher mit `docker pull` geprüft haben. Es muss `mc` enthalten, weil der Healthcheck `mc ready local` aufruft. |
-| Portal-Einladungen, Passwort-Reset im Portal oder Seed scheitern mit „table … does not exist“ / „column … does not exist“ | Migrationen unvollständig (`portal_invites`, `users.inviteToken` u. a.) | `npx prisma db push` statt nur `migrate deploy`, im Container wie oben unter [Erster Start](#erster-start-was-docker-entrypointsh-tut). |
-| `could not select device driver "nvidia"` beim Start | `docker-compose.yml` reserviert eine NVIDIA-GPU, der Server hat keine oder kein NVIDIA Container Toolkit. | Toolkit installieren oder die GPU-Reservierung entfernen: in einer Zusatzdatei `ollama: deploy: !reset {}`. |
-| `app` startet nicht, `docker compose ps` zeigt `ollama` als *unhealthy* | `app` wartet auf einen gesunden Ollama-Container. | `docker compose logs ollama` prüfen. |
-| Editor bleibt leer oder meldet einen Token-Fehler | `ONLYOFFICE_SECRET` leer oder anders als `JWT_SECRET` des OnlyOffice-Containers; oder `ONLYOFFICE_URL` vom Browser nicht erreichbar | Beide Werte gleich setzen; `ONLYOFFICE_URL` auf einen Hostnamen mit HTTPS setzen. |
+| `docker compose up` bricht mit „… fehlt in .env“ ab | Ein Pflichtwert fehlt in der `.env`. | Wert eintragen oder `./setup.sh` erneut laufen lassen. |
+| `could not select device driver "nvidia"` beim Start | `docker-compose.gpu.yml` ist eingebunden, der Server hat aber keine NVIDIA-GPU oder kein NVIDIA Container Toolkit. | Toolkit installieren oder die GPU-Datei weglassen (auch in `COMPOSE_FILE`). |
+| Uploads scheitern nach einem Update mit „Insufficient permissions“ / 403 | Alte MinIO-Daten gehören noch dem Benutzer des früheren Images; das Chainguard-Image läuft als UID 65532. | `minio-init` passt die Rechte beim Start an. Prüfen Sie mit `docker compose logs minio-init`, ob er gelaufen ist, und starten Sie mit `docker compose up -d`. |
+| Eigenes MinIO-Image gewünscht (Spiegel, feste Version) | – | `MINIO_IMAGE` in der `.env` setzen. Das Image muss `mc` enthalten (Healthcheck `mc ready local`) und als UID 65532 laufen oder die Rechte selbst passend haben. |
+| `app` startet in einer Schleife neu, Log „Manual migration failed“ oder Fehler bei `migrate deploy` | Eine Migration oder manuelle SQL-Datei scheitert. | Meldung im Log lesen, Ursache beheben; nicht mit `db push` überdecken. |
+| `app` startet nicht, Log endet im Seed | Seed beim ersten Start fehlgeschlagen (fatal). | Meldung im Log prüfen, Ursache beheben, Container neu starten. |
+| Worker startet nicht, `docker compose ps` zeigt `ollama` als *unhealthy* | Der Worker wartet auf einen gesunden Ollama-Container. | `docker compose logs ollama` prüfen. |
+| Editor bleibt leer oder meldet einen Token-Fehler | `ONLYOFFICE_URL` vom Browser nicht erreichbar oder Geheimnis nach dem Start geändert, ohne beide Container neu zu erzeugen | `ONLYOFFICE_URL` auf einen Hostnamen mit HTTPS setzen; `docker compose up -d` erzeugt `app` und `onlyoffice` mit demselben `ONLYOFFICE_SECRET` neu. |
 | Downloads führen auf `localhost:9000` oder liefern `SignatureDoesNotMatch` | `MINIO_PUBLIC_URL` zeigt nicht auf eine vom Browser erreichbare Adresse, oder der Proxy ändert den `Host`-Header. | `MINIO_PUBLIC_URL` auf `https://dateien…` setzen, `Host` unverändert weiterreichen. |
 | Healthcheck-Timeout bei `setup.sh` | Erster Start mit Migrationen und Modell-Downloads dauert länger als fünf Minuten. | `docker compose logs -f app` beobachten, abwarten. |
 

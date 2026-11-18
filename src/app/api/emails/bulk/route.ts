@@ -1,17 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { z } from "zod";
-
-const bulkActionSchema = z.object({
-  emailIds: z.array(z.string()).min(1, "Mindestens eine E-Mail-ID erforderlich"),
-  action: z.enum(["markRead", "markUnread", "delete", "archive", "spam", "move"]),
-  targetFolderId: z.string().optional(), // Required for "move" action
-});
+import { emailBulkSchema, type EmailBulkResponse } from "@/lib/email/bulk-contract";
+import { emailNachrichtZugriffWhere } from "@/lib/email/zugriff";
 
 /**
  * POST /api/emails/bulk — Bulk actions on multiple emails.
- * Actions: markRead, markUnread, delete, archive, spam, move.
+ * Actions: markRead, markUnread, delete, restore, archive, spam, move.
+ * Contract: src/lib/email/bulk-contract.ts
  */
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -19,8 +15,8 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Nicht authentifiziert" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const parsed = bulkActionSchema.safeParse(body);
+  const body = await req.json().catch(() => null);
+  const parsed = emailBulkSchema.safeParse(body);
 
   if (!parsed.success) {
     return Response.json(
@@ -29,89 +25,99 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { emailIds, action, targetFolderId } = parsed.data;
-  const isAdmin = (session.user as any).role === "ADMIN";
+  const { action, targetFolderId } = parsed.data;
+  const emailIds = Array.from(new Set(parsed.data.emailIds));
+  const user = { id: session.user.id!, role: (session.user as any).role };
 
-  // Verify user has access to all emails
-  if (!isAdmin) {
-    const zuweisungen = await prisma.emailKontoZuweisung.findMany({
-      where: { userId: session.user.id },
-      select: { kontoId: true },
-    });
-    const accessibleKontoIds = new Set(zuweisungen.map((z) => z.kontoId));
-
-    const emails = await prisma.emailNachricht.findMany({
-      where: { id: { in: emailIds } },
-      select: { emailKontoId: true },
-    });
-
-    const unauthorized = emails.some((e) => !accessibleKontoIds.has(e.emailKontoId));
-    if (unauthorized) {
-      return Response.json(
-        { error: "Kein Zugriff auf eine oder mehrere E-Mails" },
-        { status: 403 }
-      );
-    }
+  // Every email must exist and belong to a mailbox assigned to the user
+  const emails = await prisma.emailNachricht.findMany({
+    where: { AND: [{ id: { in: emailIds } }, emailNachrichtZugriffWhere(user)] },
+    select: { id: true, emailKontoId: true },
+  });
+  if (emails.length !== emailIds.length) {
+    return Response.json(
+      { error: "Kein Zugriff auf eine oder mehrere E-Mails" },
+      { status: 403 }
+    );
   }
 
   let updated = 0;
+  const where = { id: { in: emailIds } };
 
   switch (action) {
     case "markRead":
-      ({ count: updated } = await prisma.emailNachricht.updateMany({
-        where: { id: { in: emailIds } },
-        data: { gelesen: true },
-      }));
-      break;
-
     case "markUnread":
       ({ count: updated } = await prisma.emailNachricht.updateMany({
-        where: { id: { in: emailIds } },
-        data: { gelesen: false },
+        where,
+        data: { gelesen: action === "markRead" },
       }));
       break;
 
     case "delete":
       ({ count: updated } = await prisma.emailNachricht.updateMany({
-        where: { id: { in: emailIds } },
+        where,
         data: { geloescht: true, geloeschtAm: new Date() },
+      }));
+      break;
+
+    case "restore":
+      ({ count: updated } = await prisma.emailNachricht.updateMany({
+        where,
+        data: { geloescht: false, geloeschtAm: null },
       }));
       break;
 
     case "archive":
     case "spam":
     case "move": {
-      let folderId = targetFolderId;
+      // Resolve the target folder per mailbox: emails of different mailboxes
+      // must land in their own mailbox's folder.
+      const kontoIds = Array.from(new Set(emails.map((e) => e.emailKontoId)));
+      const zielProKonto = new Map<string, string>();
 
-      // For archive/spam, find the corresponding special folder
-      if (action === "archive" || action === "spam") {
-        // Get the kontoId from the first email to find the right folder
-        const firstEmail = await prisma.emailNachricht.findFirst({
-          where: { id: { in: emailIds } },
-          select: { emailKontoId: true },
+      if (action === "move") {
+        const ordner = await prisma.emailOrdner.findUnique({
+          where: { id: targetFolderId! },
+          select: { id: true, kontoId: true },
         });
-
-        if (firstEmail) {
-          const spezialTyp = action === "archive" ? "ARCHIVE" : "JUNK";
-          const folder = await prisma.emailOrdner.findFirst({
-            where: {
-              kontoId: firstEmail.emailKontoId,
-              spezialTyp,
+        if (!ordner || kontoIds.some((k) => k !== ordner.kontoId)) {
+          return Response.json(
+            { error: "Zielordner gehört nicht zum Postfach der E-Mails" },
+            { status: 400 }
+          );
+        }
+        zielProKonto.set(ordner.kontoId, ordner.id);
+      } else {
+        const spezialTyp = action === "archive" ? "ARCHIVE" : "JUNK";
+        const ordner = await prisma.emailOrdner.findMany({
+          where: { kontoId: { in: kontoIds }, spezialTyp },
+          select: { id: true, kontoId: true },
+        });
+        for (const o of ordner) if (!zielProKonto.has(o.kontoId)) zielProKonto.set(o.kontoId, o.id);
+        if (zielProKonto.size !== kontoIds.length) {
+          return Response.json(
+            {
+              error:
+                action === "archive"
+                  ? "Für das Postfach ist kein Archiv-Ordner vorhanden"
+                  : "Für das Postfach ist kein Spam-Ordner vorhanden",
             },
-          });
-          folderId = folder?.id ?? undefined;
+            { status: 409 }
+          );
         }
       }
 
-      if (folderId) {
-        ({ count: updated } = await prisma.emailNachricht.updateMany({
-          where: { id: { in: emailIds } },
-          data: { emailOrdnerId: folderId },
-        }));
+      for (const [kontoId, ordnerId] of Array.from(zielProKonto)) {
+        const { count } = await prisma.emailNachricht.updateMany({
+          where: { id: { in: emailIds }, emailKontoId: kontoId },
+          data: { emailOrdnerId: ordnerId },
+        });
+        updated += count;
       }
       break;
     }
   }
 
-  return Response.json({ updated, action });
+  const response: EmailBulkResponse = { updated, action };
+  return Response.json(response);
 }

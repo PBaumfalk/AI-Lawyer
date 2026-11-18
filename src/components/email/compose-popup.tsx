@@ -14,6 +14,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ComposeEditor, type ComposeEditorRef } from "./compose-editor";
+import type {
+  EmailSendRequest,
+  EmailSendResponse,
+  EmailSendCancelRequest,
+} from "@/lib/email/send-contract";
+import { aktenSucheUrl, parseAktenSuche, type AuswahlAkte } from "@/lib/email/dokument-auswahl";
 import { ComposeRecipients } from "./compose-recipients";
 import {
   ComposeAttachments,
@@ -80,7 +86,8 @@ export function ComposePopup({
   const [betreff, setBetreff] = useState("");
   const [akteId, setAkteId] = useState<string | null>(null);
   const [akteSearch, setAkteSearch] = useState("");
-  const [akteResults, setAkteResults] = useState<any[]>([]);
+  const [akteResults, setAkteResults] = useState<AuswahlAkte[]>([]);
+  const [akteLabel, setAkteLabel] = useState("");
   const [prioritaet, setPrioritaet] = useState<"NIEDRIG" | "NORMAL" | "HOCH">(
     "NORMAL"
   );
@@ -149,12 +156,9 @@ export function ComposePopup({
     }
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `/api/akten?search=${encodeURIComponent(akteSearch)}&limit=5`
-        );
+        const res = await fetch(aktenSucheUrl(akteSearch, 5));
         if (res.ok) {
-          const data = await res.json();
-          setAkteResults(Array.isArray(data) ? data : data?.data ?? []);
+          setAkteResults(parseAktenSuche(await res.json()));
         }
       } catch {
         setAkteResults([]);
@@ -193,13 +197,22 @@ export function ComposePopup({
       if (!proceed) return;
     }
 
+    if (attachments.some((a) => a.uploading)) {
+      toast.error("Bitte warten Sie, bis alle Anhaenge hochgeladen sind.");
+      return;
+    }
+    if (attachments.some((a) => !a.ref)) {
+      toast.error("Mindestens ein Anhang konnte nicht hochgeladen werden. Bitte entfernen Sie ihn.");
+      return;
+    }
+
     setSending(true);
 
     try {
       const html = editorRef.current?.getHTML() || "";
       const text = editorRef.current?.getText() || "";
 
-      const payload: any = {
+      const payload: EmailSendRequest = {
         kontoId,
         empfaenger,
         cc,
@@ -208,9 +221,7 @@ export function ComposePopup({
         inhalt: html,
         inhaltText: text,
         akteId: akteId || undefined,
-        anhaenge: attachments
-          .filter((a) => a.storageKey)
-          .map((a) => a.storageKey!),
+        anhaenge: attachments.map((a) => a.ref!),
         prioritaet,
         lesebestaetigung,
       };
@@ -231,7 +242,7 @@ export function ComposePopup({
         return;
       }
 
-      const data = await res.json();
+      const data: EmailSendResponse = await res.json();
 
       if (scheduledDate) {
         // Scheduled send confirmation
@@ -255,7 +266,7 @@ export function ComposePopup({
                 const cancelRes = await fetch("/api/email-send/cancel", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ emailId: data.emailId }),
+                  body: JSON.stringify({ emailId: data.emailId } satisfies EmailSendCancelRequest),
                 });
                 if (cancelRes.ok) {
                   toast.success("E-Mail-Versand abgebrochen");
@@ -290,6 +301,10 @@ export function ComposePopup({
   const handleAddAttachments = (files: AttachmentFile[]) => {
     setAttachments((prev) => [...prev, ...files]);
     setDirty(true);
+  };
+
+  const handleUpdateAttachment = (fileId: string, patch: Partial<AttachmentFile>) => {
+    setAttachments((prev) => prev.map((a) => (a.id === fileId ? { ...a, ...patch } : a)));
   };
 
   const handleRemoveAttachment = (fileId: string) => {
@@ -440,14 +455,16 @@ export function ComposePopup({
             {akteId ? (
               <div className="flex items-center gap-2 py-2">
                 <span className="text-sm text-foreground">
-                  {akteResults.find((a: any) => a.id === akteId)?.aktenzeichen ||
-                    akteId}
+                  {akteLabel || akteId}
                 </span>
                 <button
                   type="button"
                   onClick={() => {
                     setAkteId(null);
+                    setAkteLabel("");
                     setAkteSearch("");
+                    // DMS attachments belong to the previous Akte
+                    setAttachments((prev) => prev.filter((a) => a.source !== "dms"));
                   }}
                   className="text-muted-foreground hover:text-red-500"
                 >
@@ -465,12 +482,13 @@ export function ComposePopup({
                 />
                 {akteResults.length > 0 && (
                   <div className="absolute left-0 right-0 top-full z-50 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-white/20 dark:border-white/[0.08] max-h-36 overflow-y-auto">
-                    {akteResults.map((a: any) => (
+                    {akteResults.map((a) => (
                       <button
                         key={a.id}
                         type="button"
                         onClick={() => {
                           setAkteId(a.id);
+                          setAkteLabel(`${a.aktenzeichen} ${a.kurzrubrum}`.trim());
                           setAkteSearch("");
                           setAkteResults([]);
                         }}
@@ -506,6 +524,7 @@ export function ComposePopup({
         <ComposeAttachments
           attachments={attachments}
           onAdd={handleAddAttachments}
+          onUpdate={handleUpdateAttachment}
           onRemove={handleRemoveAttachment}
           akteId={akteId}
         />

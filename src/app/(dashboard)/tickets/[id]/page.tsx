@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { buildAkteAccessFilter } from "@/lib/rbac";
 import { findAccessibleTicket } from "@/lib/tickets/access";
+import { ticketEmailsInclude } from "@/lib/tickets/emails";
 import { TicketDetail } from "@/components/tickets/ticket-detail";
 
 interface TicketDetailPageProps {
@@ -19,7 +20,7 @@ export default async function TicketDetailPage({ params }: TicketDetailPageProps
     findAccessibleTicket(user, id, {
         akte: { select: { id: true, aktenzeichen: true, kurzrubrum: true } },
         verantwortlich: { select: { id: true, name: true } },
-        emails: { select: { id: true, betreff: true, absender: true } },
+        ...ticketEmailsInclude,
     }),
     prisma.user.findMany({
       select: { id: true, name: true },
@@ -53,7 +54,7 @@ export default async function TicketDetailPage({ params }: TicketDetailPageProps
         updatedAt: ticket.updatedAt.toISOString(),
         akte: ticket.akte,
         verantwortlich: ticket.verantwortlich,
-        emails: ticket.emails,
+        emails: ticket.emailNachrichten,
       }}
       users={users}
       akten={akten}

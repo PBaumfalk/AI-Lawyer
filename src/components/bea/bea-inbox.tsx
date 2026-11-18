@@ -1,5 +1,6 @@
 "use client";
 
+import { beaAutoZuordnen } from "@/lib/bea/zuordnung";
 import { useEffect, useState, useCallback } from "react";
 import { useBeaSession } from "@/lib/bea/session";
 import {
@@ -392,21 +393,15 @@ function AkteAssignDialog({
   const handleAutoAssign = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/bea/auto-assign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nachrichtId: messageId }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.akteId) {
-          onClose();
-          window.location.reload();
-          return;
-        }
+      const r = await beaAutoZuordnen(messageId);
+      if (r.zugeordnet) {
+        onClose();
+        window.location.reload();
+        return;
       }
+      if (r.meldung) alert(r.meldung);
     } catch {
-      // Ignore
+      alert("Zuordnung fehlgeschlagen");
     }
     setLoading(false);
   };

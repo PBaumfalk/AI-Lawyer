@@ -1,5 +1,7 @@
 "use client";
 
+import type { TicketEmail } from "@/lib/tickets/emails";
+import { emailLink } from "@/lib/email/links";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -35,7 +37,7 @@ interface TicketData {
   updatedAt: string;
   akte: { id: string; aktenzeichen: string; kurzrubrum: string | null } | null;
   verantwortlich: { id: string; name: string | null } | null;
-  emails: { id: string; betreff: string; absender: string }[];
+  emails: TicketEmail[];
 }
 
 interface UserOption {
@@ -265,7 +267,7 @@ export function TicketDetail({ ticket, users, akten }: TicketDetailProps) {
                 {ticket.emails.map((email) => (
                   <Link
                     key={email.id}
-                    href={`/email/${email.id}`}
+                    href={emailLink(email.id)}
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 dark:hover:bg-white/[0.04] transition-colors"
                   >
                     <Mail className="w-4 h-4 text-muted-foreground" />

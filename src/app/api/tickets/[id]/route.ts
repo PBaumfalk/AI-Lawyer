@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canAccessAkte, PERMISSIONS } from "@/lib/rbac";
 import { findAccessibleTicket } from "@/lib/tickets/access";
+import { ticketEmailsInclude } from "@/lib/tickets/emails";
 import { enqueueQuestCheck } from "@/lib/gamification/quest-service";
 
 /**
@@ -23,7 +24,7 @@ export async function GET(
   const ticket = await findAccessibleTicket(user, id, {
       akte: { select: { id: true, aktenzeichen: true, kurzrubrum: true } },
       verantwortlich: { select: { id: true, name: true } },
-      emails: { select: { id: true, betreff: true, absender: true } },
+      ...ticketEmailsInclude,
   });
 
   if (!ticket) {
@@ -118,7 +119,7 @@ export async function PATCH(
     include: {
       akte: { select: { id: true, aktenzeichen: true, kurzrubrum: true } },
       verantwortlich: { select: { id: true, name: true } },
-      emails: { select: { id: true, betreff: true } },
+      ...ticketEmailsInclude,
     },
   });
 
@@ -153,12 +154,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Ticket nicht gefunden." }, { status: 404 });
   }
 
-  // Unlink any emails referencing this ticket
-  await prisma.emailMessage.updateMany({
-    where: { ticketId: id },
-    data: { ticketId: null },
-  });
-
+  // Linked emails are unlinked by the relation (onDelete: SetNull).
   await prisma.ticket.delete({ where: { id } });
 
   return NextResponse.json({ success: true });

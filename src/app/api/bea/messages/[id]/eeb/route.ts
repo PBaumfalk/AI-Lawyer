@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { logAuditEvent } from "@/lib/audit";
+import { eebBestaetigungSchema } from "@/lib/bea/versand";
 
 // --- POST /api/bea/messages/[id]/eeb ---
 // Records the eEB (elektronisches Empfangsbekenntnis) acknowledgment.
@@ -9,7 +10,7 @@ import { logAuditEvent } from "@/lib/audit";
 // This route validates and persists the result.
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   // RBAC: Only ANWALT or ADMIN can acknowledge eEB
@@ -20,7 +21,7 @@ export async function POST(
 
   const nachricht = await prisma.beaNachricht.findUnique({
     where: { id },
-    select: { id: true, eebStatus: true, betreff: true, safeIdAbsender: true, akteId: true },
+    select: { id: true, eebStatus: true, betreff: true, safeIdAbsender: true, akteId: true, nachrichtenId: true },
   });
 
   if (!nachricht) {
@@ -34,7 +35,27 @@ export async function POST(
     );
   }
 
-  const eebDatum = new Date();
+  // The eEB must have been confirmed by bea.expert for exactly this message.
+  const parsed = eebBestaetigungSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "eEB-Bestaetigung von beA fehlt", details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+  if (!nachricht.nachrichtenId) {
+    return NextResponse.json(
+      { error: "Nachricht hat keine beA-Nachrichten-ID; eEB kann nicht zugeordnet werden" },
+      { status: 409 }
+    );
+  }
+  if (parsed.data.nachrichtenId !== nachricht.nachrichtenId) {
+    return NextResponse.json(
+      { error: "eEB-Bestaetigung gehoert zu einer anderen beA-Nachricht" },
+      { status: 400 }
+    );
+  }
+  const eebDatum = new Date(parsed.data.eebDatum);
 
   await prisma.beaNachricht.update({
     where: { id },

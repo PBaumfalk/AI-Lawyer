@@ -1,5 +1,6 @@
 "use client";
 
+import { beaAutoZuordnen } from "@/lib/bea/zuordnung";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -256,17 +257,14 @@ function AssignButton({ messageId }: { messageId: string }) {
   const handleAutoAssign = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/bea/auto-assign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nachrichtId: messageId }),
-      });
-      if (res.ok) {
+      const r = await beaAutoZuordnen(messageId);
+      if (r.zugeordnet) {
         window.location.reload();
         return;
       }
+      if (r.meldung) alert(r.meldung);
     } catch {
-      // Ignore
+      alert("Zuordnung fehlgeschlagen");
     }
     setLoading(false);
   };

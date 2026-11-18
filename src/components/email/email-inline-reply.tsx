@@ -17,11 +17,19 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { ReplyMode } from "@/components/email/email-actions-bar";
 import { cn } from "@/lib/utils";
+import {
+  splitAdressen,
+  type EmailSendRequest,
+  type EmailSendResponse,
+  type EmailSendCancelRequest,
+} from "@/lib/email/send-contract";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface EmailData {
   id: string;
+  /** Mailbox the original mail belongs to; the reply is sent from it. */
+  emailKontoId?: string;
   betreff: string;
   absender: string;
   absenderName: string | null;
@@ -142,28 +150,35 @@ export function EmailInlineReply({
     try {
       const bodyHtml = editorRef.current?.innerHTML ?? "";
 
+      if (!originalEmail.emailKontoId) {
+        throw new Error("Postfach der E-Mail unbekannt");
+      }
+      const payload: EmailSendRequest = {
+        kontoId: originalEmail.emailKontoId,
+        empfaenger: splitAdressen(recipients),
+        cc: splitAdressen(ccField),
+        bcc: splitAdressen(bccField),
+        betreff: subject,
+        inhalt: bodyHtml || "<p></p>",
+        inhaltText: editorRef.current?.innerText ?? undefined,
+        antwortAufId: mode !== "forward" ? originalEmail.id : undefined,
+        anhaenge:
+          mode === "forward"
+            ? Array.from(selectedAttachments).map((anhangId) => ({ quelle: "email" as const, anhangId }))
+            : [],
+      };
+
       const res = await fetch("/api/email-send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          an: recipients.split(",").map((r) => r.trim()).filter(Boolean),
-          cc: ccField ? ccField.split(",").map((r) => r.trim()).filter(Boolean) : [],
-          bcc: bccField ? bccField.split(",").map((r) => r.trim()).filter(Boolean) : [],
-          betreff: subject,
-          inhalt: bodyHtml,
-          inReplyTo: mode !== "forward" ? originalEmail.id : undefined,
-          weiterleitung: mode === "forward",
-          anhaengeIds:
-            mode === "forward"
-              ? Array.from(selectedAttachments)
-              : undefined,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Senden fehlgeschlagen");
       }
+      const sent: EmailSendResponse = await res.json();
 
       // 10-second undo toast
       toast("E-Mail wird in 10s gesendet", {
@@ -171,13 +186,13 @@ export function EmailInlineReply({
           label: "Rueckgaengig",
           onClick: async () => {
             try {
-              const data = await res.json().catch(() => ({}));
-              if (data.jobId) {
-                await fetch(`/api/email-send?jobId=${data.jobId}`, {
-                  method: "DELETE",
-                });
-                toast.success("Senden abgebrochen");
-              }
+              const cancel = await fetch("/api/email-send/cancel", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ emailId: sent.emailId } satisfies EmailSendCancelRequest),
+              });
+              if (cancel.ok) toast.success("Senden abgebrochen");
+              else toast.error("Konnte nicht abgebrochen werden - E-Mail wurde bereits gesendet");
             } catch {
               toast.error("Konnte nicht abgebrochen werden");
             }
@@ -201,6 +216,7 @@ export function EmailInlineReply({
     subject,
     mode,
     originalEmail.id,
+    originalEmail.emailKontoId,
     selectedAttachments,
     recipientCount,
     onSent,
@@ -332,7 +348,6 @@ export function EmailInlineReply({
             onClick={() => document.execCommand("insertUnorderedList")}
           />
           <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1" />
-          <ToolbarButton icon={Paperclip} title="Datei anhaengen" onClick={() => {}} />
         </div>
 
         {/* Editable area */}

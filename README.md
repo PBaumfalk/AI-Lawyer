@@ -23,7 +23,7 @@ Die Daten bleiben auf Ihrem Server. Die KI kann vollständig lokal laufen
 > editing (OnlyOffice), OCR, deadline calculation with German holidays, e-mail
 > filing, beA, time tracking, RVG billing with XRechnung and DATEV export, team
 > chat and a client portal. The built-in agent *Helena* runs a bounded ReAct loop
-> with 14 tools and RAG over statutes, case law and templates (pgvector, hybrid
+> with 18 tools and RAG over statutes, case law and templates (pgvector, hybrid
 > search, reranking), with local models via Ollama or OpenAI/Anthropic.
 > Next.js 14, TypeScript, PostgreSQL 16, Prisma, BullMQ, Docker Compose.
 > UI and documentation are in German.
@@ -34,11 +34,29 @@ Die Daten bleiben auf Ihrem Server. Die KI kann vollständig lokal laufen
 
 AI-Lawyer ist ein **aktives Entwicklungsprojekt, noch nicht für den
 Produktivbetrieb freigegeben.** Version 0.9 ist funktional weit
-(rund 141 000 Zeilen TypeScript, 84 Datenmodelle, 196 API-Endpunkte), der
-nächste Meilenstein v1.0 „Production Hardening“ ist in Planung. Bitte nicht mit
-echten Mandantendaten einsetzen, bevor Sie Installation, Sicherung und
-Berechtigungen selbst geprüft haben. Was bekannt offen ist, steht unter
-[Bekannte Grenzen](#bekannte-grenzen).
+(rund 141 000 Zeilen TypeScript, 86 Datenmodelle, 196 API-Endpunkte), der
+nächste Meilenstein v1.0 „Production Hardening“ ist in Planung. **Bitte nicht
+mit echten Mandantendaten einsetzen:** Unter anderem prüfen Aktenliste und
+Aktenansicht derzeit keine Zugriffsrechte, und mehrere Funktionen (beA,
+Rechnungen, E-Mail-Anhänge) sind nur teilweise fertig. Was bekannt offen ist,
+steht unter [Bekannte Grenzen](#bekannte-grenzen) und ausführlich in
+[Kapitel 23 des Handbuchs](docs/handbuch/23-einschraenkungen-und-fragen.md).
+
+## 📖 Handbuch
+
+Das **[Handbuch](docs/handbuch/README.md)** beschreibt AI-Lawyer in 23 Kapiteln
+mit Bildschirmfotos: für die Arbeit in der Kanzlei von den
+[ersten Schritten](docs/handbuch/02-erste-schritte.md) über
+[Akten](docs/handbuch/03-akten.md),
+[Fristen](docs/handbuch/06-fristen-und-kalender.md) und
+[Helena](docs/handbuch/09-helena.md) bis zum
+[Mandantenportal](docs/handbuch/12-mandantenportal.md), für Admins
+[Benutzer und Rollen](docs/handbuch/15-benutzer-und-rollen.md) und die
+[Migration aus j-lawyer.org](docs/handbuch/17-migration-aus-j-lawyer.md), für
+die IT [Installation](docs/handbuch/19-installation.md),
+[Konfiguration](docs/handbuch/20-konfiguration.md) und
+[Betrieb](docs/handbuch/21-betrieb-und-sicherung.md). Jedes Kapitel sagt offen,
+wo eine Funktion noch fehlt.
 
 ## Installation
 
@@ -60,8 +78,13 @@ cd AI-Lawyer
 
 Das Skript fragt nach der Adresse der Anwendung (z. B.
 `https://ailawyer.kanzlei.de`) und dem KI-Anbieter: Ollama (lokal, ohne
-API-Schlüssel), OpenAI oder Anthropic. Danach erzeugt es alle Geheimnisse,
-baut die Images und startet die Dienste.
+API-Schlüssel), OpenAI oder Anthropic. Danach erzeugt es Geheimnisse in einer
+`.env`, baut die Images und startet die Dienste.
+
+**Achtung:** Die dabei verwendete `docker-compose.yml` liest diese `.env` derzeit
+nicht, die Container laufen mit Entwicklungswerten. Für einen Server bitte den
+Weg über `docker-compose.portainer.yml` aus
+[Kapitel 19](docs/handbuch/19-installation.md) nehmen.
 </details>
 
 <details>
@@ -101,8 +124,10 @@ Beim ersten Start legt AI-Lawyer Beispielkonten an:
 | `anwalt@kanzlei.de` | Anwalt | `password123` |
 | `sachbearbeiter@kanzlei.de` | Sachbearbeitung | `password123` |
 
-**Ändern Sie diese Passwörter sofort**, oder legen Sie eigene Konten an und
-deaktivieren Sie die Beispielkonten. Zwei-Faktor-Anmeldung lässt sich je Rolle
+**Ändern Sie diese Passwörter sofort.** Eine Benutzerverwaltung in der
+Oberfläche gibt es noch nicht; Passwörter und neue Konten werden derzeit über
+die Datenbank gepflegt ([Kapitel 19](docs/handbuch/19-installation.md#erste-anmeldung-und-beispielkonten)).
+Zwei-Faktor-Anmeldung lässt sich über `TOTP_REQUIRED_ROLES` je Rolle
 verpflichtend machen.
 </details>
 
@@ -150,7 +175,7 @@ verpflichtend machen.
 
 ![Helena im KI-Chat](docs/screenshots/helena.png)
 
-- **Agent mit Grenzen:** Helena arbeitet in einer ReAct-Schleife mit 14
+- **Agent mit Grenzen:** Helena arbeitet in einer ReAct-Schleife mit 18
   Werkzeugen und höchstens 5 bzw. 20 Schritten. Sie liest Akten, Dokumente,
   Fristen und Zeiten, sucht in Gesetzen, Urteilen und Mustern, rechnet Kosten
   und legt Entwürfe, Fristen, Warnungen und Notizen an. Welche Werkzeuge sie
@@ -181,13 +206,15 @@ nach zwölf Monaten wird gelöscht.
 
 - Selbst gehostet: Datenbank, Dateien, Suche und auf Wunsch die KI laufen auf
   Ihrem Server.
-- Fünf Rollen (Admin, Anwalt, Sachbearbeitung, Sekretariat, Mandant), Zugriff
-  über Zuweisung oder Dezernat, Admin-Zugriff auf fremde Akten nur mit
-  Protokoll.
+- Fünf Rollen (Admin, Anwalt, Sachbearbeitung, Sekretariat, Mandant). Vorgesehen
+  ist Aktenzugriff über Zuweisung oder Dezernat; durchgesetzt wird das derzeit
+  nicht überall (siehe unten).
 - Zwei-Faktor-Anmeldung (TOTP) mit Backup-Codes, je Rolle erzwingbar.
 - Zugangsdaten für E-Mail und beA werden verschlüsselt gespeichert (AES-256).
-- Mandanten sehen ausschließlich, was für sie freigegeben ist. Die Trennung
-  erfolgt serverseitig.
+- Das Mandantenportal zeigt nur freigegebene Akten und Dokumente. **Achtung,
+  derzeit offen:** Die Aktenliste und die Aktenansicht der Kanzleioberfläche
+  prüfen die Zugriffsrechte nicht, und Mandantenkonten können sich auch dort
+  anmelden (siehe [Bekannte Grenzen](#bekannte-grenzen)).
 - Audit-Trail für Akten, Freigaben und Admin-Eingriffe, DSGVO-Anonymisierung
   von Kontakten.
 
@@ -205,8 +232,12 @@ nach zwölf Monaten wird gelöscht.
 
 ## Konfiguration
 
-Alle Variablen sind in [`.env.example`](.env.example) beschrieben. Das
-Setup-Skript erzeugt die Pflichtwerte selbst.
+Die wichtigsten Variablen stehen in [`.env.example`](.env.example), die
+vollständige Liste mit Wirkung in
+[Kapitel 20 des Handbuchs](docs/handbuch/20-konfiguration.md). Den KI-Anbieter
+(Ollama, OpenAI, Anthropic) und das Modell legen Sie nicht per Variable fest,
+sondern unter **Einstellungen → KI**. Ollama wird auch bei Cloud-Modellen für
+Einbettungen und Reranking gebraucht.
 
 <details>
 <summary><strong>Pflichtwerte</strong></summary>
@@ -224,9 +255,6 @@ Setup-Skript erzeugt die Pflichtwerte selbst.
 
 | Variable | Standard | Zweck |
 | --- | --- | --- |
-| `AI_PROVIDER` | `ollama` | `ollama`, `openai` oder `anthropic` |
-| `AI_MODEL` | `qwen3.5:35b` | Modell des gewählten Anbieters |
-| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | – | Schlüssel für Cloud-Modelle |
 | `TOTP_REQUIRED_ROLES` | – | Rollen mit Pflicht zur Zwei-Faktor-Anmeldung |
 | `POSTGRES_PASSWORD` | `ailawyer` | Datenbankpasswort, **ändern** |
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | `ailawyer` / `ailawyer123` | Dateispeicher, **ändern** |
@@ -244,12 +272,12 @@ Socket.IO, ein separater Worker für die Hintergrundaufgaben.
 | Schicht | Technik |
 | --- | --- |
 | Oberfläche | Next.js 14, React, Tailwind CSS, shadcn/ui, Motion |
-| Daten | PostgreSQL 16 mit pgvector, Prisma (84 Modelle) |
+| Daten | PostgreSQL 16 mit pgvector, Prisma (86 Modelle) |
 | Suche | Meilisearch |
 | Dateien | MinIO (S3-kompatibel) |
 | Office | OnlyOffice Docs |
 | KI | Vercel AI SDK: Ollama, OpenAI, Anthropic |
-| Hintergrund | BullMQ und Redis (13 Warteschlangen) |
+| Hintergrund | BullMQ und Redis (20 Warteschlangen) |
 | Echtzeit | Socket.IO mit Redis-Adapter |
 | Anmeldung | NextAuth.js v5, TOTP |
 | PDF und OCR | Stirling-PDF (Tesseract), pdf-lib |
@@ -296,6 +324,19 @@ steht im [Änderungsprotokoll](CHANGELOG.md).
 
 ## Bekannte Grenzen
 
+Die vollständige Liste steht in
+[Kapitel 23 des Handbuchs](docs/handbuch/23-einschraenkungen-und-fragen.md).
+Die wichtigsten Punkte:
+
+- **Sicherheitslücke beim Aktenzugriff:** Aktenliste und Aktenansicht laden
+  Akten ohne Rechteprüfung. Jeder angemeldete Benutzer sieht alle Akten, auch
+  ein Mandantenkonto, das sich über `/login` statt über das Portal anmeldet.
+  Die Dokumentensuche prüft die Aktenrechte ebenfalls nicht. **Nicht mit
+  echten Mandantendaten und Portalzugängen betreiben, bis das behoben ist.**
+- **Rechnungen:** Die Rechnungsliste stürzt ab, mehrere Knöpfe der
+  Rechnungsansicht (Bezahlt, Mahnung, Bearbeiten) funktionieren nicht.
+  Details in [Handbuch, Kapitel 10](docs/handbuch/10-zeiterfassung-und-abrechnung.md).
+
 - **Datenbank-Migrationen unvollständig:** Einige Tabellen und Spalten aus
   v0.4 und v0.5 haben keine Prisma-Migration. Bei einer frischen Installation
   bitte vorerst `npx prisma db push` statt `migrate deploy` verwenden. Wird in
@@ -304,7 +345,16 @@ steht im [Änderungsprotokoll](CHANGELOG.md).
   verfügbar. Bis zur Umstellung ein eigenes oder gespiegeltes Image eintragen.
 - **BI-Dashboard:** Die Kennzahlen laden derzeit nicht, weil eine Abfrage einen
   falschen Tabellennamen verwendet.
-- **beA** setzt eine kommerzielle Registrierung bei bea.expert voraus.
+- **beA** ist derzeit nicht nutzbar: Die Bibliothek von bea.expert ist nicht
+  eingebunden, und fehlgeschlagene Sendungen werden trotzdem als gesendet
+  gespeichert. Für den späteren Betrieb ist eine kommerzielle Registrierung bei
+  bea.expert nötig.
+- **E-Mail-Anhänge** werden beim Versand nicht mitgeschickt.
+- **Fristen** lassen sich in der Oberfläche kaum als erledigt markieren
+  (überfällige gar nicht).
+- **Echtzeit:** Das Docker-Image startet ohne Socket.IO, neue Nachrichten
+  erscheinen erst nach dem Neuladen.
+- **Benutzerverwaltung** fehlt in der Oberfläche.
 - **Next.js 14** ist veraltet. Der Umstieg auf eine aktuelle Version mit den
   zugehörigen Sicherheitskorrekturen ist für v1.0 geplant.
 - Die Testabdeckung ist im Verhältnis zur Codegröße gering.

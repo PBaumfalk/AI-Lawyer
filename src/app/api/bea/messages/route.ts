@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
   const result = await requirePermission("canSendBeA");
   if (result.error) return result.error;
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = createBeaMessageSchema.safeParse(body);
 
   if (!parsed.success) {

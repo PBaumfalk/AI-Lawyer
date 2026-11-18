@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/audit";
@@ -88,12 +89,14 @@ export async function POST(
   }
 
   const { id } = await params;
-  const body = await req.json();
+  const body = await req.json().catch(() => ({}));
   const { akteId, anhangIds, dmsOrdner, notiz } = body;
 
   if (!akteId) {
     return Response.json({ error: "akteId ist erforderlich" }, { status: 400 });
   }
+  const denied = await akteAccessDenied(session, akteId);
+  if (denied) return denied;
 
   // Verify email exists
   const email = await prisma.emailNachricht.findUnique({

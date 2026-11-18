@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { indexDokument } from "@/lib/meilisearch";
@@ -62,6 +63,8 @@ export async function PUT(
       { status: 404 }
     );
   }
+  const denied = await akteAccessDenied(session, dokument.akteId);
+  if (denied) return denied;
 
   const updated = await prisma.dokument.update({
     where: { id },

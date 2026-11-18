@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/audit";
@@ -71,6 +72,10 @@ export async function POST(
   const beschreibung = body.beschreibung ?? defaultBeschreibung;
   const akteId =
     body.akteId ?? email.veraktungen[0]?.akteId ?? null;
+  if (akteId) {
+    const denied = await akteAccessDenied(session, akteId);
+    if (denied) return denied;
+  }
   const prioritaet = body.prioritaet ?? "NORMAL";
   const faelligAm = body.faelligAm ? new Date(body.faelligAm) : null;
   const verantwortlichId = body.verantwortlichId ?? null;

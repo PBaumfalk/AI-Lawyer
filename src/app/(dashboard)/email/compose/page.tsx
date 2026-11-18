@@ -1,4 +1,6 @@
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { buildAkteAccessFilter } from "@/lib/rbac";
 import { getSetting } from "@/lib/settings/service";
 import { EmailComposeView } from "@/components/email/email-compose-view";
 
@@ -47,8 +49,10 @@ export default async function EmailComposePage({
   const kanzleiEmail = await getSetting("kanzlei.email");
   const kanzleiName = await getSetting("kanzlei.name");
 
+  const session = await auth();
+  const sessionUser = { id: session!.user!.id!, role: (session!.user as any).role };
   const akten = await prisma.akte.findMany({
-    where: { status: { in: ["OFFEN", "RUHEND"] } },
+    where: { AND: [buildAkteAccessFilter(sessionUser.id, sessionUser.role), { status: { in: ["OFFEN", "RUHEND"] } }] },
     select: { id: true, aktenzeichen: true, kurzrubrum: true },
     orderBy: { geaendert: "desc" },
     take: 100,

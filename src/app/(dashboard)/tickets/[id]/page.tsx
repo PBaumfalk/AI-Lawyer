@@ -1,5 +1,8 @@
+import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { buildAkteAccessFilter } from "@/lib/rbac";
+import { findAccessibleTicket } from "@/lib/tickets/access";
 import { TicketDetail } from "@/components/tickets/ticket-detail";
 
 interface TicketDetailPageProps {
@@ -8,15 +11,15 @@ interface TicketDetailPageProps {
 
 export default async function TicketDetailPage({ params }: TicketDetailPageProps) {
   const { id } = await params;
+  const session = await auth();
+  if (!session?.user) notFound();
+  const user = { id: session.user.id!, role: (session.user as any).role };
 
   const [ticket, users] = await Promise.all([
-    prisma.ticket.findUnique({
-      where: { id },
-      include: {
+    findAccessibleTicket(user, id, {
         akte: { select: { id: true, aktenzeichen: true, kurzrubrum: true } },
         verantwortlich: { select: { id: true, name: true } },
         emails: { select: { id: true, betreff: true, absender: true } },
-      },
     }),
     prisma.user.findMany({
       select: { id: true, name: true },
@@ -27,7 +30,7 @@ export default async function TicketDetailPage({ params }: TicketDetailPageProps
   if (!ticket) notFound();
 
   const akten = await prisma.akte.findMany({
-    where: { status: "OFFEN" },
+    where: { AND: [buildAkteAccessFilter(user.id, user.role), { status: "OFFEN" }] },
     select: { id: true, aktenzeichen: true },
     orderBy: { aktenzeichen: "asc" },
     take: 200,

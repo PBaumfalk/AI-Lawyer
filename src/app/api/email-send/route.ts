@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Nicht authentifiziert" }, { status: 401 });
   }
 
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
   const parsed = sendSchema.safeParse(body);
 
   if (!parsed.success) {
@@ -42,6 +43,10 @@ export async function POST(req: NextRequest) {
   }
 
   const data = parsed.data;
+  if (data.akteId) {
+    const denied = await akteAccessDenied(session, data.akteId);
+    if (denied) return denied;
+  }
 
   // Verify user has access to the sender mailbox
   const isAdmin = (session.user as any).role === "ADMIN";

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { DokumentStatus } from "@prisma/client";
@@ -74,6 +75,8 @@ export async function PATCH(
       { status: 404 }
     );
   }
+  const denied = await akteAccessDenied(session, dokument.akteId);
+  if (denied) return denied;
 
   // Check if transition is valid
   const allowedTargets = VALID_TRANSITIONS[dokument.status] ?? [];

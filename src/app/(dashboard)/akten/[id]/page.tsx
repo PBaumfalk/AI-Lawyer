@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { canAccessAkte } from "@/lib/rbac";
 import { Sparkles } from "lucide-react";
 import { AkteDetailHeader } from "@/components/akten/akte-detail-header";
 import { NormenSection } from "@/components/akten/normen-section";
@@ -18,6 +19,13 @@ interface AkteDetailPageProps {
 
 export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
   const { id } = await params;
+
+  // Access check first; unknown and forbidden Akten both look like 404 so the
+  // page does not reveal whether an Akte exists.
+  const session = await auth();
+  if (!session?.user) notFound();
+  const sessionUser = { id: session.user.id!, role: (session.user as any).role };
+  if (!(await canAccessAkte(sessionUser, id))) notFound();
 
   const akte = await prisma.akte.findUnique({
     where: { id },
@@ -63,8 +71,7 @@ export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
 
   if (!akte) notFound();
 
-  // Get session for role-based rendering (NaechsteSchritteEditor)
-  const session = await auth();
+  // Role-based rendering (NaechsteSchritteEditor)
   const userRole = (session?.user as any)?.role as string | undefined;
   const canEditNaechsteSchritte =
     userRole === "ADMIN" || userRole === "ANWALT" || userRole === "SACHBEARBEITER";

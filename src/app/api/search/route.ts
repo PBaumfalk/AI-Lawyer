@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchDokumente } from "@/lib/meilisearch";
+import { searchDokumenteForUser, intParam } from "@/lib/search/dokumente";
 import { requireAuth } from "@/lib/rbac";
 
 /**
@@ -58,18 +58,24 @@ export async function GET(request: NextRequest) {
   const dateFromStr = searchParams.get("dateFrom");
   const dateToStr = searchParams.get("dateTo");
 
-  const dateFrom = dateFromStr
-    ? Math.floor(new Date(dateFromStr).getTime() / 1000)
-    : undefined;
-  const dateTo = dateToStr
-    ? Math.floor(new Date(dateToStr).getTime() / 1000)
-    : undefined;
+  const toUnix = (s: string | null) => {
+    if (!s) return undefined;
+    const ms = new Date(s).getTime();
+    return Number.isFinite(ms) ? Math.floor(ms / 1000) : undefined;
+  };
+  const dateFrom = toUnix(dateFromStr);
+  // "Bis" is inclusive: a plain date (YYYY-MM-DD) covers the whole day.
+  const dateTo =
+    dateToStr && /^\d{4}-\d{2}-\d{2}$/.test(dateToStr)
+      ? toUnix(`${dateToStr}T23:59:59.999`)
+      : toUnix(dateToStr);
 
-  const limit = Math.min(parseInt(searchParams.get("limit") ?? "20"), 100);
-  const offset = parseInt(searchParams.get("offset") ?? "0");
+  const limit = intParam(searchParams.get("limit"), 20, 1, 100);
+  const offset = intParam(searchParams.get("offset"), 0, 0, 10_000);
+  const user = { id: result.session.user.id, role: result.session.user.role };
 
   try {
-    const results = await searchDokumente(q, {
+    const results = await searchDokumenteForUser(user, q, {
       akteId,
       mimeType,
       tags,

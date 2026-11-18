@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadFile, getFileStream } from "@/lib/storage";
@@ -36,6 +37,8 @@ export async function POST(
       { status: 404 }
     );
   }
+  const denied = await akteAccessDenied(session, dokument.akteId);
+  if (denied) return denied;
 
   // Load the version to restore
   const versionToRestore = await prisma.dokumentVersion.findUnique({

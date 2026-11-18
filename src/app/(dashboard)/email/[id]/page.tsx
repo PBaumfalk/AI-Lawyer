@@ -1,4 +1,6 @@
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { buildAkteAccessFilter } from "@/lib/rbac";
 import { notFound } from "next/navigation";
 import { EmailDetailView } from "@/components/email/email-detail-view";
 
@@ -36,8 +38,10 @@ export default async function EmailDetailPage({
   }
 
   // Fetch akten for the verakten dialog
+  const session = await auth();
+  const sessionUser = { id: session!.user!.id!, role: (session!.user as any).role };
   const akten = await prisma.akte.findMany({
-    where: { status: { in: ["OFFEN", "RUHEND"] } },
+    where: { AND: [buildAkteAccessFilter(sessionUser.id, sessionUser.role), { status: { in: ["OFFEN", "RUHEND"] } }] },
     select: { id: true, aktenzeichen: true, kurzrubrum: true },
     orderBy: { geaendert: "desc" },
     take: 100,

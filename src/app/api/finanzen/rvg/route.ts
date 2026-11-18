@@ -2,6 +2,7 @@
 // POST: Calculate RVG fees and optionally save to database
 
 import { NextRequest, NextResponse } from 'next/server';
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { RvgCalculator, buildCalculation } from '@/lib/finance/rvg/calculator';
@@ -56,6 +57,10 @@ export async function POST(request: NextRequest) {
   }
 
   const data = parsed.data;
+  if (data.akteId) {
+    const denied = await akteAccessDenied(session, data.akteId);
+    if (denied) return denied;
+  }
 
   try {
     const auftragseingang = data.auftragseingang

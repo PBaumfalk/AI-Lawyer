@@ -2,6 +2,7 @@
 // POST: Create a reversal booking for an existing entry (ANWALT/ADMIN only)
 
 import { NextRequest, NextResponse } from 'next/server';
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
@@ -35,6 +36,9 @@ export async function POST(
       { status: 403 },
     );
   }
+
+  const denied = await akteAccessDenied(session, akteId);
+  if (denied) return denied;
 
   let body: unknown;
   try {

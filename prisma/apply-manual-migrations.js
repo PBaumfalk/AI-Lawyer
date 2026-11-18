@@ -6,7 +6,6 @@
  * We split SQL safely (respecting dollar-quoted blocks), then run each
  * statement in its own Prisma client to avoid 25P02 cascading failures.
  */
-const { PrismaClient } = require("@prisma/client");
 const fs = require("fs");
 const path = require("path");
 
@@ -109,6 +108,7 @@ function splitSqlStatements(sql) {
 }
 
 async function main() {
+  const { PrismaClient } = require("@prisma/client");
   const migrationsDir = path.join(__dirname, "migrations");
 
   const manualFiles = fs
@@ -118,6 +118,7 @@ async function main() {
 
   console.log(`    Found ${manualFiles.length} manual migration files`);
 
+  const failures = [];
   for (const file of manualFiles) {
     const filePath = path.join(migrationsDir, file);
     const sql = fs.readFileSync(filePath, "utf8").trim();
@@ -132,7 +133,8 @@ async function main() {
         await prisma.$executeRawUnsafe(statement);
       } catch (err) {
         fileOk = false;
-        console.error(`    ⚠ ${file}: ${err.message}`);
+        failures.push(file);
+        console.error(`    ✗ ${file}: ${err.message}`);
       } finally {
         await prisma.$disconnect();
       }
@@ -141,9 +143,18 @@ async function main() {
       console.log(`    ✓ ${file}`);
     }
   }
+  if (failures.length > 0) {
+    // Fail loudly: silently skipped statements are how schema drift went
+    // unnoticed before (see migration 20261118120000_schema_sync).
+    throw new Error(`${failures.length} statement(s) failed in: ${[...new Set(failures)].join(", ")}`);
+  }
 }
 
-main().catch((err) => {
-  console.error("Manual migration failed:", err.message);
-  process.exit(0); // Non-fatal
-});
+module.exports = { splitSqlStatements };
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("Manual migration failed:", err.message);
+    process.exit(1);
+  });
+}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
@@ -41,6 +42,10 @@ export async function PATCH(
   const existing = await prisma.kalenderEintrag.findUnique({ where: { id } });
   if (!existing) {
     return NextResponse.json({ error: "Kalendereintrag nicht gefunden" }, { status: 404 });
+  }
+  if (existing.akteId) {
+    const denied = await akteAccessDenied(session, existing.akteId);
+    if (denied) return denied;
   }
 
   // For FRIST entries being marked as erledigt, erledigungsgrund is mandatory

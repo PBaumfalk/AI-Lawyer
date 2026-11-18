@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/rbac";
+import { canAccessAkte } from "@/lib/rbac";
+import { ticketAccessWhere } from "@/lib/tickets/access";
 
 export async function GET(req: NextRequest) {
   const result = await requireAuth();
@@ -11,7 +13,8 @@ export async function GET(req: NextRequest) {
   const akteId = searchParams.get("akteId") ?? "";
   const tag = searchParams.get("tag") ?? "";
 
-  const where: any = {};
+  const user = { id: result.session.user.id, role: result.session.user.role };
+  const where: any = { AND: [ticketAccessWhere(user)] };
   if (status) where.status = status;
   if (akteId) where.akteId = akteId;
   if (tag) where.tags = { has: tag };
@@ -34,7 +37,16 @@ export async function POST(req: NextRequest) {
   const postResult = await requireAuth();
   if (postResult.error) return postResult.error;
 
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body.titel !== "string" || !body.titel.trim()) {
+    return Response.json({ error: "Titel ist erforderlich." }, { status: 400 });
+  }
+  if (body.akteId) {
+    const user = { id: postResult.session.user.id, role: postResult.session.user.role };
+    if (!(await canAccessAkte(user, body.akteId))) {
+      return Response.json({ error: "Akte nicht gefunden." }, { status: 404 });
+    }
+  }
 
   // Validate tags — ai: prefixed tags are system-managed
   const tags: string[] = (body.tags ?? []).map((t: string) => t.trim()).filter(Boolean);
@@ -48,7 +60,7 @@ export async function POST(req: NextRequest) {
 
   const ticket = await prisma.ticket.create({
     data: {
-      titel: body.titel,
+      titel: body.titel.trim(),
       beschreibung: body.beschreibung ?? null,
       akteId: body.akteId ?? null,
       status: "OFFEN",

@@ -3,6 +3,7 @@
 // POST: Confirm a match (cascades: bank -> invoice paid -> Aktenkonto booking)
 
 import { NextRequest, NextResponse } from 'next/server';
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
@@ -78,6 +79,16 @@ export async function POST(request: NextRequest) {
     }
 
     const { transaktionId, rechnungId } = parsed.data;
+
+    const ziel = await prisma.rechnung.findUnique({ where: { id: rechnungId }, select: { akteId: true } });
+
+    if (ziel) {
+
+      const denied = await akteAccessDenied(session, ziel.akteId);
+
+      if (denied) return denied;
+
+    }
     const userId = session.user.id;
 
     // Execute match confirmation as a transaction (cascading effects)

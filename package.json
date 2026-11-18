@@ -18,7 +18,8 @@
     "dev:worker": "tsx --watch src/worker.ts",
     "dev:server": "tsx --watch src/server.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

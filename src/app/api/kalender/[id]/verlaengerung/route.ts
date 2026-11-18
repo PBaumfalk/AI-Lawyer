@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
@@ -54,6 +55,10 @@ export async function POST(
 
   if (!eintrag) {
     return NextResponse.json({ error: "Eintrag nicht gefunden" }, { status: 404 });
+  }
+  if (eintrag.akteId) {
+    const denied = await akteAccessDenied(session, eintrag.akteId);
+    if (denied) return denied;
   }
 
   if (eintrag.typ !== "FRIST") {

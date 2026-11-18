@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied, buildAkteAccessFilter } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -31,10 +32,25 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Build where clause based on format
+  const user = { id: session.user.id!, role: (session.user as any).role };
+  if (akteId) {
+    const denied = await akteAccessDenied(session, akteId);
+    if (denied) return denied;
+  }
+  if (datumStr && !Number.isFinite(new Date(datumStr).getTime())) {
+    return NextResponse.json({ error: "Ungueltiges Datum" }, { status: 400 });
+  }
+
+  // Build where clause based on format. Entries without an Akte are personal
+  // deadlines; entries with an Akte follow the Akte's access rules.
   const where: any = {
     typ: "FRIST",
     erledigt: false,
+    AND: [
+      user.role === "ADMIN"
+        ? {}
+        : { OR: [{ akteId: null }, { akte: buildAkteAccessFilter(user.id, user.role) }] },
+    ],
   };
 
   let title = "Fristenzettel";

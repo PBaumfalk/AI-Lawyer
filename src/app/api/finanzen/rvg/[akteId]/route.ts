@@ -3,6 +3,7 @@
 // POST: Save a new RVG calculation for an Akte with one-click invoice transfer
 
 import { NextRequest, NextResponse } from 'next/server';
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { buildCalculation } from '@/lib/finance/rvg/calculator';
@@ -42,6 +43,8 @@ export async function GET(
   }
 
   const { akteId } = await params;
+  const denied = await akteAccessDenied(session, akteId);
+  if (denied) return denied;
 
   try {
     // Verify Akte exists
@@ -113,6 +116,8 @@ export async function POST(
 
   const { akteId } = await params;
   const userId = session.user.id!;
+  const denied = await akteAccessDenied(session, akteId);
+  if (denied) return denied;
 
   let body: unknown;
   try {

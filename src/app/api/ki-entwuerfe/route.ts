@@ -1,6 +1,7 @@
+import { intParam } from "@/lib/search/dokumente";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requirePermission } from "@/lib/rbac";
+import { requirePermission, buildAkteAccessFilter } from "@/lib/rbac";
 
 /**
  * GET /api/ki-entwuerfe -- list AI-generated chat messages (userId = null)
@@ -15,11 +16,15 @@ export async function GET(req: NextRequest) {
   const akteId = searchParams.get("akteId") ?? "";
   const datum = searchParams.get("datum") ?? "";
   const q = searchParams.get("q") ?? "";
-  const take = Math.min(parseInt(searchParams.get("take") ?? "50"), 100);
-  const skip = parseInt(searchParams.get("skip") ?? "0");
+  const take = intParam(searchParams.get("take"), 50, 1, 100);
+  const skip = intParam(searchParams.get("skip"), 0, 0, 100_000);
 
+  const { session } = result;
   const where: any = {
     userId: null, // AI-generated messages only
+    ...(session.user.role === "ADMIN"
+      ? {}
+      : { akte: buildAkteAccessFilter(session.user.id, session.user.role) }),
   };
 
   if (akteId) where.akteId = akteId;

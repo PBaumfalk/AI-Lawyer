@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getFileStream, uploadFile } from "@/lib/storage";
@@ -69,6 +70,8 @@ export async function POST(
       { status: 400 }
     );
   }
+  const denied = await akteAccessDenied(session, akteId);
+  if (denied) return denied;
 
   // 1. Load template
   const vorlage = await prisma.dokumentVorlage.findUnique({ where: { id } });

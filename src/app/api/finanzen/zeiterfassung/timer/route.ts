@@ -5,6 +5,7 @@
 // PUT: Switch timer to a different Akte
 
 import { NextRequest, NextResponse } from 'next/server';
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
 import { startTimer, stopTimer, switchTimer, getActiveTimer } from '@/lib/finance/time-tracking/timer';
@@ -65,6 +66,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const denied = await akteAccessDenied(session, parsed.data.akteId);
+    if (denied) return denied;
     const timer = await startTimer(session.user.id, parsed.data.akteId);
 
     return NextResponse.json({ timer }, { status: 201 });
@@ -143,6 +146,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const denied = await akteAccessDenied(session, parsed.data.akteId);
+    if (denied) return denied;
     const result = await switchTimer(session.user.id, parsed.data.akteId);
 
     return NextResponse.json({

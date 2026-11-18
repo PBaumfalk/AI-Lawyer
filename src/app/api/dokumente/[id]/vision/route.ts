@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getFileStream } from "@/lib/storage";
@@ -32,6 +33,8 @@ export async function POST(
   if (!dokument) {
     return NextResponse.json({ error: "Dokument nicht gefunden" }, { status: 404 });
   }
+  const denied = await akteAccessDenied(session, dokument.akteId);
+  if (denied) return denied;
 
   // 2. Validate MIME type is image (PDFs are not supported for vision)
   if (!dokument.mimeType.startsWith("image/")) {

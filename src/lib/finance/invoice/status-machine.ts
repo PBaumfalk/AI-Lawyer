@@ -4,10 +4,13 @@
 //       ENTWURF -> STORNIERT (simple cancel)
 //       GESTELLT -> STORNIERT (creates Stornorechnung)
 //       GESTELLT -> MAHNUNG (tracks dunning level)
+//       MAHNUNG -> MAHNUNG (next dunning level, up to DRITTE_MAHNUNG)
 
 import { RechnungStatus, MahnStufe } from '@prisma/client';
 import { getNextInvoiceNumber } from './nummernkreis';
 import type { TransitionResult } from './types';
+import type { InvoiceAction } from './contract';
+import { INVOICE_ACTIONS } from './contract';
 import type { PrismaTransactionClient as PrismaTransaction } from '@/lib/db';
 
 /**
@@ -28,6 +31,7 @@ export const VALID_TRANSITIONS: Record<RechnungStatus, Set<RechnungStatus>> = {
   [RechnungStatus.MAHNUNG]: new Set([
     RechnungStatus.BEZAHLT,
     RechnungStatus.STORNIERT,
+    RechnungStatus.MAHNUNG,
   ]),
   [RechnungStatus.STORNIERT]: new Set([]),
 };
@@ -40,6 +44,43 @@ export function isValidTransition(
   to: RechnungStatus,
 ): boolean {
   return VALID_TRANSITIONS[from]?.has(to) ?? false;
+}
+
+/** Target status of each status action of the invoice API. */
+export const ACTION_TARGET_STATUS: Record<InvoiceAction, RechnungStatus> = {
+  stellen: RechnungStatus.GESTELLT,
+  bezahlen: RechnungStatus.BEZAHLT,
+  stornieren: RechnungStatus.STORNIERT,
+  mahnen: RechnungStatus.MAHNUNG,
+};
+
+const MAHN_SEQUENZ: MahnStufe[] = [
+  MahnStufe.ERINNERUNG,
+  MahnStufe.ERSTE_MAHNUNG,
+  MahnStufe.ZWEITE_MAHNUNG,
+  MahnStufe.DRITTE_MAHNUNG,
+];
+
+/** True when no further dunning level exists after the current one. */
+export function isLetzteMahnStufe(stufe: MahnStufe | null): boolean {
+  return stufe === MahnStufe.DRITTE_MAHNUNG;
+}
+
+/**
+ * Status actions the state machine permits for an invoice right now.
+ * The UI renders its buttons from this list, so UI and API cannot diverge.
+ */
+export function erlaubteAktionen(
+  status: RechnungStatus,
+  mahnStufe: MahnStufe | null,
+): InvoiceAction[] {
+  return INVOICE_ACTIONS.filter((action) => {
+    if (!isValidTransition(status, ACTION_TARGET_STATUS[action])) return false;
+    if (action === 'mahnen' && status === RechnungStatus.MAHNUNG && isLetzteMahnStufe(mahnStufe)) {
+      return false;
+    }
+    return true;
+  });
 }
 
 /**
@@ -84,6 +125,17 @@ export async function transitionInvoiceStatus(
     return {
       success: false,
       error: `Ungueltige Statusaenderung: ${currentStatus} -> ${targetStatus}`,
+    };
+  }
+
+  if (
+    currentStatus === RechnungStatus.MAHNUNG &&
+    targetStatus === RechnungStatus.MAHNUNG &&
+    isLetzteMahnStufe(rechnung.mahnStufe)
+  ) {
+    return {
+      success: false,
+      error: 'Hoechste Mahnstufe (3. Mahnung) bereits erreicht',
     };
   }
 
@@ -165,7 +217,8 @@ export async function transitionInvoiceStatus(
       break;
     }
 
-    case 'GESTELLT->MAHNUNG': {
+    case 'GESTELLT->MAHNUNG':
+    case 'MAHNUNG->MAHNUNG': {
       // Determine next Mahnstufe
       const currentStufe = rechnung.mahnStufe;
       const nextStufe = getNextMahnStufe(currentStufe);
@@ -231,13 +284,8 @@ export async function transitionInvoiceStatus(
 /**
  * Determine the next Mahnstufe in the dunning sequence.
  */
-function getNextMahnStufe(current: MahnStufe | null): MahnStufe {
-  const sequence: MahnStufe[] = [
-    MahnStufe.ERINNERUNG,
-    MahnStufe.ERSTE_MAHNUNG,
-    MahnStufe.ZWEITE_MAHNUNG,
-    MahnStufe.DRITTE_MAHNUNG,
-  ];
+export function getNextMahnStufe(current: MahnStufe | null): MahnStufe {
+  const sequence = MAHN_SEQUENZ;
 
   if (!current) return MahnStufe.ERINNERUNG;
 

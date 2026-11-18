@@ -1,266 +1,56 @@
+<img src="assets/logo.svg" width="72" alt="AI-Lawyer">
+
 # AI-Lawyer
 
-**AI-First Kanzleisoftware** — vollständig browserbasiert, selbst gehostet, DSGVO-konform.
+[![Tests & Typecheck](https://github.com/PBaumfalk/AI-Lawyer/actions/workflows/ci.yml/badge.svg)](https://github.com/PBaumfalk/AI-Lawyer/actions/workflows/ci.yml)
+[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-0.9-blue)](CHANGELOG.md)
+[![Status: in Entwicklung](https://img.shields.io/badge/Status-in%20Entwicklung-orange)](#stand-der-entwicklung)
 
-Vereint Akten- und Adressverwaltung, Dokumentenmanagement mit integrierter Textverarbeitung, Fristen- und Kalenderverwaltung, E-Mail-Veraktung, KI-gestützte Schriftsatzerstellung und ein Mandantenportal in einer einzigen Webanwendung. Keine Desktop-Installation, kein externes Office erforderlich.
+**Die Kanzleisoftware, in der die KI mitarbeitet, auf dem eigenen Server.**
+AI-Lawyer vereint Akten, Kontakte, Dokumente, Fristen, E-Mail, Abrechnung und
+ein Mandantenportal in einer Webanwendung. Mittendrin arbeitet **Helena**, eine
+KI-Kollegin: Sie liest mit, erkennt Fristen in Schreiben der Gegenseite, fasst
+Akten zusammen, recherchiert in Gesetzen und Urteilen und legt Schriftsatzentwürfe
+vor. Freigeben und unterschreiben tut immer ein Mensch.
 
-> ~141.000 Zeilen TypeScript &bull; 84 Prisma-Modelle &bull; 196 API-Endpunkte &bull; 9 Docker-Services
+Alles läuft im Browser, ohne Desktop-Installation und ohne externes Office.
+Die Daten bleiben auf Ihrem Server. Die KI kann vollständig lokal laufen
+(Ollama), auf Wunsch auch über OpenAI oder Anthropic.
 
----
+> **English abstract:** Self-hosted, AI-first practice management software for
+> German law firms. Case files, contacts, document management with in-browser
+> editing (OnlyOffice), OCR, deadline calculation with German holidays, e-mail
+> filing, beA, time tracking, RVG billing with XRechnung and DATEV export, team
+> chat and a client portal. The built-in agent *Helena* runs a bounded ReAct loop
+> with 14 tools and RAG over statutes, case law and templates (pgvector, hybrid
+> search, reranking), with local models via Ollama or OpenAI/Anthropic.
+> Next.js 14, TypeScript, PostgreSQL 16, Prisma, BullMQ, Docker Compose.
+> UI and documentation are in German.
 
-## Inhalt
+![Dashboard mit Tagesübersicht, Fristen und zuletzt bearbeiteten Akten](docs/screenshots/dashboard.png)
 
-- [Features](#features)
-- [Tech-Stack](#tech-stack)
-- [Architektur](#architektur)
-- [Voraussetzungen](#voraussetzungen)
-- [Installation](#installation)
-- [Umgebungsvariablen](#umgebungsvariablen)
-- [Standard-Zugangsdaten](#standard-zugangsdaten)
-- [Rollen & Berechtigungen](#rollen--berechtigungen)
-- [Lizenz](#lizenz)
+## Stand der Entwicklung
 
----
-
-## Features
-
-### Aktenverwaltung
-
-- Anlegen, Bearbeiten, Archivieren und Schließen von Akten mit vollständigem Audit-Trail
-- Konfigurierbares Aktenzeichen-Schema
-- Statusverwaltung: Offen, Ruhend, Archiviert, Geschlossen
-- 11 Sachgebiete (Arbeitsrecht, Familienrecht, Strafrecht, Verkehrsrecht u.a.)
-- Beteiligtenverwaltung: Mandant, Gegner, Gegnervertreter, Gericht, Zeuge, Sachverständiger
-- Automatische Konfliktprüfung bei Neuanlage
-- Gegenstandswert-Tracking mit Dezimalpräzision
-- Verknüpfung mit Normen (BGB, StPO etc.) inkl. KI-Analyse
-- Aktivitäts-Feed pro Akte
-- Dezernat-basierte Zugriffssteuerung
-
-### Adress- und Mandantenverwaltung
-
-- Natürliche und juristische Personen
-- Mehrere Adressen, Telefonnummern und E-Mail-Adressen pro Kontakt
-- KYC-Identitätsprüfung mit Risikobewertung (Niedrig, Mittel, Hoch)
-- Vollmachtsverwaltung mit Dokumentenanhang
-- Kontaktbeziehungen (Ehepartner, Kind, Arbeitgeber, Geschäftsführer etc.)
-- Mandantenkategorisierung: A-Kunde, Dauerauftraggeber, Gelegenheitsmandant, Pro Bono
-- Benutzerdefinierte Felder über JSON-Schema
-- Massenimport mit Vorschau-Validierung
-- DSGVO-konforme Anonymisierung
-
-### Dokumentenmanagement
-
-- Upload mit automatischer Versionierung
-- Statusverwaltung: Entwurf, Zur Prüfung, Freigegeben, Versendet
-- OnlyOffice-Integration — Dokumente direkt im Browser bearbeiten (DOCX, XLSX, PPTX, ODT)
-- OCR-Texterkennung via Stirling-PDF (Tesseract, Deutsch/Englisch)
-- Drei OCR-Fallback-Pfade: Retry, Vision-Analyse (GPT-4o), manuelle Texteingabe
-- Volltextindizierung über Meilisearch
-- MinIO-Speicher mit Versionshistorie
-- PDF-Vorschaugenerierung
-- Tag-System für Dokumentenkategorisierung
-- Sichtbarkeitssteuerung für Mandantenportal
-
-### KI-Assistent (Helena)
-
-- **ReAct-Agent** mit 14 spezialisierten Tools und begrenzter Ausführung (5/20 Schritte)
-- Tools: Akte lesen, Dokumente lesen, Fristen lesen, Zeiterfassung lesen, Gesetze suchen, Urteile suchen, Muster suchen, Websuche, Kosten berechnen, Entwürfe erstellen, Fristen anlegen, Alerts setzen, Notizen erstellen
-- **Deterministische Schriftsatz-Pipeline** (schema-basiert, kein ReAct für kritische Dokumente)
-- Platzhalter-System mit automatischer Feldbefüllung aus Aktenkontext
-- 50+ Klageart-Vorlagen
-- Multi-Turn-Rückfragen bei fehlenden Informationen
-- RAG-Integration mit pgvector-Embeddings für kontextbezogene Recherche
-- Multi-Provider: OpenAI, Anthropic, Ollama (lokal)
-- Token-Tracking und Nutzungsstatistiken
-- QA-Dashboard mit Halluzinationserkennung
-- Rollenbasierte Tool-Einschränkungen
-
-### E-Mail & beA
-
-- IMAP-Posteingangs-Synchronisierung mit Threading
-- E-Mail-Veraktung: automatische Zuordnung zu Akten
-- Zeitversetzter Versand
-- Mehrere E-Mail-Konten mit Zuweisungsregeln
-- beA-Integration (besonderes elektronisches Anwaltspostfach)
-- beA-Auto-Zuweisung: Nachricht → Akte → Ticket → Bearbeiter
-- EEB-Quittierung
-- Verschlüsselte Speicherung sensibler Daten (AES-256)
-
-### Team-Nachrichten
-
-- Kanal-System: Allgemeine Kanäle und aktenbezogene Kanäle
-- Echtzeit-Kommunikation via Socket.IO
-- Nachrichtenreaktionen und Threading
-- Lesebestätigungen
-- Suchintegration über Meilisearch
-- Separater Portal-Kanal für Mandantenkommunikation
-
-### Kalender & Fristen
-
-- Vier Eintragstypen: Termin, Frist, Wiedervorlage, Fokuszeit
-- Fristenrechner mit deutschen Feiertagen (feiertagejs)
-- Fristvorlagen für häufige Fristen (14-Tage-Frist, 30-Tage-Frist etc.)
-- Fristenzettel-Generierung
-- Werktags-Berechnung (Wochenenden/Feiertage überspringen)
-- Verlängerung und Quittierung
-- Verantwortlichkeiten und Vertreterregelung
-
-### Zeiterfassung & Abrechnung
-
-- Timer mit Start/Stop/Pause pro Akte
-- 20+ vordefinierte Tätigkeitskategorien
-- Stundensatz-Verwaltung
-
-**RVG-Abrechnung:**
-- Automatische Gebührenberechnung nach Gegenstandswert und Verfahrensart
-- Abrechnungsmodelle: Stundenhonorar, RVG, Pauschale
-
-**Rechnungswesen:**
-- Rechnungserstellung mit konfigurierbarem Nummernkreis
-- Rechnungsstatus: Entwurf, Gestellt, Bezahlt, Mahnung, Storniert
-- PDF-Rechnungen mit Kanzlei-Briefkopf
-- E-Rechnung (XRechnung-Format)
-- SEPA-Export
-- Mahnwesen mit Mahnstufen
-- DATEV-Export
-- Buchungsperioden-Verwaltung
-- Kostenstellen
-- Anderkonto-Führung (Fremdgeld)
-
-### Mandantenportal
-
-- Einladungsbasiertes Onboarding mit kryptografischen Token
-- Mandanten sehen nur ihre zugewiesenen Akten
-- Dokumenteinsicht (nur freigegebene Dokumente)
-- Nachrichtenkanal zum Anwalt mit 10-Sekunden-Polling
-- Aktivitäts-Timeline pro Akte
-- Profilverwaltung mit Passwortänderung
-- Passwort-Reset-Flow
-- BullMQ-Benachrichtigungen mit tagesbasierter Deduplizierung und DSGVO-Gate
-
-### Gamification
-
-- XP- und Level-System mit Fortschrittsbalken
-- 3–5 tägliche Quests mit automatischer Verifikation gegen Echtdaten
-- Streaks mit Werktags-Erkennung (Urlaub/Krankheit/Feiertage unterbrechen nicht)
-- Runen-Währung zum Einlösen im Item-Shop
-- Bossfight „Backlog-Monster" — Team-Fortschritts-Banner mit HP-Balken
-- 4 Spielklassen nach RBAC-Rolle: Jurist, Schreiber, Wächter, Quartiermeister
-- Item-Shop: Relikte (kosmetisch), Artefakte (Komfort), Trophäen (Prestige)
-- Wöchentliche Quests für strategische Ziele
-- Anti-Gaming: Mindestlänge, Abkühlung, Tages-Deckel, Stichproben-Audit
-- DSGVO-konform: Opt-in, anonymisiertes Team-Dashboard, 12-Monats-Löschung
-
-### Falldatenblätter
-
-- JSON-Schema-basierte Datenvorlagen pro Sachgebiet
-- Genehmigungsworkflow: Entwurf → Eingereicht → Genehmigt/Abgelehnt
-- Versionierung und Standardvorlagen
-- Dynamische Feldtypen
-
-### Volltextsuche
-
-- Globale Suche über Akten, Kontakte, Dokumente, E-Mails und Nachrichten
-- Facettierte Ergebnisse mit Filtern
-- Echtzeit-Indizierung bei Upload/Änderung
-- Relevanz-Ranking mit Highlighting
-
-### Administration
-
-- Nutzer- und Rollenverwaltung mit Aktivierung/Deaktivierung
-- Dezernat-Struktur (Abteilungen)
-- Urlaubs- und Vertretungsverwaltung
-- DSGVO-Anonymisierung mit Audit-Trail
-- System-Einstellungen und Kanzlei-Stammdaten
-- BullMQ-Job-Monitor (Bull Board)
-- QA-Dashboard für KI-Qualitätsmetriken
-- Muster-Verwaltung mit NER-basierter PII-Erkennung
-- Admin-Override mit Audit-Protokollierung
-- System-Health und Log-Viewer
-
----
-
-## Tech-Stack
-
-| Schicht | Technologie |
-|---|---|
-| Frontend | Next.js 14+ (App Router), TypeScript, Tailwind CSS, shadcn/ui |
-| Backend | Next.js API Routes, Custom Server (Socket.IO) |
-| Datenbank | PostgreSQL 16 + Prisma ORM (84 Modelle) + pgvector |
-| Volltextsuche | Meilisearch v1.11 |
-| Dateispeicher | MinIO (S3-kompatibel) |
-| Textverarbeitung | OnlyOffice Docs (Docker) |
-| AI/LLM | Vercel AI SDK v4 — OpenAI, Anthropic, Ollama |
-| Job-Queues | BullMQ + Redis 7 |
-| Echtzeit | Socket.IO + Redis Adapter |
-| Auth | NextAuth.js v5 (5 Rollen, RBAC) |
-| PDF/OCR | Stirling-PDF (Tesseract), pdf-lib, pdf-parse |
-| E-Mail | Nodemailer, IMAPFlow, Mailparser |
-| Deployment | Docker Compose (9 Services) |
-
----
-
-## Architektur
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Browser                              │
-│  Next.js App (React, Tailwind, shadcn/ui, Socket.IO)        │
-└──────────────┬──────────────────────────────┬───────────────┘
-               │ HTTPS                        │ WebSocket
-┌──────────────▼──────────────────────────────▼───────────────┐
-│  app (Next.js + Custom Server)              Port 3000       │
-│  ├─ API Routes (196 Endpunkte)                              │
-│  ├─ Server Components + Server Actions                      │
-│  └─ Socket.IO Server (Team-Nachrichten, Gamification)       │
-└──┬──────┬──────┬──────┬──────┬──────┬──────┬───────────────┘
-   │      │      │      │      │      │      │
-   ▼      ▼      ▼      ▼      ▼      ▼      ▼
-┌─────┐┌─────┐┌─────┐┌──────┐┌─────┐┌──────┐┌──────────┐
-│ db  ││redis││minio││meili ││only ││stirl.││ ollama   │
-│PG16 ││  7  ││ S3  ││search││office││ PDF  ││ LLM     │
-│pgvec││     ││     ││      ││     ││ OCR  ││         │
-└─────┘└──┬──┘└─────┘└──────┘└─────┘└──────┘└──────────┘
-          │
-   ┌──────▼──────┐
-   │   worker    │
-   │  BullMQ     │
-   │  13+ Queues │
-   └─────────────┘
-```
-
-**Docker-Services:**
-
-| Service | Image | Funktion |
-|---|---|---|
-| `app` | Custom (Dockerfile) | Next.js Application Server + Socket.IO |
-| `worker` | Custom (Dockerfile) | BullMQ Job-Prozessor (OCR, Embedding, E-Mail-Sync, Gamification) |
-| `db` | pgvector/pgvector:pg16 | PostgreSQL mit Vektorsuche |
-| `redis` | redis:7-alpine | Cache, Job-Broker, Socket.IO Adapter |
-| `minio` | minio/minio | S3-kompatibler Dateispeicher |
-| `meilisearch` | getmeili/meilisearch:v1.11 | Volltextsuche |
-| `onlyoffice` | onlyoffice/documentserver | Browser-Textverarbeitung |
-| `stirling-pdf` | stirlingtools/stirling-pdf | OCR und PDF-Konvertierung |
-| `ollama` | ollama/ollama | Lokale LLM-Inferenz |
-
-**Hintergrund-Queues (BullMQ):**
-
-OCR, Embedding, Akte-Embedding, Helena-Tasks, Dokumenten-Vorschau, Muster-Ingestion, NER/PII, Gesetze-Sync, Urteile-Sync, Gamification, Portal-Benachrichtigungen, E-Mail-Sync
-
----
-
-## Voraussetzungen
-
-- [Docker](https://docs.docker.com/get-docker/) ≥ 24 (inkl. Docker Compose V2)
-- ~8 GB freier RAM
-- ~20 GB freier Speicherplatz
-
----
+AI-Lawyer ist ein **aktives Entwicklungsprojekt, noch nicht für den
+Produktivbetrieb freigegeben.** Version 0.9 ist funktional weit
+(rund 141 000 Zeilen TypeScript, 84 Datenmodelle, 196 API-Endpunkte), der
+nächste Meilenstein v1.0 „Production Hardening“ ist in Planung. Bitte nicht mit
+echten Mandantendaten einsetzen, bevor Sie Installation, Sicherung und
+Berechtigungen selbst geprüft haben. Was bekannt offen ist, steht unter
+[Bekannte Grenzen](#bekannte-grenzen).
 
 ## Installation
 
-### Option 1: Setup-Skript (empfohlen)
+AI-Lawyer ist eine Server-Anwendung aus neun Docker-Diensten. Sie wird einmal
+installiert, danach arbeiten alle im Browser.
+
+Voraussetzungen: [Docker](https://docs.docker.com/get-docker/) ab Version 24 mit
+Docker Compose, etwa 8 GB freier Arbeitsspeicher (mehr für lokale KI-Modelle)
+und 20 GB Speicherplatz.
+
+<details>
+<summary><strong>🧭 Mit dem Setup-Skript</strong> (empfohlen)</summary>
 
 ```bash
 git clone https://github.com/PBaumfalk/AI-Lawyer.git
@@ -268,105 +58,267 @@ cd AI-Lawyer
 ./setup.sh
 ```
 
-Das Skript fragt interaktiv nach:
+Das Skript fragt nach der Adresse der Anwendung (z. B.
+`https://ailawyer.kanzlei.de`) und dem KI-Anbieter: Ollama (lokal, ohne
+API-Schlüssel), OpenAI oder Anthropic. Danach erzeugt es alle Geheimnisse,
+baut die Images und startet die Dienste.
+</details>
 
-- **App-URL** (z.B. `https://ailawyer.meinserver.de`)
-- **AI-Provider** — Ollama (lokal, kein API-Key), OpenAI oder Anthropic
-- **API-Key** (nur bei OpenAI / Anthropic)
-
-Danach generiert es automatisch alle Secrets, baut die Images und startet alle Services.
-
-### Option 2: Docker Compose (manuell)
+<details>
+<summary><strong>🖥️ Mit Docker Compose</strong> (für die IT)</summary>
 
 ```bash
-git clone https://github.com/PBaumfalk/AI-Lawyer.git
-cd AI-Lawyer
-
-# .env anlegen (siehe Umgebungsvariablen)
-cp .env.example .env
-# Secrets anpassen ...
-
+git clone https://github.com/PBaumfalk/AI-Lawyer.git && cd AI-Lawyer
+cp .env.example .env          # Pflichtwerte setzen, siehe Konfiguration
 docker compose -f docker-compose.portainer.yml up -d --build
 ```
 
-### Option 3: Portainer
-
-1. Portainer → **Stacks** → **Add stack** → **Repository**
-2. **Repository URL:** `https://github.com/PBaumfalk/AI-Lawyer`
-3. **Compose path:** `docker-compose.portainer.yml`
-4. Pflicht-Variablen unter **Environment variables** setzen (siehe unten)
-5. **Deploy the stack**
-
-### Neustart / Rebuild
+Neu bauen nach einem Update:
 
 ```bash
-docker compose -f docker-compose.portainer.yml down
 docker compose -f docker-compose.portainer.yml up -d --build --force-recreate
 ```
+</details>
 
----
+<details>
+<summary><strong>🐳 Mit Portainer</strong></summary>
 
-## Umgebungsvariablen
+1. Portainer → **Stacks** → **Add stack** → **Repository**
+2. Repository-URL `https://github.com/PBaumfalk/AI-Lawyer`, Compose-Pfad
+   `docker-compose.portainer.yml`
+3. Die Pflichtvariablen unter **Environment variables** setzen
+4. **Deploy the stack**
+</details>
 
-### Pflicht
+<details>
+<summary><strong>🔑 Erste Anmeldung</strong></summary>
 
-| Variable | Beschreibung | Generieren |
-|---|---|---|
-| `NEXTAUTH_URL` | Öffentliche URL der App | z.B. `https://ailawyer.meinserver.de` |
-| `NEXTAUTH_SECRET` | Session-Verschlüsselung | `openssl rand -base64 32` |
-| `EMAIL_ENCRYPTION_KEY` | E-Mail-Datenverschlüsselung | `openssl rand -hex 32` |
-| `ONLYOFFICE_SECRET` | OnlyOffice JWT-Secret | `openssl rand -base64 24` |
-
-### Optional
-
-| Variable | Standard | Beschreibung |
-|---|---|---|
-| `AI_PROVIDER` | `ollama` | `openai`, `anthropic` oder `ollama` |
-| `AI_MODEL` | `qwen3.5:35b` | Modellname des gewählten Providers |
-| `OPENAI_API_KEY` | — | API-Key für OpenAI |
-| `ANTHROPIC_API_KEY` | — | API-Key für Anthropic |
-| `POSTGRES_PASSWORD` | `ailawyer` | Datenbank-Passwort |
-| `MINIO_ACCESS_KEY` | `ailawyer` | MinIO Zugangsdaten |
-| `MINIO_SECRET_KEY` | `ailawyer123` | MinIO Zugangsdaten |
-| `MEILISEARCH_API_KEY` | `ailawyer-meili-key` | Meilisearch Master-Key |
-| `LOG_LEVEL` | `info` | Log-Level (debug, info, warn, error) |
-| `WORKER_CONCURRENCY` | `5` | Parallele Worker-Jobs |
-
-Alle Variablen sind in [`.env.example`](.env.example) dokumentiert.
-
----
-
-## Standard-Zugangsdaten
+Beim ersten Start legt AI-Lawyer Beispielkonten an:
 
 | E-Mail | Rolle | Passwort |
-|---|---|---|
-| `admin@kanzlei.de` | ADMIN | `password123` |
-| `anwalt@kanzlei.de` | ANWALT | `password123` |
-| `sachbearbeiter@kanzlei.de` | SACHBEARBEITER | `password123` |
+| --- | --- | --- |
+| `admin@kanzlei.de` | Admin | `password123` |
+| `anwalt@kanzlei.de` | Anwalt | `password123` |
+| `sachbearbeiter@kanzlei.de` | Sachbearbeitung | `password123` |
 
-> **Vor dem Produktivbetrieb unbedingt alle Passwörter ändern.**
+**Ändern Sie diese Passwörter sofort**, oder legen Sie eigene Konten an und
+deaktivieren Sie die Beispielkonten. Zwei-Faktor-Anmeldung lässt sich je Rolle
+verpflichtend machen.
+</details>
 
----
+## Funktionen im Überblick
 
-## Rollen & Berechtigungen
+| Akte mit Kennzahlen und Verlauf | Fristen, Termine, Wiedervorlagen |
+| --- | --- |
+| ![Akte im Detail](docs/screenshots/akte.png) | ![Kalender mit überfälligen und anstehenden Einträgen](docs/screenshots/kalender.png) |
 
-| Rolle | Beschreibung |
-|---|---|
-| `ADMIN` | Vollzugriff — Nutzerverwaltung, System-Einstellungen, Audit-Trail, DSGVO |
-| `ANWALT` | Akten, Dokumente, KI, Freigabe, beA-Versand, Abrechnung |
-| `SACHBEARBEITER` | Akten, Dokumente, Fristen, KI, Zeiterfassung |
-| `SEKRETARIAT` | Akten lesen, E-Mails, Kalender, Fristen |
-| `MANDANT` | Portal — eigene Akten einsehen, Dokumente, Nachrichten an Anwalt |
+- **Akten:** konfigurierbares Aktenzeichen, Sachgebiete, Beteiligte mit Rollen,
+  Kollisionsprüfung bei Neuanlage, Gegenstandswert, Dezernate, verknüpfte Normen,
+  Aktivitätsverlauf und vollständiger Audit-Trail
+- **Kontakte:** natürliche und juristische Personen, mehrere Anschriften,
+  Kontaktbeziehungen, Vollmachten, KYC-Prüfung mit Risikostufe, eigene Felder,
+  Massenimport, DSGVO-Anonymisierung
+- **Dokumente:** Versionen, Freigabestatus von *Entwurf* bis *Versendet*,
+  Bearbeitung im Browser mit OnlyOffice (DOCX, XLSX, PPTX, ODT), OCR über
+  Stirling-PDF, PDF-Werkzeuge, Volltextsuche, Schlagwörter
+- **Fristen und Kalender:** Fristenrechner mit Feiertagen je Bundesland,
+  Vorfristen und Halbfristen, Notfristen, Quittierung, Fristenzettel,
+  Vertretungen, Abgleich mit Google und Apple Kalender über CalDAV
+- **E-Mail und beA:** IMAP-Postfächer mit Threads, Veraktung, zeitversetzter
+  Versand, Zuweisungsregeln, beA-Eingang mit Zuordnung zu Akte und Bearbeiter,
+  eEB-Quittierung
+- **Zeiterfassung und Abrechnung:** Stoppuhr je Akte, Tätigkeitskategorien,
+  RVG-Rechner, Rechnungen mit Briefkopf, E-Rechnung (XRechnung), Mahnwesen,
+  SEPA- und DATEV-Export, Aktenkonto mit Fremdgeld
+- **Mandantenportal:** Einladung per Link, Mandanten sehen nur ihre Akten und
+  nur freigegebene Dokumente, sichere Nachrichten mit Anhängen,
+  „Nächste Schritte“ in verständlicher Sprache
+- **Team:** Echtzeit-Nachrichten in Kanälen und Akten-Threads, Tickets,
+  @-Erwähnungen, Urlaubs- und Vertretungsplanung
+- **Auswertung:** BI-Dashboard mit Kennzahlen und Trends, Export als CSV, XLSX
+  und PDF
+- **Migration aus j-lawyer.org:** Akten, Kontakte, Beteiligte, Dokumente und
+  Kalender werden über die REST-API übernommen und lassen sich gefahrlos
+  wiederholt einlesen
+- **Hell und dunkel**, Glass-Oberfläche, Befehlspalette (⌘K bzw. Strg+K)
 
-**Zugriffssteuerung:**
+| Akten | Dunkler Modus |
+| --- | --- |
+| ![Aktenliste](docs/screenshots/akten.png) | ![Dashboard im dunklen Modus](docs/screenshots/dashboard-dunkel.png) |
 
-- Direkte Zuweisung (Anwalt/Sachbearbeiter auf Akte)
-- Dezernat-Mitgliedschaft
-- Admin-Override (mit Audit-Trail)
-- Portal: Kontakt → Beteiligter → Akte (Einladungsbasiert)
+## Helena, die KI-Kollegin
 
----
+![Helena im KI-Chat](docs/screenshots/helena.png)
+
+- **Agent mit Grenzen:** Helena arbeitet in einer ReAct-Schleife mit 14
+  Werkzeugen und höchstens 5 bzw. 20 Schritten. Sie liest Akten, Dokumente,
+  Fristen und Zeiten, sucht in Gesetzen, Urteilen und Mustern, rechnet Kosten
+  und legt Entwürfe, Fristen, Warnungen und Notizen an. Welche Werkzeuge sie
+  nutzen darf, hängt von der Rolle ab.
+- **Schriftsätze über eine feste Pipeline:** Für Schriftsätze nutzt Helena keinen
+  freien Agenten, sondern eine strukturierte Pipeline mit Vorlagen für über 50
+  Klagearten, Platzhaltern aus der Akte und Rückfragen, wenn etwas fehlt.
+- **Wissen statt Raten:** Recherche in Gesetzen, Urteilen und den eigenen
+  Schriftsatzmustern über Hybrid-Suche (pgvector und Volltext) mit Reranking.
+  Personenbezogene Daten in Mustern werden vor der Aufnahme erkannt und
+  entfernt.
+- **Liest im Hintergrund mit:** erkennt Fristen in eingehenden Schreiben,
+  warnt bei Auffälligkeiten und prüft neue Urteile gegen alle laufenden Akten.
+- **Nichts geht ungeprüft raus:** Jeder Entwurf landet zur Freigabe bei einem
+  Menschen. Ein QA-Dashboard misst Qualität und Halluzinationen.
+- **Ihre Wahl des Modells:** lokal mit Ollama, ohne dass Daten das Haus
+  verlassen, oder über OpenAI bzw. Anthropic.
+
+## Gamification
+
+Wer möchte, macht aus Wiedervorlagen ein Spiel: tägliche Quests, die gegen echte
+Daten geprüft werden, Erfahrungspunkte und Level, Serien über Arbeitstage, ein
+Team-Bossfight gegen das „Backlog-Monster“ und ein Shop für Abzeichen. Die
+Teilnahme ist freiwillig, das Team-Dashboard zeigt nur anonymisierte Werte, und
+nach zwölf Monaten wird gelöscht.
+
+## Datenschutz und Sicherheit
+
+- Selbst gehostet: Datenbank, Dateien, Suche und auf Wunsch die KI laufen auf
+  Ihrem Server.
+- Fünf Rollen (Admin, Anwalt, Sachbearbeitung, Sekretariat, Mandant), Zugriff
+  über Zuweisung oder Dezernat, Admin-Zugriff auf fremde Akten nur mit
+  Protokoll.
+- Zwei-Faktor-Anmeldung (TOTP) mit Backup-Codes, je Rolle erzwingbar.
+- Zugangsdaten für E-Mail und beA werden verschlüsselt gespeichert (AES-256).
+- Mandanten sehen ausschließlich, was für sie freigegeben ist. Die Trennung
+  erfolgt serverseitig.
+- Audit-Trail für Akten, Freigaben und Admin-Eingriffe, DSGVO-Anonymisierung
+  von Kontakten.
+
+<details>
+<summary><strong>Rollen und Berechtigungen</strong></summary>
+
+| Rolle | Darf |
+| --- | --- |
+| Admin | alles, dazu Benutzer, Einstellungen, Audit-Trail, DSGVO |
+| Anwalt | Akten, Dokumente, KI, Freigaben, beA-Versand, Abrechnung |
+| Sachbearbeitung | Akten, Dokumente, Fristen, KI, Zeiterfassung |
+| Sekretariat | Akten lesen, E-Mail, Kalender, Fristen |
+| Mandant | nur das Portal: eigene Akten, freigegebene Dokumente, Nachrichten |
+</details>
+
+## Konfiguration
+
+Alle Variablen sind in [`.env.example`](.env.example) beschrieben. Das
+Setup-Skript erzeugt die Pflichtwerte selbst.
+
+<details>
+<summary><strong>Pflichtwerte</strong></summary>
+
+| Variable | Zweck | Erzeugen |
+| --- | --- | --- |
+| `NEXTAUTH_URL` | öffentliche Adresse der Anwendung | z. B. `https://ailawyer.kanzlei.de` |
+| `NEXTAUTH_SECRET` | Sitzungsverschlüsselung | `openssl rand -base64 32` |
+| `EMAIL_ENCRYPTION_KEY` | Verschlüsselung von Zugangsdaten | `openssl rand -hex 32` |
+| `ONLYOFFICE_SECRET` | JWT für OnlyOffice | `openssl rand -base64 24` |
+</details>
+
+<details>
+<summary><strong>Optionale Werte</strong></summary>
+
+| Variable | Standard | Zweck |
+| --- | --- | --- |
+| `AI_PROVIDER` | `ollama` | `ollama`, `openai` oder `anthropic` |
+| `AI_MODEL` | `qwen3.5:35b` | Modell des gewählten Anbieters |
+| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | – | Schlüssel für Cloud-Modelle |
+| `TOTP_REQUIRED_ROLES` | – | Rollen mit Pflicht zur Zwei-Faktor-Anmeldung |
+| `POSTGRES_PASSWORD` | `ailawyer` | Datenbankpasswort, **ändern** |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | `ailawyer` / `ailawyer123` | Dateispeicher, **ändern** |
+| `MEILISEARCH_API_KEY` | `ailawyer-meili-key` | Suchdienst, **ändern** |
+| `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
+| `WORKER_CONCURRENCY` | `5` | parallele Hintergrundaufgaben |
+| `JLAWYER_ALLOW_PRIVATE_URLS` | – | `true` für j-lawyer im eigenen Netz |
+</details>
+
+## Für Entwickler
+
+TypeScript durchgehend, Next.js 14 (App Router) mit eigenem Server für
+Socket.IO, ein separater Worker für die Hintergrundaufgaben.
+
+| Schicht | Technik |
+| --- | --- |
+| Oberfläche | Next.js 14, React, Tailwind CSS, shadcn/ui, Motion |
+| Daten | PostgreSQL 16 mit pgvector, Prisma (84 Modelle) |
+| Suche | Meilisearch |
+| Dateien | MinIO (S3-kompatibel) |
+| Office | OnlyOffice Docs |
+| KI | Vercel AI SDK: Ollama, OpenAI, Anthropic |
+| Hintergrund | BullMQ und Redis (13 Warteschlangen) |
+| Echtzeit | Socket.IO mit Redis-Adapter |
+| Anmeldung | NextAuth.js v5, TOTP |
+| PDF und OCR | Stirling-PDF (Tesseract), pdf-lib |
+
+<details>
+<summary><strong>Architektur</strong></summary>
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ Browser: Next.js-Oberfläche, Socket.IO                        │
+└───────────────┬──────────────────────────────┬───────────────┘
+                │ HTTPS                        │ WebSocket
+┌───────────────▼──────────────────────────────▼───────────────┐
+│ app (Next.js + eigener Server, Port 3000)                     │
+│  API-Routen · Server Components · Socket.IO                   │
+└──┬───────┬───────┬───────┬──────────┬───────────┬────────────┘
+   ▼       ▼       ▼       ▼          ▼           ▼
+┌──────┐┌─────┐┌─────┐┌────────┐┌──────────┐┌───────────┐┌────────┐
+│ db   ││redis││minio││meili-  ││onlyoffice││stirling-  ││ ollama │
+│PG 16 ││     ││ S3  ││search  ││          ││pdf (OCR)  ││  LLM   │
+└──────┘└──┬──┘└─────┘└────────┘└──────────┘└───────────┘└────────┘
+           │
+     ┌─────▼──────┐
+     │ worker     │  BullMQ: OCR, Embeddings, E-Mail-Sync, Fristen-
+     │            │  Scanner, Gesetze/Urteile, Portal-Benachrichtigung
+     └────────────┘
+```
+</details>
+
+```bash
+npm install
+npm run db:generate      # Prisma-Client erzeugen
+npm run dev              # Oberfläche und API auf :3000
+npm run dev:worker       # Hintergrund-Worker
+npm test                 # Unit-Tests (vitest)
+npx tsc --noEmit         # Typecheck
+```
+
+Für die Entwicklung reichen PostgreSQL mit pgvector, Redis, MinIO und
+Meilisearch aus der `docker-compose.yml`. OnlyOffice, Stirling-PDF und Ollama
+braucht nur, wer diese Funktionen testet. Typecheck und Unit-Tests laufen bei
+jedem Push in GitHub Actions. Was sich von Version zu Version geändert hat,
+steht im [Änderungsprotokoll](CHANGELOG.md).
+
+## Bekannte Grenzen
+
+- **Datenbank-Migrationen unvollständig:** Einige Tabellen und Spalten aus
+  v0.4 und v0.5 haben keine Prisma-Migration. Bei einer frischen Installation
+  bitte vorerst `npx prisma db push` statt `migrate deploy` verwenden. Wird in
+  v1.0 behoben.
+- **MinIO-Image:** `minio/minio:latest` ist auf Docker Hub nicht mehr frei
+  verfügbar. Bis zur Umstellung ein eigenes oder gespiegeltes Image eintragen.
+- **BI-Dashboard:** Die Kennzahlen laden derzeit nicht, weil eine Abfrage einen
+  falschen Tabellennamen verwendet.
+- **beA** setzt eine kommerzielle Registrierung bei bea.expert voraus.
+- **Next.js 14** ist veraltet. Der Umstieg auf eine aktuelle Version mit den
+  zugehörigen Sicherheitskorrekturen ist für v1.0 geplant.
+- Die Testabdeckung ist im Verhältnis zur Codegröße gering.
 
 ## Lizenz
 
-[MIT License](LICENSE) — Copyright (c) 2026 Patrick Baumfalk
+[MIT](LICENSE), © 2026 Patrick Baumfalk.
+
+## Haftungsausschluss
+
+AI-Lawyer unterstützt die Kanzleiarbeit, ersetzt aber keine anwaltliche Prüfung.
+Fristberechnungen, KI-Entwürfe, Rechercheergebnisse und Gebührenberechnungen
+sind vor jeder Verwendung von einem Menschen zu prüfen. Sprachmodelle können
+Normen und Entscheidungen falsch wiedergeben. Wer die Software betreibt, ist für
+die verarbeiteten Daten verantwortlich, insbesondere für die Wahrung des
+Mandatsgeheimnisses beim Einsatz von Cloud-Modellen. Die Software wird ohne
+Gewähr bereitgestellt (siehe [LICENSE](LICENSE)).

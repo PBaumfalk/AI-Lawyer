@@ -3,8 +3,44 @@ import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
 import { DEFAULT_SETTINGS } from "@/lib/settings/defaults";
 import type { SystemSetting } from "@prisma/client";
+import { encryptCredential, decryptCredential } from "@/lib/email/crypto";
 
 const log = createLogger("settings");
+
+// ---------------------------------------------------------------------------
+// Secret settings
+// ---------------------------------------------------------------------------
+
+const SECRET_PREFIX = "enc:v1:";
+
+export function isSecretSetting(key: string): boolean {
+  return DEFAULT_SETTINGS.some((d) => d.key === key && d.secret === true);
+}
+
+/** Encrypt a secret setting value for storage. Non-secrets pass through. */
+export function sealSettingValue(key: string, value: string): string {
+  if (!isSecretSetting(key) || value === "" || value.startsWith(SECRET_PREFIX)) return value;
+  return SECRET_PREFIX + encryptCredential(value);
+}
+
+/** Decrypt a stored value. Legacy plaintext secrets are returned unchanged. */
+export function openSettingValue(key: string, stored: string): string {
+  if (!stored.startsWith(SECRET_PREFIX)) return stored;
+  try {
+    return decryptCredential(stored.slice(SECRET_PREFIX.length));
+  } catch (err) {
+    log.error({ key, err }, "Secret setting could not be decrypted (EMAIL_ENCRYPTION_KEY changed?)");
+    return "";
+  }
+}
+
+/** Setting as shown to clients: secrets are blanked, `secretSet` tells whether one is stored. */
+export function redactSetting<T extends { key: string; value: string }>(
+  s: T
+): T & { secret?: boolean; secretSet?: boolean } {
+  if (!isSecretSetting(s.key)) return s;
+  return { ...s, value: "", secret: true, secretSet: s.value !== "" };
+}
 
 // ---------------------------------------------------------------------------
 // In-memory settings cache with TTL (avoids repeated DB roundtrips)
@@ -52,7 +88,7 @@ export function invalidateSettingsCache(key?: string): void {
  */
 export async function getSetting(key: string): Promise<string | null> {
   const setting = await getCachedSetting(key);
-  return setting?.value ?? null;
+  return setting ? openSettingValue(key, setting.value) : null;
 }
 
 /**
@@ -65,17 +101,20 @@ export async function getSettingTyped<T>(
 ): Promise<T> {
   const setting = await getCachedSetting(key);
   if (!setting) return defaultValue;
+  const value = openSettingValue(key, setting.value);
 
   try {
     switch (setting.type) {
-      case "number":
-        return parseInt(setting.value, 10) as T;
+      case "number": {
+        const n = parseInt(value, 10);
+        return (Number.isFinite(n) ? n : defaultValue) as T;
+      }
       case "boolean":
-        return (setting.value === "true") as T;
+        return (value === "true") as T;
       case "json":
-        return JSON.parse(setting.value) as T;
+        return JSON.parse(value) as T;
       default:
-        return setting.value as T;
+        return value as T;
     }
   } catch (err) {
     log.warn({ key, err }, "Failed to parse setting value, returning default");
@@ -99,20 +138,26 @@ export async function getAllSettings(): Promise<SystemSetting[]> {
  */
 export async function updateSetting(
   key: string,
-  value: string
+  value: string,
+  meta?: { type?: string; category?: string; label?: string }
 ): Promise<void> {
   // Find the default to get type and category
   const def = DEFAULT_SETTINGS.find((d) => d.key === key);
 
+  // Empty secret = "unchanged": the browser never sees the stored secret, so
+  // it sends "" back when the admin did not type a new one.
+  if (isSecretSetting(key) && value === "") return;
+  const stored = sealSettingValue(key, value);
+
   await prisma.systemSetting.upsert({
     where: { key },
-    update: { value },
+    update: { value: stored },
     create: {
       key,
-      value,
-      type: def?.type ?? "string",
-      category: def?.category ?? "general",
-      label: def?.label ?? key,
+      value: stored,
+      type: def?.type ?? meta?.type ?? "string",
+      category: def?.category ?? meta?.category ?? "general",
+      label: def?.label ?? meta?.label ?? key,
     },
   });
 
@@ -125,7 +170,8 @@ export async function updateSetting(
     publisher = createRedisConnection();
     await publisher.publish(
       "settings:changed",
-      JSON.stringify({ key, value })
+      // Secrets are not published; listeners re-read them from the DB.
+      JSON.stringify(isSecretSetting(key) ? { key } : { key, value })
     );
     log.info({ key }, "Setting updated and published");
   } catch (err) {

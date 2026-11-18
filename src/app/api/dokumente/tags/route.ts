@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { loeschenVerweigert, requirePermission } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -31,6 +32,8 @@ export async function GET() {
  * Body: { name: string, farbe: string, system?: boolean }
  */
 export async function POST(request: NextRequest) {
+  const einstellungsVerbot = (await requirePermission("canAccessEinstellungen")).error;
+  if (einstellungsVerbot) return einstellungsVerbot;
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
@@ -92,6 +95,8 @@ export async function POST(request: NextRequest) {
  * Body: { id: string, name?: string, farbe?: string, sortierung?: number }
  */
 export async function PATCH(request: NextRequest) {
+  const einstellungsVerbot = (await requirePermission("canAccessEinstellungen")).error;
+  if (einstellungsVerbot) return einstellungsVerbot;
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
@@ -149,6 +154,11 @@ export async function PATCH(request: NextRequest) {
  * Body: { id: string }
  */
 export async function DELETE(request: NextRequest) {
+  const einstellungsVerbot = (await requirePermission("canAccessEinstellungen")).error;
+  if (einstellungsVerbot) return einstellungsVerbot;
+  const loeschVerbot = await loeschenVerweigert();
+  if (loeschVerbot) return loeschVerbot;
+
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });

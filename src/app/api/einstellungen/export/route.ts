@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
+import { redactSetting } from "@/lib/settings/service";
 import type { UserRole } from "@prisma/client";
 
 // GET /api/einstellungen/export -- Export all settings as JSON
@@ -25,9 +26,9 @@ export async function GET() {
   // Gather all exportable data
   const [systemSettings, fristPresets, briefkoepfe, ordnerSchemata] =
     await Promise.all([
-      prisma.systemSetting.findMany({
-        orderBy: [{ category: "asc" }, { key: "asc" }],
-      }),
+      prisma.systemSetting
+        .findMany({ orderBy: [{ category: "asc" }, { key: "asc" }] })
+        .then((rows) => rows.map(redactSetting)),
       prisma.fristPreset.findMany({
         orderBy: [{ kategorie: "asc" }, { sortierung: "asc" }],
       }),
@@ -65,6 +66,7 @@ export async function GET() {
       type: s.type,
       category: s.category,
       label: s.label,
+      ...(s.secret ? { secret: true, secretSet: s.secretSet } : {}),
     })),
     fristPresets: fristPresets.map((p) => ({
       name: p.name,

@@ -105,7 +105,7 @@ export async function DELETE(
   const { id: akteId } = await params;
 
   // RBAC: check Akte access with edit permission
-  const access = await requireAkteAccess(akteId, { requireEdit: true });
+  const access = await requireAkteAccess(akteId, { requireEdit: true, requireDelete: true });
   if (access.error) return access.error;
   const { session } = access;
 

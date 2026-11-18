@@ -20,6 +20,9 @@ interface SettingItem {
   options?: string[];
   min?: number;
   max?: number;
+  /** Secret settings come back blank; secretSet says whether one is stored. */
+  secret?: boolean;
+  secretSet?: boolean;
 }
 
 interface SettingGroup {
@@ -291,9 +294,15 @@ function SettingField({
         ) : (
           <>
             <Input
-              type="text"
+              type={setting.secret ? "password" : "text"}
               value={value}
               onChange={(e) => onChange(e.target.value)}
+              placeholder={
+                setting.secret && setting.secretSet
+                  ? "Gespeichert, leer lassen"
+                  : undefined
+              }
+              autoComplete={setting.secret ? "new-password" : undefined}
               className="w-48"
             />
             <Button

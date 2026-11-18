@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { generateTotpSecret } from "@/lib/totp";
+import { generateTotpSecret, sealTotpSecret } from "@/lib/totp";
 
 export async function POST() {
   const session = await auth();
@@ -33,7 +33,7 @@ export async function POST() {
   await prisma.user.update({
     where: { id: userId },
     data: {
-      totpSecret: secret,
+      totpSecret: sealTotpSecret(secret),
       totpEnabled: false,
     },
   });

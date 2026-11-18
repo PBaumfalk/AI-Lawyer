@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { akteAccessDenied } from "@/lib/rbac";
+import { akteAccessDenied, loeschenVerweigert } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/audit";
@@ -157,6 +157,9 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const loeschVerbot = await loeschenVerweigert();
+  if (loeschVerbot) return loeschVerbot;
+
   const session = await auth();
   if (!session?.user) {
     return Response.json({ error: "Nicht authentifiziert" }, { status: 401 });

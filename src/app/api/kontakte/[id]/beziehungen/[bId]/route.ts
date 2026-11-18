@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { loeschenVerweigert } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -7,6 +8,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; bId: string }> }
 ) {
+  const loeschVerbot = await loeschenVerweigert();
+  if (loeschVerbot) return loeschVerbot;
+
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });

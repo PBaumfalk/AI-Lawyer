@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireMandantAkteAccess } from "@/lib/portal-access";
 import { AkteUebersicht } from "@/components/portal/akte-uebersicht";
 import { NaechsteSchritteCard } from "@/components/portal/naechste-schritte-card";
 import { SachstandTimeline } from "@/components/portal/sachstand-timeline";
@@ -21,6 +22,11 @@ export default async function PortalAkteDetailPage({
   if (!session?.user || (session.user as any).role !== "MANDANT") {
     redirect("/portal/login");
   }
+
+  // Ownership check here as well, not only in the layout: layout and page
+  // render in parallel, so the page must not rely on the layout's redirect.
+  const access = await requireMandantAkteAccess(id, session.user.id!);
+  if (access.error) redirect("/portal/dashboard");
 
   // Fetch Akte detail with Gegner + Gericht info for Uebersicht content
   const akte = await prisma.akte.findUnique({

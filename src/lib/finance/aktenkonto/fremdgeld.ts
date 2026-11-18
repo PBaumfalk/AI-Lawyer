@@ -2,7 +2,8 @@
 // 5-Werktage forwarding deadline (SS 43a BRAO) and 15k Anderkonto threshold
 // Uses feiertagejs for German holidays (NRW default)
 
-import * as feiertagejs from 'feiertagejs';
+import { istFeiertag } from '@/lib/fristen/feiertage';
+import type { BundeslandCode } from '@/lib/fristen/types';
 import { BuchungsTyp } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import type {
@@ -32,7 +33,7 @@ function isWeekend(date: Date): boolean {
  * Check if a date is a public holiday in the specified Bundesland.
  */
 function isHoliday(date: Date, bundesland: string): boolean {
-  return feiertagejs.isHoliday(toNoon(date), bundesland as any);
+  return istFeiertag(date, bundesland as BundeslandCode);
 }
 
 /**

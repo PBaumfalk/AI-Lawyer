@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { loeschenVerweigert } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
@@ -165,6 +166,9 @@ export async function PUT(request: NextRequest) {
  * DELETE /api/fristen/presets - Soft-delete preset (ADMIN only)
  */
 export async function DELETE(request: NextRequest) {
+  const loeschVerbot = await loeschenVerweigert();
+  if (loeschVerbot) return loeschVerbot;
+
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });

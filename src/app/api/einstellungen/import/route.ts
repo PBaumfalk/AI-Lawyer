@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { updateSetting } from "@/lib/settings/service";
 import { logAuditEvent } from "@/lib/audit";
 import type { UserRole } from "@prisma/client";
 
@@ -102,16 +103,10 @@ export async function POST(request: NextRequest) {
         summary.systemSettings.skipped++;
         continue;
       }
-      await prisma.systemSetting.upsert({
-        where: { key: setting.key },
-        update: { value: setting.value },
-        create: {
-          key: setting.key,
-          value: setting.value,
-          type: setting.type ?? "string",
-          category: setting.category ?? "general",
-          label: setting.label ?? setting.key,
-        },
+      await updateSetting(String(setting.key), String(setting.value), {
+        type: (setting as any).type,
+        category: (setting as any).category,
+        label: (setting as any).label,
       });
       summary.systemSettings.imported++;
     }

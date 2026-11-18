@@ -176,6 +176,15 @@ export async function requirePermission(
   return { session };
 }
 
+// ─── loeschenVerweigert ─────────────────────────────────────────────────────
+// First statement of DELETE handlers for firm data: 401 without session,
+// 403 without canLoeschen (Sekretariat, Mandant), otherwise null.
+
+export async function loeschenVerweigert(): Promise<NextResponse | null> {
+  const result = await requirePermission("canLoeschen");
+  return result.error ?? null;
+}
+
 // ─── requireAkteAccess ──────────────────────────────────────────────────────
 // Multi-path access check:
 // - ADMIN: check AdminOverride table for explicit override, else full access
@@ -184,7 +193,7 @@ export async function requirePermission(
 
 export async function requireAkteAccess(
   akteId: string,
-  options?: { requireEdit?: boolean }
+  options?: { requireEdit?: boolean; requireDelete?: boolean }
 ): Promise<
   | { session: AuthenticatedSession; akte: any; error?: undefined }
   | { session?: undefined; akte?: undefined; error: NextResponse }
@@ -195,6 +204,19 @@ export async function requireAkteAccess(
   const { session } = result;
   const userId = session.user.id;
   const role = session.user.role;
+
+  // Role-level permissions first. These options used to be accepted but
+  // ignored, so e.g. the Sekretariat could delete despite canLoeschen=false.
+  const perms = PERMISSIONS[role];
+  if (
+    !perms ||
+    (options?.requireEdit && !perms.canEditAkte) ||
+    (options?.requireDelete && !perms.canLoeschen)
+  ) {
+    return {
+      error: NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 }),
+    };
+  }
 
   // Fetch Akte with assignment info
   const akte = await prisma.akte.findUnique({

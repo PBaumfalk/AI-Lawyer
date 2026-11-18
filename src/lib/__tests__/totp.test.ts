@@ -1,3 +1,4 @@
+import { beforeAll } from "vitest";
 import { describe, it, expect } from "vitest";
 import { authenticator } from "otplib";
 import {
@@ -73,5 +74,33 @@ describe("TOTP Service", () => {
       expect(result.valid).toBe(false);
       expect(result.remainingCodes).toHaveLength(3);
     });
+  });
+});
+
+describe("TOTP-Geheimnis im Ruhezustand", () => {
+  beforeAll(() => {
+    process.env.EMAIL_ENCRYPTION_KEY ??= "0".repeat(64);
+  });
+
+  it("speichert das Geheimnis verschlüsselt und prüft Codes damit", async () => {
+    const { sealTotpSecret, openTotpSecret, verifyTotpCode } = await import("@/lib/totp");
+    const { authenticator } = await import("otplib");
+    const secret = authenticator.generateSecret(20);
+    const stored = sealTotpSecret(secret);
+    expect(stored).not.toContain(secret);
+    expect(openTotpSecret(stored)).toBe(secret);
+    expect(verifyTotpCode(stored, authenticator.generate(secret))).toBe(true);
+  });
+
+  it("liest alte Klartext-Geheimnisse weiter", async () => {
+    const { verifyTotpCode } = await import("@/lib/totp");
+    const { authenticator } = await import("otplib");
+    const secret = authenticator.generateSecret(20);
+    expect(verifyTotpCode(secret, authenticator.generate(secret))).toBe(true);
+  });
+
+  it("erzeugt Backup-Codes mit dem kryptografischen Zufallsgenerator", async () => {
+    const src = (await import("node:fs")).readFileSync("src/lib/totp.ts", "utf8");
+    expect(src).not.toMatch(/Math\.random\(\)\s*\*/);
   });
 });

@@ -10,7 +10,7 @@ export async function DELETE(
 ) {
   const { id: akteId, normId } = await params;
 
-  const access = await requireAkteAccess(akteId, { requireEdit: true });
+  const access = await requireAkteAccess(akteId, { requireEdit: true, requireDelete: true });
   if (access.error) return access.error;
   const { session } = access;
 

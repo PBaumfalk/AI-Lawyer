@@ -4,6 +4,7 @@
 // DELETE: Only ENTWURF invoices
 
 import { NextRequest, NextResponse } from 'next/server';
+import { loeschenVerweigert } from "@/lib/rbac";
 import { prisma } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
 import { requireAuth, requireAkteAccess } from '@/lib/rbac';
@@ -310,6 +311,9 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const loeschVerbot = await loeschenVerweigert();
+  if (loeschVerbot) return loeschVerbot;
+
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;
   const { session } = authResult;

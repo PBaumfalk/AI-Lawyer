@@ -188,6 +188,28 @@ export async function updateSetting(
  * Only inserts settings that do not already exist (preserves user overrides).
  * Should be called at application startup.
  */
+/**
+ * Start values from the environment for the very first start. setup.sh asks
+ * for the AI provider and key and writes them to .env; without this bridge
+ * that choice was silently ignored (the code only reads SystemSetting).
+ * Only used when the setting does not exist yet: afterwards the UI wins.
+ */
+export function bootstrapValueFromEnv(key: string, env: NodeJS.ProcessEnv = process.env): string | undefined {
+  const provider = (env.AI_PROVIDER || "").trim().toLowerCase();
+  switch (key) {
+    case "ai.provider":
+      return ["ollama", "openai", "anthropic"].includes(provider) ? provider : undefined;
+    case "ai.provider.model":
+      return env.AI_MODEL?.trim() || undefined;
+    case "ai.provider.apiKey":
+      if (provider === "openai") return env.OPENAI_API_KEY?.trim() || undefined;
+      if (provider === "anthropic") return env.ANTHROPIC_API_KEY?.trim() || undefined;
+      return undefined;
+    default:
+      return undefined;
+  }
+}
+
 export async function initializeDefaults(): Promise<void> {
   let created = 0;
   for (const def of DEFAULT_SETTINGS) {
@@ -198,7 +220,7 @@ export async function initializeDefaults(): Promise<void> {
       await prisma.systemSetting.create({
         data: {
           key: def.key,
-          value: def.value,
+          value: sealSettingValue(def.key, bootstrapValueFromEnv(def.key) ?? def.value),
           type: def.type,
           category: def.category,
           label: def.label,

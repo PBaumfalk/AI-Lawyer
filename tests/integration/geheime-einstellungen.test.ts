@@ -56,3 +56,35 @@ describe("Geheime Einstellungen (KI-API-Schlüssel)", () => {
     expect(await raw()).toMatch(/^enc:v1:/);
   });
 });
+
+describe("Startwerte aus setup.sh (.env) beim ersten Start", () => {
+  it("übernimmt Anbieter, Modell und Schlüssel – verschlüsselt", async () => {
+    const { initializeDefaults } = await import("@/lib/settings/service");
+    const saved = { ...process.env };
+    Object.assign(process.env, { AI_PROVIDER: "anthropic", AI_MODEL: "claude-x", ANTHROPIC_API_KEY: "sk-ant-aus-env" });
+    try {
+      await initializeDefaults();
+    } finally {
+      process.env = saved;
+    }
+    invalidateSettingsCache();
+    expect(await getSettingTyped("ai.provider", "")).toBe("anthropic");
+    expect(await getSettingTyped("ai.provider.model", "")).toBe("claude-x");
+    expect(await getSettingTyped(KEY, "")).toBe("sk-ant-aus-env");
+    expect(await raw()).toMatch(/^enc:v1:/);
+  });
+
+  it("überschreibt vorhandene Einstellungen nicht", async () => {
+    const { initializeDefaults } = await import("@/lib/settings/service");
+    await updateSetting("ai.provider", "ollama");
+    const saved = { ...process.env };
+    process.env.AI_PROVIDER = "openai";
+    try {
+      await initializeDefaults();
+    } finally {
+      process.env = saved;
+    }
+    invalidateSettingsCache();
+    expect(await getSettingTyped("ai.provider", "")).toBe("ollama");
+  });
+});

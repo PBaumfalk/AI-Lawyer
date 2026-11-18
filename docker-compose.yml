@@ -1,37 +1,64 @@
-services:
-  # Default credentials after seed: admin@kanzlei.de / password123
+# AI-Lawyer – Docker Compose
+#
+# Alle Werte kommen aus der Datei .env im selben Ordner (erzeugt von ./setup.sh
+# oder per `cp .env.example .env`). Geheimnisse sind Pflicht: ohne sie bricht
+# `docker compose up` mit einer Meldung ab, statt mit Entwicklungswerten zu laufen.
+#
+# Interne Dienste (Datenbank, Redis, Suche, KI, PDF) hören nur auf 127.0.0.1.
+# Von außen erreichbar sind nur die App, OnlyOffice und der MinIO-Download-Port,
+# die der Browser braucht. GPU für Ollama: zusätzlich docker-compose.gpu.yml.
 
-  # ─── Next.js Application (Custom Server + Socket.IO) ─────────────────────────
+x-app-env: &app-env
+  NODE_ENV: production
+  DATABASE_URL: postgresql://ailawyer:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD fehlt in .env}@db:5432/ailawyer?schema=public
+  REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD fehlt in .env}@redis:6379
+  NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL fehlt in .env}
+  NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET fehlt in .env}
+  AUTH_TRUST_HOST: "true"
+  EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY:?EMAIL_ENCRYPTION_KEY fehlt in .env}
+  MINIO_ENDPOINT: minio
+  MINIO_PORT: "9000"
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-ailawyer}
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY fehlt in .env}
+  MINIO_BUCKET: dokumente
+  MINIO_USE_SSL: "false"
+  MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+  MEILISEARCH_URL: http://meilisearch:7700
+  MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY:?MEILISEARCH_API_KEY fehlt in .env}
+  ONLYOFFICE_URL: ${ONLYOFFICE_URL:-http://localhost:8080}
+  ONLYOFFICE_INTERNAL_URL: http://onlyoffice:80
+  ONLYOFFICE_SECRET: ${ONLYOFFICE_SECRET:?ONLYOFFICE_SECRET fehlt in .env}
+  APP_INTERNAL_URL: http://app:3000
+  STIRLING_PDF_URL: http://stirling-pdf:8080
+  OLLAMA_URL: http://ollama:11434
+  # Startwerte für Einstellungen → KI beim allerersten Start (danach gilt die Oberfläche)
+  AI_PROVIDER: ${AI_PROVIDER:-ollama}
+  AI_MODEL: ${AI_MODEL:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  TOTP_REQUIRED_ROLES: ${TOTP_REQUIRED_ROLES:-}
+  JLAWYER_ALLOW_PRIVATE_URLS: ${JLAWYER_ALLOW_PRIVATE_URLS:-}
+  OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_SECURE: ${SMTP_SECURE:-false}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+  SMTP_FROM: ${SMTP_FROM:-}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_KANZLEI_NAME: ${KANZLEI_NAME:-Kanzlei}
     container_name: ailawyer-app
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${PUBLIC_BIND:-0.0.0.0}:3000:3000"
     environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://ailawyer:ailawyer@db:5432/ailawyer?schema=public
-      NEXTAUTH_URL: http://localhost:3000
-      NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
-      AUTH_TRUST_HOST: "true"
-      REDIS_URL: redis://redis:6379
-      MINIO_ENDPOINT: minio
-      MINIO_PORT: "9000"
-      MINIO_ACCESS_KEY: ailawyer
-      MINIO_SECRET_KEY: ailawyer123
-      MINIO_BUCKET: dokumente
-      MINIO_USE_SSL: "false"
-      MINIO_PUBLIC_URL: http://localhost:9000
-      MEILISEARCH_URL: http://meilisearch:7700
-      MEILISEARCH_API_KEY: ailawyer-meili-key
-      EMAIL_ENCRYPTION_KEY: dev-email-encryption-key-change-in-production-32chars
-      ONLYOFFICE_URL: http://localhost:8080
-      ONLYOFFICE_INTERNAL_URL: http://onlyoffice:80
-      ONLYOFFICE_SECRET: dev-onlyoffice-secret
-      APP_INTERNAL_URL: http://app:3000
-      STIRLING_PDF_URL: http://stirling-pdf:8080
-      OLLAMA_URL: http://ollama:11434
-      LOG_LEVEL: info
+      <<: *app-env
       LOG_FILE_PATH: /var/log/ai-lawyer/app
     depends_on:
       db:
@@ -42,8 +69,6 @@ services:
         condition: service_healthy
       meilisearch:
         condition: service_healthy
-      ollama:
-        condition: service_healthy
     volumes:
       - app_logs:/var/log/ai-lawyer
     healthcheck:
@@ -51,34 +76,22 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 90s
 
   # ─── BullMQ Worker Process ────────────────────────────────────────────────────
   worker:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_KANZLEI_NAME: ${KANZLEI_NAME:-Kanzlei}
     container_name: ailawyer-worker
     restart: unless-stopped
     command: ["node", "dist-worker/index.js"]
     stop_grace_period: 30s
     environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://ailawyer:ailawyer@db:5432/ailawyer?schema=public
-      REDIS_URL: redis://redis:6379
-      NEXTAUTH_SECRET: dev-secret-change-in-production-abc123xyz
-      EMAIL_ENCRYPTION_KEY: dev-email-encryption-key-change-in-production-32chars
-      MINIO_ENDPOINT: minio
-      MINIO_PORT: "9000"
-      MINIO_ACCESS_KEY: ailawyer
-      MINIO_SECRET_KEY: ailawyer123
-      MINIO_BUCKET: dokumente
-      MINIO_USE_SSL: "false"
-      MEILISEARCH_URL: http://meilisearch:7700
-      MEILISEARCH_API_KEY: ailawyer-meili-key
-      STIRLING_PDF_URL: http://stirling-pdf:8080
-      OLLAMA_URL: http://ollama:11434
-      LOG_LEVEL: info
+      <<: *app-env
       LOG_FILE_PATH: /var/log/ai-lawyer/worker
-      WORKER_CONCURRENCY: "5"
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-5}
     depends_on:
       db:
         condition: service_healthy
@@ -99,17 +112,16 @@ services:
       retries: 3
       start_period: 90s
 
-  # ─── PostgreSQL 16 + pgvector ────────────────────────────────────────────────
   db:
     image: pgvector/pgvector:pg16
     container_name: ailawyer-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ailawyer
-      POSTGRES_PASSWORD: ailawyer
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD fehlt in .env}
       POSTGRES_DB: ailawyer
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -118,52 +130,67 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── Redis (BullMQ + Socket.IO adapter) ──────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: ailawyer-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory-policy noeviction --save 60 1000
+    command: >-
+      redis-server --appendonly yes --maxmemory-policy noeviction --save 60 1000
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD fehlt in .env}
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redisdata:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" --no-auth-warning ping | grep -q PONG"]
       interval: 5s
       timeout: 3s
       retries: 5
-
-  # ─── MinIO (S3-compatible file storage) ──────────────────────────────────────
-  minio:
-    image: minio/minio:latest
-    container_name: ailawyer-minio
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ailawyer
-      MINIO_ROOT_PASSWORD: ailawyer123
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+  # MinIO stellt unter minio/minio keine Images mehr bereit. Chainguard liefert
+  # aktuelle Builds und läuft ohne Root (UID 65532). minio-init passt einmalig
+  # die Besitzrechte bestehender Volumes an, sonst schlagen Uploads in alte
+  # Buckets fehl ("Insufficient permissions").
+  minio-init:
+    image: ${MINIO_IMAGE:-cgr.dev/chainguard/minio:latest}
+    user: "0:0"
+    entrypoint: ["sh", "-c", "find /data ! -user 65532 -exec chown 65532:65532 {} + ; exit 0"]
     volumes:
       - miniodata:/data
+
+  minio:
+    image: ${MINIO_IMAGE:-cgr.dev/chainguard/minio:latest}
+    container_name: ailawyer-minio
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-ailawyer}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY fehlt in .env}
+    ports:
+      - "${PUBLIC_BIND:-0.0.0.0}:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - miniodata:/data
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  # ─── Meilisearch (full-text search) ──────────────────────────────────────────
   meilisearch:
     image: getmeili/meilisearch:v1.11
     container_name: ailawyer-meilisearch
     restart: unless-stopped
     environment:
-      MEILI_MASTER_KEY: ailawyer-meili-key
-      MEILI_ENV: development
+      MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY:?MEILISEARCH_API_KEY fehlt in .env}
+      MEILI_ENV: production
     ports:
-      - "7700:7700"
+      - "127.0.0.1:7700:7700"
     volumes:
       - meilidata:/meili_data
     healthcheck:
@@ -172,20 +199,19 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── OnlyOffice Document Server ──────────────────────────────────────────────
   onlyoffice:
     image: onlyoffice/documentserver:latest
     container_name: ailawyer-onlyoffice
     restart: unless-stopped
     environment:
       JWT_ENABLED: "true"
-      JWT_SECRET: dev-onlyoffice-secret
+      JWT_SECRET: ${ONLYOFFICE_SECRET:?ONLYOFFICE_SECRET fehlt in .env}
       JWT_HEADER: Authorization
       JWT_IN_BODY: "true"
       ALLOW_PRIVATE_IP_ADDRESS: "true"
       ALLOW_META_IP_ADDRESS: "true"
     ports:
-      - "8080:80"
+      - "${PUBLIC_BIND:-0.0.0.0}:8080:80"
     volumes:
       - onlyoffice_data:/var/www/onlyoffice/Data
       - onlyoffice_log:/var/log/onlyoffice
@@ -202,13 +228,12 @@ services:
       retries: 5
       start_period: 60s
 
-  # ─── Stirling-PDF (OCR + document conversion) ───────────────────────────────
   stirling-pdf:
     image: stirlingtools/stirling-pdf:latest-fat
     container_name: ailawyer-stirling-pdf
     restart: unless-stopped
     ports:
-      - "8081:8080"
+      - "127.0.0.1:8081:8080"
     environment:
       DOCKER_ENABLE_SECURITY: "false"
       SECURITY_ENABLELOGIN: "false"
@@ -230,14 +255,14 @@ services:
       retries: 3
       start_period: 60s
 
-  # ─── LanguageTool (optional — activate with: docker compose --profile full up)
+  # ─── LanguageTool (optional, im Code noch nicht angebunden) ───────────────────
   languagetool:
     image: erikvl87/languagetool:latest
     container_name: ailawyer-languagetool
     restart: unless-stopped
     profiles: ["full"]
     ports:
-      - "8010:8010"
+      - "127.0.0.1:8010:8010"
     environment:
       Java_Xms: 512m
       Java_Xmx: 1g
@@ -245,24 +270,17 @@ services:
     volumes:
       - languagetool_ngrams:/ngrams
 
-  # ─── Ollama (local LLM inference) ───────────────────────────────────────────
+  # ─── Ollama (lokale KI; GPU: docker-compose.gpu.yml dazunehmen) ──────────────
   ollama:
     image: ollama/ollama:latest
     container_name: ailawyer-ollama
     restart: unless-stopped
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     environment:
       OLLAMA_HOST: "0.0.0.0"
     volumes:
       - ollama_data:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 10s

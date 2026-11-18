@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 const adminNavigation = [
+  { name: "Benutzer", href: "/admin/benutzer" },
   { name: "Job-Monitor", href: "/admin/jobs" },
   { name: "System", href: "/admin/system" },
   { name: "Pipeline", href: "/admin/pipeline" },
@@ -35,7 +36,7 @@ export default async function AdminLayout({
     <div className="space-y-6">
       {/* Admin sub-navigation */}
       <div className="border-b border-border/50">
-        <nav className="flex gap-6" aria-label="Administration">
+        <nav className="flex flex-wrap gap-x-6" aria-label="Administration">
           {adminNavigation.map((item) => (
             <AdminNavLink key={item.href} href={item.href}>
               {item.name}

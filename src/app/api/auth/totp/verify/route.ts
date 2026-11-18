@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/db";
 import { verifyTotpCode, verifyBackupCode } from "@/lib/totp";
 import { logAuditEvent } from "@/lib/audit";
+import { totpGesperrt, totpErfolgreich } from "@/lib/login-throttle";
 
 const TOTP_PENDING_COOKIE = "totp_pending";
 
@@ -48,6 +49,15 @@ export async function POST(request: NextRequest) {
     select: { email: true, totpSecret: true, totpEnabled: true, backupCodes: true, totpNonce: true },
   });
 
+  // Without a limit, a 6-digit code could be guessed within the 10-minute
+  // window of the pending cookie.
+  if (await totpGesperrt(userId)) {
+    return NextResponse.json(
+      { error: "Zu viele falsche Codes. Bitte in 15 Minuten erneut anmelden." },
+      { status: 429 }
+    );
+  }
+
   if (!user?.totpEnabled || !user.totpSecret) {
     return NextResponse.json({ error: "Zwei-Faktor-Authentifizierung ist nicht konfiguriert" }, { status: 400 });
   }
@@ -71,6 +81,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Ungültiger Code" }, { status: 401 });
     }
   }
+
+  await totpErfolgreich(userId);
 
   // Clear the pending cookie on success and return nonce + email for NextAuth signIn
   const response = NextResponse.json({

@@ -46,6 +46,11 @@ x-app-env: &app-env
   SMTP_PASS: ${SMTP_PASS:-}
   SMTP_FROM: ${SMTP_FROM:-}
   LOG_LEVEL: ${LOG_LEVEL:-info}
+  # Nur beim allerersten Start (leere Datenbank) ausgewertet
+  KANZLEI_NAME: ${KANZLEI_NAME:-Kanzlei}
+  INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin@kanzlei.de}
+  INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+  SEED_DEMO: ${SEED_DEMO:-false}
 
 services:
   app:

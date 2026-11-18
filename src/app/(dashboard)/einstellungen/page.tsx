@@ -17,6 +17,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { PasswortAendern } from "@/components/einstellungen/passwort-aendern";
 import { EINSTELLUNGEN_TABS, resolveEinstellungenTab } from "@/lib/einstellungen-tabs";
 
 const NON_ADMIN_TABS = ["allgemein", "kalender", "sicherheit"] as const;
@@ -323,7 +324,8 @@ export default function EinstellungenPage() {
             </TabsContent>
           )}
 
-          <TabsContent value="sicherheit">
+          <TabsContent value="sicherheit" className="space-y-6">
+            <PasswortAendern />
             <ZweiFaktorTab />
           </TabsContent>
         </Tabs>

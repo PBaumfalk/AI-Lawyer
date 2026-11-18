@@ -16,10 +16,10 @@
 #   AI_PROVIDER           openai | anthropic | ollama  (default: ollama)
 #   AI_MODEL              z.B. gpt-4o | qwen3.5:35b
 #
-# Default credentials after seed:
-#   admin@kanzlei.de          / password123  (ADMIN)
-#   anwalt@kanzlei.de         / password123  (ANWALT)
-#   sachbearbeiter@kanzlei.de / password123  (SACHBEARBEITER)
+# Erstes Konto (nur beim allerersten Start):
+#   INITIAL_ADMIN_EMAIL     Default admin@kanzlei.de
+#   INITIAL_ADMIN_PASSWORD  mind. 12 Zeichen; leer = Zufallspasswort im Log der App
+#   SEED_DEMO=true          zusätzlich Beispielkonten (Passwort password123) – nur Test
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -33,6 +33,10 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      KANZLEI_NAME: ${KANZLEI_NAME:-Kanzlei}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin@kanzlei.de}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+      SEED_DEMO: ${SEED_DEMO:-false}
       DATABASE_URL: postgresql://ailawyer:${POSTGRES_PASSWORD:-ailawyer}@db:5432/ailawyer?schema=public
       NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL is required}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required}

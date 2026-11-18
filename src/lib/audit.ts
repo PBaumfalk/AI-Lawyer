@@ -71,7 +71,11 @@ export type AuditAktion =
   | "TOTP_AKTIVIERT"
   | "TOTP_DEAKTIVIERT"
   | "TOTP_LOGIN_ERFOLG"
-  | "TOTP_BACKUP_CODES_REGENERIERT";
+  | "TOTP_BACKUP_CODES_REGENERIERT"
+  | "BENUTZER_ANGELEGT"
+  | "BENUTZER_GEAENDERT"
+  | "BENUTZER_PASSWORT_ZURUECKGESETZT"
+  | "PASSWORT_GEAENDERT";
 
 /**
  * German human-readable labels for all audit actions.
@@ -149,6 +153,10 @@ export const AKTION_LABELS: Record<string, string> = {
   TOTP_DEAKTIVIERT: "hat Zwei-Faktor-Authentifizierung deaktiviert",
   TOTP_LOGIN_ERFOLG: "hat sich mit Zwei-Faktor-Authentifizierung eingeloggt",
   TOTP_BACKUP_CODES_REGENERIERT: "hat Backup-Codes neu generiert",
+  BENUTZER_ANGELEGT: "hat ein Benutzerkonto angelegt",
+  BENUTZER_GEAENDERT: "hat ein Benutzerkonto geändert",
+  BENUTZER_PASSWORT_ZURUECKGESETZT: "hat ein Passwort zurückgesetzt",
+  PASSWORT_GEAENDERT: "hat das eigene Passwort geändert",
 };
 
 /**
@@ -159,6 +167,10 @@ export const SECURITY_ACTIONS: Set<string> = new Set([
   "LOGIN_FEHLGESCHLAGEN",
   "ZUGRIFF_VERWEIGERT",
   "ADMIN_OVERRIDE_ERSTELLT",
+  "BENUTZER_ANGELEGT",
+  "BENUTZER_GEAENDERT",
+  "BENUTZER_PASSWORT_ZURUECKGESETZT",
+  "PASSWORT_GEAENDERT",
 ]);
 
 // German labels for field names used in change diffs

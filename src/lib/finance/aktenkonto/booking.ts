@@ -58,16 +58,34 @@ export async function createBooking(
     );
   }
 
-  // Calculate Fremdgeld deadline if applicable
+  const istWeiterleitung =
+    input.buchungstyp === BuchungsTyp.FREMDGELD && input.richtung === 'AUSGANG';
+
+  // A Weiterleitung cannot exceed the Fremdgeld currently held for the case
+  if (istWeiterleitung) {
+    const bestand = await tx.aktenKontoBuchung.aggregate({
+      where: { akteId: input.akteId, buchungstyp: BuchungsTyp.FREMDGELD },
+      _sum: { betrag: true },
+    });
+    const verfuegbar = bestand._sum.betrag?.toNumber() ?? 0;
+    if (Math.abs(input.betrag) > verfuegbar + 0.005) {
+      throw new Error(
+        `Weiterleitung ueber ${Math.abs(input.betrag).toFixed(2)} EUR uebersteigt das vorhandene Fremdgeld (${verfuegbar.toFixed(2)} EUR)`,
+      );
+    }
+  }
+
+  // Calculate Fremdgeld deadline for receipts only
   let fremdgeldFrist: Date | null = null;
-  if (input.buchungstyp === BuchungsTyp.FREMDGELD && input.betrag > 0) {
+  if (input.buchungstyp === BuchungsTyp.FREMDGELD && !istWeiterleitung && input.betrag > 0) {
     fremdgeldFrist = calculateFremdgeldDeadline(buchungsdatum);
   }
 
-  // Determine signed betrag: AUSGABE and AUSLAGE are negative in the ledger
+  // Determine signed betrag: AUSGABE, AUSLAGE and Fremdgeld-Weiterleitung are negative in the ledger
   const signedBetrag =
     input.buchungstyp === BuchungsTyp.AUSGABE ||
-    input.buchungstyp === BuchungsTyp.AUSLAGE
+    input.buchungstyp === BuchungsTyp.AUSLAGE ||
+    istWeiterleitung
       ? -Math.abs(input.betrag)
       : Math.abs(input.betrag);
 

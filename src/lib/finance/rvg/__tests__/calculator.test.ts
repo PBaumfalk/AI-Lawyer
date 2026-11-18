@@ -835,11 +835,15 @@ describe('Integration: Full Scenarios', () => {
 
   it('Mahnverfahren at 3000 EUR', () => {
     const result = new RvgCalculator(3000, new Date('2025-07-01'))
-      .addPosition('3305')  // 0.5
+      .addPosition('3305')  // 1.0 (Nr. 3305 VV RVG)
+      .addPosition('3307')  // 0.5 (Antragsgegner)
       .getResult();
 
     const baseFee = computeBaseFee(3000);
     const mahn = result.items.find((i) => i.vvNr === '3305')!;
-    expect(mahn.amount).toBeCloseTo(baseFee * 0.5, 2);
+    expect(mahn.rate).toBe(1.0);
+    expect(mahn.amount).toBeCloseTo(baseFee * 1.0, 2);
+    const widerspruch = result.items.find((i) => i.vvNr === '3307')!;
+    expect(widerspruch.rate).toBe(0.5);
   });
 });

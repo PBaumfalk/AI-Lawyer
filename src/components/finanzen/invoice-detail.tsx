@@ -17,72 +17,29 @@ import {
   Clock,
   Banknote,
 } from "lucide-react";
+import {
+  buildInvoiceActionBody,
+  MAHN_STUFE_LABEL,
+  type InvoiceAction,
+  type InvoiceDetailDto,
+} from "@/lib/finance/invoice/contract";
 
 // ---------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------
 
-interface InvoicePosition {
-  id?: string;
-  vvNr?: string | null;
-  beschreibung: string;
-  menge: number;
-  einzelpreis: number;
-  ustSatz: number;
-  betrag: number;
-}
-
-interface UstSummary {
-  satz: number;
-  bemessungsgrundlage: number;
-  betrag: number;
-}
-
-interface Teilzahlung {
-  id: string;
-  betrag: number;
-  datum: string;
-  verwendungszweck: string | null;
-}
-
-interface Mahnung {
-  id: string;
-  stufe: number;
-  datum: string;
-  gesendet: boolean;
-}
-
-interface InvoiceDetail {
-  id: string;
-  rechnungsnummer: string;
-  rechnungsdatum: string;
-  faelligAm: string | null;
-  status: string;
-  betragNetto: number;
-  betragBrutto: number;
-  mandantName: string | null;
-  aktenzeichen: string | null;
-  empfaengerName: string | null;
-  empfaengerStrasse: string | null;
-  empfaengerPlz: string | null;
-  empfaengerOrt: string | null;
-  positionen: InvoicePosition[];
-  ustSummary: UstSummary[];
-  teilzahlungen: Teilzahlung[];
-  mahnungen: Mahnung[];
-  notizen: string | null;
-  restbetrag: number;
-}
+type InvoiceDetail = InvoiceDetailDto;
 
 // ---------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------
 
-function formatEuro(cents: number): string {
+/** Amounts from the API are euros (see invoice contract). */
+function formatEuro(euro: number): string {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
     currency: "EUR",
-  }).format(cents / 100);
+  }).format(euro);
 }
 
 function formatDate(iso: string | null): string {
@@ -97,6 +54,7 @@ const STATUS_CONFIG: Record<
   ENTWURF: { label: "Entwurf", variant: "muted", color: "text-slate-600" },
   GESTELLT: { label: "Gestellt", variant: "default", color: "text-blue-600" },
   BEZAHLT: { label: "Bezahlt", variant: "success", color: "text-emerald-600" },
+  MAHNUNG: { label: "Gemahnt", variant: "warning", color: "text-amber-600" },
   STORNIERT: { label: "Storniert", variant: "destructive", color: "text-red-600" },
 };
 
@@ -113,7 +71,8 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [showConfirm, setShowConfirm] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState<InvoiceAction | "delete" | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const fetchInvoice = useCallback(async () => {
     try {
@@ -134,19 +93,23 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
 
   // Status transition
   const performAction = useCallback(
-    async (action: string) => {
+    async (action: InvoiceAction) => {
       setActionLoading(action);
+      setActionError(null);
       try {
         const res = await fetch(`/api/finanzen/rechnungen/${invoiceId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action }),
+          body: JSON.stringify(buildInvoiceActionBody(action)),
         });
         if (res.ok) {
           await fetchInvoice();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setActionError(data?.error ?? `Aktion fehlgeschlagen (HTTP ${res.status})`);
         }
-      } catch {
-        // Error handling
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : "Aktion fehlgeschlagen");
       } finally {
         setActionLoading(null);
         setShowConfirm(null);
@@ -277,92 +240,20 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
           </div>
         </div>
 
-        {/* Action buttons */}
+        {/* Action buttons: rendered from the state machine's allowed actions */}
         <div className="flex flex-wrap gap-2">
           {invoice.status === "ENTWURF" && (
-            <>
-              <button
-                type="button"
-                onClick={() =>
-                  router.push(`/finanzen/rechnungen/${invoiceId}/edit`)
-                }
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-border hover:bg-muted/50 transition-colors"
-              >
-                <Edit className="w-4 h-4" />
-                Bearbeiten
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowConfirm("stellen")}
-                disabled={actionLoading !== null}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-                {actionLoading === "stellen" ? "..." : "Stellen"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowConfirm("delete")}
-                disabled={actionLoading !== null}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/30 transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-                Loeschen
-              </button>
-            </>
+            <button
+              type="button"
+              disabled
+              title="Eine Bearbeitungsmaske fuer Rechnungsentwuerfe gibt es noch nicht"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-border opacity-50 cursor-not-allowed"
+            >
+              <Edit className="w-4 h-4" />
+              Bearbeiten (noch nicht verfuegbar)
+            </button>
           )}
-
-          {invoice.status === "GESTELLT" && (
-            <>
-              <button
-                type="button"
-                onClick={downloadPdf}
-                disabled={actionLoading !== null}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-border hover:bg-muted/50 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                PDF
-              </button>
-              <button
-                type="button"
-                onClick={downloadERechnung}
-                disabled={actionLoading !== null}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-border hover:bg-muted/50 transition-colors"
-              >
-                <FileText className="w-4 h-4" />
-                XRechnung
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowConfirm("bezahlt")}
-                disabled={actionLoading !== null}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50"
-              >
-                <CheckCircle className="w-4 h-4" />
-                Bezahlt markieren
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowConfirm("stornieren")}
-                disabled={actionLoading !== null}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/30 transition-colors"
-              >
-                <XCircle className="w-4 h-4" />
-                Stornieren
-              </button>
-              <button
-                type="button"
-                onClick={() => performAction("mahnung")}
-                disabled={actionLoading !== null}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-800 dark:hover:bg-amber-950/30 transition-colors"
-              >
-                <AlertTriangle className="w-4 h-4" />
-                Mahnung
-              </button>
-            </>
-          )}
-
-          {invoice.status === "BEZAHLT" && (
+          {invoice.downloads.pdf && invoice.status !== "ENTWURF" && (
             <button
               type="button"
               onClick={downloadPdf}
@@ -370,18 +261,94 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-border hover:bg-muted/50 transition-colors"
             >
               <Download className="w-4 h-4" />
-              PDF herunterladen
+              PDF
+            </button>
+          )}
+          {invoice.downloads.xrechnung && (
+            <button
+              type="button"
+              onClick={downloadERechnung}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-border hover:bg-muted/50 transition-colors"
+            >
+              <FileText className="w-4 h-4" />
+              XRechnung
+            </button>
+          )}
+          {invoice.erlaubteAktionen.includes("stellen") && (
+            <button
+              type="button"
+              onClick={() => setShowConfirm("stellen")}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
+            >
+              <Send className="w-4 h-4" />
+              {actionLoading === "stellen" ? "..." : "Stellen"}
+            </button>
+          )}
+          {invoice.erlaubteAktionen.includes("bezahlen") && (
+            <button
+              type="button"
+              onClick={() => setShowConfirm("bezahlen")}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50"
+            >
+              <CheckCircle className="w-4 h-4" />
+              Bezahlt markieren
+            </button>
+          )}
+          {invoice.erlaubteAktionen.includes("mahnen") && (
+            <button
+              type="button"
+              onClick={() => setShowConfirm("mahnen")}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-800 dark:hover:bg-amber-950/30 transition-colors"
+            >
+              <AlertTriangle className="w-4 h-4" />
+              {invoice.mahnStufe ? "Naechste Mahnstufe" : "Zahlungserinnerung"}
+            </button>
+          )}
+          {invoice.erlaubteAktionen.includes("stornieren") && (
+            <button
+              type="button"
+              onClick={() => setShowConfirm("stornieren")}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/30 transition-colors"
+            >
+              <XCircle className="w-4 h-4" />
+              Stornieren
+            </button>
+          )}
+          {invoice.status === "ENTWURF" && (
+            <button
+              type="button"
+              onClick={() => setShowConfirm("delete")}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/30 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Loeschen
             </button>
           )}
         </div>
       </div>
+
+      {actionError && (
+        <div className="glass rounded-xl p-4 border border-red-300 dark:border-red-800 text-sm text-red-700 dark:text-red-400" role="alert">
+          {actionError}
+        </div>
+      )}
 
       {/* Confirmation dialog */}
       {showConfirm && (
         <div className="glass rounded-xl p-6 border-2 border-amber-300 dark:border-amber-700">
           <p className="text-foreground font-medium mb-3">
             {showConfirm === "stellen" && "Rechnung jetzt stellen? Das Rechnungsdatum wird festgeschrieben."}
-            {showConfirm === "bezahlt" && "Rechnung als bezahlt markieren?"}
+            {showConfirm === "bezahlen" && "Rechnung als bezahlt markieren?"}
+            {showConfirm === "mahnen" &&
+              (invoice.mahnStufe
+                ? `Naechste Mahnstufe nach "${MAHN_STUFE_LABEL[invoice.mahnStufe]}" anlegen?`
+                : "Zahlungserinnerung anlegen?")}
             {showConfirm === "stornieren" && "Rechnung stornieren? Eine Stornorechnung wird erstellt."}
             {showConfirm === "delete" && "Entwurf endgueltig loeschen?"}
           </p>
@@ -390,9 +357,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
               type="button"
               onClick={() => {
                 if (showConfirm === "delete") handleDelete();
-                else if (showConfirm === "stellen") performAction("stellen");
-                else if (showConfirm === "bezahlt") performAction("bezahlt");
-                else if (showConfirm === "stornieren") performAction("stornieren");
+                else performAction(showConfirm);
               }}
               className="px-4 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors"
             >
@@ -418,11 +383,11 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
               Empfaenger
             </h2>
             <div className="text-foreground">
-              <p className="font-medium">{invoice.empfaengerName ?? invoice.mandantName ?? "-"}</p>
-              {invoice.empfaengerStrasse && <p className="text-sm">{invoice.empfaengerStrasse}</p>}
-              {(invoice.empfaengerPlz || invoice.empfaengerOrt) && (
+              <p className="font-medium">{invoice.empfaenger?.name ?? invoice.mandantName ?? "-"}</p>
+              {invoice.empfaenger?.strasse && <p className="text-sm">{invoice.empfaenger.strasse}</p>}
+              {(invoice.empfaenger?.plz || invoice.empfaenger?.ort) && (
                 <p className="text-sm">
-                  {invoice.empfaengerPlz} {invoice.empfaengerOrt}
+                  {invoice.empfaenger.plz} {invoice.empfaenger.ort}
                 </p>
               )}
             </div>
@@ -517,13 +482,13 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
                   {formatEuro(invoice.betragBrutto)}
                 </span>
               </div>
-              {invoice.restbetrag !== invoice.betragBrutto && (
+              {invoice.restBetrag > 0 && invoice.restBetrag !== invoice.betragBrutto && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-amber-600 dark:text-amber-400 font-medium">
                     Restbetrag
                   </span>
                   <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">
-                    {formatEuro(invoice.restbetrag)}
+                    {formatEuro(invoice.restBetrag)}
                   </span>
                 </div>
               )}
@@ -560,7 +525,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
                   >
                     <div>
                       <p className="text-foreground">
-                        {formatDate(tz.datum)}
+                        {formatDate(tz.zahlungsdatum)}
                       </p>
                       {tz.verwendungszweck && (
                         <p className="text-xs text-muted-foreground">
@@ -591,15 +556,15 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
                     className="flex items-center justify-between text-sm"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-amber-500/15 flex items-center justify-center text-xs font-semibold text-amber-600">
-                        {m.stufe}
+                      <span className="px-2 h-6 rounded-full bg-amber-500/15 flex items-center justify-center text-xs font-semibold text-amber-600">
+                        {MAHN_STUFE_LABEL[m.stufe]}
                       </span>
                       <span className="text-foreground">
                         {formatDate(m.datum)}
                       </span>
                     </div>
-                    <Badge variant={m.gesendet ? "success" : "muted"}>
-                      {m.gesendet ? "Gesendet" : "Offen"}
+                    <Badge variant={m.gesendetAm ? "success" : "muted"}>
+                      {m.gesendetAm ? `Gesendet ${formatDate(m.gesendetAm)}` : "Nicht versendet"}
                     </Badge>
                   </div>
                 ))}

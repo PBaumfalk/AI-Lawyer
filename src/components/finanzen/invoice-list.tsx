@@ -20,49 +20,35 @@ import {
   Send,
   FileText,
 } from "lucide-react";
+import {
+  buildInvoiceListQuery,
+  runInvoiceBatchAction,
+  type InvoiceAction,
+  type InvoiceListItemDto,
+  type InvoiceListResponse,
+  type InvoiceSortField,
+  type InvoiceStatsDto,
+} from "@/lib/finance/invoice/contract";
 
 // ---------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------
 
-interface Invoice {
-  id: string;
-  rechnungsnummer: string;
-  rechnungsdatum: string;
-  faelligAm: string | null;
-  status: string;
-  betragNetto: number;
-  betragBrutto: number;
-  mandantName: string | null;
-  aktenzeichen: string | null;
-  akteId: string | null;
-}
-
-interface InvoiceStats {
-  gesamtUmsatz: number;
-  offeneForderungen: number;
-  ueberfaellig: number;
-  stornoquote: number;
-}
-
-type SortField =
-  | "rechnungsnummer"
-  | "rechnungsdatum"
-  | "mandantName"
-  | "betragBrutto"
-  | "status"
-  | "faelligAm";
+type Invoice = InvoiceListItemDto;
+type InvoiceStats = InvoiceStatsDto;
+type SortField = InvoiceSortField;
 type SortDir = "asc" | "desc";
 
 // ---------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------
 
-function formatEuro(cents: number): string {
+/** Amounts from the API are euros (see invoice contract). */
+function formatEuro(euro: number): string {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
     currency: "EUR",
-  }).format(cents / 100);
+  }).format(euro);
 }
 
 function formatDate(iso: string | null): string {
@@ -77,11 +63,12 @@ const STATUS_CONFIG: Record<
   ENTWURF: { label: "Entwurf", variant: "muted" },
   GESTELLT: { label: "Gestellt", variant: "default" },
   BEZAHLT: { label: "Bezahlt", variant: "success" },
+  MAHNUNG: { label: "Gemahnt", variant: "warning" },
   STORNIERT: { label: "Storniert", variant: "destructive" },
 };
 
 function getDaysOverdue(faelligAm: string | null, status: string): number | null {
-  if (!faelligAm || status !== "GESTELLT") return null;
+  if (!faelligAm || (status !== "GESTELLT" && status !== "MAHNUNG")) return null;
   const due = new Date(faelligAm);
   const now = new Date();
   const diff = Math.floor((now.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
@@ -124,30 +111,33 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  // Selection
+  // Selection (always a subset of the invoices currently shown)
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [batchBusy, setBatchBusy] = useState(false);
+  const [batchMessage, setBatchMessage] = useState<string | null>(null);
 
   // Fetch
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.set("page", String(page));
-      params.set("limit", String(pageSize));
-      params.set("sortBy", sortField);
-      params.set("sortDir", sortDir);
-      if (akteId) params.set("akteId", akteId);
-      if (statusFilter !== "ALLE") params.set("status", statusFilter);
-      if (searchQuery.trim()) params.set("search", searchQuery.trim());
-      if (ueberfaelligOnly) params.set("ueberfaellig", "true");
-
+      const params = buildInvoiceListQuery({
+        page,
+        limit: pageSize,
+        sortBy: sortField,
+        sortDir,
+        akteId,
+        status: statusFilter !== "ALLE" ? (statusFilter as Invoice["status"]) : undefined,
+        search: searchQuery.trim() || undefined,
+        ueberfaellig: ueberfaelligOnly ? "true" : undefined,
+      });
       const res = await fetch(`/api/finanzen/rechnungen?${params}`);
       if (!res.ok) throw new Error("Fetch failed");
-      const data = await res.json();
+      const data: InvoiceListResponse = await res.json();
 
-      setInvoices(data.rechnungen ?? []);
-      setTotal(data.total ?? 0);
-      setStats(data.stats ?? null);
+      setInvoices(data.rechnungen);
+      setTotal(data.total);
+      setStats(data.stats);
+      setSelected(new Set());
     } catch {
       setInvoices([]);
     } finally {
@@ -189,6 +179,70 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
   };
 
   const totalPages = Math.ceil(total / pageSize);
+
+  // Batch actions: only invoices whose status permits the action are sent;
+  // the rest are reported as skipped instead of failing silently.
+  const BATCH_ELIGIBLE: Record<InvoiceAction, Invoice["status"][]> = {
+    stellen: ["ENTWURF"],
+    mahnen: ["GESTELLT", "MAHNUNG"],
+    bezahlen: ["GESTELLT", "MAHNUNG"],
+    stornieren: ["ENTWURF", "GESTELLT", "MAHNUNG"],
+  };
+
+  const runBatch = async (action: InvoiceAction, label: string) => {
+    const chosen = invoices.filter((i) => selected.has(i.id));
+    const eligible = chosen.filter((i) => BATCH_ELIGIBLE[action].includes(i.status));
+    const skipped = chosen.length - eligible.length;
+    if (eligible.length === 0) {
+      setBatchMessage(`${label}: keine der ausgewaehlten Rechnungen ist dafuer geeignet.`);
+      return;
+    }
+    setBatchBusy(true);
+    setBatchMessage(null);
+    try {
+      const results = await runInvoiceBatchAction(eligible.map((i) => i.id), action);
+      const failed = results.filter((r) => !r.ok);
+      const parts = [`${label}: ${results.length - failed.length} erfolgreich`];
+      if (failed.length > 0) {
+        const nr = (id: string) => invoices.find((i) => i.id === id)?.rechnungsnummer ?? id;
+        parts.push(`${failed.length} fehlgeschlagen (${failed.map((f) => `${nr(f.id)}: ${f.error}`).join("; ")})`);
+      }
+      if (skipped > 0) parts.push(`${skipped} uebersprungen (Status passt nicht)`);
+      await fetchInvoices();
+      setBatchMessage(parts.join(", "));
+    } finally {
+      setBatchBusy(false);
+    }
+  };
+
+  const downloadPdfs = async () => {
+    const chosen = invoices.filter((i) => selected.has(i.id));
+    setBatchBusy(true);
+    setBatchMessage(null);
+    const failed: string[] = [];
+    try {
+      for (const inv of chosen) {
+        const res = await fetch(`/api/finanzen/rechnungen/${inv.id}/pdf`).catch(() => null);
+        if (!res || !res.ok) {
+          failed.push(inv.rechnungsnummer);
+          continue;
+        }
+        const url = URL.createObjectURL(await res.blob());
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${inv.rechnungsnummer}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      setBatchMessage(
+        failed.length === 0
+          ? `${chosen.length} PDF(s) heruntergeladen`
+          : `${chosen.length - failed.length} PDF(s) heruntergeladen, fehlgeschlagen: ${failed.join(", ")}`
+      );
+    } finally {
+      setBatchBusy(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -252,6 +306,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
             <option value="ALLE">Alle Status</option>
             <option value="ENTWURF">Entwurf</option>
             <option value="GESTELLT">Gestellt</option>
+            <option value="MAHNUNG">Gemahnt</option>
             <option value="BEZAHLT">Bezahlt</option>
             <option value="STORNIERT">Storniert</option>
           </Select>
@@ -281,26 +336,39 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
           <div className="flex gap-2 ml-auto">
             <button
               type="button"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted/50 transition-colors"
+              disabled={batchBusy}
+              onClick={() => runBatch("stellen", "Stellen")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
             >
               <Check className="w-4 h-4" />
-              Alle stellen
+              Entwuerfe stellen
             </button>
             <button
               type="button"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted/50 transition-colors"
+              disabled={batchBusy}
+              onClick={downloadPdfs}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
             >
               <Download className="w-4 h-4" />
               PDFs herunterladen
             </button>
             <button
               type="button"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted/50 transition-colors"
+              disabled={batchBusy}
+              onClick={() => runBatch("mahnen", "Mahnstufe erhoehen")}
+              title="Legt fuer jede gestellte/gemahnte Rechnung die naechste Mahnstufe an (kein Versand)"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
-              Mahnungen senden
+              Mahnstufe erhoehen
             </button>
           </div>
+        </div>
+      )}
+
+      {batchMessage && (
+        <div className="glass rounded-xl p-3 text-sm text-foreground" role="status">
+          {batchMessage}
         </div>
       )}
 
@@ -318,27 +386,35 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
                     className="rounded accent-blue-600"
                   />
                 </th>
-                {[
-                  { field: "rechnungsnummer" as SortField, label: "Rechnungsnr." },
-                  { field: "rechnungsdatum" as SortField, label: "Datum" },
-                  { field: "mandantName" as SortField, label: "Mandant" },
-                  { field: "betragBrutto" as SortField, label: "Betrag" },
-                  { field: "status" as SortField, label: "Status" },
-                  { field: "faelligAm" as SortField, label: "Faelligkeit" },
-                ].map((col) => (
-                  <th
-                    key={col.field}
-                    className="text-left p-3 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-                    onClick={() => toggleSort(col.field)}
-                  >
-                    <span className="flex items-center gap-1">
+                {(
+                  [
+                    { field: "rechnungsnummer", label: "Rechnungsnr." },
+                    { field: "rechnungsdatum", label: "Datum" },
+                    { field: null, label: "Mandant" },
+                    { field: "betragBrutto", label: "Betrag" },
+                    { field: "status", label: "Status" },
+                    { field: "faelligAm", label: "Faelligkeit" },
+                  ] satisfies { field: SortField | null; label: string }[]
+                ).map((col) =>
+                  col.field === null ? (
+                    <th key={col.label} className="text-left p-3 font-medium text-muted-foreground">
                       {col.label}
-                      {sortField === col.field && (
-                        <ArrowUpDown className="w-3 h-3" />
-                      )}
-                    </span>
-                  </th>
-                ))}
+                    </th>
+                  ) : (
+                    <th
+                      key={col.field}
+                      className="text-left p-3 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                      onClick={() => toggleSort(col.field)}
+                    >
+                      <span className="flex items-center gap-1">
+                        {col.label}
+                        {sortField === col.field && (
+                          <ArrowUpDown className="w-3 h-3" />
+                        )}
+                      </span>
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
             <tbody>

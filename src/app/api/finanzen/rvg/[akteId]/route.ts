@@ -8,28 +8,12 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { buildCalculation } from '@/lib/finance/rvg/calculator';
 import { logAuditEvent } from '@/lib/audit';
-import { z } from 'zod';
-
-// ─── Validation Schema ───────────────────────────────────────────────────────
-
-const rvgPositionSchema = z.object({
-  vvNr: z.string().min(1),
-  rate: z.number().optional(),
-  gegenstandswert: z.number().optional(),
-  anzahlAuftraggeber: z.number().optional(),
-  betrag: z.number().optional(),
-  km: z.number().optional(),
-  tage: z.number().optional(),
-});
-
-const saveCalculationSchema = z.object({
-  streitwert: z.number().positive('Streitwert muss positiv sein'),
-  auftragseingang: z.string().datetime().optional(),
-  positionen: z.array(rvgPositionSchema).min(1, 'Mindestens eine VV-Position erforderlich'),
-  autoAnrechnung: z.boolean().optional().default(true),
-  autoAuslagen: z.boolean().optional().default(true),
-  autoUst: z.boolean().optional().default(true),
-});
+import {
+  buildInvoiceFromRvg,
+  rvgSaveSchema,
+  toCalculatorPositions,
+  type RvgSaveResponse,
+} from '@/lib/finance/rvg/contract';
 
 // ─── GET /api/finanzen/rvg/[akteId] ──────────────────────────────────────────
 
@@ -65,27 +49,12 @@ export async function GET(
     // Add uebernehmenAlsRechnung helper for each saved calculation
     const formatted = berechnungen.map((b) => {
       const ergebnis = b.ergebnis as any;
-      const items = ergebnis?.items ?? [];
-
-      const invoicePositionen = items.map((item: any) => ({
-        vvNr: item.vvNr,
-        beschreibung: item.name + (item.notes ? ` (${item.notes})` : ''),
-        menge: 1,
-        einzelpreis: item.finalAmount,
-        ustSatz: item.vvNr === '7008' ? 0 : 19,
-        betrag: item.finalAmount,
-      }));
-
       return {
         ...b,
-        uebernehmenAlsRechnung: {
-          positionen: invoicePositionen,
-          betragNetto: ergebnis?.nettoGesamt ?? 0,
-          betragBrutto: ergebnis?.bruttoGesamt ?? 0,
-          typ: 'RVG',
-          rvgBerechnungId: b.id,
-          akteId,
-        },
+        uebernehmenAlsRechnung: buildInvoiceFromRvg(
+          { items: Array.isArray(ergebnis?.items) ? ergebnis.items : [] },
+          { akteId, rvgBerechnungId: b.id },
+        ),
       };
     });
 
@@ -126,7 +95,7 @@ export async function POST(
     return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 });
   }
 
-  const parsed = saveCalculationSchema.safeParse(body);
+  const parsed = rvgSaveSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: 'Validierungsfehler', details: parsed.error.flatten() },
@@ -152,17 +121,7 @@ export async function POST(
       : undefined;
 
     // Calculate using the RVG calculator
-    const positions = data.positionen.map((p) => ({
-      nr: p.vvNr,
-      options: {
-        rate: p.rate,
-        gegenstandswert: p.gegenstandswert,
-        anzahlAuftraggeber: p.anzahlAuftraggeber,
-        betrag: p.betrag,
-        km: p.km,
-        tage: p.tage,
-      },
-    }));
+    const positions = toCalculatorPositions(data.positionen);
 
     const result = buildCalculation(data.streitwert, positions, {
       auftragseingang,
@@ -197,28 +156,11 @@ export async function POST(
       },
     });
 
-    // Build pre-filled invoice data for one-click transfer
-    const invoicePositionen = result.items.map((item) => ({
-      vvNr: item.vvNr,
-      beschreibung: item.name + (item.notes ? ` (${item.notes})` : ''),
-      menge: 1,
-      einzelpreis: item.finalAmount,
-      ustSatz: item.vvNr === '7008' ? 0 : 19,
-      betrag: item.finalAmount,
-    }));
-
-    return NextResponse.json(
+    return NextResponse.json<RvgSaveResponse>(
       {
         berechnung: {
           ...berechnung,
-          uebernehmenAlsRechnung: {
-            positionen: invoicePositionen,
-            betragNetto: result.nettoGesamt,
-            betragBrutto: result.bruttoGesamt,
-            typ: 'RVG',
-            rvgBerechnungId: berechnung.id,
-            akteId,
-          },
+          uebernehmenAlsRechnung: buildInvoiceFromRvg(result, { akteId, rvgBerechnungId: berechnung.id }),
         },
         ergebnis: result,
       },

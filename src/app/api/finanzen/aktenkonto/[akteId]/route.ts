@@ -6,25 +6,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAkteAccess } from '@/lib/rbac';
 import { z } from 'zod';
-import { BuchungsTyp, KontoTyp } from '@prisma/client';
+import { BuchungsTyp } from '@prisma/client';
 import { createBooking } from '@/lib/finance/aktenkonto/booking';
 import { checkFremdgeldCompliance } from '@/lib/finance/aktenkonto/fremdgeld';
 import { calculateSaldo, calculateRunningBalance } from '@/lib/finance/aktenkonto/saldo';
+import { bookingSchema, type AktenkontoBuchungDto } from '@/lib/finance/aktenkonto/contract';
 
 const querySchema = z.object({
   buchungstyp: z.nativeEnum(BuchungsTyp).optional(),
   von: z.string().optional(),
   bis: z.string().optional(),
-});
-
-const bookingSchema = z.object({
-  buchungstyp: z.nativeEnum(BuchungsTyp),
-  betrag: z.number().positive('Betrag muss positiv sein'),
-  verwendungszweck: z.string().min(1, 'Verwendungszweck ist erforderlich'),
-  buchungsdatum: z.string().optional(), // ISO date string
-  kostenstelle: z.string().optional(),
-  konto: z.nativeEnum(KontoTyp).optional(),
-  dokumentId: z.string().optional(),
 });
 
 // ─── GET /api/finanzen/aktenkonto/[akteId] ──────────────────────────────────
@@ -61,7 +52,28 @@ export async function GET(
     }
 
     // Get bookings with running balance
-    const buchungenMitSaldo = await calculateRunningBalance(akteId);
+    const alleBuchungen = await calculateRunningBalance(akteId);
+    const storniertDurch = new Map(
+      alleBuchungen.filter((b) => b.stornoVon).map((b) => [b.stornoVon as string, b.id]),
+    );
+    const buchungenMitSaldo = alleBuchungen.map(
+      (b): Omit<AktenkontoBuchungDto, 'buchungsdatum'> & { buchungsdatum: Date } => ({
+        id: b.id,
+        buchungstyp: b.buchungstyp,
+        betrag: b.betrag,
+        verwendungszweck: b.verwendungszweck,
+        buchungsdatum: b.buchungsdatum,
+        kostenstelle: b.kostenstelle,
+        konto: b.konto,
+        dokumentId: b.dokumentId,
+        rechnungId: b.rechnungId,
+        fremdgeldFrist: b.fremdgeldFrist ? b.fremdgeldFrist.toISOString() : null,
+        stornoVon: b.stornoVon,
+        stornoGrund: b.stornoGrund,
+        storniertDurch: storniertDurch.get(b.id) ?? null,
+        laufenderSaldo: b.laufenderSaldo,
+      }),
+    );
 
     // Apply filters if provided
     let filtered = buchungenMitSaldo;
@@ -157,6 +169,7 @@ export async function POST(
         konto: data.konto,
         dokumentId: data.dokumentId,
         gebuchtVon: userId,
+        richtung: data.richtung,
       });
     });
 
@@ -177,7 +190,7 @@ export async function POST(
     console.error('Aktenkonto booking error:', err);
 
     // Handle period lock errors with clear message
-    if (err.message?.includes('gesperrt')) {
+    if (err.message?.includes('gesperrt') || err.message?.includes('uebersteigt')) {
       return NextResponse.json({ error: err.message }, { status: 400 });
     }
 

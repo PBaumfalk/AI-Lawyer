@@ -21,25 +21,19 @@ import {
   Shield,
   ExternalLink,
 } from "lucide-react";
+import {
+  BUCHUNGS_ARTEN,
+  buildBookingBody,
+  buildStornoBody,
+  type AktenkontoBuchungDto,
+  type BuchungsArt,
+} from "@/lib/finance/aktenkonto/contract";
 
 // ---------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------
 
-interface Buchung {
-  id: string;
-  buchungstyp: string;
-  betrag: number;
-  verwendungszweck: string;
-  buchungsdatum: string;
-  kostenstelle: string | null;
-  konto: string | null;
-  dokumentId: string | null;
-  rechnungId: string | null;
-  storniertVonId: string | null;
-  stornoBuchungId: string | null;
-  laufenderSaldo?: number;
-}
+type Buchung = AktenkontoBuchungDto;
 
 interface SaldoResult {
   gesamtSaldo: number;
@@ -54,6 +48,7 @@ interface FremdgeldAlert {
   buchungId: string;
   akteId: string;
   betrag: number;
+  offenerBetrag: number;
   eingangsDatum: string;
   frist: string;
   verbleibendeTage: number;
@@ -134,7 +129,8 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
 
   // New booking dialog
   const [showNewBooking, setShowNewBooking] = useState(false);
-  const [newBuchungstyp, setNewBuchungstyp] = useState("EINNAHME");
+  const [newBuchungsArt, setNewBuchungsArt] = useState<BuchungsArt>("EINNAHME");
+  const [actionError, setActionError] = useState<string | null>(null);
   const [newBetrag, setNewBetrag] = useState("");
   const [newVerwendungszweck, setNewVerwendungszweck] = useState("");
   const [newKonto, setNewKonto] = useState("GESCHAEFT");
@@ -177,51 +173,63 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
   // Create booking
   const handleCreateBooking = useCallback(async () => {
     if (!newBetrag || !newVerwendungszweck.trim()) return;
+    const betrag = parseFloat(newBetrag.replace(/\./g, "").replace(",", "."));
+    if (!Number.isFinite(betrag) || betrag <= 0) {
+      setActionError("Bitte einen positiven Betrag eingeben.");
+      return;
+    }
     setBookingSaving(true);
+    setActionError(null);
     try {
       const res = await fetch(`/api/finanzen/aktenkonto/${akteId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          buchungstyp: newBuchungstyp,
-          betrag: parseFloat(newBetrag.replace(",", ".")),
-          verwendungszweck: newVerwendungszweck.trim(),
-          konto: newKonto,
-        }),
+        body: JSON.stringify(
+          buildBookingBody({
+            art: newBuchungsArt,
+            betrag,
+            verwendungszweck: newVerwendungszweck,
+            konto: newKonto as "GESCHAEFT" | "ANDERKONTO",
+          })
+        ),
       });
       if (res.ok) {
         setShowNewBooking(false);
         setNewBetrag("");
         setNewVerwendungszweck("");
         await fetchData();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setActionError(data?.error ?? `Buchung fehlgeschlagen (HTTP ${res.status})`);
       }
-    } catch {
-      // Error
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Buchung fehlgeschlagen");
     } finally {
       setBookingSaving(false);
     }
-  }, [akteId, newBuchungstyp, newBetrag, newVerwendungszweck, newKonto, fetchData]);
+  }, [akteId, newBuchungsArt, newBetrag, newVerwendungszweck, newKonto, fetchData]);
 
   // Storno
   const handleStorno = useCallback(async () => {
     if (!stornoId || !stornoGrund.trim()) return;
     setStornoSaving(true);
+    setActionError(null);
     try {
       const res = await fetch(`/api/finanzen/aktenkonto/${akteId}/storno`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          originalId: stornoId,
-          grund: stornoGrund.trim(),
-        }),
+        body: JSON.stringify(buildStornoBody(stornoId, stornoGrund)),
       });
       if (res.ok) {
         setStornoId(null);
         setStornoGrund("");
         await fetchData();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setActionError(data?.error ?? `Stornierung fehlgeschlagen (HTTP ${res.status})`);
       }
-    } catch {
-      // Error
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Stornierung fehlgeschlagen");
     } finally {
       setStornoSaving(false);
     }
@@ -282,7 +290,9 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
               <div className="flex-1">
                 <p className="font-medium text-sm">
                   Fremdgeld-Weiterleitung faellig:{" "}
-                  {formatEuroFromRaw(alert.betrag)}
+                  {formatEuroFromRaw(alert.offenerBetrag)}
+                  {alert.offenerBetrag !== alert.betrag &&
+                    ` (von ${formatEuroFromRaw(alert.betrag)})`}
                 </p>
                 <p className="text-xs mt-0.5">
                   Eingang: {formatDate(alert.eingangsDatum)} | Frist:{" "}
@@ -294,6 +304,12 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {actionError && (
+        <div className="p-4 rounded-xl border border-red-300 dark:border-red-800 text-sm text-red-700 dark:text-red-400" role="alert">
+          {actionError}
         </div>
       )}
 
@@ -388,13 +404,14 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
                 Buchungstyp
               </label>
               <Select
-                value={newBuchungstyp}
-                onChange={(e) => setNewBuchungstyp(e.target.value)}
+                value={newBuchungsArt}
+                onChange={(e) => setNewBuchungsArt(e.target.value as BuchungsArt)}
               >
-                <option value="EINNAHME">Einnahme</option>
-                <option value="AUSGABE">Ausgabe</option>
-                <option value="FREMDGELD">Fremdgeld</option>
-                <option value="AUSLAGE">Auslage</option>
+                {(Object.keys(BUCHUNGS_ARTEN) as BuchungsArt[]).map((art) => (
+                  <option key={art} value={art}>
+                    {BUCHUNGS_ARTEN[art].label}
+                  </option>
+                ))}
               </Select>
             </div>
             <div>
@@ -540,8 +557,8 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
                 ) : (
                   buchungenWithBalance.map((b) => {
                     const typeCfg = BUCHUNGSTYP_CONFIG[b.buchungstyp];
-                    const isStorno = !!b.storniertVonId;
-                    const hasStorno = !!b.stornoBuchungId;
+                    const isStorno = !!b.stornoVon;
+                    const hasStorno = !!b.storniertDurch;
 
                     return (
                       <tr

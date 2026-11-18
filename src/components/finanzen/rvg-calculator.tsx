@@ -33,6 +33,8 @@ import type {
   PositionOptions,
   VVPosition,
 } from "@/lib/finance/rvg/types";
+import { buildRvgSaveBody, type RvgSaveResponse } from "@/lib/finance/rvg/contract";
+import type { CreateInvoiceResponse } from "@/lib/finance/invoice/contract";
 
 // ---------------------------------------------------------------
 // Helpers
@@ -101,6 +103,7 @@ export function RvgCalculator({
   const [saving, setSaving] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [actionMessage, setActionMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   const streitwert = useMemo(
     () => parseGermanNumber(streitwertRaw),
@@ -225,66 +228,61 @@ export function RvgCalculator({
     setTimeout(() => setCopySuccess(false), 2000);
   }, [result, streitwert]);
 
+  /** Save the calculation exactly as shown (same positions and flags). */
+  const postCalculation = useCallback(async (): Promise<RvgSaveResponse> => {
+    const res = await fetch(`/api/finanzen/rvg/${akteId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        buildRvgSaveBody({ streitwert, positions, autoAuslagen, autoUst })
+      ),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data?.error ?? `Speichern fehlgeschlagen (HTTP ${res.status})`);
+    }
+    return res.json();
+  }, [akteId, streitwert, positions, autoAuslagen, autoUst]);
+
   const transferToInvoice = useCallback(async () => {
     if (!result || !akteId) return;
     setTransferring(true);
+    setActionMessage(null);
     try {
-      // First save the calculation
-      const saveRes = await fetch(`/api/finanzen/rvg/${akteId}`, {
+      const saved = await postCalculation();
+      const invoiceRes = await fetch("/api/finanzen/rechnungen", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          streitwert,
-          positionen: positions.map((p) => ({
-            nr: p.vvNr,
-            options: p.options,
-          })),
-        }),
+        body: JSON.stringify(saved.berechnung.uebernehmenAlsRechnung),
       });
-      if (!saveRes.ok) throw new Error("Save failed");
-      const saveData = await saveRes.json();
-
-      // Now create the invoice from the calculation
-      if (saveData.uebernehmenAlsRechnung) {
-        const invoiceRes = await fetch("/api/finanzen/rechnungen", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(saveData.uebernehmenAlsRechnung),
-        });
-        if (invoiceRes.ok) {
-          const invoice = await invoiceRes.json();
-          window.location.href = `/finanzen/rechnungen/${invoice.id}`;
-          return;
-        }
+      if (!invoiceRes.ok) {
+        const data = await invoiceRes.json().catch(() => ({}));
+        throw new Error(
+          `Berechnung gespeichert, Rechnung nicht angelegt: ${data?.error ?? `HTTP ${invoiceRes.status}`}`
+        );
       }
-    } catch {
-      // Error handling — show inline
+      const created: CreateInvoiceResponse = await invoiceRes.json();
+      window.location.href = `/finanzen/rechnungen/${created.rechnung.id}`;
+    } catch (err) {
+      setActionMessage({ ok: false, text: err instanceof Error ? err.message : String(err) });
     } finally {
       setTransferring(false);
     }
-  }, [result, akteId, streitwert, positions]);
+  }, [result, akteId, postCalculation]);
 
   const saveCalculation = useCallback(async () => {
     if (!result || !akteId) return;
     setSaving(true);
+    setActionMessage(null);
     try {
-      await fetch(`/api/finanzen/rvg/${akteId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          streitwert,
-          positionen: positions.map((p) => ({
-            nr: p.vvNr,
-            options: p.options,
-          })),
-        }),
-      });
-    } catch {
-      // Silently handle
+      await postCalculation();
+      setActionMessage({ ok: true, text: "Berechnung in der Akte gespeichert." });
+    } catch (err) {
+      setActionMessage({ ok: false, text: err instanceof Error ? err.message : String(err) });
     } finally {
       setSaving(false);
     }
-  }, [result, akteId, streitwert, positions]);
+  }, [result, akteId, postCalculation]);
 
   // ---------------------------------------------------------------
   // Render
@@ -774,6 +772,20 @@ export function RvgCalculator({
                         : "Uebernehmen als Rechnung"}
                     </button>
                   </>
+                )}
+
+                {actionMessage && (
+                  <p
+                    role={actionMessage.ok ? "status" : "alert"}
+                    className={cn(
+                      "text-sm",
+                      actionMessage.ok
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-red-600 dark:text-red-400"
+                    )}
+                  >
+                    {actionMessage.text}
+                  </p>
                 )}
               </div>
             </div>

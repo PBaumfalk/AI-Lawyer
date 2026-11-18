@@ -27,6 +27,8 @@ export interface BookingInput {
   konto?: KontoTyp;
   /** User creating the booking */
   gebuchtVon: string;
+  /** FREMDGELD only: EINGANG (default) or AUSGANG (Weiterleitung, booked negative) */
+  richtung?: 'EINGANG' | 'AUSGANG';
 }
 
 /** Input for creating a Storno (reversal) booking */
@@ -63,6 +65,8 @@ export interface FremdgeldAlert {
   akteId: string;
   /** Amount of the Fremdgeld booking */
   betrag: number;
+  /** Part of the receipt not yet forwarded (FIFO against Weiterleitungen) */
+  offenerBetrag: number;
   /** Date the Fremdgeld was received */
   eingangsDatum: Date;
   /** Deadline for forwarding (5 business days) */

@@ -5,14 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { z } from 'zod';
 import { stornoBooking } from '@/lib/finance/aktenkonto/booking';
 import { calculateSaldo } from '@/lib/finance/aktenkonto/saldo';
-
-const stornoSchema = z.object({
-  buchungId: z.string().min(1, 'Buchungs-ID ist erforderlich'),
-  grund: z.string().min(1, 'Stornogrund ist erforderlich'),
-});
+import { stornoSchema } from '@/lib/finance/aktenkonto/contract';
 
 // ─── POST /api/finanzen/aktenkonto/[akteId]/storno ──────────────────────────
 

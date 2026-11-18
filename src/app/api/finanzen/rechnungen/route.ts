@@ -8,47 +8,35 @@ import { logAuditEvent } from '@/lib/audit';
 import { requireAuth, requireAkteAccess, buildAkteAccessFilter } from '@/lib/rbac';
 import { getNextInvoiceNumber } from '@/lib/finance/invoice/nummernkreis';
 import { enqueueQuestCheck } from '@/lib/gamification/quest-service';
-import { z } from 'zod';
+import type { Prisma } from '@prisma/client';
 import type { InvoicePosition, UstSummary } from '@/lib/finance/invoice/types';
-
-// ─── Validation Schemas ──────────────────────────────────────────────────────
-
-const positionSchema = z.object({
-  vvNr: z.string().optional(),
-  beschreibung: z.string().min(1, 'Beschreibung ist erforderlich'),
-  menge: z.number().positive('Menge muss positiv sein'),
-  einzelpreis: z.number().min(0, 'Einzelpreis darf nicht negativ sein'),
-  ustSatz: z.number().min(0).max(100),
-  betrag: z.number(),
-});
-
-const createInvoiceSchema = z.object({
-  akteId: z.string().min(1, 'Akten-ID ist erforderlich'),
-  empfaengerId: z.string().optional(),
-  positionen: z.array(positionSchema).min(1, 'Mindestens eine Position erforderlich'),
-  zahlungszielTage: z.number().int().positive().optional(),
-  notizen: z.string().optional(),
-  isPkh: z.boolean().optional(),
-  rvgBerechnungId: z.string().optional(),
-  typ: z.enum(['RVG', 'STUNDENHONORAR', 'PAUSCHALE']).optional(),
-});
+import {
+  createInvoiceSchema,
+  invoiceListQuerySchema,
+  type CreateInvoiceResponse,
+  type InvoiceListResponse,
+} from '@/lib/finance/invoice/contract';
+import { toInvoiceListItem } from '@/lib/finance/invoice/serialize';
 
 // ─── GET /api/finanzen/rechnungen ────────────────────────────────────────────
+// Query and response follow InvoiceListQuery / InvoiceListResponse in
+// src/lib/finance/invoice/contract.ts (shared with invoice-list.tsx).
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;
   const { session } = authResult;
 
-  const { searchParams } = request.nextUrl;
-  const status = searchParams.get('status');
-  const akteId = searchParams.get('akteId');
-  const mandantId = searchParams.get('mandantId');
-  const dateFrom = searchParams.get('dateFrom');
-  const dateTo = searchParams.get('dateTo');
-  const ueberfaellig = searchParams.get('ueberfaellig');
-  const skip = parseInt(searchParams.get('skip') ?? '0', 10);
-  const take = parseInt(searchParams.get('take') ?? '50', 10);
+  const parsedQuery = invoiceListQuerySchema.safeParse(
+    Object.fromEntries(request.nextUrl.searchParams),
+  );
+  if (!parsedQuery.success) {
+    return NextResponse.json(
+      { error: 'Ungueltige Abfrageparameter', details: parsedQuery.error.flatten() },
+      { status: 400 },
+    );
+  }
+  const q = parsedQuery.data;
 
   try {
     // Determine access scope: ADMIN always kanzleiweit, ANWALT if canSeeKanzleiFinanzen
@@ -63,118 +51,101 @@ export async function GET(request: NextRequest) {
       ? {}
       : buildAkteAccessFilter(session.user.id, session.user.role);
 
-    // Build filter conditions with RBAC access filter
-    const where: Record<string, any> = {};
-
-    // Apply Akte-level access filter (merge with mandant filter if present)
-    if (mandantId) {
-      where.akte = {
+    // Scope: access + Akte/Mandant/date range. KPI stats are computed on the
+    // scope only, so they do not jump when the user filters the table.
+    const scope: Prisma.RechnungWhereInput = {};
+    if (q.mandantId) {
+      scope.akte = {
         ...akteAccessFilter,
-        beteiligte: {
-          some: { kontaktId: mandantId, rolle: 'MANDANT' },
-        },
+        beteiligte: { some: { kontaktId: q.mandantId, rolle: 'MANDANT' } },
       };
     } else if (Object.keys(akteAccessFilter).length > 0) {
-      where.akte = akteAccessFilter;
+      scope.akte = akteAccessFilter;
+    }
+    if (q.akteId) scope.akteId = q.akteId;
+    if (q.dateFrom || q.dateTo) {
+      scope.rechnungsdatum = {
+        ...(q.dateFrom && { gte: new Date(q.dateFrom) }),
+        ...(q.dateTo && { lte: new Date(q.dateTo) }),
+      };
     }
 
-    if (status) {
-      where.status = status;
-    }
-    if (akteId) {
-      where.akteId = akteId;
-    }
-    if (dateFrom || dateTo) {
-      where.rechnungsdatum = {};
-      if (dateFrom) where.rechnungsdatum.gte = new Date(dateFrom);
-      if (dateTo) where.rechnungsdatum.lte = new Date(dateTo);
-    }
-    if (ueberfaellig === 'true') {
+    // Table filters on top of the scope
+    const where: Prisma.RechnungWhereInput = { ...scope };
+    if (q.status) where.status = q.status;
+    if (q.ueberfaellig === 'true') {
       where.faelligAm = { lt: new Date() };
       where.status = { in: ['GESTELLT', 'MAHNUNG'] };
     }
-
-    const [rechnungen, total] = await Promise.all([
-      prisma.rechnung.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { rechnungsdatum: 'desc' },
-        include: {
+    if (q.search) {
+      const contains = { contains: q.search, mode: 'insensitive' as const };
+      where.OR = [
+        { rechnungsnummer: contains },
+        { akte: { aktenzeichen: contains } },
+        { akte: { kurzrubrum: contains } },
+        {
           akte: {
-            select: {
-              aktenzeichen: true,
-              kurzrubrum: true,
-              beteiligte: {
-                where: { rolle: 'MANDANT' },
-                select: {
-                  kontakt: {
-                    select: { vorname: true, nachname: true, firma: true },
-                  },
-                },
-                take: 1,
+            beteiligte: {
+              some: {
+                rolle: 'MANDANT',
+                kontakt: { OR: [{ nachname: contains }, { vorname: contains }, { firma: contains }] },
               },
             },
           },
         },
-      }),
-      prisma.rechnung.count({ where }),
-    ]);
+      ];
+    }
 
-    // Summary stats -- reuse same access-scoped where for aggregates
-    const statsWhere: Record<string, any> = {
-      ...where,
-      status: { in: ['GESTELLT', 'MAHNUNG'] },
+    const offen: Prisma.RechnungWhereInput = { ...scope, status: { in: ['GESTELLT', 'MAHNUNG'] } };
+    // Stornobelege (GS numbers, stornoVon set) are not invoices of their own
+    const ausgestellt: Prisma.RechnungWhereInput = {
+      ...scope,
+      stornoVon: null,
+      status: { in: ['GESTELLT', 'MAHNUNG', 'BEZAHLT', 'STORNIERT'] },
     };
 
-    const [stats, ueberfaelligCount, gesamtUmsatzAgg] = await Promise.all([
-      prisma.rechnung.aggregate({
-        _sum: { betragNetto: true },
-        where: statsWhere,
-      }),
-      prisma.rechnung.count({
-        where: {
-          ...where,
-          faelligAm: { lt: new Date() },
-          status: { in: ['GESTELLT', 'MAHNUNG'] },
-        },
-      }),
-      // gesamtUmsatz: sum of BEZAHLT invoices
-      prisma.rechnung.aggregate({
-        _sum: { betragNetto: true },
-        where: { ...where, status: 'BEZAHLT' },
-      }),
-    ]);
+    const [rechnungen, total, offenAgg, ueberfaelligCount, umsatzAgg, ausgestelltCount, storniertCount] =
+      await Promise.all([
+        prisma.rechnung.findMany({
+          where,
+          skip: (q.page - 1) * q.limit,
+          take: q.limit,
+          orderBy: [{ [q.sortBy]: q.sortDir }, { id: 'asc' }],
+          include: {
+            akte: {
+              select: {
+                aktenzeichen: true,
+                kurzrubrum: true,
+                beteiligte: {
+                  where: { rolle: 'MANDANT' },
+                  select: { kontakt: { select: { vorname: true, nachname: true, firma: true } } },
+                  take: 1,
+                },
+              },
+            },
+          },
+        }),
+        prisma.rechnung.count({ where }),
+        prisma.rechnung.aggregate({ _sum: { restBetrag: true }, where: offen }),
+        prisma.rechnung.count({ where: { ...offen, faelligAm: { lt: new Date() } } }),
+        prisma.rechnung.aggregate({ _sum: { betragNetto: true }, where: { ...scope, status: 'BEZAHLT' } }),
+        prisma.rechnung.count({ where: ausgestellt }),
+        prisma.rechnung.count({ where: { ...ausgestellt, status: 'STORNIERT' } }),
+      ]);
 
-    // Format Mandant name from Akte beteiligte
-    const formatted = rechnungen.map((r) => {
-      const mandant = r.akte.beteiligte[0]?.kontakt;
-      const mandantName = mandant
-        ? mandant.firma ?? [mandant.vorname, mandant.nachname].filter(Boolean).join(' ')
-        : null;
-
-      return {
-        ...r,
-        aktenzeichen: r.akte.aktenzeichen,
-        kurzrubrum: r.akte.kurzrubrum,
-        mandantName,
-      };
-    });
-
-    return NextResponse.json({
-      rechnungen: formatted,
+    return NextResponse.json<InvoiceListResponse>({
+      rechnungen: rechnungen.map((r) => toInvoiceListItem(r)),
       total,
-      skip,
-      take,
-      // Provide both 'stats' and 'summary' keys for frontend compatibility
+      page: q.page,
+      limit: q.limit,
       stats: {
-        offeneForderungen: stats._sum.betragNetto?.toNumber() ?? 0,
+        offeneForderungen: offenAgg._sum.restBetrag?.toNumber() ?? 0,
         ueberfaellig: ueberfaelligCount,
-        gesamtUmsatz: gesamtUmsatzAgg._sum.betragNetto?.toNumber() ?? 0,
-      },
-      summary: {
-        offeneForderungen: stats._sum.betragNetto?.toNumber() ?? 0,
-        ueberfaelligCount,
+        gesamtUmsatz: umsatzAgg._sum.betragNetto?.toNumber() ?? 0,
+        stornoquote:
+          ausgestelltCount === 0
+            ? 0
+            : Math.round((storniertCount / ausgestelltCount) * 1000) / 10,
       },
     });
   } catch (err: any) {
@@ -328,7 +299,10 @@ export async function POST(request: NextRequest) {
       enqueueQuestCheck(userId);
     }
 
-    return NextResponse.json({ rechnung }, { status: 201 });
+    return NextResponse.json<CreateInvoiceResponse>(
+      { rechnung: { id: rechnung.id, rechnungsnummer: rechnung.rechnungsnummer } },
+      { status: 201 },
+    );
   } catch (err: any) {
     console.error('Invoice creation error:', err);
     return NextResponse.json(

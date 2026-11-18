@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config'
 import path from 'path'
 
 export default defineConfig({
+  // tsconfig sets jsx: "preserve" for Next.js. Vite 8 (oxc) honours that and
+  // leaves JSX untransformed, so .tsx imports in tests failed to parse.
+  oxc: { jsx: { runtime: 'automatic' } },
   test: {
     globals: true,
     server: { deps: { inline: ['next-auth'] } },

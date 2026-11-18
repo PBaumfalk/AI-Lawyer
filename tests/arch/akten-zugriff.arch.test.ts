@@ -26,7 +26,6 @@ const REVIEWED: Record<string, string> = {
   "src/app/api/helena/suggestions/[id]/route.ts": "owner check on the suggestion",
   "src/app/api/ki-chat/pending/route.ts": "pending state is keyed by the current user",
   "src/app/api/dokumente/reindex/route.ts": "ADMIN only",
-  "src/app/api/bea/messages/route.ts": "firm beA postbox for all roles with canReadBeA; akteId only narrows the list, POST has no akteId",
   "src/app/api/bea/auto-assign/route.ts": "firm beA postbox; assignment suggestions only, no data of other Akten returned",
   "src/app/api/bea/messages/[id]/eeb/route.ts": "acts on the firm beA postbox message, no Akte data",
 };

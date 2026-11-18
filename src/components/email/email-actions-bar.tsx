@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { emailBulkAktion } from "@/lib/email/bulk-contract";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -51,67 +52,43 @@ export function EmailActionsBar({
     [isVeraktet, onReplyAction]
   );
 
-  const handleArchive = useCallback(async () => {
-    try {
-      const res = await fetch("/api/emails/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "archive", emailIds: [emailId] }),
-      });
-      if (res.ok) {
-        toast.success("E-Mail archiviert");
+  const runAktion = useCallback(
+    async (action: "archive" | "spam", erfolg: string) => {
+      try {
+        await emailBulkAktion({ action, emailIds: [emailId] });
+        toast.success(erfolg);
         onEmailDeleted?.();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Aktion fehlgeschlagen");
       }
-    } catch {
-      toast.error("Fehler beim Archivieren");
-    }
-  }, [emailId, onEmailDeleted]);
+    },
+    [emailId, onEmailDeleted]
+  );
 
-  const handleSpam = useCallback(async () => {
-    try {
-      const res = await fetch("/api/emails/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "spam", emailIds: [emailId] }),
-      });
-      if (res.ok) {
-        toast.success("Als Spam markiert");
-        onEmailDeleted?.();
-      }
-    } catch {
-      toast.error("Fehler beim Spam-Markieren");
-    }
-  }, [emailId, onEmailDeleted]);
+  const handleArchive = useCallback(() => runAktion("archive", "E-Mail archiviert"), [runAktion]);
+  const handleSpam = useCallback(() => runAktion("spam", "Als Spam markiert"), [runAktion]);
 
   const handleDelete = useCallback(async () => {
-    // Soft delete with 5s undo toast
+    // Soft delete with 5s undo toast (undo = bulk "restore")
     try {
-      const res = await fetch(`/api/emails/${emailId}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        toast("E-Mail geloescht", {
-          action: {
-            label: "Rueckgaengig",
-            onClick: async () => {
-              try {
-                await fetch(`/api/emails/${emailId}`, {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ geloescht: false }),
-                });
-                toast.success("Loeschung rueckgaengig gemacht");
-              } catch {
-                // Ignore
-              }
-            },
+      await emailBulkAktion({ action: "delete", emailIds: [emailId] });
+      toast("E-Mail geloescht", {
+        action: {
+          label: "Rueckgaengig",
+          onClick: async () => {
+            try {
+              await emailBulkAktion({ action: "restore", emailIds: [emailId] });
+              toast.success("Loeschung rueckgaengig gemacht");
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Wiederherstellen fehlgeschlagen");
+            }
           },
-          duration: 5000,
-        });
-        onEmailDeleted?.();
-      }
-    } catch {
-      toast.error("Fehler beim Loeschen");
+        },
+        duration: 5000,
+      });
+      onEmailDeleted?.();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Fehler beim Loeschen");
     }
   }, [emailId, onEmailDeleted]);
 

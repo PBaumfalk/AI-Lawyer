@@ -9,6 +9,8 @@ import { EmailListRow, type EmailListItem } from "@/components/email/email-list-
 import { EmailEmptyState } from "@/components/email/email-empty-state";
 import type { EmailFiltersState } from "@/hooks/use-email-store";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { emailBulkAktion, type EmailBulkAktion } from "@/lib/email/bulk-contract";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -24,6 +26,8 @@ interface EmailListProps {
   onClearChecked: () => void;
   onCheckAll: (emailIds: string[]) => void;
   onUpdateFilters: (partial: Partial<EmailFiltersState>) => void;
+  /** Open the Veraktung panel for the given emails. */
+  onVerakten?: (emailIds: string[]) => void;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -40,6 +44,7 @@ export function EmailList({
   onClearChecked,
   onCheckAll,
   onUpdateFilters,
+  onVerakten,
 }: EmailListProps) {
   const [emails, setEmails] = useState<EmailListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -174,6 +179,42 @@ export function EmailList({
     [onToggleCheck]
   );
 
+  // Bulk / quick actions (POST /api/emails/bulk)
+  const [aktionLaeuft, setAktionLaeuft] = useState(false);
+  const runAktion = useCallback(
+    async (action: EmailBulkAktion, ids: string[], erfolg: string) => {
+      if (ids.length === 0) return;
+      setAktionLaeuft(true);
+      try {
+        await emailBulkAktion({ action, emailIds: ids });
+        toast.success(erfolg);
+        if (action === "markRead" || action === "markUnread") {
+          const gelesen = action === "markRead";
+          setEmails((prev) => prev.map((e) => (ids.includes(e.id) ? { ...e, gelesen } : e)));
+        } else {
+          // delete/archive/spam remove the mails from the current folder view
+          setEmails((prev) => prev.filter((e) => !ids.includes(e.id)));
+          setTotalCount((t) => Math.max(0, t - ids.length));
+          if (selectedEmailId && ids.includes(selectedEmailId)) onSelectEmail(null);
+        }
+        onClearChecked();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Aktion fehlgeschlagen");
+      } finally {
+        setAktionLaeuft(false);
+      }
+    },
+    [onClearChecked, onSelectEmail, selectedEmailId]
+  );
+
+  const handleQuickAction = useCallback(
+    (emailId: string, action: "markRead" | "archive" | "delete") => {
+      const texte = { markRead: "Als gelesen markiert", archive: "E-Mail archiviert", delete: "E-Mail geloescht" };
+      void runAktion(action, [emailId], texte[action]);
+    },
+    [runAktion]
+  );
+
   // Select all / deselect
   const handleToggleAll = useCallback(() => {
     if (checkedEmailIds.size > 0) {
@@ -207,15 +248,40 @@ export function EmailList({
             {checkedEmailIds.size} ausgewaehlt
           </span>
           <div className="ml-auto flex items-center gap-1">
-            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
-              <FolderInput className="w-3.5 h-3.5" />
-              Verakten
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
+            {onVerakten && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                disabled={aktionLaeuft}
+                onClick={() => onVerakten(Array.from(checkedEmailIds))}
+              >
+                <FolderInput className="w-3.5 h-3.5" />
+                Verakten
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs gap-1"
+              disabled={aktionLaeuft}
+              onClick={() => runAktion("markRead", Array.from(checkedEmailIds), "Als gelesen markiert")}
+            >
               <MailOpen className="w-3.5 h-3.5" />
               Gelesen
             </Button>
-            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-rose-600 hover:text-rose-700">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs gap-1 text-rose-600 hover:text-rose-700"
+              disabled={aktionLaeuft}
+              onClick={() => {
+                const ids = Array.from(checkedEmailIds);
+                if (window.confirm(`${ids.length} E-Mail(s) loeschen?`)) {
+                  void runAktion("delete", ids, `${ids.length} E-Mail(s) geloescht`);
+                }
+              }}
+            >
               <Trash2 className="w-3.5 h-3.5" />
               Loeschen
             </Button>
@@ -301,6 +367,7 @@ export function EmailList({
                     onSelect={onSelectEmail}
                     onToggleCheck={handleToggleCheck}
                     onShiftClick={handleShiftClick}
+                    onQuickAction={handleQuickAction}
                   />
                 </div>
               );

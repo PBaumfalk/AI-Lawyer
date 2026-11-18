@@ -1,6 +1,6 @@
 "use client";
 
-import { BeaSessionProvider, useBeaSession } from "@/lib/bea/session";
+import { useBeaSession } from "@/lib/bea/session";
 import { BeaInbox } from "@/components/bea/bea-inbox";
 import { useSession } from "next-auth/react";
 import { useState, useRef } from "react";
@@ -206,10 +206,8 @@ function formatRemainingTime(seconds: number): string {
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 
+// The BeaSessionProvider lives in bea/layout.tsx so the beA session is shared
+// by /bea, /bea/compose and /bea/[id].
 export default function BeaPage() {
-  return (
-    <BeaSessionProvider>
-      <BeaPageContent />
-    </BeaSessionProvider>
-  );
+  return <BeaPageContent />;
 }

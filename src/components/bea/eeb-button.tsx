@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useBeaSession } from "@/lib/bea/session";
 import { beaSendEeb } from "@/lib/bea/client";
+import { buildEebBestaetigung } from "@/lib/bea/versand";
 import { CheckCircle2, Loader2, AlertCircle, FileCheck } from "lucide-react";
 
 interface EebButtonProps {
@@ -22,6 +23,11 @@ export function EebButton({ messageId, nachrichtenId, onConfirmed }: EebButtonPr
       return;
     }
 
+    if (!nachrichtenId) {
+      setError("Nachricht hat keine beA-Nachrichten-ID; eEB nicht moeglich.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -30,21 +36,20 @@ export function EebButton({ messageId, nachrichtenId, onConfirmed }: EebButtonPr
       const eebDate = new Date();
       const result = await beaSendEeb(session, nachrichtenId, eebDate);
 
-      if (!result.ok) {
-        // If bea.expert library not available, still record the eEB
-        // (the actual eEB may need to be sent later when library is configured)
-        console.warn("beA eEB send returned error:", result.error);
-      }
-
-      // Step 2: Record eEB in database
+      // Step 2: record only an eEB that bea.expert confirmed (throws otherwise;
+      // nothing is stored and the error is shown)
+      const bestaetigung = buildEebBestaetigung(result, nachrichtenId, eebDate);
       const res = await fetch(`/api/bea/messages/${messageId}/eeb`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bestaetigung),
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Fehler beim Bestaetigen des eEB");
+        const data = await res.json().catch(() => ({}));
+        throw new Error(
+          `eEB wurde ueber beA abgegeben, aber nicht gespeichert: ${data.error || res.status}. Bitte manuell vermerken.`
+        );
       }
 
       onConfirmed();

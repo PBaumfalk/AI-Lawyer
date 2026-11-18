@@ -432,10 +432,15 @@ export async function beaSendMessage(
     });
     touchSession(session);
 
-    return {
-      ok: true,
-      data: { nachrichtenId: result?.nachrichtenId || result?.messageId || "" },
-    };
+    const nachrichtenId = String(result?.nachrichtenId || result?.messageId || "").trim();
+    if (!nachrichtenId) {
+      // Without a beA message ID the send is not confirmed; never report success.
+      return makeError(
+        "beA hat den Versand nicht bestaetigt (keine Nachrichten-ID erhalten).",
+        "API_ERROR"
+      );
+    }
+    return { ok: true, data: { nachrichtenId } };
   } catch (err) {
     return makeError(
       `Nachricht konnte nicht gesendet werden: ${err instanceof Error ? err.message : String(err)}`,

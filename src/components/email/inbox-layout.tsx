@@ -14,6 +14,8 @@ import { TicketFromEmailDialog } from "@/components/email/ticket-from-email-dial
 import { useEmailStore } from "@/hooks/use-email-store";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useSocket } from "@/components/socket-provider";
+import { useSearchParams } from "next/navigation";
+import { useComposeManager } from "@/components/email/compose-manager";
 
 /**
  * Three-pane resizable inbox layout.
@@ -24,6 +26,23 @@ import { useSocket } from "@/components/socket-provider";
 export function InboxLayout() {
   const emailStore = useEmailStore();
   const { socket, isConnected } = useSocket();
+  const searchParams = useSearchParams();
+  const { openCompose } = useComposeManager();
+
+  // Deep links: /email?emailId=… opens a mail, ?akteId=… filters by Akte,
+  // ?compose=1 opens a new message (see src/lib/email/links.ts)
+  const linkEmailId = searchParams.get("emailId");
+  const linkAkteId = searchParams.get("akteId");
+  const linkCompose = searchParams.get("compose");
+  const { selectEmail, updateFilters } = emailStore;
+  useEffect(() => {
+    // updateFilters resets the selection, so apply the filter first
+    if (linkAkteId) updateFilters({ akteId: linkAkteId });
+    if (linkEmailId) selectEmail(linkEmailId);
+  }, [linkAkteId, linkEmailId, selectEmail, updateFilters]);
+  useEffect(() => {
+    if (linkCompose === "1") openCompose();
+  }, [linkCompose, openCompose]);
 
   // Join/leave mailbox room for real-time email updates (INT-001)
   useEffect(() => {
@@ -71,6 +90,12 @@ export function InboxLayout() {
   // Open veraktung panel for a single email
   const handleOpenVeraktung = useCallback((emailId: string) => {
     setVeraktungEmailIds([emailId]);
+    setVeraktungOpen(true);
+  }, []);
+
+  // Open veraktung panel for several emails (bulk bar)
+  const handleOpenVeraktungMulti = useCallback((emailIds: string[]) => {
+    setVeraktungEmailIds(emailIds);
     setVeraktungOpen(true);
   }, []);
 
@@ -140,6 +165,7 @@ export function InboxLayout() {
             onClearChecked={emailStore.clearChecked}
             onCheckAll={emailStore.checkAll}
             onUpdateFilters={emailStore.updateFilters}
+            onVerakten={handleOpenVeraktungMulti}
           />
         </ResizablePanel>
 

@@ -8,8 +8,10 @@ import { logAuditEvent } from "@/lib/audit";
 
 const patchSchema = z.object({
   akteId: z.string().nullable().optional(),
-  status: z.enum(["EINGANG", "GELESEN", "ZUGEORDNET", "GESENDET", "FEHLER"]).optional(),
-  eebStatus: z.string().optional(),
+  // GESENDET and eEB BESTAETIGT are only recorded by POST /api/bea/messages and
+  // POST /api/bea/messages/[id]/eeb, after bea.expert confirmed the action.
+  status: z.enum(["EINGANG", "GELESEN", "ZUGEORDNET", "FEHLER"]).optional(),
+  eebStatus: z.enum(["AUSSTEHEND", "NICHT_ERFORDERLICH"]).optional(),
 });
 
 // --- GET /api/bea/messages/[id] ---

@@ -11,6 +11,7 @@ import { createSmtpTransport } from "@/lib/email/smtp/transport-factory";
 import { createNotification } from "@/lib/notifications/service";
 import { markDokumenteVersendet } from "@/lib/versand-gate";
 import type { EmailSendJob } from "@/lib/email/types";
+import { buildSmtpAttachments } from "@/lib/email/smtp/attachments";
 
 const log = createLogger("smtp:send");
 
@@ -76,13 +77,10 @@ export async function emailSendProcessor(
     // Create SMTP transport
     const transporter = createSmtpTransport(konto);
 
-    // Build attachments from MinIO
-    const attachments = email.anhaenge.map((att) => ({
-      filename: att.dateiname,
-      path: att.speicherPfad, // nodemailer handles MinIO URLs if configured
-      contentType: att.mimeType,
-      cid: att.contentId ?? undefined,
-    }));
+    // Load attachment content from object storage. speicherPfad is a storage
+    // key, not a filesystem path; a missing object fails the send (and the
+    // job is retried) instead of sending the mail without its attachment.
+    const attachments = await buildSmtpAttachments(email.anhaenge);
 
     // Build email headers
     const mailOptions: any = {
@@ -94,6 +92,8 @@ export async function emailSendProcessor(
       html: htmlBody,
       text: email.inhaltText ?? undefined,
       attachments,
+      inReplyTo: email.inReplyTo ?? undefined,
+      references: email.references.length > 0 ? email.references : undefined,
     };
 
     // Set priority headers

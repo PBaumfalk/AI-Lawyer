@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/rbac";
 import { canAccessAkte } from "@/lib/rbac";
 import { ticketAccessWhere } from "@/lib/tickets/access";
+import { ticketEmailsInclude } from "@/lib/tickets/emails";
+import { emailNachrichtZugriffWhere } from "@/lib/email/zugriff";
 
 export async function GET(req: NextRequest) {
   const result = await requireAuth();
@@ -24,7 +26,7 @@ export async function GET(req: NextRequest) {
     include: {
       akte: { select: { id: true, aktenzeichen: true, kurzrubrum: true } },
       verantwortlich: { select: { id: true, name: true } },
-      emails: { select: { id: true, betreff: true } },
+      ...ticketEmailsInclude,
     },
     orderBy: { createdAt: "desc" },
     take: 50,
@@ -58,6 +60,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Optional link to an email (current model EmailNachricht); the user must
+  // have access to the email's mailbox and it must not have a ticket yet.
+  const user = { id: postResult.session.user.id, role: postResult.session.user.role };
+  if (body.emailId) {
+    const email = await prisma.emailNachricht.findFirst({
+      where: { AND: [{ id: String(body.emailId) }, emailNachrichtZugriffWhere(user)] },
+      select: { id: true, ticketId: true },
+    });
+    if (!email) {
+      return Response.json({ error: "E-Mail nicht gefunden." }, { status: 404 });
+    }
+    if (email.ticketId) {
+      return Response.json({ error: "E-Mail hat bereits ein Ticket." }, { status: 409 });
+    }
+  }
+
   const ticket = await prisma.ticket.create({
     data: {
       titel: body.titel.trim(),
@@ -68,16 +86,9 @@ export async function POST(req: NextRequest) {
       faelligAm: body.faelligAm ? new Date(body.faelligAm) : null,
       verantwortlichId: body.verantwortlichId ?? null,
       tags,
+      ...(body.emailId ? { emailNachrichten: { connect: { id: String(body.emailId) } } } : {}),
     },
   });
-
-  // Link email to ticket if emailId provided
-  if (body.emailId) {
-    await prisma.emailMessage.update({
-      where: { id: body.emailId },
-      data: { ticketId: ticket.id },
-    });
-  }
 
   return Response.json(ticket, { status: 201 });
 }

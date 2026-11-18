@@ -1,71 +1,16 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { buildAkteAccessFilter } from "@/lib/rbac";
-import { getSetting } from "@/lib/settings/service";
-import { EmailComposeView } from "@/components/email/email-compose-view";
+import { redirect } from "next/navigation";
+import { emailComposeLink, emailLink } from "@/lib/email/links";
 
-interface ComposePageProps {
-  searchParams: Promise<{
-    reply?: string;
-    replyAll?: string;
-    forward?: string;
-    akteId?: string;
-  }>;
-}
-
-export default async function EmailComposePage({
+/**
+ * Legacy URL /email/compose: composing happens in the inbox (compose popup;
+ * replies/forwards inline in the opened mail).
+ */
+export default async function EmailComposeRedirect({
   searchParams,
-}: ComposePageProps) {
-  const { reply, replyAll, forward, akteId } = await searchParams;
-
-  // Load referenced email if replying or forwarding
-  const refEmailId = reply || replyAll || forward;
-  let refEmail = null;
-  if (refEmailId) {
-    refEmail = await prisma.emailMessage.findUnique({
-      where: { id: refEmailId },
-      select: {
-        id: true,
-        betreff: true,
-        absender: true,
-        absenderName: true,
-        empfaenger: true,
-        cc: true,
-        inhalt: true,
-        inhaltText: true,
-        akteId: true,
-        richtung: true,
-      },
-    });
-  }
-
-  // Determine compose mode
-  let mode: "new" | "reply" | "replyAll" | "forward" = "new";
-  if (reply) mode = "reply";
-  else if (replyAll) mode = "replyAll";
-  else if (forward) mode = "forward";
-
-  // Load akten for optional akte linking
-  const kanzleiEmail = await getSetting("kanzlei.email");
-  const kanzleiName = await getSetting("kanzlei.name");
-
-  const session = await auth();
-  const sessionUser = { id: session!.user!.id!, role: (session!.user as any).role };
-  const akten = await prisma.akte.findMany({
-    where: { AND: [buildAkteAccessFilter(sessionUser.id, sessionUser.role), { status: { in: ["OFFEN", "RUHEND"] } }] },
-    select: { id: true, aktenzeichen: true, kurzrubrum: true },
-    orderBy: { geaendert: "desc" },
-    take: 100,
-  });
-
-  return (
-    <EmailComposeView
-      mode={mode}
-      refEmail={refEmail ? JSON.parse(JSON.stringify(refEmail)) : null}
-      akten={akten}
-      defaultAkteId={akteId ?? refEmail?.akteId ?? null}
-      defaultAbsender={kanzleiEmail ?? undefined}
-      defaultAbsenderName={kanzleiName ?? undefined}
-    />
-  );
+}: {
+  searchParams: Promise<{ reply?: string; replyAll?: string; forward?: string }>;
+}) {
+  const { reply, replyAll, forward } = await searchParams;
+  const refId = reply || replyAll || forward;
+  redirect(refId ? emailLink(refId) : emailComposeLink());
 }

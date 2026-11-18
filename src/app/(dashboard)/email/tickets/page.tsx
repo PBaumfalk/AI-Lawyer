@@ -1,5 +1,9 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { emailTicketsWhere, ticketEmailsInclude } from "@/lib/tickets/emails";
+import { emailLink } from "@/lib/email/links";
 import { Badge } from "@/components/ui/badge";
 import {
   Ticket,
@@ -60,21 +64,12 @@ const statusIcons: Record<string, React.ElementType> = {
 
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const { status, prioritaet, q, tag } = await searchParams;
+  const session = await auth();
+  if (!session?.user) notFound();
+  const user = { id: session.user.id!, role: (session.user as any).role };
 
-  const where: any = {
-    // Only show tickets created from emails
-    emails: { some: {} },
-  };
-
-  if (status) where.status = status;
-  if (prioritaet) where.prioritaet = prioritaet;
-  if (tag) where.tags = { has: tag };
-  if (q) {
-    where.OR = [
-      { titel: { contains: q, mode: "insensitive" } },
-      { beschreibung: { contains: q, mode: "insensitive" } },
-    ];
-  }
+  // Tickets created from emails (EmailNachricht), filtered by ticket access
+  const where = emailTicketsWhere(user, { status, prioritaet, q, tag });
 
   const [tickets, total] = await Promise.all([
     prisma.ticket.findMany({
@@ -82,7 +77,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       include: {
         akte: { select: { id: true, aktenzeichen: true, kurzrubrum: true } },
         verantwortlich: { select: { id: true, name: true } },
-        emails: { select: { id: true, betreff: true, absender: true } },
+        ...ticketEmailsInclude,
       },
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       take: 50,
@@ -134,7 +129,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
           <div className="divide-y divide-white/10 dark:divide-white/[0.04]">
             {tickets.map((ticket) => {
               const StatusIcon = statusIcons[ticket.status] ?? Clock;
-              const email = ticket.emails[0];
+              const email = ticket.emailNachrichten[0];
 
               return (
                 <div
@@ -183,7 +178,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                         {/* Source email */}
                         {email && (
                           <Link
-                            href={`/email/${email.id}`}
+                            href={emailLink(email.id)}
                             className="flex items-center gap-1 hover:text-brand-600"
                           >
                             <Mail className="w-3 h-3" />

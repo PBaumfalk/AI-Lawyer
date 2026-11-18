@@ -20,6 +20,7 @@ import {
   Check,
   RotateCcw,
   Pencil,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -28,6 +29,18 @@ import {
   KalenderEintragDialog,
   type KalenderEintragItem,
 } from "./kalender-eintrag-dialog";
+import { ErledigungDialog } from "@/components/fristen/erledigung-dialog";
+import {
+  buildErledigtRequest,
+  erledigenOhneRueckfrage,
+  istFristUeberfaellig,
+} from "@/lib/fristen/erledigung";
+import {
+  filterKalenderEintraege,
+  istExtern,
+  verantwortlichAnzeige,
+  type KalenderListenEintrag,
+} from "@/lib/kalender/eintrag";
 
 // ── Type config for visual styling ─────────────────────────────────────────────
 
@@ -59,7 +72,20 @@ const TYP_CONFIG: Record<
     bgColor:
       "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
   },
+  EXTERN: {
+    label: "Extern",
+    icon: Globe,
+    badgeVariant: "default",
+    bgColor:
+      "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400",
+  },
 };
+
+/** FRIST/WIEDERVORLAGE sind erst nach Ablauf ihres Tages ueberfaellig, Termine ab ihrem Beginn. */
+function istUeberfaellig(e: KalenderListenEintrag, now: Date): boolean {
+  if (e.typ === "FRIST" || e.typ === "WIEDERVORLAGE") return istFristUeberfaellig(e.datum, now);
+  return new Date(e.datum) < now;
+}
 
 const FILTER_OPTIONS = [
   { value: "", label: "Alle" },
@@ -83,7 +109,7 @@ export function KalenderListe() {
   const searchParams = useSearchParams();
 
   // Data state
-  const [eintraege, setEintraege] = useState<KalenderEintragItem[]>([]);
+  const [eintraege, setEintraege] = useState<KalenderListenEintrag[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filter state -- initialize from URL search params for deep-link support
@@ -101,6 +127,10 @@ export function KalenderListe() {
 
   // Context menu state
   const [contextMenuId, setContextMenuId] = useState<string | null>(null);
+
+  // Entry awaiting Erledigungsgrund / Ueberschreitungsgrund
+  const [erledigungEintrag, setErledigungEintrag] =
+    useState<KalenderEintragItem | null>(null);
 
   // Fetch entries
   const fetchEintraege = useCallback(async () => {
@@ -126,6 +156,13 @@ export function KalenderListe() {
     fetchEintraege();
   }, [fetchEintraege]);
 
+  // Reload when an entry was created elsewhere (e.g. Fristenrechner)
+  useEffect(() => {
+    const handler = () => fetchEintraege();
+    window.addEventListener("kalender:geaendert", handler);
+    return () => window.removeEventListener("kalender:geaendert", handler);
+  }, [fetchEintraege]);
+
   // Close context menu on outside click
   useEffect(() => {
     if (!contextMenuId) return;
@@ -139,19 +176,27 @@ export function KalenderListe() {
     eintrag: KalenderEintragItem,
     newValue: boolean
   ) {
+    // Fristen need reasons (and overdue ones a Ueberschreitungsgrund) -- ask first
+    if (newValue && !erledigenOhneRueckfrage(eintrag)) {
+      setErledigungEintrag(eintrag);
+      return;
+    }
     try {
       const res = await fetch(`/api/kalender/${eintrag.id}/erledigt`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ erledigt: newValue }),
+        body: JSON.stringify(buildErledigtRequest(newValue)),
       });
-      if (!res.ok) throw new Error("Fehler beim Aktualisieren");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Status konnte nicht geändert werden");
+      }
       toast.success(
         newValue ? "Als erledigt markiert" : "Als offen markiert"
       );
       fetchEintraege();
-    } catch {
-      toast.error("Status konnte nicht geändert werden");
+    } catch (err: any) {
+      toast.error(err.message);
     }
   }
 
@@ -183,30 +228,16 @@ export function KalenderListe() {
     setDialogOpen(true);
   }
 
-  // Filter entries by search query (client-side on title/akte)
-  const filteredEintraege = searchQuery
-    ? eintraege.filter(
-        (e) =>
-          e.titel.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          e.akte?.aktenzeichen
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          e.akte?.kurzrubrum
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          e.verantwortlich.name
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())
-      )
-    : eintraege;
+  // Filter entries by search query (client-side on title/akte/verantwortlich)
+  const filteredEintraege = filterKalenderEintraege(eintraege, searchQuery);
 
   // Separate overdue from upcoming
   const now = new Date();
   const overdueEntries = filteredEintraege.filter(
-    (e) => !e.erledigt && new Date(e.datum) < now
+    (e) => !e.erledigt && istUeberfaellig(e, now)
   );
   const upcomingEntries = filteredEintraege.filter(
-    (e) => !e.erledigt && new Date(e.datum) >= now
+    (e) => !e.erledigt && !istUeberfaellig(e, now)
   );
   const completedEntries = filteredEintraege.filter((e) => e.erledigt);
 
@@ -373,6 +404,12 @@ export function KalenderListe() {
         onSaved={fetchEintraege}
         eintrag={editEintrag}
       />
+
+      <ErledigungDialog
+        eintrag={erledigungEintrag}
+        onClose={() => setErledigungEintrag(null)}
+        onErledigt={fetchEintraege}
+      />
     </div>
   );
 }
@@ -380,7 +417,7 @@ export function KalenderListe() {
 // ── Single entry row ─────────────────────────────────────────────────────────────
 
 interface KalenderEintragRowProps {
-  eintrag: KalenderEintragItem;
+  eintrag: KalenderListenEintrag;
   isOverdue?: boolean;
   isCompleted?: boolean;
   onEdit: (eintrag: KalenderEintragItem) => void;
@@ -403,6 +440,12 @@ function KalenderEintragRow({
   const config = TYP_CONFIG[eintrag.typ] ?? TYP_CONFIG.TERMIN;
   const Icon = config.icon;
 
+  // External CalDAV events are read-only: no erledigen, edit or delete
+  if (istExtern(eintrag)) {
+    return <ExternerEintragRow eintrag={eintrag} isOverdue={isOverdue} />;
+  }
+  const intern = eintrag as KalenderEintragItem;
+
   return (
     <div
       className={`glass-card rounded-xl p-4 flex items-center gap-4 group transition-colors hover:bg-white/30 dark:hover:bg-white/[0.05] ${
@@ -417,7 +460,7 @@ function KalenderEintragRow({
       <button
         onClick={(e) => {
           e.stopPropagation();
-          onToggleErledigt(eintrag, !eintrag.erledigt);
+          onToggleErledigt(intern, !eintrag.erledigt);
         }}
         className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
           eintrag.erledigt
@@ -439,7 +482,7 @@ function KalenderEintragRow({
       {/* Content — clickable to edit */}
       <div
         className="min-w-0 flex-1 cursor-pointer"
-        onClick={() => onEdit(eintrag)}
+        onClick={() => onEdit(intern)}
       >
         <p
           className={`text-sm font-medium ${
@@ -459,7 +502,7 @@ function KalenderEintragRow({
             </span>
           )}
           {eintrag.akte && <span>·</span>}
-          <span>{eintrag.verantwortlich.name}</span>
+          <span>{verantwortlichAnzeige(eintrag)}</span>
           {eintrag.beschreibung && (
             <>
               <span>·</span>
@@ -514,7 +557,7 @@ function KalenderEintragRow({
           >
             <button
               className="w-full text-left px-3 py-2 text-sm hover:bg-white/20 dark:hover:bg-white/[0.06] flex items-center gap-2"
-              onClick={() => onEdit(eintrag)}
+              onClick={() => onEdit(intern)}
             >
               <Pencil className="w-4 h-4 text-muted-foreground" />
               Bearbeiten
@@ -522,7 +565,7 @@ function KalenderEintragRow({
             <button
               className="w-full text-left px-3 py-2 text-sm hover:bg-white/20 dark:hover:bg-white/[0.06] flex items-center gap-2"
               onClick={() => {
-                onToggleErledigt(eintrag, !eintrag.erledigt);
+                onToggleErledigt(intern, !eintrag.erledigt);
                 onContextMenu("");
               }}
             >
@@ -542,7 +585,7 @@ function KalenderEintragRow({
             <button
               className="w-full text-left px-3 py-2 text-sm hover:bg-rose-50 dark:hover:bg-rose-950 text-rose-600 flex items-center gap-2"
               onClick={() => {
-                onDelete(eintrag);
+                onDelete(intern);
                 onContextMenu("");
               }}
             >
@@ -552,6 +595,57 @@ function KalenderEintragRow({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── External (CalDAV) entry row: read-only ──────────────────────────────────────
+
+function ExternerEintragRow({
+  eintrag,
+  isOverdue,
+}: {
+  eintrag: KalenderListenEintrag;
+  isOverdue?: boolean;
+}) {
+  const config = TYP_CONFIG.EXTERN;
+  const Icon = config.icon;
+  return (
+    <div
+      className={`glass-card rounded-xl p-4 flex items-center gap-4 border-white/20 dark:border-white/[0.08] ${
+        isOverdue ? "opacity-75" : ""
+      }`}
+      title="Termin aus externem Kalender (nur lesend)"
+    >
+      <div className="w-5 h-5 flex-shrink-0" />
+      <div
+        className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${config.bgColor}`}
+      >
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-foreground">{eintrag.titel}</p>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+          <span>{verantwortlichAnzeige(eintrag)}</span>
+          {eintrag.beschreibung && (
+            <>
+              <span>·</span>
+              <span className="truncate max-w-[200px]">{eintrag.beschreibung}</span>
+            </>
+          )}
+        </div>
+      </div>
+      <div className="text-right flex-shrink-0">
+        <p className="text-sm font-medium text-foreground/80">
+          {eintrag.ganztaegig
+            ? formatDatumKurz(eintrag.datum)
+            : formatDatumZeit(eintrag.datum)}
+        </p>
+        <Badge variant={config.badgeVariant} className="mt-1">
+          {config.label}
+        </Badge>
+      </div>
+      <div className="w-7 flex-shrink-0" />
     </div>
   );
 }

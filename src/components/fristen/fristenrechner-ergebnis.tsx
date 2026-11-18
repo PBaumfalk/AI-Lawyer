@@ -13,10 +13,11 @@ import {
   FileText,
   History,
 } from "lucide-react";
-import { toast } from "sonner";
 
 interface FristenRechnerErgebnisProps {
   result: any;
+  /** Without a handler the "Als Frist speichern" button is not shown */
+  onAlsFristSpeichern?: () => void;
 }
 
 // History stored in localStorage
@@ -57,10 +58,12 @@ function formatDate(d: string | Date): string {
  * Displays the full FristErgebnis with Ampel, shift reasons, Vorfristen,
  * Halbfrist, Sonderfall annotations, and save/history functionality.
  */
-export function FristenRechnerErgebnis({ result }: FristenRechnerErgebnisProps) {
+export function FristenRechnerErgebnis({
+  result,
+  onAlsFristSpeichern,
+}: FristenRechnerErgebnisProps) {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
-  const [saving, setSaving] = useState(false);
 
   // Save to history on new result
   useEffect(() => {
@@ -112,15 +115,6 @@ export function FristenRechnerErgebnis({ result }: FristenRechnerErgebnisProps) 
 
   // Forward result
   const endDatum = new Date(ergebnis.endDatum);
-
-  // Save as KalenderEintrag
-  const handleSave = async () => {
-    setSaving(true);
-    toast.info(
-      "Zum Speichern als Frist bitte den Kalender-Dialog verwenden und die berechneten Daten uebernehmen."
-    );
-    setSaving(false);
-  };
 
   return (
     <div className="space-y-4">
@@ -254,16 +248,17 @@ export function FristenRechnerErgebnis({ result }: FristenRechnerErgebnisProps) 
 
       {/* Actions */}
       <div className="flex gap-2 pt-2">
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex-1"
-          onClick={handleSave}
-          disabled={saving}
-        >
-          <Save className="w-3.5 h-3.5 mr-1.5" />
-          Als Frist speichern
-        </Button>
+        {onAlsFristSpeichern && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1"
+            onClick={onAlsFristSpeichern}
+          >
+            <Save className="w-3.5 h-3.5 mr-1.5" />
+            Als Frist speichern
+          </Button>
+        )}
         <Button
           size="sm"
           variant="outline"

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { buildAkteAccessFilter } from "@/lib/rbac";
+import { begruessungsName } from "@/lib/dashboard/begruessung";
 import type { UserRole } from "@prisma/client";
 import {
   FolderOpen,
@@ -102,7 +103,7 @@ export default async function DashboardPage() {
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">
-          Willkommen, {session?.user?.name?.split(" ")[0]}
+          Willkommen, {begruessungsName(session?.user?.name)}
         </h1>
         <p className="text-muted-foreground mt-1">
           Hier ist Ihre Tagesübersicht.

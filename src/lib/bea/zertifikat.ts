@@ -99,3 +99,8 @@ export async function entferneZertifikat(userId: string): Promise<boolean> {
   const { count } = await prisma.beaZertifikat.deleteMany({ where: { userId } });
   return count > 0;
 }
+
+/** Stores the safeId reported by bea.expert after a successful login. */
+export async function setzeZertifikatSafeId(userId: string, safeId: string): Promise<void> {
+  await prisma.beaZertifikat.update({ where: { userId }, data: { safeId } });
+}

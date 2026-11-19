@@ -23,7 +23,7 @@ export class MockProvider implements BeaProvider {
 
   async anmelden(_p12: Buffer, pin: string): Promise<BeaSitzung> {
     if (pin === "falsch") {
-      throw new BeaExpertError("Anmeldung fehlgeschlagen: PIN falsch.", "bex_login_step2");
+      throw new BeaExpertError("Anmeldung fehlgeschlagen: PIN falsch.", "bex_login_step2", 401);
     }
     return { token: "mock-token", sessionKey: Buffer.alloc(32), safeId: "DE.Mock.safeid" };
   }

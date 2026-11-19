@@ -27,7 +27,6 @@ const REVIEWED: Record<string, string> = {
   "src/app/api/ki-chat/pending/route.ts": "pending state is keyed by the current user",
   "src/app/api/dokumente/reindex/route.ts": "ADMIN only",
   "src/app/api/bea/auto-assign/route.ts": "firm beA postbox; assignment suggestions only, no data of other Akten returned",
-  "src/app/api/bea/messages/[id]/eeb/route.ts": "acts on the firm beA postbox message, no Akte data",
 };
 
 function walk(dir: string, out: string[] = []) {

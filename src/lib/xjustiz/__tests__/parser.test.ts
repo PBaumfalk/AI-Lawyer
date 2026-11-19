@@ -319,3 +319,24 @@ describe("parseXJustiz", () => {
     });
   });
 });
+
+describe("parseXJustiz nachrichtenId", () => {
+  it("parseXJustiz liest eigeneNachrichtenID aus dem nachrichtenkopf", () => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<tns:nachricht.gds.uebermittlungSchriftgutobjekte.0005005 xmlns:tns="http://www.xjustiz.de">
+  <tns:nachrichtenkopf xjustizVersion="3.4.1">
+    <tns:eigeneNachrichtenID>3f2c-77a1</tns:eigeneNachrichtenID>
+  </tns:nachrichtenkopf>
+</tns:nachricht.gds.uebermittlungSchriftgutobjekte.0005005>`;
+    expect(parseXJustiz(xml).nachrichtenId).toBe("3f2c-77a1");
+  });
+
+  it("liest eigeneNachrichtenID auch unter nachrichtenKopf im nachricht-Wurzelelement", () => {
+    const xml = `<nachricht version="3.5.1"><nachrichtenKopf><eigeneNachrichtenID>id-9</eigeneNachrichtenID></nachrichtenKopf></nachricht>`;
+    expect(parseXJustiz(xml).nachrichtenId).toBe("id-9");
+  });
+
+  it("ohne nachrichtenkopf bleibt nachrichtenId undefined", () => {
+    expect(parseXJustiz(XJUSTIZ_351_BETEILIGTE).nachrichtenId).toBeUndefined();
+  });
+});

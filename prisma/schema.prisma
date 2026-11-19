@@ -123,6 +123,16 @@ enum BeaNachrichtStatus {
   FEHLER
 }
 
+enum BeaZertifikatStatus {
+  AKTIV
+  FEHLER
+}
+
+enum BeaRichtung {
+  EINGANG
+  AUSGANG
+}
+
 enum EmailRichtung {
   EINGEHEND
   AUSGEHEND
@@ -532,6 +542,9 @@ model User {
 
   // CalDAV Sync
   caldavKonten         CalDavKonto[]
+
+  // beA software certificate (bea.expert)
+  beaZertifikat        BeaZertifikat?
 
   @@map("users")
 }
@@ -1656,11 +1669,41 @@ model BeaNachricht {
   // SAFE-IDs for contact matching
   safeIdAbsender  String?
   safeIdEmpfaenger String?
+  // bea.expert integration
+  postfachSafeId       String?            // SAFE-ID of the own postbox the message belongs to
+  richtung             BeaRichtung        @default(EINGANG)
+  aktenzeichenAbsender String?
+  aktenzeichenJustiz   String?
+  eebAngefordert       Boolean            @default(false)
+  xjustizNachrichtenId String?
+  exportPfad           String?            // MinIO key of nachricht.json
+  // anhaenge format: [{ name, storageKey, mimeType, groesse, art, dokumentId? }]
   createdAt       DateTime           @default(now())
 
   @@index([akteId])
   @@index([safeIdAbsender])
   @@map("bea_nachrichten")
+}
+
+// beA software certificate per user. p12 and PIN are stored encrypted
+// (encryptCredential) and never leave the server.
+model BeaZertifikat {
+  id                String              @id @default(cuid())
+  userId            String              @unique
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  p12Verschluesselt String              @db.Text // encryptCredential(base64(p12))
+  pinVerschluesselt String
+  seriennummer      String
+  inhaber           String
+  gueltigBis        DateTime
+  safeId            String?
+  status            BeaZertifikatStatus @default(AKTIV)
+  letzterFehler     String?
+  letzterAbruf      DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@map("bea_zertifikate")
 }
 
 // ─── AI & Chat ───────────────────────────────────────────────────────────────

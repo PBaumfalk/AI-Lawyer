@@ -17,6 +17,8 @@ import { XMLParser } from "fast-xml-parser";
 export interface XJustizData {
   /** Detected XJustiz version */
   version: string;
+  /** nachrichtenkopf/eigeneNachrichtenID of the sender */
+  nachrichtenId?: string;
   grunddaten?: {
     aktenzeichen?: string;
     verfahrensgegenstand?: string;
@@ -274,9 +276,11 @@ export function parseXJustiz(xmlString: string): XJustizData {
     const beteiligte = extractBeteiligte(root);
     const instanzen = extractInstanzen(root);
     const termine = extractTermine(root);
+    const nachrichtenId = extractNachrichtenId(parsed, root);
 
     return {
       version,
+      ...(nachrichtenId ? { nachrichtenId } : {}),
       grunddaten: grunddaten || undefined,
       beteiligte,
       instanzen,
@@ -289,6 +293,21 @@ export function parseXJustiz(xmlString: string): XJustizData {
 }
 
 // ─── Extraction Functions ────────────────────────────────────────────────────
+
+/**
+ * Reads nachrichtenkopf/eigeneNachrichtenID. Real XJustiz messages use a
+ * versioned root element (e.g. nachricht.gds.uebermittlungSchriftgutobjekte.0005005),
+ * so the header is also searched one level below the document root.
+ */
+function extractNachrichtenId(parsed: any, root: any): string | undefined {
+  const kandidaten = [root, ...Object.values(parsed ?? {})];
+  for (const k of kandidaten) {
+    const kopf = dig(k, "nachrichtenkopf") || dig(k, "nachrichtenKopf");
+    const id = extractText(dig(kopf, "eigeneNachrichtenID"));
+    if (id && id.trim()) return id.trim();
+  }
+  return undefined;
+}
 
 function extractGrunddaten(root: any): XJustizData["grunddaten"] | null {
   // Grunddaten may be at various paths depending on XJustiz version

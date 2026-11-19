@@ -38,6 +38,9 @@ x-app-env: &app-env
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   TOTP_REQUIRED_ROLES: ${TOTP_REQUIRED_ROLES:-}
   JLAWYER_ALLOW_PRIVATE_URLS: ${JLAWYER_ALLOW_PRIVATE_URLS:-}
+  # beA über bea.expert: Ident aus dem bea.expert-Vertrag; ohne Ident ist beA in Produktion deaktiviert
+  BEA_EXPERT_IDENT: ${BEA_EXPERT_IDENT:-}
+  BEA_PROVIDER: ${BEA_PROVIDER:-}
   OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
   SMTP_HOST: ${SMTP_HOST:-}
   SMTP_PORT: ${SMTP_PORT:-587}

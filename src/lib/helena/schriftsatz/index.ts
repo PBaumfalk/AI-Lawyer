@@ -13,6 +13,7 @@
  * Returns "error" with captured error details on failure.
  */
 
+import { mitKiKontext } from "@/lib/ai/datenschutz-schleuse";
 import type { UserRole } from "@prisma/client";
 import type { ExtendedPrismaClient } from "@/lib/db";
 import type { IntentResult, Schriftsatz, ErvWarnung, RetrievalBeleg } from "./schemas";
@@ -156,6 +157,14 @@ export function isSchriftsatzIntent(message: string): boolean {
  * 6. Draft Creation -> HelenaDraft
  */
 export async function runSchriftsatzPipeline(
+  options: SchriftsatzPipelineOptions,
+): Promise<SchriftsatzPipelineResult> {
+  // Datenschutz-Schleuse: all model calls of this run share one placeholder mapping
+  // and the consent of this Akte.
+  return mitKiKontext({ akteId: options.akteId }, () => runSchriftsatzPipelineImKontext(options));
+}
+
+async function runSchriftsatzPipelineImKontext(
   options: SchriftsatzPipelineOptions,
 ): Promise<SchriftsatzPipelineResult> {
   const {

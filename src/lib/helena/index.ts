@@ -22,6 +22,7 @@
  * ```
  */
 
+import { mitKiKontext } from "@/lib/ai/datenschutz-schleuse";
 import type { UserRole } from "@prisma/client";
 import type { ExtendedPrismaClient } from "@/lib/db";
 import type { CoreMessage } from "ai";
@@ -104,6 +105,14 @@ export interface HelenaAgentResult {
  * 8. Auto-escalation on stall (max 1 retry)
  */
 export async function runHelenaAgent(
+  options: HelenaAgentOptions,
+): Promise<HelenaAgentResult> {
+  // Datenschutz-Schleuse: all model calls of this run share one placeholder mapping
+  // and the consent of this Akte.
+  return mitKiKontext({ akteId: options.akteId }, () => runHelenaAgentImKontext(options));
+}
+
+async function runHelenaAgentImKontext(
   options: HelenaAgentOptions,
 ): Promise<HelenaAgentResult> {
   const {

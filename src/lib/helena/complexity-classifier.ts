@@ -17,7 +17,7 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOllama } from "ollama-ai-provider";
 import { createLogger } from "@/lib/logger";
 import { getSettingTyped } from "@/lib/settings/service";
-import { getModel, getProviderName, DEFAULT_MODELS, type AiProvider } from "@/lib/ai/provider";
+import { getModel, getProviderName, schleusenModell, DEFAULT_MODELS, type AiProvider } from "@/lib/ai/provider";
 
 const log = createLogger("helena-classifier");
 
@@ -229,6 +229,11 @@ async function createModelForName(
   let resolvedProvider = currentProvider;
   let resolvedModel = modelName;
 
+  // anymize: model ids contain "/" (anthropic/claude-opus-5.5) but are routed by anymize.
+  if (currentProvider === "anymize" && !modelName.startsWith("ollama/")) {
+    return schleusenModell("anymize", modelName);
+  }
+
   if (modelName.includes("/")) {
     const [prefix, name] = modelName.split("/", 2);
     if (["openai", "anthropic", "ollama"].includes(prefix)) {
@@ -242,16 +247,10 @@ async function createModelForName(
   }
 
   switch (resolvedProvider) {
-    case "openai": {
-      const apiKey = await getSettingTyped<string>("ai.provider.apiKey", "");
-      const openai = createOpenAI({ apiKey });
-      return openai(resolvedModel);
-    }
-    case "anthropic": {
-      const apiKey = await getSettingTyped<string>("ai.provider.apiKey", "");
-      const anthropic = createAnthropic({ apiKey });
-      return anthropic(resolvedModel);
-    }
+    case "openai":
+    case "anthropic":
+      // External providers only behind the Datenschutz-Schleuse.
+      return schleusenModell(resolvedProvider, resolvedModel);
     case "ollama":
     default: {
       const ollamaUrl = await getSettingTyped<string>(

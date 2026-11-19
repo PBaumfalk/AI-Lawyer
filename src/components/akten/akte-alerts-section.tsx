@@ -70,7 +70,7 @@ function relativeTime(dateStr: string): string {
 
 function severityBadgeClass(severity: number): string {
   if (severity >= 8) return "bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300";
-  if (severity >= 5) return "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300";
+  if (severity >= 5) return "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300";
   return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300";
 }
 
@@ -209,7 +209,7 @@ export function AkteAlertsSection({ akteId }: AkteAlertsSectionProps) {
         {total > 0 && (
           <Badge
             variant="secondary"
-            className="h-5 min-w-[20px] px-1.5 text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+            className="h-5 min-w-[20px] px-1.5 text-[10px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
           >
             {total}
           </Badge>

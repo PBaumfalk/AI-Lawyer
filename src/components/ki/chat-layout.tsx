@@ -336,6 +336,7 @@ export function ChatLayout({
             Akte:
           </label>
           <select
+            aria-label="Akte für den Chat"
             value={crossAkte ? "__all__" : selectedAkteId ?? ""}
             onChange={(e) => handleAkteChange(e.target.value || null)}
             className="min-w-0 flex-1 sm:flex-none text-sm bg-transparent border border-white/20 dark:border-white/10 rounded-md px-2 py-1 text-foreground max-w-[300px] truncate focus:outline-none focus:ring-1 focus:ring-ring"

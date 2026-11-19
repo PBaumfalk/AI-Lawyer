@@ -269,6 +269,7 @@ export function ActivityFeedComposer({
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !text.trim()}
+            aria-label="Senden"
             className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? (
@@ -339,6 +340,7 @@ export function ActivityFeedComposer({
               type="button"
               onClick={handleSubmit}
               disabled={submitting}
+              aria-label="Senden"
               className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? (
@@ -390,6 +392,7 @@ export function ActivityFeedComposer({
               type="button"
               onClick={handleSubmit}
               disabled={submitting}
+              aria-label="Senden"
               className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? (

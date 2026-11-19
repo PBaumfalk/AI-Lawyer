@@ -45,19 +45,22 @@ export function AktenSearchBar({
   }
 
   return (
-    <form onSubmit={handleSearchSubmit} className="flex items-center gap-3">
-      <div className="relative max-w-md flex-1">
+    <form onSubmit={handleSearchSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      {/* Schmal: Suchfeld volle Breite, damit der Platzhalter nicht abgeschnitten wird */}
+      <div className="relative w-full max-w-md sm:flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Aktenzeichen, Rubrum oder Beteiligte suchen..."
+          aria-label="Akten durchsuchen"
           className="pl-10 pr-8"
         />
         {search && (
           <button
             type="button"
             onClick={handleClear}
+            aria-label="Suche leeren"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
           >
             <X className="w-4 h-4" />
@@ -67,7 +70,8 @@ export function AktenSearchBar({
       <Select
         value={defaultStatus ?? ""}
         onChange={handleStatusChange}
-        className="w-40"
+        className="w-full sm:w-40"
+        aria-label="Status filtern"
       >
         <option value="">Alle Status</option>
         <option value="OFFEN">Offen</option>

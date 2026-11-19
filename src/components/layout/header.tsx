@@ -17,11 +17,12 @@ export function Header() {
       <button
         onClick={openCommandPalette}
         className="flex min-h-[40px] items-center gap-2 px-3 py-2 rounded-lg bg-[var(--al-surface)] text-muted-foreground text-sm hover:border-primary-strong transition-colors w-full max-w-72 min-w-0 border border-border"
-        aria-label="Suchen (Befehlspalette, Cmd+K)"
       >
-        <Search className="w-4 h-4" />
-        <span>Suchen...</span>
-        <kbd className="ml-auto hidden sm:inline text-xs border border-border/50 rounded px-1.5 py-0.5 text-muted-foreground/70">
+        <Search className="w-4 h-4" aria-hidden="true" />
+        {/* Sichtbarer Text beginnt den zugänglichen Namen (WCAG 2.5.3 Label in Name) */}
+        <span>Suchen…</span>
+        <span className="sr-only"> (Befehlspalette, Cmd+K)</span>
+        <kbd aria-hidden="true" className="ml-auto hidden sm:inline text-xs border border-border/50 rounded px-1.5 py-0.5 text-muted-foreground/70">
           ⌘K
         </kbd>
       </button>

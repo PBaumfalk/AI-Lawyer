@@ -181,7 +181,8 @@ export default function GlobalKiChatPage() {
       <div
         className={cn(
           "flex-shrink-0 border-white/10 dark:border-white/[0.06] bg-white/30 dark:bg-white/[0.02] backdrop-blur-md transition-all duration-200 flex flex-col",
-          sidebarOpen ? "w-64 border-r" : "w-0 overflow-hidden",
+          // Zugeklappt unsichtbar: kein Fokus und keine Vorlese-Inhalte in 0 px Breite
+          sidebarOpen ? "w-64 border-r" : "w-0 overflow-hidden invisible",
           "max-md:absolute max-md:z-20 max-md:h-full max-md:max-w-[85%] max-md:bg-background max-md:shadow-xl"
         )}
       >

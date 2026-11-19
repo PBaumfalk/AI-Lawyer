@@ -113,7 +113,7 @@ export function Tagesuebersicht() {
   return (
     <>
       <GlassCard className="p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-4">
           <h2 className="text-lg font-heading text-foreground">
             Tagesübersicht
           </h2>

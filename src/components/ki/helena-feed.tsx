@@ -131,6 +131,7 @@ export function HelenaFeed() {
 
         {/* Type filter */}
         <Select
+          aria-label="Typ filtern"
           value={typFilter}
           onChange={(e) => setTypFilter(e.target.value)}
           className="h-8 text-xs w-40"
@@ -145,6 +146,7 @@ export function HelenaFeed() {
         {/* Akte filter */}
         {akten.length > 0 && (
           <Select
+            aria-label="Akte filtern"
             value={akteFilter}
             onChange={(e) => setAkteFilter(e.target.value)}
             className="h-8 text-xs w-48"

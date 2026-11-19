@@ -50,11 +50,12 @@ export function AkteDetailHeader({ akte }: { akte: AkteHeaderData }) {
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-2 sm:gap-4">
-          <Link href="/akten" aria-label="Zurück zur Aktenliste">
-            <Button variant="ghost" size="icon" className="mt-1" tabIndex={-1}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
+          {/* Ein einziges interaktives Element: Link im Button-Stil statt Button im Link */}
+          <Button asChild variant="ghost" size="icon" className="mt-1 shrink-0">
+            <Link href="/akten" aria-label="Zurück zur Aktenliste">
+              <ArrowLeft className="w-5 h-5" aria-hidden="true" />
+            </Link>
+          </Button>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <h1 className="min-w-0 break-words text-2xl font-semibold text-foreground">

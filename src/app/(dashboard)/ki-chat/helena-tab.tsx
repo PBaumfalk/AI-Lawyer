@@ -80,7 +80,7 @@ export function HelenaTab({
                 <span
                   className={`ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                     activeTab === tab.id
-                      ? "bg-white/20 text-white"
+                      ? "bg-primary-foreground/15 text-primary-foreground"
                       : "bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
                   }`}
                 >

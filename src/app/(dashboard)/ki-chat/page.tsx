@@ -21,7 +21,7 @@ export default async function KiChatPage({ searchParams }: KiChatPageProps) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-6 pt-6 pb-2">
+      <div className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6">
         <h1 className="text-2xl font-semibold text-foreground">
           Helena KI-Assistentin
         </h1>
@@ -31,7 +31,7 @@ export default async function KiChatPage({ searchParams }: KiChatPageProps) {
       </div>
 
       {/* Tab content */}
-      <div className="flex-1 overflow-hidden px-6 pb-6">
+      <div className="flex-1 overflow-hidden px-4 pb-4 sm:px-6 sm:pb-6">
         <Suspense fallback={<GlassPanel elevation="panel" className="h-96" />}>
           <HelenaTab
             initialAkteId={akteId}

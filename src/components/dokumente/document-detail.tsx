@@ -377,10 +377,10 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
       <div className="flex-1 min-h-0">
         <ResizablePanelGroup
           orientation="horizontal"
-          autoSaveId="document-detail"
+          autoSaveId="document-detail-v2"
         >
           {/* Left panel: PDF viewer */}
-          <ResizablePanel id="pdf-panel" defaultSize={65} minSize={30}>
+          <ResizablePanel id="pdf-panel" defaultSize="65%" minSize="30%">
             <div className="h-full flex flex-col">
               {/* OnlyOffice button for editable non-PDF documents */}
               {isEditable && (
@@ -486,7 +486,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
           <ResizableHandle withHandle />
 
           {/* Right panel: Metadata + actions */}
-          <ResizablePanel id="meta-panel" defaultSize={35} minSize={25}>
+          <ResizablePanel id="meta-panel" defaultSize="35%" minSize="25%">
             <div className="h-full overflow-y-auto bg-white/50 dark:bg-slate-800/50 p-4 space-y-5">
               {/* Metadata card */}
               <section>

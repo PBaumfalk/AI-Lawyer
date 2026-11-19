@@ -247,7 +247,7 @@ export function MessageView({ channelId, onMessageSent }: MessageViewProps) {
   }, []);
 
   return (
-    <div className="flex-1 glass-card rounded-2xl flex flex-col overflow-hidden">
+    <div className="flex-1 min-w-0 min-h-0 glass-card rounded-2xl flex flex-col overflow-hidden">
       {/* Invisible socket bridge for channel room management */}
       <MessagingSocketBridge channelId={channelId} />
 

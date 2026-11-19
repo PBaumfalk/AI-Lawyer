@@ -5,6 +5,7 @@ import { useChat } from "@ai-sdk/react";
 import { Bot, Plus, Send, PanelLeft, PanelLeftClose, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import { useIsMobile } from "@/hooks/use-media-query";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,6 +41,11 @@ function stripThinkTags(text: string): string {
 
 export default function GlobalKiChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Below md the history is an overlay that starts closed
+  const isMobile = useIsMobile();
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [loadingConversations, setLoadingConversations] = useState(true);
@@ -161,13 +167,22 @@ export default function GlobalKiChatPage() {
   const latestSources = Object.values(sourcesMap).at(-1) ?? [];
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] -m-6 overflow-hidden">
+    <div className="relative flex h-[calc(100vh-4rem)] -m-4 sm:-m-6 overflow-hidden">
+      {/* Mobile: backdrop behind the overlay history */}
+      {sidebarOpen && isMobile && (
+        <button
+          type="button"
+          aria-label="Gesprächsverlauf schließen"
+          onClick={() => setSidebarOpen(false)}
+          className="absolute inset-0 z-10 bg-foreground/20"
+        />
+      )}
       {/* Sidebar: Conversation history */}
       <div
         className={cn(
-          "flex-shrink-0 border-r border-white/10 dark:border-white/[0.06] bg-white/30 dark:bg-white/[0.02] backdrop-blur-md transition-all duration-200 flex flex-col",
-          sidebarOpen ? "w-64" : "w-0 overflow-hidden",
-          "max-md:absolute max-md:z-20 max-md:h-full"
+          "flex-shrink-0 border-white/10 dark:border-white/[0.06] bg-white/30 dark:bg-white/[0.02] backdrop-blur-md transition-all duration-200 flex flex-col",
+          sidebarOpen ? "w-64 border-r" : "w-0 overflow-hidden",
+          "max-md:absolute max-md:z-20 max-md:h-full max-md:max-w-[85%] max-md:bg-background max-md:shadow-xl"
         )}
       >
         {/* Sidebar header */}
@@ -195,7 +210,10 @@ export default function GlobalKiChatPage() {
             conversations.map((conv) => (
               <button
                 key={conv.id}
-                onClick={() => handleLoadConversation(conv)}
+                onClick={() => {
+                  handleLoadConversation(conv);
+                  if (isMobile) setSidebarOpen(false);
+                }}
                 className={cn(
                   "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors truncate",
                   activeConversationId === conv.id
@@ -218,7 +236,7 @@ export default function GlobalKiChatPage() {
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-1.5 rounded-lg hover:bg-white/20 dark:hover:bg-white/[0.06] transition-colors"
-            aria-label={sidebarOpen ? "Sidebar schliessen" : "Sidebar oeffnen"}
+            aria-label={sidebarOpen ? "Gesprächsverlauf schließen" : "Gesprächsverlauf öffnen"}
           >
             {sidebarOpen ? (
               <PanelLeftClose className="w-5 h-5 text-foreground/60" />
@@ -226,8 +244,8 @@ export default function GlobalKiChatPage() {
               <PanelLeft className="w-5 h-5 text-foreground/60" />
             )}
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="w-8 h-8 shrink-0 rounded-lg bg-primary flex items-center justify-center">
               <Bot className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>

@@ -16,6 +16,8 @@ export interface BeaStatus {
     letzterAbruf: string | null;
     safeId: string | null;
   } | null;
+  /** Messages of the certificate's postbox skipped after repeated failures. */
+  uebersprungen?: number;
 }
 
 const ANMELDUNG_FEHLGESCHLAGEN = "beA-Anmeldung fehlgeschlagen";

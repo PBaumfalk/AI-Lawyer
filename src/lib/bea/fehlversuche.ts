@@ -55,3 +55,64 @@ export async function setzeFehlversucheZurueck(postfachSafeId: string, messageId
     warn("Zurücksetzen", e);
   }
 }
+
+// ---------- skipped messages (ruling R29) ----------
+
+const uebersprungenSchluessel = (postfachSafeId: string) => `bea:uebersprungen:${postfachSafeId}`;
+
+/** Escapes glob characters so a safeId is matched literally by SCAN MATCH. */
+function globSicher(s: string): string {
+  return s.replace(/[*?[\]\\]/g, (z) => `\\${z}`);
+}
+
+/**
+ * Records a message that is no longer fetched (MAX_FEHLVERSUCHE reached).
+ * The set's TTL is refreshed on every call. Redis errors only warn.
+ */
+export async function merkeUebersprungen(postfachSafeId: string, messageId: string): Promise<void> {
+  const k = uebersprungenSchluessel(postfachSafeId);
+  try {
+    await redis().sadd(k, messageId);
+    await redis().expire(k, TTL_SEKUNDEN);
+  } catch (e) {
+    warn("Merken (übersprungen)", e);
+  }
+}
+
+/** Removes a message from the skipped set (it was stored after all). Redis errors only warn. */
+export async function vergesseUebersprungen(postfachSafeId: string, messageId: string): Promise<void> {
+  try {
+    await redis().srem(uebersprungenSchluessel(postfachSafeId), messageId);
+  } catch (e) {
+    warn("Entfernen (übersprungen)", e);
+  }
+}
+
+/** Number of skipped messages of the postbox (0 if Redis unavailable). */
+export async function anzahlUebersprungen(postfachSafeId: string): Promise<number> {
+  try {
+    return Number(await redis().scard(uebersprungenSchluessel(postfachSafeId))) || 0;
+  } catch (e) {
+    warn("Lesen (übersprungen)", e);
+    return 0;
+  }
+}
+
+/**
+ * Clears all failure counters and the skipped set of the postbox, so every
+ * message is fetched again on the next run. Returns the number of skipped
+ * messages that were released. Redis errors propagate: the admin must see them.
+ */
+export async function setzePostfachFehlversucheZurueck(postfachSafeId: string): Promise<number> {
+  const r = redis();
+  const uebersprungen = await r.scard(uebersprungenSchluessel(postfachSafeId));
+  const muster = `bea:fehlversuch:${globSicher(postfachSafeId)}:*`;
+  let cursor = "0";
+  do {
+    const [weiter, keys] = await r.scan(cursor, "MATCH", muster, "COUNT", 200);
+    cursor = weiter;
+    if (keys.length > 0) await r.del(...keys);
+  } while (cursor !== "0");
+  await r.del(uebersprungenSchluessel(postfachSafeId));
+  return Number(uebersprungen) || 0;
+}

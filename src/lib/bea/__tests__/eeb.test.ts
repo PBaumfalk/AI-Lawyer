@@ -64,6 +64,7 @@ vi.mock("../provider", () => ({ getBeaProvider: vi.fn() }));
 import { NextRequest } from "next/server";
 import { getBeaProvider } from "../provider";
 import { MockProvider } from "../mock-provider";
+import { BeaExpertError } from "../expert/transport";
 import { heuteBerlin } from "../regeln";
 import { POST } from "@/app/api/bea/messages/[id]/eeb/route";
 
@@ -157,6 +158,37 @@ describe("POST /api/bea/messages/[id]/eeb – serverseitige Abgabe", () => {
     expect(abgabe).toHaveBeenCalledTimes(1);
     expect(nachrichten[0].eebStatus).toBe("AUSSTEHEND");
     expect(prismaFake.beaNachricht.update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["Zeitüberschreitung", null],
+    ["HTTP 503", 503],
+  ])("%s während der Abgabe → 502 „eEB-Status unklar“, Status bleibt WIRD_ABGEGEBEN", async (_n, status) => {
+    const abgabe = vi.spyOn(provider, "gibEebAb").mockRejectedValue(new BeaExpertError("weg", "bea_send_eeb", status));
+    const res = await post({ abgabeDatum: heuteBerlin() });
+    expect(res.status).toBe(502);
+    expect((await res.json()).error).toBe("eEB-Status unklar – bitte im beA-Webclient prüfen");
+    expect(abgabe).toHaveBeenCalledTimes(1);
+    expect(nachrichten[0].eebStatus).toBe("WIRD_ABGEGEBEN");
+    // a second attempt is refused while the outcome is unclear
+    expect((await post({ abgabeDatum: heuteBerlin() })).status).toBe(409);
+    expect(abgabe).toHaveBeenCalledTimes(1);
+  });
+
+  it("4xx während der Abgabe → 502, Status zurückgesetzt", async () => {
+    vi.spyOn(provider, "gibEebAb").mockRejectedValue(new BeaExpertError("abgelehnt", "bea_send_eeb", 400));
+    const res = await post({ abgabeDatum: heuteBerlin() });
+    expect(res.status).toBe(502);
+    expect(nachrichten[0].eebStatus).toBe("AUSSTEHEND");
+  });
+
+  it("Ausfall bei der Sitzungsprüfung (vor der Abgabe) → Status zurückgesetzt", async () => {
+    store.set("bea:sitzung:u1", JSON.stringify({ token: "t", sessionKey: Buffer.alloc(32).toString("base64"), safeId: "s" }));
+    vi.spyOn(provider, "pruefeSitzung").mockRejectedValue(new BeaExpertError("down", "bex_check", 503));
+    const abgabe = vi.spyOn(provider, "gibEebAb");
+    expect((await post({ abgabeDatum: heuteBerlin() })).status).toBe(502);
+    expect(abgabe).not.toHaveBeenCalled();
+    expect(nachrichten[0].eebStatus).toBe("AUSSTEHEND");
   });
 
   it("gleichzeitige zweite Anfrage → 409, gibEebAb nur 1×", async () => {

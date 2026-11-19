@@ -9,7 +9,7 @@ import { createRedisConnection } from "@/lib/redis";
 import { encryptCredential, decryptCredential } from "@/lib/email/crypto";
 import { getBeaProvider, type BeaProvider, type BeaSitzung } from "./provider";
 import { BeaExpertError } from "./expert/transport";
-import { ladeZertifikat, markiereZertifikatFehler, setzeZertifikatSafeId } from "./zertifikat";
+import { ladeZertifikat, setzeZertifikatSafeId } from "./zertifikat";
 
 const SITZUNG_TTL_SEKUNDEN = 600;
 const schluessel = (userId: string) => `bea:sitzung:${userId}`;
@@ -68,24 +68,16 @@ async function speichereSitzung(userId: string, s: BeaSitzung): Promise<void> {
   }
 }
 
-function istAusfall(e: unknown): boolean {
-  return e instanceof BeaExpertError && (e.status === null || e.status >= 500);
-}
-
 async function anmeldenUndSpeichern(userId: string, provider: BeaProvider): Promise<BeaSitzung> {
+  // ladeZertifikat checks the certificate locally (PIN, format, expiry) and marks
+  // it FEHLER itself; null means "no usable certificate" (ruling R28).
   const zert = await ladeZertifikat(userId);
   if (!zert) throw new BeaNichtEingerichtetError("Kein gültiges beA-Zertifikat hinterlegt.");
 
-  let sitzung: BeaSitzung;
-  try {
-    sitzung = await provider.anmelden(zert.p12, zert.pin);
-  } catch (e) {
-    // An outage says nothing about the certificate: keep it usable.
-    if (istAusfall(e)) throw e;
-    const meldung = e instanceof Error ? e.message : "Unbekannter Fehler";
-    await markiereZertifikatFehler(userId, `beA-Anmeldung fehlgeschlagen: ${meldung}`);
-    throw new BeaNichtEingerichtetError(`beA-Anmeldung fehlgeschlagen: ${meldung}`);
-  }
+  // Every failure of the bea.expert login (4xx, 429, error answers, 5xx, network)
+  // and every failure of our own stack is treated as an outage: it is rethrown
+  // and the certificate stays AKTIV.
+  const sitzung = await provider.anmelden(zert.p12, zert.pin);
 
   await speichereSitzung(userId, sitzung);
   await setzeZertifikatSafeId(userId, sitzung.safeId);
@@ -94,8 +86,9 @@ async function anmeldenUndSpeichern(userId: string, provider: BeaProvider): Prom
 
 /**
  * Runs fn with the user's beA session.
- * wiederholen=true (read-only calls): on BeaExpertError the session is dropped,
- * a fresh login is made and fn runs exactly once more.
+ * wiederholen=true (read-only calls): on BeaExpertError the session is checked;
+ * only if bea.expert reports it invalid is it dropped, a fresh login made and fn
+ * run exactly once more. Otherwise the original error is rethrown.
  * wiederholen=false (send/draft/eEB): the session is verified up front; fn is never repeated.
  */
 export async function mitBeaSitzung<T>(
@@ -123,6 +116,14 @@ export async function mitBeaSitzung<T>(
     return await fn(sitzung, provider);
   } catch (e) {
     if (!(e instanceof BeaExpertError)) throw e;
+    // Retry only for an invalid session; a failing check is no reason to retry.
+    let gueltig: boolean;
+    try {
+      gueltig = await provider.pruefeSitzung(sitzung);
+    } catch {
+      throw e;
+    }
+    if (gueltig) throw e;
     await verwerfeBeaSitzung(userId);
     const neu = await anmeldenUndSpeichern(userId, provider);
     return fn(neu, provider);

@@ -10,8 +10,10 @@ import {
   FolderOpen,
   Search,
   Link2,
+  RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useBeaStatus, beaStatusMeldung, Hinweis, formatDatumZeit } from "./bea-status";
@@ -50,6 +52,10 @@ const NEU_LADEN_NACH_MS = 5000;
 
 export function BeaInbox() {
   const { status, fehler: statusFehler, neuLaden: statusNeuLaden } = useBeaStatus();
+  const { data: session } = useSession();
+  const istAdmin = session?.user?.role === "ADMIN";
+  const [zuruecksetzen, setZuruecksetzen] = useState(false);
+  const [zuruecksetzenFehler, setZuruecksetzenFehler] = useState<string | null>(null);
   const [tab, setTab] = useState<"eingang" | "ausgang">("eingang");
   const [messages, setMessages] = useState<StoredMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,6 +130,31 @@ export function BeaInbox() {
   };
 
   const statusMeldung = status ? beaStatusMeldung(status) : null;
+  const uebersprungen = status?.uebersprungen ?? 0;
+
+  // Admin: release skipped messages of the postbox for the next retrieval
+  const fehlversucheZuruecksetzen = async () => {
+    const postfachSafeId = status?.zertifikat?.safeId;
+    if (!postfachSafeId) return;
+    setZuruecksetzen(true);
+    setZuruecksetzenFehler(null);
+    try {
+      const res = await fetch("/api/bea/fehlversuche/zuruecksetzen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postfachSafeId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Zurücksetzen fehlgeschlagen (${res.status})`);
+      }
+      await statusNeuLaden();
+    } catch (e) {
+      setZuruecksetzenFehler(e instanceof Error ? e.message : "Zurücksetzen fehlgeschlagen");
+    } finally {
+      setZuruecksetzen(false);
+    }
+  };
   const abrufMoeglich = !!status && !statusMeldung;
 
   // Returns an error message (e.g. 409: documents already in another Akte) or null
@@ -151,6 +182,28 @@ export function BeaInbox() {
       {/* beA status banner */}
       {statusFehler && <Hinweis art="fehler">{statusFehler}</Hinweis>}
       {statusMeldung && <Hinweis art="warnung">{statusMeldung}</Hinweis>}
+      {uebersprungen > 0 && (
+        <Hinweis art="warnung">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              {uebersprungen === 1
+                ? "1 beA-Nachricht konnte nicht übernommen werden – bitte im beA-Webclient prüfen."
+                : `${uebersprungen} beA-Nachrichten konnten nicht übernommen werden – bitte im beA-Webclient prüfen.`}
+            </span>
+            {istAdmin && (
+              <Button variant="outline" size="sm" onClick={fehlversucheZuruecksetzen} disabled={zuruecksetzen}>
+                {zuruecksetzen ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                Erneut versuchen
+              </Button>
+            )}
+          </div>
+          {zuruecksetzenFehler && <p className="mt-1 text-destructive">{zuruecksetzenFehler}</p>}
+        </Hinweis>
+      )}
 
       {/* Tabs + Actions */}
       <div className="flex flex-wrap items-center justify-between gap-2">

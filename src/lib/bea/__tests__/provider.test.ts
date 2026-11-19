@@ -46,6 +46,18 @@ describe("getBeaProvider", () => {
     expect(getBeaProvider()).toBeNull();
   });
 
+  it("leeres BEA_PROVIDER (Docker-Standard ${BEA_PROVIDER:-}) verhält sich wie nicht gesetzt", () => {
+    vi.stubEnv("BEA_PROVIDER", "");
+    vi.stubEnv("BEA_EXPERT_IDENT", "ident");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(getBeaProvider()).toBeInstanceOf(BeaExpertProvider);
+    vi.stubEnv("BEA_PROVIDER", "  ");
+    vi.stubEnv("BEA_EXPERT_IDENT", "");
+    expect(getBeaProvider()).toBeNull();
+    vi.stubEnv("NODE_ENV", "development");
+    expect(getBeaProvider()).toBeInstanceOf(MockProvider);
+  });
+
   it("BEA_PROVIDER=mock in Produktion bleibt null", () => {
     vi.stubEnv("BEA_EXPERT_IDENT", "ident");
     vi.stubEnv("BEA_PROVIDER", "mock");

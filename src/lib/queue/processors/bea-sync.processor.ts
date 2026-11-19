@@ -31,7 +31,13 @@ export async function processBeaSync(job: Job<BeaSyncJobData>): Promise<void> {
   let neu = 0;
 
   for (const userId of userIds) {
-    const r = await rufeZertifikatAb(userId);
+    // One user's unexpected failure (e.g. database) must not stop the others.
+    let r: { neu: number; fehler: string[] };
+    try {
+      r = await rufeZertifikatAb(userId);
+    } catch (e) {
+      r = { neu: 0, fehler: [e instanceof Error ? e.message : "Unbekannter Fehler"] };
+    }
     neu += r.neu;
     if (r.fehler.length > 0) {
       log.warn({ jobId: job.id, userId, anzahl: r.fehler.length }, "beA sync finished with errors");

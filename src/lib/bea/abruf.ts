@@ -15,7 +15,10 @@ import { autoAssignToAkte } from "./auto-assign";
 import { mitBeaSitzung, BeaNichtEingerichtetError } from "./sitzung";
 import { BeaExpertError } from "./expert/transport";
 import { BeaEntschluesselungError } from "./expert/eingang";
-import { fehlversuche, zaehleFehlversuch, MAX_FEHLVERSUCHE } from "./fehlversuche";
+import { safeEmit } from "@/lib/socket/emitter";
+import {
+  fehlversuche, zaehleFehlversuch, setzeFehlversucheZurueck, merkeUebersprungen, vergesseUebersprungen, MAX_FEHLVERSUCHE,
+} from "./fehlversuche";
 import type { BeaNachrichtVoll, BeaOrdnerInfo } from "./provider";
 
 /** Attachment reference stored in BeaNachricht.anhaenge. */
@@ -310,11 +313,25 @@ function istNachrichtenFehler(e: unknown, phase: "holen" | "speichern"): boolean
   return true;
 }
 
-/** Message-level failure: count it; on the last allowed attempt report it once. */
+export const UEBERSPRUNGEN_MELDUNG = "beA-Nachricht konnte nicht übernommen werden – bitte im beA-Webclient prüfen";
+
+/**
+ * Message-level failure: count it; on the last allowed attempt record it as
+ * skipped, notify the admins (ids only, no content) and audit it once.
+ */
 async function meldeNachrichtFehler(userId: string, postfachSafeId: string, messageId: string, e: unknown): Promise<void> {
   const anzahl = await zaehleFehlversuch(postfachSafeId, messageId);
   console.warn(`[bea] Nachricht nicht übernommen (postfach=${postfachSafeId}, messageId=${messageId}, versuch=${anzahl}): ${fehlermeldung(e)}`);
   if (anzahl !== MAX_FEHLVERSUCHE) return;
+  await merkeUebersprungen(postfachSafeId, messageId);
+  // Same channel the worker uses for final job failures (role:ADMIN room).
+  safeEmit("role:ADMIN", "notification", {
+    type: "system:alert",
+    title: "beA-Nachricht nicht übernommen",
+    message: UEBERSPRUNGEN_MELDUNG,
+    data: { queue: "bea-sync", postfachSafeId, messageId, link: "/bea" },
+    createdAt: new Date().toISOString(),
+  });
   await logAuditEvent({
     userId,
     aktion: "BEA_NACHRICHT_FEHLER",
@@ -363,13 +380,22 @@ export async function rufeZertifikatAb(userId: string): Promise<{ neu: number; f
     );
 
     for (const messageId of messageIds.filter((id) => !vorhanden.has(id))) {
-      if ((await fehlversuche(postfachSafeId, messageId)) >= MAX_FEHLVERSUCHE) continue;
+      const bisher = await fehlversuche(postfachSafeId, messageId);
+      if (bisher >= MAX_FEHLVERSUCHE) {
+        // Keep the skipped set alive while the message is still being skipped.
+        await merkeUebersprungen(postfachSafeId, messageId);
+        continue;
+      }
       let phase: "holen" | "speichern" = "holen";
       try {
         // Each message has its own retry so one stale session does not fail the rest.
         const n = await mitBeaSitzung(userId, (s, p) => p.holeNachricht(s, messageId), { wiederholen: true });
         phase = "speichern";
         if ((await speichereEingang(n, postfachSafeId, userId)).neu) neu += 1;
+        if (bisher > 0) {
+          await setzeFehlversucheZurueck(postfachSafeId, messageId);
+          await vergesseUebersprungen(postfachSafeId, messageId);
+        }
       } catch (e) {
         if (e instanceof BeaNichtEingerichtetError) return { neu, fehler: [] };
         if (!istNachrichtenFehler(e, phase)) return { neu, fehler: [`Nachricht ${messageId}: ${fehlermeldung(e)}`] };

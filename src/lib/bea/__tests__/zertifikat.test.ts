@@ -18,6 +18,7 @@ import {
   ladeZertifikat,
   markiereZertifikatFehler,
   zertifikatInfo,
+  setzeZertifikatSafeId,
 } from "../zertifikat";
 
 const mockUpsert = vi.mocked(prisma.beaZertifikat.upsert);
@@ -69,6 +70,7 @@ describe("speichereZertifikat", () => {
     const geladen = await ladeZertifikat("user-1");
     expect(geladen?.pin).toBe(PIN);
     expect(geladen?.p12.equals(gueltig.p12)).toBe(true);
+    expect(mockUpdateMany).not.toHaveBeenCalled();
   });
 
   it("speichereZertifikat wirft bei falscher PIN 'PIN falsch oder Datei ist kein beA-Softwarezertifikat'", async () => {
@@ -105,9 +107,50 @@ describe("ladeZertifikat", () => {
     expect(await ladeZertifikat("user-1")).toBeNull();
   });
 
+  it("ladeZertifikat markiert FEHLER und liefert null, wenn die gespeicherte PIN nicht (mehr) passt", async () => {
+    await speichereZertifikat("user-1", gueltig.p12, PIN);
+    const { create } = gespeicherterDatensatz();
+    const { encryptCredential } = await import("@/lib/email/crypto");
+    mockFindUnique.mockResolvedValue({ ...create, pinVerschluesselt: encryptCredential("falsch"), status: "AKTIV" } as any);
+    expect(await ladeZertifikat("user-1")).toBeNull();
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: { userId: "user-1" },
+      data: { status: "FEHLER", letzterFehler: "beA-Anmeldung fehlgeschlagen: PIN falsch oder Datei ist kein beA-Softwarezertifikat" },
+    });
+    expect(JSON.stringify(mockUpdateMany.mock.calls)).not.toContain(PIN);
+  });
+
+  it("ladeZertifikat markiert FEHLER und liefert null bei abgelaufenem Zertifikat", async () => {
+    const { encryptCredential } = await import("@/lib/email/crypto");
+    mockFindUnique.mockResolvedValue({
+      p12Verschluesselt: encryptCredential(abgelaufen.p12.toString("base64")),
+      pinVerschluesselt: encryptCredential(PIN),
+      status: "AKTIV",
+    } as any);
+    expect(await ladeZertifikat("user-1")).toBeNull();
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: { userId: "user-1" },
+      data: { status: "FEHLER", letzterFehler: "beA-Anmeldung fehlgeschlagen: Zertifikat ist abgelaufen" },
+    });
+  });
+
+  it("ladeZertifikat: Datenbankfehler wird durchgereicht, kein FEHLER-Status", async () => {
+    mockFindUnique.mockRejectedValue(new Error("DB weg"));
+    await expect(ladeZertifikat("user-1")).rejects.toThrow("DB weg");
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+
   it("ladeZertifikat liefert null ohne Zertifikat", async () => {
     mockFindUnique.mockResolvedValue(null);
     expect(await ladeZertifikat("user-1")).toBeNull();
+  });
+});
+
+describe("setzeZertifikatSafeId", () => {
+  it("nutzt updateMany (entferntes Zertifikat ist kein Fehler)", async () => {
+    mockUpdateMany.mockResolvedValue({ count: 0 } as any);
+    await expect(setzeZertifikatSafeId("user-1", "DE.BRAK.x")).resolves.toBeUndefined();
+    expect(mockUpdateMany).toHaveBeenCalledWith({ where: { userId: "user-1" }, data: { safeId: "DE.BRAK.x" } });
   });
 });
 

@@ -149,11 +149,24 @@ function mappeOrdner(antwort: unknown): BeaOrdnerInfo[] {
 function mappeKoepfe(antwort: unknown, sessionKey: Buffer): BeaNachrichtKopf[] {
   return liste(antwort, ["messages"]).map((m) => ({
     messageId: str(m.messageId),
-    betreff: entschluessleText(m.encSubject, sessionKey),
+    betreff: betreffOderLeer(m, sessionKey),
     absender: person(m.sender).name,
     empfangenAm: datum(m.zugegangen) ?? datum(m.received),
     eebAngefordert: bool(m.eebAngefordert),
   }));
+}
+
+/**
+ * Decrypts one overview subject on its own: a single undecryptable subject must
+ * not fail the whole list (the full message is fetched and checked separately).
+ */
+function betreffOderLeer(m: Roh, sessionKey: Buffer): string {
+  try {
+    return entschluessleText(m.encSubject, sessionKey);
+  } catch {
+    console.warn(`[bea] Betreff in der Nachrichtenliste nicht entschlüsselbar (messageId=${str(m.messageId)}).`);
+    return "";
+  }
 }
 
 /** bea_get_message: metadata, encrypted objects and attachments. */

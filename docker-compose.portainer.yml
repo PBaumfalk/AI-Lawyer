@@ -66,6 +66,8 @@ services:
       AI_MODEL: ${AI_MODEL:-}
       TOTP_REQUIRED_ROLES: ${TOTP_REQUIRED_ROLES:-}
       JLAWYER_ALLOW_PRIVATE_URLS: ${JLAWYER_ALLOW_PRIVATE_URLS:-}
+      BEA_EXPERT_IDENT: ${BEA_EXPERT_IDENT:-}
+      BEA_PROVIDER: ${BEA_PROVIDER:-}
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
@@ -121,6 +123,8 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       LOG_FILE_PATH: /var/log/ai-lawyer/worker
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-5}
+      BEA_EXPERT_IDENT: ${BEA_EXPERT_IDENT:-}
+      BEA_PROVIDER: ${BEA_PROVIDER:-}
     depends_on:
       db:
         condition: service_healthy

@@ -83,6 +83,38 @@ describe("Zuordnung eingegangener beA-Nachrichten", () => {
   });
 });
 
+describe("PATCH /api/bea/messages/[id] – Zugriff und eEB-Status", () => {
+  it("ohne Zugriff auf die aktuelle Akte → keine Änderung (auch nicht in die eigene Akte)", async () => {
+    const n = await nachricht({ akteId: akte.id, anhaenge: [] });
+    const eigene = await createAkte({ anwaltId: fremd.id });
+    asUser(fremd);
+    const { PATCH } = await route();
+    for (const json of [{ akteId: eigene.id }, { akteId: null }, { status: "GELESEN" }, { eebStatus: "NICHT_ERFORDERLICH" }]) {
+      const r = await PATCH(req("/x", { method: "PATCH", json }), params({ id: n.id }));
+      expect(r.status).toBeGreaterThanOrEqual(403);
+      expect(r.status).toBeLessThan(500);
+    }
+    const danach = await prisma.beaNachricht.findUniqueOrThrow({ where: { id: n.id } });
+    expect(danach.akteId).toBe(akte.id);
+    expect(danach.status).toBe("EINGANG");
+  });
+
+  it("eEB-Status nach Abgabe (BESTAETIGT / WIRD_ABGEGEBEN) nicht mehr änderbar → 409", async () => {
+    asUser(anwalt);
+    const { PATCH } = await route();
+    for (const eebStatus of ["BESTAETIGT", "WIRD_ABGEGEBEN"]) {
+      const n = await nachricht({ akteId: akte.id, eebAngefordert: true, eebStatus });
+      const r = await PATCH(req("/x", { method: "PATCH", json: { eebStatus: "NICHT_ERFORDERLICH" } }), params({ id: n.id }));
+      expect(r.status).toBe(409);
+      expect((await r.json()).error).toBe("Der eEB-Status kann nach einer Abgabe nicht mehr geändert werden.");
+      expect((await prisma.beaNachricht.findUniqueOrThrow({ where: { id: n.id } })).eebStatus).toBe(eebStatus);
+    }
+    const offen = await nachricht({ akteId: akte.id, eebAngefordert: true, eebStatus: "AUSSTEHEND" });
+    const r = await PATCH(req("/x", { method: "PATCH", json: { eebStatus: "NICHT_ERFORDERLICH" } }), params({ id: offen.id }));
+    expect(r.status).toBe(200);
+  });
+});
+
 describe("Lesen und Anhang-Download", () => {
   it("zugeordnete Nachricht ist ohne Aktenzugriff nicht lesbar", async () => {
     const n = await nachricht({ akteId: akte.id });
@@ -164,5 +196,72 @@ describe("GET /api/bea/messages – Richtung", () => {
     expect(ein.nachrichten.map((n: any) => n.betreff)).toEqual(["Eingang"]);
 
     expect((await GET(req("/x?richtung=SEITWAERTS") as any)).status).toBe(400);
+  });
+});
+
+describe("Übersprungene beA-Nachrichten (Status und Zurücksetzen)", () => {
+  const SAFE = `DE.BRAK.int-${Date.now()}`;
+
+  async function redisDirekt() {
+    const { createRedisConnection } = await import("@/lib/redis");
+    return createRedisConnection({ maxRetriesPerRequest: 1 });
+  }
+
+  async function zertifikatMitPostfach(userId: string) {
+    await prisma.beaZertifikat.create({
+      data: {
+        userId, p12Verschluesselt: "x", pinVerschluesselt: "x", seriennummer: "1",
+        inhaber: "RA", gueltigBis: new Date(Date.now() + 86_400_000), safeId: SAFE,
+      },
+    });
+  }
+
+  it("GET /api/bea/status liefert uebersprungen für das Postfach des Zertifikats", async () => {
+    const r = await redisDirekt();
+    try {
+      await r.del(`bea:uebersprungen:${SAFE}`);
+      await zertifikatMitPostfach(anwalt.id);
+      asUser(anwalt);
+      const { GET } = await import("@/app/api/bea/status/route");
+      expect((await (await GET()).json()).uebersprungen).toBe(0);
+
+      await r.sadd(`bea:uebersprungen:${SAFE}`, "m1", "m2");
+      const body = await (await GET()).json();
+      expect(body.uebersprungen).toBe(2);
+      expect(JSON.stringify(body)).not.toContain("p12");
+    } finally {
+      await r.del(`bea:uebersprungen:${SAFE}`);
+      r.disconnect();
+    }
+  });
+
+  it("POST /api/bea/fehlversuche/zuruecksetzen: nur ADMIN, löscht Zähler und Set, Audit-Eintrag", async () => {
+    const r = await redisDirekt();
+    try {
+      await r.set(`bea:fehlversuch:${SAFE}:m1`, "3");
+      await r.set(`bea:fehlversuch:${SAFE}:m2`, "1");
+      await r.set(`bea:fehlversuch:DE.anderes:m1`, "3");
+      await r.sadd(`bea:uebersprungen:${SAFE}`, "m1");
+      const { POST } = await import("@/app/api/bea/fehlversuche/zuruecksetzen/route");
+
+      asUser(anwalt);
+      expect((await POST(req("/x", { method: "POST", json: { postfachSafeId: SAFE } }) as any)).status).toBe(403);
+      expect(await r.exists(`bea:fehlversuch:${SAFE}:m1`)).toBe(1);
+
+      const admin = await createUser("ADMIN");
+      asUser(admin);
+      expect((await POST(req("/x", { method: "POST", json: {} }) as any)).status).toBe(400);
+      const res = await POST(req("/x", { method: "POST", json: { postfachSafeId: SAFE } }) as any);
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ freigegeben: 1 });
+      expect(await r.exists(`bea:fehlversuch:${SAFE}:m1`, `bea:fehlversuch:${SAFE}:m2`, `bea:uebersprungen:${SAFE}`)).toBe(0);
+      expect(await r.exists(`bea:fehlversuch:DE.anderes:m1`)).toBe(1);
+
+      const audit = await prisma.auditLog.findFirst({ where: { aktion: "BEA_FEHLVERSUCHE_ZURUECKGESETZT", userId: admin.id } });
+      expect(audit?.details).toMatchObject({ postfachSafeId: SAFE, freigegeben: 1 });
+    } finally {
+      await r.del(`bea:fehlversuch:${SAFE}:m1`, `bea:fehlversuch:${SAFE}:m2`, `bea:fehlversuch:DE.anderes:m1`, `bea:uebersprungen:${SAFE}`);
+      r.disconnect();
+    }
   });
 });

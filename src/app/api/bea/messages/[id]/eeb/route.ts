@@ -6,6 +6,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { pruefeEebDatum } from "@/lib/bea/regeln";
 import { getBeaProvider } from "@/lib/bea/provider";
 import { mitBeaSitzung, BeaNichtEingerichtetError } from "@/lib/bea/sitzung";
+import { BeaExpertError } from "@/lib/bea/expert/transport";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("bea-eeb");
@@ -22,8 +23,10 @@ const NICHT_MOEGLICH = "Für diese Nachricht kann kein eEB abgegeben werden";
  * Empfangsbekenntnis) server-side through the beA provider.
  *
  * Requires an interactive user session with canSendBeA (agents never send).
- * The provider is called at most once (wiederholen: false); on any provider
- * error the eEB status stays unchanged and 502 is returned.
+ * The provider is called at most once (wiederholen: false). On a provider
+ * error the eEB status is rolled back and 502 is returned, except for a
+ * timeout/network/5xx failure during the submission: the outcome is then
+ * unclear and the status stays WIRD_ABGEGEBEN (502 "eEB-Status unklar").
  *
  * eEB references: aktenzeichenAbsender = our own Aktenzeichen (if the message
  * is assigned to an Akte), aktenzeichenEmpfaenger = the court's file number,
@@ -115,9 +118,23 @@ export async function POST(
     }
   };
 
+  let gestartet = false;
   try {
-    await mitBeaSitzung(userId, (s, p) => p.gibEebAb(s, auftrag), { wiederholen: false });
+    await mitBeaSitzung(
+      userId,
+      (s, p) => {
+        gestartet = true;
+        return p.gibEebAb(s, auftrag);
+      },
+      { wiederholen: false },
+    );
   } catch (e) {
+    // Timeout, network or 5xx after the submission started: it may have reached
+    // the court. WIRD_ABGEGEBEN stays so nobody submits it a second time.
+    if (gestartet && e instanceof BeaExpertError && (e.status === null || e.status >= 500)) {
+      log.warn({ nachrichtId: id, err: e.message }, "eEB-Status unklar");
+      return NextResponse.json({ error: "eEB-Status unklar – bitte im beA-Webclient prüfen" }, { status: 502 });
+    }
     await zuruecksetzen();
     if (e instanceof BeaNichtEingerichtetError) {
       return NextResponse.json(

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---------- in-memory fakes (hoisted: used inside vi.mock factories) ----------
 
-const { nachrichten, dokumente, dateien, zert, store, zertPin, prismaFake } = vi.hoisted(() => {
+const { nachrichten, dokumente, dateien, zert, store, mengen, zertPin, prismaFake } = vi.hoisted(() => {
   interface Zeile { id: string; [k: string]: unknown }
   const nachrichten = new Map<string, Zeile>();
   const dokumente: Zeile[] = [];
@@ -58,8 +58,9 @@ const { nachrichten, dokumente, dateien, zert, store, zertPin, prismaFake } = vi
     },
   };
   const store = new Map<string, string>();
+  const mengen = new Map<string, Set<string>>();
   const zertPin = { pin: "1234" };
-  return { nachrichten, dokumente, dateien, zert, store, zertPin, prismaFake };
+  return { nachrichten, dokumente, dateien, zert, store, mengen, zertPin, prismaFake };
 });
 vi.mock("@/lib/db", () => ({ prisma: prismaFake }));
 
@@ -86,7 +87,18 @@ vi.mock("@/lib/redis", () => ({
   createRedisConnection: () => ({
     get: async (k: string) => store.get(k) ?? null,
     set: async (k: string, v: string) => (store.set(k, v), "OK"),
-    del: async (k: string) => (store.delete(k) ? 1 : 0),
+    del: async (...ks: string[]) => ks.filter((k) => store.delete(k) || mengen.delete(k)).length,
+    sadd: async (k: string, v: string) => {
+      const m = mengen.get(k) ?? new Set<string>();
+      mengen.set(k, m);
+      return m.has(v) ? 0 : (m.add(v), 1);
+    },
+    srem: async (k: string, v: string) => (mengen.get(k)?.delete(v) ? 1 : 0),
+    scard: async (k: string) => mengen.get(k)?.size ?? 0,
+    scan: async (_c: string, _m: string, muster: string) => {
+      const praefix = muster.replace(/\\(.)/g, "$1").replace(/\*$/, "");
+      return ["0", [...store.keys()].filter((k) => k.startsWith(praefix))];
+    },
     incr: async (k: string) => {
       const v = String(Number(store.get(k) ?? 0) + 1);
       store.set(k, v);
@@ -99,14 +111,27 @@ vi.mock("@/lib/email/crypto", () => ({
   encryptCredential: (s: string) => s,
   decryptCredential: (s: string) => s,
 }));
-vi.mock("../zertifikat", () => ({
-  ladeZertifikat: vi.fn(async () => (zert.status === "AKTIV" ? { p12: Buffer.from("p12"), pin: zertPin.pin } : null)),
-  markiereZertifikatFehler: vi.fn(async (_u: string, meldung: string) => {
+vi.mock("../zertifikat", () => {
+  const markiereZertifikatFehler = vi.fn(async (_u: string, meldung: string) => {
     zert.status = "FEHLER";
     void meldung;
-  }),
-  setzeZertifikatSafeId: vi.fn(async () => {}),
-}));
+  });
+  return {
+    // Mirrors the real local check (tested in zertifikat.test.ts): a PIN that no
+    // longer opens the p12 marks the certificate FEHLER and yields null.
+    ladeZertifikat: vi.fn(async (u: string) => {
+      if (zert.status !== "AKTIV") return null;
+      if (zertPin.pin === "falsch") {
+        await markiereZertifikatFehler(u, "beA-Anmeldung fehlgeschlagen: PIN falsch");
+        return null;
+      }
+      return { p12: Buffer.from("p12"), pin: zertPin.pin };
+    }),
+    markiereZertifikatFehler,
+    setzeZertifikatSafeId: vi.fn(async () => {}),
+  };
+});
+vi.mock("@/lib/socket/emitter", () => ({ safeEmit: vi.fn() }));
 vi.mock("../provider", () => ({ getBeaProvider: vi.fn() }));
 
 import { getBeaProvider, type BeaNachrichtVoll } from "../provider";
@@ -117,6 +142,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { markiereZertifikatFehler } from "../zertifikat";
 import { rufeZertifikatAb, speichereEingang, legeDokumenteAn } from "../abruf";
 import { processBeaSync } from "@/lib/queue/processors/bea-sync.processor";
+import { safeEmit } from "@/lib/socket/emitter";
 
 const SAFE = "DE.BRAK.kanzlei";
 
@@ -155,6 +181,7 @@ beforeEach(() => {
   dokumente.length = 0;
   dateien.clear();
   store.clear();
+  mengen.clear();
   zert.status = "AKTIV";
   zert.letzterAbruf = null;
   zertPin.pin = "1234";
@@ -232,7 +259,17 @@ describe("rufeZertifikatAb", () => {
     expect(liste.mock.calls[1][1]).toBe("b");
   });
 
-  it("falsche PIN → keine Exception aus dem Job, Zertifikat FEHLER, kein zweiter Anmeldeversuch beim nächsten Lauf", async () => {
+  it("Anmeldung von bea.expert abgelehnt (401) → Ausfall: fehler[], Zertifikat bleibt AKTIV", async () => {
+    zertPin.pin = "falsch-beim-dienst";
+    const { BeaExpertError } = await import("../expert/transport");
+    vi.spyOn(provider, "anmelden").mockRejectedValue(new BeaExpertError("abgelehnt", "bex_login_step2", 401));
+    const r = await rufeZertifikatAb("u1");
+    expect(r.fehler).toHaveLength(1);
+    expect(zert.status).toBe("AKTIV");
+    expect(markiereZertifikatFehler).not.toHaveBeenCalled();
+  });
+
+  it("lokal ungültige PIN → keine Exception aus dem Job, Zertifikat FEHLER, kein zweiter Anmeldeversuch beim nächsten Lauf", async () => {
     zertPin.pin = "falsch";
     const anmelden = vi.spyOn(provider, "anmelden");
     await expect(rufeZertifikatAb("u1")).resolves.toEqual({ neu: 0, fehler: [] });
@@ -240,7 +277,8 @@ describe("rufeZertifikatAb", () => {
     expect(markiereZertifikatFehler).toHaveBeenCalledTimes(1);
 
     await expect(processBeaSync({ data: { userId: "u1" } } as never)).resolves.toBeUndefined();
-    expect(anmelden).toHaveBeenCalledTimes(1);
+    // the local check fails before bea.expert is contacted
+    expect(anmelden).not.toHaveBeenCalled();
   });
 
   it("Ausfall von bea.expert → fehler[], Zertifikat bleibt AKTIV, Job schlägt fehl", async () => {
@@ -275,6 +313,28 @@ describe("rufeZertifikatAb", () => {
     await rufeZertifikatAb("u1");
     expect(hole.mock.calls.filter((c) => c[1] === "m1").length).toBe(vorher);
     expect(meldungen()).toHaveLength(1);
+
+    // skipped: recorded per postbox and admins notified once with ids only
+    expect([...(mengen.get(`bea:uebersprungen:${SAFE}`) ?? [])]).toEqual(["m1"]);
+    expect(safeEmit).toHaveBeenCalledTimes(1);
+    const [raum, ereignis, payload] = vi.mocked(safeEmit).mock.calls[0];
+    expect(raum).toBe("role:ADMIN");
+    expect(ereignis).toBe("notification");
+    expect(payload).toMatchObject({
+      message: "beA-Nachricht konnte nicht übernommen werden – bitte im beA-Webclient prüfen",
+      data: { postfachSafeId: SAFE, messageId: "m1" },
+    });
+    expect(JSON.stringify(payload)).not.toContain("Betreff");
+
+    // admin reset: counters and set cleared, next run fetches m1 again
+    const { setzePostfachFehlversucheZurueck, anzahlUebersprungen } = await import("../fehlversuche");
+    expect(await anzahlUebersprungen(SAFE)).toBe(1);
+    expect(await setzePostfachFehlversucheZurueck(SAFE)).toBe(1);
+    expect(await anzahlUebersprungen(SAFE)).toBe(0);
+    expect(store.has(`bea:fehlversuch:${SAFE}:m1`)).toBe(false);
+    hole.mockImplementation(original);
+    await rufeZertifikatAb("u1");
+    expect([...nachrichten.values()].map((n) => n.nachrichtenId).sort()).toEqual(["m1", "m2"]);
   });
 
   it("Ausfall beim Holen einer Nachricht → Abbruch, fehler[], Job schlägt fehl, kein Fehlversuch gezählt", async () => {
@@ -330,6 +390,14 @@ describe("rufeZertifikatAb", () => {
   it("kein Posteingang → nur Warnung, kein Jobfehler", async () => {
     vi.spyOn(provider, "listeOrdner").mockResolvedValue([{ id: "x", name: "Gesendet", typ: "OUTBOX", parentId: null }]);
     await expect(rufeZertifikatAb("u1")).resolves.toEqual({ neu: 0, fehler: [] });
+  });
+
+  it("unerwarteter Fehler bei einem Benutzer stoppt die übrigen nicht, Job schlägt am Ende fehl", async () => {
+    prismaFake.beaZertifikat.findMany.mockResolvedValueOnce([{ userId: "u0" }, { userId: "u1" }]);
+    // u0's first database access throws (not caught inside rufeZertifikatAb)
+    prismaFake.beaNachricht.findMany.mockRejectedValueOnce(new Error("Datenbank weg"));
+    await expect(processBeaSync({ data: {} } as never)).rejects.toThrow(/u0: Datenbank weg/);
+    expect(nachrichten.size).toBe(2);
   });
 
   it("Job ohne userId läuft über alle AKTIV-Zertifikate", async () => {

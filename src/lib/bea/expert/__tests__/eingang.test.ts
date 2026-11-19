@@ -226,6 +226,20 @@ describe("bea.expert Eingang", () => {
     expect(k.empfangenAm).toEqual(new Date(1763550000000));
   });
 
+  it("holeNachrichtenkoepfe: ein nicht entschlüsselbarer Betreff ergibt '' und blockiert die übrigen nicht", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fremd = gcm("geheim", crypto.randomBytes(32));
+    fetchMock.mockResolvedValueOnce(
+      json({ messages: [overviewNachricht({ messageId: "kaputt", encSubject: fremd }), overviewNachricht({ messageId: "ok" })] }),
+    );
+    const k = await holeNachrichtenkoepfe(s, "1");
+    expect(k.map((x) => [x.messageId, x.betreff])).toEqual([["kaputt", ""], ["ok", BETREFF]]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][0])).toContain("messageId=kaputt");
+    expect(String(warn.mock.calls[0][0])).not.toContain("geheim");
+    warn.mockRestore();
+  });
+
   it("entschlüsselt Betreff 'Klage Müller ./. Schäfer €' aus metaData.subject", async () => {
     const text = "Sehr geehrte Damen und Herren, anbei Müller ß €.";
     fetchMock.mockResolvedValueOnce(

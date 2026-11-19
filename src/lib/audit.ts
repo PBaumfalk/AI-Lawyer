@@ -55,6 +55,7 @@ export type AuditAktion =
   | "BEA_NACHRICHT_GESENDET"
   | "BEA_NACHRICHT_EMPFANGEN"
   | "BEA_NACHRICHT_FEHLER"
+  | "BEA_FEHLVERSUCHE_ZURUECKGESETZT"
   | "BEA_EEB_BESTAETIGT"
   | "BEA_NACHRICHT_GELESEN"
   | "BEA_ZUORDNUNG_GEAENDERT"
@@ -140,6 +141,7 @@ export const AKTION_LABELS: Record<string, string> = {
   BEA_NACHRICHT_GESENDET: "beA Nachricht gesendet",
   BEA_NACHRICHT_EMPFANGEN: "beA Nachricht empfangen",
   BEA_NACHRICHT_FEHLER: "beA Nachricht konnte nicht abgerufen werden",
+  BEA_FEHLVERSUCHE_ZURUECKGESETZT: "hat übersprungene beA-Nachrichten zum erneuten Abruf freigegeben",
   BEA_EEB_BESTAETIGT: "eEB bestaetigt",
   BEA_NACHRICHT_GELESEN: "beA Nachricht gelesen",
   BEA_ZUORDNUNG_GEAENDERT: "beA Zuordnung geaendert",

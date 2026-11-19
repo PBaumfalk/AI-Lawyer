@@ -98,7 +98,8 @@ Bleibt unklar, ob beA die Abgabe angenommen hat, erscheint *„Abgabe unklar –
 | *Kein beA-Zertifikat hinterlegt …* | Administration: Zertifikat hinterlegen. |
 | *beA-Anmeldung fehlgeschlagen* | PIN und Ablaufdatum prüfen, Zertifikat neu hochladen. Bis dahin ruft AI-Lawyer nicht erneut ab. |
 | *Versandstatus unklar – bitte im beA-Webclient prüfen* | Im beA-Webclient nachsehen, ob die Nachricht hinausging. |
-| *Abgabe unklar – bitte im beA-Webclient prüfen* | Im beA-Webclient prüfen, ob das eEB abgegeben ist. |
+| *Abgabe unklar – bitte im beA-Webclient prüfen* / *eEB-Status unklar – bitte im beA-Webclient prüfen* | Im beA-Webclient prüfen, ob das eEB abgegeben ist. |
+| *… beA-Nachricht(en) konnten nicht übernommen werden – bitte im beA-Webclient prüfen.* | Eine Nachricht ließ sich dreimal nicht abrufen und wird übersprungen; die Administration wird benachrichtigt. Im beA-Webclient lesen. Die Administration kann mit **Erneut versuchen** einen neuen Abruf freigeben. |
 | Zuordnung ändern nicht möglich | Zur Nachricht gibt es bereits Dokumente in der Akte. |
 
 ## Für die Administration (Betrieb)

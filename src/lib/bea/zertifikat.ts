@@ -57,6 +57,10 @@ export async function speichereZertifikat(
 /**
  * Returns the decrypted certificate, or null if none is stored or the
  * certificate is in FEHLER state (no retry until a new upload).
+ *
+ * The certificate is checked locally before use (ruling R28): if it can no
+ * longer be opened with the stored PIN or has expired, it is marked FEHLER
+ * and null is returned. These are the only failures that lock the certificate.
  */
 export async function ladeZertifikat(userId: string): Promise<{ p12: Buffer; pin: string } | null> {
   const z = await prisma.beaZertifikat.findUnique({
@@ -64,10 +68,22 @@ export async function ladeZertifikat(userId: string): Promise<{ p12: Buffer; pin
     select: { p12Verschluesselt: true, pinVerschluesselt: true, status: true },
   });
   if (!z || z.status !== "AKTIV") return null;
-  return {
-    p12: Buffer.from(decryptCredential(z.p12Verschluesselt), "base64"),
-    pin: decryptCredential(z.pinVerschluesselt),
-  };
+  const p12 = Buffer.from(decryptCredential(z.p12Verschluesselt), "base64");
+  const pin = decryptCredential(z.pinVerschluesselt);
+
+  let gueltigBis: Date;
+  try {
+    gueltigBis = leseP12(p12, pin).gueltigBis;
+  } catch (e) {
+    const meldung = e instanceof Error ? e.message : "Unbekannter Fehler";
+    await markiereZertifikatFehler(userId, `beA-Anmeldung fehlgeschlagen: ${meldung}`);
+    return null;
+  }
+  if (gueltigBis.getTime() < Date.now()) {
+    await markiereZertifikatFehler(userId, `beA-Anmeldung fehlgeschlagen: ${ZERTIFIKAT_ABGELAUFEN}`);
+    return null;
+  }
+  return { p12, pin };
 }
 
 /**
@@ -105,5 +121,6 @@ export async function entferneZertifikat(userId: string): Promise<boolean> {
 
 /** Stores the safeId reported by bea.expert after a successful login. */
 export async function setzeZertifikatSafeId(userId: string, safeId: string): Promise<void> {
-  await prisma.beaZertifikat.update({ where: { userId }, data: { safeId } });
+  // updateMany: a certificate removed meanwhile is a no-op instead of P2025.
+  await prisma.beaZertifikat.updateMany({ where: { userId }, data: { safeId } });
 }

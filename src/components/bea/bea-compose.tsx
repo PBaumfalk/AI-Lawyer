@@ -163,7 +163,7 @@ export function BeaCompose() {
 
   const anzahl = attachments.length;
   const summeBytes = attachments.reduce((s, a) => s + a.groesse, 0);
-  const zuGross = anzahl >= WARN_ANHAENGE || summeBytes >= WARN_BYTES;
+  const zuGross = anzahl > WARN_ANHAENGE || summeBytes > WARN_BYTES;
 
   const anhaenge = attachments.map((a) => ({ dokumentId: a.id, art: a.art }));
   const nachricht = {

@@ -135,11 +135,28 @@ export async function PATCH(
 
   const existing = await prisma.beaNachricht.findUnique({
     where: { id },
-    select: { id: true, akteId: true, betreff: true, anhaenge: true },
+    select: { id: true, akteId: true, betreff: true, anhaenge: true, eebStatus: true },
   });
 
   if (!existing) {
     return NextResponse.json({ error: "Nachricht nicht gefunden" }, { status: 404 });
+  }
+
+  // The caller must also have access to the Akte the message currently belongs to.
+  if (existing.akteId) {
+    const denied = await akteAccessDenied(result.session, existing.akteId);
+    if (denied) return denied;
+  }
+
+  // After a submitted (or running) eEB the status is fixed.
+  if (
+    parsed.data.eebStatus !== undefined &&
+    (existing.eebStatus === "BESTAETIGT" || existing.eebStatus === "WIRD_ABGEGEBEN")
+  ) {
+    return NextResponse.json(
+      { error: "Der eEB-Status kann nach einer Abgabe nicht mehr geändert werden." },
+      { status: 409 }
+    );
   }
 
   // Documents already created in an Akte stay there: moving the message would

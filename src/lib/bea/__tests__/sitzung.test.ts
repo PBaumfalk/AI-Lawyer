@@ -55,16 +55,37 @@ describe("mitBeaSitzung", () => {
     expect(wert.startsWith("enc:")).toBe(true);
   });
 
-  it("wiederholen:true – nach BeaExpertError neu anmelden und fn ein zweites Mal aufrufen", async () => {
+  it("wiederholen:true – nach BeaExpertError und ungültiger Sitzung neu anmelden und fn ein zweites Mal aufrufen", async () => {
+    const pruefe = vi.spyOn(provider, "pruefeSitzung").mockResolvedValueOnce(false);
     const fn = vi.fn()
       .mockRejectedValueOnce(new BeaExpertError("abgelaufen", "x", 401))
       .mockResolvedValueOnce("ok");
     await expect(mitBeaSitzung("u1", fn, { wiederholen: true })).resolves.toBe("ok");
     expect(fn).toHaveBeenCalledTimes(2);
     expect(anmelden).toHaveBeenCalledTimes(2);
+    expect(pruefe).toHaveBeenCalledTimes(1);
+  });
+
+  it("wiederholen:true – Sitzung noch gültig → Originalfehler, kein Re-Login, fn nur 1×", async () => {
+    const fehler = new BeaExpertError("kaputt", "x", 500);
+    const fn = vi.fn().mockRejectedValue(fehler);
+    await expect(mitBeaSitzung("u1", fn, { wiederholen: true })).rejects.toBe(fehler);
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(anmelden).toHaveBeenCalledTimes(1);
+    expect(store.has("bea:sitzung:u1")).toBe(true);
+  });
+
+  it("wiederholen:true – pruefeSitzung wirft → Originalfehler, kein Re-Login", async () => {
+    const fehler = new BeaExpertError("timeout", "x", null);
+    vi.spyOn(provider, "pruefeSitzung").mockRejectedValueOnce(new BeaExpertError("down", "y", 503));
+    const fn = vi.fn().mockRejectedValue(fehler);
+    await expect(mitBeaSitzung("u1", fn, { wiederholen: true })).rejects.toBe(fehler);
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(anmelden).toHaveBeenCalledTimes(1);
   });
 
   it("wiederholen:true – zweiter Fehler wird durchgereicht (fn höchstens 2×)", async () => {
+    vi.spyOn(provider, "pruefeSitzung").mockResolvedValue(false);
     const fn = vi.fn().mockRejectedValue(new BeaExpertError("kaputt", "x", 500));
     await expect(mitBeaSitzung("u1", fn, { wiederholen: true })).rejects.toBeInstanceOf(BeaExpertError);
     expect(fn).toHaveBeenCalledTimes(2);
@@ -100,18 +121,27 @@ describe("mitBeaSitzung", () => {
     expect(fn).not.toHaveBeenCalled();
   });
 
-  it("falsche PIN → Zertifikat FEHLER und BeaNichtEingerichtetError", async () => {
-    vi.mocked(ladeZertifikat).mockResolvedValue({ p12: Buffer.from("p12"), pin: "falsch" });
+  it("lokal ungültiges Zertifikat (ladeZertifikat null) → BeaNichtEingerichtetError, keine Anmeldung", async () => {
+    vi.mocked(ladeZertifikat).mockResolvedValue(null);
     const fn = vi.fn();
     await expect(mitBeaSitzung("u1", fn, { wiederholen: true })).rejects.toBeInstanceOf(BeaNichtEingerichtetError);
-    expect(markiereZertifikatFehler).toHaveBeenCalledWith("u1", expect.stringMatching(/^beA-Anmeldung fehlgeschlagen: /));
+    expect(anmelden).not.toHaveBeenCalled();
     expect(fn).not.toHaveBeenCalled();
   });
 
-  it("Ausfall beim Anmelden markiert das Zertifikat NICHT als FEHLER", async () => {
-    anmelden.mockRejectedValueOnce(new BeaExpertError("Netzwerk", "x", null));
-    await expect(mitBeaSitzung("u1", vi.fn(), { wiederholen: true })).rejects.toBeInstanceOf(BeaExpertError);
+  it.each([
+    ["401", new BeaExpertError("PIN falsch", "bex_login_step2", 401)],
+    ["429", new BeaExpertError("zu viele", "bex_login_step1", 429)],
+    ["200 mit error", new BeaExpertError("beA-Fehler", "bex_login_step1", 200)],
+    ["503", new BeaExpertError("down", "bex_login_step1", 503)],
+    ["Netzwerk", new BeaExpertError("Netzwerk", "bex_login_step1", null)],
+    ["DB/Einstellungen", new Error("DB weg")],
+  ])("Fehler der bea.expert-Anmeldung (%s) wird durchgereicht, Zertifikat bleibt AKTIV", async (_n, fehler) => {
+    anmelden.mockRejectedValueOnce(fehler);
+    const fn = vi.fn();
+    await expect(mitBeaSitzung("u1", fn, { wiederholen: true })).rejects.toBe(fehler);
     expect(markiereZertifikatFehler).not.toHaveBeenCalled();
+    expect(fn).not.toHaveBeenCalled();
   });
 
   it("ohne Zertifikat oder ohne Provider → BeaNichtEingerichtetError", async () => {
@@ -135,6 +165,7 @@ describe("Redis-Ausfall", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     fakeRedis.set.mockRejectedValueOnce(new Error("down"));
     fakeRedis.del.mockRejectedValue(new Error("down"));
+    vi.spyOn(provider, "pruefeSitzung").mockResolvedValueOnce(false);
     const fn = vi.fn()
       .mockRejectedValueOnce(new BeaExpertError("x", "x", 401))
       .mockResolvedValueOnce("ok");

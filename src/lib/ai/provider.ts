@@ -116,7 +116,7 @@ export async function schleusenModell(provider: string, modellName: string): Pro
     throw new Error(`Unbekannter KI-Anbieter: ${provider}`);
   }
   const nerAn = await getSettingTyped<boolean>("helena.datei.nerPruefung", true);
-  const pflicht = await getSettingTyped<boolean>("helena.datei.einwilligungErforderlich", true);
+  const pflicht = await getSettingTyped<boolean>("helena.datei.einwilligungErforderlich", false);
   const kanzlei = await prisma.kanzlei.findFirst({ select: { name: true } }).catch(() => null);
   const zusatzBegriffe = await getSettingTyped<unknown>("ai.schleuse.erlaubteBegriffe", []);
   return schuetzeModell(basis, {

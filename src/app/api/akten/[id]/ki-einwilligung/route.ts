@@ -2,7 +2,7 @@
  * GET/PUT /api/akten/[id]/ki-einwilligung
  *
  * Records the Mandant's consent to AI processing via external service
- * providers (§ 43e Abs. 5 BRAO). Only ANWALT and ADMIN may change it; every
+ * providers (foreign models: § 43e Abs. 4 BRAO). Only ANWALT and ADMIN may change it; every
  * change is written to the audit log with old and new value.
  */
 

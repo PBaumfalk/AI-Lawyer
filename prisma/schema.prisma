@@ -41,7 +41,7 @@ enum BeteiligterRolle {
   SONSTIGER
 }
 
-/// Mandant consent to AI processing via external service providers (§ 43e Abs. 5 BRAO).
+/// Mandant consent to AI processing via external service providers (foreign models: § 43e Abs. 4 BRAO).
 enum KiEinwilligung {
   KEINE
   DE_MODELLE   // anymize anonymisation + anymize models hosted in Germany
@@ -855,7 +855,7 @@ model Akte {
   archiviert       DateTime?
   jlawyerId        String?          @unique  // J-Lawyer case ID for idempotent migration
 
-  // Helena Datei-Pipeline: Mandant consent (§ 43e Abs. 5 BRAO), recorded by a user
+  // Helena Datei-Pipeline: Mandant consent (foreign models: § 43e Abs. 4 BRAO), recorded by a user
   kiEinwilligung          KiEinwilligung @default(KEINE)
   kiEinwilligungAm        DateTime?
   kiEinwilligungErfasstVon String?

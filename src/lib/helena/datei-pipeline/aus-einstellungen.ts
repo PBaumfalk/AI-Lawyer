@@ -40,13 +40,13 @@ export async function pipelineAbhaengigkeiten(o: { aufgabe: Aufgabe; einwilligun
   }
   const anymize = new AnymizeClient({ apiKey, baseUrl });
 
-  const pflicht = await getSettingTyped<boolean>("helena.datei.einwilligungErforderlich", true);
+  const pflicht = await getSettingTyped<boolean>("helena.datei.einwilligungErforderlich", false);
   const erlaubt = erlaubteStandorte(o.einwilligung, pflicht);
   if (erlaubt.length === 0) {
     throw new PipelineFehler(
       "einlesen",
       "EINWILLIGUNG_FEHLT",
-      "Für diese Akte ist keine Einwilligung der Mandantschaft in die KI-Verarbeitung vermerkt (§ 43e Abs. 5 BRAO)",
+      "Für diese Akte ist keine Einwilligung der Mandantschaft in die KI-Verarbeitung vermerkt (Kanzleieinstellung „Einwilligung auch für deutsche Modelle“)",
     );
   }
   const hinweise: string[] = [];

@@ -12,7 +12,7 @@
  *   after a call   placeholders in text and tool-call arguments -> original values,
  *                  locally (tools run on real data, users read real names);
  *                  JSON outputs get JSON-escaped values
- *   consent        per Akte (§ 43e Abs. 5 BRAO): a model the consent does not
+ *   consent        per Akte (§ 43e Abs. 4 BRAO for non-EU models): a model the consent does not
  *                  cover is replaced by the German fallback model; no consent
  *                  at all blocks before anything is sent
  *
@@ -134,7 +134,7 @@ export function schleusenMiddleware(k: SchleusenKonfig): LanguageModelV1Middlewa
           throw new PipelineFehler(
             "einlesen",
             "EINWILLIGUNG_FEHLT",
-            "Für diese Akte ist keine Einwilligung der Mandantschaft in die KI-Verarbeitung vermerkt (§ 43e Abs. 5 BRAO)",
+            "Für diese Akte ist keine Einwilligung der Mandantschaft in die KI-Verarbeitung vermerkt (Kanzleieinstellung „Einwilligung auch für deutsche Modelle“)",
           );
         }
       } else {

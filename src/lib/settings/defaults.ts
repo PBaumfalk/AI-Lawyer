@@ -215,10 +215,10 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
   },
   {
     key: "helena.datei.einwilligungErforderlich",
-    value: "true",
+    value: "false",
     type: "boolean",
     category: "ai",
-    label: "Datei-Pipeline: nur Akten mit vermerkter Einwilligung der Mandantschaft (§ 43e Abs. 5 BRAO)",
+    label: "Datei-Pipeline: auch für deutsche Modelle eine vermerkte Einwilligung der Mandantschaft verlangen (berufsrechtlich nicht nötig: anymize ist Infrastruktur nach § 43e Abs. 1 BRAO; Fremdmodelle brauchen stets eine Einwilligung, § 43e Abs. 4 BRAO)",
   },
   {
     key: "ai.schleuse.erlaubteBegriffe",

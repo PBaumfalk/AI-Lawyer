@@ -69,11 +69,12 @@ Admins können die Zuordnung in der Einstellung `helena.datei.modellRouting` üb
 
 **Einwilligung der Mandantschaft:** Die Einwilligung wird je Akte vermerkt (`PUT /api/akten/[id]/ki-einwilligung`). Das dürfen nur Anwältinnen, Anwälte und Admins, und jede Änderung landet im Audit-Log.
 
-- `KEINE`: keine Verarbeitung (`EINWILLIGUNG_FEHLT`).
-- `DE_MODELLE`: anymize-Anonymisierung und die deutschen anymize-Modelle.
+- `KEINE` und `DE_MODELLE`: anymize-Anonymisierung und die deutschen anymize-Modelle.
 - `FREMDMODELLE`: zusätzlich Foundation-Modelle über anymize.
 
-Hintergrund ist § 43e Abs. 5 BRAO in unserem Verständnis: Dient eine Dienstleistung unmittelbar einem einzelnen Mandat, braucht es die Einwilligung der Mandantschaft. Das ist **vor dem Produktivbetrieb am Normtext zu prüfen.** Die Pflicht lässt sich nach dieser Prüfung mit `helena.datei.einwilligungErforderlich` abschalten. Dann gelten ohne Vermerk die deutschen Modelle.
+Berufsrechtliche Einordnung (geprüft am 19.11.2026): anymize wird für den Kanzleibetrieb insgesamt eingesetzt und ist damit Infrastruktur nach § 43e Abs. 1 BRAO, keine Dienstleistung, die unmittelbar einem einzelnen Mandat dient. Eine Einwilligung nach § 43e Abs. 5 BRAO ist deshalb nicht nötig; es genügen sorgfältige Auswahl und ein Vertrag in Textform nach Abs. 2 und 3. Fremdmodelle außerhalb der EU bleiben wegen § 43e Abs. 4 BRAO an die Einwilligung `FREMDMODELLE` gebunden.
+
+Wer strenger arbeiten will, schaltet `helena.datei.einwilligungErforderlich` ein (Standard: aus). Dann ist bei `KEINE` jede Verarbeitung gesperrt (`EINWILLIGUNG_FEHLT`).
 
 **Qualitätsvergleich:** `ANYMIZE_API_KEY=… npx tsx scripts/helena-modellvergleich.ts` schickt fünf Kanzleiaufgaben auf fiktiven Daten an fünf Modelle. Das Skript schreibt einen blinden Bericht (Modelle A–E) nach `docs/modellvergleich/<Datum>/`.
 

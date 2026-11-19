@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Copy, KeyRound, Plus, ShieldCheck, UserRound } from "lucide-react";
+import { Copy, KeyRound, LockOpen, Plus, ShieldCheck, UserRound } from "lucide-react";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +64,15 @@ export default function BenutzerPage() {
       const neu = await api<BenutzerZeile>(`/api/admin/benutzer/${u.id}`, { method: "PATCH", json: aenderung });
       setBenutzer((alt) => alt?.map((x) => (x.id === neu.id ? neu : x)) ?? null);
       toast.success(`${neu.name} gespeichert`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function entsperren(u: BenutzerZeile) {
+    try {
+      await api(`/api/admin/benutzer/${u.id}/entsperren`, { method: "POST" });
+      toast.success(`Anmeldesperre für ${u.name} aufgehoben`);
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -146,10 +155,21 @@ export default function BenutzerPage() {
                     />
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Button variant="ghost" size="sm" onClick={() => setZuruecksetzen(u)}>
-                      <KeyRound className="w-4 h-4 mr-1.5" />
-                      Passwort zurücksetzen
-                    </Button>
+                    <div className="flex flex-wrap justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => entsperren(u)}
+                        title="Hebt eine Sperre nach zu vielen Fehlversuchen auf. Passwort und Sitzungen bleiben unverändert."
+                      >
+                        <LockOpen className="w-4 h-4 mr-1.5" />
+                        Entsperren
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setZuruecksetzen(u)}>
+                        <KeyRound className="w-4 h-4 mr-1.5" />
+                        Passwort zurücksetzen
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

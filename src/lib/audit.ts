@@ -75,6 +75,7 @@ export type AuditAktion =
   | "BENUTZER_ANGELEGT"
   | "BENUTZER_GEAENDERT"
   | "BENUTZER_PASSWORT_ZURUECKGESETZT"
+  | "BENUTZER_ENTSPERRT"
   | "PASSWORT_GEAENDERT";
 
 /**
@@ -156,6 +157,7 @@ export const AKTION_LABELS: Record<string, string> = {
   BENUTZER_ANGELEGT: "hat ein Benutzerkonto angelegt",
   BENUTZER_GEAENDERT: "hat ein Benutzerkonto geändert",
   BENUTZER_PASSWORT_ZURUECKGESETZT: "hat ein Passwort zurückgesetzt",
+  BENUTZER_ENTSPERRT: "hat eine Anmeldesperre aufgehoben",
   PASSWORT_GEAENDERT: "hat das eigene Passwort geändert",
 };
 
@@ -170,6 +172,7 @@ export const SECURITY_ACTIONS: Set<string> = new Set([
   "BENUTZER_ANGELEGT",
   "BENUTZER_GEAENDERT",
   "BENUTZER_PASSWORT_ZURUECKGESETZT",
+  "BENUTZER_ENTSPERRT",
   "PASSWORT_GEAENDERT",
 ]);
 

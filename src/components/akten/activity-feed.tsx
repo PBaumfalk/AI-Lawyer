@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Filter, ChevronDown, Loader2, RefreshCw, Mail, MessageSquare, Clock, MailOpen } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ActivityFeedEntry, type FeedEntryData } from "./activity-feed-entry";
@@ -117,13 +118,13 @@ function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: 
           </p>
         </div>
         <div className="flex justify-center gap-2 flex-wrap">
-          <a
+          <Link
             href="/email"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors"
           >
             <Mail className="w-3.5 h-3.5" />
             Posteingang oeffnen
-          </a>
+          </Link>
           <a
             href={`/akten/${akteId}/emails`}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-muted/50 transition-colors text-foreground"

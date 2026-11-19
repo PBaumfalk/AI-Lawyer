@@ -4,6 +4,8 @@ import { pruefePasswort } from "@/lib/auth-credentials";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import crypto from "crypto";
+import { GERAET_COOKIE, geraetCookieOptionen, geraetTokenErzeugen } from "@/lib/login-geraet";
+import { ANMELDESCHUTZ_FEHLT } from "@/lib/login-throttle";
 
 const TOTP_PENDING_COOKIE = "totp_pending";
 
@@ -37,7 +39,13 @@ export async function POST(req: NextRequest) {
     if (pruefung.grund === "gesperrt") {
       return NextResponse.json(
         { error: "Zu viele Anmeldeversuche. Bitte in 15 Minuten erneut versuchen." },
-        { status: 429 }
+        { status: 429, headers: { "Retry-After": "900" } }
+      );
+    }
+    if (pruefung.grund === "dienst") {
+      return NextResponse.json(
+        { error: ANMELDESCHUTZ_FEHLT },
+        { status: 503, headers: { "Retry-After": "60" } }
       );
     }
     return NextResponse.json({ error: "Ungültige Anmeldedaten" }, { status: 401 });
@@ -45,8 +53,13 @@ export async function POST(req: NextRequest) {
   const user = pruefung.user;
 
   if (!user.totpEnabled) {
-    // No TOTP — client should proceed with normal signIn
-    return NextResponse.json({ requireTotp: false });
+    // No TOTP — client should proceed with normal signIn. The password was
+    // correct: remember this device so that a distributed guessing attack on
+    // the account cannot lock its owner out (see login-throttle.ts).
+    const res = NextResponse.json({ requireTotp: false });
+    const geraet = geraetTokenErzeugen(user.email);
+    if (geraet) res.cookies.set(GERAET_COOKIE, geraet, geraetCookieOptionen);
+    return res;
   }
 
   const secret = process.env.NEXTAUTH_SECRET;

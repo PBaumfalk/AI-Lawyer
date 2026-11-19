@@ -23,13 +23,20 @@ export default function TotpChallengePage() {
     setError(null);
     setLoading(true);
 
-    const res = await fetch("/api/auth/totp/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, isBackupCode: useBackupCode }),
-    });
+    let res: Response;
+    try {
+      res = await fetch("/api/auth/totp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, isBackupCode: useBackupCode }),
+      });
+    } catch {
+      setLoading(false);
+      setError("Der Server ist nicht erreichbar. Bitte Verbindung prüfen und erneut versuchen.");
+      return;
+    }
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
 
     if (!res.ok || !data.success) {
       setLoading(false);

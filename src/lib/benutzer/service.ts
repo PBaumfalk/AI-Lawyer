@@ -5,7 +5,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
 import { invalidateUserSessionCache } from "@/lib/auth-session";
-import { loginSperreAufheben } from "@/lib/login-throttle";
+import { fensterUeberschritten, LimiterNichtVerfuegbar, loginSperreAufheben, LOGIN_SPERRE } from "@/lib/login-throttle";
 import {
   KANZLEI_ROLLEN,
   type BenutzerAendern,
@@ -163,7 +163,9 @@ export async function setzePasswortZurueck(
     select: auswahl,
   });
   invalidateUserSessionCache(id);
-  await loginSperreAufheben(vorher.email, id);
+  // Das neue Passwort gilt bereits; fehlt Redis, laufen alte Zähler nach dem
+  // Zeitfenster ab.
+  await loginSperreAufheben(vorher.email, id).catch(() => {});
   await logAuditEvent({
     userId: adminId,
     aktion: "BENUTZER_PASSWORT_ZURUECKGESETZT",
@@ -172,9 +174,37 @@ export async function setzePasswortZurueck(
   return { benutzer: zeile(u), startpasswort: passwort };
 }
 
+/**
+ * Hebt alle Anmeldesperren eines Kontos auf, ohne das Passwort zu ändern
+ * (z. B. nach einem Rateangriff von außen). Sitzungen bleiben bestehen.
+ */
+export async function entsperreBenutzer(adminId: string, id: string): Promise<void> {
+  const u = await findeKanzleiKonto(id);
+  try {
+    await loginSperreAufheben(u.email, id);
+  } catch (e) {
+    if (e instanceof LimiterNichtVerfuegbar) {
+      throw new BenutzerFehler("Der Anmeldeschutz ist gerade nicht erreichbar. Bitte später erneut versuchen.", 503);
+    }
+    throw e;
+  }
+  await logAuditEvent({ userId: adminId, aktion: "BENUTZER_ENTSPERRT", details: { benutzerId: id, email: u.email } });
+}
+
 export async function aendereEigenesPasswort(userId: string, aktuell: string, neu: string): Promise<void> {
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true, isSystem: true } });
   if (!u || u.isSystem) throw new BenutzerFehler("Benutzer nicht gefunden", 404);
+  // Eine offene Sitzung darf kein unbegrenztes Passwort-Orakel sein.
+  let zuViele: boolean;
+  try {
+    zuViele = await fensterUeberschritten("eigenes-passwort", userId, LOGIN_SPERRE.proQuelleUndKonto, LOGIN_SPERRE.fensterSekunden);
+  } catch (e) {
+    if (e instanceof LimiterNichtVerfuegbar) {
+      throw new BenutzerFehler("Der Anmeldeschutz ist gerade nicht erreichbar. Bitte später erneut versuchen.", 503);
+    }
+    throw e;
+  }
+  if (zuViele) throw new BenutzerFehler("Zu viele Versuche. Bitte in 15 Minuten erneut versuchen.", 429);
   if (!(await bcrypt.compare(aktuell, u.passwordHash))) {
     throw new BenutzerFehler("Das aktuelle Passwort ist falsch", 400);
   }

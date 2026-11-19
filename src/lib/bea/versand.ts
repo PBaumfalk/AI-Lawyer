@@ -81,38 +81,3 @@ export interface BeaVersandPruefungResponse {
 
 /** Hint stored on a message whose send outcome is unknown. */
 export const VERSANDSTATUS_UNKLAR = "Versandstatus unklar – bitte im beA-Webclient prüfen";
-
-// ---------------------------------------------------------------------------
-// eEB contract (browser-side eEB; replaced by the server-side eEB in Task 11)
-// ---------------------------------------------------------------------------
-
-/** Minimal shape of a bea.expert call result (see BeaResult in client.ts). */
-export interface BeaErgebnis<T> {
-  ok: boolean;
-  data?: T;
-  error?: string;
-  code?: string;
-}
-
-export const eebBestaetigungSchema = z.object({
-  /** beA message ID the eEB was sent for (must match the stored message). */
-  nachrichtenId: z.string().trim().min(1),
-  /** Date stated in the eEB as sent to bea.expert. */
-  eebDatum: z.string().datetime(),
-});
-
-export type EebBestaetigung = z.infer<typeof eebBestaetigungSchema>;
-
-/** Build the eEB record; throws unless bea.expert confirmed the eEB. */
-export function buildEebBestaetigung(
-  ergebnis: BeaErgebnis<{ success: boolean }>,
-  nachrichtenId: string,
-  eebDatum: Date
-): EebBestaetigung {
-  if (!ergebnis.ok || !ergebnis.data?.success) {
-    throw new Error(
-      ergebnis.error || "eEB wurde von beA nicht bestaetigt und daher nicht gespeichert."
-    );
-  }
-  return { nachrichtenId, eebDatum: eebDatum.toISOString() };
-}

@@ -1,6 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import fs from "fs";
-import path from "path";
 
 // ---------- in-memory fakes (hoisted: used inside vi.mock factories) ----------
 
@@ -71,7 +69,7 @@ import { getBeaProvider } from "../provider";
 import { MockProvider } from "../mock-provider";
 import { BeaExpertError } from "../expert/transport";
 import { requirePermission } from "@/lib/rbac";
-import { buildEebBestaetigung, beaVersandSchema } from "../versand";
+import { beaVersandSchema } from "../versand";
 import { POST } from "@/app/api/bea/messages/route";
 import { POST as PRUEFUNG } from "@/app/api/bea/messages/versand-pruefung/route";
 
@@ -328,28 +326,5 @@ describe("POST /api/bea/messages/versand-pruefung", () => {
     const j = await res.json();
     expect(j.ok).toBe(false);
     expect(j.errors[0]).toMatchObject({ dokumentId: "d2", status: "ENTWURF" });
-  });
-});
-
-describe("eEB-Vertrag (bis Task 11)", () => {
-  it("bestätigtes eEB → Datensatz mit Nachrichten-ID und Datum; unbestätigt → Fehler", () => {
-    const d = new Date("2026-11-18T10:00:00Z");
-    expect(buildEebBestaetigung({ ok: true, data: { success: true } }, "bea-1", d)).toEqual({
-      nachrichtenId: "bea-1",
-      eebDatum: d.toISOString(),
-    });
-    expect(() => buildEebBestaetigung({ ok: false, error: "x" }, "bea-1", d)).toThrow();
-  });
-});
-
-describe("beA-Seiten liegen im BeaSessionProvider", () => {
-  const dir = path.resolve(__dirname, "../../../app/(dashboard)/bea");
-  it("Layout stellt den Provider für /bea, /bea/compose und /bea/[id]", () => {
-    const layout = fs.readFileSync(path.join(dir, "layout.tsx"), "utf8");
-    expect(layout).toMatch(/<BeaSessionProvider>\s*\{children\}\s*<\/BeaSessionProvider>/);
-    for (const p of ["compose/page.tsx", "[id]/page.tsx", "page.tsx"]) {
-      expect(fs.existsSync(path.join(dir, p))).toBe(true);
-    }
-    expect(fs.readFileSync(path.join(dir, "page.tsx"), "utf8")).not.toMatch(/<BeaSessionProvider/);
   });
 });

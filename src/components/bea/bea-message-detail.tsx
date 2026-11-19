@@ -14,8 +14,10 @@ import {
   Sparkles,
   Paperclip,
   CheckCircle2,
+  Download,
 } from "lucide-react";
 import { EebButton } from "./eeb-button";
+import { Hinweis, formatDatumZeit } from "./bea-status";
 import { PruefprotokollViewer } from "./pruefprotokoll-viewer";
 import { XJustizViewer } from "./xjustiz-viewer";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +33,8 @@ interface BeaMessageProps {
     empfaenger: string;
     inhalt: string | null;
     status: string;
+    richtung: "EINGANG" | "AUSGANG";
+    eebAngefordert: boolean;
     safeIdAbsender: string | null;
     safeIdEmpfaenger: string | null;
     pruefprotokoll: any;
@@ -56,22 +60,51 @@ interface BeaMessageProps {
 
 // ─── Status Config ───────────────────────────────────────────────────────────
 
-const statusBadgeConfig: Record<string, { label: string; variant: string }> = {
-  EINGANG: { label: "Eingang", variant: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400" },
-  GELESEN: { label: "Gelesen", variant: "bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-400" },
-  ZUGEORDNET: { label: "Zugeordnet", variant: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400" },
-  GESENDET: { label: "Gesendet", variant: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-400" },
-  FEHLER: { label: "Fehler", variant: "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400" },
+type BadgeVariant = "default" | "secondary" | "success" | "danger" | "muted";
+
+const statusBadgeConfig: Record<string, { label: string; variant: BadgeVariant }> = {
+  EINGANG: { label: "Eingang", variant: "default" },
+  GELESEN: { label: "Gelesen", variant: "muted" },
+  ZUGEORDNET: { label: "Zugeordnet", variant: "success" },
+  GESENDET: { label: "Gesendet", variant: "secondary" },
+  FEHLER: { label: "Fehler", variant: "danger" },
 };
+
+/** Attachment entry in BeaNachricht.anhaenge. */
+interface Anhang {
+  id?: string;
+  name: string;
+  storageKey?: string;
+  mimeType?: string;
+  groesse?: number;
+  art?: string | null;
+  dokumentId?: string;
+}
+
+/** Download URL: stored beA file via the message route, else the Akte document. */
+function anhangUrl(nachrichtId: string, a: Anhang): string | null {
+  if (a.id && a.storageKey) {
+    return `/api/bea/messages/${encodeURIComponent(nachrichtId)}?download=${encodeURIComponent(a.id)}`;
+  }
+  if (a.dokumentId) return `/api/dokumente/${encodeURIComponent(a.dokumentId)}?download=true`;
+  return null;
+}
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessageProps) {
-  const [eebConfirmed, setEebConfirmed] = useState(nachricht.eebStatus === "BESTAETIGT");
+  const [eeb, setEeb] = useState<{ status: string | null; datum: string | null; warnung?: string }>({
+    status: nachricht.eebStatus,
+    datum: nachricht.eebDatum,
+  });
   const statusCfg = statusBadgeConfig[nachricht.status] || statusBadgeConfig.EINGANG;
-  const attachments = Array.isArray(nachricht.anhaenge) ? nachricht.anhaenge : [];
-  const isIncoming = nachricht.status !== "GESENDET";
+  const attachments: Anhang[] = Array.isArray(nachricht.anhaenge) ? nachricht.anhaenge : [];
+  const isIncoming = nachricht.richtung !== "AUSGANG";
   const isAnwalt = userRole === "ANWALT";
+  const zeigeEeb =
+    isIncoming &&
+    eeb.status !== "NICHT_ERFORDERLICH" &&
+    (nachricht.eebAngefordert || (eeb.status !== null && eeb.status !== undefined));
 
   return (
     <div className="space-y-6">
@@ -83,11 +116,9 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Zurueck
+            Zurück
           </Link>
-          <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusCfg.variant}`}>
-            {statusCfg.label}
-          </span>
+          <Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>
         </div>
       </div>
 
@@ -109,7 +140,7 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
           <div className="flex items-start gap-2">
             <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
             <div>
-              <p className="text-muted-foreground">Empfaenger</p>
+              <p className="text-muted-foreground">Empfänger</p>
               <p className="font-medium text-foreground">{nachricht.empfaenger}</p>
               {nachricht.safeIdEmpfaenger && (
                 <p className="text-xs text-muted-foreground">SAFE-ID: {nachricht.safeIdEmpfaenger}</p>
@@ -121,7 +152,7 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
             <div>
               <p className="text-muted-foreground">Datum</p>
               <p className="font-medium text-foreground">
-                {formatDate(nachricht.empfangenAm || nachricht.gesendetAm || nachricht.createdAt)}
+                {formatDatumZeit(nachricht.empfangenAm || nachricht.gesendetAm || nachricht.createdAt)}
               </p>
             </div>
           </div>
@@ -132,7 +163,7 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
               {nachricht.akte ? (
                 <Link
                   href={`/akten/${nachricht.akte.id}`}
-                  className="font-medium text-brand hover:underline"
+                  className="font-medium text-primary hover:underline"
                 >
                   {nachricht.akte.aktenzeichen} - {nachricht.akte.kurzrubrum}
                 </Link>
@@ -143,6 +174,10 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
           </div>
         </div>
       </div>
+
+      {isIncoming && (
+        <Hinweis art="info">Der Abruf über AI-Lawyer gilt im beA nicht als gelesen.</Hinweis>
+      )}
 
       {/* Content */}
       {nachricht.inhalt && (
@@ -159,49 +194,66 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
         <div className="glass rounded-xl p-6">
           <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
             <Paperclip className="h-4 w-4" />
-            Anhaenge ({attachments.length})
+            Anhänge ({attachments.length})
           </h2>
           <div className="space-y-2">
-            {attachments.map((att: any, idx: number) => (
-              <div
-                key={att.id || idx}
-                className="flex items-center gap-3 rounded-lg border border-border p-3"
-              >
-                <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{att.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {att.mimeType}
-                    {att.size ? ` - ${formatSize(att.size)}` : ""}
-                  </p>
+            {attachments.map((att, idx) => {
+              const url = anhangUrl(nachricht.id, att);
+              return (
+                <div
+                  key={att.id || att.dokumentId || idx}
+                  className="flex items-center gap-3 rounded-lg border border-border p-3"
+                >
+                  <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{att.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {[att.art === "SCHRIFTSATZ" ? "Schriftsatz" : null, att.mimeType, typeof att.groesse === "number" ? formatSize(att.groesse) : null]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                  {url && (
+                    <a
+                      href={url}
+                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline flex-shrink-0"
+                    >
+                      <Download className="h-4 w-4" />
+                      Herunterladen
+                    </a>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* eEB Section */}
-      {isIncoming && nachricht.eebStatus !== "NICHT_ERFORDERLICH" && (
+      {zeigeEeb && (
         <div className="glass rounded-xl p-6">
           <h2 className="text-sm font-medium text-muted-foreground mb-3">
             Empfangsbekenntnis (eEB)
           </h2>
-          {eebConfirmed || nachricht.eebStatus === "BESTAETIGT" ? (
-            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="text-sm font-medium">
-                Bestaetigt am {formatDate(nachricht.eebDatum || new Date().toISOString())}
-              </span>
+          {eeb.status === "BESTAETIGT" ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-5 w-5" />
+                <span className="text-sm font-medium">Abgegeben am {formatDatum(eeb.datum)}</span>
+              </div>
+              {eeb.warnung && <Hinweis art="warnung">{eeb.warnung}</Hinweis>}
             </div>
           ) : isAnwalt ? (
             <EebButton
               messageId={nachricht.id}
-              onConfirmed={() => setEebConfirmed(true)}
+              eebStatus={eeb.status}
+              onConfirmed={({ eebDatum, warnung }) => setEeb({ status: "BESTAETIGT", datum: eebDatum, warnung })}
             />
+          ) : eeb.status === "WIRD_ABGEGEBEN" ? (
+            <Hinweis art="warnung">Abgabe unklar – bitte im beA-Webclient prüfen</Hinweis>
           ) : (
-            <p className="text-sm text-amber-600 dark:text-amber-400">
-              Nur Anwaelte koennen Empfangsbekenntnisse bestaetigen.
+            <p className="text-sm text-muted-foreground">
+              Nur Anwältinnen und Anwälte können Empfangsbekenntnisse abgeben.
             </p>
           )}
         </div>
@@ -221,21 +273,21 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
       {suggestions.length > 0 && (
         <div className="glass rounded-xl p-6">
           <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-violet-500" />
-            Helena-Vorschlaege
+            <Sparkles className="h-4 w-4 text-primary" />
+            Helena-Vorschläge
           </h2>
           <div className="space-y-3">
             {suggestions.map((s) => (
               <div
                 key={s.id}
-                className="rounded-lg border border-violet-200 dark:border-violet-900 bg-violet-50 dark:bg-violet-950/30 p-4"
+                className="rounded-lg border border-border bg-muted p-4"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge className="bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300 text-xs">
+                  <Badge variant="secondary" className="text-xs">
                     {s.typ.replace(/_/g, " ")}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
-                    {formatDate(s.createdAt)}
+                    {formatDatumZeit(s.createdAt)}
                   </span>
                 </div>
                 <p className="text-sm font-medium text-foreground">{s.titel}</p>
@@ -252,18 +304,20 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
 
 function AssignButton({ messageId }: { messageId: string }) {
   const [loading, setLoading] = useState(false);
+  const [fehler, setFehler] = useState<string | null>(null);
 
   const handleAutoAssign = async () => {
     setLoading(true);
+    setFehler(null);
     try {
       const r = await beaAutoZuordnen(messageId);
       if (r.zugeordnet) {
         window.location.reload();
         return;
       }
-      if (r.meldung) alert(r.meldung);
+      if (r.meldung) setFehler(r.meldung);
     } catch {
-      alert("Zuordnung fehlgeschlagen");
+      setFehler("Zuordnung fehlgeschlagen");
     }
     setLoading(false);
   };
@@ -276,30 +330,24 @@ function AssignButton({ messageId }: { messageId: string }) {
       <button
         onClick={handleAutoAssign}
         disabled={loading}
-        className="inline-flex items-center gap-1 text-xs text-brand hover:underline disabled:opacity-50"
+        className="inline-flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
       >
         <Link2 className="h-3 w-3" />
-        {loading ? "..." : "Zuordnen"}
+        {loading ? "…" : "Zuordnen"}
       </button>
+      {fehler && <span className="text-xs text-destructive">{fehler}</span>}
     </div>
   );
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "-";
-  try {
-    return new Date(dateStr).toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return dateStr;
-  }
+function formatDatum(dateStr: string | null): string {
+  if (!dateStr) return "–";
+  const d = new Date(dateStr);
+  return Number.isNaN(d.getTime())
+    ? dateStr
+    : d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" });
 }
 
 function formatSize(bytes: number): string {

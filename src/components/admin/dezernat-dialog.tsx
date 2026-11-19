@@ -373,7 +373,7 @@ export function DezernatDialog({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 text-sm font-medium rounded-md bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50"
           >
             {saving ? "Speichern..." : dezernat ? "Speichern" : "Erstellen"}
           </button>

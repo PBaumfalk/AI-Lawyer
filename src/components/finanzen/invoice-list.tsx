@@ -383,7 +383,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
                     type="checkbox"
                     checked={selected.size === invoices.length && invoices.length > 0}
                     onChange={toggleSelectAll}
-                    className="rounded accent-blue-600"
+                    className="rounded accent-[var(--al-brand-strong)]"
                   />
                 </th>
                 {(
@@ -449,7 +449,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
                           type="checkbox"
                           checked={selected.has(inv.id)}
                           onChange={() => toggleSelect(inv.id)}
-                          className="rounded accent-blue-600"
+                          className="rounded accent-[var(--al-brand-strong)]"
                         />
                       </td>
                       <td className="p-3">

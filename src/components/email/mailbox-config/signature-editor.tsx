@@ -201,7 +201,7 @@ export function SignatureEditor({ kontoId }: SignatureEditorProps) {
           type="button"
           onClick={handleSave}
           disabled={saving || !kontoId}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover disabled:opacity-50 text-primary-foreground text-sm font-medium rounded-lg transition-colors"
         >
           <Save className="w-4 h-4" />
           {saving ? "Wird gespeichert..." : "Signatur speichern"}

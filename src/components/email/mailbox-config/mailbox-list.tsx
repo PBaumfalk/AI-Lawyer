@@ -151,7 +151,7 @@ export function MailboxList() {
         <button
           type="button"
           onClick={handleAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-medium rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           Neues Postfach hinzufuegen
@@ -211,7 +211,7 @@ export function MailboxList() {
                 type="button"
                 onClick={() => handleToggleAktiv(konto)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
-                  konto.aktiv ? "bg-brand-600" : "bg-slate-300 dark:bg-slate-600"
+                  konto.aktiv ? "bg-primary-strong" : "bg-[var(--al-line)]"
                 }`}
               >
                 <span

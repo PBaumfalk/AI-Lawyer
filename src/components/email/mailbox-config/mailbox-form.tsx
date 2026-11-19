@@ -205,7 +205,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                   value={form.name || ""}
                   onChange={(e) => updateField("name", e.target.value)}
                   placeholder="z.B. Kanzlei Hauptpostfach"
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary-strong"
                 />
                 {errors.name && (
                   <p className="text-xs text-red-500 mt-0.5">{errors.name}</p>
@@ -223,7 +223,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                     updateField("emailAdresse", e.target.value)
                   }
                   placeholder="info@kanzlei.de"
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary-strong"
                 />
                 {errors.emailAdresse && (
                   <p className="text-xs text-red-500 mt-0.5">
@@ -245,7 +245,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                     updateField("benutzername", e.target.value)
                   }
                   placeholder="Oft identisch mit E-Mail"
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary-strong"
                 />
                 {errors.benutzername && (
                   <p className="text-xs text-red-500 mt-0.5">
@@ -286,7 +286,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                   value={form.imapHost || ""}
                   onChange={(e) => updateField("imapHost", e.target.value)}
                   placeholder="imap.server.de"
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary-strong"
                 />
                 {errors.imapHost && (
                   <p className="text-xs text-red-500 mt-0.5">
@@ -305,7 +305,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                   onChange={(e) =>
                     updateField("imapPort", parseInt(e.target.value))
                   }
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-primary-strong"
                 />
               </div>
 
@@ -318,7 +318,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                   onChange={(e) =>
                     updateField("imapSecure", e.target.value === "ssl")
                   }
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-primary-strong"
                 >
                   <option value="ssl">SSL/TLS</option>
                   <option value="starttls">STARTTLS</option>
@@ -343,7 +343,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                   value={form.smtpHost || ""}
                   onChange={(e) => updateField("smtpHost", e.target.value)}
                   placeholder="smtp.server.de"
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary-strong"
                 />
                 {errors.smtpHost && (
                   <p className="text-xs text-red-500 mt-0.5">
@@ -362,7 +362,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                   onChange={(e) =>
                     updateField("smtpPort", parseInt(e.target.value))
                   }
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-primary-strong"
                 />
               </div>
 
@@ -375,7 +375,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                   onChange={(e) =>
                     updateField("smtpSecure", e.target.value === "ssl")
                   }
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-primary-strong"
                 >
                   <option value="ssl">SSL/TLS</option>
                   <option value="starttls">STARTTLS</option>
@@ -401,7 +401,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                   value={form.passwort || ""}
                   onChange={(e) => updateField("passwort", e.target.value)}
                   placeholder={kontoId ? "Neues Passwort (leer = unveraendert)" : "Passwort eingeben"}
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary-strong"
                 />
               </div>
             ) : (
@@ -431,7 +431,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                       e.target.value as "NUR_NEUE" | "DREISSIG_TAGE" | "ALLES"
                     )
                   }
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-primary-strong"
                 >
                   <option value="NUR_NEUE">Nur neue E-Mails</option>
                   <option value="DREISSIG_TAGE">Letzte 30 Tage</option>
@@ -448,7 +448,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                   onChange={(e) =>
                     updateField("softDeleteTage", parseInt(e.target.value))
                   }
-                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-brand-500"
+                  className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground focus:outline-none focus:border-primary-strong"
                 >
                   <option value={30}>30 Tage</option>
                   <option value={60}>60 Tage</option>
@@ -476,7 +476,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover disabled:opacity-50 text-primary-foreground text-sm font-medium rounded-lg transition-colors"
           >
             <Save className="w-4 h-4" />
             {saving ? "Wird gespeichert..." : "Speichern"}

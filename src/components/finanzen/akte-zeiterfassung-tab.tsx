@@ -290,7 +290,7 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
         <button
           type="button"
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-primary hover:bg-primary-hover text-primary-foreground transition-colors"
         >
           <Plus className="w-4 h-4" />
           Manueller Eintrag
@@ -312,7 +312,7 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
             </div>
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={handleCreate} disabled={saving || !newDauer || !newBeschreibung.trim()} className="px-4 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50">
+            <button type="button" onClick={handleCreate} disabled={saving || !newDauer || !newBeschreibung.trim()} className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary-hover text-primary-foreground transition-colors disabled:opacity-50">
               {saving ? "Speichern..." : "Speichern"}
             </button>
             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted/50 transition-colors">Abbrechen</button>

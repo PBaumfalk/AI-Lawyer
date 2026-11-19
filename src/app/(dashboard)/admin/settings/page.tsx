@@ -246,7 +246,7 @@ function SettingField({
                 step={0.01}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-violet-600"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-brand-600"
               />
               <span className="text-xs text-muted-foreground whitespace-nowrap">
                 Strenger

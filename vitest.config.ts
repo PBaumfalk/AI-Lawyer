@@ -21,6 +21,8 @@ export default defineConfig({
       // next-auth imports "next/server" without extension, which Node's ESM
       // resolver rejects outside the Next.js bundler.
       { find: /^next\/server$/, replacement: 'next/server.js' },
+      // Persimmon icons, same alias as next.config.mjs
+      { find: /^lucide-react$/, replacement: path.resolve(__dirname, './src/components/icons/lucide-compat.tsx') },
     ],
   },
 })

@@ -387,7 +387,7 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
         <button
           type="button"
           onClick={() => setShowNewBooking(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-primary hover:bg-primary-hover text-primary-foreground transition-colors"
         >
           <Plus className="w-4 h-4" />
           Neue Buchung
@@ -456,7 +456,7 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
               type="button"
               onClick={handleCreateBooking}
               disabled={bookingSaving || !newBetrag || !newVerwendungszweck.trim()}
-              className="px-4 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary-hover text-primary-foreground transition-colors disabled:opacity-50"
             >
               {bookingSaving ? "Buchen..." : "Buchen"}
             </button>

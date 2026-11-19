@@ -418,7 +418,7 @@ export default function KiEinstellungenPage() {
             <button
               onClick={handleTest}
               disabled={testing}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50 transition-colors"
             >
               {testing ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -487,9 +487,13 @@ export default function KiEinstellungenPage() {
               </p>
             </div>
             <button
+              type="button"
+              role="switch"
+              aria-checked={scanEnabled}
+              aria-label="Proaktive Aktenanalyse"
               onClick={() => setScanEnabled(!scanEnabled)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                scanEnabled ? "bg-blue-600" : "bg-slate-600"
+                scanEnabled ? "bg-primary-strong" : "bg-[var(--al-line)]"
               }`}
             >
               <span
@@ -511,9 +515,13 @@ export default function KiEinstellungenPage() {
               </p>
             </div>
             <button
+              type="button"
+              role="switch"
+              aria-checked={briefingEnabled}
+              aria-label="Tagesbriefing"
               onClick={() => setBriefingEnabled(!briefingEnabled)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                briefingEnabled ? "bg-blue-600" : "bg-slate-600"
+                briefingEnabled ? "bg-primary-strong" : "bg-[var(--al-line)]"
               }`}
             >
               <span
@@ -555,7 +563,7 @@ export default function KiEinstellungenPage() {
                 onClick={() => setUsagePeriod(p)}
                 className={`px-3 py-1 text-xs rounded-lg transition-colors ${
                   usagePeriod === p
-                    ? "bg-blue-600 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-white/10"
                 }`}
               >
@@ -680,7 +688,7 @@ export default function KiEinstellungenPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50 transition-colors"
         >
           {saving ? (
             <Loader2 className="w-4 h-4 animate-spin" />

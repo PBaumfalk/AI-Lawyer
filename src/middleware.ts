@@ -13,6 +13,6 @@ export const config = {
     // Every exclusion must end at a path-segment boundary: the previous bare
     // prefix "api/ki" also exempted /api/ki-chat and /api/ki-entwuerfe.
     // Note: 2fa-setup-required is excluded so the authorized callback can serve it without redirect loop
-    "/((?!(?:login|2fa-setup-required|portal/login|portal/activate|portal/passwort-vergessen|portal/passwort-reset|api/auth|api/portal/activate|api/portal/password-reset|api/onlyoffice|api/openclaw|api/health|_next/static|_next/image|favicon\\.ico)(?:/|$)).*)",
+    "/((?!(?:login|2fa-setup-required|portal/login|portal/activate|portal/passwort-vergessen|portal/passwort-reset|api/auth|api/portal/activate|api/portal/password-reset|api/onlyoffice|api/openclaw|api/health|_next/static|_next/image|favicon\\.ico|brand)(?:/|$)).*)",
   ],
 };

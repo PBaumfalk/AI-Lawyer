@@ -27,13 +27,13 @@ export function ChannelListItemComponent({
       onClick={onSelect}
       className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors ${
         isSelected
-          ? "bg-[oklch(45%_0.2_260/0.15)] border-l-2 border-violet-500"
+          ? "bg-primary-soft border-l-2 border-brand-500"
           : "hover:bg-white/5 dark:hover:bg-white/[0.03]"
       }`}
     >
       <Icon
         className={`w-3.5 h-3.5 flex-shrink-0 ${
-          isSelected ? "text-violet-400" : "text-muted-foreground"
+          isSelected ? "text-brand-400" : "text-muted-foreground"
         }`}
       />
       <span
@@ -47,7 +47,7 @@ export function ChannelListItemComponent({
       </span>
       {channel.unreadCount > 0 && (
         <Badge
-          className="h-5 min-w-[20px] px-1.5 text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300 border-0"
+          className="h-5 min-w-[20px] px-1.5 text-[10px] font-semibold bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300 border-0"
         >
           {channel.unreadCount}
         </Badge>

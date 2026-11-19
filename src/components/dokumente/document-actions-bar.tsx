@@ -426,7 +426,7 @@ export function DocumentActionsBar({
           size="sm"
           variant="ghost"
           onClick={() => setPdfToolsOpen(true)}
-          className="w-full justify-start h-8 px-2 text-xs text-violet-600 dark:text-violet-400"
+          className="w-full justify-start h-8 px-2 text-xs text-brand-600 dark:text-brand-400"
         >
           <Wrench className="w-3.5 h-3.5 mr-2" />
           PDF-Tools

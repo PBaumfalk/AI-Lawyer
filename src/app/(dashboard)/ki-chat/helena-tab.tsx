@@ -70,7 +70,7 @@ export function HelenaTab({
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? "bg-brand-600 text-white shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-foreground/70 hover:bg-white/50 dark:hover:bg-white/[0.06]"
               }`}
             >

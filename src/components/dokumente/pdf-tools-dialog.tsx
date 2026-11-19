@@ -395,7 +395,7 @@ export function PdfToolsDialog({
                   max={60}
                   value={fontSize}
                   onChange={(e) => setFontSize(Number(e.target.value))}
-                  className="w-full mt-1 accent-blue-500"
+                  className="w-full mt-1 accent-[var(--al-brand-strong)]"
                 />
               </div>
               <div>
@@ -406,7 +406,7 @@ export function PdfToolsDialog({
                   max={90}
                   value={watermarkRotation}
                   onChange={(e) => setWatermarkRotation(Number(e.target.value))}
-                  className="w-full mt-1 accent-blue-500"
+                  className="w-full mt-1 accent-[var(--al-brand-strong)]"
                 />
               </div>
               <div>
@@ -417,7 +417,7 @@ export function PdfToolsDialog({
                   max={100}
                   value={Math.round(opacity * 100)}
                   onChange={(e) => setOpacity(Number(e.target.value) / 100)}
-                  className="w-full mt-1 accent-blue-500"
+                  className="w-full mt-1 accent-[var(--al-brand-strong)]"
                 />
               </div>
             </div>
@@ -446,7 +446,7 @@ export function PdfToolsDialog({
                   type="checkbox"
                   checked={useDsgvo}
                   onChange={toggleUseDsgvo}
-                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-500"
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-ring accent-[var(--al-brand-strong)]"
                 />
                 <span className="text-sm font-medium">DSGVO-Muster anwenden</span>
               </label>
@@ -460,7 +460,7 @@ export function PdfToolsDialog({
                       type="checkbox"
                       checked={dsgvoPatterns.has(pat.pattern)}
                       onChange={() => toggleDsgvoPattern(pat.pattern)}
-                      className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-500"
+                      className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-ring accent-[var(--al-brand-strong)]"
                     />
                     <span className="text-sm">{pat.label}</span>
                   </label>
@@ -516,7 +516,7 @@ function SharedFooter({
           type="checkbox"
           checked={saveAsNew}
           onChange={(e) => onSaveAsNewChange(e.target.checked)}
-          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-500"
+          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-ring accent-[var(--al-brand-strong)]"
         />
         <span className="text-sm">Als neue Datei speichern</span>
       </label>

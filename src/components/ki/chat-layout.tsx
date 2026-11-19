@@ -268,7 +268,7 @@ export function ChatLayout({
           <div className="flex items-center justify-between px-3 py-3 border-b border-white/10 dark:border-white/[0.06]">
             <button
               onClick={handleNewChat}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-brand-600 text-white hover:bg-brand-700 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
             >
               <Plus className="w-4 h-4" />
               Neuer Chat
@@ -310,7 +310,7 @@ export function ChatLayout({
           <select
             value={crossAkte ? "__all__" : selectedAkteId ?? ""}
             onChange={(e) => handleAkteChange(e.target.value || null)}
-            className="text-sm bg-transparent border border-white/20 dark:border-white/10 rounded-md px-2 py-1 text-foreground max-w-[300px] truncate focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="text-sm bg-transparent border border-white/20 dark:border-white/10 rounded-md px-2 py-1 text-foreground max-w-[300px] truncate focus:outline-none focus:ring-1 focus:ring-ring"
           >
             <option value="__all__">Alle Akten</option>
             {akten.map((a) => (

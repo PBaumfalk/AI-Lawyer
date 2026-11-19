@@ -255,8 +255,8 @@ export function ChatMessages({
     return (
       <div className="h-full flex items-center justify-center p-8">
         <div className="text-center max-w-md">
-          <div className="w-16 h-16 rounded-full bg-violet-100 dark:bg-violet-950 flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-8 h-8 text-violet-600 dark:text-violet-400" />
+          <div className="w-16 h-16 rounded-full bg-brand-100 dark:bg-brand-950 flex items-center justify-center mx-auto mb-4">
+            <Sparkles className="w-8 h-8 text-brand-600 dark:text-brand-400" />
           </div>
           <h2 className="text-lg font-heading text-foreground mb-2">
             Hallo! Ich bin Helena.
@@ -310,8 +310,8 @@ export function ChatMessages({
             {/* Helena avatar */}
             {!isUser && (
               <div className="flex-shrink-0 mt-0.5">
-                <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-950 flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                 </div>
               </div>
             )}
@@ -321,7 +321,7 @@ export function ChatMessages({
               className={cn(
                 "max-w-[80%] rounded-2xl px-4 py-3 text-sm",
                 isUser
-                  ? "bg-brand-600 text-white rounded-br-sm"
+                  ? "bg-primary text-primary-foreground rounded-br-sm"
                   : "glass rounded-bl-sm"
               )}
             >
@@ -398,14 +398,14 @@ export function ChatMessages({
                             <span>Helena denkt nach</span>
                             {isThinkingPhase && (
                               <span className="flex gap-0.5 ml-1">
-                                <span className="w-1 h-1 rounded-full bg-violet-400 animate-bounce [animation-delay:0ms]" />
-                                <span className="w-1 h-1 rounded-full bg-violet-400 animate-bounce [animation-delay:150ms]" />
-                                <span className="w-1 h-1 rounded-full bg-violet-400 animate-bounce [animation-delay:300ms]" />
+                                <span className="w-1 h-1 rounded-full bg-brand-400 animate-bounce [animation-delay:0ms]" />
+                                <span className="w-1 h-1 rounded-full bg-brand-400 animate-bounce [animation-delay:150ms]" />
+                                <span className="w-1 h-1 rounded-full bg-brand-400 animate-bounce [animation-delay:300ms]" />
                               </span>
                             )}
                           </button>
                           {isExpanded && (
-                            <div className="mt-1.5 pl-3 border-l-2 border-violet-200 dark:border-violet-800">
+                            <div className="mt-1.5 pl-3 border-l-2 border-brand-200 dark:border-brand-800">
                               <p className="text-xs text-muted-foreground/70 whitespace-pre-wrap">
                                 {thinking || "\u2026"}
                               </p>
@@ -497,17 +497,17 @@ export function ChatMessages({
       {isLoading && !messages.some((m) => m.role === "assistant" && m.content) && (
         <div className="flex gap-3 justify-start">
           <div className="flex-shrink-0 mt-0.5">
-            <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
-              <Bot className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+            <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-950 flex items-center justify-center">
+              <Bot className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             </div>
           </div>
           <div className="glass rounded-2xl rounded-bl-sm px-4 py-3">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>Helena denkt nach</span>
               <span className="flex gap-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:0ms]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:150ms]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:300ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce [animation-delay:0ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce [animation-delay:150ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce [animation-delay:300ms]" />
               </span>
             </div>
           </div>

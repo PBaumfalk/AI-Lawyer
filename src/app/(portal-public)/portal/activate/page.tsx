@@ -106,8 +106,8 @@ export default function PortalActivatePage() {
         <div className="glass-lg rounded-2xl p-8">
           {/* Logo & Title */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-600 rounded-xl mb-4 shadow-lg shadow-brand-600/25">
-              <Shield className="w-7 h-7 text-white" />
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">
+              <Shield className="w-7 h-7" aria-hidden="true" />
             </div>
             <h1 className="text-2xl font-heading text-foreground">
               Willkommen im Mandantenportal

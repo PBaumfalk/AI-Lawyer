@@ -280,7 +280,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
               type="button"
               onClick={() => setShowConfirm("stellen")}
               disabled={actionLoading !== null}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-primary hover:bg-primary-hover text-primary-foreground transition-colors disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
               {actionLoading === "stellen" ? "..." : "Stellen"}
@@ -359,7 +359,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
                 if (showConfirm === "delete") handleDelete();
                 else performAction(showConfirm);
               }}
-              className="px-4 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+              className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary-hover text-primary-foreground transition-colors"
             >
               Bestaetigen
             </button>

@@ -103,7 +103,7 @@ export const EmailListRow = memo(function EmailListRow({
           type="checkbox"
           checked={isChecked}
           readOnly
-          className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 cursor-pointer"
+          className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-ring cursor-pointer"
         />
       </div>
 

@@ -137,7 +137,7 @@ export function AdminOverrideDialog({
           <button
             onClick={handleSubmit}
             disabled={saving || success}
-            className="px-4 py-2 text-sm font-medium rounded-md bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50"
           >
             {saving ? "Erstelle..." : "Zugriff uebernehmen"}
           </button>

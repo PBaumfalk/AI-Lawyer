@@ -384,7 +384,7 @@ export function MessageComposer({
           type="button"
           onClick={handleSubmit}
           disabled={sending || !text.trim()}
-          className="p-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {sending ? (
             <Loader2 className="w-5 h-5 animate-spin" />

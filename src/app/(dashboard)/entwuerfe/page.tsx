@@ -7,7 +7,7 @@ export default function EntwuerfePage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <FileCheck className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+            <FileCheck className="w-6 h-6 text-brand-600 dark:text-brand-400" />
             <h1 className="text-2xl font-semibold text-foreground">
               Entwuerfe
             </h1>

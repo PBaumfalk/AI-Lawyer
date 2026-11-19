@@ -454,7 +454,7 @@ export function RvgCalculator({
                                   parseFloat(e.target.value)
                                 )
                               }
-                              className="w-32 accent-blue-600"
+                              className="w-32 accent-[var(--al-brand-strong)]"
                             />
                             <span className="text-sm font-mono text-foreground w-8">
                               {(
@@ -654,7 +654,7 @@ export function RvgCalculator({
                     type="checkbox"
                     checked={autoAuslagen}
                     onChange={(e) => setAutoAuslagen(e.target.checked)}
-                    className="rounded accent-blue-600"
+                    className="rounded accent-[var(--al-brand-strong)]"
                   />
                   <span className="text-muted-foreground">
                     VV 7002 Auslagenpauschale
@@ -665,7 +665,7 @@ export function RvgCalculator({
                     type="checkbox"
                     checked={autoUst}
                     onChange={(e) => setAutoUst(e.target.checked)}
-                    className="rounded accent-blue-600"
+                    className="rounded accent-[var(--al-brand-strong)]"
                   />
                   <span className="text-muted-foreground">
                     VV 7008 USt (19%)
@@ -764,7 +764,7 @@ export function RvgCalculator({
                       type="button"
                       onClick={transferToInvoice}
                       disabled={transferring}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors disabled:opacity-50"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-medium transition-colors disabled:opacity-50"
                     >
                       <ArrowRightLeft className="w-4 h-4" />
                       {transferring

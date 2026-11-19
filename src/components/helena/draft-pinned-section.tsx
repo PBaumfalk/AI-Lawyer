@@ -229,8 +229,8 @@ export function DraftPinnedSection({
           onClick={fetchDrafts}
           className={cn(
             "w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg",
-            "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300",
-            "text-sm font-medium cursor-pointer hover:bg-violet-200 dark:hover:bg-violet-900/50",
+            "bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300",
+            "text-sm font-medium cursor-pointer hover:bg-brand-200 dark:hover:bg-brand-900/50",
             "transition-colors"
           )}
         >
@@ -247,17 +247,17 @@ export function DraftPinnedSection({
             className="flex items-center gap-2 w-full text-left py-1.5"
           >
             {collapsed ? (
-              <ChevronRight className="w-4 h-4 text-violet-500" />
+              <ChevronRight className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-violet-500" />
+              <ChevronDown className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             )}
-            <Sparkles className="w-4 h-4 text-violet-500" />
-            <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">
+            <Sparkles className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+            <span className="text-sm font-semibold text-brand-700 dark:text-brand-300">
               Helena-Entwuerfe
             </span>
             <Badge
               variant="secondary"
-              className="ml-1 bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300"
+              className="ml-1 bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300"
             >
               {totalPending}
             </Badge>

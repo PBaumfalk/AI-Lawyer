@@ -16,6 +16,10 @@ const ThemeContext = createContext<ThemeContextValue>({
   setTheme: () => {},
 });
 
+export function resolveTheme(theme: Theme): "light" | "dark" {
+  return theme === "dark" ? "dark" : "light";
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
@@ -30,25 +34,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       .catch(() => {});
   }, []);
 
-  // Apply .dark class to <html> whenever theme state changes
+  // Apply .dark class to <html> whenever theme state changes.
+  // Persimmon CI-Contract §8: the light theme is the default and dark mode is
+  // never switched on automatically. "system" (the stored default for users
+  // who never chose) therefore resolves to light; only an explicit "dark"
+  // selection activates the dark palette.
   useEffect(() => {
-    const root = document.documentElement;
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-    const apply = () => {
-      const resolved =
-        theme === "system"
-          ? mediaQuery.matches
-            ? "dark"
-            : "light"
-          : theme;
-      root.classList.toggle("dark", resolved === "dark");
-      setResolvedTheme(resolved as "light" | "dark");
-    };
-
-    apply();
-    mediaQuery.addEventListener("change", apply);
-    return () => mediaQuery.removeEventListener("change", apply);
+    const resolved = resolveTheme(theme);
+    document.documentElement.classList.toggle("dark", resolved === "dark");
+    setResolvedTheme(resolved);
   }, [theme]);
 
   const setTheme = (t: Theme) => {

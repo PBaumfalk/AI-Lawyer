@@ -234,7 +234,7 @@ export function ActivityFeedComposer({
             className={
               "inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full border transition-colors " +
               (mode === key
-                ? "bg-brand-600 text-white border-brand-600"
+                ? "bg-primary text-primary-foreground border-brand-600"
                 : "bg-white text-slate-600 border-slate-200 hover:border-slate-400 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700 dark:hover:border-slate-500")
             }
           >
@@ -269,7 +269,7 @@ export function ActivityFeedComposer({
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !text.trim()}
-            className="p-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -293,7 +293,7 @@ export function ActivityFeedComposer({
               }}
               placeholder="Name des Gespraechspartners"
               className={
-                "w-full px-3 py-2 text-sm rounded-lg border bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500 " +
+                "w-full px-3 py-2 text-sm rounded-lg border bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-ring " +
                 (telefonValidation.beteiligter ? "border-red-500" : "border-slate-200 dark:border-slate-700")
               }
               disabled={submitting}
@@ -305,7 +305,7 @@ export function ActivityFeedComposer({
                 if (telefonValidation.ergebnis) setTelefonValidation((v) => ({ ...v, ergebnis: false }));
               }}
               className={
-                "w-full px-3 py-2 text-sm rounded-lg border bg-white dark:bg-slate-900 text-foreground focus:outline-none focus:ring-1 focus:ring-brand-500 " +
+                "w-full px-3 py-2 text-sm rounded-lg border bg-white dark:bg-slate-900 text-foreground focus:outline-none focus:ring-1 focus:ring-ring " +
                 (telefonValidation.ergebnis ? "border-red-500" : "border-slate-200 dark:border-slate-700")
               }
               disabled={submitting}
@@ -322,7 +322,7 @@ export function ActivityFeedComposer({
             value={stichworte}
             onChange={(e) => setStichworte(e.target.value)}
             placeholder="Stichworte zum Gespraech..."
-            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
             rows={2}
             disabled={submitting}
           />
@@ -332,14 +332,14 @@ export function ActivityFeedComposer({
               value={naechsterSchritt}
               onChange={(e) => setNaechsterSchritt(e.target.value)}
               placeholder="Naechster Schritt / Follow-up"
-              className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-ring"
               disabled={submitting}
             />
             <button
               type="button"
               onClick={handleSubmit}
               disabled={submitting}
-              className="p-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -364,7 +364,7 @@ export function ActivityFeedComposer({
               }}
               placeholder="Aufgabe beschreiben..."
               className={
-                "flex-1 px-3 py-2 text-sm rounded-lg border bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500 " +
+                "flex-1 px-3 py-2 text-sm rounded-lg border bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-ring " +
                 (aufgabeValidation.titel ? "border-red-500" : "border-slate-200 dark:border-slate-700")
               }
               disabled={submitting}
@@ -373,7 +373,7 @@ export function ActivityFeedComposer({
               type="date"
               value={aufgabeFaelligAm}
               onChange={(e) => setAufgabeFaelligAm(e.target.value)}
-              className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               disabled={submitting}
             />
           </div>
@@ -382,7 +382,7 @@ export function ActivityFeedComposer({
               value={aufgabeBeschreibung}
               onChange={(e) => setAufgabeBeschreibung(e.target.value)}
               placeholder="Details..."
-              className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
+              className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
               rows={2}
               disabled={submitting}
             />
@@ -390,7 +390,7 @@ export function ActivityFeedComposer({
               type="button"
               onClick={handleSubmit}
               disabled={submitting}
-              className="p-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

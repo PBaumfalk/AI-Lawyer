@@ -98,7 +98,7 @@ describe("Middleware: welche Pfade sie überhaupt sieht", () => {
   });
 
   it("lässt öffentliche Seiten und Auth-Endpunkte aus", () => {
-    for (const p of ["/login", "/portal/login", "/portal/activate", "/api/auth/session", "/api/health", "/_next/static/x.js"]) {
+    for (const p of ["/login", "/portal/login", "/portal/activate", "/api/auth/session", "/api/health", "/_next/static/x.js", "/brand/app/favicon.svg", "/brand/app/site.webmanifest", "/brand/logos/wordmark-primary.svg"]) {
       expect(matcher.test(p)).toBe(false);
     }
   });
@@ -112,5 +112,6 @@ describe("Middleware: welche Pfade sie überhaupt sieht", () => {
   it("verwechselt Präfixe nicht (/login-hilfe, /api/healthz werden geprüft)", () => {
     expect(matcher.test("/login-hilfe")).toBe(true);
     expect(matcher.test("/api/healthz")).toBe(true);
+    expect(matcher.test("/branding")).toBe(true);
   });
 });

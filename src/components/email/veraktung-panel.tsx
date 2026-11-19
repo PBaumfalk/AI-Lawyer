@@ -551,7 +551,7 @@ export function VeraktungPanel({
                           type="checkbox"
                           checked={selectedAnhangIds.has(anhang.id)}
                           onChange={() => toggleAnhang(anhang.id)}
-                          className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
+                          className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-ring"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-foreground truncate">

@@ -139,14 +139,14 @@ export function ChatInput({ append, isLoading }: ChatInputProps) {
                 : "Frage an Helena stellen..."
             }
             rows={1}
-            className="w-full resize-none bg-white/50 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500/30 transition-colors"
+            className="w-full resize-none bg-white/50 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary-strong transition-colors"
             disabled={isLoading}
           />
         </div>
         <button
           onClick={() => handleSubmit(inputValue)}
           disabled={!inputValue.trim() || isLoading}
-          className="flex-shrink-0 p-2.5 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-shrink-0 p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Senden"
         >
           <Send className="w-4 h-4" />

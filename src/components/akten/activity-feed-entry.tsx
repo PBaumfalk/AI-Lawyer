@@ -199,7 +199,7 @@ export function ActivityFeedEntry({ entry }: ActivityFeedEntryProps) {
     ? entry.typ === "HELENA_ALERT"
       ? severityBorderClass(entry.meta?.severity)
       : entry.typ === "HELENA_DRAFT"
-        ? "border-l-2 border-l-[oklch(45%_0.2_260)]"
+        ? "border-l-2 border-l-primary-strong"
         : ""
     : "";
 

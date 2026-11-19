@@ -251,7 +251,7 @@ export function DraftInbox() {
         </div>
       ) : drafts.length === 0 ? (
         <div className="text-center py-12">
-          <Sparkles className="w-10 h-10 mx-auto mb-3 text-violet-300 dark:text-violet-700" />
+          <Sparkles className="w-10 h-10 mx-auto mb-3 text-brand-300 dark:text-brand-700" />
           <p className="text-muted-foreground text-sm">
             Keine ausstehenden Entwuerfe
           </p>

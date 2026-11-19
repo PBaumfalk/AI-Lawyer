@@ -109,7 +109,7 @@ export function BiFilters({ filters, onChange }: BiFiltersProps) {
                 type="date"
                 value={filters.von ?? ""}
                 onChange={(e) => handleChange("von", e.target.value)}
-                className="flex h-10 rounded-lg glass-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(45%_0.2_260)]"
+                className="flex h-10 rounded-lg glass-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -120,7 +120,7 @@ export function BiFilters({ filters, onChange }: BiFiltersProps) {
                 type="date"
                 value={filters.bis ?? ""}
                 onChange={(e) => handleChange("bis", e.target.value)}
-                className="flex h-10 rounded-lg glass-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(45%_0.2_260)]"
+                className="flex h-10 rounded-lg glass-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
           </>

@@ -214,7 +214,7 @@ export function UserAssignment() {
                         disabled={updating}
                         className={`w-6 h-6 rounded border transition-colors inline-flex items-center justify-center ${
                           assigned
-                            ? "bg-brand-600 border-brand-600 text-white"
+                            ? "bg-primary border-brand-600 text-primary-foreground"
                             : "border-white/30 dark:border-white/[0.15] hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/10"
                         } ${updating ? "opacity-50" : ""}`}
                       >

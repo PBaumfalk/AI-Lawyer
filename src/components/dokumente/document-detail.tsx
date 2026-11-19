@@ -389,7 +389,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                     href={`/dokumente/${dokument.id}/bearbeiten`}
                     className="inline-flex items-center gap-1.5"
                   >
-                    <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
+                    <Button size="sm" variant="default">
                       <ExternalLink className="w-4 h-4 mr-1.5" />
                       In OnlyOffice bearbeiten
                     </Button>
@@ -520,7 +520,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                       <span className="text-[11px] text-slate-400 block">Akte</span>
                       <Link
                         href={`/akten/${dokument.akte.id}`}
-                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate block"
+                        className="text-sm text-primary-strong dark:text-brand-300 hover:underline truncate block"
                       >
                         {dokument.akte.aktenzeichen} - {dokument.akte.kurzrubrum}
                       </Link>

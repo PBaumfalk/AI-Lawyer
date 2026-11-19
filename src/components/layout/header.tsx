@@ -12,11 +12,12 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 h-16 glass-panel border-b border-[var(--glass-border-color)] flex items-center justify-between gap-3 px-3 sm:px-6">
+    <header className="sticky top-0 z-40 h-16 glass-panel border-b border-border/60 flex items-center justify-between gap-3 px-3 sm:px-6">
       {/* Search trigger */}
       <button
         onClick={openCommandPalette}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/40 dark:bg-white/[0.06] text-muted-foreground text-sm hover:bg-white/60 dark:hover:bg-white/[0.10] transition-colors w-full max-w-72 min-w-0 border border-[var(--glass-border-color)]"
+        className="flex min-h-[40px] items-center gap-2 px-3 py-2 rounded-lg bg-[var(--al-surface)] text-muted-foreground text-sm hover:border-primary-strong transition-colors w-full max-w-72 min-w-0 border border-border"
+        aria-label="Suchen (Befehlspalette, Cmd+K)"
       >
         <Search className="w-4 h-4" />
         <span>Suchen...</span>
@@ -33,7 +34,7 @@ export function Header() {
         {/* User info */}
         {session?.user && (
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[oklch(45%_0.2_260)] flex items-center justify-center text-white text-sm font-medium shadow-md">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-semibold" aria-hidden="true">
               {session.user.name
                 ?.split(" ")
                 .map((n) => n[0])

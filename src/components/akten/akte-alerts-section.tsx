@@ -233,7 +233,7 @@ export function AkteAlertsSection({ akteId }: AkteAlertsSectionProps) {
               className={cn(
                 "flex items-start gap-4 px-6 py-4 transition-colors",
                 !alert.gelesen &&
-                  "border-l-2 border-[oklch(45%_0.2_260)] bg-[oklch(45%_0.2_260/0.03)]",
+                  "border-l-2 border-primary-strong bg-brand-50/60 dark:bg-brand-950/30",
                 alert.gelesen && "opacity-60",
               )}
             >

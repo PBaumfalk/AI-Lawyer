@@ -233,7 +233,7 @@ export default function NeueAktePage() {
           {!loadingTemplates && suggestedTemplates.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[oklch(45%_0.2_260)]" />
+                <Sparkles className="w-4 h-4 text-primary-strong" />
                 <span className="text-sm font-medium text-foreground">
                   Helena empfiehlt:
                 </span>
@@ -247,7 +247,7 @@ export default function NeueAktePage() {
                     className={cn(
                       "w-full text-left rounded-xl px-4 py-3 border transition-all",
                       selectedTemplateId === template.id
-                        ? "border-[oklch(45%_0.2_260)] bg-[oklch(45%_0.2_260/0.05)] ring-1 ring-[oklch(45%_0.2_260/0.3)]"
+                        ? "border-primary-strong bg-brand-50/60 dark:bg-brand-950/30 ring-1 ring-brand-200"
                         : "border-white/20 dark:border-white/[0.08] bg-white/30 dark:bg-white/[0.03] hover:border-white/40 dark:hover:border-white/[0.15]"
                     )}
                   >

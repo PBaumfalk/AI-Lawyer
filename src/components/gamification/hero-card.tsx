@@ -85,8 +85,8 @@ export function HeroCard({
         {/* Left side: Avatar with class icon inside frame */}
         <div className="flex-shrink-0">
           <AvatarFrame rarity={highestRarity} className="p-1">
-            <div className="w-24 h-24 rounded-full bg-[oklch(45%_0.2_260/0.15)] dark:bg-[oklch(45%_0.2_260/0.25)] flex items-center justify-center">
-              <ClassIcon className="w-16 h-16 text-[oklch(45%_0.2_260)] dark:text-[oklch(70%_0.15_260)]" />
+            <div className="w-24 h-24 rounded-full bg-primary-soft dark:bg-brand-900/40 flex items-center justify-center">
+              <ClassIcon className="w-16 h-16 text-primary-strong dark:text-[oklch(70%_0.15_260)]" />
             </div>
           </AvatarFrame>
         </div>

@@ -120,7 +120,7 @@ function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: 
         <div className="flex justify-center gap-2 flex-wrap">
           <Link
             href="/email"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
           >
             <Mail className="w-3.5 h-3.5" />
             Posteingang oeffnen
@@ -140,8 +140,8 @@ function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: 
     return (
       <div className="glass-card rounded-xl p-10 text-center space-y-3">
         <div className="flex justify-center">
-          <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
-            <MessageSquare className="w-6 h-6 text-violet-400" />
+          <div className="w-12 h-12 rounded-full bg-brand-100 dark:bg-brand-950 flex items-center justify-center">
+            <MessageSquare className="w-6 h-6 text-brand-400" />
           </div>
         </div>
         <div>

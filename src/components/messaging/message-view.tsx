@@ -268,7 +268,7 @@ export function MessageView({ channelId, onMessageSent }: MessageViewProps) {
           <button
             type="button"
             onClick={handleBannerRefetch}
-            className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs text-violet-500 hover:text-violet-400 bg-violet-500/10 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs text-brand-600 dark:text-brand-400 hover:text-brand-400 bg-brand-500/10 rounded-lg transition-colors"
           >
             <ArrowDown className="w-3.5 h-3.5" />
             Neue Nachrichten

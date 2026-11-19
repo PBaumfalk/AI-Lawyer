@@ -62,7 +62,7 @@ function Checkbox({
         id={id}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-border text-violet-600 focus:ring-violet-500"
+        className="h-4 w-4 rounded border-border text-brand-600 focus:ring-ring"
       />
       <span className="text-sm">{label}</span>
     </label>

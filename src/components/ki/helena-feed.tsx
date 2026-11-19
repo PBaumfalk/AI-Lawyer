@@ -120,7 +120,7 @@ export function HelenaFeed() {
               onClick={() => setActiveStatus(tab.value)}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeStatus === tab.value
-                  ? "bg-brand-600 text-white"
+                  ? "bg-primary text-primary-foreground"
                   : "bg-white/50 dark:bg-white/[0.05] text-foreground/70 hover:bg-white/70 dark:hover:bg-white/[0.08]"
               }`}
             >

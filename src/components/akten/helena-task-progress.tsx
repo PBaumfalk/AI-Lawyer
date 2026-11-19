@@ -22,7 +22,7 @@ export function HelenaTaskProgress({ tasks }: HelenaTaskProgressProps) {
       {Array.from(tasks.values()).map((task) => (
         <div
           key={task.taskId}
-          className="glass-card rounded-xl p-4 border-l-2 border-l-[oklch(45%_0.2_260)]"
+          className="glass-card rounded-xl p-4 border-l-2 border-l-primary-strong"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-950 flex items-center justify-center">

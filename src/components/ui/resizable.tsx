@@ -86,14 +86,14 @@ const ResizableHandle = ({
 }) => (
   <Separator
     className={cn(
-      "relative flex w-px items-center justify-center bg-slate-200 dark:bg-slate-700 after:absolute after:inset-y-0 after:-left-1 after:-right-1 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-1 data-[resize-handle-state=hover]:bg-brand-400 data-[resize-handle-state=drag]:bg-brand-600 data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:right-0 data-[panel-group-direction=vertical]:after:-top-1 data-[panel-group-direction=vertical]:after:-bottom-1 [&[data-panel-group-direction=vertical]>div]:rotate-90 transition-colors",
+      "relative flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:-left-1 after:-right-1 after:content-[''] data-[resize-handle-state=hover]:bg-brand-400 data-[resize-handle-state=drag]:bg-brand-600 data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:right-0 data-[panel-group-direction=vertical]:after:-top-1 data-[panel-group-direction=vertical]:after:-bottom-1 [&[data-panel-group-direction=vertical]>div]:rotate-90 transition-colors",
       className
     )}
     {...props}
   >
     {withHandle && (
-      <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-        <GripVertical className="h-2.5 w-2.5 text-slate-400" />
+      <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border border-border bg-muted">
+        <GripVertical className="h-2.5 w-2.5 text-muted-foreground" />
       </div>
     )}
   </Separator>

@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Scale } from "lucide-react";
+import { BrandWordmark } from "@/components/brand/brand-logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -91,11 +91,11 @@ export default function LoginPage() {
         <div className="glass-lg rounded-2xl p-8">
           {/* Logo & Title */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-600 rounded-xl mb-4 shadow-lg shadow-brand-600/25">
-              <Scale className="w-7 h-7 text-white" />
+            <div className="flex justify-center mb-6">
+              <BrandWordmark width={176} />
             </div>
-            <h1 className="text-2xl font-heading text-foreground">
-              AI-Lawyer
+            <h1 className="text-xl font-semibold text-foreground">
+              Anmeldung
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Kanzleisoftware mit KI

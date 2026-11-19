@@ -230,7 +230,7 @@ export default function RollenPage() {
                       type="checkbox"
                       checked={selectedUser.canSeeKanzleiFinanzen}
                       onChange={(e) => handleToggleFinanzen(selectedUser.id, e.target.checked)}
-                      className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                      className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-ring"
                     />
                   </label>
                 )}

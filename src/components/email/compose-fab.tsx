@@ -19,7 +19,7 @@ export function ComposeFab() {
     <button
       type="button"
       onClick={() => openCompose()}
-      className="fixed bottom-6 right-6 z-[80] flex items-center gap-2 px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
+      className="fixed bottom-6 right-6 z-[80] flex items-center gap-2 px-4 py-3 bg-primary hover:bg-primary-hover text-primary-foreground rounded-2xl shadow-lg hover:shadow-xl transition-all"
       aria-label="Neue E-Mail verfassen"
     >
       <Pencil className="w-5 h-5" />

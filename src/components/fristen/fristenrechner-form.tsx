@@ -321,7 +321,7 @@ export function FristenRechnerForm({ onResult, onLoading }: FristenRechnerFormPr
             onClick={() => setFristArt("EREIGNISFRIST")}
             className={`flex-1 px-3 py-2 rounded-lg border text-sm transition-colors ${
               fristArt === "EREIGNISFRIST"
-                ? "border-violet-300 bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-400 dark:border-violet-700"
+                ? "border-brand-300 bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400 dark:border-brand-700"
                 : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400"
             }`}
           >
@@ -332,7 +332,7 @@ export function FristenRechnerForm({ onResult, onLoading }: FristenRechnerFormPr
             onClick={() => setFristArt("BEGINNFRIST")}
             className={`flex-1 px-3 py-2 rounded-lg border text-sm transition-colors ${
               fristArt === "BEGINNFRIST"
-                ? "border-violet-300 bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-400 dark:border-violet-700"
+                ? "border-brand-300 bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400 dark:border-brand-700"
                 : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400"
             }`}
           >

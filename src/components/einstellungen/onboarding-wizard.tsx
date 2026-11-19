@@ -164,7 +164,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               key={s.id}
               className={`h-1 flex-1 rounded-full transition-colors ${
                 s.id <= step
-                  ? "bg-blue-500"
+                  ? "bg-primary"
                   : "bg-muted/30"
               }`}
             />

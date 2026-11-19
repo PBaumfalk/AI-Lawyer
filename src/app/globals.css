@@ -2,99 +2,150 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ══════════════════════════════════════════════════════════════════════════
+   Persimmon v1.1 – zentrale Design-Tokens
+   Quelle: Designpaket „AI-Lawyer-Persimmon-v1.1“ (tokens/persimmon.css,
+   CI-CONTRACT.md). Die --al-* Werte sind die einzige Farbquelle; die
+   shadcn/ui-Variablen und die Tailwind-Palette `brand` verweisen darauf.
+   Hell ist Standard; Dunkel über die Klasse .dark (ThemeProvider) bzw.
+   [data-theme="dark"] wie im Paket.
+   ══════════════════════════════════════════════════════════════════════════ */
 @layer base {
   :root {
-    /* ── Core shadcn/ui color tokens (oklch) ─────────────────────────────── */
-    --background: oklch(97% 0.005 250);
-    --foreground: oklch(15% 0.01 250);
-    --card: oklch(100% 0 0 / 0.8);
-    --card-foreground: oklch(15% 0.01 250);
-    --popover: oklch(100% 0 0 / 0.9);
-    --popover-foreground: oklch(15% 0.01 250);
-    --primary: oklch(45% 0.2 260);
-    --primary-foreground: oklch(98% 0 0);
-    --secondary: oklch(94% 0.01 250);
-    --secondary-foreground: oklch(20% 0.01 250);
-    --muted: oklch(94% 0.01 250);
-    --muted-foreground: oklch(55% 0.015 250);
-    --accent: oklch(94% 0.01 250);
-    --accent-foreground: oklch(20% 0.01 250);
-    --destructive: oklch(55% 0.22 25);
-    --destructive-foreground: oklch(98% 0 0);
-    --border: oklch(88% 0.01 250 / 0.6);
-    --input: oklch(88% 0.01 250 / 0.4);
-    --ring: oklch(45% 0.2 260);
-    --radius: 0.625rem;
+    --al-brand: #FF5C34;          /* Persimmon: Logo, primäre Aktion */
+    --al-brand-hover: #FF754F;    /* Hover der primären Aktion, Text bleibt Graphit */
+    --al-brand-strong: #B94720;   /* Burnt Orange: Links, Fokus, aktive Navigation */
+    --al-brand-soft: #FFF0E9;     /* Auswahl-/Hover-Hintergrund */
+    --al-on-brand: #2D2A27;       /* Text auf Orange – immer Graphit, nie Weiß */
+    --al-ink: #2D2A27;
+    --al-text-muted: #68615B;
+    --al-canvas: #F8F6F2;
+    --al-surface: #FFFFFF;
+    --al-surface-sunken: #F1ECE6;
+    --al-line: #D9D1C9;
+    --al-focus: #B94720;
+    --al-success: #13724D;
+    --al-success-soft: #E2F4E9;
+    --al-warning: #8C5700;
+    --al-warning-soft: #FFF1CF;
+    --al-danger: #B42335;
+    --al-danger-soft: #FDE8EB;
+    --al-info: #295CAA;
+    --al-info-soft: #E9F0FD;
+    --al-glass: rgba(255, 255, 255, 0.78);
+    --al-glass-edge: rgba(255, 255, 255, 0.94);
+    --al-shadow: 0 12px 40px rgba(67, 43, 24, 0.08);
+    --al-shadow-sm: 0 2px 10px rgba(67, 43, 24, 0.06);
+    --al-radius-control: 12px;
+    --al-radius-card: 24px;
+    --al-radius-panel: 28px;
+    --al-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --al-motion: 180ms;
+    --al-space: 4px;
+    color-scheme: light;
 
-    /* ── Risk / status colors ────────────────────────────────────────────── */
-    --risk-low: oklch(55% 0.18 155);
-    --risk-medium: oklch(70% 0.18 75);
-    --risk-high: oklch(55% 0.22 25);
+    /* ── shadcn/ui-Variablen, abgeleitet ─────────────────────────────────── */
+    --background: var(--al-canvas);
+    --foreground: var(--al-ink);
+    --card: var(--al-glass);
+    --card-foreground: var(--al-ink);
+    --popover: var(--al-surface);
+    --popover-foreground: var(--al-ink);
+    --primary: var(--al-brand);
+    --primary-hover: var(--al-brand-hover);
+    --primary-foreground: var(--al-on-brand);
+    --secondary: var(--al-surface-sunken);
+    --secondary-foreground: var(--al-ink);
+    --muted: var(--al-surface-sunken);
+    --muted-foreground: var(--al-text-muted);
+    --accent: var(--al-brand-soft);
+    --accent-foreground: var(--al-ink);
+    --destructive: var(--al-danger);
+    --destructive-foreground: #FFFFFF;
+    --border: var(--al-line);
+    --input: var(--al-line);
+    --ring: var(--al-focus);
+    --radius: 0.75rem; /* 12px = Controls */
 
-    /* ── Text tiers ──────────────────────────────────────────────────────── */
-    --text-primary: oklch(15% 0.01 250);
-    --text-secondary: oklch(40% 0.015 250);
-    --text-tertiary: oklch(60% 0.01 250);
+    /* ── Markenskala für Tailwind `brand-*` (RGB-Kanäle für /Alpha) ────── */
+    --brand-50: 255 247 243;
+    --brand-100: 255 240 233;
+    --brand-200: 255 220 205;
+    --brand-300: 255 183 158;
+    --brand-400: 255 142 107;
+    --brand-500: 255 92 52;    /* Persimmon */
+    --brand-600: 185 71 32;    /* Burnt Orange */
+    --brand-700: 156 59 26;
+    --brand-800: 124 47 21;
+    --brand-900: 91 36 17;
+    --brand-950: 58 23 11;
 
-    /* ── Glass tier tokens (light) ───────────────────────────────────────── */
-    --glass-input-bg: oklch(100% 0 0 / 0.5);
-    --glass-card-bg: oklch(100% 0 0 / 0.6);
-    --glass-panel-bg: oklch(100% 0 0 / 0.72);
-    --glass-elevated-bg: oklch(100% 0 0 / 0.82);
-    --glass-sidebar-bg: oklch(100% 0 0 / 0.35);
-    --glass-border-color: oklch(100% 0 0 / 0.5);
-    --glass-shadow: 0 4px 24px oklch(0% 0 0 / 0.06);
-    --glass-shadow-lg: 0 8px 48px oklch(0% 0 0 / 0.10);
+    /* ── Risiko / Status ─────────────────────────────────────────────────── */
+    --risk-low: var(--al-success);
+    --risk-medium: var(--al-warning);
+    --risk-high: var(--al-danger);
 
-    /* ── Mesh gradient (light) ───────────────────────────────────────────── */
-    --mesh-1: oklch(85% 0.08 250 / 0.25);
-    --mesh-2: oklch(80% 0.06 270 / 0.20);
-    --mesh-3: oklch(90% 0.04 230 / 0.15);
-    --mesh-4: oklch(88% 0.05 260 / 0.18);
+    /* ── Texthierarchie ──────────────────────────────────────────────────── */
+    --text-primary: var(--al-ink);
+    --text-secondary: var(--al-text-muted);
+    --text-tertiary: #857C74;
+
+    /* ── Glas-Stufen (hell): Blur 24, helle Kontur, weicher Schatten ────── */
+    --glass-input-bg: var(--al-surface);
+    --glass-card-bg: var(--al-glass);
+    --glass-panel-bg: rgba(255, 255, 255, 0.84);
+    --glass-elevated-bg: rgba(255, 255, 255, 0.94);
+    --glass-sidebar-bg: rgba(255, 255, 255, 0.62);
+    --glass-border-color: var(--al-glass-edge);
+    --glass-shadow: var(--al-shadow-sm);
+    --glass-shadow-lg: var(--al-shadow);
+
+    /* ── Ruhiger, neutral-warmer Hintergrundverlauf ─────────────────────── */
+    --mesh-1: rgba(255, 228, 214, 0.55);
+    --mesh-2: rgba(244, 236, 226, 0.70);
+    --mesh-3: rgba(255, 240, 233, 0.45);
+    --mesh-4: rgba(236, 229, 220, 0.50);
   }
 
-  .dark {
-    /* ── Core shadcn/ui color tokens (dark) ──────────────────────────────── */
-    --background: oklch(12% 0.02 250);
-    --foreground: oklch(92% 0.005 250);
-    --card: oklch(18% 0.03 250 / 0.7);
-    --card-foreground: oklch(92% 0.005 250);
-    --popover: oklch(16% 0.03 250 / 0.95);
-    --popover-foreground: oklch(92% 0.005 250);
-    --primary: oklch(55% 0.22 260);
-    --primary-foreground: oklch(10% 0.02 260);
-    --secondary: oklch(20% 0.03 250);
-    --secondary-foreground: oklch(88% 0.005 250);
-    --muted: oklch(20% 0.03 250);
-    --muted-foreground: oklch(65% 0.01 250);
-    --accent: oklch(20% 0.03 250);
-    --accent-foreground: oklch(88% 0.005 250);
-    --destructive: oklch(45% 0.2 25);
-    --destructive-foreground: oklch(98% 0 0);
-    --border: oklch(30% 0.03 250 / 0.5);
-    --input: oklch(30% 0.03 250 / 0.4);
-    --ring: oklch(55% 0.22 260);
+  .dark,
+  [data-theme="dark"] {
+    --al-brand: #FF5C34;
+    --al-brand-hover: #FF754F;
+    --al-brand-strong: #FF997C;
+    --al-brand-soft: #43271F;
+    --al-on-brand: #2D2A27;
+    --al-ink: #F5F0EB;
+    --al-text-muted: #BEB3A9;
+    --al-canvas: #191715;
+    --al-surface: #24211E;
+    --al-surface-sunken: #2E2A26;
+    --al-line: #645B53;
+    --al-focus: #FF997C;
+    --al-success: #7DDEAB;
+    --al-success-soft: #17392A;
+    --al-warning: #F1C66A;
+    --al-warning-soft: #3B2F16;
+    --al-danger: #FF9BA7;
+    --al-danger-soft: #421F29;
+    --al-info: #A1C4FF;
+    --al-info-soft: #1F304A;
+    --al-glass: rgba(36, 33, 30, 0.88);
+    --al-glass-edge: rgba(255, 255, 255, 0.12);
+    --al-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+    --al-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.18);
+    color-scheme: dark;
 
-    /* ── Text tiers (dark) ───────────────────────────────────────────────── */
-    --text-primary: oklch(92% 0.005 250);
-    --text-secondary: oklch(65% 0.01 250);
-    --text-tertiary: oklch(50% 0.01 250);
+    --destructive: #B42335; /* deckender Gefahrknopf, weiße Schrift */
+    --text-tertiary: #9A9087;
 
-    /* ── Glass tier tokens (dark) ────────────────────────────────────────── */
-    --glass-input-bg: oklch(20% 0.03 250 / 0.5);
-    --glass-card-bg: oklch(18% 0.03 250 / 0.55);
-    --glass-panel-bg: oklch(16% 0.03 250 / 0.68);
-    --glass-elevated-bg: oklch(14% 0.03 250 / 0.78);
-    --glass-sidebar-bg: oklch(15% 0.03 250 / 0.4);
-    --glass-border-color: oklch(50% 0.02 250 / 0.3);
-    --glass-shadow: 0 4px 24px oklch(0% 0 0 / 0.25);
-    --glass-shadow-lg: 0 8px 48px oklch(0% 0 0 / 0.35);
+    --glass-panel-bg: rgba(36, 33, 30, 0.92);
+    --glass-elevated-bg: rgba(36, 33, 30, 0.97);
+    --glass-sidebar-bg: rgba(30, 27, 25, 0.80);
 
-    /* ── Mesh gradient (dark) ────────────────────────────────────────────── */
-    --mesh-1: oklch(30% 0.08 250 / 0.3);
-    --mesh-2: oklch(25% 0.06 270 / 0.25);
-    --mesh-3: oklch(20% 0.04 230 / 0.2);
-    --mesh-4: oklch(28% 0.05 260 / 0.2);
+    --mesh-1: rgba(67, 39, 31, 0.35);
+    --mesh-2: rgba(40, 35, 31, 0.60);
+    --mesh-3: rgba(58, 33, 24, 0.25);
+    --mesh-4: rgba(36, 33, 30, 0.50);
   }
 }
 
@@ -103,99 +154,145 @@
     @apply border-border;
   }
 
-  /* 200ms global transition for theme switches */
-  *, *::before, *::after {
-    transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+  html {
+    font-family: var(--al-font);
   }
 
   body {
     @apply text-foreground antialiased;
-    font-family: 'SF Pro Display', 'SF Pro Text', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-family: var(--al-font);
+    font-size: 16px;
+    line-height: 1.5;
     background:
-      radial-gradient(80% 50% at 20% 20%, var(--mesh-1, oklch(85% 0.08 250 / 0.25)), transparent),
-      radial-gradient(60% 60% at 80% 30%, var(--mesh-2, oklch(80% 0.06 270 / 0.20)), transparent),
-      radial-gradient(70% 40% at 50% 80%, var(--mesh-3, oklch(90% 0.04 230 / 0.15)), transparent),
-      oklch(97% 0.005 250);
+      radial-gradient(70% 50% at 15% 10%, var(--mesh-1), transparent),
+      radial-gradient(60% 60% at 85% 20%, var(--mesh-2), transparent),
+      radial-gradient(70% 45% at 50% 90%, var(--mesh-3), transparent),
+      var(--al-canvas);
     background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'SF Pro Display', 'SF Pro Text', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-family: var(--al-font);
+  }
+
+  a {
+    text-underline-offset: 3px;
+  }
+
+  /* Tastaturfokus: 3-Pixel-Ring mit 3 Pixel Abstand (CI-Contract §6).
+     :where() hält die Spezifität niedrig, Komponenten können ihn verfeinern. */
+  :where(a, button, input, select, textarea, summary, [role="button"], [role="tab"],
+         [role="menuitem"], [role="option"], [role="switch"], [tabindex]):focus-visible {
+    outline: 3px solid var(--al-focus);
+    outline-offset: 3px;
   }
 }
 
-/* Dark mode body gradient */
-.dark body {
-  background:
-    radial-gradient(80% 50% at 20% 20%, var(--mesh-1), transparent),
-    radial-gradient(60% 60% at 80% 30%, var(--mesh-2), transparent),
-    radial-gradient(70% 40% at 50% 80%, var(--mesh-3), transparent),
-    oklch(12% 0.02 250);
-  background-attachment: fixed;
+/* Theme-Wechsel weich, aber nur ohne Bewegungsreduktion */
+@media (prefers-reduced-motion: no-preference) {
+  *, *::before, *::after {
+    transition-property: background-color, color, border-color;
+    transition-duration: var(--al-motion);
+    transition-timing-function: ease;
+  }
 }
 
-/* Mesh gradient background utility (keep for backward compat) */
+/* Mesh gradient background utility (Anmeldung, Portal) */
 @layer utilities {
   .bg-mesh {
     background:
       radial-gradient(ellipse 80% 60% at 10% 20%, var(--mesh-1), transparent 60%),
       radial-gradient(ellipse 60% 80% at 80% 10%, var(--mesh-2), transparent 55%),
       radial-gradient(ellipse 70% 50% at 50% 80%, var(--mesh-3), transparent 50%),
-      radial-gradient(ellipse 50% 70% at 90% 70%, var(--mesh-4), transparent 45%),
-      oklch(97% 0.005 250);
+      var(--al-canvas);
   }
 }
 
-/* ── Glass utility classes ────────────────────────────────────────────────── */
+/* ── Glas-Klassen ─────────────────────────────────────────────────────────
+   Ohne Blur-Unterstützung oder bei reduzierter Transparenz: deckende Fläche. */
 @layer utilities {
-  /* Tier 1: inputs and minimal surfaces (8px blur) */
   .glass-input {
     background: var(--glass-input-bg);
-    backdrop-filter: blur(8px) saturate(1.3);
-    -webkit-backdrop-filter: blur(8px) saturate(1.3);
-    border: 1px solid var(--glass-border-color);
-    box-shadow: var(--glass-shadow);
+    border: 1px solid var(--al-line);
   }
 
-  /* Tier 2: cards and content panels (16px blur) */
-  .glass-card {
-    background: var(--glass-card-bg);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
-    border: 1px solid var(--glass-border-color);
-    box-shadow: var(--glass-shadow);
-  }
-
-  /* Tier 3: larger panels and drawers (24px blur) */
-  .glass-panel {
-    background: var(--glass-panel-bg);
-    backdrop-filter: blur(24px) saturate(1.5);
-    -webkit-backdrop-filter: blur(24px) saturate(1.5);
-    border: 1px solid var(--glass-border-color);
-    box-shadow: var(--glass-shadow-lg);
-  }
-
-  /* Tier 4: elevated dialogs and modals (40px blur) */
+  .glass-card,
+  .glass-panel,
   .glass-panel-elevated {
-    background: var(--glass-elevated-bg);
-    backdrop-filter: blur(40px) saturate(1.6);
-    -webkit-backdrop-filter: blur(40px) saturate(1.6);
+    background: var(--al-surface);
     border: 1px solid var(--glass-border-color);
+    box-shadow: var(--glass-shadow);
+  }
+  .glass-panel,
+  .glass-panel-elevated {
     box-shadow: var(--glass-shadow-lg);
   }
 
-  /* Sidebar: translucent navigation (40px blur, no bottom border) */
   .glass-sidebar {
-    background: var(--glass-sidebar-bg);
-    backdrop-filter: blur(40px) saturate(1.6);
-    -webkit-backdrop-filter: blur(40px) saturate(1.6);
-    border-right: 1px solid var(--glass-border-color);
+    background: var(--al-surface);
+    border-right: 1px solid var(--al-line);
+  }
+
+  .al-opaque {
+    background: var(--al-surface);
+  }
+
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-card {
+      background: var(--glass-card-bg);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+    }
+    .glass-panel {
+      background: var(--glass-panel-bg);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+    }
+    .glass-panel-elevated {
+      background: var(--glass-elevated-bg);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+    }
+    .glass-sidebar {
+      background: var(--glass-sidebar-bg);
+      border-right-color: var(--glass-border-color);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+    }
   }
 
   /* Backward-compat aliases — existing components using these still work */
   .glass { @apply glass-card; }
   .glass-heavy { @apply glass-panel; }
   .glass-lg { @apply glass-panel-elevated; }
+}
+
+/* ── Icons ────────────────────────────────────────────────────────────────
+   Lucide-Icons ohne Persimmon-Entsprechung erhalten dieselbe Strichstärke
+   wie die Persimmon-Icons (1.75); ausdrücklich gesetzte Werte bleiben.
+   Duotone ist opt-in: Akzentelemente in Burnt Orange (Contract §5). */
+svg.lucide[stroke-width="2"] {
+  stroke-width: 1.75;
+}
+.al-icon[data-tone="duotone"] [data-accent] {
+  stroke: var(--al-brand-strong);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass-card, .glass-panel, .glass-panel-elevated, .glass-sidebar {
+    background: var(--al-surface) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .al-icon [data-accent] {
+    stroke: currentColor;
+  }
+  .glass-card, .glass-panel, .glass-panel-elevated, .glass-sidebar, .glass-input {
+    border: 1px solid CanvasText;
+  }
 }
 
 /* ── macOS-style scrollbars ──────────────────────────────────────────────── */
@@ -210,20 +307,20 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: oklch(60% 0.01 250 / 0.35);
+    background: rgba(104, 97, 91, 0.35);
     border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: oklch(50% 0.01 250 / 0.5);
+    background: rgba(104, 97, 91, 0.55);
   }
 
   .dark ::-webkit-scrollbar-thumb {
-    background: oklch(60% 0.01 250 / 0.25);
+    background: rgba(190, 179, 169, 0.25);
   }
 
   .dark ::-webkit-scrollbar-thumb:hover {
-    background: oklch(70% 0.01 250 / 0.4);
+    background: rgba(190, 179, 169, 0.45);
   }
 }
 
@@ -236,7 +333,7 @@
 .glass-shimmer {
   background: linear-gradient(90deg,
     var(--glass-card-bg) 25%,
-    oklch(100% 0 0 / 0.15) 50%,
+    rgba(255, 255, 255, 0.35) 50%,
     var(--glass-card-bg) 75%);
   background-size: 200% 100%;
   animation: glass-shimmer 1.5s ease-in-out infinite;
@@ -251,5 +348,14 @@
 @media (prefers-reduced-motion: no-preference) {
   .list-item-in {
     animation: list-item-in 0.2s ease-out both;
+  }
+}
+
+/* Keine laufenden Animationen bei reduzierter Bewegung (CI-Contract §6) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
   }
 }

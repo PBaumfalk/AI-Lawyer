@@ -65,7 +65,7 @@ export function AkteChannelTab({ akteId }: AkteChannelTabProps) {
         <button
           type="button"
           onClick={fetchChannel}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-violet-500 hover:text-violet-400 bg-violet-500/10 rounded-lg transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-400 bg-brand-500/10 rounded-lg transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Erneut versuchen
@@ -150,7 +150,7 @@ export function PortalChannelTab({ akteId }: PortalChannelTabProps) {
         <button
           type="button"
           onClick={fetchChannels}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-violet-500 hover:text-violet-400 bg-violet-500/10 rounded-lg transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-400 bg-brand-500/10 rounded-lg transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Erneut versuchen
@@ -205,7 +205,7 @@ export function PortalChannelTab({ akteId }: PortalChannelTabProps) {
           onClick={() => setSelectedChannelId(ch.id)}
           className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 dark:hover:bg-white/[0.03] transition-colors text-left"
         >
-          <UserCircle className="w-5 h-5 text-violet-400 flex-shrink-0" />
+          <UserCircle className="w-5 h-5 text-brand-400 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">
               {ch.mandantUserName || ch.name}
@@ -217,7 +217,7 @@ export function PortalChannelTab({ akteId }: PortalChannelTabProps) {
             )}
           </div>
           {ch.unreadCount > 0 && (
-            <Badge className="h-5 min-w-[20px] px-1.5 text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300 border-0">
+            <Badge className="h-5 min-w-[20px] px-1.5 text-[10px] font-semibold bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300 border-0">
               {ch.unreadCount}
             </Badge>
           )}

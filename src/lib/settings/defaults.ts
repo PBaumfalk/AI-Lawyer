@@ -10,6 +10,12 @@ export interface SettingDefinition {
   min?: number;
   /** Maximum value for number type settings */
   max?: number;
+  /**
+   * Secret settings (API keys) are stored encrypted, never sent to the
+   * browser, never published in clear over Redis. An empty value on save
+   * means "keep the stored secret".
+   */
+  secret?: boolean;
 }
 
 /**
@@ -123,6 +129,7 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     type: "string",
     category: "ai",
     label: "API-Schluessel",
+    secret: true,
   },
   {
     key: "ai.provider.model",

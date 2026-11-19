@@ -1016,12 +1016,18 @@ async function startup() {
     log.info("pgvector extension and HNSW index ensured");
 
     // Phase 30: Akte summary embedding column + HNSW index (idempotent)
+    // One statement per call: Prisma sends raw SQL as a prepared statement,
+    // which rejects multiple commands (42601).
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE akten ADD COLUMN IF NOT EXISTS "summaryEmbedding" vector(1024)`
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE akten ADD COLUMN IF NOT EXISTS "summaryEmbeddingAt" TIMESTAMP`
+    );
     await prisma.$executeRawUnsafe(`
-      ALTER TABLE akten ADD COLUMN IF NOT EXISTS "summaryEmbedding" vector(1024);
-      ALTER TABLE akten ADD COLUMN IF NOT EXISTS "summaryEmbeddingAt" TIMESTAMP;
       CREATE INDEX IF NOT EXISTS akten_summary_embedding_hnsw
         ON akten USING hnsw ("summaryEmbedding" vector_cosine_ops)
-        WITH (m = 16, ef_construction = 64);
+        WITH (m = 16, ef_construction = 64)
     `);
     log.info("Akte summary embedding column and HNSW index ensured");
   } catch (err) {

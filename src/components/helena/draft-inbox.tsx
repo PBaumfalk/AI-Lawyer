@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Sparkles, Filter, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -131,13 +131,20 @@ export function DraftInbox() {
     return { createdId: data.createdId, typ: data.typ };
   }, []);
 
+  const [editRequested, setEditRequested] = useState<string | null>(null);
+
+  // "Bearbeiten" edits inline in the detail modal (PATCH action "edit").
+  // The former redirect to /akten/<id>?draft=…&edit=true was never evaluated.
   const handleEdit = useCallback((draftId: string) => {
-    // Find the draft to get its akteId
-    const draft = drafts.find((d) => d.id === draftId);
-    if (draft?.akte) {
-      window.location.href = `/akten/${draft.akte.id}?draft=${draftId}&edit=true`;
-    }
-  }, [drafts]);
+    setEditRequested(draftId);
+    void handleOpenDetailRef.current?.(draftId);
+  }, []);
+
+  const handleEdited = useCallback((draftId: string, changes: { titel: string; inhalt: string }) => {
+    setDrafts((prev) => prev.map((d) => (d.id === draftId ? { ...d, titel: changes.titel, inhalt: changes.inhalt } : d)));
+    setSelectedDraft((prev) => (prev && prev.id === draftId ? { ...prev, ...changes } : prev));
+    setEditRequested(null);
+  }, []);
 
   const handleReject = useCallback(async (draftId: string, data: RejectFormData) => {
     const res = await fetch(`/api/helena/drafts/${draftId}`, {
@@ -168,6 +175,9 @@ export function DraftInbox() {
     }
   }, []);
 
+  const handleOpenDetailRef = useRef(handleOpenDetail);
+  handleOpenDetailRef.current = handleOpenDetail;
+
   const handleNavigate = useCallback(
     (draftId: string) => {
       handleOpenDetail(draftId);
@@ -178,6 +188,7 @@ export function DraftInbox() {
   const handleCloseModal = useCallback(() => {
     setModalOpen(false);
     setSelectedDraft(null);
+    setEditRequested(null);
   }, []);
 
   const currentIndex = selectedDraft
@@ -318,7 +329,8 @@ export function DraftInbox() {
         allDraftIds={allDraftIds}
         currentIndex={currentIndex}
         onAccept={handleAccept}
-        onEdit={handleEdit}
+        onEdited={handleEdited}
+        startEditing={!!selectedDraft && editRequested === selectedDraft.id}
         onReject={handleReject}
         onNavigate={handleNavigate}
         onClose={handleCloseModal}

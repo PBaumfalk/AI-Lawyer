@@ -12,19 +12,22 @@ Wer nicht Administrator ist und eine Admin-Adresse aufruft, landet ohne Meldung 
 
 ## Benutzer anlegen, deaktivieren, Passwort zurücksetzen
 
-Ehrlich vorweg: **Eine Benutzerverwaltung für Kanzleimitarbeitende gibt es in der Oberfläche derzeit nicht.** Es gibt keinen Knopf zum Anlegen, Einladen, Deaktivieren oder zum Zurücksetzen eines Passworts. Die Seite **Rollen** zeigt Benutzer nur an.
+Unter **Admin → Benutzer** verwalten Administratoren alle Kanzleikonten.
 
-Was es gibt:
+| Vorgang | So geht es |
+| --- | --- |
+| Konto anlegen | **Neues Konto**, Name, E-Mail (Anmeldename) und Rolle eintragen, **Konto anlegen**. AI-Lawyer erzeugt ein Startpasswort (Form `xxxx-xxxx-xxxx-xxxx`) und zeigt es **nur dieses eine Mal** an. Persönlich weitergeben. |
+| Rolle ändern | In der Liste die Rolle wählen. Wirkt sofort, auch für bereits angemeldete Personen. |
+| Konto deaktivieren | Schalter **Aktiv** ausschalten. Laufende Sitzungen enden sofort; Akten, Dokumente und der Audit-Trail bleiben erhalten. Wieder einschalten stellt den Zugang her. |
+| Passwort vergessen | **Passwort zurücksetzen**: neues Startpasswort, alle Sitzungen des Kontos werden beendet, eine Anmeldesperre wird aufgehoben. Bei verlorenem Smartphone zusätzlich **Zwei-Faktor-Anmeldung ebenfalls zurücksetzen** wählen. |
+| Eigenes Passwort ändern | Jede Person selbst unter **Einstellungen → Sicherheit → Passwort ändern** (mindestens 12 Zeichen). Danach neu anmelden; andere Geräte werden abgemeldet. |
+| Mandanten-Zugang | Über die Portal-Einladung in der Akte, siehe [Kapitel 12](12-mandantenportal.md). Mandantenkonten erscheinen nicht in dieser Liste. |
 
-| Vorgang | Stand im Code | Wie es heute geht |
-| --- | --- | --- |
-| Mitarbeitende anlegen | Kein Dialog, keine Schnittstelle | Nur über die Datenbank. Die Beispieldaten (`npm run db:seed`) legen drei Testkonten an (Administrator, Anwältin, Sachbearbeiterin) mit dem Passwort `password123`. Diese Passwörter vor dem Echtbetrieb ändern. |
-| Mandanten-Zugang | Einladung aus der Akte | Über das Mandantenportal, siehe [Kapitel 12](12-mandantenportal.md). Nur so entstehen Konten mit der Rolle Mandant. |
-| Benutzer deaktivieren | Feld `aktiv` im Benutzerdatensatz | Nur über die Datenbank. Ein deaktiviertes Konto kann sich nicht mehr anmelden; der Versuch wird im Audit-Trail als *Fehlgeschlagener Login-Versuch* mit Grund „Konto deaktiviert“ vermerkt. |
-| Passwort vergessen (Mitarbeitende) | Keine Funktion | Die IT setzt in der Datenbank einen neuen bcrypt-Hash im Feld `passwordHash` (Tabelle `users`). |
-| Passwort vergessen (Mandant) | Vorhanden | Im Portal über **Passwort vergessen**, siehe [Kapitel 12](12-mandantenportal.md). |
+Schutzregeln: Das letzte aktive Administratorkonto lässt sich weder deaktivieren noch herabstufen, das eigene Konto nicht deaktivieren. Konten werden nicht gelöscht, nur deaktiviert, weil Akten, Fristen und Audit-Einträge auf sie verweisen. Jede Änderung steht im Audit-Trail (*Benutzerkonto angelegt/geändert*, *Passwort zurückgesetzt*).
 
-Für Arbeiten direkt in der Datenbank bringt AI-Lawyer `npm run db:studio` (Prisma Studio) mit. Das ist Sache der IT ([Kapitel 20](20-konfiguration.md)).
+### Anmeldesperre
+
+Nach **10 Anmeldeversuchen in 15 Minuten** für dasselbe Konto (oder 50 von derselben IP-Adresse) weist AI-Lawyer weitere Versuche ab, auch mit richtigem Passwort, und meldet „Zu viele Anmeldeversuche“. Die Sperre endet nach 15 Minuten von selbst oder sofort durch **Passwort zurücksetzen**. Für falsche Zwei-Faktor-Codes gilt dieselbe Grenze. Konten mit Zwei-Faktor-Anmeldung kommen nur über Passwort **und** Code hinein, auch wenn jemand die Anmeldeseite umgeht.
 
 ## Die fünf Rollen
 
@@ -59,14 +62,14 @@ Wo das im Programm tatsächlich geprüft wird:
 | Berechtigung | Wirkt auf |
 | --- | --- |
 | **Freigeben** | Dokument freigeben und Freigabe zurücknehmen. Ausnahme: Vorlagen freigeben dürfen nur Administrator und Anwalt/Anwältin. |
-| **Loeschen** | Dokumente löschen. |
+| **Loeschen** | Alle Löschvorgänge: Dokumente, Kalendereinträge und Fristen, Beteiligte und Normen einer Akte, Kontakte samt Anschriften, Beziehungen, Vollmachten und KYC-Angaben, Rechnungen, Tickets, Vorlagen, Briefköpfe, Fristen-Vorlagen, Ordner-Schemata, Dokument-Tags und die Zuordnung einer E-Mail zu einer Akte. Sekretariat und Mandanten erhalten beim Löschen *Keine Berechtigung*. |
 | **beA senden** | beA-Nachrichten senden und ändern. Das elektronische Empfangsbekenntnis (eEB) dürfen nur Anwalt/Anwältin und Administrator abgeben ([Kapitel 8](08-bea.md)). |
 | **beA lesen** | beA-Posteingang, Nachrichten öffnen, automatische Zuordnung. |
 | **KI nutzen** | KI-Entwürfe. Welche Werkzeuge Helena verwenden darf, hängt zusätzlich von der Rolle ab: Sekretariat darf nur lesen und Notizen anlegen ([Kapitel 9](09-helena.md)). |
 | **Administration** | Der gesamte Admin-Bereich. |
-| **Einstellungen** | Für das Sekretariat blendet die Seitenleiste **Einstellungen** aus. Die Seite selbst sperrt der Code nicht. Die meisten Reiter dort sieht ohnehin nur der Administrator. |
+| **Einstellungen** | Für das Sekretariat blendet die Seitenleiste **Einstellungen** aus. Die Seite selbst sperrt der Code nicht; die meisten Reiter dort sieht ohnehin nur der Administrator. Die kanzleiweiten Tag-Kategorien für Dokumente (anlegen, ändern, löschen) setzen dieses Recht voraus. |
 | **Akte erstellen** | Neue Akte anlegen. |
-| **Akte bearbeiten** | Steht in der Matrix, wird im Code derzeit nicht gesondert geprüft. Maßgeblich ist der Aktenzugriff (nächster Abschnitt). |
+| **Akte bearbeiten** | Ändernde Aktionen in einer Akte setzen dieses Recht zusätzlich zum Aktenzugriff (nächster Abschnitt) voraus. Alle Kanzleirollen haben es. |
 
 Daneben gibt es Funktionen, die fest dem Administrator vorbehalten sind, etwa Buchungsperioden und Kostenstellen ([Kapitel 10](10-zeiterfassung-und-abrechnung.md)), Sonder-Quests ([Kapitel 14](14-gamification.md)) und das Neuindizieren von Dokumenten.
 
@@ -80,11 +83,11 @@ Wer welche Akten sieht, regelt nicht die Rolle allein, sondern die Zuordnung. Es
 2. **Dezernat.** Wer Mitglied eines Dezernats ist, sieht alle Akten, die diesem Dezernat zugewiesen sind (siehe unten).
 3. **Administrator.** Sieht immer alle Akten.
 
-Alle anderen bekommen eine Akte, auf die sie keinen Zugriff haben, gar nicht erst angezeigt. Ruft jemand sie über die Schnittstelle auf, lautet die Antwort *Nicht gefunden*, nicht *Keine Berechtigung*, damit nicht einmal die Existenz der Akte verraten wird.
+Alle anderen bekommen eine Akte, auf die sie keinen Zugriff haben, gar nicht erst angezeigt. Das gilt überall: in der Aktenliste, in Auswahllisten, in der Suche und im BI-Dashboard ([Kapitel 13](13-suche-und-auswertung.md)), bei Tickets und in allen Funktionen innerhalb der Akte (Dokumente, Kalender, Rechnungen, Aktenkonto, Helena, Zeiterfassung, beA-Zuordnung). Ruft jemand die Detailseite einer fremden Akte (`/akten/<ID>`) direkt auf, erscheint die Seite „nicht gefunden“; die Schnittstelle antwortet *Nicht gefunden*, nicht *Keine Berechtigung*, damit nicht einmal die Existenz der Akte verraten wird.
 
-**Wichtig:** Eine Akte ohne eingetragenen Anwalt, ohne Sachbearbeiter/in und ohne Dezernat sieht nur der Administrator. Das betrifft insbesondere alle Akten aus der j-lawyer-Übernahme ([Kapitel 17](17-migration-aus-j-lawyer.md)).
+Mandantenkonten kommen ausschließlich ins Mandantenportal ([Kapitel 12](12-mandantenportal.md)). Meldet sich ein Mandant über die Kanzlei-Anmeldung an oder ruft er eine Kanzleiseite auf, leitet AI-Lawyer ihn ins Portal um; Kanzlei-Schnittstellen antworten ihm mit *Keine Berechtigung*.
 
-**Bekannte Lücke:** Die Aktenliste, die Suche und die Schnittstellen filtern nach diesen Regeln. Die Detailseite einer Akte (`/akten/<ID>`) prüft den Zugriff derzeit nicht selbst. Wer die genaue Adresse einer fremden Akte kennt, kann sie öffnen.
+**Wichtig:** Eine Akte ohne eingetragenen Anwalt, ohne Sachbearbeiter/in und ohne Dezernat sieht nur der Administrator. Bei der j-lawyer-Übernahme ordnet AI-Lawyer Anwalt und Sachbearbeiter/in per Benutzerabgleich oder dem gewählten Standard-Verantwortlichen zu ([Kapitel 17](17-migration-aus-j-lawyer.md)); prüfen Sie die Zuordnung trotzdem nach der Übernahme.
 
 ### Zugriff prüfen
 
@@ -158,9 +161,8 @@ Die Rollennamen sind die technischen: `ADMIN`, `ANWALT`, `SACHBEARBEITER`, `SEKR
 
 So wirkt die Pflicht: Wer zu einer genannten Rolle gehört und 2FA noch nicht eingerichtet hat, wird bei jedem Seitenaufruf auf die Seite **Zwei-Faktor-Authentifizierung erforderlich** umgeleitet („Ihre Rolle erfordert eine aktive Zwei-Faktor-Authentifizierung.“). Nur die Einstellungen bleiben erreichbar.
 
-1. **Zu den Sicherheitseinstellungen** klicken.
-2. Die Einstellungen öffnen sich auf dem Reiter **Allgemein**. Auf den Reiter **Sicherheit** wechseln (der direkte Sprung dorthin funktioniert derzeit nicht).
-3. **2FA aktivieren**, QR-Code scannen, Code eingeben, **Bestätigen**, Backup-Codes sichern, **Fertig**.
+1. **Zu den Sicherheitseinstellungen** klicken. Die Einstellungen öffnen sich direkt auf dem Reiter **Sicherheit**.
+2. **2FA aktivieren**, QR-Code scannen, Code eingeben, **Bestätigen**, Backup-Codes sichern, **Fertig**.
 
 Danach gilt die Pflicht sofort als erfüllt, ohne neue Anmeldung.
 
@@ -172,7 +174,9 @@ Hinweise:
 
 ### Backup-Codes und verlorenes Handy
 
-Beim Einrichten erzeugt AI-Lawyer zehn Backup-Codes aus je acht Zeichen (Großbuchstaben und Ziffern). Jeder Code gilt einmal. Bei der Anmeldung führt **Backup-Code verwenden** zur Eingabe. Den Code ohne Bindestrich und in Großbuchstaben eingeben, auch wenn das Feld „xxxx-xxxx“ als Muster zeigt.
+Beim Einrichten erzeugt AI-Lawyer zehn zufällige Backup-Codes aus je acht Zeichen (Großbuchstaben und Ziffern). Jeder Code gilt einmal. Bei der Anmeldung führt **Backup-Code verwenden** zur Eingabe. Groß- und Kleinschreibung, Leerzeichen und Bindestriche spielen dabei keine Rolle; „abcd-1234“ wird wie „ABCD1234“ angenommen.
+
+Das Geheimnis der Authenticator-App speichert AI-Lawyer verschlüsselt in der Datenbank, die Backup-Codes nur als Hash.
 
 Neue Codes erzeugt jeder Benutzer selbst unter **Einstellungen → Sicherheit → Backup-Codes neu generieren** (mit aktuellem App-Code).
 

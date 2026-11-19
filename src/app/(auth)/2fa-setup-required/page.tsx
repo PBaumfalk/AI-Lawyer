@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { einstellungenUrl } from "@/lib/einstellungen-tabs";
 import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -20,7 +21,7 @@ export default function TwoFASetupRequired() {
             Bitte richten Sie 2FA in Ihren Einstellungen ein, um fortzufahren.
           </p>
           <Button asChild className="w-full">
-            <Link href="/einstellungen?tab=sicherheit">
+            <Link href={einstellungenUrl("sicherheit")}>
               Zu den Sicherheitseinstellungen
             </Link>
           </Button>

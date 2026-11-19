@@ -1,6 +1,6 @@
 # 10 — Zeiterfassung und Abrechnung
 
-Dieses Kapitel zeigt, wie AI-Lawyer Arbeitszeit je Akte erfasst, wie Sie Gebühren nach dem RVG berechnen und wie Rechnungen und das Aktenkonto mit Fremdgeld funktionieren. Es sagt auch offen, welche Teile des Finanzbereichs derzeit nur eingeschränkt nutzbar sind.
+Dieses Kapitel zeigt, wie AI-Lawyer Arbeitszeit je Akte erfasst, wie Sie Gebühren nach dem RVG berechnen und wie Rechnungen und das Aktenkonto mit Fremdgeld funktionieren. Es sagt auch offen, welche Teile des Finanzbereichs noch fehlen.
 
 > **Wichtig:** Gebührenberechnungen, Rechnungen und Fremdgeld-Fristen aus AI-Lawyer sind Arbeitshilfen. Prüfen Sie jede Berechnung und jede Rechnung, bevor sie das Haus verlässt. Bekannte Abweichungen vom RVG stehen im Abschnitt [Grenzen des RVG-Rechners](#grenzen-des-rvg-rechners).
 
@@ -133,25 +133,28 @@ Ergebnis weitergeben:
 - **Kopieren als Text** legt die Aufstellung in die Zwischenablage (Bestätigung **Kopiert!**).
 - **DAV Vergleich** öffnet den Prozesskostenrechner des DAV mit dem Streitwert in einem neuen Tab, zum Gegenprüfen.
 
-Die Knöpfe **Berechnung speichern** und **Uebernehmen als Rechnung** erscheinen nur, wenn der Rechner mit einem Aktenbezug geöffnet wurde. Keine Seite in AI-Lawyer öffnet ihn derzeit so, und beide Funktionen speichern im aktuellen Stand nicht zuverlässig. Nutzen Sie den Rechner deshalb als eigenständige Rechenhilfe.
+### Berechnung in der Akte speichern und als Rechnung übernehmen
+
+Die Knöpfe **Berechnung speichern** und **Uebernehmen als Rechnung** erscheinen nur, wenn der Rechner mit einem Aktenbezug geöffnet wurde. Einen Knopf, der ihn so öffnet, gibt es noch nicht. Sie öffnen ihn mit Aktenbezug über die Adresse `/finanzen/rechner?akteId=<Akten-ID>&aktenzeichen=<Aktenzeichen>`; die Akten-ID steht in der Adresszeile, wenn die Akte geöffnet ist (`/akten/<Akten-ID>`). Rechts erscheint dann der Kasten **Akte** mit dem Aktenzeichen.
+
+- **Berechnung speichern** legt die Berechnung mit allen Positionen und den Häkchen für Auslagenpauschale und Umsatzsteuer in der Akte ab: *„Berechnung in der Akte gespeichert.“*
+- **Uebernehmen als Rechnung** speichert die Berechnung und legt daraus einen Rechnungsentwurf vom Typ RVG an; anschließend öffnet sich die Rechnung. Die Umsatzsteuer (VV 7008) wird dabei nicht als eigene Position übernommen, sondern wie bei jeder Rechnung aus den Positionen berechnet; so entsteht keine doppelte Umsatzsteuer. Ist die Umsatzsteuer im Rechner abgeschaltet, erhalten die Positionen 0 % USt. Scheitert das Anlegen der Rechnung, meldet AI-Lawyer *„Berechnung gespeichert, Rechnung nicht angelegt: …“*.
+
+Ohne Aktenbezug ist der Rechner eine eigenständige Rechenhilfe.
 
 ### Grenzen des RVG-Rechners
 
 Bitte bei der Prüfung besonders beachten:
 
-- **VV 3305 (Mahnverfahren)** ist mit einem Satz von 0,5 voreingestellt. Das Gesetz sieht für den Antragsteller 1,0 vor. Stellen Sie den Regler von Hand auf 1,0.
+- **VV 3305 (Mahnverfahren)** ist mit dem gesetzlichen Satz von 1,0 für die Vertretung des Antragstellers voreingestellt. Die ermäßigten Gebühren (VV 3306, 3307) kennt der Rechner nicht.
 - **Gebührentabelle:** Es gilt immer die Tabelle für das heutige Datum. Für Aufträge vor dem 1. Juni 2025 (§ 60 RVG) muss die alte Tabelle verwendet werden. Das kann der Rechner nicht.
 - **Auslagenpauschale:** Sie wird einmal für die ganze Berechnung angesetzt (20 %, höchstens 20 €). Umfasst die Berechnung mehrere Angelegenheiten, etwa außergerichtliche Vertretung und Klageverfahren, steht sie Ihnen je Angelegenheit zu.
-- **Anrechnung** erkennt der Rechner nur zwischen VV 2300 und VV 3100.
+- **Anrechnung** erkennt der Rechner nur zwischen VV 2300 und VV 3100. Die Anrechnung der Mahnverfahrensgebühr VV 3305 auf die Verfahrensgebühr VV 3100 des folgenden Rechtsstreits (Anm. zu VV 3305) fehlt; ziehen Sie sie von Hand ab.
 - **Nur 14 Positionen** stehen zur Auswahl (Teile 1, 2, 3 und 7 VV). Betragsrahmengebühren, etwa im Straf- oder Sozialrecht, fehlen.
 - **VV 2300 über 1,3:** Der Regler geht bis 2,5. Ob die Tätigkeit umfangreich oder schwierig war, prüft der Rechner nicht.
 - Der **Mindestbetrag** einer Gebühr (§ 13 Abs. 2 RVG) wird nicht gesondert geprüft.
 
 ## Rechnungen
-
-### Bekannter Fehler: Rechnungsliste bricht ab
-
-Im aktuellen Stand lässt sich die Rechnungsliste nicht öffnen. Statt der Liste erscheint *Fehler im Dashboard: Cannot read properties of undefined (reading 'toFixed')*. Ursache: Die Liste will eine Kennzahl **Stornoquote** anzeigen, die der Server nicht liefert. Betroffen sind der Reiter **Rechnungen** und der Abschnitt **Rechnungen** im Reiter **Finanzen** der Akte, der dieselbe Liste verwendet. Die Behebung ist eingeplant.
 
 ### Rechnungstypen, Nummern und Inhalt
 
@@ -159,11 +162,21 @@ Eine Rechnung hat einen der Typen **RVG**, **Stundenhonorar** oder **Pauschale**
 
 Die Rechnungsnummer vergibt AI-Lawyer beim Anlegen fortlaufend je Jahr, im Format `RE-2026-0001`. Stornorechnungen bekommen einen eigenen Nummernkreis, `GS-2026-0001`. Das Zahlungsziel beträgt ohne andere Kanzlei-Vorgabe 14 Tage.
 
-Eine Eingabemaske zum Anlegen einer Rechnung gibt es derzeit nicht. Der Weg aus dem RVG-Rechner (**Uebernehmen als Rechnung**) funktioniert ebenfalls nicht zuverlässig (siehe oben). Rechnungen entstehen deshalb im Moment nur über die Programmschnittstelle.
+Eine Eingabemaske zum Anlegen oder Bearbeiten einer Rechnung gibt es derzeit nicht. Rechnungen entstehen über den RVG-Rechner mit Aktenbezug (**Uebernehmen als Rechnung**, [oben](#berechnung-in-der-akte-speichern-und-als-rechnung-übernehmen)) oder über die Programmschnittstelle. Stundenhonorar- und Pauschalrechnungen lassen sich in der Oberfläche also noch nicht erstellen.
 
 ### Die Rechnungsliste
 
-Wenn sie wieder läuft: Suchfeld (*Rechnungsnr., Mandant, Aktenzeichen...*), Statusfilter (**Alle Status**, **Entwurf**, **Gestellt**, **Bezahlt**, **Storniert**) und das Häkchen **Nur ueberfaellige**. Überfällige Rechnungen zeigen *… Tage ueberfaellig*, ab 14 Tagen orange, ab 30 Tagen rot. Die Knöpfe **Alle stellen**, **PDFs herunterladen** und **Mahnungen senden**, die bei markierten Rechnungen erscheinen, haben noch keine Funktion.
+Der Reiter **Rechnungen** (und der Abschnitt **Rechnungen** im Reiter **Finanzen** der Akte, der nur die Rechnungen dieser Akte zeigt) beginnt mit vier Kennzahlen: **Gesamtumsatz**, **Offene Forderungen**, **Ueberfaellig** und **Stornoquote**. Darunter stehen das Suchfeld (*Rechnungsnr., Mandant, Aktenzeichen...*), der Statusfilter (**Alle Status**, **Entwurf**, **Gestellt**, **Gemahnt**, **Bezahlt**, **Storniert**) und das Häkchen **Nur ueberfaellige**. Ein Klick auf eine Spaltenüberschrift (**Rechnungsnr.**, **Datum**, **Betrag**, **Status**, **Faelligkeit**) sortiert, unten blättern Sie seitenweise. Überfällige Rechnungen zeigen *… Tage ueberfaellig*, ab 14 Tagen orange, ab 30 Tagen rot.
+
+Haken Sie Rechnungen an, erscheinen Sammelaktionen:
+
+| Knopf | Wirkung |
+| --- | --- |
+| **Entwuerfe stellen** | Stellt alle markierten Entwürfe. |
+| **PDFs herunterladen** | Lädt die PDFs der markierten Rechnungen herunter. |
+| **Mahnstufe erhoehen** | Legt für jede markierte gestellte oder gemahnte Rechnung die nächste Mahnstufe an. Versendet wird dabei nichts. |
+
+Das Ergebnis der Sammelaktion steht anschließend über der Tabelle.
 
 ### Status-Ablauf
 
@@ -171,28 +184,30 @@ Wenn sie wieder läuft: Suchfeld (*Rechnungsnr., Mandant, Aktenzeichen...*), Sta
 | --- | --- | --- |
 | **Entwurf** | Noch änderbar und löschbar | Gestellt, Storniert |
 | **Gestellt** | Rechnungsdatum und Fälligkeit stehen fest | Bezahlt, Mahnung, Storniert |
-| **Mahnung** | Mindestens eine Mahnstufe erzeugt | Bezahlt, Storniert |
+| **Mahnung** (Anzeige **Gemahnt**) | Mindestens eine Mahnstufe erzeugt | Bezahlt, nächste Mahnstufe (bis zur 3. Mahnung), Storniert |
 | **Bezahlt** | Abgeschlossen | – |
 | **Storniert** | Abgeschlossen | – |
 
-In der Rechnungsansicht stehen je nach Status diese Knöpfe zur Verfügung. Jeder Schritt verlangt eine Bestätigung mit **Bestaetigen** oder **Abbrechen**:
+In der Rechnungsansicht zeigt AI-Lawyer genau die Knöpfe, die im jeweiligen Status erlaubt sind. Jeder Schritt verlangt eine Bestätigung mit **Bestaetigen** oder **Abbrechen**:
 
-| Status | Knopf | Was passiert | Stand heute |
-| --- | --- | --- | --- |
-| Entwurf | **Stellen** | *Rechnung jetzt stellen? Das Rechnungsdatum wird festgeschrieben.* Fälligkeit = heute + Zahlungsziel. Im Aktenkonto entsteht die Buchung *Forderung: Rechnung …*. | funktioniert |
-| Entwurf | **Loeschen** | *Entwurf endgueltig loeschen?* | funktioniert |
-| Entwurf | **Bearbeiten** | soll den Entwurf öffnen | Seite fehlt noch |
-| Gestellt | **PDF**, **XRechnung** | Download, siehe unten | funktioniert |
-| Gestellt | **Stornieren** | *Rechnung stornieren? Eine Stornorechnung wird erstellt.* Die Forderungsbuchung im Aktenkonto wird storniert. | funktioniert |
-| Gestellt | **Bezahlt markieren** | soll die Rechnung auf Bezahlt setzen | ohne Wirkung |
-| Gestellt | **Mahnung** | soll die nächste Mahnstufe erzeugen | ohne Wirkung |
-| Bezahlt | **PDF herunterladen** | Download | funktioniert |
+| Status | Knopf | Was passiert |
+| --- | --- | --- |
+| Entwurf | **Stellen** | *Rechnung jetzt stellen? Das Rechnungsdatum wird festgeschrieben.* Fälligkeit = heute + Zahlungsziel. Im Aktenkonto entsteht die Buchung *Forderung: Rechnung …*. |
+| Entwurf | **Loeschen** | *Entwurf endgueltig loeschen?* |
+| Entwurf | **Bearbeiten (noch nicht verfuegbar)** | Ausgegraut; eine Bearbeitungsmaske gibt es noch nicht. Für Änderungen löschen Sie den Entwurf und legen ihn neu an. |
+| Gestellt, Gemahnt, Bezahlt | **PDF**, **XRechnung** | Download, siehe unten. |
+| Gestellt, Gemahnt | **Bezahlt markieren** | *Rechnung als bezahlt markieren?* Die Rechnung wird auf **Bezahlt** gesetzt. |
+| Gestellt | **Zahlungserinnerung** | *Zahlungserinnerung anlegen?* Erste Mahnstufe; der Status wird **Gemahnt**. |
+| Gemahnt | **Naechste Mahnstufe** | *Naechste Mahnstufe nach „…“ anlegen?* Bis zur 3. Mahnung; danach entfällt der Knopf. |
+| Entwurf, Gestellt, Gemahnt | **Stornieren** | *Rechnung stornieren? Eine Stornorechnung wird erstellt.* Die Forderungsbuchung im Aktenkonto wird storniert. |
 
-Für Rechnungen im Status **Mahnung** zeigt die Ansicht keine Knöpfe.
+Schlägt eine Aktion fehl, steht die Fehlermeldung über der Rechnung.
 
 ### Mahnstufen
 
-Vorgesehen sind vier Stufen: Erinnerung, erste, zweite und dritte Mahnung. Die Rechnungsansicht listet erzeugte Mahnungen mit Stufe, Datum und **Gesendet** oder **Offen**. Im aktuellen Stand lässt sich nur die erste Stufe (Erinnerung) erzeugen, und auch das nur über die Programmschnittstelle. Einen Mahnversand gibt es nicht.
+Es gibt vier Stufen: **Zahlungserinnerung**, **1. Mahnung**, **2. Mahnung** und **3. Mahnung**. Sie legen sie nacheinander mit **Zahlungserinnerung** bzw. **Naechste Mahnstufe** in der Rechnungsansicht oder mit **Mahnstufe erhoehen** in der Liste an. Die Rechnungsansicht listet unter **Mahnungen (…)** jede Stufe mit Datum und dem Vermerk **Nicht versendet**.
+
+**Wichtig:** AI-Lawyer vermerkt die Mahnstufe nur. Ein Mahnschreiben wird weder erzeugt noch verschickt. Schreiben und versenden Sie die Mahnung selbst ([Kapitel 23](23-einschraenkungen-und-fragen.md)).
 
 ### Teilzahlungen
 
@@ -205,7 +220,7 @@ Ein Entwurf wird beim Stornieren einfach auf **Storniert** gesetzt. Bei einer ge
 ### PDF und E-Rechnung
 
 - **PDF** erzeugt die Rechnung mit den Kanzlei-Stammdaten im Kopf und in der Fußzeile: Name, Anschrift, Telefon, E-Mail, Steuernummer, USt-IdNr. und Bank. Eine Maske zum Pflegen dieser Stammdaten gibt es derzeit nicht ([Kapitel 16](16-einstellungen-und-vorlagen.md#kanzlei-stammdaten)). Die Vorlagen aus dem Briefkopf-Editor werden hier nicht verwendet. Eine Kopie des PDFs wird im Dokumentenspeicher abgelegt.
-- **XRechnung** lädt eine XML-Datei im Format XRechnung (CII, EN 16931), Dateiname `<Rechnungsnummer>_xrechnung.xml`. Das geht nur für gestellte oder bezahlte Rechnungen und nur, wenn bei der Kanzlei Steuernummer oder USt-IdNr. eingetragen ist.
+- **XRechnung** lädt eine XML-Datei im Format XRechnung (CII, EN 16931), Dateiname `<Rechnungsnummer>_xrechnung.xml`. Das geht nur für gestellte, gemahnte oder bezahlte Rechnungen und nur, wenn bei der Kanzlei Steuernummer oder USt-IdNr. eingetragen ist.
 
 ## Aktenkonto und Fremdgeld
 
@@ -218,13 +233,21 @@ Oben stehen **Saldo** (Einnahmen minus Ausgaben und Auslagen, ohne Fremdgeld), *
 ### Buchung anlegen
 
 1. **Neue Buchung** klicken.
-2. **Buchungstyp** wählen: **Einnahme**, **Ausgabe**, **Fremdgeld** oder **Auslage**.
-3. **Betrag** eintragen (z. B. `1.500,00`, immer positiv; Ausgaben und Auslagen bucht AI-Lawyer als Minus).
+2. **Buchungstyp** wählen: **Einnahme**, **Ausgabe**, **Fremdgeld-Eingang**, **Fremdgeld-Weiterleitung** oder **Auslage**.
+3. **Betrag** eintragen (z. B. `1.500,00`, immer positiv; Ausgaben, Auslagen und Fremdgeld-Weiterleitungen bucht AI-Lawyer als Minus).
 4. **Verwendungszweck** angeben.
 5. **Konto** wählen: **Geschaeftskonto** oder **Anderkonto**.
 6. **Buchen** klicken.
 
-Buchungen lassen sich nicht ändern oder löschen, nur stornieren (GoBD). Stornierte Buchungen erscheinen durchgestrichen. Das Stornieren über den Knopf in der Zeile (Dialog **Buchung stornieren**, Feld *Grund fuer die Stornierung*) schlägt im aktuellen Stand allerdings fehl, die Buchung bleibt bestehen.
+Buchungen lassen sich nicht ändern oder löschen, nur stornieren (GoBD):
+
+1. In der Zeile der Buchung auf das Symbol **Stornieren** klicken.
+2. Im Dialog **Buchung stornieren** unter **Stornogrund (Pflichtangabe)** den Grund eintragen (*Grund fuer die Stornierung*).
+3. Bestätigen. AI-Lawyer legt eine Gegenbuchung an; die ursprüngliche Buchung erscheint durchgestrichen und hat keinen Storno-Knopf mehr.
+
+Stornieren dürfen nur Anwalt und Admin. Schlägt eine Buchung oder Stornierung fehl, steht die Fehlermeldung über dem Kontobuch.
+
+In der Spalte neben dem Saldo kann bei einer Buchung ein Verweis-Symbol auf ein Dokument stehen. Dieser Link führt derzeit ins Leere ([Kapitel 23](23-einschraenkungen-und-fragen.md)); öffnen Sie das Dokument über die Akte.
 
 ### Fremdgeld und Weiterleitungsfrist
 
@@ -239,7 +262,11 @@ Für jede Fremdgeld-Buchung berechnet AI-Lawyer eine Weiterleitungsfrist von **5
 
 Liegt die Summe des Fremdgelds einer Akte bei 15.000 € oder mehr, warnt AI-Lawyer: *15.000 EUR Anderkonto-Schwelle ueberschritten!*
 
-Bitte beachten: Die Fünf-Tage-Frist ist eine Regel der Software. Was berufsrechtlich unverzüglich ist und wann ein Anderkonto Pflicht ist, beurteilen Sie selbst. Die Warnung verschwindet nur, wenn die Fremdgeld-Buchung storniert wird. Eine Weiterleitung als Ausgabe gebucht beendet sie nicht.
+**Weiterleitung buchen.** Leiten Sie Fremdgeld an den Mandanten oder Dritte weiter, buchen Sie das mit dem Buchungstyp **Fremdgeld-Weiterleitung**. Mehr als den vorhandenen Fremdgeldbestand der Akte können Sie nicht weiterleiten (*„Weiterleitung ueber … EUR uebersteigt das vorhandene Fremdgeld (… EUR)“*). Eine als **Ausgabe** gebuchte Weiterleitung zählt nicht.
+
+AI-Lawyer verrechnet Weiterleitungen mit den Eingängen in der Reihenfolge ihres Eingangs (der älteste Eingang zuerst). Ein Eingang bleibt mit seinem noch nicht weitergeleiteten Rest offen; der Hinweis zeigt dann den offenen Betrag und in Klammern den ursprünglichen (*„… (von …)“*). Ist ein Eingang vollständig gedeckt, verschwindet seine Warnung. Diese Zuordnung ist eine Vereinfachung: Gehört eine Weiterleitung fachlich zu einem bestimmten späteren Eingang, kann die Anzeige davon abweichen ([Kapitel 23](23-einschraenkungen-und-fragen.md)).
+
+Bitte beachten: Die Fünf-Tage-Frist ist eine Regel der Software. Was berufsrechtlich unverzüglich ist und wann ein Anderkonto Pflicht ist, beurteilen Sie selbst.
 
 ### Kostenstellen und Buchungsperioden
 
@@ -263,7 +290,6 @@ Wenn Sie diese Funktionen brauchen, wenden Sie sich an die IT ([Kapitel 22](22-a
 
 | Meldung | Bedeutung | Was tun |
 | --- | --- | --- |
-| *Fehler im Dashboard: Cannot read properties of undefined (reading 'toFixed')* | Bekannter Fehler der Rechnungsliste | Abwarten bis zur Behebung, siehe [oben](#bekannter-fehler-rechnungsliste-bricht-ab) |
 | *Taetigkeitsbeschreibung ist Pflicht bei Stundenhonorar-Akten* | Timer einer Stundenhonorar-Akte ohne Beschreibung gestoppt | Über die Seitenleiste mit Tätigkeit stoppen |
 | Timer läuft nach Verlassen der Akte weiter | Stundenhonorar-Akte | Wie oben |
 | *Bereits abgerechnete Eintraege koennen nicht bearbeitet werden* | Zeiteintrag ist abgerechnet | Nichts ändern; ggf. Rechnung stornieren |
@@ -273,7 +299,9 @@ Wenn Sie diese Funktionen brauchen, wenden Sie sich an die IT ([Kapitel 22](22-a
 | *E-Rechnung nur fuer gestellte oder bezahlte Rechnungen verfuegbar. …* | Rechnung ist noch Entwurf | Erst stellen |
 | *Keine Berechtigung. Sekretariat darf keine Fremdgeld-Buchungen erstellen.* | Rollenbeschränkung | Anwalt oder Admin bucht |
 | *Buchungsperiode MM/JJJJ ist gesperrt. Keine Buchungen moeglich.* | Monat abgeschlossen | Admin entsperrt den Monat oder Buchungsdatum prüfen |
-| **Bezahlt markieren** oder **Mahnung** ohne Wirkung | Bekannter Fehler | Derzeit nicht über die Oberfläche möglich |
+| *Weiterleitung ueber … EUR uebersteigt das vorhandene Fremdgeld …* | Weiterleitung größer als der Fremdgeldbestand | Betrag prüfen; fehlt ein Fremdgeld-Eingang, zuerst diesen buchen |
+| *Berechnung gespeichert, Rechnung nicht angelegt: …* | Berechnung liegt in der Akte, die Rechnung scheiterte (z. B. kein Mandant) | Ursache aus der Meldung beheben, erneut **Uebernehmen als Rechnung** |
+| Knopf **Naechste Mahnstufe** fehlt | Die 3. Mahnung ist bereits angelegt | Weiteres Vorgehen (Mahnverfahren) außerhalb von AI-Lawyer |
 | Rechner zeigt *Bitte Streitwert eingeben.* / *Bitte VV-Positionen hinzufuegen.* | Eingabe fehlt | Streitwert eintragen bzw. Position wählen |
 
 ---

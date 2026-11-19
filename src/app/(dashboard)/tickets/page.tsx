@@ -1,5 +1,8 @@
+import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { buildAkteAccessFilter } from "@/lib/rbac";
+import { ticketAccessWhere } from "@/lib/tickets/access";
 import { Badge } from "@/components/ui/badge";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import {
@@ -83,7 +86,9 @@ function isOverdue(date: Date | null, status: string): boolean {
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const { status, prioritaet, q, tag, faelligkeit, akteId, sort } = await searchParams;
 
-  const where: any = {};
+  const session = await auth();
+  const user = { id: session!.user!.id!, role: (session!.user as any).role };
+  const where: any = { AND: [ticketAccessWhere(user)] };
 
   if (status) where.status = status;
   if (prioritaet) where.prioritaet = prioritaet;
@@ -143,7 +148,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     }),
     prisma.ticket.count({ where }),
     prisma.akte.findMany({
-      where: { status: "OFFEN" },
+      where: { AND: [buildAkteAccessFilter(user.id, user.role), { status: "OFFEN" }] },
       select: { id: true, aktenzeichen: true },
       orderBy: { aktenzeichen: "asc" },
       take: 200,

@@ -11,7 +11,7 @@ Termine, Fristen und Wiedervorlagen verwalten Sie in einem gemeinsamen Kalender.
 | **Kalender** in der Seitenleiste | Alle Einträge, auf die Sie Zugriff haben, als Liste. |
 | Akte, Reiter **Termine & Fristen (…)** | Nur die Einträge dieser Akte. |
 | **Dashboard**, Kasten **Tagesuebersicht** | Überfällige und heutige Fristen, Wiedervorlagen und Termine, mit Knopf **Fristenzettel**. |
-| Fristenrechner | Über **Strg + K** (Mac: **⌘ + K**), dann **Frist berechnen**. |
+| Fristenrechner | Über **Strg + K** (Mac: **⌘ + K**), dann **Frist berechnen**, oder direkt mit **Strg + Umschalt + F** (Mac: **⌘ + Umschalt + F**). |
 
 **Sichtbarkeit:** Sie sehen Einträge zu Akten, auf die Sie Zugriff haben, sowie alle Einträge ohne Akte. Einträge ohne Aktenbezug sind also für alle Benutzer sichtbar. Tragen Sie private Termine deshalb nicht ohne Akte ein, wenn andere sie nicht sehen sollen.
 
@@ -21,11 +21,13 @@ Termine, Fristen und Wiedervorlagen verwalten Sie in einem gemeinsamen Kalender.
 
 Die Seite **Kalender** (*Termine, Fristen & Wiedervorlagen*) ist eine Liste, keine Monatsansicht. Sie ist in Gruppen geteilt:
 
-- **Überfällig (…)**: offene Einträge, deren Datum vorbei ist, rot markiert,
+- **Überfällig (…)**: offene Einträge, deren Tag vollständig vorbei ist, rot markiert (eine Frist, die heute abläuft, ist noch nicht überfällig, siehe [Fristen erledigen](#fristen-erledigen)),
 - **Anstehend (…)**: offene Einträge ab heute,
 - **Erledigt (…)**: nur sichtbar, wenn **Erledigte anzeigen** angehakt ist.
 
 Oben filtern Sie nach Typ (**Alle**, **Termine**, **Fristen**, **Wiedervorlagen**) und suchen im Feld **Suche nach Titel, Akte, Verantwortlich...**. Ein Klick auf einen Eintrag öffnet ihn zum Bearbeiten. Das Drei-Punkte-Menü bietet **Bearbeiten**, **Als erledigt markieren** bzw. **Wieder öffnen** und **Löschen**.
+
+Termine aus einem verbundenen externen Kalender erscheinen nur in der Ansicht **Alle**, gekennzeichnet als **Extern** und mit dem Namen des Kalenders statt eines Verantwortlichen. Sie sind nur lesbar: Erledigen, Bearbeiten und Löschen gibt es für sie nicht. Im Reiter der Akte, in den Typ-Filtern und unter **Erledigt** tauchen sie nicht auf.
 
 ## Eintragstypen
 
@@ -56,13 +58,13 @@ Oben filtern Sie nach Typ (**Alle**, **Termine**, **Fristen**, **Wiedervorlagen*
 | **Akte (optional)** | Suche nach Aktenzeichen oder Kurzrubrum. |
 | **Verantwortlich** | Pflicht. Wer die Erinnerungen bekommt. |
 
-Weitere Merkmale, die AI-Lawyer intern kennt (Priorität, Notfrist, Bundesland, Fristart, mehrere Vorfristen, Halbfrist, Sonderfall), lassen sich in diesem Fenster **nicht** eingeben. Sie werden derzeit nur gesetzt, wenn Einträge auf anderem Weg entstehen, etwa bei der Übernahme aus j-lawyer ([Kapitel 17](17-migration-aus-j-lawyer.md)).
+Weitere Merkmale, die AI-Lawyer intern kennt (Priorität, Notfrist, Bundesland, Fristart, mehrere Vorfristen, Halbfrist, Sonderfall), lassen sich in diesem Fenster **nicht** von Hand eingeben. Sie werden gesetzt, wenn Sie eine Frist aus dem Fristenrechner mit **Als Frist speichern** anlegen ([Das Ergebnis lesen](#das-ergebnis-lesen)) oder wenn Einträge aus j-lawyer übernommen werden ([Kapitel 17](17-migration-aus-j-lawyer.md)).
 
 ## Der Fristenrechner
 
 Der Fristenrechner rechnet Fristen nach §§ 187 bis 193 BGB, berücksichtigt Wochenenden und die Feiertage des gewählten Bundeslandes und schlägt Vorfristen und eine Halbfrist vor.
 
-1. **Strg + K** (Mac: **⌘ + K**) drücken, **Frist berechnen** wählen. Rechts öffnet sich **Fristenrechner**.
+1. **Strg + Umschalt + F** (Mac: **⌘ + Umschalt + F**) drücken, oder **Strg + K** (Mac: **⌘ + K**) und **Frist berechnen** wählen. Rechts öffnet sich **Fristenrechner**.
 2. Unter **Berechnungsrichtung** **Vorwaerts** (*Zustellung → Fristende*) oder **Rueckwaerts** (*Fristende → Zustellung*) wählen.
 3. Optional eine **Frist-Vorlage (optional)** wählen. Sie füllt Dauer und Notfrist aus.
 4. **Zustellungsdatum** (bzw. **Fristende** bei rückwärts) eintragen.
@@ -118,7 +120,9 @@ Der Bereich **Ergebnis** zeigt:
 
 **Historie** zeigt Ihre letzten zehn Berechnungen. Sie liegen nur in Ihrem Browser.
 
-**Das Ergebnis wird nicht automatisch eingetragen.** Der Knopf **Als Frist speichern** zeigt derzeit nur den Hinweis *„Zum Speichern als Frist bitte den Kalender-Dialog verwenden und die berechneten Daten uebernehmen.“* Legen Sie die Frist also über **Neuer Eintrag** an und übertragen Sie Fristende und Vorfrist von Hand. Kontrollieren Sie das übertragene Datum noch einmal gegen das Ergebnis.
+**Ergebnis als Frist eintragen:** Das Ergebnis wird nicht automatisch eingetragen. Klicken Sie auf **Als Frist speichern**. Der Fristenrechner schließt sich, und das Fenster **Neuer Kalendereintrag** öffnet sich vorbelegt: Typ **Frist**, als Titel der Name der gewählten Frist-Vorlage (sonst „Frist“), **Datum** und **Fristablauf** auf dem berechneten Fristende, in der **Beschreibung** Fristbeginn, Bundesland und gegebenenfalls Sonderfall. Im Hintergrund übernimmt AI-Lawyer außerdem Notfrist, Fristart, Bundesland, Sonderfall, alle Vorfristen und die Halbfrist. Ergänzen Sie **Akte (optional)** und **Verantwortlich**, prüfen Sie das Datum gegen das Ergebnis und klicken Sie auf **Erstellen**.
+
+Das funktioniert nur bei einer **Vorwärts**-Berechnung. Bei **Rückwärts** passiert beim Klick nichts; legen Sie die Frist dann über **Neuer Eintrag** an.
 
 ## Erinnerungen, Vorfrist und Halbfrist
 
@@ -132,25 +136,24 @@ Erinnerungen erscheinen als Benachrichtigung in AI-Lawyer und, wenn die IT den E
 
 ## Notfrist, Priorität und Quittierung
 
-- **Notfrist:** AI-Lawyer kann eine Frist als Notfrist führen. Notfristen lassen sich technisch nicht verlängern. Im Fenster **Neuer Kalendereintrag** gibt es dafür derzeit kein Feld; der Haken im Fristenrechner wird nicht in den Kalender übernommen.
+- **Notfrist:** AI-Lawyer kann eine Frist als Notfrist führen. Notfristen lassen sich technisch nicht verlängern. Im Fenster **Neuer Kalendereintrag** gibt es dafür kein eigenes Feld; die Kennzeichnung entsteht, wenn Sie die Frist aus dem Fristenrechner mit **Als Frist speichern** anlegen.
 - **Priorität:** Fünf Stufen von *sehr niedrig* bis *dringend* sind vorgesehen. Eine Eingabe in der Oberfläche fehlt noch, neue Einträge haben immer *normal*.
 - **Quittierung:** Ein Feld dafür gibt es in der Datenbank. Eine Möglichkeit, eine Frist in der Oberfläche zu quittieren, gibt es nicht.
 
 ## Fristen erledigen
 
-Für Fristen verlangt AI-Lawyer einen **Erledigungsgrund**. Er wird mit Ihrem Namen und der Uhrzeit protokolliert.
+Für Fristen verlangt AI-Lawyer einen **Erledigungsgrund**, für überfällige Fristen zusätzlich einen **Überschreitungsgrund**. Beide werden mit Ihrem Namen und der Uhrzeit protokolliert. Sie erledigen Fristen an drei Stellen: in der **Tagesuebersicht** auf dem Dashboard (Haken-Symbol **Erledigen**), in der Kalenderliste (Kästchen links oder **Als erledigt markieren**) und im Reiter **Termine & Fristen** der Akte.
 
-1. Auf dem **Dashboard** im Kasten **Tagesuebersicht** bei der Frist auf **Erledigen** (Haken-Symbol) klicken.
-2. Im Fenster **Erledigen: …** den **Erledigungsgrund** eintragen, z. B. „Berufungsbegründung per beA eingereicht“.
-3. **Erledigen** klicken. Meldung: *„Erledigt!“*
+1. Bei der Frist auf **Erledigen** bzw. das Kästchen klicken. Es öffnet sich das Fenster **Erledigen: …** mit dem Fälligkeitsdatum.
+2. Den **Erledigungsgrund** eintragen, z. B. „Schriftsatz per beA eingereicht“.
+3. Ist die Frist bereits abgelaufen, steht dort *Fristablauf war am …*, und es erscheint zusätzlich das Feld **Diese Frist ist abgelaufen. Grund der Überschreitung**. Tragen Sie ein, warum die Frist erst jetzt abgehakt wird, z. B. „rechtzeitig erledigt, Eintrag nur verspätet abgehakt“.
+4. **Erledigen** klicken. Der Knopf ist erst anklickbar, wenn alle verlangten Gründe ausgefüllt sind; ein Grund nur aus Leerzeichen zählt nicht. Meldung: *„Als erledigt markiert“*.
 
-Termine und Wiedervorlagen haken Sie einfacher ab: in der Kalenderliste das Kästchen links oder **Als erledigt markieren**.
+**Wann ist eine Frist überfällig?** Erst wenn ihr letzter Tag vollständig abgelaufen ist (§ 188 Abs. 1 BGB), gerechnet nach deutscher Zeit (Europe/Berlin). Eine Frist, die heute abläuft, erledigen Sie also noch ohne Überschreitungsgrund; ab morgen verlangt AI-Lawyer ihn.
 
-**Derzeitige Einschränkungen:**
+Termine und Wiedervorlagen haken Sie ohne Rückfrage ab: in der Kalenderliste das Kästchen links oder **Als erledigt markieren**.
 
-- In der **Kalenderliste** und im Reiter der Akte lassen sich **Fristen nicht** abhaken. Es fehlt dort die Abfrage des Grundes, AI-Lawyer lehnt ab und meldet *„Status konnte nicht geändert werden“*. Nutzen Sie die Tagesübersicht.
-- **Überfällige Fristen** verlangen zusätzlich einen Überschreitungsgrund. Diese Abfrage fehlt auch in der Tagesübersicht, dort erscheint *„Fuer ueberfaellige Fristen ist ein Ueberschreitungsgrund erforderlich“*. Eine überfällige Frist lässt sich derzeit über die Oberfläche nicht erledigen. Klären Sie den Fall sofort mit der zuständigen Anwältin oder dem Anwalt und lassen Sie den Admin informieren ([Kapitel 23](23-einschraenkungen-und-fragen.md)).
-- Die Tagesübersicht zeigt nur überfällige und heutige Einträge. Eine Frist in der Zukunft erledigen Sie dort erst an ihrem Tag.
+Die Tagesübersicht zeigt nur überfällige und heutige Einträge. Eine Frist in der Zukunft erledigen Sie über die Kalenderliste oder den Reiter der Akte.
 
 ## Verlängerung und Frist-Historie
 
@@ -160,7 +163,7 @@ AI-Lawyer kann eine Frist verlängern und dabei das alte Ende in einer Historie 
 
 Der Fristenzettel ist ein PDF zum Ausdrucken. Sie erzeugen ihn mit **Fristenzettel** in der Tagesübersicht oder mit **Fristenzettel drucken** im Fristenrechner. Er öffnet sich in einem neuen Tab und enthält alle offenen Fristen der nächsten sieben Tage sowie alle überfälligen Fristen.
 
-Der Fristenzettel enthält derzeit die Fristen aller Akten der Kanzlei, nicht nur Ihre eigenen.
+Der Fristenzettel enthält die Fristen aller Akten, auf die Sie Zugriff haben, sowie Fristen ohne Aktenbezug.
 
 ## Vertretung und Urlaub
 
@@ -191,14 +194,13 @@ Danach gleicht AI-Lawyer alle 15 Minuten ab, sofort mit **Jetzt synchronisieren*
 | --- | --- |
 | Fristen | Nur von AI-Lawyer in den externen Kalender, dort schreibgeschützt. Änderungen im Handy-Kalender wirken nicht zurück. |
 | Termine | In beide Richtungen: Anlegen, Ändern und Löschen werden abgeglichen. |
-| Fremde Termine aus dem externen Kalender | Erscheinen in der Tagesübersicht als externe Termine. |
+| Fremde Termine aus dem externen Kalender | Erscheinen in der Tagesübersicht unter **Externe Kalender** und in der Kalenderliste (Ansicht **Alle**) als **Extern**, jeweils nur lesbar. |
 
 Hinweise:
 
 - Fristen landen damit auch in Google bzw. Apple, also außerhalb der Kanzlei. Klären Sie vorher, ob das mit Ihrer Verschwiegenheitspflicht vereinbar ist ([Kapitel 18](18-datenschutz-und-audit.md)).
 - Ob Google den Zugang per App-Passwort annimmt, hängt von den Google-Einstellungen Ihres Kontos ab. Klappt die Verbindung nicht, erscheint *„Verbindung fehlgeschlagen“*.
 - Das Sekretariat hat in der Seitenleiste keinen Menüpunkt **Einstellungen** und damit keinen Zugang zu diesem Reiter.
-- Bekannter Fehler: Sobald fremde Termine aus dem externen Kalender übernommen wurden, kann die Seite **Kalender** beim Anzeigen dieser Termine abbrechen, weil ihnen kein Verantwortlicher zugeordnet ist. Die Tagesübersicht auf dem Dashboard ist davon nicht betroffen ([Kapitel 23](23-einschraenkungen-und-fragen.md)).
 
 ## Einstellungen → Fristen (Admin)
 
@@ -209,9 +211,11 @@ Unter **Einstellungen → Fristen** kann der Admin Vorfristen, ein Standard-Bund
 | Meldung | Bedeutung | Was tun |
 | --- | --- | --- |
 | *Kalendereinträge konnten nicht geladen werden* | Server nicht erreichbar. | Seite neu laden, sonst IT informieren. |
-| *Status konnte nicht geändert werden* (beim Abhaken einer Frist) | Für Fristen fehlt der Erledigungsgrund. | Über die **Tagesuebersicht** erledigen. |
-| *Fuer ueberfaellige Fristen ist ein Ueberschreitungsgrund erforderlich* | Überfällige Frist, Abfrage fehlt in der Oberfläche. | Sofort Anwältin oder Anwalt informieren; Admin wegen der Erledigung ansprechen. |
-| *Bitte einen Erledigungsgrund angeben* | Feld leer. | Grund eintragen. |
+| **Erledigen** im Fenster nicht anklickbar | Erledigungsgrund oder (bei überfälligen Fristen) Überschreitungsgrund fehlt. | Beide Felder ausfüllen. |
+| *Für überfällige Fristen ist ein Überschreitungsgrund erforderlich* | Die Frist ist während des Abhakens überfällig geworden (z. B. Fenster über Mitternacht offen). | Fenster schließen, erneut öffnen und den Überschreitungsgrund eintragen. |
+| *Status konnte nicht geändert werden* | Server nicht erreichbar oder keine Berechtigung für die Akte. | Seite neu laden; Zuordnung zur Akte prüfen lassen. |
+| Externer Termin lässt sich nicht abhaken oder bearbeiten | Termine aus Google- oder Apple-Kalender sind in AI-Lawyer nur lesbar. | Im externen Kalender ändern. |
+| **Als Frist speichern** reagiert nicht | Rückwärts-Berechnung. | Frist über **Neuer Eintrag** anlegen. |
 | *Bitte ein Datum eingeben* | Fristenrechner ohne Datum. | Zustellungsdatum eintragen. |
 | *Bitte mindestens eine Dauer angeben (Tage, Wochen oder Monate)* | Keine Dauer. | Dauer eintragen oder Vorlage wählen. |
 | *Titel ist erforderlich* / *Datum ist erforderlich* | Pflichtfeld leer. | Feld ausfüllen. |

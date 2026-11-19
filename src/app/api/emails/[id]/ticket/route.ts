@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/audit";
+import { emailNachrichtZugriffWhere } from "@/lib/email/zugriff";
 
 /**
  * POST /api/emails/[id]/ticket — Create a Ticket from an email.
@@ -20,8 +22,9 @@ export async function POST(
   const { id } = await params;
 
   // Fetch email with veraktung info
-  const email = await prisma.emailNachricht.findUnique({
-    where: { id },
+  const user = { id: session.user.id!, role: (session.user as any).role };
+  const email = await prisma.emailNachricht.findFirst({
+    where: { AND: [{ id }, emailNachrichtZugriffWhere(user)] },
     select: {
       id: true,
       betreff: true,
@@ -71,6 +74,10 @@ export async function POST(
   const beschreibung = body.beschreibung ?? defaultBeschreibung;
   const akteId =
     body.akteId ?? email.veraktungen[0]?.akteId ?? null;
+  if (akteId) {
+    const denied = await akteAccessDenied(session, akteId);
+    if (denied) return denied;
+  }
   const prioritaet = body.prioritaet ?? "NORMAL";
   const faelligAm = body.faelligAm ? new Date(body.faelligAm) : null;
   const verantwortlichId = body.verantwortlichId ?? null;

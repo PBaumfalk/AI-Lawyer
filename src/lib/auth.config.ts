@@ -16,19 +16,40 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request }: { auth: any; request: NextRequest }) {
       const url = request.nextUrl;
+      const path = url.pathname;
+      const under = (base: string) => path === base || path.startsWith(base + "/");
+      const isApi = under("/api");
 
       // Allow the 2FA setup-required page itself (no redirect loop)
-      if (url.pathname === "/2fa-setup-required") return true;
+      if (path === "/2fa-setup-required") return true;
 
-      // Allow the settings area so enforced users can actually reach the 2FA
-      // setup UI (the setup-required page links to /einstellungen?tab=sicherheit).
-      // Without this exemption the enforcement redirect loops forever.
-      if (url.pathname.startsWith("/einstellungen")) return true;
+      if (!auth?.user) {
+        // API callers get a machine-readable 401 instead of a login redirect.
+        if (isApi) {
+          return Response.json({ error: "Nicht authentifiziert" }, { status: 401 });
+        }
+        return false;
+      }
+
+      // Mandanten (client accounts) may only use the portal. Without this gate
+      // a client who signed in via /login could open the firm's case list and
+      // every API that only checks for a session.
+      if (auth.user.role === "MANDANT") {
+        if (under("/portal") || under("/api/portal")) return true;
+        if (isApi) {
+          return Response.json({ error: "Keine Berechtigung" }, { status: 403 });
+        }
+        return Response.redirect(new URL("/portal/dashboard", request.url));
+      }
+
+      // The settings area stays reachable for users who must still set up 2FA
+      // (the setup-required page links to /einstellungen?tab=sicherheit).
+      if (under("/einstellungen")) return true;
 
       // 2FA enforcement: roles configured via TOTP_REQUIRED_ROLES env var (comma-separated)
       // Edge middleware cannot query the DB — totpEnabled is stored in JWT at login time
       const requiredRolesEnv = process.env.TOTP_REQUIRED_ROLES || "";
-      if (requiredRolesEnv && auth?.user?.role && !auth?.user?.totpEnabled) {
+      if (requiredRolesEnv && auth.user.role && !auth.user.totpEnabled) {
         const requiredRoles = requiredRolesEnv
           .split(",")
           .map((r: string) => r.trim())
@@ -38,7 +59,7 @@ export const authConfig = {
         }
       }
 
-      return !!auth;
+      return true;
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {

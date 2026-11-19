@@ -211,6 +211,22 @@ export function ChatLayout({
     setPendingReminder(null);
   }, [selectedAkteId]);
 
+  // Schriftsatz conflict: discard the pending pipeline, then resend the user's
+  // new request (the last user message) so it starts a fresh pipeline.
+  const handleRestartSchriftsatz = useCallback(async () => {
+    if (!selectedAkteId) return;
+    const lastUserIndex = messages.map((m) => m.role).lastIndexOf("user");
+    if (lastUserIndex < 0) return;
+    const lastUser = messages[lastUserIndex];
+    const res = await fetch(`/api/ki-chat/pending?akteId=${encodeURIComponent(selectedAkteId)}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) return;
+    setPendingReminder(null);
+    setMessages(messages.slice(0, lastUserIndex));
+    await append({ role: "user", content: lastUser.content });
+  }, [selectedAkteId, messages, setMessages, append]);
+
   const handleAkteChange = useCallback((akteId: string | null) => {
     if (akteId === "__all__") {
       setSelectedAkteId(null);
@@ -322,6 +338,7 @@ export function ChatLayout({
             conversationId={selectedConversationId}
             pendingReminder={pendingReminder}
             onDismissPending={handleDismissPending}
+            onRestartSchriftsatz={handleRestartSchriftsatz}
           />
         </div>
 

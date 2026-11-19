@@ -23,6 +23,10 @@ RUN mkdir -p public && cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs publi
 # Generate Prisma client (needs dummy DATABASE_URL since .env is excluded)
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
+# NEXT_PUBLIC_* values are inlined at build time, so they must be build args.
+ARG NEXT_PUBLIC_KANZLEI_NAME=Kanzlei
+ENV NEXT_PUBLIC_KANZLEI_NAME=$NEXT_PUBLIC_KANZLEI_NAME
+
 # Build Next.js in standalone mode (no .env — env vars come from docker-compose at runtime)
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npm run build
@@ -102,4 +106,7 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["node", "server.js"]
+# Custom server = Next.js + Socket.IO on one port (src/server.ts). It runs on
+# the standalone output with the build-time config; .next/standalone/server.js
+# would serve the app without Socket.IO (no realtime messages/notifications).
+CMD ["node", "dist-server/index.js"]

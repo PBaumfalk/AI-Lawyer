@@ -4,35 +4,56 @@
 // DELETE: Only ENTWURF invoices
 
 import { NextRequest, NextResponse } from 'next/server';
+import { loeschenVerweigert } from "@/lib/rbac";
 import { prisma } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
 import { requireAuth, requireAkteAccess } from '@/lib/rbac';
-import { transitionInvoiceStatus } from '@/lib/finance/invoice/status-machine';
+import { transitionInvoiceStatus, ACTION_TARGET_STATUS } from '@/lib/finance/invoice/status-machine';
 import { autoBookFromInvoice } from '@/lib/finance/aktenkonto/booking';
-import { z } from 'zod';
 import type { InvoicePosition, UstSummary } from '@/lib/finance/invoice/types';
+import {
+  editInvoiceSchema,
+  invoiceActionSchema,
+  type InvoiceActionResponse,
+  type InvoiceDetailDto,
+} from '@/lib/finance/invoice/contract';
+import { toInvoiceDetail } from '@/lib/finance/invoice/serialize';
 
-// ─── Validation Schemas ──────────────────────────────────────────────────────
+/** Load an invoice with everything the detail view needs, as DTO. */
+async function loadInvoiceDetail(id: string): Promise<{ akteId: string; dto: InvoiceDetailDto } | null> {
+  const rechnung = await prisma.rechnung.findUnique({
+    where: { id },
+    include: {
+      akte: {
+        select: {
+          aktenzeichen: true,
+          kurzrubrum: true,
+          beteiligte: {
+            where: { rolle: 'MANDANT' },
+            select: {
+              kontakt: {
+                select: { vorname: true, nachname: true, firma: true, strasse: true, plz: true, ort: true },
+              },
+            },
+            take: 1,
+          },
+        },
+      },
+      teilzahlungen: { orderBy: { zahlungsdatum: 'desc' } },
+      mahnungen: { orderBy: { datum: 'desc' } },
+    },
+  });
+  if (!rechnung) return null;
 
-const positionSchema = z.object({
-  vvNr: z.string().optional(),
-  beschreibung: z.string().min(1),
-  menge: z.number().positive(),
-  einzelpreis: z.number().min(0),
-  ustSatz: z.number().min(0).max(100),
-  betrag: z.number(),
-});
+  const empfaenger = rechnung.empfaengerId
+    ? await prisma.kontakt.findUnique({
+        where: { id: rechnung.empfaengerId },
+        select: { vorname: true, nachname: true, firma: true, strasse: true, plz: true, ort: true },
+      })
+    : null;
 
-const editSchema = z.object({
-  positionen: z.array(positionSchema).optional(),
-  notizen: z.string().optional(),
-  zahlungszielTage: z.number().int().positive().optional(),
-  empfaengerId: z.string().optional(),
-});
-
-const actionSchema = z.object({
-  action: z.enum(['stellen', 'bezahlen', 'stornieren', 'mahnen']),
-});
+  return { akteId: rechnung.akteId, dto: toInvoiceDetail(rechnung, empfaenger) };
+}
 
 // ─── GET /api/finanzen/rechnungen/[id] ───────────────────────────────────────
 
@@ -46,71 +67,16 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const rechnung = await prisma.rechnung.findUnique({
-      where: { id },
-      include: {
-        akte: {
-          select: {
-            id: true,
-            aktenzeichen: true,
-            kurzrubrum: true,
-            kanzlei: true,
-            beteiligte: {
-              where: { rolle: 'MANDANT' },
-              select: {
-                kontakt: {
-                  select: {
-                    id: true,
-                    vorname: true,
-                    nachname: true,
-                    firma: true,
-                    strasse: true,
-                    plz: true,
-                    ort: true,
-                  },
-                },
-              },
-              take: 1,
-            },
-          },
-        },
-        teilzahlungen: {
-          orderBy: { zahlungsdatum: 'desc' },
-        },
-        mahnungen: {
-          orderBy: { datum: 'desc' },
-        },
-      },
-    });
-
-    if (!rechnung) {
+    const loaded = await loadInvoiceDetail(id);
+    if (!loaded) {
       return NextResponse.json({ error: 'Rechnung nicht gefunden' }, { status: 404 });
     }
 
     // Verify user has access to the invoice's Akte
-    const akteAccess = await requireAkteAccess(rechnung.akte.id);
+    const akteAccess = await requireAkteAccess(loaded.akteId);
     if (akteAccess.error) return akteAccess.error;
 
-    // Calculate restBetrag from teilzahlungen
-    const gezahlt = rechnung.teilzahlungen.reduce(
-      (sum, tz) => sum + tz.betrag.toNumber(),
-      0,
-    );
-    const restBetrag = rechnung.betragBrutto.toNumber() - gezahlt;
-
-    // Format Mandant and Empfaenger
-    const mandant = rechnung.akte.beteiligte[0]?.kontakt;
-    const mandantName = mandant
-      ? mandant.firma ?? [mandant.vorname, mandant.nachname].filter(Boolean).join(' ')
-      : null;
-
-    return NextResponse.json({
-      ...rechnung,
-      restBetrag: Math.max(0, Math.round(restBetrag * 100) / 100),
-      mandantName,
-      aktenzeichen: rechnung.akte.aktenzeichen,
-      kurzrubrum: rechnung.akte.kurzrubrum,
-    });
+    return NextResponse.json<InvoiceDetailDto>(loaded.dto);
   } catch (err: any) {
     console.error('Invoice detail error:', err);
     return NextResponse.json(
@@ -141,20 +107,13 @@ export async function PATCH(
   }
 
   // Determine mode: action (status transition) or edit
-  const actionParsed = actionSchema.safeParse(body);
+  const actionParsed = invoiceActionSchema.safeParse(body);
 
   if (actionParsed.success) {
     // ── Status Transition Mode ─────────────────────────────────────────────
     const { action } = actionParsed.data;
 
-    const statusMap: Record<string, string> = {
-      stellen: 'GESTELLT',
-      bezahlen: 'BEZAHLT',
-      stornieren: 'STORNIERT',
-      mahnen: 'MAHNUNG',
-    };
-
-    const targetStatus = statusMap[action] as any;
+    const targetStatus = ACTION_TARGET_STATUS[action];
 
     try {
       // Load Kanzlei settings for Storno pattern
@@ -194,10 +153,13 @@ export async function PATCH(
       }
 
       // Reload updated invoice
-      const updated = await prisma.rechnung.findUnique({ where: { id } });
+      const updated = await loadInvoiceDetail(id);
+      if (!updated) {
+        return NextResponse.json({ error: 'Rechnung nicht gefunden' }, { status: 404 });
+      }
 
-      return NextResponse.json({
-        rechnung: updated,
+      return NextResponse.json<InvoiceActionResponse>({
+        rechnung: updated.dto,
         sideEffects: result.sideEffects,
       });
     } catch (err: any) {
@@ -210,7 +172,7 @@ export async function PATCH(
   }
 
   // ── Edit Mode (ENTWURF only) ───────────────────────────────────────────────
-  const editParsed = editSchema.safeParse(body);
+  const editParsed = editInvoiceSchema.safeParse(body);
   if (!editParsed.success) {
     return NextResponse.json(
       { error: 'Validierungsfehler', details: editParsed.error.flatten() },
@@ -310,6 +272,9 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const loeschVerbot = await loeschenVerweigert();
+  if (loeschVerbot) return loeschVerbot;
+
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;
   const { session } = authResult;

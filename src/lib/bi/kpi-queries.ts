@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { Prisma, Sachgebiet, type UserRole } from "@prisma/client";
+import { buildAkteAccessFilter } from "@/lib/rbac";
 import { cachedQuery } from "@/lib/bi/cache";
 import type { BiFilterParams, KpiTile, TrendSeries, TrendPoint } from "@/lib/bi/types";
 import { createLogger } from "@/lib/logger";
@@ -20,10 +22,29 @@ interface ParsedFilters {
 }
 
 /** Parse query string into BiFilterParams and compute current + previous date ranges */
+/** Invalid filter input from the query string (→ HTTP 400). */
+export class BiFilterError extends Error {}
+
+const ZEITRAEUME: readonly BiFilterParams["zeitraum"][] = ["monat", "quartal", "jahr", "custom"];
+
+function parseDateParam(value: string | null, name: string): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) throw new BiFilterError(`Ungueltiges Datum fuer ${name}`);
+  return d;
+}
+
 export function parseBiFilters(searchParams: URLSearchParams): ParsedFilters {
-  const zeitraum = (searchParams.get("zeitraum") as BiFilterParams["zeitraum"]) || "monat";
+  const zeitraumRaw = searchParams.get("zeitraum") || "monat";
+  if (!ZEITRAEUME.includes(zeitraumRaw as BiFilterParams["zeitraum"])) {
+    throw new BiFilterError("Ungueltiger Zeitraum");
+  }
+  const zeitraum = zeitraumRaw as BiFilterParams["zeitraum"];
   const anwaltId = searchParams.get("anwaltId") || undefined;
   const sachgebiet = searchParams.get("sachgebiet") || undefined;
+  if (sachgebiet && !(sachgebiet in Sachgebiet)) {
+    throw new BiFilterError("Ungueltiges Sachgebiet");
+  }
 
   const now = new Date();
   let von: Date;
@@ -48,10 +69,8 @@ export function parseBiFilters(searchParams: URLSearchParams): ParsedFilters {
       break;
     }
     case "custom": {
-      const vonStr = searchParams.get("von");
-      const bisStr = searchParams.get("bis");
-      von = vonStr ? new Date(vonStr) : new Date(now.getFullYear(), now.getMonth(), 1);
-      bis = bisStr ? new Date(bisStr) : now;
+      von = parseDateParam(searchParams.get("von"), "von") ?? new Date(now.getFullYear(), now.getMonth(), 1);
+      bis = parseDateParam(searchParams.get("bis"), "bis") ?? new Date(now);
       // Set bis to end of day
       bis.setHours(23, 59, 59, 999);
       const durationMs = bis.getTime() - von.getTime();
@@ -90,6 +109,46 @@ function computeDelta(current: number, previous: number): number {
   return Math.round(((current - previous) / previous) * 100 * 10) / 10;
 }
 
+// ─── Scope ──────────────────────────────────────────────────────────────────
+
+/**
+ * Which data a BI request may aggregate: the Akten the user may access
+ * (buildAkteAccessFilter) narrowed by the Anwalt/Sachgebiet filters. Every
+ * query below derives its WHERE clause from this one object, so a filter or an
+ * access rule cannot be forgotten in a single KPI.
+ */
+export interface BiScope {
+  /** WHERE for Akte itself; {} = no restriction (ADMIN without filters). */
+  akte: Prisma.AkteWhereInput;
+  /** WHERE fragment for models with an `akte` relation. */
+  viaAkte: { akte?: Prisma.AkteWhereInput };
+  /** Token usage is per user: non-admins only see their own consumption. */
+  tokenUsage: Prisma.TokenUsageWhereInput;
+}
+
+export function buildBiScope(
+  user: { id: string; role: UserRole },
+  params: Pick<BiFilterParams, "anwaltId" | "sachgebiet">
+): BiScope {
+  const parts: Prisma.AkteWhereInput[] = [];
+  const access = buildAkteAccessFilter(user.id, user.role);
+  if (Object.keys(access).length > 0) parts.push(access);
+  if (params.anwaltId) parts.push({ anwaltId: params.anwaltId });
+  if (params.sachgebiet) parts.push({ sachgebiet: params.sachgebiet as Sachgebiet });
+
+  const akte: Prisma.AkteWhereInput = parts.length > 0 ? { AND: parts } : {};
+  const viaAkte = parts.length > 0 ? { akte } : {};
+
+  const tokenUsage: Prisma.TokenUsageWhereInput = {
+    ...(user.role === "ADMIN" ? {} : { userId: user.id }),
+    ...(params.anwaltId || params.sachgebiet
+      ? { akte: { ...(params.anwaltId ? { anwaltId: params.anwaltId } : {}), ...(params.sachgebiet ? { sachgebiet: params.sachgebiet as Sachgebiet } : {}) } }
+      : {}),
+  };
+
+  return { akte, viaAkte, tokenUsage };
+}
+
 /** Generate a stable hash for cache key from filter params + userId */
 function filterHash(filters: ParsedFilters, userId: string): string {
   const data = JSON.stringify({
@@ -107,15 +166,13 @@ const CACHE_TTL = 300; // 5 minutes
 
 export async function getAktenKpis(
   filters: ParsedFilters,
-  accessFilter: Record<string, any>,
+  scope: BiScope,
   userId: string
 ): Promise<KpiTile[]> {
   const cacheKey = `aktenKpis:${filterHash(filters, userId)}`;
 
   const { data } = await cachedQuery(cacheKey, CACHE_TTL, async () => {
-    const baseWhere: any = { ...accessFilter };
-    if (filters.params.sachgebiet) baseWhere.sachgebiet = filters.params.sachgebiet;
-    if (filters.params.anwaltId) baseWhere.anwaltId = filters.params.anwaltId;
+    const baseWhere = scope.akte;
 
     // akten-offen: count Akte with status OFFEN
     const [offenCurrent, offenPrevious] = await Promise.all([
@@ -174,22 +231,13 @@ export async function getAktenKpis(
 
 export async function getFinanzenKpis(
   filters: ParsedFilters,
-  accessFilter: Record<string, any>,
+  scope: BiScope,
   userId: string
 ): Promise<KpiTile[]> {
   const cacheKey = `finanzenKpis:${filterHash(filters, userId)}`;
 
   const { data } = await cachedQuery(cacheKey, CACHE_TTL, async () => {
-    // Build akte-scoped access filter for Rechnung
-    const akteFilter = Object.keys(accessFilter).length > 0
-      ? { akte: accessFilter }
-      : {};
-    const sachgebietFilter = filters.params.sachgebiet
-      ? { akte: { ...akteFilter.akte, sachgebiet: filters.params.sachgebiet } }
-      : akteFilter;
-    const anwaltFilter = filters.params.anwaltId
-      ? { akte: { ...sachgebietFilter.akte, anwaltId: filters.params.anwaltId } }
-      : sachgebietFilter;
+    const anwaltFilter = scope.viaAkte;
 
     // finanzen-umsatz: Sum betragBrutto where rechnungsdatum in period
     const [umsatzCurrent, umsatzPrevious] = await Promise.all([
@@ -261,15 +309,13 @@ export async function getFinanzenKpis(
 
 export async function getFristenKpis(
   filters: ParsedFilters,
-  accessFilter: Record<string, any>,
+  scope: BiScope,
   userId: string
 ): Promise<KpiTile[]> {
   const cacheKey = `fristenKpis:${filterHash(filters, userId)}`;
 
   const { data } = await cachedQuery(cacheKey, CACHE_TTL, async () => {
-    const akteFilter = Object.keys(accessFilter).length > 0
-      ? { akte: accessFilter }
-      : {};
+    const akteFilter = scope.viaAkte;
 
     // fristen-compliance: Percentage of FRIST entries completed on time
     // Use raw query for field-to-field comparison (erledigtAm <= datum)
@@ -281,19 +327,20 @@ export async function getFristenKpis(
       },
     });
 
-    // Count fristen completed on time (erledigtAm <= datum) via raw SQL
+    // Count fristen completed on time (erledigtAm <= datum): field-to-field
+    // comparison via Prisma field reference, so the access and Anwalt/
+    // Sachgebiet scope applies exactly as for the total above.
     let complianceCount = 0;
     if (totalFristen > 0) {
-      const result = await prisma.$queryRaw<[{ count: bigint }]>`
-        SELECT COUNT(*)::bigint as count FROM "KalenderEintrag"
-        WHERE typ = 'FRIST'
-          AND datum >= ${filters.current.von}
-          AND datum <= ${filters.current.bis}
-          AND erledigt = true
-          AND "erledigtAm" IS NOT NULL
-          AND "erledigtAm" <= datum
-      `;
-      complianceCount = Number(result[0]?.count ?? 0);
+      complianceCount = await prisma.kalenderEintrag.count({
+        where: {
+          ...akteFilter,
+          typ: "FRIST",
+          datum: { gte: filters.current.von, lte: filters.current.bis },
+          erledigt: true,
+          erledigtAm: { not: null, lte: prisma.kalenderEintrag.fields.datum },
+        },
+      });
     }
 
     const complianceRate = totalFristen > 0
@@ -371,15 +418,13 @@ export async function getFristenKpis(
 
 export async function getHelenaKpis(
   filters: ParsedFilters,
-  accessFilter: Record<string, any>,
+  scope: BiScope,
   userId: string
 ): Promise<KpiTile[]> {
   const cacheKey = `helenaKpis:${filterHash(filters, userId)}`;
 
   const { data } = await cachedQuery(cacheKey, CACHE_TTL, async () => {
-    const akteFilter = Object.keys(accessFilter).length > 0
-      ? { akte: accessFilter }
-      : {};
+    const akteFilter = scope.viaAkte;
 
     // helena-gespraeche: Count HelenaTask in period
     const [gespraecheCurrent, gespraechePrevious] = await Promise.all([
@@ -459,12 +504,14 @@ export async function getHelenaKpis(
       prisma.tokenUsage.aggregate({
         _sum: { tokensIn: true, tokensOut: true },
         where: {
+          ...scope.tokenUsage,
           createdAt: { gte: filters.current.von, lte: filters.current.bis },
         },
       }),
       prisma.tokenUsage.aggregate({
         _sum: { tokensIn: true, tokensOut: true },
         where: {
+          ...scope.tokenUsage,
           createdAt: { gte: filters.previous.von, lte: filters.previous.bis },
         },
       }),
@@ -517,7 +564,7 @@ export async function getHelenaKpis(
 
 export async function getTrendData(
   filters: ParsedFilters,
-  accessFilter: Record<string, any>,
+  scope: BiScope,
   userId: string
 ): Promise<TrendSeries[]> {
   const cacheKey = `trendData:${filterHash(filters, userId)}`;
@@ -538,16 +585,14 @@ export async function getTrendData(
       });
     }
 
-    const akteFilter = Object.keys(accessFilter).length > 0
-      ? { akte: accessFilter }
-      : {};
+    const akteFilter = scope.viaAkte;
 
     // Akten-Neuzugang trend
     const aktenTrend: TrendPoint[] = await Promise.all(
       months.map(async (m) => {
         const count = await prisma.akte.count({
           where: {
-            ...accessFilter,
+            ...scope.akte,
             angelegt: { gte: m.von, lte: m.bis },
           },
         });
@@ -561,7 +606,7 @@ export async function getTrendData(
         const result = await prisma.rechnung.aggregate({
           _sum: { betragBrutto: true },
           where: {
-            ...(Object.keys(accessFilter).length > 0 ? { akte: accessFilter } : {}),
+            ...scope.viaAkte,
             rechnungsdatum: { gte: m.von, lte: m.bis },
             status: { not: "STORNIERT" },
           },

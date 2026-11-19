@@ -27,6 +27,14 @@ import {
   KalenderEintragDialog,
   type KalenderEintragItem,
 } from "./kalender-eintrag-dialog";
+import {
+  ErledigungDialog,
+  type ErledigungsDialogEintrag,
+} from "@/components/fristen/erledigung-dialog";
+import {
+  buildErledigtRequest,
+  erledigenOhneRueckfrage,
+} from "@/lib/fristen/erledigung";
 
 // ── Config ──────────────────────────────────────────────────────────────────────
 
@@ -87,6 +95,8 @@ export function KalenderTab({ akteId, initialEintraege }: KalenderTabProps) {
   );
   const [contextMenuId, setContextMenuId] = useState<string | null>(null);
   const [showErledigt, setShowErledigt] = useState(false);
+  const [erledigungEintrag, setErledigungEintrag] =
+    useState<ErledigungsDialogEintrag | null>(null);
 
   // Close context menu on outside click
   useEffect(() => {
@@ -110,20 +120,31 @@ export function KalenderTab({ akteId, initialEintraege }: KalenderTabProps) {
   }, [akteId, router]);
 
   // Toggle erledigt
-  async function handleToggleErledigt(id: string, newValue: boolean) {
+  async function handleToggleErledigt(
+    ke: InitialKalenderEintrag,
+    newValue: boolean
+  ) {
+    // Fristen need reasons (and overdue ones a Ueberschreitungsgrund) -- ask first
+    if (newValue && !erledigenOhneRueckfrage(ke)) {
+      setErledigungEintrag(ke);
+      return;
+    }
     try {
-      const res = await fetch(`/api/kalender/${id}/erledigt`, {
+      const res = await fetch(`/api/kalender/${ke.id}/erledigt`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ erledigt: newValue }),
+        body: JSON.stringify(buildErledigtRequest(newValue)),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Status konnte nicht geändert werden");
+      }
       toast.success(
         newValue ? "Als erledigt markiert" : "Als offen markiert"
       );
       refreshData();
-    } catch {
-      toast.error("Status konnte nicht geändert werden");
+    } catch (err: any) {
+      toast.error(err.message);
     }
   }
 
@@ -224,7 +245,7 @@ export function KalenderTab({ akteId, initialEintraege }: KalenderTabProps) {
                   {/* Erledigt toggle */}
                   <button
                     onClick={() =>
-                      handleToggleErledigt(ke.id, !ke.erledigt)
+                      handleToggleErledigt(ke, !ke.erledigt)
                     }
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                       ke.erledigt
@@ -304,7 +325,7 @@ export function KalenderTab({ akteId, initialEintraege }: KalenderTabProps) {
                         <button
                           className="w-full text-left px-3 py-2 text-sm hover:bg-white/20 dark:hover:bg-white/[0.06] flex items-center gap-2"
                           onClick={() => {
-                            handleToggleErledigt(ke.id, !ke.erledigt);
+                            handleToggleErledigt(ke, !ke.erledigt);
                             setContextMenuId(null);
                           }}
                         >
@@ -351,6 +372,12 @@ export function KalenderTab({ akteId, initialEintraege }: KalenderTabProps) {
         onSaved={refreshData}
         eintrag={editEintrag}
         akteId={akteId}
+      />
+
+      <ErledigungDialog
+        eintrag={erledigungEintrag}
+        onClose={() => setErledigungEintrag(null)}
+        onErledigt={refreshData}
       />
     </div>
   );

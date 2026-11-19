@@ -1,3 +1,4 @@
+import { getSettingTyped } from "@/lib/settings/service";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { testProviderConnection } from "@/lib/ai/provider";
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   const result = await testProviderConnection({
     provider: body.provider || "ollama",
-    apiKey: body.apiKey,
+    apiKey: body.apiKey || (await getSettingTyped<string>("ai.provider.apiKey", "")),
     model: body.model,
     ollamaUrl: body.ollamaUrl,
   });

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { UIMessage } from "@ai-sdk/ui-utils";
-import { Bot, User, Copy, Link2, FileDown, Sparkles, AlertTriangle, ChevronRight } from "lucide-react";
+import { Bot, User, Copy, Link2, Sparkles, AlertTriangle, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SourceCitations, type SourceData } from "@/components/ki/source-citations";
 import ReactMarkdown from "react-markdown";
@@ -170,6 +170,8 @@ interface ChatMessagesProps {
     filledSlots: Record<string, unknown>;
   } | null;
   onDismissPending?: () => void;
+  /** "Verwerfen und neu starten" on a Schriftsatz conflict message. */
+  onRestartSchriftsatz?: () => void;
 }
 
 interface StoredMessage {
@@ -187,6 +189,7 @@ export function ChatMessages({
   conversationId,
   pendingReminder,
   onDismissPending,
+  onRestartSchriftsatz,
 }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [historicalMessages, setHistoricalMessages] = useState<StoredMessage[]>([]);
@@ -329,6 +332,24 @@ export function ChatMessages({
                   // Check for Schriftsatz pipeline metadata in message
                   const { isSchriftsatz, meta, cleanContent } = parseSchriftsatzMeta(msg.content);
 
+                  if (isSchriftsatz && meta?._conflict) {
+                    return (
+                      <div className="space-y-2">
+                        <p className="text-sm">{cleanContent}</p>
+                        {onRestartSchriftsatz && (
+                          <button
+                            type="button"
+                            onClick={onRestartSchriftsatz}
+                            disabled={isLoading}
+                            className="text-xs font-medium px-2.5 py-1 rounded-md border border-amber-300 text-amber-800 dark:text-amber-200 hover:bg-amber-50 dark:hover:bg-amber-950 disabled:opacity-50"
+                          >
+                            Verwerfen und neu starten
+                          </button>
+                        )}
+                      </div>
+                    );
+                  }
+
                   if (isSchriftsatz && meta?._schriftsatz) {
                     return (
                       <RueckfrageMessage
@@ -431,13 +452,8 @@ export function ChatMessages({
                     <Copy className="w-3 h-3" />
                     Kopieren
                   </button>
-                  <button
-                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-white/50 dark:hover:bg-white/[0.05]"
-                    title="Als Entwurf speichern"
-                  >
-                    <FileDown className="w-3 h-3" />
-                    Als Entwurf
-                  </button>
+                  {/* "Als Entwurf" removed: there is no API to save a chat answer as
+                      draft (POST /api/helena/drafts does not exist). Use "Kopieren". */}
                 </div>
               )}
             </div>

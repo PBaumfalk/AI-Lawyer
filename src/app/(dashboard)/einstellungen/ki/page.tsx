@@ -66,6 +66,8 @@ export default function KiEinstellungenPage() {
   // Provider config
   const [provider, setProvider] = useState("ollama");
   const [apiKey, setApiKey] = useState("");
+  // The server never returns the stored key; it only says whether one exists.
+  const [apiKeySet, setApiKeySet] = useState(false);
   const [model, setModel] = useState("qwen3.5:35b");
   const [ollamaUrl, setOllamaUrl] = useState("http://ollama:11434");
   const [monthlyBudget, setMonthlyBudget] = useState("0");
@@ -116,7 +118,10 @@ export default function KiEinstellungenPage() {
           settings.find((s: any) => s.key === key)?.value ?? fallback;
 
         setProvider(get("ai.provider", "ollama"));
-        setApiKey(get("ai.provider.apiKey", ""));
+        setApiKey("");
+        setApiKeySet(
+          Boolean(settings.find((s: any) => s.key === "ai.provider.apiKey")?.secretSet)
+        );
         setModel(get("ai.provider.model", "qwen3.5:35b"));
         setOllamaUrl(get("ai.ollama.url", "http://ollama:11434"));
         setMonthlyBudget(get("ai.monthly_budget", "0"));
@@ -362,9 +367,11 @@ export default function KiEinstellungenPage() {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder={
-                  provider === "openai"
-                    ? "sk-..."
-                    : "sk-ant-..."
+                  apiKeySet
+                    ? "Gespeichert. Leer lassen, um den Schlüssel zu behalten."
+                    : provider === "openai"
+                      ? "sk-..."
+                      : "sk-ant-..."
                 }
                 className="glass-input w-full rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
               />

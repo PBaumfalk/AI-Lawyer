@@ -176,6 +176,15 @@ export async function requirePermission(
   return { session };
 }
 
+// ─── loeschenVerweigert ─────────────────────────────────────────────────────
+// First statement of DELETE handlers for firm data: 401 without session,
+// 403 without canLoeschen (Sekretariat, Mandant), otherwise null.
+
+export async function loeschenVerweigert(): Promise<NextResponse | null> {
+  const result = await requirePermission("canLoeschen");
+  return result.error ?? null;
+}
+
 // ─── requireAkteAccess ──────────────────────────────────────────────────────
 // Multi-path access check:
 // - ADMIN: check AdminOverride table for explicit override, else full access
@@ -184,7 +193,7 @@ export async function requirePermission(
 
 export async function requireAkteAccess(
   akteId: string,
-  options?: { requireEdit?: boolean }
+  options?: { requireEdit?: boolean; requireDelete?: boolean }
 ): Promise<
   | { session: AuthenticatedSession; akte: any; error?: undefined }
   | { session?: undefined; akte?: undefined; error: NextResponse }
@@ -195,6 +204,19 @@ export async function requireAkteAccess(
   const { session } = result;
   const userId = session.user.id;
   const role = session.user.role;
+
+  // Role-level permissions first. These options used to be accepted but
+  // ignored, so e.g. the Sekretariat could delete despite canLoeschen=false.
+  const perms = PERMISSIONS[role];
+  if (
+    !perms ||
+    (options?.requireEdit && !perms.canEditAkte) ||
+    (options?.requireDelete && !perms.canLoeschen)
+  ) {
+    return {
+      error: NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 }),
+    };
+  }
 
   // Fetch Akte with assignment info
   const akte = await prisma.akte.findUnique({
@@ -255,6 +277,40 @@ export async function requireAkteAccess(
   };
 }
 
+// ─── canAccessAkte ──────────────────────────────────────────────────────────
+// Boolean access check for server components and non-HTTP callers. Same rules
+// as requireAkteAccess: ADMIN everything, others direct assignment or
+// Dezernat membership, MANDANT never (clients use portal-access.ts).
+
+export async function canAccessAkte(
+  user: { id: string; role: UserRole },
+  akteId: string
+): Promise<boolean> {
+  if (user.role === "MANDANT") return false;
+  const akte = await prisma.akte.findFirst({
+    where: { id: akteId, ...buildAkteAccessFilter(user.id, user.role) },
+    select: { id: true },
+  });
+  return akte !== null;
+}
+
+// ─── akteAccessDenied ───────────────────────────────────────────────────────
+// For routes that take an akteId from the body/URL but do not use
+// requireAkteAccess: returns a 404 response when the user may not use that
+// Akte (same response as for a missing Akte, so existence is not revealed).
+
+export async function akteAccessDenied(
+  session: { user?: { id?: string | null; role?: unknown } | null } | null,
+  akteId: string
+): Promise<NextResponse | null> {
+  const id = session?.user?.id;
+  const role = session?.user?.role as UserRole | undefined;
+  if (!id || !role || !(await canAccessAkte({ id, role }, akteId))) {
+    return NextResponse.json({ error: "Akte nicht gefunden" }, { status: 404 });
+  }
+  return null;
+}
+
 // ─── buildAkteAccessFilter ──────────────────────────────────────────────────
 // Returns Prisma WHERE clause fragment for list queries to filter Akten by access
 
@@ -265,6 +321,11 @@ export function buildAkteAccessFilter(
   // ADMIN sees all Akten
   if (role === "ADMIN") {
     return {};
+  }
+
+  // Client accounts never see firm Akten through staff queries
+  if (role === "MANDANT") {
+    return { id: { in: [] } };
   }
 
   // Others: only see Akten they are assigned to (directly or via Dezernat)

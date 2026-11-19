@@ -1,38 +1,31 @@
 import { NextRequest } from "next/server";
+import type { UserRole } from "@prisma/client";
+import { akteAccessDenied } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { z } from "zod";
 import { emailSendQueue } from "@/lib/queue/queues";
-import { checkDokumenteFreigegeben } from "@/lib/versand-gate";
-
-const sendSchema = z.object({
-  kontoId: z.string().cuid("Ungültige Konto-ID"),
-  empfaenger: z.array(z.string().email()).min(1, "Mindestens ein Empfänger"),
-  cc: z.array(z.string().email()).default([]),
-  bcc: z.array(z.string().email()).default([]),
-  betreff: z.string().min(1, "Betreff ist erforderlich"),
-  inhalt: z.string().min(1, "Inhalt ist erforderlich"),
-  inhaltText: z.string().optional(),
-  akteId: z.string().optional(),
-  anhaenge: z.array(z.string()).default([]), // File IDs from DMS or uploaded
-  prioritaet: z.enum(["NIEDRIG", "NORMAL", "HOCH"]).default("NORMAL"),
-  lesebestaetigung: z.boolean().default(false),
-  geplanterVersand: z.string().datetime().optional(), // ISO DateTime for scheduled send
-});
+import { emailSendSchema, type EmailSendResponse } from "@/lib/email/send-contract";
+import { resolveEmailAnhaenge } from "@/lib/email/anhaenge";
+import { emailNachrichtZugriffWhere, hatKontoZugriff } from "@/lib/email/zugriff";
+import type { EmailSendJob } from "@/lib/email/types";
 
 /**
  * POST /api/email-send — Queue an outgoing email.
- * Creates EmailNachricht with richtung=AUSGEHEND, adds to BullMQ emailSendQueue.
+ * Creates EmailNachricht (richtung=AUSGEHEND) together with its EmailAnhang
+ * rows, then adds a job to the BullMQ emailSendQueue.
  * Supports 10-second undo window (delay) and scheduled sending.
+ * Request/response contract: src/lib/email/send-contract.ts
+ * Undo: POST /api/email-send/cancel.
  */
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) {
     return Response.json({ error: "Nicht authentifiziert" }, { status: 401 });
   }
+  const user = { id: session.user.id!, role: (session.user as any).role as UserRole };
 
-  const body = await req.json();
-  const parsed = sendSchema.safeParse(body);
+  const body = await req.json().catch(() => null);
+  const parsed = emailSendSchema.safeParse(body);
 
   if (!parsed.success) {
     return Response.json(
@@ -42,16 +35,14 @@ export async function POST(req: NextRequest) {
   }
 
   const data = parsed.data;
+  if (data.akteId) {
+    const denied = await akteAccessDenied(session, data.akteId);
+    if (denied) return denied;
+  }
 
   // Verify user has access to the sender mailbox
-  const isAdmin = (session.user as any).role === "ADMIN";
-  if (!isAdmin) {
-    const hasAccess = await prisma.emailKontoZuweisung.findFirst({
-      where: { kontoId: data.kontoId, userId: session.user.id },
-    });
-    if (!hasAccess) {
-      return Response.json({ error: "Kein Zugriff auf dieses Postfach" }, { status: 403 });
-    }
+  if (!(await hatKontoZugriff(user, data.kontoId))) {
+    return Response.json({ error: "Kein Zugriff auf dieses Postfach" }, { status: 403 });
   }
 
   // Get sender mailbox info
@@ -64,23 +55,34 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "E-Mail-Konto nicht gefunden" }, { status: 404 });
   }
 
-  // Versand-Gate: check that all DMS attachments are FREIGEGEBEN
-  // DMS attachments use the format "dms-{dokumentId}", direct uploads use "upload-{random}"
-  const dmsIds = data.anhaenge
-    .filter((a) => a.startsWith("dms-"))
-    .map((a) => a.replace(/^dms-/, ""));
+  // Attachments: access check + Versand-Gate for DMS documents
+  const aufgeloest = await resolveEmailAnhaenge(user, data.anhaenge);
+  if (!aufgeloest.ok) {
+    return Response.json(
+      { error: aufgeloest.error, details: aufgeloest.details },
+      { status: aufgeloest.status }
+    );
+  }
 
-  if (dmsIds.length > 0) {
-    const check = await checkDokumenteFreigegeben(dmsIds);
-    if (!check.ok) {
-      return Response.json(
-        {
-          error: "Nicht freigegebene Dokumente koennen nicht versendet werden",
-          details: check.errors,
-        },
-        { status: 400 }
-      );
+  // Threading for replies (only within mailboxes the user can access)
+  let threading: { inReplyTo: string | null; references: string[]; threadId: string | null } = {
+    inReplyTo: null,
+    references: [],
+    threadId: null,
+  };
+  if (data.antwortAufId) {
+    const original = await prisma.emailNachricht.findFirst({
+      where: { AND: [{ id: data.antwortAufId }, emailNachrichtZugriffWhere(user)] },
+      select: { messageId: true, references: true, threadId: true },
+    });
+    if (!original) {
+      return Response.json({ error: "Ursprüngliche E-Mail nicht gefunden" }, { status: 404 });
     }
+    threading = {
+      inReplyTo: original.messageId,
+      references: original.messageId ? [...original.references, original.messageId] : original.references,
+      threadId: original.threadId,
+    };
   }
 
   // Calculate delay
@@ -96,7 +98,7 @@ export async function POST(req: NextRequest) {
     sendeStatus = "WIRD_GESENDET";
   }
 
-  // Create the outgoing email record
+  // Create the outgoing email record with its attachments (and veraktung)
   const email = await prisma.emailNachricht.create({
     data: {
       emailKontoId: data.kontoId,
@@ -111,98 +113,45 @@ export async function POST(req: NextRequest) {
       inhaltText: data.inhaltText ?? null,
       prioritaet: data.prioritaet,
       sendeStatus,
-      geplanterVersand: data.geplanterVersand
-        ? new Date(data.geplanterVersand)
-        : null,
+      geplanterVersand: data.geplanterVersand ? new Date(data.geplanterVersand) : null,
+      inReplyTo: threading.inReplyTo,
+      references: threading.references,
+      threadId: threading.threadId,
+      anhaenge: { create: aufgeloest.anhaenge },
+      ...(data.akteId
+        ? {
+            veraktet: true,
+            veraktungen: {
+              create: {
+                akteId: data.akteId,
+                userId: user.id,
+                notiz: "Automatisch beim Senden veraktet",
+              },
+            },
+          }
+        : {}),
     },
   });
-
-  // Auto-verakten if akteId provided
-  if (data.akteId) {
-    await prisma.emailVeraktung.create({
-      data: {
-        emailNachrichtId: email.id,
-        akteId: data.akteId,
-        userId: session.user.id,
-        notiz: "Automatisch beim Senden veraktet",
-      },
-    });
-    await prisma.emailNachricht.update({
-      where: { id: email.id },
-      data: { veraktet: true },
-    });
-  }
 
   // Add to send queue with delay
-  const job = await emailSendQueue.add(
-    "send-email",
-    {
-      emailNachrichtId: email.id,
-      kontoId: data.kontoId,
-      userId: session.user.id,
-      dmsDocumentIds: dmsIds, // Pass DMS doc IDs for VERSENDET marking
-    },
-    {
-      delay,
-      jobId: `send-${email.id}`,
-      removeOnComplete: { age: 86_400 },
-      removeOnFail: { age: 604_800 },
-    }
-  );
-
-  return Response.json(
-    {
-      emailId: email.id,
-      jobId: job.id,
-      delay,
-      sendeStatus,
-    },
-    { status: 201 }
-  );
-}
-
-/**
- * DELETE /api/email-send — Cancel a queued send (undo).
- * Only works if the BullMQ job hasn't started processing yet.
- */
-export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return Response.json({ error: "Nicht authentifiziert" }, { status: 401 });
-  }
-
-  const { searchParams } = new URL(req.url);
-  const emailId = searchParams.get("emailId");
-
-  if (!emailId) {
-    return Response.json({ error: "emailId Parameter erforderlich" }, { status: 400 });
-  }
-
-  // Try to remove the job from the queue
-  const jobId = `send-${emailId}`;
-  const job = await emailSendQueue.getJob(jobId);
-
-  if (!job) {
-    return Response.json({ error: "Sendevorgang nicht gefunden" }, { status: 404 });
-  }
-
-  // Check if job is still waiting/delayed (can be cancelled)
-  const state = await job.getState();
-  if (state !== "waiting" && state !== "delayed") {
-    return Response.json(
-      { error: "E-Mail wird bereits gesendet oder wurde bereits gesendet" },
-      { status: 409 }
-    );
-  }
-
-  // Remove the job
-  await job.remove();
-
-  // Update email status back to draft
-  await prisma.emailNachricht.update({
-    where: { id: emailId },
-    data: { sendeStatus: "ENTWURF" },
+  const jobData: EmailSendJob = {
+    emailNachrichtId: email.id,
+    kontoId: data.kontoId,
+    userId: user.id,
+    dmsDocumentIds: aufgeloest.dmsDokumentIds, // marked VERSENDET after confirmed send
+  };
+  const job = await emailSendQueue.add("send-email", jobData, {
+    delay,
+    jobId: `send-${email.id}`,
+    removeOnComplete: { age: 86_400 },
+    removeOnFail: { age: 604_800 },
   });
 
-  return Response.json({ cancelled: true, emailId });
+  const response: EmailSendResponse = {
+    emailId: email.id,
+    jobId: String(job.id),
+    delay,
+    sendeStatus,
+  };
+  return Response.json(response, { status: 201 });
 }

@@ -27,6 +27,11 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  // Client accounts belong in the portal, never in the firm's workspace.
+  if ((session.user as any).role === "MANDANT") {
+    redirect("/portal/dashboard");
+  }
+
   // Resolve OnlyOffice URL from request headers (works for LAN/localhost)
   const headersList = await headers();
   const onlyofficeUrl = resolvePublicOnlyOfficeUrl(headersList);

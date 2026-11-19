@@ -2,9 +2,11 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
+import type { EmailSendCancelRequest } from "@/lib/email/send-contract";
 import { emailSendQueue } from "@/lib/queue/queues";
+import { hatKontoZugriff } from "@/lib/email/zugriff";
 
-const cancelSchema = z.object({
+const cancelSchema: z.ZodType<EmailSendCancelRequest> = z.object({
   emailId: z.string().min(1, "emailId ist erforderlich"),
 });
 
@@ -20,7 +22,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Nicht authentifiziert" }, { status: 401 });
   }
 
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
   const parsed = cancelSchema.safeParse(body);
 
   if (!parsed.success) {
@@ -38,7 +40,8 @@ export async function POST(req: NextRequest) {
     select: { id: true, emailKontoId: true, sendeStatus: true },
   });
 
-  if (!email) {
+  const user = { id: session.user.id!, role: (session.user as any).role };
+  if (!email || !(await hatKontoZugriff(user, email.emailKontoId))) {
     return Response.json({ error: "E-Mail nicht gefunden" }, { status: 404 });
   }
 

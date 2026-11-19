@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { readResolution } from "@/lib/helena/alert-meta";
 import { useSocket } from "@/components/socket-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -362,10 +363,9 @@ export function AlertCenter() {
             const Icon = typeConfig?.icon ?? AlertTriangle;
             const iconColor = typeConfig?.color ?? "text-slate-500";
             const metaObj = alert.meta as Record<string, unknown> | null;
-            const isAutoResolved = !!metaObj?.resolvedAt;
-            const resolveReason = metaObj?.resolveReason as
-              | string
-              | undefined;
+            const resolution = readResolution(alert.meta);
+            const isAutoResolved = resolution !== null;
+            const resolveReason = resolution?.reason ?? undefined;
 
             return (
               <div

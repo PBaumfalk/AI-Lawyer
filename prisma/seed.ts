@@ -1,42 +1,34 @@
 import { PrismaClient, UserRole, Sachgebiet, AkteStatus, KontaktTyp, BeteiligterRolle, KalenderTyp, EmailRichtung } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { seedBasis, isDemoSeed, DEMO_PASSWORT } from "./seed-basis";
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("🌱 Seeding database...");
 
-  // ─── Kanzlei ───────────────────────────────────────────────────────────────
-  const kanzlei = await prisma.kanzlei.upsert({
-    where: { id: "kanzlei-baumfalk" },
-    update: {},
-    create: {
-      id: "kanzlei-baumfalk",
-      name: "Kanzlei Baumfalk",
-      strasse: "Westfalendamm 87",
-      plz: "44141",
-      ort: "Dortmund",
-      telefon: "+49 231 12345678",
-      email: "info@kanzlei-baumfalk.de",
-      website: "https://kanzlei-baumfalk.de",
-    },
-  });
+  const basis = await seedBasis(prisma);
+  const admin = { id: basis.adminId };
+  const kanzlei = { id: basis.kanzleiId };
 
-  // ─── Users ─────────────────────────────────────────────────────────────────
-  const passwordHash = await bcrypt.hash("password123", 12);
+  if (!isDemoSeed()) {
+    await prisma.auditLog.create({
+      data: { userId: admin.id, aktion: "SYSTEM_SEED", details: { message: "Grundausstattung angelegt" } },
+    });
+    console.log("Seed completed (Produktion): Administratorkonto + Systembenutzer, keine Beispieldaten.");
+    console.log(`   Login: ${basis.adminEmail}`);
+    if (basis.erzeugtesPasswort) {
+      console.log("   INITIAL_ADMIN_PASSWORD war nicht gesetzt. Einmaliges Passwort:");
+      console.log(`   ${basis.erzeugtesPasswort}`);
+      console.log("   Bitte nach der ersten Anmeldung unter Einstellungen > Sicherheit ändern.");
+    } else {
+      console.log("   Passwort: Wert von INITIAL_ADMIN_PASSWORD aus der .env");
+    }
+    return;
+  }
 
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@kanzlei.de" },
-    update: {},
-    create: {
-      email: "admin@kanzlei.de",
-      name: "Patrick Baumfalk",
-      passwordHash,
-      role: UserRole.ADMIN,
-      position: "Kanzleiinhaber",
-      kanzleiId: kanzlei.id,
-    },
-  });
+  // ─── Demo-Benutzer (nur Entwicklung oder SEED_DEMO=true) ──────────────────
+  const demoHash = await bcrypt.hash(DEMO_PASSWORT, 12);
 
   const anwalt = await prisma.user.upsert({
     where: { email: "anwalt@kanzlei.de" },
@@ -44,7 +36,7 @@ async function main() {
     create: {
       email: "anwalt@kanzlei.de",
       name: "Dr. Maria Schmidt",
-      passwordHash,
+      passwordHash: demoHash,
       role: UserRole.ANWALT,
       position: "Rechtsanwältin",
       kanzleiId: kanzlei.id,
@@ -57,25 +49,9 @@ async function main() {
     create: {
       email: "sachbearbeiter@kanzlei.de",
       name: "Anna Meier",
-      passwordHash,
+      passwordHash: demoHash,
       role: UserRole.SACHBEARBEITER,
       position: "Rechtsanwaltsfachangestellte",
-      kanzleiId: kanzlei.id,
-    },
-  });
-
-  // ─── Helena (AI System User) ─────────────────────────────────────────────
-  const helena = await prisma.user.upsert({
-    where: { email: "helena@system.local" },
-    update: { isSystem: true },
-    create: {
-      email: "helena@system.local",
-      name: "Helena",
-      passwordHash: await bcrypt.hash(crypto.randomUUID(), 12), // Not loginable
-      role: UserRole.SACHBEARBEITER, // Minimal role, isSystem flag used for identification
-      isSystem: true,
-      aktiv: false, // Cannot login
-      position: "KI-Assistentin",
       kanzleiId: kanzlei.id,
     },
   });
@@ -355,7 +331,7 @@ async function main() {
   console.log(`   - 1 Akte mit 3 Beteiligten`);
   console.log(`   - 2 Kalendereintraege (Frist + Termin)`);
   console.log(`   - 7 E-Mails (Beispiel-Posteingang)`);
-  console.log(`\n   Login: admin@kanzlei.de / password123`);
+  console.log(`\n   Login: admin@kanzlei.de / ${DEMO_PASSWORT} (nur Demo)`);
 }
 
 main()

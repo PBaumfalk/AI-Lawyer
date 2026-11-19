@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/rbac";
+import { anschriftStrasse, hauptAnschrift, kontakteWhere, KONTAKT_ADRESSEN_INCLUDE } from "@/lib/kontakte/liste";
 import { generateCsv } from "@/lib/export/csv-export";
 import { generateXlsx } from "@/lib/export/xlsx-export";
 import type { ExportFormat, ExportConfig } from "@/lib/export/types";
@@ -37,35 +38,34 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const where: any = {};
-  if (typ) where.typ = typ;
-  if (q) {
-    where.OR = [
-      { nachname: { contains: q, mode: "insensitive" } },
-      { vorname: { contains: q, mode: "insensitive" } },
-      { firma: { contains: q, mode: "insensitive" } },
-      { email: { contains: q, mode: "insensitive" } },
-    ];
-  }
+  const where = kontakteWhere({
+    q: q?.trim() || undefined,
+    typ: typ === "NATUERLICH" || typ === "JURISTISCH" ? typ : undefined,
+    tag: searchParams.get("tag") || undefined,
+  });
 
   const kontakte = await prisma.kontakt.findMany({
     where,
     orderBy: [{ nachname: "asc" }, { firma: "asc" }],
+    include: KONTAKT_ADRESSEN_INCLUDE,
   });
 
   // Transform to flat export data
-  const data = kontakte.map((k) => ({
+  const data = kontakte.map((k) => {
+    const anschrift = hauptAnschrift(k);
+    return {
     name: k.typ === "JURISTISCH"
       ? (k.firma ?? "")
       : [k.vorname, k.nachname].filter(Boolean).join(" "),
     firma: k.firma ?? "",
-    strasse: k.strasse ?? "",
-    plz: k.plz ?? "",
-    ort: k.ort ?? "",
+    strasse: anschriftStrasse(anschrift),
+    plz: anschrift?.plz ?? "",
+    ort: anschrift?.ort ?? "",
     telefon: k.telefon ?? "",
     email: k.email ?? "",
     typ: k.typ === "NATUERLICH" ? "Natuerliche Person" : "Juristische Person",
-  }));
+    };
+  });
 
   const dateStr = new Date().toISOString().slice(0, 10);
   const filename = `${KONTAKTE_EXPORT_CONFIG.filename}-${dateStr}`;

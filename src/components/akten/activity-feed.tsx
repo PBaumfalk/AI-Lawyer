@@ -118,7 +118,7 @@ function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: 
         </div>
         <div className="flex justify-center gap-2 flex-wrap">
           <a
-            href="/posteingang"
+            href="/email"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors"
           >
             <Mail className="w-3.5 h-3.5" />

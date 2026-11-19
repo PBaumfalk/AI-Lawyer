@@ -90,7 +90,7 @@ export default function TotpChallengePage() {
                   type="text"
                   autoComplete="one-time-code"
                   required
-                  placeholder="xxxx-xxxx"
+                  placeholder="z. B. ABCD2345"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                 />

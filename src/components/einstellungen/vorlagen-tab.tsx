@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { vorlageFreigabeRequest } from "@/lib/vorlagen-freigabe";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,11 +73,8 @@ export function VorlagenTab() {
   // Toggle Freigabe
   const handleToggleFreigabe = async (vorlage: VorlageItem) => {
     try {
-      const res = await fetch(`/api/vorlagen/${vorlage.id}/freigabe`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ freigeben: !vorlage.freigegeben }),
-      });
+      const { url, init } = vorlageFreigabeRequest(vorlage.id, !vorlage.freigegeben);
+      const res = await fetch(url, init);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Fehler");
@@ -112,11 +110,9 @@ export function VorlagenTab() {
     // Reset is conceptual: revoke all Freigaben
     try {
       for (const v of vorlagen.filter((v) => v.freigegeben)) {
-        await fetch(`/api/vorlagen/${v.id}/freigabe`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ freigeben: false }),
-        });
+        const { url, init } = vorlageFreigabeRequest(v.id, false);
+        const res = await fetch(url, init);
+        if (!res.ok) throw new Error("Freigabe konnte nicht zurueckgezogen werden");
       }
       fetchVorlagen();
     } catch {

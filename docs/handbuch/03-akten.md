@@ -18,11 +18,11 @@ Die Liste zeigt die zuletzt geänderten Akten zuerst, mit den Spalten **Aktenzei
 
 Gut zu wissen:
 
-- Die Suche durchsucht **Aktenzeichen, Kurzrubrum und das Feld „Wegen“**. Namen von Beteiligten findet sie entgegen dem Hinweis im Feld nicht. Um eine Akte über den Namen einer Partei zu finden, öffnen Sie den Kontakt und dort den Reiter **Akten** ([Kapitel 4](04-kontakte.md#akten-eines-kontakts)), oder Sie nutzen die Befehlspalette **⌘K** bzw. die Suche aus [Kapitel 13](13-suche-und-auswertung.md).
+- Die Suche durchsucht **Aktenzeichen, Kurzrubrum, das Feld „Wegen“** und die **Namen der Beteiligten** (Vorname, Nachname, Firma).
 - Die Liste zeigt höchstens **50 Akten**. Ein Blättern gibt es nicht. Grenzen Sie bei vielen Akten mit Suchbegriff oder Status ein.
 - Suchbegriff und Filter stehen in der Adresszeile (z. B. `/akten?status=OFFEN`). Sie können die Seite also als Lesezeichen speichern.
 
-> **Hinweis:** Die Aktenliste zeigt im aktuellen Stand **alle Akten der Kanzlei**, auch solche, denen Sie nicht zugeordnet sind. Siehe [Zugriff, Dezernate und Admin-Override](#zugriff-dezernate-und-admin-override).
+> **Hinweis:** Die Aktenliste zeigt nur Akten, auf die Sie Zugriff haben (Admins: alle). Siehe [Zugriff, Dezernate und Admin-Override](#zugriff-dezernate-und-admin-override).
 
 ## Neue Akte anlegen
 
@@ -54,9 +54,9 @@ Wählen Sie ein anderes Sachgebiet als **Sonstiges**, sucht AI-Lawyer passende F
 
 ### Kollisionsprüfung
 
-AI-Lawyer prüft auf Interessenkonflikte, wenn ein Kontakt einer Akte als **Mandant**, **Gegner** oder **Gegnervertreter** hinzugefügt wird: Ist derselbe Kontakt in einer anderen offenen oder ruhenden Akte auf der Gegenseite, erscheint der Hinweis **Interessenkonflikt erkannt** mit der betroffenen Akte, und Sie müssen ausdrücklich **Trotzdem hinzufügen** wählen.
+AI-Lawyer prüft auf Interessenkonflikte, wenn Sie einer Akte über den Dialog **Beteiligten hinzufügen** einen Kontakt als **Mandant**, **Gegner** oder **Gegnervertreter** hinzufügen ([Beteiligte](#beteiligte)): Ist derselbe Kontakt in einer anderen offenen oder ruhenden Akte auf der Gegenseite, erscheint der Hinweis **Interessenkonflikt erkannt** mit der betroffenen Akte, und Sie müssen ausdrücklich **Trotzdem hinzufügen** wählen.
 
-> **Derzeit eingeschränkt:** Dieser Dialog ist im Programm vorhanden, aber in der Akte noch nicht eingebunden (siehe [Beteiligte](#beteiligte)). Beim Anlegen einer Akte selbst findet keine Kollisionsprüfung statt, weil dabei noch keine Beteiligten erfasst werden. Prüfen Sie Interessenkonflikte vor der Mandatsannahme deshalb zusätzlich selbst, etwa über den Reiter **Akten** des Kontakts.
+> **Gut zu wissen:** Beim Anlegen einer Akte selbst findet noch keine Kollisionsprüfung statt, weil dabei noch keine Beteiligten erfasst werden. Sie greift, sobald Sie Mandant und Gegner in der neuen Akte hinzufügen. Beteiligte, die Helena vorschlägt, werden nicht geprüft.
 
 ## Die Akte im Überblick
 
@@ -154,14 +154,23 @@ Ergebnisse von Helena erscheinen als Entwurf im Verlauf, oft mit den verwendeten
 
 ## Beteiligte
 
-Die Beteiligten stehen oben im Reiter **Aktivitaeten** unter **Beteiligte (n)**, jeweils mit Name, Rolle (z. B. **Mandant**, **Gegner**), E-Mail, Telefon und Ort. Die Rollen sind in [Kapitel 1](01-was-ist-ai-lawyer.md#beteiligte-und-rollen) erklärt. Hat die Akte noch keine Beteiligten, fehlt der Abschnitt ganz.
+Die Beteiligten stehen oben im Reiter **Aktivitaeten** unter **Beteiligte (n)**, jeweils mit Name, Rolle (z. B. **Mandant**, **Gegner**), E-Mail, Telefon und Ort (aus der Hauptanschrift des Kontakts). Die Rollen sind in [Kapitel 1](01-was-ist-ai-lawyer.md#beteiligte-und-rollen) erklärt. Hat die Akte noch keine Beteiligten, steht dort *Noch keine Beteiligten erfasst.*
 
 Bei Beteiligten mit Rolle **Mandant** sehen Anwälte und Admins den Knopf für die **Portal-Einladung** ([Kapitel 12](12-mandantenportal.md)).
 
-> **Derzeit eingeschränkt:** In der Akte gibt es im aktuellen Stand **keinen Knopf, um Beteiligte von Hand hinzuzufügen oder zu entfernen**. Der Dialog **Beteiligten hinzufügen** (mit Rollenwahl, Kontaktsuche und Kollisionsprüfung) ist im Programm vorhanden, aber noch nicht in die Akte eingebunden. Beteiligte gelangen derzeit auf zwei Wegen in eine Akte:
->
-> - Helena erkennt Parteien in Dokumenten und schlägt sie vor; übernehmen Sie den Vorschlag, legt AI-Lawyer einen Kontakt an und verknüpft ihn ([Kapitel 9](09-helena.md)). Dieser Weg prüft nicht auf Interessenkonflikte.
-> - Bei der Übernahme aus j-lawyer werden Beteiligte mitgenommen ([Kapitel 17](17-migration-aus-j-lawyer.md)).
+### Beteiligten hinzufügen
+
+1. Klicken Sie neben **Beteiligte (n)** auf **Hinzufügen**. Es öffnet sich der Dialog **Beteiligten hinzufügen**.
+2. Wählen Sie unter **Rolle** die Rolle: **Mandant**, **Gegner**, **Gegnervertreter**, **Gericht**, **Zeuge**, **Sachverständiger** oder **Sonstiger**.
+3. Geben Sie unter **Kontakt suchen** einen Namen oder eine Firma ein (**Name oder Firma eingeben...**) und klicken Sie auf den passenden Treffer. Den Kontakt legen Sie bei Bedarf vorher unter **Kontakte** an ([Kapitel 4](04-kontakte.md)).
+4. Klicken Sie auf **Hinzufügen**. Bei den Rollen **Mandant**, **Gegner** und **Gegnervertreter** prüft AI-Lawyer vorher auf Interessenkonflikte ([Kollisionsprüfung](#kollisionsprüfung)). Erscheint **Interessenkonflikt erkannt**, brechen Sie mit **Abbrechen** ab oder bestätigen bewusst mit **Trotzdem hinzufügen**.
+
+Den Knopf **Hinzufügen** sehen alle Kanzleirollen mit Zugriff auf die Akte. Einen Knopf zum Entfernen eines Beteiligten gibt es in der Oberfläche nicht.
+
+Daneben gelangen Beteiligte auf zwei weiteren Wegen in eine Akte:
+
+- Helena erkennt Parteien in Dokumenten und schlägt sie vor; übernehmen Sie den Vorschlag, legt AI-Lawyer einen Kontakt an und verknüpft ihn ([Kapitel 9](09-helena.md)). Dieser Weg prüft nicht auf Interessenkonflikte.
+- Bei der Übernahme aus j-lawyer werden Beteiligte mitgenommen ([Kapitel 17](17-migration-aus-j-lawyer.md)).
 
 ## Verknüpfte Normen
 
@@ -236,9 +245,7 @@ Für die Kollisionsprüfung zählen nur offene und ruhende Akten. Ein Statuswech
 
 **Wer darf was?** Im Grundsatz gilt: Admins dürfen alle Akten. Alle anderen dürfen eine Akte, wenn sie dort als **Anwalt** oder **Sachbearbeiter/in** eingetragen sind oder Mitglied eines **Dezernats** sind, dem die Akte zugeordnet ist. Dezernate und ihre Akten pflegt die Administration unter **Administration → Dezernate** ([Kapitel 15](15-benutzer-und-rollen.md)).
 
-Diese Regel prüft AI-Lawyer derzeit bei den Aktionen in der Akte (Speichern, Status, Notizen, Verlauf, Normen, Zusammenfassung) und auf dem Dashboard. Ohne Berechtigung antwortet AI-Lawyer, als gäbe es die Akte nicht.
-
-> **Derzeit eingeschränkt:** Die Aktenliste und das erste Laden der Detailseite prüfen die Zuordnung im aktuellen Stand **nicht**. Wer angemeldet ist, kann dort auch fremde Akten sehen. Verlassen Sie sich für vertrauliche Mandate bis zur Behebung nicht auf die Dezernatstrennung.
+Diese Regel gilt überall in AI-Lawyer: in der Aktenliste, auf der Detailseite, in Auswahllisten (z. B. bei Tickets und E-Mails), in der Suche, auf dem Dashboard und bei allen Funktionen mit Aktenbezug wie Dokumenten, Kalender, Rechnungen, Zeiterfassung, beA-Zuordnung und Helena. Ohne Berechtigung antwortet AI-Lawyer, als gäbe es die Akte nicht. Löschen innerhalb einer Akte (etwa von Dokumenten) setzt zusätzlich das Löschrecht der Rolle voraus ([Kapitel 15](15-benutzer-und-rollen.md)).
 
 **Admin-Override:** Admins sehen in jeder Akte neben **Fallzusammenfassung** den Knopf **Zugriff uebernehmen**. Er dient dazu, einen bewussten Eingriff in eine fremde Akte (etwa bei Krankheit eines Kollegen) zu dokumentieren:
 
@@ -253,7 +260,7 @@ Danach zeigt die Akte **Zugriff aktiv**; mit **Zugriff aufheben** beenden Sie ih
 
 | Meldung | Bedeutung | Was tun? |
 | --- | --- | --- |
-| *Keine Akten für diese Suche gefunden.* | Kein Treffer in Aktenzeichen, Kurzrubrum oder „Wegen“. | Kürzeren Begriff oder Teil des Aktenzeichens versuchen; Statusfilter auf **Alle Status** stellen. |
+| *Keine Akten für diese Suche gefunden.* | Kein Treffer in Aktenzeichen, Kurzrubrum, „Wegen“ oder bei den Beteiligten, oder die Akte ist Ihnen nicht zugeordnet. | Kürzeren Begriff oder Teil des Aktenzeichens versuchen; Statusfilter auf **Alle Status** stellen. |
 | *Validierungsfehler* | Beim Anlegen oder Speichern fehlt ein Pflichtwert oder ein Wert ist ungültig. | **Kurzrubrum** ausfüllen; Gegenstandswert als Zahl mit Punkt eingeben. |
 | *Keine Berechtigung* | Ihre Rolle darf die Aktion nicht ausführen. | Administration fragen ([Kapitel 15](15-benutzer-und-rollen.md)). |
 | *Nicht gefunden* | Die Akte gibt es nicht, oder Sie sind ihr nicht zugeordnet. | Zuordnung (Anwalt, Sachbearbeiter, Dezernat) prüfen lassen. |
@@ -261,7 +268,6 @@ Danach zeigt die Akte **Zugriff aktiv**; mit **Zugriff aufheben** beenden Sie ih
 | *Normtext konnte nicht geladen werden* | Der Paragraph ist in der Gesetzesdatenbank nicht abrufbar. | Später erneut versuchen; IT prüft den Gesetze-Import. |
 | *Keine Vorschlaege gefunden -- keine OCR-Texte verfuegbar?* | Auto-Fill fand keinen lesbaren Text in den Dokumenten. | Prüfen, ob die Dokumente per OCR erkannt sind ([Kapitel 5](05-dokumente.md)). |
 | *Fehler bei der Analyse* | Die Fallzusammenfassung ist gescheitert, meist weil das KI-Modell nicht erreichbar ist. | **Erneut versuchen**; sonst IT informieren. |
-| Link **Posteingang oeffnen** im leeren Filter **Kommunikation** führt ins Leere | Bekannter Fehler: Die Seite heißt **E-Mails**. | In der Seitenleiste **E-Mails** öffnen. |
 
 ---
 

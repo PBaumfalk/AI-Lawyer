@@ -18,6 +18,8 @@
  */
 
 import { NextRequest } from "next/server";
+import type { UserRole } from "@prisma/client";
+import { akteAccessDenied, PERMISSIONS } from "@/lib/rbac";
 import { streamText, type CoreMessage } from "ai";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -212,7 +214,15 @@ export async function POST(req: NextRequest) {
 
   console.log(`[ki-chat] POST received — akteId=${akteId ?? "NULL"}, conversationId=${conversationId ?? "NULL"}, crossAkte=${crossAkte}, messages=${messages?.length ?? 0}`);
 
-  if (!messages || messages.length === 0) {
+  if (!PERMISSIONS[(session.user as any).role as UserRole]?.canUseKI) {
+    return new Response("Keine Berechtigung", { status: 403 });
+  }
+  if (akteId) {
+    const denied = await akteAccessDenied(session, akteId);
+    if (denied) return denied;
+  }
+
+  if (!Array.isArray(messages) || messages.length === 0) {
     return new Response("Keine Nachrichten", { status: 400 });
   }
 

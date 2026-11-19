@@ -3,6 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useBeaSession } from "@/lib/bea/session";
 import { beaSendMessage, type BeaSendPayload } from "@/lib/bea/client";
+import {
+  buildGesendetNachricht,
+  type BeaVersandPruefungRequest,
+  type BeaVersandPruefungResponse,
+} from "@/lib/bea/versand";
+import { ladeAktenDokumente } from "@/lib/email/dokument-auswahl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -31,8 +37,19 @@ interface DokumentAttachment {
   id: string;
   name: string;
   mimeType: string;
-  dateipfad: string;
   status?: string;
+}
+
+/** Load a DMS document's content as base64 (for the bea.expert payload). */
+async function ladeDokumentBase64(dokumentId: string): Promise<string> {
+  const res = await fetch(`/api/dokumente/${encodeURIComponent(dokumentId)}?download=true`);
+  if (!res.ok) throw new Error("Anhang konnte nicht geladen werden");
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode(...Array.from(bytes.subarray(i, i + 0x8000)));
+  }
+  return btoa(bin);
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -118,47 +135,62 @@ export function BeaCompose() {
     setSending(true);
     setError(null);
 
+    let gesendeteId: string | null = null;
     try {
-      // Build payload for bea.expert
-      const payload: BeaSendPayload = {
-        recipientSafeId,
-        subject,
-        body,
-        attachments: [], // Attachments are fetched from DMS in the backend
-      };
-
-      // Step 1: Send via bea.expert (browser-side)
-      const sendResult = await beaSendMessage(session, payload);
-
-      if (!sendResult.ok) {
-        // Log warning but continue -- we still want to record the message
-        console.warn("beA send result:", sendResult.error);
+      // Step 1: Versand-Gate BEFORE transmitting (access + FREIGEGEBEN)
+      const dokumentIds = attachments.map((a) => a.id);
+      if (dokumentIds.length > 0) {
+        const pruefung = await fetch("/api/bea/messages/versand-pruefung", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dokumentIds } satisfies BeaVersandPruefungRequest),
+        });
+        const pr: BeaVersandPruefungResponse = await pruefung.json().catch(() => ({ ok: false, errors: [] }));
+        if (!pruefung.ok || !pr.ok) {
+          const gruende = pr.errors.map((e) => `${e.name || e.dokumentId}: ${e.reason}`).join("; ");
+          throw new Error(`Versand nicht moeglich. ${gruende || "Dokumente nicht freigegeben."}`);
+        }
       }
 
-      // Step 2: Store sent message in database
+      // Step 2: load attachment contents (base64) for bea.expert
+      const anhaenge = await Promise.all(
+        attachments.map(async (a) => ({
+          name: a.name,
+          mimeType: a.mimeType,
+          content: await ladeDokumentBase64(a.id),
+        }))
+      );
+
+      // Step 3: send via bea.expert (browser-side)
+      const payload: BeaSendPayload = { recipientSafeId, subject, body, attachments: anhaenge };
+      const sendResult = await beaSendMessage(session, payload);
+
+      // Step 4: only a confirmed send (with beA message ID) is recorded as GESENDET;
+      // buildGesendetNachricht throws otherwise and nothing is stored.
+      const record = buildGesendetNachricht(sendResult, {
+        betreff: subject,
+        inhalt: body,
+        absender: session.displayName || session.safeId,
+        safeIdAbsender: session.safeId,
+        empfaenger: recipientName || recipientSafeId,
+        safeIdEmpfaenger: recipientSafeId,
+        dokumentIds,
+        anhaenge: attachments.map((a) => ({ name: a.name, mimeType: a.mimeType, dokumentId: a.id })),
+        akteId,
+      });
+      gesendeteId = record.nachrichtenId ?? null;
+
       const storeRes = await fetch("/api/bea/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nachrichtenId: sendResult.data?.nachrichtenId || null,
-          betreff: subject,
-          absender: session.displayName || session.safeId,
-          empfaenger: recipientName || recipientSafeId,
-          inhalt: body,
-          status: "GESENDET",
-          safeIdAbsender: session.safeId,
-          safeIdEmpfaenger: recipientSafeId,
-          gesendetAm: new Date().toISOString(),
-          dokumentIds: attachments.map((a) => a.id), // Versand-Gate check on server
-        }),
+        body: JSON.stringify(record),
       });
 
-      if (!storeRes.ok) {
-        const data = await storeRes.json();
-        // 409 is ok (duplicate), everything else is an error
-        if (storeRes.status !== 409) {
-          throw new Error(data.error || "Fehler beim Speichern der Nachricht");
-        }
+      if (!storeRes.ok && storeRes.status !== 409) {
+        const data = await storeRes.json().catch(() => ({}));
+        throw new Error(
+          `Die Nachricht wurde ueber beA versendet (Nachrichten-ID ${gesendeteId}), konnte aber nicht gespeichert werden: ${data.error || storeRes.status}. Bitte manuell in der Akte vermerken.`
+        );
       }
 
       setSuccess(true);
@@ -550,26 +582,15 @@ function DocumentPicker({
     setLoading(true);
     const timer = setTimeout(async () => {
       try {
-        // Fetch ALL documents (not just FREIGEGEBEN) to show ENTWURF greyed out
-        const params = new URLSearchParams({ take: "30" });
-        if (akteId) params.set("akteId", akteId);
-        if (search) params.set("q", search);
-
-        const res = await fetch(`/api/dokumente?${params.toString()}`);
-        if (res.ok) {
-          const data = await res.json();
-          setDocs(
-            (data.dokumente || []).map((d: any) => ({
-              id: d.id,
-              name: d.name,
-              mimeType: d.mimeType,
-              dateipfad: d.dateipfad,
-              status: d.status,
-            }))
-          );
+        // Documents of the selected Akte (ENTWURF etc. shown greyed out)
+        if (!akteId) {
+          setDocs([]);
+        } else {
+          const list = await ladeAktenDokumente(akteId, search || undefined);
+          setDocs(list.map((d) => ({ id: d.id, name: d.name, mimeType: d.mimeType, status: d.status })));
         }
       } catch {
-        // Ignore
+        setDocs([]);
       }
       setLoading(false);
     }, 300);
@@ -624,11 +645,12 @@ function DocumentPicker({
             </div>
           ) : docs.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Keine Dokumente gefunden.
+              {akteId ? "Keine Dokumente gefunden." : "Bitte zuerst oben eine Akte auswaehlen."}
             </p>
           ) : (
             docs.map((doc) => {
-              const isFreigegeben = doc.status === "FREIGEGEBEN" || doc.status === "VERSENDET";
+              // Versand-Gate: only FREIGEGEBEN can be sent (VERSENDET was already sent)
+              const isFreigegeben = doc.status === "FREIGEGEBEN";
               const isEntwurf = doc.status === "ENTWURF" || doc.status === "ZUR_PRUEFUNG";
               const isAlreadyAdded = existingIds.includes(doc.id);
 
@@ -648,7 +670,6 @@ function DocumentPicker({
                         id: doc.id,
                         name: doc.name,
                         mimeType: doc.mimeType,
-                        dateipfad: doc.dateipfad,
                       });
                     }
                   }}

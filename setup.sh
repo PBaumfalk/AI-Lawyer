@@ -38,7 +38,8 @@ ok "Docker daemon running"
 echo ""
 
 # ─── Disk space ───────────────────────────────────────────────────────────────
-AVAILABLE_GB=$(df -BG . | awk 'NR==2 {gsub("G",""); print $4}')
+# POSIX df (-P, 1K blocks) works on Linux and macOS; df -BG is GNU-only.
+AVAILABLE_GB=$(df -Pk . | awk 'NR==2 {print int($4/1048576)}')
 if [ "$AVAILABLE_GB" -lt 15 ]; then
   warn "Less than 15 GB free (${AVAILABLE_GB} GB). Docker images + Ollama model require ~15-20 GB."
 else
@@ -86,14 +87,14 @@ if [ "$SKIP_CONFIG" != "true" ]; then
       AI_MODEL="gpt-4o"
       ask "OpenAI API-Key (sk-...):"
       read -r OPENAI_KEY
-      [ -z "$OPENAI_KEY" ] && warn "Kein API-Key eingegeben — kann später in .env gesetzt werden."
+      [ -z "$OPENAI_KEY" ] && warn "Kein API-Key eingegeben — später unter Einstellungen → KI eintragen."
       ;;
     3)
       AI_PROVIDER="anthropic"
       AI_MODEL="claude-sonnet-4-6"
       ask "Anthropic API-Key (sk-ant-...):"
       read -r ANTHROPIC_KEY
-      [ -z "$ANTHROPIC_KEY" ] && warn "Kein API-Key eingegeben — kann später in .env gesetzt werden."
+      [ -z "$ANTHROPIC_KEY" ] && warn "Kein API-Key eingegeben — später unter Einstellungen → KI eintragen."
       ;;
     *)
       AI_PROVIDER="ollama"
@@ -104,33 +105,45 @@ if [ "$SKIP_CONFIG" != "true" ]; then
   echo ""
 
   # Generate secrets
-  if command -v openssl >/dev/null 2>&1; then
-    NEXTAUTH_SECRET=$(openssl rand -base64 32)
-    EMAIL_ENC_KEY=$(openssl rand -hex 32)
-    ONLYOFFICE_SECRET=$(openssl rand -base64 24 | tr -d '/+=')
-  else
-    warn "openssl nicht gefunden — Secrets werden als Platzhalter gesetzt. Bitte manuell in .env ändern."
-    NEXTAUTH_SECRET="change-me-$(date +%s)"
-    EMAIL_ENC_KEY="change-me-$(date +%s)-32charkey-placeholder"
-    ONLYOFFICE_SECRET="change-me-onlyoffice"
-  fi
+  command -v openssl >/dev/null 2>&1 || fail "openssl wird zum Erzeugen der Geheimnisse benötigt."
+  gen() { openssl rand -hex "$1"; }
 
-  # Write .env
+  # Write KEY="value" into .env (portable: no sed -i, which differs on macOS/Linux
+  # and broke here before because "sed -i ''" was word-split into a wrong suffix).
+  set_env() {
+    local key="$1" value="$2" tmp
+    tmp="$(mktemp)"
+    awk -v k="$key" -v v="$value" 'BEGIN{done=0}
+      $0 ~ "^"k"=" { print k"=\""v"\""; done=1; next } { print }
+      END { if (!done) print k"=\""v"\"" }' .env > "$tmp" && mv "$tmp" .env
+  }
+
   cp .env.example .env
-
-  SED_CMD="sed -i"
-  [[ "$OSTYPE" == "darwin"* ]] && SED_CMD="sed -i ''"
-
-  $SED_CMD "s|NEXTAUTH_URL=.*|NEXTAUTH_URL=\"${APP_URL}\"|" .env
-  $SED_CMD "s|your-secret-here-change-in-production|${NEXTAUTH_SECRET}|" .env
-  $SED_CMD "s|your-random-32-char-encryption-key-here|${EMAIL_ENC_KEY}|" .env
-  $SED_CMD "s|your-onlyoffice-secret|${ONLYOFFICE_SECRET}|" .env
-  $SED_CMD "s|^AI_PROVIDER=.*|AI_PROVIDER=\"${AI_PROVIDER}\"|" .env
-  $SED_CMD "s|^AI_MODEL=.*|AI_MODEL=\"${AI_MODEL}\"|" .env
-
-  [ -n "$OPENAI_KEY" ]    && $SED_CMD "s|OPENAI_API_KEY=.*|OPENAI_API_KEY=\"${OPENAI_KEY}\"|" .env
-  [ -n "$ANTHROPIC_KEY" ] && $SED_CMD "s|ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=\"${ANTHROPIC_KEY}\"|" .env
-
+  set_env NEXTAUTH_URL "$APP_URL"
+  set_env NEXTAUTH_SECRET "$(gen 32)"
+  set_env EMAIL_ENCRYPTION_KEY "$(gen 32)"
+  set_env ONLYOFFICE_SECRET "$(gen 24)"
+  PG_PW="$(gen 24)"; REDIS_PW="$(gen 24)"
+  set_env POSTGRES_PASSWORD "$PG_PW"
+  set_env REDIS_PASSWORD "$REDIS_PW"
+  # Same credentials for local development against the published 127.0.0.1 ports
+  set_env DATABASE_URL "postgresql://ailawyer:${PG_PW}@localhost:5432/ailawyer?schema=public"
+  set_env REDIS_URL "redis://:${REDIS_PW}@localhost:6379"
+  set_env MINIO_SECRET_KEY "$(gen 24)"
+  set_env MEILISEARCH_API_KEY "$(gen 24)"
+  set_env INITIAL_ADMIN_PASSWORD "$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-20)"
+  HOST_PART="${APP_URL%:*}"
+  set_env MINIO_PUBLIC_URL "${HOST_PART}:9000"
+  set_env ONLYOFFICE_URL "${HOST_PART}:8080"
+  set_env AI_PROVIDER "$AI_PROVIDER"
+  set_env AI_MODEL "$AI_MODEL"
+  [ -n "$OPENAI_KEY" ]    && set_env OPENAI_API_KEY "$OPENAI_KEY"
+  [ -n "$ANTHROPIC_KEY" ] && set_env ANTHROPIC_API_KEY "$ANTHROPIC_KEY"
+  chmod 600 .env
+  OFFEN=$(grep -v '^[[:space:]]*#' .env | grep -c "ÄNDERN" || true)
+  if [ "$OFFEN" -gt 0 ]; then
+    fail "In .env sind noch Platzhalter: ${OFFEN} Stelle(n). Bitte prüfen."
+  fi
   ok ".env erstellt"
   echo ""
 fi
@@ -140,12 +153,21 @@ echo -e "${BOLD}Bereit zum Starten${NC}"
 echo "──────────────────────────────────────"
 echo -e "  URL:         ${APP_URL:-$(grep NEXTAUTH_URL .env | cut -d'"' -f2)}"
 echo -e "  AI Provider: ${AI_PROVIDER:-$(grep ^AI_PROVIDER .env | cut -d'"' -f2)}"
+
+# GPU for Ollama only when the NVIDIA runtime is available
+COMPOSE_FILES=(-f docker-compose.yml)
+if command -v nvidia-smi >/dev/null 2>&1 && docker info 2>/dev/null | grep -qi nvidia; then
+  COMPOSE_FILES+=(-f docker-compose.gpu.yml)
+  ok "NVIDIA-GPU erkannt – Ollama nutzt die GPU"
+else
+  warn "Keine NVIDIA-GPU – Ollama läuft auf der CPU (langsam für große Modelle)"
+fi
 echo ""
 ask "Jetzt bauen und starten? [Y/n]"
 read -r CONFIRM
 if [[ "$CONFIRM" =~ ^[Nn]$ ]]; then
   echo ""
-  info "Abgebrochen. Starte manuell mit: docker compose up -d"
+  info "Abgebrochen. Starte manuell mit: docker compose ${COMPOSE_FILES[*]} up -d"
   exit 0
 fi
 
@@ -153,11 +175,11 @@ echo ""
 
 # ─── Build & Start ────────────────────────────────────────────────────────────
 info "Building Docker images (erster Build dauert 5-10 Minuten)..."
-docker compose build
+docker compose "${COMPOSE_FILES[@]}" build
 
 echo ""
 info "Starting all services..."
-docker compose up -d
+docker compose "${COMPOSE_FILES[@]}" up -d
 
 echo ""
 
@@ -193,13 +215,15 @@ FINAL_URL=$(grep NEXTAUTH_URL .env | cut -d'"' -f2 | head -1)
 echo -e "${BOLD}Fertig.${NC}"
 echo ""
 echo -e "  App:           ${GREEN}${FINAL_URL}${NC}"
-echo -e "  MinIO Console: ${FINAL_URL%:*}:9001"
+echo -e "  MinIO-Konsole: nur auf dem Server erreichbar (http://127.0.0.1:9001)"
 echo ""
 echo -e "  ${BOLD}Zugangsdaten${NC}"
-echo -e "  admin@kanzlei.de          → ADMIN"
-echo -e "  anwalt@kanzlei.de         → ANWALT"
-echo -e "  sachbearbeiter@kanzlei.de → SACHBEARBEITER"
-echo -e "  Passwort: ${BOLD}password123${NC} (bitte nach Login ändern)"
+ADMIN_MAIL=$(grep '^INITIAL_ADMIN_EMAIL=' .env | cut -d'"' -f2)
+echo -e "  Benutzer: ${BOLD}${ADMIN_MAIL:-admin@kanzlei.de}${NC} (ADMIN)"
+echo -e "  Passwort: steht als INITIAL_ADMIN_PASSWORD in .env (nur für den ersten Login)"
+echo -e "            anzeigen mit: ${BOLD}grep INITIAL_ADMIN_PASSWORD .env${NC}"
+echo -e "  Danach:   Einstellungen → Sicherheit → Passwort ändern,"
+echo -e "            Mitarbeiter unter Admin → Benutzer anlegen."
 echo ""
 echo -e "${YELLOW}Hinweis:${NC} Ollama lädt qwen3.5:35b beim ersten Start herunter (5-15 Min)."
 echo -e "         Fortschritt: ${BOLD}docker compose logs -f ollama${NC}"

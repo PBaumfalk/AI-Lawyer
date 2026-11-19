@@ -33,9 +33,16 @@ NEEDS_SEED=$(node -e "
   p.user.count().then(c => { console.log(c === 0 ? 'yes' : 'no'); p.\$disconnect(); }).catch(() => { console.log('yes'); p.\$disconnect(); });
 " 2>/dev/null)
 
+# Only the app container seeds; app and worker share this entrypoint and would
+# otherwise race on an empty database.
+if echo "$@" | grep -q "dist-worker"; then
+  NEEDS_SEED="no"
+fi
+
 if [ "$NEEDS_SEED" = "yes" ]; then
   echo "==> Running Prisma seed (first run)..."
-  node node_modules/tsx/dist/cli.mjs prisma/seed.ts || echo "    Seed failed (non-fatal)"
+  # Fatal on purpose: without the seed there is no user to log in with.
+  node node_modules/tsx/dist/cli.mjs prisma/seed.ts
 else
   echo "==> Database already seeded, skipping"
 fi

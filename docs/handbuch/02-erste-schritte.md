@@ -27,7 +27,7 @@ Ist für Ihr Konto die Zwei-Faktor-Anmeldung aktiv, folgt die Seite **Zwei-Fakto
 
 Zwischen Passwort und Code haben Sie zehn Minuten Zeit. Danach müssen Sie über **Zuruck zur Anmeldung** neu beginnen.
 
-**Handy nicht zur Hand?** Klicken Sie auf **Backup-Code verwenden** und geben Sie einen Ihrer Backup-Codes ein: acht Zeichen, genau so, wie sie beim Einrichten angezeigt wurden, also in Großbuchstaben und ohne Bindestrich (das Muster `xxxx-xxxx` im Feld ist irreführend). Jeder Backup-Code funktioniert genau einmal. Mit **Authenticator-Code verwenden** wechseln Sie zurück.
+**Handy nicht zur Hand?** Klicken Sie auf **Backup-Code verwenden** und geben Sie einen Ihrer Backup-Codes ein: acht Zeichen, so wie sie beim Einrichten angezeigt wurden. Groß- und Kleinschreibung, Leerzeichen und Bindestriche spielen keine Rolle. Jeder Backup-Code funktioniert genau einmal. Mit **Authenticator-Code verwenden** wechseln Sie zurück.
 
 **Mandantinnen und Mandanten** melden sich nicht hier an, sondern auf der eigenen Anmeldeseite des Mandantenportals ([Kapitel 12](12-mandantenportal.md)).
 
@@ -58,7 +58,7 @@ Mit **2FA deaktivieren**, einem aktuellen App-Code und **Deaktivieren bestätige
 
 ### Wenn 2FA Pflicht ist
 
-Die IT kann die Zwei-Faktor-Anmeldung für bestimmte Rollen verpflichtend machen (Variable `TOTP_REQUIRED_ROLES`, [Kapitel 20](20-konfiguration.md)). Wer zu einer solchen Rolle gehört und noch keine 2FA eingerichtet hat, sieht nach dem Anmelden nur die Seite **Zwei-Faktor-Authentifizierung erforderlich**. Klicken Sie dort auf **Zu den Sicherheitseinstellungen**, wählen Sie den Reiter **Sicherheit** (die Seite öffnet sich auf **Allgemein**) und richten Sie 2FA wie oben ein. Danach sind alle Bereiche wieder erreichbar.
+Die IT kann die Zwei-Faktor-Anmeldung für bestimmte Rollen verpflichtend machen (Variable `TOTP_REQUIRED_ROLES`, [Kapitel 20](20-konfiguration.md)). Wer zu einer solchen Rolle gehört und noch keine 2FA eingerichtet hat, sieht nach dem Anmelden nur die Seite **Zwei-Faktor-Authentifizierung erforderlich**. Klicken Sie dort auf **Zu den Sicherheitseinstellungen**; die Einstellungen öffnen sich direkt im Reiter **Sicherheit**. Richten Sie 2FA wie oben ein. Danach sind alle Bereiche wieder erreichbar.
 
 ## Die Oberfläche
 
@@ -150,7 +150,7 @@ Nach der Anmeldung landen Sie auf dem **Dashboard**. Es zeigt nur Daten aus Akte
 
 ![Dashboard](../screenshots/dashboard.png)
 
-Oben steht eine Begrüßung mit Ihrem Vornamen. (Bekannter Fehler: Beginnt der hinterlegte Name mit einem Titel, erscheint z. B. „Willkommen, Dr.“.)
+Oben steht eine Begrüßung mit Ihrem Vornamen, z. B. **Willkommen, Anna**. Ein vorangestellter Titel wie „Dr.“ wird dabei übersprungen.
 
 Darunter vier Kennzahlen:
 
@@ -169,7 +169,7 @@ Die **Tagesuebersicht** listet alles, was heute ansteht, getrennt nach **Fristen
 
 - Eine Ampel und das Kürzel **NF** (Notfrist) helfen beim Einordnen von Fristen.
 - **Fristenzettel** öffnet eine druckbare Liste der heutigen Fristen in einem neuen Tab.
-- Das Häkchen (**Erledigen**) schließt eine Frist oder Wiedervorlage ab. AI-Lawyer verlangt dafür einen **Erledigungsgrund**; erst dann ist **Erledigen** im Dialog anklickbar.
+- Das Häkchen (**Erledigen**) schließt eine Frist oder Wiedervorlage ab. Bei Fristen verlangt AI-Lawyer einen **Erledigungsgrund**, bei überfälligen Fristen zusätzlich einen **Überschreitungsgrund**; erst dann ist **Erledigen** im Fenster anklickbar ([Kapitel 6](06-fristen-und-kalender.md#fristen-erledigen)).
 - Das Ordnersymbol (**Akte oeffnen**) springt in die Akte.
 
 ### Zuletzt bearbeitete Akten und anstehende Einträge

@@ -14,7 +14,7 @@ Sortiert wird nach Nachname bzw. Firma. Angezeigt werden höchstens 50 Kontakte;
 
 ### Suchen und filtern
 
-- **Suchfeld** **Name, Firma, E-Mail oder Ort suchen...**: Begriff eingeben, **Enter**. Gesucht wird in Vorname, Nachname, Firma, Kurzname, E-Mail, Ort, Telefon, Mandantennummer und USt-IdNr.
+- **Suchfeld** **Name, Firma, E-Mail oder Ort suchen...**: Begriff eingeben, **Enter**. Gesucht wird in Vorname, Nachname, Firma, Kurzname, E-Mail, Telefon, Mandantennummer, USt-IdNr. sowie in Straße, PLZ und Ort der Adressen.
 - **Typ**: **Alle Typen**, **Natürliche Personen** oder **Juristische Personen**.
 - **Tags**: Haben Kontakte Tags, erscheinen sie als Schaltflächen unter der Suche. Ein Klick filtert auf diesen Tag, ein zweiter Klick hebt den Filter auf.
 
@@ -74,7 +74,7 @@ Unter **Adressen** verwalten Sie beliebig viele Anschriften:
 
 Darunter, unter **Kommunikation**: **Telefon**, **Telefon 2**, **Mobil**, **Fax**, **E-Mail**, **E-Mail 2**, **Website**, **Bevorzugte Kontaktart** (E-Mail, Telefon, Brief, Fax, beA), **Kontaktzeiten** und **Korrespondenzsprachen**. Diese Felder werden erst mit **Kontakt anlegen** bzw. **Änderungen speichern** gesichert.
 
-> **Hinweis:** Die Spalte **Ort** in der Kontaktliste und die Ortssuche verwenden ein älteres Adressfeld, das nur beim Import und bei der Übernahme aus j-lawyer gefüllt wird. Bei Kontakten, die Sie in AI-Lawyer anlegen, bleibt die Spalte deshalb leer, auch wenn Adressen hinterlegt sind. Solche älteren Adressen zeigt der Kontakt im Reiter **Adressen** mit dem Kennzeichen **Legacy**.
+> **Hinweis:** Die Spalte **Ort** in der Kontaktliste zeigt PLZ und Ort der Hauptadresse; fehlt eine als Hauptadresse markierte Anschrift, nimmt AI-Lawyer die Anschrift vom Typ **Hauptanschrift** oder die erste vorhandene. Die Suche findet Kontakte auch über Straße, PLZ und Ort ihrer Adressen. Ältere Adressen aus Import oder j-lawyer-Übernahme zeigt der Kontakt im Reiter **Adressen** mit dem Kennzeichen **Legacy**; sie werden berücksichtigt, wenn keine andere Adresse hinterlegt ist.
 
 ### Rechtliches
 
@@ -198,7 +198,7 @@ Einen Export-Knopf gibt es in der Kontaktliste derzeit nicht. Die Funktion selbs
 - als CSV-Datei: `<Ihre AI-Lawyer-Adresse>/api/kontakte/export?format=csv`
 - als Excel-Datei: `<Ihre AI-Lawyer-Adresse>/api/kontakte/export?format=xlsx`
 
-Mit `&typ=NATUERLICH` oder `&typ=JURISTISCH` und `&q=Suchbegriff` lässt sich die Auswahl eingrenzen. Die Datei enthält Name, Firma, Straße, PLZ, Ort, Telefon, E-Mail und Typ. Straße, PLZ und Ort stammen dabei aus dem älteren Adressfeld (siehe Hinweis bei [Adressen](#adressen--komm)) und sind bei neu angelegten Kontakten leer.
+Mit `&typ=NATUERLICH` oder `&typ=JURISTISCH` und `&q=Suchbegriff` lässt sich die Auswahl eingrenzen. Die Datei enthält Name, Firma, Straße, PLZ, Ort, Telefon, E-Mail und Typ. Straße, PLZ und Ort stammen aus der Hauptadresse des Kontakts (siehe Hinweis bei [Adressen](#adressen--komm)).
 
 ## Löschen und Anonymisieren
 
@@ -206,7 +206,7 @@ Mit `&typ=NATUERLICH` oder `&typ=JURISTISCH` und `&q=Suchbegriff` lässt sich di
 
 **DSGVO-Anonymisierung:** Verlangt eine Person die Löschung ihrer Daten, während die Akten aus Aufbewahrungsgründen bleiben müssen, ersetzt die Anonymisierung die personenbezogenen Daten des Kontakts, ohne die Akten zu zerstören. Sie ist nur für Admins unter **Administration** verfügbar und in [Kapitel 18](18-datenschutz-und-audit.md) beschrieben.
 
-**Rollenhinweis:** Anlegen, Bearbeiten, Importieren und Löschen von Kontakten prüft AI-Lawyer derzeit nicht nach Rolle. Auch das Sekretariat, das sonst nichts löschen darf, kann Kontakte löschen. Stimmen Sie in der Kanzlei ab, wer Kontakte löscht.
+**Rollenhinweis:** Kontakte löschen dürfen nur Rollen mit Löschrecht (Administrator, Anwalt/Anwältin, Sachbearbeiter/in). Das Sekretariat erhält beim Löschen die Meldung *Keine Berechtigung*. Anlegen, Bearbeiten und Importieren dürfen alle Kanzleirollen.
 
 ## Wenn etwas nicht klappt
 

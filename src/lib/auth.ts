@@ -3,15 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { NextAuthConfig } from "next-auth";
 import { prisma } from "@/lib/db";
-import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { logAuditEvent } from "@/lib/audit";
 import { authConfig } from "./auth.config";
-
-const loginSchema = z.object({
-  email: z.string().email("Ungültige E-Mail-Adresse"),
-  password: z.string().min(1, "Passwort ist erforderlich"),
-});
+import { refreshTokenFromDb } from "@/lib/auth-session";
+import { pruefePasswort } from "@/lib/auth-credentials";
 
 // Schema for TOTP nonce path (second step after TOTP challenge)
 const totpNonceSchema = z.object({
@@ -21,6 +16,16 @@ const totpNonceSchema = z.object({
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    // Node runtime only: re-check account state on every session read so that
+    // deactivation, role changes and password resets take effect immediately.
+    async jwt(params) {
+      const token = await authConfig.callbacks.jwt(params as any);
+      if (params.user || !token) return token;
+      return refreshTokenFromDb(token);
+    },
+  },
   adapter: PrismaAdapter(prisma) as NextAuthConfig["adapter"],
   providers: [
     Credentials({
@@ -70,51 +75,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           };
         }
 
-        // Normal password path
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: parsed.data.email },
-        });
-
-        if (!user || !user.aktiv) {
-          logAuditEvent({
-            aktion: "LOGIN_FEHLGESCHLAGEN",
-            details: {
-              email: parsed.data.email,
-              grund: !user ? "Benutzer nicht gefunden" : "Konto deaktiviert",
-            },
-          }).catch(() => {});
-          return null;
-        }
-
-        const passwordMatch = await bcrypt.compare(
-          parsed.data.password,
-          user.passwordHash
-        );
-
-        if (!passwordMatch) {
-          logAuditEvent({
-            userId: user.id,
-            aktion: "LOGIN_FEHLGESCHLAGEN",
-            details: {
-              email: parsed.data.email,
-              grund: "Falsches Passwort",
-            },
-          }).catch(() => {});
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          kanzleiId: user.kanzleiId,
-          kontaktId: user.kontaktId,
-          totpEnabled: user.totpEnabled,
-        };
+        // Normal password path (rate-limited; refuses accounts with 2FA)
+        const pruefung = await pruefePasswort(credentials, request);
+        return pruefung.ok ? pruefung.user : null;
       },
     }),
   ],

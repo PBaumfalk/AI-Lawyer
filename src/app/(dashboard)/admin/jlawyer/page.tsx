@@ -21,29 +21,19 @@ import {
   Plug,
   ChevronDown,
   ChevronUp,
+  Info,
 } from "lucide-react";
+import type {
+  JLawyerBenutzerOption,
+  JLawyerConfigRequest,
+  JLawyerConfigResponse,
+  MigrationStartResponse,
+  MigrationStatusResponse,
+  MigrationStatusWert,
+} from "@/lib/jlawyer/migration-status";
+import type { JLawyerMigrationIssue } from "@/lib/jlawyer/types";
 
-interface JLawyerMigrationStats {
-  akten: number;
-  kontakte: number;
-  beteiligte: number;
-  dokumente: number;
-  kalender: number;
-  errors: Array<{ entity: string; id: string; message: string }>;
-}
-
-interface MigrationStatus {
-  status: "idle" | "running" | "done" | "error";
-  startedAt?: string;
-  finishedAt?: string;
-  report?: JLawyerMigrationStats;
-}
-
-interface ConfigData {
-  url: string;
-  username: string;
-  hasPassword: boolean;
-}
+type MigrationStatus = Partial<MigrationStatusResponse> & { status: MigrationStatusWert };
 
 const statusLabels: Record<string, string> = {
   idle: "Bereit",
@@ -73,6 +63,8 @@ export default function JLawyerMigrationPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [hasPassword, setHasPassword] = useState(false);
+  const [standardVerantwortlicherId, setStandardVerantwortlicherId] = useState("");
+  const [benutzer, setBenutzer] = useState<JLawyerBenutzerOption[]>([]);
   const [configLoading, setConfigLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -87,6 +79,7 @@ export default function JLawyerMigrationPage() {
 
   // Report UI state
   const [showErrors, setShowErrors] = useState(false);
+  const [showHinweise, setShowHinweise] = useState(false);
 
   // Load config on mount
   const fetchConfig = useCallback(async () => {
@@ -98,10 +91,12 @@ export default function JLawyerMigrationPage() {
         return;
       }
       if (!res.ok) throw new Error("Fehler beim Laden");
-      const data: ConfigData = await res.json();
+      const data: JLawyerConfigResponse = await res.json();
       setUrl(data.url || "");
       setUsername(data.username || "");
       setHasPassword(data.hasPassword);
+      setStandardVerantwortlicherId(data.standardVerantwortlicherId ?? "");
+      setBenutzer(data.benutzer ?? []);
     } catch {
       toast.error("Verbindungsdaten konnten nicht geladen werden");
     } finally {
@@ -114,7 +109,7 @@ export default function JLawyerMigrationPage() {
     try {
       const res = await fetch("/api/admin/jlawyer/migrate");
       if (!res.ok) return;
-      const data: MigrationStatus = await res.json();
+      const data: MigrationStatusResponse = await res.json();
       setMigration(data);
     } catch {
       // Ignore — non-critical on initial load
@@ -136,7 +131,7 @@ export default function JLawyerMigrationPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const body: Record<string, string> = {};
+      const body: JLawyerConfigRequest = { standardVerantwortlicherId };
       if (url) body.url = url;
       if (username) body.username = username;
       if (password) body.password = password;
@@ -202,7 +197,7 @@ export default function JLawyerMigrationPage() {
       try {
         const res = await fetch("/api/admin/jlawyer/migrate");
         if (!res.ok) return;
-        const data: MigrationStatus = await res.json();
+        const data: MigrationStatusResponse = await res.json();
         setMigration(data);
         if (data.status === "done" || data.status === "error") {
           if (pollingRef.current) clearInterval(pollingRef.current);
@@ -235,16 +230,22 @@ export default function JLawyerMigrationPage() {
         return;
       }
 
-      const data = await res.json();
+      const data: MigrationStartResponse = await res.json();
       if (!data.success) {
         toast.error(data.error || "Migration fehlgeschlagen");
-        setMigration({ status: "error" });
+        if (res.status === 409) {
+          // Another run is active: show its state instead of an error
+          await fetchMigrationStatus();
+        } else {
+          setMigration({ status: "error", report: data.report ?? null, abbruch: data.error });
+        }
       } else {
         setMigration({
           status: "done",
           startedAt: migration.startedAt,
           finishedAt: new Date().toISOString(),
           report: data.report,
+          abbruch: null,
         });
         toast.success("Migration abgeschlossen");
       }
@@ -257,6 +258,9 @@ export default function JLawyerMigrationPage() {
       pollingRef.current = null;
     }
   };
+
+  const errors: JLawyerMigrationIssue[] = migration.report?.errors ?? [];
+  const hinweise: JLawyerMigrationIssue[] = migration.report?.hinweise ?? [];
 
   const statCards = migration.report
     ? [
@@ -282,7 +286,8 @@ export default function JLawyerMigrationPage() {
       <div>
         <h1 className="text-2xl font-semibold font-bold">J-Lawyer Migration</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Akten, Kontakte, Dokumente und Kalendereintraege aus J-Lawyer importieren
+          Akten, Kontakte, Dokumente und Kalendereintraege aus J-Lawyer importieren. Ein erneuter
+          Lauf legt nur fehlende Datensaetze an und aendert keine bereits uebernommenen.
         </p>
       </div>
 
@@ -325,6 +330,25 @@ export default function JLawyerMigrationPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={hasPassword ? "\u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25cf" : "Passwort eingeben"}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jl-standard">Standard-Verantwortlicher</Label>
+              <select
+                id="jl-standard"
+                value={standardVerantwortlicherId}
+                onChange={(e) => setStandardVerantwortlicherId(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+              >
+                <option value="">Startender Administrator</option>
+                {benutzer.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.role})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Erhält Akten und Fristen, deren j-lawyer-Benutzer keinem Benutzer hier zugeordnet werden kann.
+              </p>
             </div>
           </div>
 
@@ -376,6 +400,13 @@ export default function JLawyerMigrationPage() {
           </div>
         </div>
         <div className="p-6 space-y-4">
+          {migration.status !== "running" && migration.abbruch && (
+            <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-800">
+              <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <p className="text-sm">{migration.abbruch}</p>
+            </div>
+          )}
+
           {migration.status === "running" && (
             <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-800">
               <Loader2 className="w-5 h-5 animate-spin shrink-0" />
@@ -417,10 +448,10 @@ export default function JLawyerMigrationPage() {
           <div className="px-6 py-4 border-b border-[var(--glass-border-color)]">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-foreground">Abschlussbericht</h2>
-              {migration.report.errors.length > 0 ? (
+              {errors.length > 0 ? (
                 <Badge variant="destructive">
                   <AlertTriangle className="w-3 h-3 mr-1" />
-                  {migration.report.errors.length} Fehler
+                  {errors.length} Fehler
                 </Badge>
               ) : (
                 <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
@@ -438,21 +469,21 @@ export default function JLawyerMigrationPage() {
                   <div className="flex flex-col items-center gap-2 text-center">
                     <Icon className="w-6 h-6 text-muted-foreground" />
                     <span className="text-2xl font-bold">{value}</span>
-                    <span className="text-xs text-muted-foreground">{label}</span>
+                    <span className="text-xs text-muted-foreground">{label} neu</span>
                   </div>
                 </GlassCard>
               ))}
             </div>
 
             {/* Error list */}
-            {migration.report.errors.length > 0 && (
+            {errors.length > 0 && (
               <div>
                 <button
                   className="flex items-center gap-2 text-sm font-medium text-rose-600 hover:text-rose-700 transition-colors"
                   onClick={() => setShowErrors((v) => !v)}
                 >
                   <AlertTriangle className="w-4 h-4" />
-                  {migration.report.errors.length} Fehler anzeigen
+                  {errors.length} Fehler anzeigen
                   {showErrors ? (
                     <ChevronUp className="w-4 h-4" />
                   ) : (
@@ -462,7 +493,7 @@ export default function JLawyerMigrationPage() {
 
                 {showErrors && (
                   <div className="mt-3 space-y-2 max-h-96 overflow-y-auto">
-                    {migration.report.errors.slice(0, 20).map((err, i) => (
+                    {errors.slice(0, 20).map((err, i) => (
                       <div
                         key={i}
                         className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm"
@@ -475,9 +506,42 @@ export default function JLawyerMigrationPage() {
                         <p className="text-rose-600 mt-0.5">{err.message}</p>
                       </div>
                     ))}
-                    {migration.report.errors.length > 20 && (
+                    {errors.length > 20 && (
                       <p className="text-sm text-muted-foreground text-center py-2">
-                        Und {migration.report.errors.length - 20} weitere Fehler...
+                        Und {errors.length - 20} weitere Fehler...
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Fallback notes (e.g. unmatched users) */}
+            {hinweise.length > 0 && (
+              <div>
+                <button
+                  className="flex items-center gap-2 text-sm font-medium text-amber-700 hover:text-amber-800 transition-colors"
+                  onClick={() => setShowHinweise((v) => !v)}
+                >
+                  <Info className="w-4 h-4" />
+                  {hinweise.length} Hinweise (Ersatzzuordnungen) anzeigen
+                  {showHinweise ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {showHinweise && (
+                  <div className="mt-3 space-y-2 max-h-96 overflow-y-auto">
+                    {hinweise.slice(0, 200).map((h, i) => (
+                      <div key={i} className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm">
+                        <div className="flex items-center gap-2 text-amber-800">
+                          <span className="font-medium">{h.entity}</span>
+                          <span className="text-amber-400">/</span>
+                          <span className="font-mono text-xs text-amber-600">{h.id}</span>
+                        </div>
+                        <p className="text-amber-700 mt-0.5">{h.message}</p>
+                      </div>
+                    ))}
+                    {hinweise.length > 200 && (
+                      <p className="text-sm text-muted-foreground text-center py-2">
+                        Und {hinweise.length - 200} weitere Hinweise...
                       </p>
                     )}
                   </div>

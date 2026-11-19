@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import bcrypt from "bcryptjs";
+import { pruefePasswort } from "@/lib/auth-credentials";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import crypto from "crypto";
@@ -29,35 +29,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ungültige Eingabe" }, { status: 400 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
-    select: {
-      id: true,
-      email: true,
-      passwordHash: true,
-      aktiv: true,
-      totpEnabled: true,
-    },
-  });
-
-  if (!user || !user.aktiv) {
-    return NextResponse.json(
-      { error: "Ungültige Anmeldedaten" },
-      { status: 401 }
-    );
+  // Same check as the NextAuth credentials provider, including the attempt
+  // limit. This endpoint used to compare the password itself without any
+  // limit or audit entry, which made it an unthrottled password oracle.
+  const pruefung = await pruefePasswort(parsed.data, req, { fuerTotpVorstufe: true });
+  if (!pruefung.ok) {
+    if (pruefung.grund === "gesperrt") {
+      return NextResponse.json(
+        { error: "Zu viele Anmeldeversuche. Bitte in 15 Minuten erneut versuchen." },
+        { status: 429 }
+      );
+    }
+    return NextResponse.json({ error: "Ungültige Anmeldedaten" }, { status: 401 });
   }
-
-  const passwordMatch = await bcrypt.compare(
-    parsed.data.password,
-    user.passwordHash
-  );
-
-  if (!passwordMatch) {
-    return NextResponse.json(
-      { error: "Ungültige Anmeldedaten" },
-      { status: 401 }
-    );
-  }
+  const user = pruefung.user;
 
   if (!user.totpEnabled) {
     // No TOTP — client should proceed with normal signIn

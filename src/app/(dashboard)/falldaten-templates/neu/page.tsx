@@ -46,7 +46,7 @@ export default function NeuFalldatenTemplatePage() {
         return;
       }
       toast.success("Template als Entwurf gespeichert");
-      router.push("/dashboard/falldaten-templates");
+      router.push("/falldaten-templates");
     } catch (err: unknown) {
       setServerErrors([
         err instanceof Error ? err.message : "Unbekannter Fehler",
@@ -101,12 +101,12 @@ export default function NeuFalldatenTemplatePage() {
         toast.error(
           submitData.error ?? "Template erstellt, aber Einreichen fehlgeschlagen"
         );
-        router.push("/dashboard/falldaten-templates");
+        router.push("/falldaten-templates");
         return;
       }
 
       toast.success("Template erstellt und zur Pruefung eingereicht");
-      router.push("/dashboard/falldaten-templates");
+      router.push("/falldaten-templates");
     } catch (err: unknown) {
       setServerErrors([
         err instanceof Error ? err.message : "Unbekannter Fehler",

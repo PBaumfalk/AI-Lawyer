@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { prisma } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { listAktenForUser } from "@/lib/akten/list";
 import { AktenSearchBar } from "@/components/akten/akten-search-bar";
 import { GlassPanel } from "@/components/ui/glass-panel";
 
@@ -12,32 +14,12 @@ interface AktenPageProps {
 export default async function AktenPage({ searchParams }: AktenPageProps) {
   const { q, status } = await searchParams;
 
-  const where: any = {};
-  if (status) where.status = status;
-  if (q) {
-    where.OR = [
-      { aktenzeichen: { contains: q, mode: "insensitive" } },
-      { kurzrubrum: { contains: q, mode: "insensitive" } },
-      { wegen: { contains: q, mode: "insensitive" } },
-    ];
-  }
-
-  const akten = await prisma.akte.findMany({
-    where,
-    include: {
-      anwalt: { select: { name: true } },
-      sachbearbeiter: { select: { name: true } },
-      beteiligte: {
-        include: {
-          kontakt: {
-            select: { vorname: true, nachname: true, firma: true },
-          },
-        },
-      },
-    },
-    orderBy: { geaendert: "desc" },
-    take: 50,
-  });
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const akten = await listAktenForUser(
+    { id: session.user.id!, role: (session.user as any).role },
+    { q, status }
+  );
 
   const statusColor: Record<string, string> = {
     OFFEN:

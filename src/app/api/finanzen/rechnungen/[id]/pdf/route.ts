@@ -3,6 +3,7 @@
 // Also stores PDF in MinIO and links as dokumentId on the invoice
 
 import { NextRequest, NextResponse } from 'next/server';
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { generateInvoicePdf } from '@/lib/finance/invoice/pdf-generator';
@@ -65,6 +66,8 @@ export async function GET(
     if (!rechnung) {
       return NextResponse.json({ error: 'Rechnung nicht gefunden' }, { status: 404 });
     }
+    const denied = await akteAccessDenied(session, rechnung.akteId);
+    if (denied) return denied;
 
     // Build InvoiceData from DB records
     const kanzlei = rechnung.akte.kanzlei;

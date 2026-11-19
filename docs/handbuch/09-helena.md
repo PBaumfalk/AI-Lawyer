@@ -48,8 +48,7 @@ Sie können Helena auch direkt aus einer Akte starten: Der Knopf **Fallzusammenf
 
 - **Helena denkt nach** erscheint, solange Helena arbeitet. Bei manchen Modellen lässt sich der Denkweg aufklappen.
 - Unter einer Antwort stehen die **Quellen**: nummerierte Dokumente mit Aktenzeichen und Textauszug. Ein Klick öffnet das Dokument. Im Text verweist Helena mit [1], [2] usw. darauf.
-- **Kopieren** legt die Antwort in die Zwischenablage.
-- Der Knopf **Als Entwurf** ist sichtbar, hat aber derzeit keine Funktion. Kopieren Sie den Text stattdessen und legen Sie ihn selbst ab.
+- **Kopieren** legt die Antwort in die Zwischenablage. Eine Chat-Antwort direkt als Entwurf speichern lässt sich nicht; kopieren Sie den Text und legen Sie ihn selbst ab, oder lassen Sie Helena einen Entwurf anlegen (Schriftsatz-Pipeline oder `@Helena`-Auftrag).
 - Dateien in das Chatfenster zu ziehen funktioniert noch nicht. Es erscheint *„Dokument-Upload in den Chat wird in einer spaeteren Version unterstuetzt.“*
 
 ### Verlauf
@@ -62,7 +61,7 @@ Links stehen Ihre bisherigen Unterhaltungen, gruppiert nach Akte (ohne Akte unte
 - **Loeschen** entfernt eine Unterhaltung nach der Rückfrage *„Unterhaltung loeschen?“*.
 - **Sidebar ausblenden** und **Sidebar anzeigen** klappen die Liste ein und aus.
 
-Unterhaltungen sind persönlich; Kolleginnen und Kollegen sehen sie nicht.
+Unterhaltungen erscheinen nur in Ihrer eigenen Liste. Mit dem Link aus **Link kopieren** können Kolleginnen und Kollegen eine Unterhaltung aber öffnen: Ist sie einer Akte zugeordnet, gilt der Aktenzugriff; eine Unterhaltung **ohne** Akte kann jeder angemeldete Mitarbeiter lesen, der den Link kennt ([Kapitel 23](23-einschraenkungen-und-fragen.md)). Stellen Sie mandatsbezogene Fragen deshalb mit gewählter Akte.
 
 ## Die Seite KI-Chat
 
@@ -154,7 +153,7 @@ Eine Rückfrage zeigt rechts den Zähler, z. B. (2/5), und darunter aufklappbar 
 
 - Nach **5 Runden** legt Helena den Entwurf trotzdem an und markiert die fehlenden Stellen als Platzhalter: *„Ich erstelle den Entwurf mit Platzhaltern fuer: … Diese kannst du spaeter ergaenzen.“*
 - Eine offene Rückfrage bleibt **7 Tage** gespeichert, je Person und Akte. Wählen Sie die Akte später wieder, erscheint oben der Hinweis **Offene Rueckfrage** mit dem Knopf **Verwerfen**.
-- Bitten Sie um einen neuen Schriftsatz, während einer offen ist, fragt Helena: *„Du hast noch einen offenen Entwurf fuer einen Schriftsatz. Verwerfen und neu starten?“* Einen Knopf dafür gibt es in dieser Meldung nicht. Schreiben Sie „abbrechen“ (oder wählen Sie die Akte neu und klicken Sie im Hinweis auf **Verwerfen**) und stellen Sie die Bitte danach erneut.
+- Bitten Sie um einen neuen Schriftsatz, während einer offen ist, fragt Helena: *„Du hast noch einen offenen Entwurf fuer einen Schriftsatz. Verwerfen und neu starten?“* Darunter steht der Knopf **Verwerfen und neu starten**: Er verwirft den offenen Schriftsatz und schickt Ihre neue Bitte sofort noch einmal ab. Wollen Sie den offenen Schriftsatz behalten, beantworten Sie stattdessen die Rückfrage.
 - Schreiben Sie etwas, das mit der Rückfrage nichts zu tun hat, verwirft Helena den offenen Schriftsatz und antwortet normal.
 
 Ohne gewählte Akte (bei **Alle Akten**) gibt es keine Schriftsatz-Pipeline; Helena antwortet dann frei im Chat.
@@ -170,7 +169,7 @@ Filtern Sie nach Art (**Dokument**, **Frist**, **Notiz**, **Alert**) und Akte. E
 | Knopf | Taste | Wirkung |
 | --- | --- | --- |
 | **Annehmen** | `A` | Der Entwurf wird übernommen (siehe unten). Fünf Sekunden lang bietet die Meldung **Rueckgaengig** an. |
-| **Bearbeiten** | `B` | Öffnet die Akte. Den Text ändern Sie im Aktivitätsverlauf beim Entwurfseintrag über **Bearbeiten** und **Speichern**. Danach ist der Entwurf weiter offen und muss noch angenommen werden. |
+| **Bearbeiten** | `B` | Öffnet Titel und Text des Entwurfs direkt in der Detailansicht zum Bearbeiten. **Speichern** übernimmt die Änderung (*„Entwurf gespeichert“*), **Abbrechen** verwirft sie. Danach ist der Entwurf weiter offen und muss noch angenommen werden. |
 | **Ablehnen** | `R` | Öffnet das Ablehnungsformular. |
 
 Was beim Annehmen entsteht:
@@ -212,7 +211,7 @@ So arbeiten Sie damit:
 2. Ein Klick auf das Aktenzeichen öffnet die Akte.
 3. Mit dem Häkchen **Gelesen** blenden Sie eine Warnung aus, mit **Alle gelesen** alle.
 
-Der Scanner läuft standardmäßig nachts um 1 Uhr. Er erzeugt dieselbe Warnung für dieselbe Akte höchstens einmal in 24 Stunden. Ist das Problem behoben (Frist erledigt oder quittiert, Akte wieder aktiv, Beteiligte oder Dokument ergänzt), markiert er die Warnung als **Automatisch geloest**. Bleibt eine Warnung liegen, steigt nach 3 Tagen ihre Schwere, nach 7 Tagen werden die Administratoren benachrichtigt. Ist die verantwortliche Person im Urlaub und ein Vertreter eingetragen, bekommt der Vertreter die Warnungen **Inaktive Akte**, **Fehlende Beteiligte** und **Fehlende Dokumente** zusätzlich ([Kapitel 15](15-benutzer-und-rollen.md)).
+Der Scanner läuft standardmäßig nachts um 1 Uhr. Er erzeugt dieselbe Warnung für dieselbe Akte höchstens einmal in 24 Stunden. Ist das Problem behoben (Frist erledigt oder quittiert, Akte wieder aktiv, Beteiligte oder Dokument ergänzt), markiert er die Warnung als **Automatisch geloest** und nennt daneben den Grund. Bleibt eine Warnung liegen, steigt nach 3 Tagen ihre Schwere, nach 7 Tagen werden die Administratoren benachrichtigt. Ist die verantwortliche Person im Urlaub und ein Vertreter eingetragen, bekommt der Vertreter die Warnungen **Inaktive Akte**, **Fehlende Beteiligte** und **Fehlende Dokumente** zusätzlich ([Kapitel 15](15-benutzer-und-rollen.md)).
 
 Sie sehen Warnungen aller Akten, auf die Sie Zugriff haben. Schwellenwerte, Zeitplan und erwartete Dokumente stellt die Administration ein ([Kapitel 16](16-einstellungen-und-vorlagen.md#admin-einstellungen)).
 
@@ -267,7 +266,7 @@ Welches Sprachmodell Helena benutzt, legt die Administration auf der Seite **Hel
 | Feld | Bedeutung |
 | --- | --- |
 | **KI-Provider** | **Ollama (Lokal)** auf eigener Hardware, **OpenAI** oder **Anthropic** in der Cloud. Standard ist Ollama. |
-| **API-Schluessel** | Nur bei OpenAI und Anthropic. |
+| **API-Schluessel** | Nur bei OpenAI und Anthropic. Der Schlüssel wird verschlüsselt gespeichert und nie wieder im Browser angezeigt. Ist bereits einer hinterlegt, steht im Feld *„Gespeichert. Leer lassen, um den Schlüssel zu behalten.“* |
 | **Modell** | Name des Modells, z. B. `qwen3.5:35b` (Ollama, Standard), `gpt-4o` oder `claude-sonnet-4-20250514`. |
 | **Ollama-URL** | Adresse des Ollama-Servers. |
 | **Verbindung testen** | Zeigt **Verbunden (… ms)** oder den Fehler. |

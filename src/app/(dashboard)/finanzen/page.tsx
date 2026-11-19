@@ -14,6 +14,10 @@ import {
   Receipt,
   Building2,
 } from "lucide-react";
+import {
+  buildInvoiceListQuery,
+  type InvoiceListResponse,
+} from "@/lib/finance/invoice/contract";
 
 interface FinanzenSummary {
   gesamtUmsatz: number;
@@ -50,10 +54,12 @@ export default function FinanzenPage() {
     async function fetchSummary() {
       try {
         // Fetch invoice summary stats
-        // API now returns 'stats' key with: gesamtUmsatz, offeneForderungen, ueberfaellig
-        const invoiceRes = await fetch("/api/finanzen/rechnungen?take=0");
+        // Only the stats are needed; limit=1 keeps the list query minimal
+        const invoiceRes = await fetch(
+          `/api/finanzen/rechnungen?${buildInvoiceListQuery({ limit: 1 })}`
+        );
         if (invoiceRes.ok) {
-          const invoiceData = await invoiceRes.json();
+          const invoiceData: InvoiceListResponse = await invoiceRes.json();
           const stats = invoiceData.stats;
           if (stats) {
             setSummary((prev) => ({

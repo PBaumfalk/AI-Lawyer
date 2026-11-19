@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
-import { requirePermission } from "@/lib/rbac";
+import { requirePermission, akteAccessDenied } from "@/lib/rbac";
 import { logAuditEvent } from "@/lib/audit";
 
 // --- Validation ---
 
 const patchSchema = z.object({
   akteId: z.string().nullable().optional(),
-  status: z.enum(["EINGANG", "GELESEN", "ZUGEORDNET", "GESENDET", "FEHLER"]).optional(),
-  eebStatus: z.string().optional(),
+  // GESENDET and eEB BESTAETIGT are only recorded by POST /api/bea/messages and
+  // POST /api/bea/messages/[id]/eeb, after bea.expert confirmed the action.
+  status: z.enum(["EINGANG", "GELESEN", "ZUGEORDNET", "FEHLER"]).optional(),
+  eebStatus: z.enum(["AUSSTEHEND", "NICHT_ERFORDERLICH"]).optional(),
 });
 
 // --- GET /api/bea/messages/[id] ---
@@ -84,7 +86,7 @@ export async function PATCH(
   if (result.error) return result.error;
 
   const { id } = await params;
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
 
   if (!parsed.success) {
@@ -92,6 +94,10 @@ export async function PATCH(
       { error: "Validierungsfehler", details: parsed.error.flatten() },
       { status: 400 }
     );
+  }
+  if (parsed.data.akteId) {
+    const denied = await akteAccessDenied(result.session, parsed.data.akteId);
+    if (denied) return denied;
   }
 
   const existing = await prisma.beaNachricht.findUnique({

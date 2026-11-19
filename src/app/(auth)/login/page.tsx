@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,14 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hinweis, setHinweis] = useState<string | null>(null);
+
+  // window.location instead of useSearchParams: no Suspense boundary needed
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("passwort") === "geaendert") {
+      setHinweis("Passwort geändert. Bitte mit dem neuen Passwort anmelden.");
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,7 +38,12 @@ export default function LoginPage() {
 
     if (!initRes.ok) {
       setLoading(false);
-      setError("Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.");
+      const body = await initRes.json().catch(() => null);
+      setError(
+        initRes.status === 429 && body?.error
+          ? body.error
+          : "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut."
+      );
       return;
     }
 
@@ -112,6 +125,9 @@ export default function LoginPage() {
               />
             </div>
 
+            {hinweis && !error && (
+              <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">{hinweis}</p>
+            )}
             {error && (
               <div className="text-sm text-red-600 dark:text-red-400 bg-red-500/10 rounded-lg p-3 border border-red-500/20">
                 {error}

@@ -1,0 +1,13 @@
+# Nur für scripts/test-backup-restore.sh: eigene Containernamen und keine
+# Host-Ports, damit der Test nicht mit einer laufenden Installation kollidiert.
+# Zusammen mit docker-compose.yml und COMPOSE_PROJECT_NAME=ailawyer-backuptest.
+services:
+  db:
+    container_name: ailawyer-backuptest-db
+    ports: !reset []
+  minio:
+    container_name: ailawyer-backuptest-minio
+    ports: !reset []
+  meilisearch:
+    container_name: ailawyer-backuptest-meilisearch
+    ports: !reset []

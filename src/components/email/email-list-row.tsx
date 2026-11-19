@@ -33,6 +33,7 @@ interface EmailListRowProps {
   onSelect: (emailId: string) => void;
   onToggleCheck: (emailId: string) => void;
   onShiftClick: (emailId: string) => void;
+  onQuickAction: (emailId: string, action: "markRead" | "archive" | "delete") => void;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ export const EmailListRow = memo(function EmailListRow({
   onSelect,
   onToggleCheck,
   onShiftClick,
+  onQuickAction,
 }: EmailListRowProps) {
   const isUnread = !email.gelesen;
   const isHighPriority = email.prioritaet === "HOCH";
@@ -179,9 +181,15 @@ export const EmailListRow = memo(function EmailListRow({
 
       {/* Quick actions on hover */}
       <div className="flex-shrink-0 hidden group-hover:flex items-center gap-0.5">
-        <QuickAction icon={MailOpen} title="Als gelesen markieren" />
-        <QuickAction icon={Archive} title="Archivieren" />
-        <QuickAction icon={Trash2} title="Loeschen" />
+        {isUnread && (
+          <QuickAction
+            icon={MailOpen}
+            title="Als gelesen markieren"
+            onClick={() => onQuickAction(email.id, "markRead")}
+          />
+        )}
+        <QuickAction icon={Archive} title="Archivieren" onClick={() => onQuickAction(email.id, "archive")} />
+        <QuickAction icon={Trash2} title="Loeschen" onClick={() => onQuickAction(email.id, "delete")} />
       </div>
     </div>
   );
@@ -192,13 +200,19 @@ export const EmailListRow = memo(function EmailListRow({
 function QuickAction({
   icon: Icon,
   title,
+  onClick,
 }: {
   icon: React.ElementType;
   title: string;
+  onClick: () => void;
 }) {
   return (
     <button
-      onClick={(e) => e.stopPropagation()}
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
       title={title}
       className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
     >

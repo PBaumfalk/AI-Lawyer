@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { withResolution } from "@/lib/helena/alert-meta";
 import { createLogger } from "@/lib/logger";
 import { createNotification } from "@/lib/notifications/service";
 import { getSocketEmitter } from "@/lib/socket/emitter";
@@ -215,7 +216,7 @@ export async function resolveStaleAlerts(): Promise<number> {
           data: {
             gelesen: true,
             gelesenAt: new Date(),
-            meta: { ...meta, resolvedAt: new Date().toISOString(), resolvedReason: reason },
+            meta: withResolution(meta, reason) as any,
           },
         });
         totalResolved++;
@@ -258,11 +259,7 @@ export async function resolveStaleAlerts(): Promise<number> {
           data: {
             gelesen: true,
             gelesenAt: new Date(),
-            meta: {
-              ...meta,
-              resolvedAt: new Date().toISOString(),
-              resolvedReason: "Neue Aktivitaet erkannt",
-            },
+            meta: withResolution(meta, "Neue Aktivitaet erkannt") as any,
           },
         });
         totalResolved++;
@@ -309,11 +306,7 @@ export async function resolveStaleAlerts(): Promise<number> {
           data: {
             gelesen: true,
             gelesenAt: new Date(),
-            meta: {
-              ...meta,
-              resolvedAt: new Date().toISOString(),
-              resolvedReason: "Beteiligte ergaenzt",
-            },
+            meta: withResolution(meta, "Beteiligte ergaenzt") as any,
           },
         });
         totalResolved++;
@@ -360,11 +353,7 @@ export async function resolveStaleAlerts(): Promise<number> {
           data: {
             gelesen: true,
             gelesenAt: new Date(),
-            meta: {
-              ...meta,
-              resolvedAt: new Date().toISOString(),
-              resolvedReason: "Dokument hochgeladen",
-            },
+            meta: withResolution(meta, "Dokument hochgeladen") as any,
           },
         });
         totalResolved++;

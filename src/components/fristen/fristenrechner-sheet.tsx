@@ -11,10 +11,17 @@ import {
 import { FristenRechnerForm } from "./fristenrechner-form";
 import { FristenRechnerErgebnis } from "./fristenrechner-ergebnis";
 import { Calculator, Loader2 } from "lucide-react";
+import { istFristenrechnerKuerzel } from "@/lib/fristen/tastenkuerzel";
+import {
+  fristVorlageAusRechnerErgebnis,
+  type FristVorlage,
+} from "@/lib/fristen/als-frist";
 
 interface FristenRechnerSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Opens the Kalender dialog pre-filled with the calculated Frist */
+  onAlsFristSpeichern?: (vorlage: FristVorlage) => void;
 }
 
 /**
@@ -27,6 +34,7 @@ interface FristenRechnerSheetProps {
 export function FristenRechnerSheet({
   open,
   onOpenChange,
+  onAlsFristSpeichern,
 }: FristenRechnerSheetProps) {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -85,7 +93,17 @@ export function FristenRechnerSheet({
           {/* Result */}
           {result && !loading && (
             <div className="border-t border-white/20 dark:border-white/[0.08] pt-6">
-              <FristenRechnerErgebnis result={result} />
+              <FristenRechnerErgebnis
+                result={result}
+                onAlsFristSpeichern={
+                  onAlsFristSpeichern
+                    ? () => {
+                        const vorlage = fristVorlageAusRechnerErgebnis(result);
+                        if (vorlage) onAlsFristSpeichern(vorlage);
+                      }
+                    : undefined
+                }
+              />
             </div>
           )}
         </div>
@@ -104,7 +122,7 @@ export function useFristenRechnerShortcut(
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       // Cmd+Shift+F (Mac) or Ctrl+Shift+F (Windows/Linux)
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "f") {
+      if (istFristenrechnerKuerzel(e)) {
         e.preventDefault();
         onOpen();
       }

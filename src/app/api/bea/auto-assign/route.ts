@@ -52,13 +52,14 @@ export async function POST(request: NextRequest) {
   });
 
   // Update the message with the assignment result
-  if (assignResult.akteId) {
+  // Only an unambiguous match is filed automatically. WAHRSCHEINLICH (SAFE-ID,
+  // court reference, several Aktenzeichen) is returned as a suggestion; the
+  // user confirms it via PATCH /api/bea/messages/[id] { akteId }.
+  const zugeordnet = assignResult.confidence === "SICHER" && !!assignResult.akteId;
+  if (zugeordnet) {
     await prisma.beaNachricht.update({
       where: { id: nachricht.id },
-      data: {
-        akteId: assignResult.akteId,
-        status: assignResult.confidence === "SICHER" ? "ZUGEORDNET" : undefined,
-      },
+      data: { akteId: assignResult.akteId, status: "ZUGEORDNET" },
     });
 
     // Audit log: auto-assignment
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
+    zugeordnet,
     akteId: assignResult.akteId,
     confidence: assignResult.confidence,
     reason: assignResult.reason,

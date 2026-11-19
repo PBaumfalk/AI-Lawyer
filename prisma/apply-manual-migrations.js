@@ -3,14 +3,112 @@
  * All statements are idempotent (IF NOT EXISTS / EXCEPTION WHEN duplicate_object).
  * Called from docker-entrypoint.sh after prisma migrate deploy.
  *
- * Each statement runs in its own try/catch to avoid 25P02 transaction-abort
- * cascading across statements.
+ * We split SQL safely (respecting dollar-quoted blocks), then run each
+ * statement in its own Prisma client to avoid 25P02 cascading failures.
  */
-const { PrismaClient } = require("@prisma/client");
 const fs = require("fs");
 const path = require("path");
 
+function splitSqlStatements(sql) {
+  const statements = [];
+  let current = "";
+  let i = 0;
+  let inSingle = false;
+  let inDouble = false;
+  let inDollar = false;
+  let dollarTag = "";
+
+  while (i < sql.length) {
+    const ch = sql[i];
+
+    if (inSingle) {
+      current += ch;
+      if (ch === "'") {
+        if (sql[i + 1] === "'") {
+          // Escaped single quote ('') inside string
+          current += sql[i + 1];
+          i += 2;
+          continue;
+        }
+        inSingle = false;
+      }
+      i += 1;
+      continue;
+    }
+
+    if (inDouble) {
+      current += ch;
+      if (ch === '"') {
+        if (sql[i + 1] === '"') {
+          // Escaped double quote ("") inside identifier
+          current += sql[i + 1];
+          i += 2;
+          continue;
+        }
+        inDouble = false;
+      }
+      i += 1;
+      continue;
+    }
+
+    if (inDollar) {
+      if (sql.startsWith(dollarTag, i)) {
+        current += dollarTag;
+        i += dollarTag.length;
+        inDollar = false;
+        dollarTag = "";
+        continue;
+      }
+      current += ch;
+      i += 1;
+      continue;
+    }
+
+    if (ch === "'") {
+      inSingle = true;
+      current += ch;
+      i += 1;
+      continue;
+    }
+
+    if (ch === '"') {
+      inDouble = true;
+      current += ch;
+      i += 1;
+      continue;
+    }
+
+    if (ch === "$" ) {
+      const rest = sql.slice(i);
+      const tagMatch = rest.match(/^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/);
+      if (tagMatch) {
+        dollarTag = tagMatch[0];
+        inDollar = true;
+        current += dollarTag;
+        i += dollarTag.length;
+        continue;
+      }
+    }
+
+    if (ch === ";") {
+      const trimmed = current.trim();
+      if (trimmed) statements.push(trimmed);
+      current = "";
+      i += 1;
+      continue;
+    }
+
+    current += ch;
+    i += 1;
+  }
+
+  const trimmed = current.trim();
+  if (trimmed) statements.push(trimmed);
+  return statements;
+}
+
 async function main() {
+  const { PrismaClient } = require("@prisma/client");
   const migrationsDir = path.join(__dirname, "migrations");
 
   const manualFiles = fs
@@ -20,26 +118,23 @@ async function main() {
 
   console.log(`    Found ${manualFiles.length} manual migration files`);
 
+  const failures = [];
   for (const file of manualFiles) {
     const filePath = path.join(migrationsDir, file);
     const sql = fs.readFileSync(filePath, "utf8").trim();
     if (!sql) continue;
 
-    const statements = sql
-      .split(/;\s*(?:\r?\n|$)/)
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const statements = splitSqlStatements(sql);
 
     let fileOk = true;
     for (const statement of statements) {
-      // Frische Prisma-Instanz pro Statement, damit ein Fehler nicht die
-      // Transaction fuer nachfolgende Statements blockiert (25P02).
       const prisma = new PrismaClient();
       try {
         await prisma.$executeRawUnsafe(statement);
       } catch (err) {
         fileOk = false;
-        console.error(`    ⚠ ${file}: ${err.message}`);
+        failures.push(file);
+        console.error(`    ✗ ${file}: ${err.message}`);
       } finally {
         await prisma.$disconnect();
       }
@@ -48,9 +143,18 @@ async function main() {
       console.log(`    ✓ ${file}`);
     }
   }
+  if (failures.length > 0) {
+    // Fail loudly: silently skipped statements are how schema drift went
+    // unnoticed before (see migration 20261118120000_schema_sync).
+    throw new Error(`${failures.length} statement(s) failed in: ${[...new Set(failures)].join(", ")}`);
+  }
 }
 
-main().catch((err) => {
-  console.error("Manual migration failed:", err.message);
-  process.exit(0); // Non-fatal
-});
+module.exports = { splitSqlStatements };
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("Manual migration failed:", err.message);
+    process.exit(1);
+  });
+}

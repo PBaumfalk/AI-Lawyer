@@ -527,6 +527,8 @@ model User {
   totpVerifiedAt  DateTime?
   backupCodes     String[]  @default([])  // hashed backup codes
   totpNonce       String?   @unique       // one-time nonce for completing TOTP login flow
+  // Sessions (JWTs) issued before this instant are rejected (password change/reset)
+  sessionsGueltigAb DateTime?
 
   // CalDAV Sync
   caldavKonten         CalDavKonto[]

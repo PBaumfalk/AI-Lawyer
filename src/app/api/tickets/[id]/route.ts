@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { canAccessAkte, PERMISSIONS } from "@/lib/rbac";
+import { findAccessibleTicket } from "@/lib/tickets/access";
+import { ticketEmailsInclude } from "@/lib/tickets/emails";
 import { enqueueQuestCheck } from "@/lib/gamification/quest-service";
 
 /**
@@ -16,14 +19,12 @@ export async function GET(
   }
 
   const { id } = await params;
+  const user = { id: session.user.id!, role: (session.user as any).role };
 
-  const ticket = await prisma.ticket.findUnique({
-    where: { id },
-    include: {
+  const ticket = await findAccessibleTicket(user, id, {
       akte: { select: { id: true, aktenzeichen: true, kurzrubrum: true } },
       verantwortlich: { select: { id: true, name: true } },
-      emails: { select: { id: true, betreff: true, absender: true } },
-    },
+      ...ticketEmailsInclude,
   });
 
   if (!ticket) {
@@ -49,9 +50,13 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Ungültige Anfrage." }, { status: 400 });
+  }
+  const user = { id: session.user.id!, role: (session.user as any).role };
 
-  const ticket = await prisma.ticket.findUnique({ where: { id } });
+  const ticket = await findAccessibleTicket(user, id);
   if (!ticket) {
     return NextResponse.json({ error: "Ticket nicht gefunden." }, { status: 404 });
   }
@@ -62,7 +67,12 @@ export async function PATCH(
   if (body.beschreibung !== undefined) updateData.beschreibung = body.beschreibung;
   if (body.prioritaet !== undefined) updateData.prioritaet = body.prioritaet;
   if (body.verantwortlichId !== undefined) updateData.verantwortlichId = body.verantwortlichId || null;
-  if (body.akteId !== undefined) updateData.akteId = body.akteId || null;
+  if (body.akteId !== undefined) {
+    if (body.akteId && !(await canAccessAkte(user, body.akteId))) {
+      return NextResponse.json({ error: "Akte nicht gefunden." }, { status: 404 });
+    }
+    updateData.akteId = body.akteId || null;
+  }
   if (body.faelligAm !== undefined) {
     updateData.faelligAm = body.faelligAm ? new Date(body.faelligAm) : null;
   }
@@ -109,7 +119,7 @@ export async function PATCH(
     include: {
       akte: { select: { id: true, aktenzeichen: true, kurzrubrum: true } },
       verantwortlich: { select: { id: true, name: true } },
-      emails: { select: { id: true, betreff: true } },
+      ...ticketEmailsInclude,
     },
   });
 
@@ -134,18 +144,17 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  const user = { id: session.user.id!, role: (session.user as any).role };
+  if (!PERMISSIONS[user.role as keyof typeof PERMISSIONS]?.canLoeschen) {
+    return NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 });
+  }
 
-  const ticket = await prisma.ticket.findUnique({ where: { id } });
+  const ticket = await findAccessibleTicket(user, id);
   if (!ticket) {
     return NextResponse.json({ error: "Ticket nicht gefunden." }, { status: 404 });
   }
 
-  // Unlink any emails referencing this ticket
-  await prisma.emailMessage.updateMany({
-    where: { ticketId: id },
-    data: { ticketId: null },
-  });
-
+  // Linked emails are unlinked by the relation (onDelete: SetNull).
   await prisma.ticket.delete({ where: { id } });
 
   return NextResponse.json({ success: true });

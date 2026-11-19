@@ -84,11 +84,24 @@ Im Kanzleipostfach können Sie einer E-Mail über das Personen-Symbol neben dem 
 | `#` oder `Entf` | Löschen |
 | `Esc` | Auswahl aufheben |
 
+### Mehrere E-Mails auf einmal bearbeiten
+
+Fahren Sie mit der Maus über eine Zeile der Liste, erscheinen rechts die Schnellaktionen **Als gelesen markieren** (nur bei ungelesenen E-Mails), **Archivieren** und **Loeschen**. AI-Lawyer bestätigt jeweils mit *„Als gelesen markiert“*, *„E-Mail archiviert“* bzw. *„E-Mail geloescht“*.
+
+Haken Sie mehrere E-Mails an, erscheint über der Liste eine Leiste mit *„… ausgewaehlt“*, **Alle auswaehlen** bzw. **Auswahl aufheben** und den Knöpfen:
+
+| Knopf | Wirkung |
+| --- | --- |
+| **Verakten** | Öffnet **E-Mail verakten** für alle angehakten E-Mails; sie werden gemeinsam einer Akte zugeordnet (*„… E-Mails an Akte … veraktet“*). |
+| **Gelesen** | Markiert alle angehakten E-Mails als gelesen. |
+| **Loeschen** | Löscht nach der Rückfrage *„… E-Mail(s) loeschen?“*. |
+
+Schlägt eine Aktion fehl, zeigt AI-Lawyer die Fehlermeldung an, statt stillschweigend nichts zu tun.
+
 ### Was im Posteingang noch nicht funktioniert
 
 - **Threads:** AI-Lawyer erkennt zusammengehörige E-Mails (über die Kopfzeilen und Betreffpräfixe wie *AW:* und *WG:*) und nutzt das für Akten-Vorschläge. Eine Gesprächsansicht, die Antworten gruppiert, gibt es noch nicht.
-- Die kleinen Symbole in einer Listenzeile (**Als gelesen markieren**, **Archivieren**, **Loeschen**) und die Knöpfe **Verakten**, **Gelesen**, **Loeschen**, die bei mehreren angehakten E-Mails erscheinen, haben noch keine Funktion. Bearbeiten Sie E-Mails einzeln.
-- Die Taste `V` (verakten) ist noch nicht belegt.
+- Die Taste `V` (verakten) ist noch nicht belegt. Verwenden Sie den Knopf **Verakten**.
 
 ## Veraktung: E-Mails einer Akte zuordnen
 
@@ -129,13 +142,19 @@ Antworten schreiben Sie direkt unter der geöffneten E-Mail im Antwortfeld (**Ih
 2. **Morgen 08:00** (genauer: nächster Werktag, 8 Uhr) oder **Naechster Montag 09:00** wählen, oder ein eigenes Datum mit Uhrzeit eintragen und **Planen** klicken.
 3. AI-Lawyer bestätigt *„Geplant fuer …“*.
 
-### Anhänge: derzeit mit Vorsicht
+### Anhänge
 
-Über **Datei anhaengen** und **Aus Akte** (*Datei aus Akte waehlen*, erst nach Wahl einer Akte) lassen sich Anhänge auswählen. **Nach aktuellem Programmstand werden diese Anhänge aber nicht mit der E-Mail verschickt.** Prüfen Sie nach dem Versand im Ordner **Gesendet**, ob der Anhang angekommen ist, und versenden Sie wichtige Dokumente bis zur Behebung auf anderem Weg ([Kapitel 23](23-einschraenkungen-und-fragen.md)). Grundsätzlich gilt: Dokumente aus der Akte dürfen nur angehängt werden, wenn sie **freigegeben** sind ([Kapitel 5](05-dokumente.md#status-entwurf--zur-prüfung--freigegeben--versendet)).
+Im Schreibfenster fügen Sie Anhänge auf drei Wegen hinzu:
 
-### Die ältere Schreibseite
+- **Datei anhaengen**: eine Datei von Ihrem Rechner hochladen (höchstens 25 MB je Datei). Sie können Dateien auch in das Feld ziehen (*Dateien per Drag & Drop hinzufuegen*).
+- **Aus Akte**: ein Dokument aus der gewählten Akte auswählen. Ohne gewählte Akte erscheint *„Bitte waehlen Sie zuerst eine Akte aus, um Dateien aus der Akte anzuhaengen.“*
+- Beim **Weiterleiten** haken Sie an, welche Anhänge der ursprünglichen E-Mail mitgehen sollen.
 
-Unter `/email/compose` und beim Öffnen einzelner E-Mails über `/email/<id>` gibt es noch eine ältere Oberfläche (**Neue E-Mail**, **Antworten** mit Feldern **An:**, **Betr.:** und **Senden**). Sie gehört zu einem früheren E-Mail-Modul und kann nicht senden. Verwenden Sie den Posteingang unter **E-Mails**.
+Die Anhänge werden mit der E-Mail verschickt und an der gesendeten E-Mail gespeichert. Ein Dokument aus der Akte darf nur angehängt werden, wenn es **freigegeben** ist ([Kapitel 5](05-dokumente.md#status-entwurf--zur-prüfung--freigegeben--versendet)); sonst lehnt AI-Lawyer den Versand mit *„Nicht freigegebene Dokumente koennen nicht versendet werden“* ab. Außerdem brauchen Sie Zugriff auf die Akte, aus der das Dokument stammt.
+
+### Alte Adressen
+
+Die früheren Adressen `/email/compose` und `/email/<id>` gibt es nur noch als Weiterleitung: Sie führen in den Posteingang unter **E-Mails** und öffnen dort das Schreibfenster bzw. die betreffende E-Mail. Alte Lesezeichen funktionieren also weiter.
 
 ## Tickets
 
@@ -149,7 +168,7 @@ Menüpunkt **Tickets**. Die Tabelle zeigt **Status**, **Titel**, **Akte**, **Ver
 
 Über der Liste filtern Sie mit **Ticket suchen...** sowie nach Status, Priorität, Fälligkeit (**Heute fällig**, **Überfällig**, **Nächste 7 Tage**), Akte und Tag. Sortieren lässt sich nach **Fälligkeit**, **Priorität** oder **Zuletzt geändert**.
 
-Alle Benutzer sehen alle Tickets der Kanzlei, unabhängig vom Aktenzugriff.
+Tickets ohne Akte sind Teamaufgaben und für alle Mitarbeiter sichtbar. Tickets mit Akte sieht nur, wer auf diese Akte zugreifen darf ([Kapitel 15](15-benutzer-und-rollen.md)); der Admin sieht alle. Mandanten sehen keine Tickets.
 
 ### Ein Ticket anlegen
 
@@ -172,7 +191,7 @@ Schlagwörter, die mit `ai:` beginnen, sind für Helena reserviert und lassen si
 
 ### Ein Ticket aus einer E-Mail
 
-1. Im Posteingang die E-Mail öffnen, **Ticket** klicken.
+1. Im Posteingang die E-Mail öffnen, **Ticket** klicken. Das geht nur bei E-Mails aus Postfächern, die Ihnen zugewiesen sind.
 2. Das Fenster **Ticket aus E-Mail erstellen** übernimmt den Betreff als **Titel**. Ergänzen Sie **Beschreibung**, **Akte**, **Prioritaet**, **Faellig am** und **Verantwortlicher**.
 3. **Ticket erstellen**. Die Meldung *„Ticket erstellt“* bietet **Anzeigen**.
 
@@ -180,7 +199,9 @@ Schlagwörter, die mit `ai:` beginnen, sind für Helena reserviert und lassen si
 
 Ein Klick auf den Titel öffnet das Ticket. Titel und Beschreibung ändern Sie per Klick auf das Stift-Symbol, rechts stellen Sie **Status** (**Offen**, **In Bearbeitung**, **Erledigt**), **Priorität**, **Verantwortlich**, **Fälligkeit** und **Akte** ein. **Zeitstempel** zeigt, wann das Ticket angelegt, geändert und erledigt wurde.
 
-**Bekannte Lücken:** Die Seite `/email/tickets` (Tickets aus E-Mails) und der Abschnitt **Verknüpfte E-Mails** im Ticket berücksichtigen nur Verknüpfungen aus dem älteren E-Mail-Modul. Tickets, die Sie im aktuellen Posteingang aus einer E-Mail erzeugen, erscheinen dort derzeit nicht. In der normalen Ticketliste sind sie vorhanden.
+Ist das Ticket aus einer E-Mail entstanden, zeigt der Abschnitt **Verknüpfte E-Mails** diese E-Mail. Die Seite `/email/tickets` listet alle Tickets, die aus E-Mails entstanden sind, mit denselben Zugriffsregeln wie die Ticketliste.
+
+Ein Ticket ganz zu löschen ist nur Rollen mit Löschrecht erlaubt ([Kapitel 15](15-benutzer-und-rollen.md)); in der Oberfläche gibt es dafür keinen Knopf. Setzen Sie erledigte Tickets stattdessen auf **Erledigt**.
 
 ## Wenn etwas nicht klappt
 
@@ -196,6 +217,8 @@ Ein Klick auf den Titel öffnet das Ticket. Titel und Beschreibung ändern Sie p
 | *Konnte nicht abgebrochen werden - E-Mail wurde bereits gesendet* | Die 10 Sekunden waren vorbei. | Ggf. Korrektur nachsenden. |
 | *Fehler beim Verakten* | Akte nicht gefunden oder Serverfehler. | Erneut versuchen, sonst IT informieren. |
 | *Titel ist erforderlich.* | Ticket ohne Titel. | Titel eintragen. |
+| *E-Mail hat bereits ein Ticket* | Aus dieser E-Mail wurde schon ein Ticket erstellt. | Vorhandenes Ticket in der Ticketliste öffnen. |
+| *Datei ist größer als 25 MB* | Anhang zu groß. | Datei verkleinern oder als Dokument in der Akte ablegen und anders bereitstellen. |
 
 ---
 

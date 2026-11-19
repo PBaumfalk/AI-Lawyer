@@ -10,26 +10,14 @@ import { Select } from "@/components/ui/select";
 import { Loader2, X, Search, Calendar, Clock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import type { KalenderListenEintrag, KalenderInternTyp } from "@/lib/kalender/eintrag";
+import { buildKalenderPayload, type KalenderFormWerte } from "@/lib/kalender/payload";
+import type { FristVorlage } from "@/lib/fristen/als-frist";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-export interface KalenderEintragItem {
-  id: string;
-  typ: "TERMIN" | "FRIST" | "WIEDERVORLAGE";
-  titel: string;
-  beschreibung: string | null;
-  datum: string;
-  datumBis: string | null;
-  ganztaegig: boolean;
-  erledigt: boolean;
-  erledigtAm: string | null;
-  akteId: string | null;
-  verantwortlichId: string;
-  fristablauf: string | null;
-  vorfrist: string | null;
-  akte: { aktenzeichen: string; kurzrubrum: string } | null;
-  verantwortlich: { name: string };
-}
+/** Bearbeitbarer (interner) Eintrag aus GET /api/kalender -- externe CalDAV-Termine sind ausgeschlossen. */
+export type KalenderEintragItem = KalenderListenEintrag & { typ: KalenderInternTyp };
 
 interface KalenderEintragDialogProps {
   open: boolean;
@@ -38,20 +26,11 @@ interface KalenderEintragDialogProps {
   eintrag?: KalenderEintragItem | null;
   defaultDate?: Date;
   akteId?: string;
+  /** Vorbelegung fuer einen neuen Eintrag (z. B. aus dem Fristenrechner) */
+  vorlage?: FristVorlage | null;
 }
 
-interface FormValues {
-  typ: "TERMIN" | "FRIST" | "WIEDERVORLAGE";
-  titel: string;
-  beschreibung: string;
-  datum: string;
-  datumBis: string;
-  ganztaegig: boolean;
-  akteId: string;
-  verantwortlichId: string;
-  fristablauf: string;
-  vorfrist: string;
-}
+type FormValues = KalenderFormWerte;
 
 interface UserOption {
   id: string;
@@ -83,6 +62,46 @@ function toDateTimeInputValue(value: string | Date | null | undefined): string {
   return format(d, "yyyy-MM-dd'T'HH:mm");
 }
 
+// ── Initial form values (edit, Vorlage or new) ─────────────────────────────────
+
+function formStartwerte(
+  eintrag: KalenderEintragItem | null | undefined,
+  vorlage: FristVorlage | null | undefined,
+  defaultDate: Date | undefined,
+  akteId: string | undefined,
+): FormValues {
+  if (eintrag) {
+    return {
+      typ: eintrag.typ,
+      titel: eintrag.titel,
+      beschreibung: eintrag.beschreibung ?? "",
+      datum: eintrag.ganztaegig
+        ? toDateInputValue(eintrag.datum)
+        : toDateTimeInputValue(eintrag.datum),
+      datumBis: eintrag.ganztaegig
+        ? toDateInputValue(eintrag.datumBis)
+        : toDateTimeInputValue(eintrag.datumBis),
+      ganztaegig: eintrag.ganztaegig,
+      akteId: eintrag.akteId ?? akteId ?? "",
+      verantwortlichId: eintrag.verantwortlichId ?? "",
+      fristablauf: toDateInputValue(eintrag.fristablauf),
+      vorfrist: toDateInputValue(eintrag.vorfrist),
+    };
+  }
+  return {
+    typ: vorlage?.typ ?? "TERMIN",
+    titel: vorlage?.titel ?? "",
+    beschreibung: vorlage?.beschreibung ?? "",
+    datum: vorlage?.datum ?? (defaultDate ? toDateInputValue(defaultDate) : ""),
+    datumBis: "",
+    ganztaegig: vorlage?.ganztaegig ?? true,
+    akteId: akteId ?? "",
+    verantwortlichId: "",
+    fristablauf: vorlage?.fristablauf ?? "",
+    vorfrist: "",
+  };
+}
+
 // ── Type config for visual styling ─────────────────────────────────────────────
 
 const TYP_CONFIG = {
@@ -112,6 +131,7 @@ export function KalenderEintragDialog({
   eintrag,
   defaultDate,
   akteId,
+  vorlage,
 }: KalenderEintragDialogProps) {
   const isEdit = !!eintrag;
 
@@ -142,28 +162,7 @@ export function KalenderEintragDialog({
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    defaultValues: {
-      typ: eintrag?.typ ?? "TERMIN",
-      titel: eintrag?.titel ?? "",
-      beschreibung: eintrag?.beschreibung ?? "",
-      datum: eintrag
-        ? eintrag.ganztaegig
-          ? toDateInputValue(eintrag.datum)
-          : toDateTimeInputValue(eintrag.datum)
-        : defaultDate
-          ? toDateInputValue(defaultDate)
-          : "",
-      datumBis: eintrag
-        ? eintrag.ganztaegig
-          ? toDateInputValue(eintrag.datumBis)
-          : toDateTimeInputValue(eintrag.datumBis)
-        : "",
-      ganztaegig: eintrag?.ganztaegig ?? true,
-      akteId: eintrag?.akteId ?? akteId ?? "",
-      verantwortlichId: eintrag?.verantwortlichId ?? "",
-      fristablauf: toDateInputValue(eintrag?.fristablauf),
-      vorfrist: toDateInputValue(eintrag?.vorfrist),
-    },
+    defaultValues: formStartwerte(eintrag, vorlage, defaultDate, akteId),
   });
 
   const watchTyp = watch("typ");
@@ -172,28 +171,7 @@ export function KalenderEintragDialog({
   // Reset form when dialog opens/closes or eintrag changes
   useEffect(() => {
     if (open) {
-      reset({
-        typ: eintrag?.typ ?? "TERMIN",
-        titel: eintrag?.titel ?? "",
-        beschreibung: eintrag?.beschreibung ?? "",
-        datum: eintrag
-          ? eintrag.ganztaegig
-            ? toDateInputValue(eintrag.datum)
-            : toDateTimeInputValue(eintrag.datum)
-          : defaultDate
-            ? toDateInputValue(defaultDate)
-            : "",
-        datumBis: eintrag
-          ? eintrag.ganztaegig
-            ? toDateInputValue(eintrag.datumBis)
-            : toDateTimeInputValue(eintrag.datumBis)
-          : "",
-        ganztaegig: eintrag?.ganztaegig ?? true,
-        akteId: eintrag?.akteId ?? akteId ?? "",
-        verantwortlichId: eintrag?.verantwortlichId ?? "",
-        fristablauf: toDateInputValue(eintrag?.fristablauf),
-        vorfrist: toDateInputValue(eintrag?.vorfrist),
-      });
+      reset(formStartwerte(eintrag, vorlage, defaultDate, akteId));
       setSelectedAkte(
         eintrag?.akte
           ? { id: eintrag.akteId!, aktenzeichen: eintrag.akte.aktenzeichen, kurzrubrum: eintrag.akte.kurzrubrum }
@@ -201,7 +179,7 @@ export function KalenderEintragDialog({
       );
       setAkteQuery("");
     }
-  }, [open, eintrag, defaultDate, akteId, reset]);
+  }, [open, eintrag, vorlage, defaultDate, akteId, reset]);
 
   // Fetch users on open
   useEffect(() => {
@@ -265,28 +243,8 @@ export function KalenderEintragDialog({
     setSaving(true);
 
     try {
-      // Build payload
-      const payload: Record<string, unknown> = {
-        typ: data.typ,
-        titel: data.titel.trim(),
-        beschreibung: data.beschreibung.trim() || null,
-        datum: data.datum ? new Date(data.datum).toISOString() : null,
-        datumBis:
-          data.typ === "TERMIN" && data.datumBis
-            ? new Date(data.datumBis).toISOString()
-            : null,
-        ganztaegig: data.ganztaegig,
-        akteId: data.akteId || null,
-        verantwortlichId: data.verantwortlichId || null,
-        fristablauf:
-          data.typ === "FRIST" && data.fristablauf
-            ? new Date(data.fristablauf).toISOString()
-            : null,
-        vorfrist:
-          data.typ === "FRIST" && data.vorfrist
-            ? new Date(data.vorfrist).toISOString()
-            : null,
-      };
+      // Build payload (shared contract with POST /api/kalender)
+      const payload = buildKalenderPayload(data, isEdit ? null : vorlage?.zusatz);
 
       const url = isEdit ? `/api/kalender/${eintrag!.id}` : "/api/kalender";
       const method = isEdit ? "PATCH" : "POST";
@@ -567,7 +525,9 @@ export function KalenderEintragDialog({
             <Label htmlFor="eintrag-verantwortlich">Verantwortlich</Label>
             <Select
               id="eintrag-verantwortlich"
-              {...register("verantwortlichId")}
+              {...register("verantwortlichId", {
+                required: "Verantwortlich ist erforderlich",
+              })}
               disabled={usersLoading}
             >
               <option value="">
@@ -579,6 +539,9 @@ export function KalenderEintragDialog({
                 </option>
               ))}
             </Select>
+            {errors.verantwortlichId && (
+              <p className="text-xs text-rose-600">{errors.verantwortlichId.message}</p>
+            )}
           </div>
 
           {/* Actions */}

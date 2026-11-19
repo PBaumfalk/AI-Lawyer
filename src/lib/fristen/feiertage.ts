@@ -27,7 +27,30 @@ function toNoon(date: Date): Date {
  * @returns true if the date is a public holiday
  */
 export function istFeiertag(date: Date, bundesland: BundeslandCode): boolean {
-  return feiertagejs.isHoliday(toNoon(date), bundesland)
+  return holidayMap(date.getFullYear(), bundesland).has(dayKey(date))
+}
+
+// feiertagejs recomputes all holidays of the year on every call (~1-8 ms).
+// Deadline loops call this once per day, so a multi-year range took seconds.
+// Holidays per (year, Bundesland) never change: compute once, look up by day.
+const holidayCache = new Map<string, Map<string, string>>()
+
+function dayKey(date: Date): string {
+  const d = toNoon(date)
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+}
+
+function holidayMap(year: number, bundesland: BundeslandCode): Map<string, string> {
+  const cacheKey = `${year}:${bundesland}`
+  let map = holidayCache.get(cacheKey)
+  if (!map) {
+    map = new Map()
+    for (const h of feiertagejs.getHolidays(year, bundesland)) {
+      map.set(dayKey(h.date), h.translate('de') ?? h.name)
+    }
+    holidayCache.set(cacheKey, map)
+  }
+  return map
 }
 
 /**
@@ -60,7 +83,5 @@ export function getFeiertagName(
   date: Date,
   bundesland: BundeslandCode,
 ): string | null {
-  const holiday = feiertagejs.getHolidayByDate(toNoon(date), bundesland)
-  if (!holiday) return null
-  return holiday.translate('de') ?? holiday.name
+  return holidayMap(date.getFullYear(), bundesland).get(dayKey(date)) ?? null
 }

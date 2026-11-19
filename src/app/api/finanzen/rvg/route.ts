@@ -2,33 +2,11 @@
 // POST: Calculate RVG fees and optionally save to database
 
 import { NextRequest, NextResponse } from 'next/server';
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { RvgCalculator, buildCalculation } from '@/lib/finance/rvg/calculator';
-import { z } from 'zod';
-
-// ─── Validation Schema ───────────────────────────────────────────────────────
-
-const rvgPositionSchema = z.object({
-  vvNr: z.string().min(1),
-  rate: z.number().optional(),
-  gegenstandswert: z.number().optional(),
-  anzahlAuftraggeber: z.number().optional(),
-  betrag: z.number().optional(),
-  km: z.number().optional(),
-  tage: z.number().optional(),
-});
-
-const calculateSchema = z.object({
-  streitwert: z.number().positive('Streitwert muss positiv sein'),
-  auftragseingang: z.string().datetime().optional(),
-  positionen: z.array(rvgPositionSchema).min(1, 'Mindestens eine VV-Position erforderlich'),
-  autoAnrechnung: z.boolean().optional().default(true),
-  autoAuslagen: z.boolean().optional().default(true),
-  autoUst: z.boolean().optional().default(true),
-  akteId: z.string().optional(),
-  speichern: z.boolean().optional().default(false),
-});
+import { buildCalculation } from '@/lib/finance/rvg/calculator';
+import { buildInvoiceFromRvg, rvgCalculateSchema, toCalculatorPositions } from '@/lib/finance/rvg/contract';
 
 // ─── POST /api/finanzen/rvg ──────────────────────────────────────────────────
 
@@ -47,7 +25,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 });
   }
 
-  const parsed = calculateSchema.safeParse(body);
+  const parsed = rvgCalculateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: 'Validierungsfehler', details: parsed.error.flatten() },
@@ -56,6 +34,10 @@ export async function POST(request: NextRequest) {
   }
 
   const data = parsed.data;
+  if (data.akteId) {
+    const denied = await akteAccessDenied(session, data.akteId);
+    if (denied) return denied;
+  }
 
   try {
     const auftragseingang = data.auftragseingang
@@ -63,17 +45,7 @@ export async function POST(request: NextRequest) {
       : undefined;
 
     // Build calculation using the RVG calculator
-    const positions = data.positionen.map((p) => ({
-      nr: p.vvNr,
-      options: {
-        rate: p.rate,
-        gegenstandswert: p.gegenstandswert,
-        anzahlAuftraggeber: p.anzahlAuftraggeber,
-        betrag: p.betrag,
-        km: p.km,
-        tage: p.tage,
-      },
-    }));
+    const positions = toCalculatorPositions(data.positionen);
 
     const result = buildCalculation(data.streitwert, positions, {
       auftragseingang,
@@ -101,27 +73,12 @@ export async function POST(request: NextRequest) {
       savedId = berechnung.id;
     }
 
-    // Build pre-filled invoice data for one-click transfer
-    const invoicePositionen = result.items.map((item) => ({
-      vvNr: item.vvNr,
-      beschreibung: item.name + (item.notes ? ` (${item.notes})` : ''),
-      menge: 1,
-      einzelpreis: item.finalAmount,
-      ustSatz: item.vvNr === '7008' ? 0 : 19, // USt item itself is not re-taxed
-      betrag: item.finalAmount,
-    }));
-
     return NextResponse.json({
       ergebnis: result,
       savedId,
-      uebernehmenAlsRechnung: {
-        positionen: invoicePositionen,
-        betragNetto: result.nettoGesamt,
-        betragBrutto: result.bruttoGesamt,
-        typ: 'RVG',
-        rvgBerechnungId: savedId,
-        akteId: data.akteId,
-      },
+      uebernehmenAlsRechnung: data.akteId
+        ? buildInvoiceFromRvg(result, { akteId: data.akteId, rvgBerechnungId: savedId ?? undefined })
+        : null,
     });
   } catch (err: any) {
     console.error('RVG calculation error:', err);

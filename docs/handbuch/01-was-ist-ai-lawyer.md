@@ -94,9 +94,9 @@ Jeder Benutzer hat genau eine Rolle. Die Rechte sind im Programm fest hinterlegt
 
 Die Rollen heißen in der Oberfläche **Administrator**, **Anwalt/Anwaeltin**, **Sachbearbeiter/in**, **Sekretariat** und **Mandant**. Einige Funktionen sind zusätzlich an Rollen gebunden, etwa die Portal-Einladung (nur Anwalt und Admin). Darauf weisen die jeweiligen Kapitel hin.
 
-**Zugriff auf Akten:** Admins sehen alle Akten. Alle anderen Rollen erreichen über die Programmschnittstelle nur Akten, bei denen sie als Anwalt oder Sachbearbeiter eingetragen sind oder die einem ihrer Dezernate zugeordnet sind. Will ein Admin bewusst in eine fremde Akte eingreifen, kann er das mit **Zugriff uebernehmen** begründet und protokolliert tun ([Kapitel 3](03-akten.md#zugriff-dezernate-und-admin-override)).
+**Zugriff auf Akten:** Admins sehen alle Akten. Alle anderen Rollen sehen und bearbeiten nur Akten, bei denen sie als Anwalt oder Sachbearbeiter eingetragen sind oder die einem ihrer Dezernate zugeordnet sind. Will ein Admin bewusst in eine fremde Akte eingreifen, kann er das mit **Zugriff uebernehmen** begründet und protokolliert tun ([Kapitel 3](03-akten.md#zugriff-dezernate-und-admin-override)).
 
-> **Achtung, derzeit eingeschränkt:** Die Aktenliste und die Akten-Detailseite prüfen diese Zuweisung im aktuellen Stand noch nicht. Angemeldete Benutzer können dort auch Akten sehen, denen sie nicht zugeordnet sind. Änderungen über die Akte (Speichern, Status, Notizen) sind dagegen geschützt.
+Diese Regel gilt überall: in der Aktenliste, auf der Akten-Detailseite, in Auswahllisten, in der Suche, bei Dokumenten, Fristen, Rechnungen und den übrigen Funktionen mit Aktenbezug. Konten mit der Rolle **Mandant** kommen ausschließlich ins Mandantenportal ([Kapitel 12](12-mandantenportal.md)); die Kanzleioberfläche ist für sie gesperrt.
 
 ## Das Prinzip: KI schlägt vor, Mensch entscheidet
 

@@ -90,36 +90,51 @@ export async function removeDokumentFromIndex(docId: string): Promise<void> {
  * Search documents with optional filters for akteId, folder, MIME type,
  * OCR status, document status, date range, and more.
  */
-export async function searchDokumente(
-  query: string,
-  options?: {
-    akteId?: string;
-    ordner?: string;
-    mimeType?: string;
-    tags?: string[];
-    ocrStatus?: string;
-    dokumentStatus?: string;
-    createdById?: string;
-    dateFrom?: number; // Unix timestamp
-    dateTo?: number;   // Unix timestamp
-    limit?: number;
-    offset?: number;
-  }
-) {
-  const index = meiliClient.index(DOKUMENTE_INDEX);
+export interface DokumentSearchOptions {
+  akteId?: string;
+  /** Restrict hits to these Akten (access control). Undefined = no restriction. */
+  akteIds?: string[];
+  ordner?: string;
+  mimeType?: string;
+  tags?: string[];
+  ocrStatus?: string;
+  dokumentStatus?: string;
+  createdById?: string;
+  dateFrom?: number; // Unix timestamp
+  dateTo?: number;   // Unix timestamp
+  limit?: number;
+  offset?: number;
+}
 
+/**
+ * Quote a value for a Meilisearch filter expression. Values come from URL
+ * parameters; unescaped quotes would let a caller rewrite the filter (and
+ * thereby drop the access restriction).
+ */
+export function meiliString(value: string): string {
+  return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
+
+export function buildDokumentFilter(options: DokumentSearchOptions = {}): string[] {
   const filter: string[] = [];
-  if (options?.akteId) filter.push(`akteId = "${options.akteId}"`);
-  if (options?.ordner) filter.push(`ordner = "${options.ordner}"`);
-  if (options?.mimeType) filter.push(`mimeType = "${options.mimeType}"`);
-  if (options?.ocrStatus) filter.push(`ocrStatus = "${options.ocrStatus}"`);
-  if (options?.dokumentStatus) filter.push(`dokumentStatus = "${options.dokumentStatus}"`);
-  if (options?.createdById) filter.push(`createdById = "${options.createdById}"`);
-  if (options?.tags && options.tags.length > 0) {
-    filter.push(`tags IN [${options.tags.map((t) => `"${t}"`).join(", ")}]`);
+  if (options.akteIds) filter.push(`akteId IN [${options.akteIds.map(meiliString).join(", ")}]`);
+  if (options.akteId) filter.push(`akteId = ${meiliString(options.akteId)}`);
+  if (options.ordner) filter.push(`ordner = ${meiliString(options.ordner)}`);
+  if (options.mimeType) filter.push(`mimeType = ${meiliString(options.mimeType)}`);
+  if (options.ocrStatus) filter.push(`ocrStatus = ${meiliString(options.ocrStatus)}`);
+  if (options.dokumentStatus) filter.push(`dokumentStatus = ${meiliString(options.dokumentStatus)}`);
+  if (options.createdById) filter.push(`createdById = ${meiliString(options.createdById)}`);
+  if (options.tags && options.tags.length > 0) {
+    filter.push(`tags IN [${options.tags.map(meiliString).join(", ")}]`);
   }
-  if (options?.dateFrom) filter.push(`createdAt >= ${options.dateFrom}`);
-  if (options?.dateTo) filter.push(`createdAt <= ${options.dateTo}`);
+  if (Number.isFinite(options.dateFrom)) filter.push(`createdAt >= ${Math.floor(options.dateFrom!)}`);
+  if (Number.isFinite(options.dateTo)) filter.push(`createdAt <= ${Math.floor(options.dateTo!)}`);
+  return filter;
+}
+
+export async function searchDokumente(query: string, options?: DokumentSearchOptions) {
+  const index = meiliClient.index(DOKUMENTE_INDEX);
+  const filter = buildDokumentFilter(options);
 
   return index.search(query, {
     filter: filter.length > 0 ? filter : undefined,

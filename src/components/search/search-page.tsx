@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { DOKUMENT_TAGS_URL, type DokumentTagsResponse } from "@/lib/dokument-tags";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
@@ -124,9 +125,9 @@ export function SearchPage() {
       .catch(() => {});
 
     // Fetch tag categories
-    fetch("/api/dokumente/tags")
-      .then((r) => r.json())
-      .then((d) => setTagKategorien(d.kategorien ?? d ?? []))
+    fetch(DOKUMENT_TAGS_URL)
+      .then((r) => r.json() as Promise<DokumentTagsResponse>)
+      .then((d) => setTagKategorien(d.tags))
       .catch(() => {});
   }, []);
 

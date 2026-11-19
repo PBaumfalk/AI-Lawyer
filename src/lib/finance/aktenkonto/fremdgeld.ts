@@ -2,7 +2,8 @@
 // 5-Werktage forwarding deadline (SS 43a BRAO) and 15k Anderkonto threshold
 // Uses feiertagejs for German holidays (NRW default)
 
-import * as feiertagejs from 'feiertagejs';
+import { istFeiertag } from '@/lib/fristen/feiertage';
+import type { BundeslandCode } from '@/lib/fristen/types';
 import { BuchungsTyp } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import type {
@@ -32,7 +33,7 @@ function isWeekend(date: Date): boolean {
  * Check if a date is a public holiday in the specified Bundesland.
  */
 function isHoliday(date: Date, bundesland: string): boolean {
-  return feiertagejs.isHoliday(toNoon(date), bundesland as any);
+  return istFeiertag(date, bundesland as BundeslandCode);
 }
 
 /**
@@ -136,12 +137,98 @@ export function classifyDringlichkeit(
   return 'normal';
 }
 
+/** Minimal booking shape needed to determine open Fremdgeld receipts. */
+export interface FremdgeldBuchungLite {
+  id: string;
+  akteId: string;
+  betrag: number;
+  buchungsdatum: Date;
+  createdAt?: Date;
+  stornoVon: string | null;
+  fremdgeldFrist: Date | null;
+}
+
+export interface OffenerFremdgeldEingang {
+  buchung: FremdgeldBuchungLite;
+  /** Part of the receipt not yet forwarded */
+  offen: number;
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * Determine which Fremdgeld receipts of ONE case are still not forwarded.
+ *
+ * - Positive FREMDGELD bookings are receipts (Eingaenge), negative ones are
+ *   forwardings (Weiterleitungen).
+ * - Storno entries and the bookings they reverse are ignored entirely.
+ * - Forwardings settle receipts oldest first (FIFO); a receipt stays open with
+ *   its uncovered remainder until forwardings cover it completely.
+ */
+export function ermittleOffeneFremdgeldEingaenge(
+  buchungen: FremdgeldBuchungLite[],
+): OffenerFremdgeldEingang[] {
+  const reversed = new Set(buchungen.map((b) => b.stornoVon).filter(Boolean));
+  const aktiv = buchungen.filter((b) => b.stornoVon === null && !reversed.has(b.id));
+
+  const eingaenge = aktiv
+    .filter((b) => b.betrag > 0)
+    .sort(
+      (a, b) =>
+        a.buchungsdatum.getTime() - b.buchungsdatum.getTime() ||
+        (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0),
+    );
+
+  let weitergeleitet = round2(
+    aktiv.filter((b) => b.betrag < 0).reduce((sum, b) => sum - b.betrag, 0),
+  );
+
+  const offen: OffenerFremdgeldEingang[] = [];
+  for (const eingang of eingaenge) {
+    const deckung = Math.min(weitergeleitet, eingang.betrag);
+    weitergeleitet = round2(weitergeleitet - deckung);
+    const rest = round2(eingang.betrag - deckung);
+    if (rest > 0) offen.push({ buchung: eingang, offen: rest });
+  }
+  return offen;
+}
+
+function toAlert(e: OffenerFremdgeldEingang): FremdgeldAlert | null {
+  if (!e.buchung.fremdgeldFrist) return null;
+  const verbleibendeTage = countRemainingBusinessDays(e.buchung.fremdgeldFrist);
+  return {
+    buchungId: e.buchung.id,
+    akteId: e.buchung.akteId,
+    betrag: e.buchung.betrag,
+    offenerBetrag: e.offen,
+    eingangsDatum: e.buchung.buchungsdatum,
+    frist: e.buchung.fremdgeldFrist,
+    verbleibendeTage,
+    dringlichkeit: classifyDringlichkeit(verbleibendeTage),
+  };
+}
+
+async function loadFremdgeldBuchungen(where: { akteId?: string }): Promise<FremdgeldBuchungLite[]> {
+  const rows = await prisma.aktenKontoBuchung.findMany({
+    where: { ...where, buchungstyp: BuchungsTyp.FREMDGELD },
+    select: {
+      id: true,
+      akteId: true,
+      betrag: true,
+      buchungsdatum: true,
+      createdAt: true,
+      stornoVon: true,
+      fremdgeldFrist: true,
+    },
+  });
+  return rows.map((r) => ({ ...r, betrag: r.betrag.toNumber() }));
+}
+
 /**
  * Check Fremdgeld compliance for a specific case.
  *
- * Queries all FREMDGELD bookings that have not been forwarded (no matching
- * Storno entry). For each: calculates remaining days and classifies urgency.
- * Also checks the 15k EUR Anderkonto threshold.
+ * Alerts for every receipt that is not yet fully forwarded (see
+ * ermittleOffeneFremdgeldEingaenge) and the 15k EUR Anderkonto threshold.
  *
  * @param akteId - The case ID to check
  * @returns Compliance result with alerts and optional Anderkonto alert
@@ -149,70 +236,14 @@ export function classifyDringlichkeit(
 export async function checkFremdgeldCompliance(
   akteId: string,
 ): Promise<FremdgeldComplianceResult> {
-  // Get all FREMDGELD bookings for this case that are positive (incoming)
-  // and have not been reversed (no Storno pointing at them)
-  const fremdgeldBuchungen = await prisma.aktenKontoBuchung.findMany({
-    where: {
-      akteId,
-      buchungstyp: BuchungsTyp.FREMDGELD,
-      betrag: { gt: 0 },
-      stornoVon: null, // Not a Storno entry itself
-    },
-    orderBy: { buchungsdatum: 'asc' },
-  });
+  const buchungen = await loadFremdgeldBuchungen({ akteId });
 
-  // Find which ones have been reversed (Storno entries pointing at them)
-  const stornoEntries = await prisma.aktenKontoBuchung.findMany({
-    where: {
-      akteId,
-      stornoVon: { not: null },
-    },
-    select: { stornoVon: true },
-  });
+  const alerts = ermittleOffeneFremdgeldEingaenge(buchungen)
+    .map(toAlert)
+    .filter((a): a is FremdgeldAlert => a !== null);
 
-  const reversedIds = new Set(
-    stornoEntries.map((s) => s.stornoVon).filter(Boolean),
-  );
-
-  // Filter to only non-reversed FREMDGELD bookings
-  const activeFremdgeld = fremdgeldBuchungen.filter(
-    (b) => !reversedIds.has(b.id),
-  );
-
-  // Build alerts
-  const alerts: FremdgeldAlert[] = [];
-
-  for (const buchung of activeFremdgeld) {
-    if (!buchung.fremdgeldFrist) continue;
-
-    const verbleibendeTage = countRemainingBusinessDays(buchung.fremdgeldFrist);
-    const dringlichkeit = classifyDringlichkeit(verbleibendeTage);
-
-    alerts.push({
-      buchungId: buchung.id,
-      akteId: buchung.akteId,
-      betrag: buchung.betrag.toNumber(),
-      eingangsDatum: buchung.buchungsdatum,
-      frist: buchung.fremdgeldFrist,
-      verbleibendeTage,
-      dringlichkeit,
-    });
-  }
-
-  // Check Anderkonto threshold
-  // Sum ALL Fremdgeld bookings (including Storno, which are negative)
-  const allFremdgeld = await prisma.aktenKontoBuchung.findMany({
-    where: {
-      akteId,
-      buchungstyp: BuchungsTyp.FREMDGELD,
-    },
-    select: { betrag: true },
-  });
-
-  const totalFremdgeld = allFremdgeld.reduce(
-    (sum, b) => sum + b.betrag.toNumber(),
-    0,
-  );
+  // Anderkonto threshold: net Fremdgeld held (receipts minus forwardings, Storno included)
+  const totalFremdgeld = round2(buchungen.reduce((sum, b) => sum + b.betrag, 0));
 
   let anderkontoAlert: AnderkontoAlert | undefined;
   if (totalFremdgeld >= ANDERKONTO_SCHWELLE) {
@@ -236,52 +267,21 @@ export async function checkFremdgeldCompliance(
  * @returns Array of active Fremdgeld alerts
  */
 export async function getFremdgeldAlerts(): Promise<FremdgeldAlert[]> {
-  // Get all FREMDGELD bookings with a frist that have not been reversed
-  const fremdgeldBuchungen = await prisma.aktenKontoBuchung.findMany({
-    where: {
-      buchungstyp: BuchungsTyp.FREMDGELD,
-      betrag: { gt: 0 },
-      stornoVon: null,
-      fremdgeldFrist: { not: null },
-    },
-    orderBy: { fremdgeldFrist: 'asc' },
-  });
+  const buchungen = await loadFremdgeldBuchungen({});
 
-  // Find all Storno entries globally
-  const stornoEntries = await prisma.aktenKontoBuchung.findMany({
-    where: {
-      buchungstyp: BuchungsTyp.FREMDGELD,
-      stornoVon: { not: null },
-    },
-    select: { stornoVon: true },
-  });
-
-  const reversedIds = new Set(
-    stornoEntries.map((s) => s.stornoVon).filter(Boolean),
-  );
-
-  const alerts: FremdgeldAlert[] = [];
-
-  for (const buchung of fremdgeldBuchungen) {
-    if (reversedIds.has(buchung.id)) continue;
-    if (!buchung.fremdgeldFrist) continue;
-
-    const verbleibendeTage = countRemainingBusinessDays(buchung.fremdgeldFrist);
-    const dringlichkeit = classifyDringlichkeit(verbleibendeTage);
-
-    // Only return actionable alerts (not "normal")
-    if (dringlichkeit === 'normal') continue;
-
-    alerts.push({
-      buchungId: buchung.id,
-      akteId: buchung.akteId,
-      betrag: buchung.betrag.toNumber(),
-      eingangsDatum: buchung.buchungsdatum,
-      frist: buchung.fremdgeldFrist,
-      verbleibendeTage,
-      dringlichkeit,
-    });
+  const byAkte = new Map<string, FremdgeldBuchungLite[]>();
+  for (const b of buchungen) {
+    const list = byAkte.get(b.akteId) ?? [];
+    list.push(b);
+    byAkte.set(b.akteId, list);
   }
 
-  return alerts;
+  const alerts: FremdgeldAlert[] = [];
+  for (const list of Array.from(byAkte.values())) {
+    for (const offen of ermittleOffeneFremdgeldEingaenge(list)) {
+      const alert = toAlert(offen);
+      if (alert && alert.dringlichkeit !== 'normal') alerts.push(alert);
+    }
+  }
+  return alerts.sort((a, b) => a.frist.getTime() - b.frist.getTime());
 }

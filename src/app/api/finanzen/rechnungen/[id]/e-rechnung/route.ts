@@ -3,6 +3,7 @@
 // Only GESTELLT or BEZAHLT invoices may generate E-Rechnung (not ENTWURF)
 // Requires Kanzlei to have Steuernummer or UStIdNr set
 
+import { xrechnungErlaubt } from '@/lib/finance/invoice/contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
@@ -63,11 +64,11 @@ export async function GET(
       return NextResponse.json({ error: 'Rechnung nicht gefunden' }, { status: 404 });
     }
 
-    // Only GESTELLT or BEZAHLT invoices can generate E-Rechnung
-    if (rechnung.status !== 'GESTELLT' && rechnung.status !== 'BEZAHLT') {
+    // Only issued invoices (GESTELLT, MAHNUNG, BEZAHLT) can generate E-Rechnung
+    if (!xrechnungErlaubt(rechnung.status)) {
       return NextResponse.json(
         {
-          error: `E-Rechnung nur fuer gestellte oder bezahlte Rechnungen verfuegbar. Aktueller Status: ${rechnung.status}`,
+          error: `E-Rechnung nur fuer gestellte, gemahnte oder bezahlte Rechnungen verfuegbar. Aktueller Status: ${rechnung.status}`,
         },
         { status: 400 },
       );

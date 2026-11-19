@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ocrQueue } from "@/lib/queue/queues";
@@ -35,6 +36,8 @@ export async function POST(
   if (!dokument) {
     return NextResponse.json({ error: "Dokument nicht gefunden" }, { status: 404 });
   }
+  const denied = await akteAccessDenied(session, dokument.akteId);
+  if (denied) return denied;
 
   // Reset OCR status
   const updated = await prisma.dokument.update({

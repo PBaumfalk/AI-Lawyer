@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchDokumente } from "@/lib/meilisearch";
+import { searchDokumenteForUser, intParam } from "@/lib/search/dokumente";
 import { requireAuth } from "@/lib/rbac";
 
 /**
@@ -15,11 +15,12 @@ export async function GET(request: NextRequest) {
   const akteId = searchParams.get("akteId") ?? undefined;
   const ordner = searchParams.get("ordner") ?? undefined;
   const mimeType = searchParams.get("mimeType") ?? undefined;
-  const limit = parseInt(searchParams.get("limit") ?? "50");
-  const offset = parseInt(searchParams.get("offset") ?? "0");
+  const limit = intParam(searchParams.get("limit"), 50, 1, 100);
+  const offset = intParam(searchParams.get("offset"), 0, 0, 10_000);
+  const user = { id: result.session.user.id, role: result.session.user.role };
 
   try {
-    const results = await searchDokumente(q, {
+    const results = await searchDokumenteForUser(user, q, {
       akteId,
       ordner,
       mimeType,

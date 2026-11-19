@@ -1,109 +1,157 @@
-import { KontaktTyp, BeteiligterRolle } from "@prisma/client";
+import { KontaktTyp, BeteiligterRolle, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import type { JLawyerClient } from "./client";
-import type { JLawyerMigrationStats } from "./types";
+import { parseJLawyerDate, type JLawyerClient } from "./client";
+import type { JLawyerContact, JLawyerMigrationStats } from "./types";
+
+const blank = (s: string | null | undefined) => (s && s.trim() ? s.trim() : null);
 
 /**
- * Maps J-Lawyer contact type to Prisma KontaktTyp enum.
+ * j-lawyer has no explicit contact type: a contact with a company but
+ * without first/last name is treated as a legal entity.
  */
-function mapKontaktTyp(type: "PERSON" | "ORGANIZATION"): KontaktTyp {
-  return type === "ORGANIZATION" ? KontaktTyp.JURISTISCH : KontaktTyp.NATUERLICH;
+export function mapKontaktTyp(c: Pick<JLawyerContact, "company" | "name" | "firstName">): KontaktTyp {
+  return blank(c.company) && !blank(c.name) && !blank(c.firstName)
+    ? KontaktTyp.JURISTISCH
+    : KontaktTyp.NATUERLICH;
 }
 
 /**
- * Maps J-Lawyer participant role string to Prisma BeteiligterRolle enum.
+ * Maps the j-lawyer party type (involvementType, a configurable German
+ * label such as "Mandant", "Gegner", "Rechtsanwalt Gegner", "Dritte") to the
+ * Prisma BeteiligterRolle enum. Unknown labels become SONSTIGER; the original
+ * label is kept in Beteiligter.notizen.
  */
-function mapBeteiligterRolle(role: string): BeteiligterRolle {
-  const upper = role.toUpperCase();
-  if (upper === "CLIENT" || upper === "MANDANT") return BeteiligterRolle.MANDANT;
-  if (upper === "OPPONENT" || upper === "GEGNER") return BeteiligterRolle.GEGNER;
-  if (upper === "OPPONENT_ATTORNEY" || upper === "GEGNERVERTRETER")
+export function mapBeteiligterRolle(type: string | null | undefined): BeteiligterRolle {
+  const t = (type ?? "").toLowerCase();
+  const isGegner = t.includes("gegner") || t.includes("opponent");
+  if (isGegner && (t.includes("anwalt") || t.includes("vertret") || t.includes("attorney")))
     return BeteiligterRolle.GEGNERVERTRETER;
-  if (upper === "COURT" || upper === "GERICHT") return BeteiligterRolle.GERICHT;
-  if (upper === "WITNESS" || upper === "ZEUGE") return BeteiligterRolle.ZEUGE;
-  if (upper === "EXPERT" || upper === "SACHVERSTAENDIGER")
+  if (t.includes("mandant") || t.includes("client")) return BeteiligterRolle.MANDANT;
+  if (isGegner) return BeteiligterRolle.GEGNER;
+  if (t.includes("gericht") || t.includes("court")) return BeteiligterRolle.GERICHT;
+  if (t.includes("zeug") || t.includes("witness")) return BeteiligterRolle.ZEUGE;
+  if (t.includes("sachverst") || t.includes("gutacht") || t.includes("expert"))
     return BeteiligterRolle.SACHVERSTAENDIGER;
   return BeteiligterRolle.SONSTIGER;
 }
 
+export function mapKontaktDaten(c: JLawyerContact): Prisma.KontaktCreateInput {
+  const strasse = [blank(c.street), blank(c.streetNumber)].filter(Boolean).join(" ") || null;
+  return {
+    typ: mapKontaktTyp(c),
+    anrede: blank(c.salutation),
+    titel: blank(c.title),
+    vorname: blank(c.firstName),
+    nachname: blank(c.name),
+    firma: blank(c.company),
+    rechtsform: blank(c.legalForm),
+    strasse,
+    plz: blank(c.zipCode),
+    ort: blank(c.city),
+    land: blank(c.country) ?? "Deutschland",
+    telefon: blank(c.phone),
+    mobil: blank(c.mobile),
+    fax: blank(c.fax),
+    email: blank(c.email),
+    website: blank(c.website),
+    geburtsdatum: parseJLawyerDate(blank(c.birthDate)),
+    geburtsname: blank(c.birthName),
+    geburtsort: blank(c.placeOfBirth),
+    beruf: blank(c.profession),
+    beaSafeId: blank(c.beaSafeId),
+    ustIdNr: blank(c.vatId),
+    notizen: blank(c.notice),
+    jlawyerId: c.id,
+  };
+}
+
+type Stats = Pick<JLawyerMigrationStats, "kontakte" | "errors" | "hinweise">;
+
 /**
- * Migrates all J-Lawyer contacts to AI-Lawyer Kontakte.
+ * Migrates all j-lawyer contacts to AI-Lawyer Kontakte.
  *
- * Deduplication strategy:
- *   1. Primary key: jlawyerId (upsert where jlawyerId)
- *   2. Email fallback: if a Kontakt with the same email already exists
- *      (without a jlawyerId), update it to claim the jlawyerId and continue.
+ * Re-run rule (create-only):
+ *   - A Kontakt that already carries the jlawyerId is left untouched.
+ *   - An existing Kontakt without jlawyerId that has the same e-mail AND the
+ *     same last name / company is linked (only jlawyerId is set); its data is
+ *     NOT overwritten — it may have been maintained in AI-Lawyer.
+ *   - Same e-mail but different name: a new Kontakt is created (shared
+ *     family/office addresses are common) and a possible duplicate is
+ *     reported in `hinweise`.
  *
- * @param client  Authenticated JLawyerClient
- * @returns Partial migration stats with kontakte count and per-record errors
+ * The contact list (/v1/contacts/list) only contains overview fields; the
+ * full record (/v2/contacts/{id}) is loaded for contacts not yet migrated.
  */
 export async function migrateKontakte(
   client: JLawyerClient,
-): Promise<Pick<JLawyerMigrationStats, "kontakte" | "errors"> & { kontakteMap: Map<string, string> }> {
-  const stats: Pick<JLawyerMigrationStats, "kontakte" | "errors"> = {
-    kontakte: 0,
-    errors: [],
-  };
+): Promise<Stats & { kontakteMap: Map<string, string> }> {
+  const stats: Stats = { kontakte: 0, errors: [], hinweise: [] };
   const kontakteMap = new Map<string, string>();
 
   const contacts = await client.listContacts();
 
-  for (const jlContact of contacts) {
+  for (const overview of contacts) {
     try {
-      const typ = mapKontaktTyp(jlContact.type);
-      const geburtsdatum =
-        jlContact.dateOfBirth ? new Date(jlContact.dateOfBirth) : null;
-      const land = jlContact.country ?? "Deutschland";
+      const existing = await prisma.kontakt.findUnique({
+        where: { jlawyerId: overview.id },
+        select: { id: true },
+      });
+      if (existing) {
+        kontakteMap.set(overview.id, existing.id);
+        continue;
+      }
 
-      const data = {
-        typ,
-        vorname: jlContact.firstName ?? null,
-        nachname: jlContact.lastName ?? null,
-        firma: jlContact.company ?? null,
-        strasse: jlContact.street ?? null,
-        plz: jlContact.zipCode ?? null,
-        ort: jlContact.city ?? null,
-        land,
-        telefon: jlContact.phone ?? null,
-        mobil: jlContact.mobile ?? null,
-        fax: jlContact.fax ?? null,
-        email: jlContact.email ?? null,
-        geburtsdatum,
-        notizen: jlContact.note ?? null,
-        jlawyerId: jlContact.id,
-      };
+      const jlContact = await client.getContact(overview.id);
+      const data = mapKontaktDaten({ ...jlContact, id: overview.id });
 
-      // Email fallback deduplication: if a record without a jlawyerId exists
-      // with the same email, claim it by setting its jlawyerId first.
-      if (jlContact.email) {
-        const existingByEmail = await prisma.kontakt.findFirst({
-          where: { email: jlContact.email, jlawyerId: null },
-          select: { id: true },
+      if (jlContact.birthDate?.trim() && !data.geburtsdatum) {
+        stats.hinweise.push({
+          entity: "Kontakt",
+          id: overview.id,
+          message: `Geburtsdatum "${jlContact.birthDate}" nicht lesbar; nicht übernommen.`,
         });
-        if (existingByEmail) {
+      }
+
+      const email = data.email;
+      if (email) {
+        const sameEmail = await prisma.kontakt.findMany({
+          where: { email: { equals: email, mode: "insensitive" }, jlawyerId: null },
+          select: { id: true, nachname: true, firma: true },
+        });
+        const key = (data.nachname ?? data.firma ?? "").toLowerCase();
+        const match = sameEmail.filter(
+          (k) => key && (k.nachname ?? k.firma ?? "").trim().toLowerCase() === key,
+        );
+        if (match.length === 1) {
           await prisma.kontakt.update({
-            where: { id: existingByEmail.id },
-            data,
+            where: { id: match[0].id },
+            data: { jlawyerId: overview.id },
           });
-          kontakteMap.set(jlContact.id, existingByEmail.id);
+          kontakteMap.set(overview.id, match[0].id);
+          stats.hinweise.push({
+            entity: "Kontakt",
+            id: overview.id,
+            message: `Mit bestehendem Kontakt ${match[0].id} verknüpft (gleiche E-Mail und gleicher Name); vorhandene Daten unverändert.`,
+          });
           stats.kontakte += 1;
           continue;
         }
+        if (sameEmail.length > 0) {
+          stats.hinweise.push({
+            entity: "Kontakt",
+            id: overview.id,
+            message: `Neu angelegt; mögliche Dublette von Kontakt ${sameEmail.map((k) => k.id).join(", ")} (gleiche E-Mail, anderer Name).`,
+          });
+        }
       }
 
-      // Primary upsert by jlawyerId
-      const kontakt = await prisma.kontakt.upsert({
-        where: { jlawyerId: jlContact.id },
-        create: data,
-        update: data,
-      });
-
-      kontakteMap.set(jlContact.id, kontakt.id);
+      const kontakt = await prisma.kontakt.create({ data });
+      kontakteMap.set(overview.id, kontakt.id);
       stats.kontakte += 1;
     } catch (err) {
       stats.errors.push({
         entity: "Kontakt",
-        id: jlContact.id,
+        id: overview.id,
         message: err instanceof Error ? err.message : String(err),
       });
     }
@@ -113,18 +161,8 @@ export async function migrateKontakte(
 }
 
 /**
- * Migrates J-Lawyer case participants to AI-Lawyer Beteiligte.
- *
- * Requires pre-built maps from the migration runner:
- *   - aktenMap: jlCaseId → Akte.id
- *   - kontakteMap: jlContactId → Kontakt.id
- *
- * Upsert key: (akteId, kontaktId, rolle) — Prisma compound unique.
- *
- * @param client       Authenticated JLawyerClient
- * @param aktenMap     Map of J-Lawyer case ID → AI-Lawyer Akte.id
- * @param kontakteMap  Map of J-Lawyer contact ID → AI-Lawyer Kontakt.id
- * @returns Partial migration stats with beteiligte count and per-record errors
+ * Migrates j-lawyer case parties (/v1/cases/{id}/parties) to Beteiligte.
+ * Existing Beteiligte (akteId, kontaktId, rolle) are left untouched.
  */
 export async function migrateBeteiligte(
   client: JLawyerClient,
@@ -137,52 +175,53 @@ export async function migrateBeteiligte(
   };
 
   for (const [jlCaseId, akteId] of Array.from(aktenMap.entries())) {
-    let participants;
+    let parties;
     try {
-      participants = await client.getCaseParticipants(jlCaseId);
+      parties = await client.getCaseParties(jlCaseId);
     } catch (err) {
       stats.errors.push({
-        entity: "Beteiligte-list",
+        entity: "Beteiligte-Liste",
         id: jlCaseId,
         message: err instanceof Error ? err.message : String(err),
       });
       continue;
     }
 
-    for (const participant of participants) {
+    for (const party of parties) {
       try {
-        const kontaktId = kontakteMap.get(participant.contactId);
+        const kontaktId = kontakteMap.get(party.contact);
         if (!kontaktId) {
           stats.errors.push({
             entity: "Beteiligter",
-            id: participant.contactId,
-            message: `Kontakt not found in kontakteMap for caseId=${jlCaseId}`,
+            id: party.id ?? party.contact,
+            message: `Kontakt ${party.contact} nicht übernommen (Akte ${jlCaseId})`,
           });
           continue;
         }
 
-        const rolle = mapBeteiligterRolle(participant.role);
+        const rolle = mapBeteiligterRolle(party.involvementType);
+        const notizen =
+          [
+            party.involvementType ? `j-lawyer: ${party.involvementType}` : null,
+            blank(party.reference) ? `Zeichen: ${party.reference!.trim()}` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") || null;
 
-        await prisma.beteiligter.upsert({
-          where: {
-            akteId_kontaktId_rolle: { akteId, kontaktId, rolle },
-          },
-          create: {
-            akteId,
-            kontaktId,
-            rolle,
-            notizen: participant.note ?? null,
-          },
-          update: {
-            notizen: participant.note ?? null,
-          },
+        const existing = await prisma.beteiligter.findUnique({
+          where: { akteId_kontaktId_rolle: { akteId, kontaktId, rolle } },
+          select: { id: true },
         });
+        if (existing) continue;
 
+        await prisma.beteiligter.create({
+          data: { akteId, kontaktId, rolle, notizen },
+        });
         stats.beteiligte += 1;
       } catch (err) {
         stats.errors.push({
           entity: "Beteiligter",
-          id: participant.contactId,
+          id: party.id ?? party.contact,
           message: err instanceof Error ? err.message : String(err),
         });
       }

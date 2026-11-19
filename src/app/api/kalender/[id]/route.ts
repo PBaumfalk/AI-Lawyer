@@ -188,7 +188,7 @@ export async function DELETE(
 
   // RBAC: check access to linked Akte if present
   if (existing.akteId) {
-    const access = await requireAkteAccess(existing.akteId, { requireEdit: true });
+    const access = await requireAkteAccess(existing.akteId, { requireEdit: true, requireDelete: true });
     if (access.error) return access.error;
   }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getAllSettings, updateSetting } from "@/lib/settings/service";
+import { getAllSettings, updateSetting, redactSetting } from "@/lib/settings/service";
 import { DEFAULT_SETTINGS, CATEGORY_LABELS } from "@/lib/settings/defaults";
 
 /**
@@ -40,7 +40,7 @@ export async function GET() {
       settings: group.settings.map((s) => {
         const def = DEFAULT_SETTINGS.find((d) => d.key === s.key);
         return {
-          ...s,
+          ...redactSetting(s),
           options: def?.options,
           min: def?.min,
           max: def?.max,

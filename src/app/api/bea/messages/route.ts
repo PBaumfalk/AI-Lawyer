@@ -4,29 +4,15 @@ import { z } from "zod";
 import { autoAssignToAkte } from "@/lib/bea/auto-assign";
 import { parseXJustiz } from "@/lib/xjustiz/parser";
 import { aiScanQueue } from "@/lib/queue/queues";
-import { requirePermission } from "@/lib/rbac";
+import { requirePermission, akteAccessDenied } from "@/lib/rbac";
+import { beaNachrichtSchema } from "@/lib/bea/versand";
 import { checkDokumenteFreigegeben, markDokumenteVersendet } from "@/lib/versand-gate";
 import { logAuditEvent } from "@/lib/audit";
 
 // --- Validation ---
 
-const createBeaMessageSchema = z.object({
-  nachrichtenId: z.string().optional(),
-  betreff: z.string().min(1, "Betreff ist erforderlich"),
-  absender: z.string().min(1, "Absender ist erforderlich"),
-  empfaenger: z.string().min(1, "Empfaenger ist erforderlich"),
-  inhalt: z.string().optional(),
-  status: z.enum(["EINGANG", "GELESEN", "ZUGEORDNET", "GESENDET", "FEHLER"]).default("EINGANG"),
-  safeIdAbsender: z.string().optional(),
-  safeIdEmpfaenger: z.string().optional(),
-  pruefprotokoll: z.any().optional(),
-  anhaenge: z.any().optional(),
-  dokumentIds: z.array(z.string()).optional(), // DMS document IDs for Versand-Gate check
-  empfangenAm: z.string().optional(),
-  gesendetAm: z.string().optional(),
-  eebErforderlich: z.boolean().optional(),
-  xjustizXml: z.string().optional(),
-});
+// Contract shared with bea-compose: src/lib/bea/versand.ts
+const createBeaMessageSchema = beaNachrichtSchema;
 
 // --- GET /api/bea/messages ---
 
@@ -83,7 +69,7 @@ export async function POST(request: NextRequest) {
   const result = await requirePermission("canSendBeA");
   if (result.error) return result.error;
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = createBeaMessageSchema.safeParse(body);
 
   if (!parsed.success) {
@@ -94,6 +80,10 @@ export async function POST(request: NextRequest) {
   }
 
   const data = parsed.data;
+  if (data.akteId) {
+    const denied = await akteAccessDenied(result.session, data.akteId);
+    if (denied) return denied;
+  }
 
   // Versand-Gate: check that all attached DMS documents are FREIGEGEBEN
   if (data.dokumentIds && data.dokumentIds.length > 0) {
@@ -184,7 +174,10 @@ export async function POST(request: NextRequest) {
       eebStatus,
       xjustizData: xjustizData || null,
       // Auto-assignment
-      akteId: assignResult.confidence !== "UNSICHER" ? assignResult.akteId : null,
+      // Explicit Akte from the sender wins. Otherwise only an unambiguous
+      // match (SICHER) is filed; WAHRSCHEINLICH is returned as a suggestion
+      // that a user has to confirm (see auto-assign.ts header).
+      akteId: data.akteId ?? (assignResult.confidence === "SICHER" ? assignResult.akteId : null),
     },
     include: {
       akte: {
@@ -240,6 +233,7 @@ export async function POST(request: NextRequest) {
     {
       nachricht,
       assignment: {
+        vorschlagAkteId: assignResult.akteId,
         confidence: assignResult.confidence,
         reason: assignResult.reason,
       },

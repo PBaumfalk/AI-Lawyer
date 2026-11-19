@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -83,11 +84,15 @@ export async function POST(req: NextRequest) {
   }
 
   const userId = session.user.id;
-  const body = await req.json();
+  const body = await req.json().catch(() => ({}));
   const { akteId, titel } = body as {
     akteId?: string | null;
     titel?: string;
   };
+  if (akteId) {
+    const denied = await akteAccessDenied(session, akteId);
+    if (denied) return denied;
+  }
 
   const conversation = await prisma.aiConversation.create({
     data: {

@@ -1,9 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { Users, Mail, Phone, MapPin } from "lucide-react";
+import { Users, Mail, Phone, MapPin, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PortalInviteDialog } from "./portal-invite-dialog";
+import { BeteiligteAddDialog } from "./beteiligte-add-dialog";
+import { anschriftOrt, hauptAnschrift } from "@/lib/kontakte/liste";
 import { rolleLabels, rolleBadgeVariant } from "./akte-detail-tabs";
 import type { UserRole } from "@prisma/client";
 
@@ -19,7 +23,10 @@ interface BeteiligterData {
     firma: string | null;
     email: string | null;
     telefon: string | null;
+    strasse?: string | null;
+    plz?: string | null;
     ort: string | null;
+    adressen?: Array<{ typ?: string | null; strasse?: string | null; hausnummer?: string | null; plz?: string | null; ort?: string | null; istHaupt?: boolean | null }>;
   };
 }
 
@@ -29,32 +36,52 @@ interface BeteiligteSectionProps {
 }
 
 const INVITE_ALLOWED_ROLES: UserRole[] = ["ANWALT", "ADMIN"];
+// Mirrors PERMISSIONS[role].canEditAkte in src/lib/rbac.ts (server-only module);
+// the POST route enforces it again via requireAkteAccess({ requireEdit: true }).
+const EDIT_ALLOWED_ROLES: UserRole[] = ["ADMIN", "ANWALT", "SACHBEARBEITER", "SEKRETARIAT"];
 
 export function BeteiligteSection({ beteiligte, akteId }: BeteiligteSectionProps) {
   const { data: session } = useSession();
   const userRole = (session?.user as any)?.role as UserRole | undefined;
   const canInvite = userRole ? INVITE_ALLOWED_ROLES.includes(userRole) : false;
-
-  if (!beteiligte || beteiligte.length === 0) {
-    return null;
-  }
+  const canEdit = userRole ? EDIT_ALLOWED_ROLES.includes(userRole) : false;
+  const [addOpen, setAddOpen] = useState(false);
+  const list = beteiligte ?? [];
 
   return (
     <div className="glass-card rounded-xl p-4">
       <div className="flex items-center gap-2 mb-3">
         <Users className="w-4 h-4 text-muted-foreground" />
         <h3 className="text-sm font-semibold text-foreground">
-          Beteiligte ({beteiligte.length})
+          Beteiligte ({list.length})
         </h3>
+        {canEdit && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto h-7 gap-1 text-xs"
+            onClick={() => setAddOpen(true)}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Hinzufügen
+          </Button>
+        )}
       </div>
+      {canEdit && (
+        <BeteiligteAddDialog akteId={akteId} open={addOpen} onClose={() => setAddOpen(false)} />
+      )}
+      {list.length === 0 && (
+        <p className="text-xs text-muted-foreground">Noch keine Beteiligten erfasst.</p>
+      )}
       <div className="divide-y divide-border/50">
-        {beteiligte.map((b) => {
+        {list.map((b) => {
           const name =
             [b.kontakt.vorname, b.kontakt.nachname].filter(Boolean).join(" ") ||
             b.kontakt.firma ||
             "Unbekannt";
 
           const badgeVariant = rolleBadgeVariant[b.rolle] ?? "muted";
+          const ort = anschriftOrt(hauptAnschrift(b.kontakt));
 
           return (
             <div
@@ -84,10 +111,10 @@ export function BeteiligteSection({ beteiligte, akteId }: BeteiligteSectionProps
                         {b.kontakt.telefon}
                       </span>
                     )}
-                    {b.kontakt.ort && (
+                    {ort && (
                       <span className="flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="w-3 h-3" />
-                        {b.kontakt.ort}
+                        {ort}
                       </span>
                     )}
                   </div>

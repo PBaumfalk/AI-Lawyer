@@ -48,3 +48,10 @@ export interface BiTrendResponse {
   zeitraum: { von: string; bis: string };
   cached: boolean;
 }
+
+/**
+ * Source of the "Anwalt" filter dropdown. Shared by the filter component and
+ * the integration test so the UI cannot drift to a route that does not exist.
+ * /api/users returns a plain array of { id, name, email, role }.
+ */
+export const BI_ANWALT_OPTIONS_URL = "/api/users?role=ANWALT";

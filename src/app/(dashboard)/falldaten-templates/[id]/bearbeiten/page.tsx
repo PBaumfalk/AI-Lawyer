@@ -131,7 +131,7 @@ export default function BearbeitenFalldatenTemplatePage({
           {error ?? "Template nicht gefunden"}
         </p>
         <a
-          href="/dashboard/falldaten-templates"
+          href="/falldaten-templates"
           className="text-sm text-primary hover:underline mt-4 inline-block"
         >
           Zurueck zur Uebersicht
@@ -152,7 +152,7 @@ export default function BearbeitenFalldatenTemplatePage({
           Dieses Template kann nicht bearbeitet werden.
         </p>
         <a
-          href="/dashboard/falldaten-templates"
+          href="/falldaten-templates"
           className="text-sm text-primary hover:underline mt-4 inline-block"
         >
           Zurueck zur Uebersicht
@@ -198,7 +198,7 @@ export default function BearbeitenFalldatenTemplatePage({
         return;
       }
       toast.success("Template gespeichert");
-      router.push("/dashboard/falldaten-templates");
+      router.push("/falldaten-templates");
     } catch (err: unknown) {
       setServerErrors([
         err instanceof Error ? err.message : "Unbekannter Fehler",
@@ -250,7 +250,7 @@ export default function BearbeitenFalldatenTemplatePage({
         toast.error(
           submitData.error ?? "Gespeichert, aber Einreichen fehlgeschlagen"
         );
-        router.push("/dashboard/falldaten-templates");
+        router.push("/falldaten-templates");
         return;
       }
 
@@ -259,7 +259,7 @@ export default function BearbeitenFalldatenTemplatePage({
           ? "Template gespeichert und erneut eingereicht"
           : "Template gespeichert und eingereicht"
       );
-      router.push("/dashboard/falldaten-templates");
+      router.push("/falldaten-templates");
     } catch (err: unknown) {
       setServerErrors([
         err instanceof Error ? err.message : "Unbekannter Fehler",

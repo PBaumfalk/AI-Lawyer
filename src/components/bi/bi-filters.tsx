@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { BiFilterParams } from "@/lib/bi/types";
+import { BI_ANWALT_OPTIONS_URL, type BiFilterParams } from "@/lib/bi/types";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Select } from "@/components/ui/select";
 
@@ -40,14 +40,13 @@ interface BiFiltersProps {
 export function BiFilters({ filters, onChange }: BiFiltersProps) {
   const [anwaelte, setAnwaelte] = useState<AnwaltOption[]>([]);
 
-  // Fetch users with ANWALT/PARTNER role for the Anwalt dropdown
+  // Fetch users with role ANWALT for the Anwalt dropdown
   useEffect(() => {
     async function fetchAnwaelte() {
       try {
-        const res = await fetch("/api/admin/users?role=ANWALT,PARTNER");
+        const res = await fetch(BI_ANWALT_OPTIONS_URL);
         if (res.ok) {
-          const data = await res.json();
-          const users = (data.users ?? data ?? []) as Array<{
+          const users = (await res.json()) as Array<{
             id: string;
             name?: string | null;
             email?: string;

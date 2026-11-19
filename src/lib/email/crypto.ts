@@ -17,15 +17,21 @@ const SALT = "ai-lawyer-email-cred-v1"; // Fixed salt for deterministic key deri
  * Derive a 256-bit key from the EMAIL_ENCRYPTION_KEY env var.
  * Uses scryptSync for key derivation.
  */
+// scrypt is deliberately slow (~20 ms); derive once per secret, not per call.
+let cachedKey: { secret: string; key: Buffer } | null = null;
+
 function getEncryptionKey(): Buffer {
   const secret = process.env.EMAIL_ENCRYPTION_KEY;
+  if (cachedKey && cachedKey.secret === secret) return cachedKey.key;
   if (!secret || secret.length < 32) {
     throw new Error(
       "EMAIL_ENCRYPTION_KEY muss mindestens 32 Zeichen lang sein. " +
       "Bitte in .env setzen."
     );
   }
-  return scryptSync(secret, SALT, KEY_LENGTH);
+  const key = scryptSync(secret, SALT, KEY_LENGTH);
+  cachedKey = { secret, key };
+  return key;
 }
 
 /**

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { akteAccessDenied } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canConvertToPdf, generatePreviewWithBriefkopf } from "@/lib/onlyoffice";
@@ -29,7 +30,7 @@ export async function GET(
 
   const dokument = await prisma.dokument.findUnique({
     where: { id },
-    select: { id: true, mimeType: true, previewPfad: true },
+    select: { id: true, akteId: true, mimeType: true, previewPfad: true },
   });
 
   if (!dokument) {
@@ -38,6 +39,8 @@ export async function GET(
       { status: 404 }
     );
   }
+  const denied = await akteAccessDenied(session, dokument.akteId);
+  if (denied) return denied;
 
   // PDF files -- proxy through Next.js inline
   if (dokument.mimeType === "application/pdf") {
@@ -103,6 +106,8 @@ export async function POST(
       { status: 404 }
     );
   }
+  const denied = await akteAccessDenied(session, dokument.akteId);
+  if (denied) return denied;
 
   if (dokument.mimeType === "application/pdf") {
     return NextResponse.json({

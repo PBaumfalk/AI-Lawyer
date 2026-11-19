@@ -64,3 +64,8 @@ target/
 
 # Ralph backup directories (created by migration)
 .ralph_backup_*
+.claude/worktrees/
+/node_modules
+
+# Datensicherungen (scripts/backup.sh)
+/backups/

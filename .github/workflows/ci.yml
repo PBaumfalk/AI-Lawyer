@@ -9,7 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  unit:
+    name: Typecheck, Lint, Unit-Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -22,5 +23,65 @@ jobs:
       - run: npx prisma generate
       - name: Typecheck
         run: npx tsc --noEmit
-      - name: Unit-Tests
+      - name: Lint
+        run: npx next lint --max-warnings 347
+      - name: Unit- und Architekturtests
         run: npx vitest run
+
+  integration:
+    name: Integrationstests (PostgreSQL + Redis)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      TEST_DATABASE_URL: postgresql://test:test@localhost:5432/test
+      TEST_REDIS_URL: redis://localhost:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Integrationstests (inkl. Schema-Drift)
+        run: npm run test:integration
+
+  build:
+    name: Produktions-Build und Compose-Dateien
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: next build
+        run: npm run build
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+      - name: Server- und Worker-Bundle
+        run: npm run build:custom
+      - name: Compose-Dateien gültig
+        run: |
+          cp .env.example .env
+          sed -i 's/ÄNDERN/ci-placeholder-0123456789abcdef0123456789abcdef/g' .env
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.yml -f docker-compose.gpu.yml config --quiet
+          docker compose -f docker-compose.portainer.yml config --quiet

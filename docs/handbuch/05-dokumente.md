@@ -180,7 +180,7 @@ Auch beim **Aufteilen** sollten Sie das Ergebnis öffnen und kontrollieren, ob e
 
 Auf der Detailseite unter **Tags** fügen Sie mit **Tag hinzufuegen** Schlagwörter hinzu. Beim Tippen schlägt AI-Lawyer die kanzleiweit angelegten Schlagwort-Kategorien mit ihren Farben vor. Ein Klick auf das kleine x am Schlagwort entfernt es. Schlagwörter werden bei der Volltextsuche mit durchsucht und lassen sich dort als Filter nutzen.
 
-Die Liste der Kategorien pflegt der Admin unter `/einstellungen/dokument-tags` ([Kapitel 16](16-einstellungen-und-vorlagen.md)). Anhänge, die aus einer E-Mail in die Akte übernommen werden, erhalten automatisch das Schlagwort **E-Mail-Anhang**.
+Die Liste der Kategorien pflegen Rollen mit Zugang zu den Einstellungen (Administrator, Anwalt/Anwältin, Sachbearbeiter/in) unter `/einstellungen/dokument-tags` ([Kapitel 16](16-einstellungen-und-vorlagen.md)); Kategorien löschen dürfen nur Rollen mit Löschrecht. Dieselben Kategorien stehen auf der Seite **Suche** als Schlagwort-Filter zur Auswahl. Anhänge, die aus einer E-Mail in die Akte übernommen werden, erhalten automatisch das Schlagwort **E-Mail-Anhang**.
 
 ## Dokumente aus Vorlagen erstellen
 

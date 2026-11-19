@@ -141,7 +141,8 @@ export const VV_CATALOG: VVPosition[] = [
     nr: '3305',
     name: 'Verfahrensgebuehr Mahnverfahren',
     feeType: 'wertgebuehr',
-    defaultRate: 0.5,
+    // Nr. 3305 VV RVG: 1,0 (0,5 gilt nur fuer 3306 vorzeitige Beendigung und 3307 Antragsgegner)
+    defaultRate: 1.0,
     minRate: null,
     maxRate: null,
     part: 3,
@@ -149,7 +150,7 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Verfahrensgebuehr im Mahnverfahren (VV 3305 RVG). Halbe Gebuehr.',
+    description: 'Verfahrensgebuehr fuer die Vertretung des Antragstellers im Mahnverfahren (VV 3305 RVG), 1,0 Gebuehr.',
   },
   {
     nr: '3307',

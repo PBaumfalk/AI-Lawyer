@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { kontakteListUrl, kontaktAnzeigename, type KontakteListResponse } from "@/lib/kontakte/liste";
 import { X } from "lucide-react";
 
 interface Recipient {
@@ -45,9 +46,7 @@ export function ComposeRecipients({
     try {
       // Query contacts and previous email addresses in parallel
       const [kontakteRes, emailsRes] = await Promise.all([
-        fetch(
-          `/api/kontakte?search=${encodeURIComponent(query)}&limit=5`
-        ).catch(() => null),
+        fetch(kontakteListUrl({ q: query, take: 5 })).catch(() => null),
         fetch(
           `/api/emails?search=${encodeURIComponent(query)}&limit=10&fields=absender,absenderName`
         ).catch(() => null),
@@ -57,15 +56,12 @@ export function ComposeRecipients({
 
       // Parse contacts
       if (kontakteRes?.ok) {
-        const kontakte = await kontakteRes.json();
-        const items = Array.isArray(kontakte) ? kontakte : kontakte?.data ?? [];
-        for (const k of items) {
+        const { kontakte } = (await kontakteRes.json()) as KontakteListResponse;
+        for (const k of kontakte) {
           if (k.email) {
             results.push({
               email: k.email,
-              name: k.name || k.vorname
-                ? `${k.vorname || ""} ${k.nachname || k.name || ""}`.trim()
-                : undefined,
+              name: kontaktAnzeigename(k) || undefined,
               source: "kontakt",
             });
           }

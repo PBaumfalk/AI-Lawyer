@@ -1,3 +1,4 @@
+import type { UserRole } from "@prisma/client";
 /**
  * GET/PATCH/DELETE /api/ki-chat/conversations/[id]
  *
@@ -8,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { canAccessAkte } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -17,7 +19,7 @@ import { prisma } from "@/lib/db";
 
 async function checkAccess(
   conversationId: string,
-  userId: string
+  user: { id: string; role: UserRole }
 ): Promise<{
   allowed: boolean;
   isOwner: boolean;
@@ -40,6 +42,7 @@ async function checkAccess(
     return { allowed: false, isOwner: false, conversation: null };
   }
 
+  const userId = user.id;
   // Owner always has access
   if (conversation.userId === userId) {
     return { allowed: true, isOwner: true, conversation };
@@ -50,11 +53,10 @@ async function checkAccess(
     return { allowed: true, isOwner: false, conversation };
   }
 
-  // Shared access with Akte: user must be assigned to the Akte
+  // Shared access with Akte: same rules as the Akte itself
+  // (assignment, Dezernat, admin) instead of a partial copy of them.
   if (conversation.akte) {
-    const hasAkteAccess =
-      conversation.akte.anwaltId === userId ||
-      conversation.akte.sachbearbeiterId === userId;
+    const hasAkteAccess = await canAccessAkte(user, conversation.akteId);
     return { allowed: hasAkteAccess, isOwner: false, conversation };
   }
 
@@ -75,17 +77,15 @@ export async function GET(
   }
 
   const { id } = await params;
-  const { allowed, conversation } = await checkAccess(id, session.user.id);
+  const { allowed, conversation } = await checkAccess(id, { id: session.user.id!, role: (session.user as any).role });
 
   if (!conversation) {
     return NextResponse.json({ error: "Nicht gefunden" }, { status: 404 });
   }
 
   if (!allowed) {
-    return NextResponse.json(
-      { error: "Kein Zugriff auf diese Unterhaltung" },
-      { status: 403 }
-    );
+    // Same answer as for a missing conversation: do not reveal existence.
+    return NextResponse.json({ error: "Unterhaltung nicht gefunden" }, { status: 404 });
   }
 
   return NextResponse.json({
@@ -121,16 +121,17 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const { allowed, isOwner, conversation } = await checkAccess(
-    id,
-    session.user.id
-  );
+  const { allowed, isOwner, conversation } = await checkAccess(id, { id: session.user.id!, role: (session.user as any).role });
 
   if (!conversation) {
     return NextResponse.json({ error: "Nicht gefunden" }, { status: 404 });
   }
 
-  if (!allowed || !isOwner) {
+  if (!allowed) {
+    // Same answer as for a missing conversation: do not reveal existence.
+    return NextResponse.json({ error: "Unterhaltung nicht gefunden" }, { status: 404 });
+  }
+  if (!isOwner) {
     return NextResponse.json(
       { error: "Nur der Ersteller kann diese Unterhaltung bearbeiten" },
       { status: 403 }
@@ -171,16 +172,17 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const { allowed, isOwner, conversation } = await checkAccess(
-    id,
-    session.user.id
-  );
+  const { allowed, isOwner, conversation } = await checkAccess(id, { id: session.user.id!, role: (session.user as any).role });
 
   if (!conversation) {
     return NextResponse.json({ error: "Nicht gefunden" }, { status: 404 });
   }
 
-  if (!allowed || !isOwner) {
+  if (!allowed) {
+    // Same answer as for a missing conversation: do not reveal existence.
+    return NextResponse.json({ error: "Unterhaltung nicht gefunden" }, { status: 404 });
+  }
+  if (!isOwner) {
     return NextResponse.json(
       { error: "Nur der Ersteller kann diese Unterhaltung loeschen" },
       { status: 403 }

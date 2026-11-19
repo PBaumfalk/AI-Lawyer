@@ -122,6 +122,7 @@ export async function calculateRunningBalance(
   rechnungId: string | null;
   kostenstelle: string | null;
   konto: string;
+  dokumentId: string | null;
   fremdgeldFrist: Date | null;
   createdAt: Date;
   laufenderSaldo: number;
@@ -150,6 +151,7 @@ export async function calculateRunningBalance(
       rechnungId: b.rechnungId,
       kostenstelle: b.kostenstelle,
       konto: b.konto,
+      dokumentId: b.dokumentId,
       fremdgeldFrist: b.fremdgeldFrist,
       createdAt: b.createdAt,
       laufenderSaldo: round2(runningSaldo),

@@ -8,6 +8,7 @@ import {
   countRemainingBusinessDays,
   classifyDringlichkeit,
   isBusinessDay,
+  ermittleOffeneFremdgeldEingaenge,
 } from '../fremdgeld';
 import { ANDERKONTO_SCHWELLE } from '../types';
 
@@ -238,5 +239,30 @@ describe('isBusinessDay', () => {
 describe('Anderkonto threshold', () => {
   it('should have the correct threshold value', () => {
     expect(ANDERKONTO_SCHWELLE).toBe(15000);
+  });
+});
+
+describe('ermittleOffeneFremdgeldEingaenge', () => {
+  const b = (id: string, betrag: number, tag: number, stornoVon: string | null = null) => ({
+    id, akteId: 'a', betrag, buchungsdatum: new Date(2026, 0, tag, 12), stornoVon,
+    fremdgeldFrist: new Date(2026, 0, tag + 7, 12),
+  });
+
+  it('verrechnet Weiterleitungen FIFO gegen die ältesten Eingänge', () => {
+    const offen = ermittleOffeneFremdgeldEingaenge([b('e2', 300, 5), b('e1', 200, 2), b('w1', -250.5, 6)]);
+    expect(offen.map((o) => [o.buchung.id, o.offen])).toEqual([['e2', 249.5]]);
+  });
+
+  it('ignoriert stornierte Buchungen und Storno-Einträge', () => {
+    const offen = ermittleOffeneFremdgeldEingaenge([
+      b('e1', 100, 2), b('w1', -100, 3), b('s1', 100, 4, 'w1'), // Weiterleitung storniert
+      b('e2', 50, 5), b('s2', -50, 6, 'e2'), // Eingang storniert
+    ]);
+    expect(offen.map((o) => [o.buchung.id, o.offen])).toEqual([['e1', 100]]);
+  });
+
+  it('leere Liste und Cent-Rundung', () => {
+    expect(ermittleOffeneFremdgeldEingaenge([])).toEqual([]);
+    expect(ermittleOffeneFremdgeldEingaenge([b('e1', 0.3, 1), b('w1', -0.1, 2), b('w2', -0.2, 3)])).toEqual([]);
   });
 });

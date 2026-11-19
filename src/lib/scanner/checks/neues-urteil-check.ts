@@ -196,7 +196,7 @@ export async function runNeuesUrteilCheck(): Promise<{
           INNER JOIN urteil_chunks uc ON uc.id = ${urteil.id}
           WHERE a.status = 'OFFEN'
             AND a."summaryEmbedding" IS NOT NULL
-            AND a.sachgebiet = ANY(${sachgebiete}::text[])
+            AND a.sachgebiet::text = ANY(${sachgebiete}::text[])
             AND 1 - (a."summaryEmbedding" <=> uc.embedding) >= ${threshold}
           ORDER BY score DESC
         `;

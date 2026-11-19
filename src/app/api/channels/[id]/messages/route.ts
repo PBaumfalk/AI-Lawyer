@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyChannelAccess } from "@/lib/messaging/channel-access";
 import { z } from "zod";
-import { requireAuth, requireAkteAccess } from "@/lib/rbac";
+import { requireAuth } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { sendMessage } from "@/lib/messaging/message-service";
 import type { MessageListItem } from "@/lib/messaging/types";
@@ -26,64 +27,6 @@ const sendMessageSchema = z.object({
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Verify the user has access to the channel.
- *
- * - For AKTE channels: uses requireAkteAccess() as the single source of truth.
- * - For ALLGEMEIN channels: checks ChannelMember row (or ADMIN role).
- *
- * Returns the channel record on success or an error NextResponse.
- */
-async function verifyChannelAccess(
-  channelId: string,
-  userId: string,
-  userRole: string,
-): Promise<
-  | { channel: { id: string; typ: string; akteId: string | null }; error?: undefined }
-  | { channel?: undefined; error: NextResponse }
-> {
-  const channel = await prisma.channel.findUnique({
-    where: { id: channelId },
-    select: { id: true, typ: true, akteId: true },
-  });
-
-  if (!channel) {
-    return {
-      error: NextResponse.json({ error: "Kanal nicht gefunden" }, { status: 404 }),
-    };
-  }
-
-  // AKTE channels: requireAkteAccess is the authoritative gate
-  if (channel.typ === "AKTE" && channel.akteId) {
-    const akteResult = await requireAkteAccess(channel.akteId);
-    if (akteResult.error) {
-      return { error: akteResult.error };
-    }
-    return { channel };
-  }
-
-  // ALLGEMEIN channels: check ChannelMember row or ADMIN bypass
-  if (userRole === "ADMIN") {
-    return { channel };
-  }
-
-  const membership = await prisma.channelMember.findUnique({
-    where: { channelId_userId: { channelId, userId } },
-    select: { id: true },
-  });
-
-  if (!membership) {
-    return {
-      error: NextResponse.json(
-        { error: "Du bist kein Mitglied dieses Kanals" },
-        { status: 403 },
-      ),
-    };
-  }
-
-  return { channel };
-}
 
 // ---------------------------------------------------------------------------
 // GET /api/channels/{id}/messages -- Paginated message history

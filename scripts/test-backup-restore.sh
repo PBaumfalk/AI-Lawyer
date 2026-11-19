@@ -9,8 +9,11 @@
 #   - db, minio, meilisearch aus docker-compose.yml
 #   - "reindexer": Stellvertreter des App-Containers mit demselben Bundle
 #     dist-worker/reindex-suche.mjs (scripts/backuptest-reindexer.Dockerfile)
-#   - ein ZWEITER, separater MinIO-Container als S3-Sicherungsziel (Stellvertreter
-#     für den externen Speicher; belegt die S3-Anbindung, ist aber kein anderes Gerät)
+#   - ein separates Sicherungsziel als Stellvertreter für den externen Speicher
+#     (belegt die Anbindung, ist aber kein anderes Gerät):
+#       BACKUPTEST_ZIEL=s3 (Standard): zweiter MinIO-Container (S3)
+#       BACKUPTEST_ZIEL=sftp: SFTP-Server-Container (atmoz/sftp), Anmeldung nur mit
+#       eigenem SSH-Schlüssel, Host-Schlüssel fest in known_hosts
 #
 # Ablauf:
 #   0. Bundle bauen, Image bauen, S3-Ziel starten, Stack starten, Migrationen
@@ -23,7 +26,7 @@
 #   5. Negativtest: Wiederherstellung mit falschem Schlüssel → Abbruch, nichts verändert
 #   6. Totalverlust (Volumes + restic-Cache weg), Wiederherstellung (latest),
 #      Vergleich und Suche OHNE manuellen Reindex
-#   7. Negativtest: Repository-Objekt im S3-Ziel manipulieren → restic check
+#   7. Negativtest: Repository-Objekt im Sicherungsziel manipulieren → restic check
 #      --read-data meldet Fehler, Wiederherstellung bricht ohne Änderung ab
 #   8. Alles abräumen
 #
@@ -46,6 +49,10 @@ WORK=$(cd "$WORK" && pwd -P)
 S3_NAME=$P-s3
 S3_NET=$P-s3net
 S3_VOL=$P-s3data
+SFTP_NAME=$P-sftp
+SFTP_IMAGE=${BACKUPTEST_SFTP_IMAGE:-atmoz/sftp:alpine}
+ZIEL=${BACKUPTEST_ZIEL:-s3}
+case "$ZIEL" in s3|sftp) ;; *) echo "BACKUPTEST_ZIEL muss s3 oder sftp sein" >&2; exit 2 ;; esac
 HC_NAME=$P-hc
 CACHE_VOL=$P-restic-cache
 IMAGE=$P-reindexer:local
@@ -81,7 +88,7 @@ cleanup() {
   [ "$COMPOSE_PROJECT_NAME" = "$TEST_PROJECT" ] || { echo "Projektname verändert – räume nicht ab" >&2; exit 1; }
   log "Aufräumen (nur Objekte mit Präfix $P)"
   dc down -v --remove-orphans >/dev/null 2>&1
-  docker rm -f "$S3_NAME" "$HC_NAME" >/dev/null 2>&1
+  docker rm -f "$S3_NAME" "$SFTP_NAME" "$HC_NAME" >/dev/null 2>&1
   docker volume rm -f "$S3_VOL" "$CACHE_VOL" "${P}_backup-staging" "${P}_restore-staging" >/dev/null 2>&1
   docker network rm "$S3_NET" >/dev/null 2>&1
   [ "${KEEP_IMAGE:-0}" = 1 ] || docker rmi "$IMAGE" >/dev/null 2>&1
@@ -115,11 +122,20 @@ chmod 600 "$WORK/.env"
 S3_USER=restic-$(rnd | cut -c1-8)
 S3_PASS=$(rnd)
 printf 'MINIO_ROOT_USER=%s\nMINIO_ROOT_PASSWORD=%s\n' "$S3_USER" "$S3_PASS" > "$WORK/s3.env"
+if [ "$ZIEL" = sftp ]; then
+  # Eigener SSH-Schlüssel nur für die Sicherung; known_hosts folgt nach dem Start
+  mkdir -p "$WORK/ssh"; chmod 700 "$WORK/ssh"
+  ssh-keygen -q -t ed25519 -N "" -C ailawyer-backuptest -f "$WORK/ssh/id_ed25519"
+  export BACKUP_SSH_DIR="$WORK/ssh"
+  ZIEL_REPO="RESTIC_REPOSITORY=sftp://restic@$SFTP_NAME:22//upload/ai-lawyer"
+else
+  ZIEL_REPO="RESTIC_REPOSITORY=s3:http://$S3_NAME:9000/restic-repo/ai-lawyer
+AWS_ACCESS_KEY_ID=$S3_USER
+AWS_SECRET_ACCESS_KEY=$S3_PASS"
+fi
 cat > "$BACKUP_CONFIG" <<EOF
 # Testkonfiguration (Format docker --env-file)
-RESTIC_REPOSITORY=s3:http://$S3_NAME:9000/restic-repo/ai-lawyer
-AWS_ACCESS_KEY_ID=$S3_USER
-AWS_SECRET_ACCESS_KEY=$S3_PASS
+$ZIEL_REPO
 BACKUP_KEEP_DAILY=7
 BACKUP_KEEP_WEEKLY=5
 BACKUP_KEEP_MONTHLY=12
@@ -152,7 +168,7 @@ expect_same() { # expect_same <erwartet> <kontext>
 }
 
 dc down -v --remove-orphans >/dev/null 2>&1 || true   # Reste eines abgebrochenen Laufs
-docker rm -f "$S3_NAME" "$HC_NAME" >/dev/null 2>&1 || true
+docker rm -f "$S3_NAME" "$SFTP_NAME" "$HC_NAME" >/dev/null 2>&1 || true
 docker volume rm -f "$S3_VOL" "$CACHE_VOL" >/dev/null 2>&1 || true
 
 # ── 0. Vorbereitung ──────────────────────────────────────────────────────────
@@ -166,15 +182,29 @@ PRISMA_VERSION=$(node -p 'require("./node_modules/prisma/package.json").version'
 build_image() { docker build -q -t "$IMAGE" --build-arg "PRISMA_VERSION=$PRISMA_VERSION" -f "$SCRIPT_DIR/backuptest-reindexer.Dockerfile" "$WORK/ctx" >/dev/null; }
 timed "Reindexer-Image bauen (Prisma $PRISMA_VERSION)" build_image
 
-log "   S3-Sicherungsziel als separater Container $S3_NAME (Netz $S3_NET)"
-MINIO_IMAGE=$(dc config --images 2>/dev/null | grep -i minio | head -n1)
 docker network create "$S3_NET" >/dev/null
-docker run -d --name "$S3_NAME" --network "$S3_NET" --env-file "$WORK/s3.env" \
-  -v "$S3_VOL:/data" "$MINIO_IMAGE" server /data >/dev/null
-i=0; until docker exec "$S3_NAME" mc ready local >/dev/null 2>&1; do
-  i=$((i + 1)); [ "$i" -le 30 ] || fail "S3-Ziel startet nicht"; sleep 1; done
-s3_mc 'mc mb s/restic-repo >/dev/null'
-ok "Bucket restic-repo angelegt"
+if [ "$ZIEL" = sftp ]; then
+  log "   SFTP-Sicherungsziel als separater Container $SFTP_NAME (Netz $S3_NET)"
+  docker run -d --name "$SFTP_NAME" --network "$S3_NET" \
+    -v "$WORK/ssh/id_ed25519.pub:/home/restic/.ssh/keys/backup.pub:ro" \
+    "$SFTP_IMAGE" "restic::1001:1001:upload" >/dev/null
+  i=0; until docker exec "$SFTP_NAME" sh -c 'test -s /etc/ssh/ssh_host_ed25519_key.pub && pgrep sshd' >/dev/null 2>&1; do
+    i=$((i + 1)); [ "$i" -le 30 ] || fail "SFTP-Ziel startet nicht"; sleep 1; done
+  # Host-Schlüssel direkt vom Server (statt ssh-keyscan über das Netz)
+  printf '%s %s\n' "$SFTP_NAME" "$(docker exec "$SFTP_NAME" cut -d' ' -f1,2 /etc/ssh/ssh_host_ed25519_key.pub)" \
+    > "$WORK/ssh/known_hosts"
+  chmod 600 "$WORK/ssh/known_hosts"
+  ok "SFTP-Konto restic nur mit Schlüssel, Host-Schlüssel in known_hosts"
+else
+  log "   S3-Sicherungsziel als separater Container $S3_NAME (Netz $S3_NET)"
+  MINIO_IMAGE=$(dc config --images 2>/dev/null | grep -i minio | head -n1)
+  docker run -d --name "$S3_NAME" --network "$S3_NET" --env-file "$WORK/s3.env" \
+    -v "$S3_VOL:/data" "$MINIO_IMAGE" server /data >/dev/null
+  i=0; until docker exec "$S3_NAME" mc ready local >/dev/null 2>&1; do
+    i=$((i + 1)); [ "$i" -le 30 ] || fail "S3-Ziel startet nicht"; sleep 1; done
+  s3_mc 'mc mb s/restic-repo >/dev/null'
+  ok "Bucket restic-repo angelegt"
+fi
 
 log "   Benachrichtigungsempfänger (protokolliert nur Aufrufe)"
 docker run -d --name "$HC_NAME" -p 127.0.0.1::8000 python:3.12-slim-bookworm python -u -c '
@@ -330,7 +360,7 @@ log "6. Totalverlust: Container, Volumes und restic-Cache löschen, dann wiederh
 dc down -v >/dev/null 2>&1
 docker volume rm -f "$CACHE_VOL" >/dev/null
 if docker volume ls -q | grep -q "^${TEST_PROJECT}_"; then fail "Test-Volumes noch vorhanden"; fi
-ok "Volumes von $TEST_PROJECT und restic-Cache gelöscht; übrig: S3-Ziel, Schlüsseldatei, .env, backup.env"
+ok "Volumes von $TEST_PROJECT und restic-Cache gelöscht; übrig: Sicherungsziel ($ZIEL), Schlüsseldatei, .env, backup.env"
 timed "Wiederherstellung nach Totalverlust" "$SCRIPT_DIR/restore.sh" --yes > "$WORK/restore2.log" 2>&1 \
   || { cat "$WORK/restore2.log"; fail "Wiederherstellung 2 fehlgeschlagen"; }
 sed 's/^/    /' "$WORK/restore2.log"
@@ -344,18 +374,33 @@ printf '%s\n' "$HITS" | grep -o '"estimatedTotalHits":[0-9]*' | sed 's/^/    /'
 ok "Suche findet '$WORT' (Dokument $DOC_ID) ohne manuellen Reindex"
 
 # ── 7. Manipuliertes Repository ──────────────────────────────────────────────
-log "7. Negativtest: ein Datenpaket im S3-Ziel manipulieren"
-PACK=$(s3_mc 'mc ls --json --recursive s/restic-repo/ai-lawyer/data/' \
-  | sed -n 's/.*"size":\([0-9]*\).*"key":"\([^"]*\)".*/\1 \2/p' | sort -n | tail -n1 | cut -d" " -f2)
-[ -n "$PACK" ] || fail "kein Datenpaket gefunden"
-s3_mc "mc cat s/restic-repo/ai-lawyer/data/$PACK" > "$WORK/pack"
+log "7. Negativtest: ein Datenpaket im Sicherungsziel ($ZIEL) manipulieren"
+if [ "$ZIEL" = sftp ]; then
+  SFTP_DATA=/home/restic/upload/ai-lawyer/data
+  PACK=$(docker exec "$SFTP_NAME" sh -c "find $SFTP_DATA -type f -exec ls -l {} + | sort -k5 -n | tail -n1" \
+    | awk '{print $NF}' | sed "s#^$SFTP_DATA/##")
+  [ -n "$PACK" ] || fail "kein Datenpaket gefunden"
+  docker cp "$SFTP_NAME:$SFTP_DATA/$PACK" "$WORK/pack"
+  chmod u+w "$WORK/pack"   # restic legt Pakete schreibgeschützt an (0400)
+else
+  PACK=$(s3_mc 'mc ls --json --recursive s/restic-repo/ai-lawyer/data/' \
+    | sed -n 's/.*"size":\([0-9]*\).*"key":"\([^"]*\)".*/\1 \2/p' | sort -n | tail -n1 | cut -d" " -f2)
+  [ -n "$PACK" ] || fail "kein Datenpaket gefunden"
+  s3_mc "mc cat s/restic-repo/ai-lawyer/data/$PACK" > "$WORK/pack"
+fi
 SIZE=$(wc -c < "$WORK/pack" | tr -d ' ')
 # ein Byte in der Mitte invertieren
 OFF=$((SIZE / 2))
 B=$(dd if="$WORK/pack" bs=1 skip="$OFF" count=1 2>/dev/null | od -An -tu1 | tr -d ' ')
 # shellcheck disable=SC2059 # Byte per Oktal-Escape
 printf "\\$(printf '%03o' $((255 - B)))" | dd of="$WORK/pack" bs=1 seek="$OFF" conv=notrunc 2>/dev/null
-s3_mc "mc pipe s/restic-repo/ai-lawyer/data/$PACK >/dev/null" < "$WORK/pack"
+if [ "$ZIEL" = sftp ]; then
+  docker cp "$WORK/pack" "$SFTP_NAME:$SFTP_DATA/$PACK"
+  # Besitzer und Rechte wie von restic angelegt, sonst meldet restic nur "permission denied"
+  docker exec "$SFTP_NAME" sh -c "chown 1001:1001 '$SFTP_DATA/$PACK' && chmod 0400 '$SFTP_DATA/$PACK'"
+else
+  s3_mc "mc pipe s/restic-repo/ai-lawyer/data/$PACK >/dev/null" < "$WORK/pack"
+fi
 ok "Paket data/$PACK ($SIZE Bytes): Byte $OFF verändert"
 if "$SCRIPT_DIR/backup.sh" check > "$WORK/check-struct.log" 2>&1; then
   echo "    restic check (nur Struktur): keine Fehler – erwartbar, Inhalte werden erst mit --read-data gelesen"
@@ -366,6 +411,11 @@ if "$SCRIPT_DIR/backup.sh" check --read-data > "$WORK/check.log" 2>&1; then
   cat "$WORK/check.log"; fail "restic check --read-data hat die Manipulation nicht bemerkt"
 fi
 grep -iE 'error|fehler|corrupt|mismatch' "$WORK/check.log" | head -n5 | sed 's/^/    /'
+# Nur ein echter Inhaltsfehler zählt, kein Zugriffs- oder Verbindungsfehler
+if grep -qiE 'permission denied|connection|no such file' "$WORK/check.log" \
+  || ! grep -qiE 'ciphertext verification failed|hash does not match|invalid data' "$WORK/check.log"; then
+  cat "$WORK/check.log"; fail "restic check meldet keinen Inhaltsfehler, sondern etwas anderes"
+fi
 ok "restic check --read-data meldet Fehler (Exit != 0)"
 psql_q "INSERT INTO backup_test VALUES (4, 'Marker vor Restore aus beschädigtem Repo', '[4,4,4]');"
 BEFORE=$(state)

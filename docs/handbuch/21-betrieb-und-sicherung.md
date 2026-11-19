@@ -59,7 +59,7 @@ Der Exit-Code ist bei jedem Fehler ungleich 0. Die `.env` wird standardmäßig n
 | Ziel | Was Sie brauchen | `RESTIC_REPOSITORY` |
 | --- | --- | --- |
 | S3-Objektspeicher (Hetzner, IONOS, Wasabi, AWS, MinIO an anderem Standort) | Bucket, Endpoint, Access-Key und Secret-Key nur für diesen Bucket | `s3:https://<endpoint>/<bucket>/ai-lawyer` |
-| SFTP (Hetzner Storage Box, NAS an anderem Ort) | Host, Benutzer, eigener SSH-Schlüssel ohne Passphrase, `known_hosts` | `sftp:<benutzer>@<host>:/ai-lawyer` |
+| SFTP (Hetzner Storage Box, NAS an anderem Ort) | Host, Port, Benutzer, eigener SSH-Schlüssel ohne Passphrase, `known_hosts` | Port 22: `sftp:<benutzer>@<host>:/ai-lawyer`; anderer Port: `sftp://<benutzer>@<host>:<port>/ai-lawyer` (Storage Box: Port 23). `ssh-keyscan -p <port>` muss denselben Port verwenden, sonst scheitert die Host-Prüfung. |
 | rest-server an anderem Ort | URL, Benutzer, Passwort; am besten mit `--append-only` betrieben | `rest:https://<host>:8000/ai-lawyer` |
 
 Für Auftragsverarbeitung und Standort gelten die üblichen Regeln (AV-Vertrag, Speicherort in der EU). Die Daten verlassen den Server nur verschlüsselt; der Anbieter kann sie ohne Ihren Schlüssel nicht lesen. Schalten Sie, wo angeboten, Objekt-Versionierung oder Object Lock ein: Dann kann auch ein Angreifer mit den Zugangsdaten des Servers alte Sicherungen nicht löschen.

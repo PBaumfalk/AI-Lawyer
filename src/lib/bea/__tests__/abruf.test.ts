@@ -289,6 +289,44 @@ describe("rufeZertifikatAb", () => {
     await expect(processBeaSync({ data: { userId: "u1" } } as never)).rejects.toThrow();
   });
 
+  it("Speicherfehler (MinIO) → Abbruch, Job schlägt fehl, kein Fehlversuch gezählt", async () => {
+    const { uploadFile } = await import("@/lib/storage");
+    vi.mocked(uploadFile).mockRejectedValueOnce(new Error("MinIO nicht erreichbar"));
+    const r = await rufeZertifikatAb("u1");
+    expect(r.fehler).toHaveLength(1);
+    expect(nachrichten.size).toBe(0); // aborted before m2
+    expect(store.has(`bea:fehlversuch:${SAFE}:m1`)).toBe(false);
+    vi.mocked(uploadFile).mockRejectedValueOnce(new Error("MinIO nicht erreichbar"));
+    await expect(processBeaSync({ data: { userId: "u1" } } as never)).rejects.toThrow();
+    expect(store.has(`bea:fehlversuch:${SAFE}:m1`)).toBe(false);
+  });
+
+  it("Datenbankfehler beim Anlegen → Abbruch ohne Fehlversuch", async () => {
+    prismaFake.beaNachricht.create.mockRejectedValueOnce(new Error("Verbindung zur Datenbank verloren"));
+    const r = await rufeZertifikatAb("u1");
+    expect(r.fehler).toHaveLength(1);
+    expect(store.has(`bea:fehlversuch:${SAFE}:m1`)).toBe(false);
+  });
+
+  it("4xx-Antwort für eine Nachricht zählt gegen die Nachricht, Job läuft weiter", async () => {
+    const { BeaExpertError } = await import("../expert/transport");
+    const original = provider.holeNachricht.bind(provider);
+    vi.spyOn(provider, "holeNachricht").mockImplementation(async (s, id) => {
+      if (id === "m1") throw new BeaExpertError("nicht gefunden", "bea_get_message", 404);
+      return original(s, id);
+    });
+    await expect(processBeaSync({ data: { userId: "u1" } } as never)).resolves.toBeUndefined();
+    expect(store.get(`bea:fehlversuch:${SAFE}:m1`)).toBe("1");
+    expect(nachrichten.size).toBe(1);
+  });
+
+  it("setzeFehlversucheZurueck löscht den Zähler", async () => {
+    const { setzeFehlversucheZurueck } = await import("../fehlversuche");
+    store.set(`bea:fehlversuch:${SAFE}:m1`, "3");
+    await setzeFehlversucheZurueck(SAFE, "m1");
+    expect(store.has(`bea:fehlversuch:${SAFE}:m1`)).toBe(false);
+  });
+
   it("kein Posteingang → nur Warnung, kein Jobfehler", async () => {
     vi.spyOn(provider, "listeOrdner").mockResolvedValue([{ id: "x", name: "Gesendet", typ: "OUTBOX", parentId: null }]);
     await expect(rufeZertifikatAb("u1")).resolves.toEqual({ neu: 0, fehler: [] });

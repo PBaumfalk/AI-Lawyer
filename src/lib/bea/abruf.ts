@@ -297,15 +297,17 @@ export async function legeDokumenteAn(beaNachrichtId: string, akteId: string, us
 // ---------- retrieval ----------
 
 /**
- * A transport outage (bea.expert unreachable, timeout, HTTP 5xx) concerns the
- * whole service; anything else while handling one message concerns that message.
+ * Classifies a failure while handling one message (ruling R21). Only problems
+ * of the message itself count against it: an undecryptable message, a 4xx answer
+ * for it, or a mapping error of its content while fetching. Transport outages
+ * (status null / 5xx) and every failure of our own stack while storing
+ * (MinIO, database) are infrastructure: the run aborts and the job retries.
  */
-function istAusfall(e: unknown): boolean {
-  return (
-    e instanceof BeaExpertError &&
-    !(e instanceof BeaEntschluesselungError) &&
-    (e.status === null || e.status >= 500)
-  );
+function istNachrichtenFehler(e: unknown, phase: "holen" | "speichern"): boolean {
+  if (phase === "speichern") return false;
+  if (e instanceof BeaEntschluesselungError) return true;
+  if (e instanceof BeaExpertError) return e.status !== null && e.status < 500;
+  return true;
 }
 
 /** Message-level failure: count it; on the last allowed attempt report it once. */
@@ -324,9 +326,10 @@ async function meldeNachrichtFehler(userId: string, postfachSafeId: string, mess
  * Fetches new inbox messages for the user's certificate.
  * - BeaNichtEingerichtetError (no/failed certificate, wrong PIN) ends quietly:
  *   the certificate is already FEHLER or absent, so no further login is attempted.
- * - A transport outage aborts the run and is returned in fehler[] (job retries with backoff).
- * - A failure of a single message is counted per messageId and does not fail the
- *   run; after MAX_FEHLVERSUCHE attempts the message is skipped (reported once).
+ * - Outages and infrastructure failures (see istNachrichtenFehler) abort the run
+ *   and are returned in fehler[] (job retries with backoff).
+ * - A failure of the message itself is counted per messageId and does not fail
+ *   the run; after MAX_FEHLVERSUCHE attempts the message is skipped (reported once).
  */
 export async function rufeZertifikatAb(userId: string): Promise<{ neu: number; fehler: string[] }> {
   let neu = 0;
@@ -361,13 +364,15 @@ export async function rufeZertifikatAb(userId: string): Promise<{ neu: number; f
 
     for (const messageId of messageIds.filter((id) => !vorhanden.has(id))) {
       if ((await fehlversuche(postfachSafeId, messageId)) >= MAX_FEHLVERSUCHE) continue;
+      let phase: "holen" | "speichern" = "holen";
       try {
         // Each message has its own retry so one stale session does not fail the rest.
         const n = await mitBeaSitzung(userId, (s, p) => p.holeNachricht(s, messageId), { wiederholen: true });
+        phase = "speichern";
         if ((await speichereEingang(n, postfachSafeId, userId)).neu) neu += 1;
       } catch (e) {
         if (e instanceof BeaNichtEingerichtetError) return { neu, fehler: [] };
-        if (istAusfall(e)) return { neu, fehler: [`Nachricht ${messageId}: ${fehlermeldung(e)}`] };
+        if (!istNachrichtenFehler(e, phase)) return { neu, fehler: [`Nachricht ${messageId}: ${fehlermeldung(e)}`] };
         await meldeNachrichtFehler(userId, postfachSafeId, messageId, e);
       }
     }

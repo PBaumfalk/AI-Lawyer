@@ -46,3 +46,12 @@ export async function zaehleFehlversuch(postfachSafeId: string, messageId: strin
     return 0;
   }
 }
+
+/** Clears the failure counter so the message is fetched again on the next run. */
+export async function setzeFehlversucheZurueck(postfachSafeId: string, messageId: string): Promise<void> {
+  try {
+    await redis().del(schluessel(postfachSafeId, messageId));
+  } catch (e) {
+    warn("Zurücksetzen", e);
+  }
+}

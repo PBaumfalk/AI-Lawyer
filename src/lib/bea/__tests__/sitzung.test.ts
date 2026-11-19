@@ -122,6 +122,28 @@ describe("mitBeaSitzung", () => {
   });
 });
 
+describe("Redis-Ausfall", () => {
+  it("get wirft → es wird direkt angemeldet und fn läuft", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    fakeRedis.get.mockRejectedValueOnce(new Error("down"));
+    const fn = vi.fn().mockResolvedValue("ok");
+    await expect(mitBeaSitzung("u1", fn, { wiederholen: true })).resolves.toBe("ok");
+    expect(anmelden).toHaveBeenCalledTimes(1);
+  });
+
+  it("set und del werfen → fn läuft trotzdem", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    fakeRedis.set.mockRejectedValueOnce(new Error("down"));
+    fakeRedis.del.mockRejectedValue(new Error("down"));
+    const fn = vi.fn()
+      .mockRejectedValueOnce(new BeaExpertError("x", "x", 401))
+      .mockResolvedValueOnce("ok");
+    await expect(mitBeaSitzung("u1", fn, { wiederholen: true })).resolves.toBe("ok");
+    await expect(verwerfeBeaSitzung("u1")).resolves.toBeUndefined();
+    fakeRedis.del.mockImplementation(async (k: string) => (store.delete(k) ? 1 : 0));
+  });
+});
+
 describe("verwerfeBeaSitzung", () => {
   it("entfernt die Sitzung, sodass neu angemeldet wird", async () => {
     await mitBeaSitzung("u1", async () => 1, { wiederholen: true });

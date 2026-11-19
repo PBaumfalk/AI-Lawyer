@@ -24,20 +24,35 @@ export class BeaNichtEingerichtetError extends Error {
 // One shared connection per process, created lazily.
 let redisInstanz: Redis | null = null;
 function redis(): Redis {
-  return (redisInstanz ??= createRedisConnection());
+  // Fail fast: Redis is only a cache, its outage must not block beA.
+  return (redisInstanz ??= createRedisConnection({
+    maxRetriesPerRequest: 1,
+    extra: { commandTimeout: 2000 },
+  }));
 }
 
 async function ladeGespeicherteSitzung(userId: string): Promise<BeaSitzung | null> {
-  const roh = await redis().get(schluessel(userId));
+  let roh: string | null;
+  try {
+    roh = await redis().get(schluessel(userId));
+  } catch (e) {
+    warnRedis("Lesen", userId, e);
+    return null;
+  }
   if (!roh) return null;
   try {
     const d = JSON.parse(decryptCredential(roh)) as { token: string; sessionKey: string; safeId: string };
     return { token: d.token, sessionKey: Buffer.from(d.sessionKey, "base64"), safeId: d.safeId };
   } catch {
     // Unreadable entry (e.g. key rotation): treat as no session.
-    await redis().del(schluessel(userId));
+    await verwerfeBeaSitzung(userId);
     return null;
   }
+}
+
+function warnRedis(aktion: string, userId: string, e: unknown): void {
+  // Log only the error message, never session data.
+  console.warn(`[bea] Redis ${aktion} fehlgeschlagen (userId=${userId}): ${e instanceof Error ? e.message : "unbekannt"}`);
 }
 
 async function speichereSitzung(userId: string, s: BeaSitzung): Promise<void> {
@@ -46,7 +61,11 @@ async function speichereSitzung(userId: string, s: BeaSitzung): Promise<void> {
     sessionKey: s.sessionKey.toString("base64"),
     safeId: s.safeId,
   });
-  await redis().set(schluessel(userId), encryptCredential(payload), "EX", SITZUNG_TTL_SEKUNDEN);
+  try {
+    await redis().set(schluessel(userId), encryptCredential(payload), "EX", SITZUNG_TTL_SEKUNDEN);
+  } catch (e) {
+    warnRedis("Schreiben", userId, e);
+  }
 }
 
 function istAusfall(e: unknown): boolean {
@@ -112,5 +131,9 @@ export async function mitBeaSitzung<T>(
 
 /** Drops the stored session of the user. */
 export async function verwerfeBeaSitzung(userId: string): Promise<void> {
-  await redis().del(schluessel(userId));
+  try {
+    await redis().del(schluessel(userId));
+  } catch (e) {
+    warnRedis("Löschen", userId, e);
+  }
 }

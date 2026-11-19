@@ -54,6 +54,7 @@ export type AuditAktion =
   | "DSGVO_AUSKUNFT_EXPORTIERT"
   | "BEA_NACHRICHT_GESENDET"
   | "BEA_NACHRICHT_EMPFANGEN"
+  | "BEA_NACHRICHT_FEHLER"
   | "BEA_EEB_BESTAETIGT"
   | "BEA_NACHRICHT_GELESEN"
   | "BEA_ZUORDNUNG_GEAENDERT"
@@ -138,6 +139,7 @@ export const AKTION_LABELS: Record<string, string> = {
   DSGVO_AUSKUNFT_EXPORTIERT: "hat Datenauskunft exportiert",
   BEA_NACHRICHT_GESENDET: "beA Nachricht gesendet",
   BEA_NACHRICHT_EMPFANGEN: "beA Nachricht empfangen",
+  BEA_NACHRICHT_FEHLER: "beA Nachricht konnte nicht abgerufen werden",
   BEA_EEB_BESTAETIGT: "eEB bestaetigt",
   BEA_NACHRICHT_GELESEN: "beA Nachricht gelesen",
   BEA_ZUORDNUNG_GEAENDERT: "beA Zuordnung geaendert",

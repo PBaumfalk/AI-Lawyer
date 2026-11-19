@@ -87,6 +87,12 @@ vi.mock("@/lib/redis", () => ({
     get: async (k: string) => store.get(k) ?? null,
     set: async (k: string, v: string) => (store.set(k, v), "OK"),
     del: async (k: string) => (store.delete(k) ? 1 : 0),
+    incr: async (k: string) => {
+      const v = String(Number(store.get(k) ?? 0) + 1);
+      store.set(k, v);
+      return Number(v);
+    },
+    expire: async () => 1,
   }),
 }));
 vi.mock("@/lib/email/crypto", () => ({
@@ -244,6 +250,48 @@ describe("rufeZertifikatAb", () => {
     expect(r.fehler).toHaveLength(1);
     expect(zert.status).toBe("AKTIV");
     await expect(processBeaSync({ data: { userId: "u1" } } as never)).rejects.toThrow();
+  });
+
+  it("eine nicht lesbare Nachricht blockiert spätere nicht, der Job schlägt nicht fehl", async () => {
+    const { BeaEntschluesselungError } = await import("../expert/eingang");
+    const original = provider.holeNachricht.bind(provider);
+    const hole = vi.spyOn(provider, "holeNachricht").mockImplementation(async (s, id) => {
+      if (id === "m1") throw new BeaEntschluesselungError("kaputt", "bea_get_message");
+      return original(s, id);
+    });
+    await expect(processBeaSync({ data: { userId: "u1" } } as never)).resolves.toBeUndefined();
+    expect([...nachrichten.values()].map((n) => n.nachrichtenId)).toEqual(["m2"]);
+    expect(store.get(`bea:fehlversuch:${SAFE}:m1`)).toBe("1");
+    expect(zert.letzterAbruf).toBeInstanceOf(Date);
+
+    // runs 2 and 3 try again; the 3rd failure is reported once; run 4 skips m1
+    await rufeZertifikatAb("u1");
+    await rufeZertifikatAb("u1");
+    const meldungen = () =>
+      vi.mocked(logAuditEvent).mock.calls.filter((c) => c[0].aktion === "BEA_NACHRICHT_FEHLER");
+    expect(meldungen()).toHaveLength(1);
+    expect(JSON.stringify(meldungen()[0][0].details)).not.toContain("Betreff");
+    const vorher = hole.mock.calls.filter((c) => c[1] === "m1").length;
+    await rufeZertifikatAb("u1");
+    expect(hole.mock.calls.filter((c) => c[1] === "m1").length).toBe(vorher);
+    expect(meldungen()).toHaveLength(1);
+  });
+
+  it("Ausfall beim Holen einer Nachricht → Abbruch, fehler[], Job schlägt fehl, kein Fehlversuch gezählt", async () => {
+    const { BeaExpertError } = await import("../expert/transport");
+    vi.spyOn(provider, "holeNachricht").mockRejectedValue(new BeaExpertError("Zeitüberschreitung", "bea_get_message"));
+    const hole = vi.mocked(provider.holeNachricht);
+    const r = await rufeZertifikatAb("u1");
+    expect(r.fehler).toHaveLength(1);
+    // aborted after m1 (2 calls: first try + retry), m2 not attempted
+    expect(hole.mock.calls.every((c) => c[1] === "m1")).toBe(true);
+    expect(store.has(`bea:fehlversuch:${SAFE}:m1`)).toBe(false);
+    await expect(processBeaSync({ data: { userId: "u1" } } as never)).rejects.toThrow();
+  });
+
+  it("kein Posteingang → nur Warnung, kein Jobfehler", async () => {
+    vi.spyOn(provider, "listeOrdner").mockResolvedValue([{ id: "x", name: "Gesendet", typ: "OUTBOX", parentId: null }]);
+    await expect(rufeZertifikatAb("u1")).resolves.toEqual({ neu: 0, fehler: [] });
   });
 
   it("Job ohne userId läuft über alle AKTIV-Zertifikate", async () => {

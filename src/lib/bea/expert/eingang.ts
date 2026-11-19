@@ -88,7 +88,18 @@ function entschluessleText(x: unknown, sessionKey: Buffer): string {
 }
 
 /**
- * Runs decryption and turns any crypto failure into a BeaExpertError.
+ * A message that cannot be decrypted. Unlike a transport failure (status null
+ * from fetch/timeout) this concerns one message, not the service.
+ */
+export class BeaEntschluesselungError extends BeaExpertError {
+  constructor(message: string, funktion: string, options?: { cause?: unknown }) {
+    super(message, funktion, null, null, options);
+    this.name = "BeaEntschluesselungError";
+  }
+}
+
+/**
+ * Runs decryption and turns any crypto failure into a BeaEntschluesselungError.
  * The message never contains key material or plaintext; the cause carries
  * only the crypto library's generic error.
  */
@@ -97,11 +108,9 @@ function mitEntschluesselung<T>(funktion: string, f: () => T): T {
     return f();
   } catch (err) {
     if (err instanceof BeaExpertError) throw err;
-    throw new BeaExpertError(
+    throw new BeaEntschluesselungError(
       `beA-Nachricht konnte nicht entschlüsselt werden (${funktion}).`,
       funktion,
-      null,
-      null,
       { cause: err },
     );
   }
@@ -190,7 +199,7 @@ function mappeNachricht(antwort: unknown, sessionKey: Buffer): BeaNachrichtVoll 
       (elementKey ? Buffer.from(elementKey, "base64") : null) ??
       standardSchluessel;
     if (!key) {
-      throw new BeaExpertError(`Kein Schlüssel für einen Anhang gefunden.`, "bea_get_message");
+      throw new BeaEntschluesselungError(`Kein Schlüssel für einen Anhang gefunden.`, "bea_get_message");
     }
     const iv = str(a.iv);
     const tag = str(a.tag);

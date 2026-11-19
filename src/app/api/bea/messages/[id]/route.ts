@@ -41,6 +41,12 @@ export async function GET(
     return NextResponse.json({ error: "Nachricht nicht gefunden" }, { status: 404 });
   }
 
+  // Content and attachments of an assigned message follow the Akte's access rules
+  if (nachricht.akteId) {
+    const denied = await akteAccessDenied(result.session, nachricht.akteId);
+    if (denied) return denied;
+  }
+
   // Audit log: beA message read
   logAuditEvent({
     userId: result.session!.user.id,
@@ -60,36 +66,43 @@ export async function GET(
   if (downloadAttachmentId) {
     const attachments = Array.isArray(nachricht.anhaenge) ? (nachricht.anhaenge as any[]) : [];
     const attachment = attachments.find((a) => a.id === downloadAttachmentId);
-    logAuditEvent({
-      userId: result.session!.user.id,
-      akteId: nachricht.akteId,
-      aktion: "BEA_ANHANG_HERUNTERGELADEN",
-      details: {
-        nachrichtId: nachricht.id,
-        anhangId: downloadAttachmentId,
-        anhangName: attachment?.name || "Unbekannt",
-        anhangGroesse: attachment?.groesse ?? attachment?.size ?? null,
-        ergebnis: "ERFOLG",
-      },
-    }).catch(() => {});
+    const protokolliereDownload = () =>
+      logAuditEvent({
+        userId: result.session!.user.id,
+        akteId: nachricht.akteId,
+        aktion: "BEA_ANHANG_HERUNTERGELADEN",
+        details: {
+          nachrichtId: nachricht.id,
+          anhangId: downloadAttachmentId,
+          anhangName: attachment?.name || "Unbekannt",
+          anhangGroesse: attachment?.groesse ?? attachment?.size ?? null,
+          ergebnis: "ERFOLG",
+        },
+      }).catch(() => {});
 
     // Attachments retrieved via bea.expert are stored in MinIO under storageKey
     if (attachment?.storageKey) {
+      let stream: Awaited<ReturnType<typeof getFileStream>>;
       try {
-        const stream = await getFileStream(attachment.storageKey);
-        if (!stream) {
-          return NextResponse.json({ error: "Datei nicht gefunden im Speicher" }, { status: 404 });
-        }
-        return new NextResponse(stream.transformToWebStream() as any, {
-          headers: {
-            "Content-Type": attachment.mimeType || "application/octet-stream",
-            "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(attachment.name)}`,
-          },
-        });
+        stream = await getFileStream(attachment.storageKey);
       } catch {
         return NextResponse.json({ error: "Datei konnte nicht geladen werden" }, { status: 500 });
       }
+      if (!stream) {
+        return NextResponse.json({ error: "Datei nicht gefunden im Speicher" }, { status: 404 });
+      }
+      // Logged only once the file is actually available
+      protokolliereDownload();
+      return new NextResponse(stream.transformToWebStream() as any, {
+        headers: {
+          "Content-Type": attachment.mimeType || "application/octet-stream",
+          "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(attachment.name)}`,
+        },
+      });
     }
+
+    // Legacy attachments without storageKey: client-side download, logging only
+    protokolliereDownload();
   }
 
   return NextResponse.json(nachricht);
@@ -122,11 +135,22 @@ export async function PATCH(
 
   const existing = await prisma.beaNachricht.findUnique({
     where: { id },
-    select: { id: true, akteId: true, betreff: true },
+    select: { id: true, akteId: true, betreff: true, anhaenge: true },
   });
 
   if (!existing) {
     return NextResponse.json({ error: "Nachricht nicht gefunden" }, { status: 404 });
+  }
+
+  // Documents already created in an Akte stay there: moving the message would
+  // leave them behind, so a change of Akte is refused until they are removed.
+  const hatDokumente =
+    Array.isArray(existing.anhaenge) && (existing.anhaenge as any[]).some((a) => a?.dokumentId);
+  if (hatDokumente && parsed.data.akteId !== undefined && parsed.data.akteId !== existing.akteId) {
+    return NextResponse.json(
+      { error: "Die Anhänge liegen bereits als Dokumente in einer anderen Akte. Bitte dort zuerst entfernen." },
+      { status: 409 }
+    );
   }
 
   // On (re)assignment create the Akte documents first, so a failure changes nothing.

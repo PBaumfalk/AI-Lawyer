@@ -29,9 +29,11 @@ export async function POST() {
     "bea-sync",
     { userId },
     {
-      jobId: `bea-sync-${userId}-${Date.now()}`,
-      removeOnComplete: { age: 3_600 },
-      removeOnFail: { age: 86_400 },
+      // Stable id: while a job for this user is waiting or running, a second request is ignored
+      jobId: `bea-sync-${userId}`,
+      // Remove when finished so the id is free for the next manual retrieval
+      removeOnComplete: true,
+      removeOnFail: true,
     },
   );
 

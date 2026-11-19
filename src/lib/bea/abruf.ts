@@ -13,6 +13,9 @@ import { parseXJustiz, type XJustizData } from "@/lib/xjustiz/parser";
 import type { OcrJobData } from "@/lib/ocr/types";
 import { autoAssignToAkte } from "./auto-assign";
 import { mitBeaSitzung, BeaNichtEingerichtetError } from "./sitzung";
+import { BeaExpertError } from "./expert/transport";
+import { BeaEntschluesselungError } from "./expert/eingang";
+import { fehlversuche, zaehleFehlversuch, MAX_FEHLVERSUCHE } from "./fehlversuche";
 import type { BeaNachrichtVoll, BeaOrdnerInfo } from "./provider";
 
 /** Attachment reference stored in BeaNachricht.anhaenge. */
@@ -26,8 +29,6 @@ export interface BeaAnhangRef {
   dokumentId?: string;
 }
 
-// Consecutive message failures after which a run is aborted.
-const MAX_FOLGEFEHLER = 3;
 const XJUSTIZ_DATEI = "xjustiz_nachricht.xml";
 const TEXT_MIMES = new Set(["text/plain", "text/csv", "text/html", "text/markdown", "application/json", "application/xml", "text/xml"]);
 // Detached signatures carry no readable content.
@@ -248,7 +249,9 @@ export async function legeDokumenteAn(beaNachrichtId: string, akteId: string, us
   for (const a of offen) {
     const inhalt = await ladeDatei(a.storageKey);
     const name = bereinigeDateiname(a.name);
-    const dateipfad = generateStorageKey(akteId, name);
+    // generateStorageKey maps non-ASCII to "_" and only adds a ms timestamp:
+    // the attachment position keeps keys of one message apart.
+    const dateipfad = generateStorageKey(akteId, `${anhaenge.indexOf(a) + 1}_${name}`);
     await uploadFile(dateipfad, inhalt, a.mimeType, inhalt.length);
 
     const istText = TEXT_MIMES.has(a.mimeType);
@@ -294,15 +297,39 @@ export async function legeDokumenteAn(beaNachrichtId: string, akteId: string, us
 // ---------- retrieval ----------
 
 /**
+ * A transport outage (bea.expert unreachable, timeout, HTTP 5xx) concerns the
+ * whole service; anything else while handling one message concerns that message.
+ */
+function istAusfall(e: unknown): boolean {
+  return (
+    e instanceof BeaExpertError &&
+    !(e instanceof BeaEntschluesselungError) &&
+    (e.status === null || e.status >= 500)
+  );
+}
+
+/** Message-level failure: count it; on the last allowed attempt report it once. */
+async function meldeNachrichtFehler(userId: string, postfachSafeId: string, messageId: string, e: unknown): Promise<void> {
+  const anzahl = await zaehleFehlversuch(postfachSafeId, messageId);
+  console.warn(`[bea] Nachricht nicht übernommen (postfach=${postfachSafeId}, messageId=${messageId}, versuch=${anzahl}): ${fehlermeldung(e)}`);
+  if (anzahl !== MAX_FEHLVERSUCHE) return;
+  await logAuditEvent({
+    userId,
+    aktion: "BEA_NACHRICHT_FEHLER",
+    details: { postfachSafeId, messageId, versuche: anzahl, fehler: fehlermeldung(e), ergebnis: "FEHLER" },
+  }).catch(() => {});
+}
+
+/**
  * Fetches new inbox messages for the user's certificate.
- * BeaNichtEingerichtetError (no/failed certificate, wrong PIN) ends quietly:
- * the certificate is already FEHLER or absent, so no further login is attempted.
- * Other errors are collected in fehler[]; the certificate stays AKTIV.
+ * - BeaNichtEingerichtetError (no/failed certificate, wrong PIN) ends quietly:
+ *   the certificate is already FEHLER or absent, so no further login is attempted.
+ * - A transport outage aborts the run and is returned in fehler[] (job retries with backoff).
+ * - A failure of a single message is counted per messageId and does not fail the
+ *   run; after MAX_FEHLVERSUCHE attempts the message is skipped (reported once).
  */
 export async function rufeZertifikatAb(userId: string): Promise<{ neu: number; fehler: string[] }> {
-  const fehler: string[] = [];
   let neu = 0;
-  let folgefehler = 0;
 
   let auftraege: { postfachSafeId: string; messageIds: string[] }[];
   try {
@@ -311,7 +338,7 @@ export async function rufeZertifikatAb(userId: string): Promise<{ neu: number; f
       for (const postfach of await p.listePostfaecher(s)) {
         const eingang = waehlePosteingang(await p.listeOrdner(s, postfach.safeId));
         if (!eingang) {
-          fehler.push(`Kein Posteingang im Postfach ${postfach.safeId} gefunden.`);
+          console.warn(`[bea] Kein Posteingang im Postfach ${postfach.safeId} gefunden.`);
           continue;
         }
         const ids = [...new Set((await p.listeNachrichten(s, eingang.id)).map((k) => k.messageId).filter(Boolean))];
@@ -321,7 +348,7 @@ export async function rufeZertifikatAb(userId: string): Promise<{ neu: number; f
     }, { wiederholen: true });
   } catch (e) {
     if (e instanceof BeaNichtEingerichtetError) return { neu: 0, fehler: [] };
-    return { neu: 0, fehler: [...fehler, fehlermeldung(e)] };
+    return { neu: 0, fehler: [fehlermeldung(e)] };
   }
 
   for (const { postfachSafeId, messageIds } of auftraege) {
@@ -333,22 +360,19 @@ export async function rufeZertifikatAb(userId: string): Promise<{ neu: number; f
     );
 
     for (const messageId of messageIds.filter((id) => !vorhanden.has(id))) {
+      if ((await fehlversuche(postfachSafeId, messageId)) >= MAX_FEHLVERSUCHE) continue;
       try {
         // Each message has its own retry so one stale session does not fail the rest.
         const n = await mitBeaSitzung(userId, (s, p) => p.holeNachricht(s, messageId), { wiederholen: true });
         if ((await speichereEingang(n, postfachSafeId, userId)).neu) neu += 1;
-        folgefehler = 0;
       } catch (e) {
-        if (e instanceof BeaNichtEingerichtetError) return { neu, fehler };
-        fehler.push(`Nachricht ${messageId}: ${fehlermeldung(e)}`);
-        // A single unreadable message must not block the rest, but repeated
-        // failures in a row mean an outage: stop, the job retries with backoff.
-        folgefehler += 1;
-        if (folgefehler >= MAX_FOLGEFEHLER) return { neu, fehler };
+        if (e instanceof BeaNichtEingerichtetError) return { neu, fehler: [] };
+        if (istAusfall(e)) return { neu, fehler: [`Nachricht ${messageId}: ${fehlermeldung(e)}`] };
+        await meldeNachrichtFehler(userId, postfachSafeId, messageId, e);
       }
     }
   }
 
   await prisma.beaZertifikat.updateMany({ where: { userId }, data: { letzterAbruf: new Date() } });
-  return { neu, fehler };
+  return { neu, fehler: [] };
 }

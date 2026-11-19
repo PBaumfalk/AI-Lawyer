@@ -16,6 +16,8 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useSocket } from "@/components/socket-provider";
 import { useSearchParams } from "next/navigation";
 import { useComposeManager } from "@/components/email/compose-manager";
+import { useIsMobile } from "@/hooks/use-media-query";
+import { ArrowLeft, Folder } from "lucide-react";
 
 /**
  * Three-pane resizable inbox layout.
@@ -123,69 +125,55 @@ export function InboxLayout() {
     setTicketEmailId(null);
   }, []);
 
-  return (
+  // Below md only one pane is visible: folders, list or the open mail
+  const isMobile = useIsMobile();
+  const [mobileFolders, setMobileFolders] = useState(false);
+  const handleSelectFolderMobile = useCallback(
+    (kontoId: string | null, ordnerId: string | null) => {
+      emailStore.selectFolder(kontoId, ordnerId);
+      setMobileFolders(false);
+    },
+    [emailStore]
+  );
+
+  const emailList = (
+    <EmailList
+      selectedKontoId={emailStore.selectedKontoId}
+      selectedOrdnerId={emailStore.selectedOrdnerId}
+      selectedEmailId={emailStore.selectedEmailId}
+      filters={emailStore.filters}
+      checkedEmailIds={emailStore.checkedEmailIds}
+      onSelectEmail={emailStore.selectEmail}
+      onToggleCheck={emailStore.toggleCheck}
+      onToggleCheckRange={emailStore.toggleCheckRange}
+      onClearChecked={emailStore.clearChecked}
+      onCheckAll={emailStore.checkAll}
+      onUpdateFilters={emailStore.updateFilters}
+      onVerakten={handleOpenVeraktungMulti}
+    />
+  );
+  const emailDetail = (
+    <EmailDetail
+      emailId={emailStore.selectedEmailId}
+      onSelectEmail={emailStore.selectEmail}
+      onOpenVeraktung={handleOpenVeraktung}
+      onOpenTicket={handleOpenTicket}
+    />
+  );
+
+  const mobileBackButton = (label: string, onClick: () => void) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-11 items-center gap-2 px-3 text-sm font-medium text-foreground hover:bg-muted"
+    >
+      <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+      {label}
+    </button>
+  );
+
+  const overlays = (
     <>
-      <ResizablePanelGroup
-        orientation="horizontal"
-        autoSaveId="email-inbox-v2"
-        className="h-full"
-      >
-        {/* Left: Folder Tree */}
-        <ResizablePanel
-          id="folder-tree"
-          defaultSize={20}
-          minSize={15}
-          maxSize={30}
-          className="glass-card rounded-l-2xl overflow-hidden"
-        >
-          <FolderTree
-            selectedKontoId={emailStore.selectedKontoId}
-            selectedOrdnerId={emailStore.selectedOrdnerId}
-            onSelectFolder={emailStore.selectFolder}
-          />
-        </ResizablePanel>
-
-        <ResizableHandle />
-
-        {/* Center: Email List */}
-        <ResizablePanel
-          id="email-list"
-          defaultSize={35}
-          minSize={25}
-        >
-          <EmailList
-            selectedKontoId={emailStore.selectedKontoId}
-            selectedOrdnerId={emailStore.selectedOrdnerId}
-            selectedEmailId={emailStore.selectedEmailId}
-            filters={emailStore.filters}
-            checkedEmailIds={emailStore.checkedEmailIds}
-            onSelectEmail={emailStore.selectEmail}
-            onToggleCheck={emailStore.toggleCheck}
-            onToggleCheckRange={emailStore.toggleCheckRange}
-            onClearChecked={emailStore.clearChecked}
-            onCheckAll={emailStore.checkAll}
-            onUpdateFilters={emailStore.updateFilters}
-            onVerakten={handleOpenVeraktungMulti}
-          />
-        </ResizablePanel>
-
-        <ResizableHandle />
-
-        {/* Right: Email Detail */}
-        <ResizablePanel
-          id="email-detail"
-          defaultSize={45}
-          minSize={30}
-        >
-          <EmailDetail
-            emailId={emailStore.selectedEmailId}
-            onSelectEmail={emailStore.selectEmail}
-            onOpenVeraktung={handleOpenVeraktung}
-            onOpenTicket={handleOpenTicket}
-          />
-        </ResizablePanel>
-      </ResizablePanelGroup>
-
       {/* Veraktung slide-over panel */}
       <VeraktungPanel
         open={veraktungOpen}
@@ -202,6 +190,97 @@ export function InboxLayout() {
           emailId={ticketEmailId}
         />
       )}
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <div className="flex h-full flex-col overflow-hidden glass-card">
+          {mobileFolders || (!emailStore.selectedKontoId && !emailStore.selectedOrdnerId) ? (
+            <>
+              {/* Without a selected folder the list has nothing to show, so the
+                  folder tree is the start pane (it auto-selects the inbox). */}
+              {(emailStore.selectedKontoId || emailStore.selectedOrdnerId) &&
+                mobileBackButton("Zur Liste", () => setMobileFolders(false))}
+              <div className="min-h-0 flex-1 overflow-hidden">
+                <FolderTree
+                  selectedKontoId={emailStore.selectedKontoId}
+                  selectedOrdnerId={emailStore.selectedOrdnerId}
+                  onSelectFolder={handleSelectFolderMobile}
+                />
+              </div>
+            </>
+          ) : emailStore.selectedEmailId ? (
+            <>
+              {mobileBackButton("Zur Liste", () => emailStore.selectEmail(null))}
+              <div className="min-h-0 flex-1 overflow-hidden">{emailDetail}</div>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setMobileFolders(true)}
+                className="flex min-h-11 items-center gap-2 border-b border-border px-3 text-sm font-medium text-foreground hover:bg-muted"
+              >
+                <Folder className="w-4 h-4" aria-hidden="true" />
+                Ordner und Postfächer
+              </button>
+              <div className="min-h-0 flex-1 overflow-hidden">{emailList}</div>
+            </>
+          )}
+        </div>
+        {overlays}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <ResizablePanelGroup
+        orientation="horizontal"
+        autoSaveId="email-inbox-v3"
+        className="h-full"
+      >
+        {/* Left: Folder Tree */}
+        <ResizablePanel
+          id="folder-tree"
+          defaultSize="20%"
+          minSize="15%"
+          maxSize="30%"
+          className="glass-card rounded-l-2xl overflow-hidden"
+        >
+          <FolderTree
+            selectedKontoId={emailStore.selectedKontoId}
+            selectedOrdnerId={emailStore.selectedOrdnerId}
+            onSelectFolder={emailStore.selectFolder}
+          />
+        </ResizablePanel>
+
+        <ResizableHandle />
+
+        {/* Center: Email List */}
+        <ResizablePanel
+          id="email-list"
+          defaultSize="35%"
+          minSize="25%"
+        >
+          {emailList}
+        </ResizablePanel>
+
+        <ResizableHandle />
+
+        {/* Right: Email Detail */}
+        <ResizablePanel
+          id="email-detail"
+          defaultSize="45%"
+          minSize="30%"
+        >
+          {emailDetail}
+        </ResizablePanel>
+      </ResizablePanelGroup>
+
+      {overlays}
     </>
   );
 }

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { LayoutDashboard, Calculator, Receipt, BookOpen } from "lucide-react";
 
 const finanzenTabs = [
-  { name: "Uebersicht", href: "/finanzen", icon: LayoutDashboard },
+  { name: "Übersicht", href: "/finanzen", icon: LayoutDashboard },
   { name: "Rechner", href: "/finanzen/rechner", icon: Calculator },
   { name: "Rechnungen", href: "/finanzen/rechnungen", icon: Receipt },
   { name: "Aktenkonto", href: "/finanzen/aktenkonto", icon: BookOpen },
@@ -22,7 +22,7 @@ export default function FinanzenLayout({
   return (
     <div className="space-y-6">
       {/* Sub-navigation tabs */}
-      <nav className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
+      <nav className="flex flex-wrap gap-1 p-1 bg-muted rounded-lg w-fit max-w-full">
         {finanzenTabs.map((tab) => {
           const isActive =
             tab.href === "/finanzen"

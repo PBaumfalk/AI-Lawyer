@@ -15,10 +15,10 @@ interface GlassKpiCardProps {
 }
 
 const iconBg: Record<string, string> = {
-  blue: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-  amber: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-  rose: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
-  emerald: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  blue: "bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300",
+  amber: "bg-warning-soft text-warning",
+  rose: "bg-danger-soft text-danger",
+  emerald: "bg-success-soft text-success",
 };
 
 export function GlassKpiCard({
@@ -52,14 +52,14 @@ export function GlassKpiCard({
   if (skeleton) {
     return (
       <div
-        className={cn("glass-card rounded-xl p-5 h-[84px] glass-shimmer", className)}
+        className={cn("glass-card rounded-2xl p-5 h-[84px] glass-shimmer", className)}
         aria-hidden="true"
       />
     );
   }
 
   return (
-    <div className={cn("glass-card rounded-xl p-5", className)}>
+    <div className={cn("glass-card rounded-2xl p-5", className)}>
       <div className="flex items-center gap-3">
         <div
           className={cn(

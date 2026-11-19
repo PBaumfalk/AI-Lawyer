@@ -18,7 +18,7 @@ export async function GET() {
   const role = (session.user as any).role as UserRole;
   if (role !== "ADMIN") {
     return NextResponse.json(
-      { error: "Nur Administratoren koennen Einstellungen exportieren" },
+      { error: "Nur Administratoren können Einstellungen exportieren" },
       { status: 403 }
     );
   }

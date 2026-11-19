@@ -207,7 +207,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
     drawText(data.aktenzeichen, valueX, y, { size: FONT_BODY });
   }
   if (data.faelligAm) {
-    drawText('Faellig am:', rightLabelX, y, { font: helveticaBold, size: FONT_BODY });
+    drawText('Fällig am:', rightLabelX, y, { font: helveticaBold, size: FONT_BODY });
     drawText(formatDate(data.faelligAm), rightValueX, y, { size: FONT_BODY });
   }
   y -= LINE_HEIGHT;

@@ -27,20 +27,20 @@ export function portalInviteEmail(params: PortalInviteEmailParams): {
   const text = [
     `Guten Tag ${mandantName},`,
     "",
-    `die Kanzlei ${kanzleiName} laedt Sie ein, das Mandantenportal zu nutzen.`,
+    `die Kanzlei ${kanzleiName} lädt Sie ein, das Mandantenportal zu nutzen.`,
     "",
-    `Ueber das Portal koennen Sie den Fortschritt Ihrer Akte (Az. ${aktenzeichen}) einsehen,`,
+    `Über das Portal können Sie den Fortschritt Ihrer Akte (Az. ${aktenzeichen}) einsehen,`,
     "freigegebene Dokumente herunterladen und sicher mit Ihrer Kanzlei kommunizieren.",
     "",
-    "Bitte aktivieren Sie Ihren Zugang ueber den folgenden Link:",
+    "Bitte aktivieren Sie Ihren Zugang über den folgenden Link:",
     activationUrl,
     "",
-    "Dieser Link ist 7 Tage gueltig. Falls er ablaeuft, kann Ihre Kanzlei",
+    "Dieser Link ist 7 Tage gültig. Falls er abläuft, kann Ihre Kanzlei",
     "Ihnen eine neue Einladung zusenden.",
     "",
     "Bei Fragen wenden Sie sich bitte direkt an Ihre Kanzlei.",
     "",
-    "Mit freundlichen Gruessen",
+    "Mit freundlichen Grüßen",
     kanzleiName,
   ].join("\n");
 
@@ -66,8 +66,8 @@ export function portalInviteEmail(params: PortalInviteEmailParams): {
                 Guten Tag <strong>${mandantName}</strong>,
               </p>
               <p style="margin:0 0 16px;color:#3f3f46;font-size:15px;line-height:1.6;">
-                die Kanzlei <strong>${kanzleiName}</strong> laedt Sie ein, das Mandantenportal zu nutzen.
-                Ueber das Portal koennen Sie den Fortschritt Ihrer Akte einsehen, freigegebene
+                die Kanzlei <strong>${kanzleiName}</strong> lädt Sie ein, das Mandantenportal zu nutzen.
+                Über das Portal können Sie den Fortschritt Ihrer Akte einsehen, freigegebene
                 Dokumente herunterladen und sicher mit Ihrer Kanzlei kommunizieren.
               </p>
               <p style="margin:0 0 8px;color:#71717a;font-size:13px;">
@@ -80,11 +80,11 @@ export function portalInviteEmail(params: PortalInviteEmailParams): {
                 </a>
               </div>
               <p style="margin:0 0 8px;color:#a1a1aa;font-size:13px;text-align:center;">
-                Dieser Link ist <strong>7 Tage</strong> gueltig.
+                Dieser Link ist <strong>7 Tage</strong> gültig.
               </p>
               <hr style="border:none;border-top:1px solid #e4e4e7;margin:24px 0;">
               <p style="margin:0;color:#a1a1aa;font-size:12px;line-height:1.5;">
-                Falls Sie diese Einladung nicht erwartet haben, koennen Sie diese E-Mail ignorieren.
+                Falls Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail ignorieren.
                 Bei Fragen wenden Sie sich bitte direkt an Ihre Kanzlei.
               </p>
             </td>
@@ -93,7 +93,7 @@ export function portalInviteEmail(params: PortalInviteEmailParams): {
           <tr>
             <td style="background:#fafafa;padding:20px 40px;border-top:1px solid #e4e4e7;">
               <p style="margin:0;color:#a1a1aa;font-size:12px;">
-                Mit freundlichen Gruessen &mdash; ${kanzleiName}
+                Mit freundlichen Grüßen &mdash; ${kanzleiName}
               </p>
             </td>
           </tr>

@@ -194,7 +194,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
     const eligible = chosen.filter((i) => BATCH_ELIGIBLE[action].includes(i.status));
     const skipped = chosen.length - eligible.length;
     if (eligible.length === 0) {
-      setBatchMessage(`${label}: keine der ausgewaehlten Rechnungen ist dafuer geeignet.`);
+      setBatchMessage(`${label}: keine der ausgewählten Rechnungen ist dafür geeignet.`);
       return;
     }
     setBatchBusy(true);
@@ -207,7 +207,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
         const nr = (id: string) => invoices.find((i) => i.id === id)?.rechnungsnummer ?? id;
         parts.push(`${failed.length} fehlgeschlagen (${failed.map((f) => `${nr(f.id)}: ${f.error}`).join("; ")})`);
       }
-      if (skipped > 0) parts.push(`${skipped} uebersprungen (Status passt nicht)`);
+      if (skipped > 0) parts.push(`${skipped} übersprungen (Status passt nicht)`);
       await fetchInvoices();
       setBatchMessage(parts.join(", "));
     } finally {
@@ -262,7 +262,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
             color="blue"
           />
           <GlassKpiCard
-            title="Ueberfaellig"
+            title="Überfällig"
             value={String(stats.ueberfaellig)}
             icon={<Clock className="w-5 h-5" />}
             color={stats.ueberfaellig > 0 ? "amber" : "emerald"}
@@ -322,7 +322,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
               }}
               className="rounded accent-amber-600"
             />
-            <span className="text-muted-foreground">Nur ueberfaellige</span>
+            <span className="text-muted-foreground">Nur überfällige</span>
           </label>
         </div>
       </div>
@@ -331,7 +331,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
       {selected.size > 0 && (
         <div className="glass rounded-xl p-3 flex items-center gap-3">
           <span className="text-sm text-muted-foreground">
-            {selected.size} ausgewaehlt
+            {selected.size} ausgewählt
           </span>
           <div className="flex gap-2 ml-auto">
             <button
@@ -341,7 +341,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
             >
               <Check className="w-4 h-4" />
-              Entwuerfe stellen
+              Entwürfe stellen
             </button>
             <button
               type="button"
@@ -355,12 +355,12 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
             <button
               type="button"
               disabled={batchBusy}
-              onClick={() => runBatch("mahnen", "Mahnstufe erhoehen")}
-              title="Legt fuer jede gestellte/gemahnte Rechnung die naechste Mahnstufe an (kein Versand)"
+              onClick={() => runBatch("mahnen", "Mahnstufe erhöhen")}
+              title="Legt für jede gestellte/gemahnte Rechnung die nächste Mahnstufe an (kein Versand)"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
-              Mahnstufe erhoehen
+              Mahnstufe erhöhen
             </button>
           </div>
         </div>
@@ -383,7 +383,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
                     type="checkbox"
                     checked={selected.size === invoices.length && invoices.length > 0}
                     onChange={toggleSelectAll}
-                    className="rounded accent-blue-600"
+                    className="rounded accent-[var(--al-brand-strong)]"
                   />
                 </th>
                 {(
@@ -393,7 +393,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
                     { field: null, label: "Mandant" },
                     { field: "betragBrutto", label: "Betrag" },
                     { field: "status", label: "Status" },
-                    { field: "faelligAm", label: "Faelligkeit" },
+                    { field: "faelligAm", label: "Fälligkeit" },
                   ] satisfies { field: SortField | null; label: string }[]
                 ).map((col) =>
                   col.field === null ? (
@@ -449,7 +449,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
                           type="checkbox"
                           checked={selected.has(inv.id)}
                           onChange={() => toggleSelect(inv.id)}
-                          className="rounded accent-blue-600"
+                          className="rounded accent-[var(--al-brand-strong)]"
                         />
                       </td>
                       <td className="p-3">
@@ -497,7 +497,7 @@ export function InvoiceList({ akteId }: InvoiceListProps = {}) {
                           {formatDate(inv.faelligAm)}
                           {daysOverdue && (
                             <span className="block text-xs">
-                              {daysOverdue} Tage ueberfaellig
+                              {daysOverdue} Tage überfällig
                             </span>
                           )}
                         </span>

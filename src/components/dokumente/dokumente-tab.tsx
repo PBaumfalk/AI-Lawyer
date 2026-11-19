@@ -366,8 +366,8 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
       if (!res.ok) throw new Error("Fehler beim Umschalten");
       toast.success(
         newValue
-          ? "Dokument fuer Mandant sichtbar"
-          : "Dokument fuer Mandant verborgen"
+          ? "Dokument für Mandant sichtbar"
+          : "Dokument für Mandant verborgen"
       );
     } catch {
       // Revert optimistic update
@@ -376,7 +376,7 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
           d.id === doc.id ? { ...d, mandantSichtbar: !newValue } : d
         )
       );
-      toast.error("Sichtbarkeit konnte nicht geaendert werden");
+      toast.error("Sichtbarkeit konnte nicht geändert werden");
     }
   };
 
@@ -609,7 +609,7 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
           {dokumente.filter((d) => d.mimeType === "application/pdf").length >= 2 && (
             <Button size="sm" variant="outline" onClick={() => setMergeOpen(true)}>
               <Combine className="w-4 h-4 mr-1.5" />
-              PDFs zusammenfuehren
+              PDFs zusammenführen
             </Button>
           )}
           <Button
@@ -848,8 +848,8 @@ export function DokumenteTab({ akteId, initialDokumente }: DokumenteTabProps) {
                         }`}
                         title={
                           dok.mandantSichtbar
-                            ? "Fuer Mandant sichtbar"
-                            : "Fuer Mandant unsichtbar"
+                            ? "Für Mandant sichtbar"
+                            : "Für Mandant unsichtbar"
                         }
                       >
                         {dok.mandantSichtbar ? (

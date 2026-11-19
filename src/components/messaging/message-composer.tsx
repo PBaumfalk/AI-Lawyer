@@ -352,7 +352,7 @@ export function MessageComposer({
           type="button"
           onClick={openDmsPicker}
           className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-foreground transition-colors"
-          title="Dokument anhaengen"
+          title="Dokument anhängen"
         >
           <Paperclip className="w-5 h-5" />
         </button>
@@ -362,7 +362,7 @@ export function MessageComposer({
           type="button"
           onClick={insertHelenaMention}
           className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-brand-600 transition-colors"
-          title="@Helena erwaehnen"
+          title="@Helena erwähnen"
         >
           <Bot className="w-5 h-5" />
         </button>
@@ -384,7 +384,8 @@ export function MessageComposer({
           type="button"
           onClick={handleSubmit}
           disabled={sending || !text.trim()}
-          className="p-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          aria-label="Senden"
+          className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {sending ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -400,7 +401,7 @@ export function MessageComposer({
           <div className="glass-panel-elevated rounded-xl shadow-2xl w-full max-w-md max-h-[60vh] flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 dark:border-white/[0.06]">
               <h3 className="font-semibold text-sm text-foreground">
-                Dokument anhaengen
+                Dokument anhängen
               </h3>
               <button
                 type="button"
@@ -463,7 +464,7 @@ export function MessageComposer({
                         </span>
                         {isAttached && (
                           <span className="text-xs text-muted-foreground ml-auto">
-                            angehaengt
+                            angehängt
                           </span>
                         )}
                       </button>

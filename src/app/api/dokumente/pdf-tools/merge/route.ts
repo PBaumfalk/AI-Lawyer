@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger JSON-Body" },
+      { error: "Ungültiger JSON-Body" },
       { status: 400 }
     );
   }
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   // Validate input
   if (!body.dokumentIds || !Array.isArray(body.dokumentIds) || body.dokumentIds.length < 2) {
     return NextResponse.json(
-      { error: "Mindestens 2 Dokument-IDs muessen angegeben werden" },
+      { error: "Mindestens 2 Dokument-IDs müssen angegeben werden" },
       { status: 400 }
     );
   }
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     const missingIds = body.dokumentIds.filter((id) => !foundIds.has(id));
     return NextResponse.json(
       {
-        error: `Dokumente nicht gefunden oder gehoeren nicht zur Akte: ${missingIds.join(", ")}`,
+        error: `Dokumente nicht gefunden oder gehören nicht zur Akte: ${missingIds.join(", ")}`,
       },
       { status: 400 }
     );
@@ -129,10 +129,10 @@ export async function POST(request: NextRequest) {
   try {
     mergedBuffer = await mergePdfs(buffers, filenames);
   } catch (err: any) {
-    console.error("[PDF-MERGE] Zusammenfuehren fehlgeschlagen:", err);
+    console.error("[PDF-MERGE] Zusammenführen fehlgeschlagen:", err);
     return NextResponse.json(
       {
-        error: `PDF-Zusammenfuehrung fehlgeschlagen: ${err.message ?? "Stirling-PDF nicht erreichbar"}`,
+        error: `PDF-Zusammenführung fehlgeschlagen: ${err.message ?? "Stirling-PDF nicht erreichbar"}`,
       },
       { status: 502 }
     );
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error("[PDF-MERGE] Speichern fehlgeschlagen:", err);
     return NextResponse.json(
-      { error: "Zusammengefuehrtes PDF konnte nicht gespeichert werden" },
+      { error: "Zusammengeführtes PDF konnte nicht gespeichert werden" },
       { status: 500 }
     );
   }

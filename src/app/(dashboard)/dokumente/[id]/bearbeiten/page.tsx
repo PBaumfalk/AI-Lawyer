@@ -50,7 +50,7 @@ export default async function BearbeitenPage({ params }: BearbeitenPageProps) {
           className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
         >
           <ArrowLeft className="w-4 h-4" />
-          Zurueck zum Dokument
+          Zurück zum Dokument
         </Link>
         <span className="text-slate-300 dark:text-slate-600">|</span>
         <span className="text-sm font-medium truncate">{dokument.name}</span>

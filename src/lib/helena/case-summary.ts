@@ -76,7 +76,7 @@ const timelineEventSchema = z.object({
 const keyFactSchema = z.object({
   label: z
     .string()
-    .describe("Fact label, e.g. Streitwert, Gegner, Naechste Frist"),
+    .describe("Fact label, e.g. Streitwert, Gegner, Nächste Frist"),
   value: z.string().describe("The fact value"),
   kategorie: z.enum([
     "PARTEI",
@@ -107,20 +107,20 @@ const SYSTEM_PROMPT = `Du bist Helena, KI-Assistentin einer Kanzlei. Erstelle ei
 
 Extrahiere aus den vorliegenden Aktendaten:
 
-1) Eine kurze Zusammenfassung (3-5 Saetze) des Falls: Worum geht es, wer ist beteiligt, wie ist der aktuelle Stand.
+1) Eine kurze Zusammenfassung (3-5 Sätze) des Falls: Worum geht es, wer ist beteiligt, wie ist der aktuelle Stand.
 
 2) Eine chronologische Timeline der wichtigsten Ereignisse:
    - Dokumente (Eingang, Erstellung)
    - Fristen und Termine
    - Kommunikation (Schreiben, E-Mails)
-   - Entscheidungen (Beschluesse, Urteile)
+   - Entscheidungen (Beschlüsse, Urteile)
    - Sortiere nach Datum aufsteigend
 
 3) Key Facts (strukturierte Eckdaten):
    - PARTEI: Beteiligte Parteien mit Rollen
    - VERFAHREN: Aktenzeichen, Sachgebiet, Status, Gericht
    - FINANZEN: Streitwert/Gegenstandswert falls vorhanden
-   - FRIST: Naechste anstehende Fristen/Termine
+   - FRIST: Nächste anstehende Fristen/Termine
    - SONSTIGES: Weitere relevante Eckdaten
 
 Basiere alles auf den vorliegenden Dokumenten und Aktendaten. Erfinde keine Fakten.
@@ -249,7 +249,7 @@ export async function generateCaseSummary(options: {
     model,
     schema: caseSummarySchema,
     system: SYSTEM_PROMPT,
-    prompt: `Erstelle eine Fallzusammenfassung fuer folgende Akte:\n\n${contextString}`,
+    prompt: `Erstelle eine Fallzusammenfassung für folgende Akte:\n\n${contextString}`,
   });
 
   // Track token usage

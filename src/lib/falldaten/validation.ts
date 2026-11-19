@@ -30,7 +30,7 @@ export const falldatenFeldSchema = z.object({
     }
     return true;
   },
-  { message: "Optionen sind erforderlich fuer Select und Mehrfachauswahl Felder" }
+  { message: "Optionen sind erforderlich für Select und Mehrfachauswahl Felder" }
 );
 
 export const templateSchemaSchema = z.object({
@@ -41,7 +41,7 @@ export const templateSchemaSchema = z.object({
     const keys = data.felder.map((f) => f.key);
     return new Set(keys).size === keys.length;
   },
-  { message: "Feld-Keys muessen innerhalb eines Templates eindeutig sein" }
+  { message: "Feld-Keys müssen innerhalb eines Templates eindeutig sein" }
 );
 
 export const createTemplateSchema = z.object({

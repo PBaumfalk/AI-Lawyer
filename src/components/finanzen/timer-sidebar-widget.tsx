@@ -171,15 +171,15 @@ export function TimerSidebarWidget() {
           <div className="space-y-2 pt-2 border-t border-border/50">
             <label className="block text-xs text-muted-foreground">
               {isStundenhonorar
-                ? "Taetigkeit (Pflichtangabe)"
-                : "Taetigkeit (optional)"}
+                ? "Tätigkeit (Pflichtangabe)"
+                : "Tätigkeit (optional)"}
             </label>
             <input
               type="text"
               value={beschreibung}
               onChange={(e) => setBeschreibung(e.target.value)}
               placeholder="Was wurde gemacht?"
-              className="w-full h-8 px-2 text-xs rounded bg-black/[0.04] dark:bg-white/[0.08] border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full h-8 px-2 text-xs rounded bg-black/[0.04] dark:bg-white/[0.08] border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               autoFocus
             />
             <div className="flex gap-1.5">

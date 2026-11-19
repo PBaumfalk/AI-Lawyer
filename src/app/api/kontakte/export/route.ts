@@ -12,7 +12,7 @@ const KONTAKTE_EXPORT_CONFIG: ExportConfig = {
   columns: [
     { key: "name", header: "Name", width: 28 },
     { key: "firma", header: "Firma", width: 24 },
-    { key: "strasse", header: "Strasse", width: 24 },
+    { key: "strasse", header: "Straße", width: 24 },
     { key: "plz", header: "PLZ", width: 8 },
     { key: "ort", header: "Ort", width: 18 },
     { key: "telefon", header: "Telefon", width: 18 },
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
   if (format !== "csv" && format !== "xlsx") {
     return NextResponse.json(
-      { error: "Ungueltiges Format. Erlaubt: csv, xlsx" },
+      { error: "Ungültiges Format. Erlaubt: csv, xlsx" },
       { status: 400 }
     );
   }
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     ort: anschrift?.ort ?? "",
     telefon: k.telefon ?? "",
     email: k.email ?? "",
-    typ: k.typ === "NATUERLICH" ? "Natuerliche Person" : "Juristische Person",
+    typ: k.typ === "NATUERLICH" ? "Natürliche Person" : "Juristische Person",
     };
   });
 

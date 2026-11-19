@@ -55,7 +55,7 @@ const ALERT_TYPE_CONFIG: Record<
   NEUES_URTEIL: {
     icon: Scale,
     label: "Neues Urteil",
-    color: "text-violet-600 dark:text-violet-400",
+    color: "text-brand-600 dark:text-brand-400",
   },
 };
 
@@ -139,7 +139,7 @@ const TYPE_CHIPS = [
 ] as const;
 
 const PRIORITY_CHIPS = [
-  { value: null, label: "Alle Prioritaeten" },
+  { value: null, label: "Alle Prioritäten" },
   { value: "7", label: "Hoch (7+)" },
 ] as const;
 
@@ -273,7 +273,7 @@ export function AlertCenter() {
               className={cn(
                 "px-3 py-1 text-xs rounded-full border transition-colors",
                 filters.typ === chip.value
-                  ? "bg-[oklch(45%_0.2_260/0.1)] text-[oklch(45%_0.2_260)] border-[oklch(45%_0.2_260/0.3)]"
+                  ? "bg-primary-soft text-primary-strong border-brand-200 dark:border-brand-800"
                   : "bg-white text-slate-600 border-slate-200 hover:border-slate-400 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700 dark:hover:border-slate-500",
               )}
             >
@@ -286,7 +286,7 @@ export function AlertCenter() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-medium text-muted-foreground mr-1">
-              Prioritaet:
+              Priorität:
             </span>
             {PRIORITY_CHIPS.map((chip) => (
               <button
@@ -295,7 +295,7 @@ export function AlertCenter() {
                 className={cn(
                   "px-3 py-1 text-xs rounded-full border transition-colors",
                   filters.prioritaet === chip.value
-                    ? "bg-[oklch(45%_0.2_260/0.1)] text-[oklch(45%_0.2_260)] border-[oklch(45%_0.2_260/0.3)]"
+                    ? "bg-primary-soft text-primary-strong border-brand-200 dark:border-brand-800"
                     : "bg-white text-slate-600 border-slate-200 hover:border-slate-400 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700 dark:hover:border-slate-500",
                 )}
               >
@@ -313,7 +313,7 @@ export function AlertCenter() {
                 className={cn(
                   "px-3 py-1 text-xs rounded-full border transition-colors",
                   filters.gelesen === chip.value
-                    ? "bg-[oklch(45%_0.2_260/0.1)] text-[oklch(45%_0.2_260)] border-[oklch(45%_0.2_260/0.3)]"
+                    ? "bg-primary-soft text-primary-strong border-brand-200 dark:border-brand-800"
                     : "bg-white text-slate-600 border-slate-200 hover:border-slate-400 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700 dark:hover:border-slate-500",
                 )}
               >
@@ -373,7 +373,7 @@ export function AlertCenter() {
                 className={cn(
                   "flex items-start gap-4 px-6 py-4 transition-colors",
                   !alert.gelesen &&
-                    "border-l-2 border-[oklch(45%_0.2_260)] bg-[oklch(45%_0.2_260/0.03)]",
+                    "border-l-2 border-primary-strong bg-brand-50/60 dark:bg-brand-950/30",
                   alert.gelesen && "opacity-60",
                 )}
               >
@@ -416,7 +416,7 @@ export function AlertCenter() {
                   <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                     <Link
                       href={`/akten/${alert.akteId}`}
-                      className="inline-flex items-center gap-1 text-[oklch(45%_0.2_260)] hover:underline"
+                      className="inline-flex items-center gap-1 text-primary-strong hover:underline"
                     >
                       <ExternalLink className="w-3 h-3" />
                       {alert.akte.aktenzeichen}
@@ -437,7 +437,7 @@ export function AlertCenter() {
                         className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-[10px]"
                       >
                         <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Automatisch geloest
+                        Automatisch gelöst
                         {resolveReason && (
                           <span className="ml-1 font-normal">
                             — {resolveReason}
@@ -486,7 +486,7 @@ export function AlertCenter() {
             disabled={page <= 1}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
-            Zurueck
+            Zurück
           </Button>
           <span className="text-sm text-muted-foreground">
             Seite {page} von {pages}

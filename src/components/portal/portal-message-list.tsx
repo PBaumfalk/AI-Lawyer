@@ -167,7 +167,7 @@ export function PortalMessageList({
             type="button"
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="text-xs text-violet-500 hover:text-violet-400 transition-colors disabled:opacity-50"
+            className="text-xs text-brand-600 dark:text-brand-400 hover:text-brand-400 transition-colors disabled:opacity-50"
           >
             {loadingMore ? (
               <span className="flex items-center gap-1.5">
@@ -175,7 +175,7 @@ export function PortalMessageList({
                 Laden...
               </span>
             ) : (
-              "Aeltere Nachrichten laden"
+              "Ältere Nachrichten laden"
             )}
           </button>
         </div>

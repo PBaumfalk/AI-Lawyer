@@ -114,7 +114,7 @@ export function SachstandTimeline({ akteId }: { akteId: string }) {
     return (
       <div className="glass-card rounded-xl p-8 text-center">
         <p className="text-sm text-muted-foreground">
-          Noch keine Eintraege vorhanden.
+          Noch keine Einträge vorhanden.
         </p>
       </div>
     );

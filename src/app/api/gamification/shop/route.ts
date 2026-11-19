@@ -95,10 +95,10 @@ export async function POST(request: Request) {
 
     // Known business errors
     const businessErrors = [
-      "Item nicht verfuegbar",
+      "Item nicht verfügbar",
       "Kein GameProfile",
       "Level 25 erforderlich",
-      "Nicht genuegend Runen",
+      "Nicht genügend Runen",
     ];
 
     if (businessErrors.includes(message)) {
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     // Zod validation errors
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Ungueltige Eingabe" },
+        { error: "Ungültige Eingabe" },
         { status: 400 },
       );
     }

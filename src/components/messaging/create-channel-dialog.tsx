@@ -73,7 +73,7 @@ export function CreateChannelDialog({
         <DialogHeader>
           <DialogTitle>Neuer Kanal</DialogTitle>
           <DialogDescription>
-            Erstelle einen neuen Kanal fuer die Kanzlei-Kommunikation.
+            Erstelle einen neuen Kanal für die Kanzlei-Kommunikation.
           </DialogDescription>
         </DialogHeader>
 
@@ -109,7 +109,7 @@ export function CreateChannelDialog({
               id="channel-desc"
               value={beschreibung}
               onChange={(e) => setBeschreibung(e.target.value)}
-              placeholder="Wofuer wird dieser Kanal verwendet?"
+              placeholder="Wofür wird dieser Kanal verwendet?"
               maxLength={500}
               rows={2}
               className="glass-input w-full px-3 py-2 rounded-lg text-sm resize-none"
@@ -127,7 +127,7 @@ export function CreateChannelDialog({
             <button
               type="submit"
               disabled={!name.trim() || submitting}
-              className="px-4 py-2 text-sm rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

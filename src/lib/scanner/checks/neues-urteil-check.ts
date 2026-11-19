@@ -67,7 +67,7 @@ interface BriefingParams {
 /** Generate a structured Helena briefing explaining why the Urteil is relevant. */
 async function generateBriefing(params: BriefingParams): Promise<string> {
   const fallback =
-    "Automatische Analyse nicht verfuegbar. Bitte pruefen Sie das Urteil manuell.";
+    "Automatische Analyse nicht verfügbar. Bitte prüfen Sie das Urteil manuell.";
 
   try {
     const model = await getModel();
@@ -76,12 +76,12 @@ async function generateBriefing(params: BriefingParams): Promise<string> {
       maxTokens: 500,
       system: `Du bist Helena, die KI-Rechtsanwaltsfachangestellte. Erstelle eine kurze, professionelle Analyse in genau drei Abschnitten:
 
-1. "Was wurde entschieden?" - 1-2 Saetze ueber das Urteil
-2. "Warum relevant fuer diese Akte?" - 1-2 Saetze zur Verbindung
-3. "Moegliche Auswirkungen" - 1-2 Saetze mit konkreten Handlungsempfehlungen
+1. "Was wurde entschieden?" - 1-2 Sätze über das Urteil
+2. "Warum relevant für diese Akte?" - 1-2 Sätze zur Verbindung
+3. "Mögliche Auswirkungen" - 1-2 Sätze mit konkreten Handlungsempfehlungen
 
-Antworte auf Deutsch. Sei praezise und fachlich. Verwende keine Markdown-Formatierung.`,
-      prompt: `Analysiere die Relevanz dieses Urteils fuer die folgende Akte.
+Antworte auf Deutsch. Sei präzise und fachlich. Verwende keine Markdown-Formatierung.`,
+      prompt: `Analysiere die Relevanz dieses Urteils für die folgende Akte.
 
 Urteil:
 - Gericht: ${params.gericht}
@@ -92,7 +92,7 @@ Urteil:
 Akte:
 - Kurzrubrum: ${params.kurzrubrum}
 - Sachgebiet: ${params.sachgebiet}
-- Aehnlichkeitsscore: ${(params.score * 100).toFixed(1)}%
+- Ähnlichkeitsscore: ${(params.score * 100).toFixed(1)}%
 - Kontext: ${params.akteSummaryText.slice(0, 1500)}`,
     });
 
@@ -285,7 +285,7 @@ export async function runNeuesUrteilCheck(): Promise<{
               akteId: match.akteId,
               userId,
               typ: "NEUES_URTEIL",
-              titel: `Relevantes Urteil fuer ${match.kurzrubrum}`,
+              titel: `Relevantes Urteil für ${match.kurzrubrum}`,
               inhalt: briefing,
               severity: scoreToSeverity(match.score),
               meta: {

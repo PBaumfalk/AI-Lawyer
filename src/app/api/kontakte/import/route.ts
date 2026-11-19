@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       mapping = JSON.parse(mappingStr);
     } catch {
       return NextResponse.json(
-        { error: "Ungueltige Feld-Zuordnung (kein gueltiges JSON)" },
+        { error: "Ungültige Feld-Zuordnung (kein gültiges JSON)" },
         { status: 400 }
       );
     }

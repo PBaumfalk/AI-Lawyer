@@ -44,12 +44,12 @@ export async function syncCalDavKonto(kontoId: string): Promise<SyncResult> {
     }
 
     if (!konto.aktiv) {
-      log.info({ kontoId }, "Konto inaktiv, ueberspringe Sync");
+      log.info({ kontoId }, "Konto inaktiv, überspringe Sync");
       return result;
     }
 
     if (!konto.selectedCalendarUrl) {
-      result.errors.push("Kein Kalender ausgewaehlt (selectedCalendarUrl fehlt)");
+      result.errors.push("Kein Kalender ausgewählt (selectedCalendarUrl fehlt)");
       await updateKontoStatus(kontoId, "FEHLER", result.errors);
       return result;
     }
@@ -75,7 +75,7 @@ export async function syncCalDavKonto(kontoId: string): Promise<SyncResult> {
     const remoteCTag = calendar?.ctag ?? null;
 
     if (remoteCTag && remoteCTag === konto.ctag) {
-      log.info({ kontoId, ctag: remoteCTag }, "CTag unveraendert, kein Sync noetig");
+      log.info({ kontoId, ctag: remoteCTag }, "CTag unverändert, kein Sync nötig");
       // Still update letzterSync to show health
       await (prisma as any).calDavKonto.update({
         where: { id: kontoId },

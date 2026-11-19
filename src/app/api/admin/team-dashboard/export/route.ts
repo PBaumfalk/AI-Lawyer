@@ -233,7 +233,7 @@ function generateCsv(data: MonthlyReportData): NextResponse {
   lines.push(
     `Rechnungen (Netto);${formatCurrency(data.billing.thisTotal)};${formatCurrency(data.billing.prevTotal)};${data.billing.deltaPercent}%`,
   );
-  lines.push(`Quest-Erfuellungsquote;${data.questRate}%;;`);
+  lines.push(`Quest-Erfüllungsquote;${data.questRate}%;;`);
 
   // Blank line before weekly breakdown
   lines.push("");
@@ -368,7 +368,7 @@ async function generatePdf(data: MonthlyReportData): Promise<NextResponse> {
   y -= 18;
 
   if (data.backlog.weeks.length === 0) {
-    page.drawText("Keine Daten fuer diesen Zeitraum.", {
+    page.drawText("Keine Daten für diesen Zeitraum.", {
       x: marginLeft,
       y,
       font,
@@ -503,7 +503,7 @@ async function generatePdf(data: MonthlyReportData): Promise<NextResponse> {
 
   // ── 5. Section: Quest-Erfuellungsquote ──
   ensureSpace(60);
-  page.drawText("3. Quest-Erfuellungsquote", {
+  page.drawText("3. Quest-Erfüllungsquote", {
     x: marginLeft,
     y,
     font: fontBold,
@@ -512,7 +512,7 @@ async function generatePdf(data: MonthlyReportData): Promise<NextResponse> {
   });
   y -= 18;
 
-  page.drawText(`Team-Erfuellungsquote: ${data.questRate}%`, {
+  page.drawText(`Team-Erfüllungsquote: ${data.questRate}%`, {
     x: marginLeft,
     y,
     font,

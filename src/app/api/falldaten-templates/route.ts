@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   // Validate status filter if provided
   if (statusFilter && !Object.values(FalldatenTemplateStatus).includes(statusFilter)) {
     return NextResponse.json(
-      { error: `Ungueltiger Status: ${statusFilter}` },
+      { error: `Ungültiger Status: ${statusFilter}` },
       { status: 400 }
     );
   }
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
   // Validate sachgebiet filter if provided
   if (sachgebietFilter && !Object.values(Sachgebiet).includes(sachgebietFilter)) {
     return NextResponse.json(
-      { error: `Ungueltiges Sachgebiet: ${sachgebietFilter}` },
+      { error: `Ungültiges Sachgebiet: ${sachgebietFilter}` },
       { status: 400 }
     );
   }
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     // Validate sachgebiet is a valid Prisma enum value if provided
     if (sachgebiet && !Object.values(Sachgebiet).includes(sachgebiet as Sachgebiet)) {
       return NextResponse.json(
-        { error: `Ungueltiges Sachgebiet: ${sachgebiet}` },
+        { error: `Ungültiges Sachgebiet: ${sachgebiet}` },
         { status: 400 }
       );
     }

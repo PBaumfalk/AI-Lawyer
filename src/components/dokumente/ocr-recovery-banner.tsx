@@ -182,7 +182,7 @@ export function OcrRecoveryBanner({
       {state === "vision" && (
         <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-xs">Vision-Analyse laeuft...</span>
+          <span className="text-xs">Vision-Analyse läuft...</span>
         </div>
       )}
       {state === "saving" && (
@@ -198,7 +198,7 @@ export function OcrRecoveryBanner({
           <textarea
             value={manualText}
             onChange={(e) => setManualText(e.target.value)}
-            placeholder="Dokumenttext hier einfuegen..."
+            placeholder="Dokumenttext hier einfügen..."
             className="w-full min-h-32 p-3 text-sm border border-amber-200 dark:border-amber-800 rounded-lg bg-white/80 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-y"
             autoFocus
           />

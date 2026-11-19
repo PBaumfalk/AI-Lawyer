@@ -209,7 +209,7 @@ export default function KiEinstellungenPage() {
               value: apiKey,
               type: "string",
               category: "ai",
-              label: "API-Schluessel",
+              label: "API-Schlüssel",
             },
             {
               key: "ai.provider.model",
@@ -304,10 +304,10 @@ export default function KiEinstellungenPage() {
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
           <div>
             <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
-              Helena ist gerade nicht verfuegbar
+              Helena ist gerade nicht verfügbar
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Der KI-Provider ist nicht erreichbar. Bitte pruefen Sie die
+              Der KI-Provider ist nicht erreichbar. Bitte prüfen Sie die
               Verbindungseinstellungen.
             </p>
           </div>
@@ -360,7 +360,7 @@ export default function KiEinstellungenPage() {
           {(provider === "openai" || provider === "anthropic") && (
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">
-                API-Schluessel
+                API-Schlüssel
               </label>
               <input
                 type="password"
@@ -418,7 +418,7 @@ export default function KiEinstellungenPage() {
             <button
               onClick={handleTest}
               disabled={testing}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50 transition-colors"
             >
               {testing ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -483,13 +483,17 @@ export default function KiEinstellungenPage() {
                 Proaktive Aktenanalyse
               </p>
               <p className="text-xs text-muted-foreground">
-                Helena analysiert Akten regelmaessig auf neue Aufgaben
+                Helena analysiert Akten regelmäßig auf neue Aufgaben
               </p>
             </div>
             <button
+              type="button"
+              role="switch"
+              aria-checked={scanEnabled}
+              aria-label="Proaktive Aktenanalyse"
               onClick={() => setScanEnabled(!scanEnabled)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                scanEnabled ? "bg-blue-600" : "bg-slate-600"
+                scanEnabled ? "bg-primary-strong" : "bg-[var(--al-line)]"
               }`}
             >
               <span
@@ -507,13 +511,17 @@ export default function KiEinstellungenPage() {
                 Tagesbriefing
               </p>
               <p className="text-xs text-muted-foreground">
-                Helena erstellt taeglich ein Briefing ueber anstehende Aufgaben
+                Helena erstellt täglich ein Briefing über anstehende Aufgaben
               </p>
             </div>
             <button
+              type="button"
+              role="switch"
+              aria-checked={briefingEnabled}
+              aria-label="Tagesbriefing"
               onClick={() => setBriefingEnabled(!briefingEnabled)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                briefingEnabled ? "bg-blue-600" : "bg-slate-600"
+                briefingEnabled ? "bg-primary-strong" : "bg-[var(--al-line)]"
               }`}
             >
               <span
@@ -555,7 +563,7 @@ export default function KiEinstellungenPage() {
                 onClick={() => setUsagePeriod(p)}
                 className={`px-3 py-1 text-xs rounded-lg transition-colors ${
                   usagePeriod === p
-                    ? "bg-blue-600 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-white/10"
                 }`}
               >
@@ -664,7 +672,7 @@ export default function KiEinstellungenPage() {
 
             {usage.totalTokens === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Keine Token-Nutzung im gewaehlten Zeitraum.
+                Keine Token-Nutzung im gewählten Zeitraum.
               </p>
             )}
           </div>
@@ -680,7 +688,7 @@ export default function KiEinstellungenPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50 transition-colors"
         >
           {saving ? (
             <Loader2 className="w-4 h-4 animate-spin" />

@@ -27,7 +27,7 @@ export async function POST(
   // RBAC: Only ANWALT and ADMIN can perform Storno
   if (userRole !== 'ANWALT' && userRole !== 'ADMIN') {
     return NextResponse.json(
-      { error: 'Keine Berechtigung. Nur Anwaelte und Administratoren koennen Stornierungen durchfuehren.' },
+      { error: 'Keine Berechtigung. Nur Anwälte und Administratoren können Stornierungen durchführen.' },
       { status: 403 },
     );
   }
@@ -39,7 +39,7 @@ export async function POST(
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 });
+    return NextResponse.json({ error: 'Ungültiger Request-Body' }, { status: 400 });
   }
 
   const parsed = stornoSchema.safeParse(body);
@@ -64,7 +64,7 @@ export async function POST(
 
     if (originalBuchung.akteId !== akteId) {
       return NextResponse.json(
-        { error: 'Buchung gehoert nicht zu dieser Akte' },
+        { error: 'Buchung gehört nicht zu dieser Akte' },
         { status: 400 },
       );
     }

@@ -99,7 +99,7 @@ export function DraftInbox() {
           setPage(p);
         }
       } catch {
-        toast.error("Entwuerfe konnten nicht geladen werden");
+        toast.error("Entwürfe konnten nicht geladen werden");
       } finally {
         setLoading(false);
       }
@@ -206,7 +206,7 @@ export function DraftInbox() {
         <Filter className="w-4 h-4 text-muted-foreground" />
 
         {/* Type filter buttons */}
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           {DRAFT_TYPES.map((dt) => (
             <Button
               key={dt.value}
@@ -247,23 +247,23 @@ export function DraftInbox() {
       {/* Draft list */}
       {loading && drafts.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground text-sm">
-          Lade Entwuerfe...
+          Lade Entwürfe...
         </div>
       ) : drafts.length === 0 ? (
         <div className="text-center py-12">
-          <Sparkles className="w-10 h-10 mx-auto mb-3 text-violet-300 dark:text-violet-700" />
+          <Sparkles className="w-10 h-10 mx-auto mb-3 text-brand-300 dark:text-brand-700" />
           <p className="text-muted-foreground text-sm">
-            Keine ausstehenden Entwuerfe
+            Keine ausstehenden Entwürfe
           </p>
           <p className="text-muted-foreground/60 text-xs mt-1">
-            Helena-Entwuerfe erscheinen hier zur Pruefung
+            Helena-Entwürfe erscheinen hier zur Prüfung
           </p>
         </div>
       ) : (
         <>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Badge variant="secondary">{total}</Badge>
-            <span>ausstehende Entwuerfe</span>
+            <span>ausstehende Entwürfe</span>
           </div>
 
           <div className="space-y-3">
@@ -276,7 +276,7 @@ export function DraftInbox() {
                     const result = await handleAccept(id);
                     toast.success("Angenommen", {
                       action: {
-                        label: "Rueckgaengig",
+                        label: "Rückgängig",
                         onClick: async () => {
                           try {
                             await fetch(`/api/helena/drafts/${id}/undo`, {
@@ -287,7 +287,7 @@ export function DraftInbox() {
                                 typ: result.typ,
                               }),
                             });
-                            toast.info("Rueckgaengig gemacht");
+                            toast.info("Rückgängig gemacht");
                             fetchDrafts(1);
                           } catch {
                             toast.error("Undo fehlgeschlagen");

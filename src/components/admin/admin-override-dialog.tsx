@@ -46,7 +46,7 @@ export function AdminOverrideDialog({
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Fehler beim Erstellen der Zugriffsueberschreibung");
+        setError(data.error || "Fehler beim Erstellen der Zugriffsüberschreibung");
         return;
       }
 
@@ -71,7 +71,7 @@ export function AdminOverrideDialog({
       <div className="bg-background rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold">Zugriff uebernehmen</h2>
+          <h2 className="text-lg font-semibold">Zugriff übernehmen</h2>
           <button
             onClick={() => onOpenChange(false)}
             className="p-1 rounded-md hover:bg-muted"
@@ -89,12 +89,12 @@ export function AdminOverrideDialog({
           )}
           {success && (
             <div className="p-3 text-sm text-emerald-700 bg-emerald-50 rounded-md border border-emerald-200">
-              Zugriffsueberschreibung erfolgreich erstellt
+              Zugriffsüberschreibung erfolgreich erstellt
             </div>
           )}
 
           <p className="text-sm text-muted-foreground">
-            Sie erstellen eine Admin-Zugriffsueberschreibung fuer Akte{" "}
+            Sie erstellen eine Admin-Zugriffsüberschreibung für Akte{" "}
             <span className="font-medium text-foreground">{aktenzeichen}</span>.
             Bitte geben Sie einen Grund an.
           </p>
@@ -106,13 +106,13 @@ export function AdminOverrideDialog({
               onChange={(e) => setGrund(e.target.value)}
               className="w-full px-3 py-2 border rounded-md bg-background text-sm"
               rows={3}
-              placeholder="Grund fuer die Zugriffsueberschreibung..."
+              placeholder="Grund für die Zugriffsüberschreibung..."
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">
-              Gueltig bis (optional)
+              Gültig bis (optional)
             </label>
             <input
               type="date"
@@ -121,7 +121,7 @@ export function AdminOverrideDialog({
               className="w-full px-3 py-2 border rounded-md bg-background text-sm"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Ohne Angabe gilt die Ueberschreibung unbefristet.
+              Ohne Angabe gilt die Überschreibung unbefristet.
             </p>
           </div>
         </div>
@@ -137,9 +137,9 @@ export function AdminOverrideDialog({
           <button
             onClick={handleSubmit}
             disabled={saving || success}
-            className="px-4 py-2 text-sm font-medium rounded-md bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50"
           >
-            {saving ? "Erstelle..." : "Zugriff uebernehmen"}
+            {saving ? "Erstelle..." : "Zugriff übernehmen"}
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 
 interface AkteTimerBridgeProps {
@@ -19,35 +19,40 @@ interface AkteTimerBridgeProps {
  */
 export function AkteTimerBridge({ akteId }: AkteTimerBridgeProps) {
   const { data: session } = useSession();
-  const startedRef = useRef(false);
+  // Stable dependency: the session object changes identity on every refetch,
+  // which used to run the cleanup (stopping the timer) while still in the Akte.
+  const userId = session?.user?.id;
 
   useEffect(() => {
-    // Only fire once per mount, and only if authenticated
-    if (!session?.user || startedRef.current) return;
-    startedRef.current = true;
+    if (!userId) return;
 
-    // Fire-and-forget: start timer without awaiting
-    fetch("/api/finanzen/zeiterfassung/timer", {
+    // Fire-and-forget start; remember whether this bridge actually started a
+    // timer, so leaving the Akte never tries to stop a timer that does not
+    // exist (that ended in a 404 in the browser console).
+    const gestartet = fetch("/api/finanzen/zeiterfassung/timer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ akteId }),
-    }).catch(() => {
-      // Silently ignore errors -- timer start is best-effort
-    });
+    })
+      .then((r) => r.ok)
+      .catch(() => false);
 
     // Stop timer when leaving the Akte (unmount)
     return () => {
-      fetch("/api/finanzen/zeiterfassung/timer", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-        // keepalive ensures the request completes even during page navigation
-        keepalive: true,
-      }).catch(() => {
-        // Best-effort stop
+      void gestartet.then((ok) => {
+        if (!ok) return;
+        fetch("/api/finanzen/zeiterfassung/timer", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+          // keepalive ensures the request completes even during page navigation
+          keepalive: true,
+        }).catch(() => {
+          // Best-effort stop
+        });
       });
     };
-  }, [akteId, session]);
+  }, [akteId, userId]);
 
   // This component renders nothing
   return null;

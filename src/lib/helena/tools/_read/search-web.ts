@@ -22,7 +22,7 @@ export function createSearchWebTool(_ctx: ToolContext) {
     execute: async (): Promise<ToolResult> => {
       return {
         error:
-          "Web-Suche ist noch nicht konfiguriert. Nutze search_gesetze und search_urteile fuer rechtliche Recherche.",
+          "Web-Suche ist noch nicht konfiguriert. Nutze search_gesetze und search_urteile für rechtliche Recherche.",
       };
     },
   });

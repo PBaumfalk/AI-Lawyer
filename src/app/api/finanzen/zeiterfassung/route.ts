@@ -277,7 +277,7 @@ export async function PATCH(request: NextRequest) {
 
     if (existing.abgerechnet) {
       return NextResponse.json(
-        { error: 'Bereits abgerechnete Eintraege koennen nicht bearbeitet werden' },
+        { error: 'Bereits abgerechnete Einträge können nicht bearbeitet werden' },
         { status: 400 },
       );
     }

@@ -49,7 +49,7 @@ export function calculateAnrechnung(
     creditAmount: effectiveCredit,
     description:
       `Anrechnung gem. Vorbem. 3 Abs. 4 VV RVG: ` +
-      `Geschaeftsgebuehr ${geschaeftsgebuehrRate.toFixed(1)} / 2 = ${halvedRate.toFixed(2)}, ` +
+      `Geschäftsgebühr ${geschaeftsgebuehrRate.toFixed(1)} / 2 = ${halvedRate.toFixed(2)}, ` +
       `begrenzt auf ${cappedRate.toFixed(2)}, ` +
       `Anrechnungsbetrag: ${effectiveCredit.toFixed(2)} EUR`,
   };

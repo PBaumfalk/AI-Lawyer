@@ -114,6 +114,7 @@ export function TicketSearchBar({
             <button
               type="button"
               onClick={handleClear}
+              aria-label="Suche leeren"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
             >
               <X className="w-4 h-4" />
@@ -123,6 +124,7 @@ export function TicketSearchBar({
         <Select
           value={defaultStatus ?? ""}
           onChange={handleStatusChange}
+          aria-label="Status filtern"
           className="w-48"
         >
           <option value="">Alle Status</option>
@@ -133,6 +135,7 @@ export function TicketSearchBar({
         <Select
           value={defaultPrioritaet ?? ""}
           onChange={handlePrioritaetChange}
+          aria-label="Priorität filtern"
           className="w-48"
         >
           <option value="">Alle Prioritäten</option>
@@ -144,6 +147,7 @@ export function TicketSearchBar({
         <Select
           value={defaultFaelligkeit ?? ""}
           onChange={handleFaelligkeitChange}
+          aria-label="Fälligkeit filtern"
           className="w-48"
         >
           <option value="">Alle Fälligkeiten</option>
@@ -155,6 +159,7 @@ export function TicketSearchBar({
           <Select
             value={defaultAkteId ?? ""}
             onChange={handleAkteChange}
+            aria-label="Akte filtern"
             className="w-48"
           >
             <option value="">Alle Akten</option>
@@ -168,6 +173,7 @@ export function TicketSearchBar({
         <Select
           value={defaultTag ?? ""}
           onChange={handleTagChange}
+          aria-label="Tag filtern"
           className="w-48"
         >
           <option value="">Alle Tags</option>
@@ -179,6 +185,7 @@ export function TicketSearchBar({
         <Select
           value={defaultSort ?? ""}
           onChange={handleSortChange}
+          aria-label="Sortierung"
           className="w-48"
         >
           <option value="">Standard-Sortierung</option>

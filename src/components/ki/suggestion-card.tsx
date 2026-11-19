@@ -93,7 +93,7 @@ const statusBadges: Record<string, { label: string; className: string }> = {
     className: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 animate-pulse",
   },
   UEBERNOMMEN: {
-    label: "Uebernommen",
+    label: "Übernommen",
     className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
   },
   ABGELEHNT: {
@@ -180,11 +180,11 @@ export function SuggestionCard({ suggestion, onStatusChange }: SuggestionCardPro
       if (status === "UEBERNOMMEN") {
         const linkedType = data.linkedType;
         const messages: Record<string, string> = {
-          KalenderEintrag: "Frist wurde in den Kalender uebernommen",
-          Beteiligter: "Beteiligter wurde zur Akte hinzugefuegt",
+          KalenderEintrag: "Frist wurde in den Kalender übernommen",
+          Beteiligter: "Beteiligter wurde zur Akte hinzugefügt",
           ChatNachricht: "Entwurf wurde gespeichert",
         };
-        toast.success(messages[linkedType] || "Vorschlag uebernommen");
+        toast.success(messages[linkedType] || "Vorschlag übernommen");
       } else if (status === "ABGELEHNT") {
         toast.info("Vorschlag abgelehnt");
       }
@@ -289,7 +289,7 @@ export function SuggestionCard({ suggestion, onStatusChange }: SuggestionCardPro
               disabled={loading}
             >
               <Check className="w-3.5 h-3.5 mr-1" />
-              Uebernehmen
+              Übernehmen
             </Button>
             <Button
               size="sm"

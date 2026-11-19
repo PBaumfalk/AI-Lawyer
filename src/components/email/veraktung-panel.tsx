@@ -477,7 +477,7 @@ export function VeraktungPanel({
               {/* Section 2: Akte search */}
               <div className="space-y-2">
                 <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                  {selectedAkte ? "Ausgewaehlte Akte" : "Akte suchen"}
+                  {selectedAkte ? "Ausgewählte Akte" : "Akte suchen"}
                 </p>
                 {selectedAkte ? (
                   <div className="flex items-center justify-between gap-3 rounded-lg border border-brand-300 dark:border-brand-700 bg-brand-50/50 dark:bg-brand-950/20 p-3">
@@ -538,7 +538,7 @@ export function VeraktungPanel({
                   <div className="flex items-center gap-2">
                     <Paperclip className="w-4 h-4 text-slate-400" />
                     <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                      Anhaenge ({selectedAnhangIds.size}/{anhaenge.length})
+                      Anhänge ({selectedAnhangIds.size}/{anhaenge.length})
                     </p>
                   </div>
                   <div className="space-y-1">
@@ -551,7 +551,7 @@ export function VeraktungPanel({
                           type="checkbox"
                           checked={selectedAnhangIds.has(anhang.id)}
                           onChange={() => toggleAnhang(anhang.id)}
-                          className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
+                          className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-ring"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-foreground truncate">
@@ -614,7 +614,7 @@ export function VeraktungPanel({
                   ) : (
                     <FolderInput className="w-4 h-4 mr-2" />
                   )}
-                  Verakten bestaetigen
+                  Verakten bestätigen
                 </Button>
 
                 {completedVeraktungen.length > 0 && (

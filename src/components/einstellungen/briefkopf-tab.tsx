@@ -46,7 +46,7 @@ export function BriefkopfTab() {
       const data = await res.json();
       setBriefkoepfe(data.briefkoepfe ?? []);
     } catch {
-      toast.error("Briefkoepfe konnten nicht geladen werden");
+      toast.error("Briefköpfe konnten nicht geladen werden");
     } finally {
       setLoading(false);
     }
@@ -74,16 +74,16 @@ export function BriefkopfTab() {
 
   // Delete
   const handleDelete = async (bk: BriefkopfItem) => {
-    if (!confirm(`Briefkopf "${bk.name}" wirklich loeschen?`)) return;
+    if (!confirm(`Briefkopf "${bk.name}" wirklich löschen?`)) return;
     try {
       const res = await fetch(`/api/briefkopf/${bk.id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Fehler");
-      toast.success("Briefkopf geloescht");
+      toast.success("Briefkopf gelöscht");
       fetchBriefkoepfe();
     } catch {
-      toast.error("Fehler beim Loeschen");
+      toast.error("Fehler beim Löschen");
     }
   };
 
@@ -95,10 +95,10 @@ export function BriefkopfTab() {
       for (const bk of briefkoepfe.slice(1)) {
         await fetch(`/api/briefkopf/${bk.id}`, { method: "DELETE" });
       }
-      toast.success("Briefkopf-Einstellungen zurueckgesetzt");
+      toast.success("Briefkopf-Einstellungen zurückgesetzt");
       fetchBriefkoepfe();
     } catch {
-      toast.error("Fehler beim Zuruecksetzen");
+      toast.error("Fehler beim Zurücksetzen");
     }
   };
 
@@ -122,7 +122,7 @@ export function BriefkopfTab() {
             setEditingId(null);
           }}
         >
-          Zurueck zur Uebersicht
+          Zurück zur Übersicht
         </Button>
         <BriefkopfEditor
           briefkopfId={editingId ?? undefined}
@@ -147,7 +147,7 @@ export function BriefkopfTab() {
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-blue-500" />
             <h3 className="text-lg font-heading text-foreground">
-              Briefkoepfe
+              Briefköpfe
             </h3>
             <Badge variant="outline" className="text-xs">
               {briefkoepfe.length}
@@ -163,7 +163,7 @@ export function BriefkopfTab() {
           <div className="text-center py-8">
             <FileText className="w-12 h-12 mx-auto text-muted-foreground/20 mb-3" />
             <p className="text-sm text-muted-foreground">
-              Noch keine Briefkoepfe vorhanden.
+              Noch keine Briefköpfe vorhanden.
             </p>
             <Button
               variant="outline"
@@ -240,7 +240,7 @@ export function BriefkopfTab() {
           className="text-muted-foreground"
         >
           <RotateCcw className="w-4 h-4 mr-1.5" />
-          Auf Standard zuruecksetzen
+          Auf Standard zurücksetzen
         </Button>
       </div>
 
@@ -249,11 +249,11 @@ export function BriefkopfTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="glass rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
             <h3 className="text-lg font-heading text-foreground">
-              Einstellungen zuruecksetzen?
+              Einstellungen zurücksetzen?
             </h3>
             <p className="text-sm text-muted-foreground">
-              Moechten Sie die Einstellungen in diesem Bereich auf die Standardwerte
-              zuruecksetzen? Diese Aktion kann nicht rueckgaengig gemacht werden.
+              Möchten Sie die Einstellungen in diesem Bereich auf die Standardwerte
+              zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.
             </p>
             <div className="flex gap-2 justify-end">
               <Button
@@ -263,7 +263,7 @@ export function BriefkopfTab() {
                 Abbrechen
               </Button>
               <Button variant="destructive" onClick={handleReset}>
-                Zuruecksetzen
+                Zurücksetzen
               </Button>
             </div>
           </div>

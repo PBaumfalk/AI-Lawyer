@@ -22,7 +22,7 @@ export function GlassCard({
   return (
     <div
       className={cn(
-        "rounded-xl",
+        "rounded-2xl",
         resolvedVariant === "elevated" ? "glass-panel-elevated" : "glass-card",
         className
       )}

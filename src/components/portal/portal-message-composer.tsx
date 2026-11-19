@@ -87,7 +87,7 @@ export function PortalMessageComposer({
         const file = files[i];
 
         if (file.size > MAX_FILE_SIZE) {
-          toast.error(`"${file.name}" ist groesser als 25 MB`);
+          toast.error(`"${file.name}" ist größer als 25 MB`);
           continue;
         }
 
@@ -155,7 +155,7 @@ export function PortalMessageComposer({
       }
 
       // Step 2: Send message with text + attachment references
-      const messageBody = hasText ? trimmed : `[${pendingFiles.length} Datei${pendingFiles.length > 1 ? "en" : ""} angehaengt]`;
+      const messageBody = hasText ? trimmed : `[${pendingFiles.length} Datei${pendingFiles.length > 1 ? "en" : ""} angehängt]`;
 
       const res = await fetch(`/api/portal/akten/${akteId}/messages`, {
         method: "POST",
@@ -241,7 +241,7 @@ export function PortalMessageComposer({
           onClick={() => fileInputRef.current?.click()}
           disabled={sending || pendingFiles.length >= MAX_FILES}
           className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Datei anhaengen"
+          title="Datei anhängen"
         >
           <Paperclip className="w-5 h-5" />
         </button>
@@ -274,7 +274,8 @@ export function PortalMessageComposer({
           type="button"
           onClick={handleSubmit}
           disabled={sending || !canSend}
-          className="p-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          aria-label="Senden"
+          className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {sending ? (
             <Loader2 className="w-5 h-5 animate-spin" />

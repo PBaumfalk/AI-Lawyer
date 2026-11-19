@@ -136,7 +136,7 @@ async function generatePdf(
     page.drawText(dateRange, { x: margin, y, font, size: 9, color: rgb(0.4, 0.4, 0.4) });
     y -= 14;
   }
-  page.drawText(`Erstellt: ${formatDe(new Date())} | ${logs.length} Eintraege`, {
+  page.drawText(`Erstellt: ${formatDe(new Date())} | ${logs.length} Einträge`, {
     x: margin,
     y,
     font,

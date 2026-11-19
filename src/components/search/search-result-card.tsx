@@ -35,7 +35,7 @@ const OCR_STATUS_LABELS: Record<string, { label: string; className: string }> = 
     className: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
   },
   IN_BEARBEITUNG: {
-    label: "OCR laeuft",
+    label: "OCR läuft",
     className: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400",
   },
   ABGESCHLOSSEN: {

@@ -183,7 +183,7 @@ export function TagManager({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Tag hinzufuegen..."
+              placeholder="Tag hinzufügen..."
               className="h-7 text-xs flex-1"
               autoFocus
               disabled={saving}
@@ -238,7 +238,7 @@ export function TagManager({
           className="h-7 px-2 text-xs text-slate-500 hover:text-blue-600"
         >
           <Tag className="w-3 h-3 mr-1" />
-          Tag hinzufuegen
+          Tag hinzufügen
         </Button>
       )}
     </div>

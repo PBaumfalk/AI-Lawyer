@@ -52,7 +52,7 @@ export function HelenaTab({
     },
     {
       id: "vorschlaege",
-      label: "Vorschlaege",
+      label: "Vorschläge",
       icon: Sparkles,
       count: neuCount,
     },
@@ -70,7 +70,7 @@ export function HelenaTab({
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? "bg-brand-600 text-white shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-foreground/70 hover:bg-white/50 dark:hover:bg-white/[0.06]"
               }`}
             >
@@ -80,7 +80,7 @@ export function HelenaTab({
                 <span
                   className={`ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                     activeTab === tab.id
-                      ? "bg-white/20 text-white"
+                      ? "bg-primary-foreground/15 text-primary-foreground"
                       : "bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
                   }`}
                 >

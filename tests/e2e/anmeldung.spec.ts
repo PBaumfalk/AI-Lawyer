@@ -5,7 +5,8 @@ import { ADMIN_EMAIL, ADMIN_PASSWORT, adresse, anmelden, foto, keinUeberlauf, me
 test.describe("Anmeldung", () => {
   test("Grundzustand: Beschriftungen, Lesbarkeit, kein Überlauf", async ({ page }, info) => {
     await page.goto("/login");
-    await expect(page.getByRole("heading", { name: "AI-Lawyer" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Anmeldung" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "AI-Lawyer" }).first()).toBeVisible();
     await expect(page.getByLabel("E-Mail-Adresse")).toBeVisible();
     await expect(page.getByLabel("Passwort")).toBeVisible();
     await keinUeberlauf(page);

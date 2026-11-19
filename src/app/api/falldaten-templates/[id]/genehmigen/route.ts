@@ -56,7 +56,7 @@ export async function POST(
     // Only EINGEREICHT can be approved
     if (template.status !== FalldatenTemplateStatus.EINGEREICHT) {
       return NextResponse.json(
-        { error: "Nur eingereichte Templates koennen genehmigt werden" },
+        { error: "Nur eingereichte Templates können genehmigt werden" },
         { status: 400 }
       );
     }
@@ -76,7 +76,7 @@ export async function POST(
         return NextResponse.json(
           {
             error:
-              "4-Augen-Prinzip: Eigene Templates koennen nicht selbst genehmigt werden",
+              "4-Augen-Prinzip: Eigene Templates können nicht selbst genehmigt werden",
           },
           { status: 403 }
         );
@@ -102,7 +102,7 @@ export async function POST(
       userId: template.erstelltVonId,
       type: "template:approved",
       title: "Falldaten-Template genehmigt",
-      message: `Ihr Template "${template.name}" wurde genehmigt und ist jetzt fuer alle Nutzer verfuegbar.`,
+      message: `Ihr Template "${template.name}" wurde genehmigt und ist jetzt für alle Nutzer verfügbar.`,
       data: { templateId: template.id },
     });
 

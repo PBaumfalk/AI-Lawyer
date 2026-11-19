@@ -103,7 +103,7 @@ export function CalDavTab() {
 
   const handleSubmitCredentials = async () => {
     if (!selectedProvider || !formName.trim() || !formEmail.trim() || !formPassword.trim()) {
-      toast.error("Bitte alle Felder ausfuellen");
+      toast.error("Bitte alle Felder ausfüllen");
       return;
     }
     setSaving(true);
@@ -160,7 +160,7 @@ export function CalDavTab() {
         body: JSON.stringify({ selectedCalendarUrl }),
       });
       if (!res.ok) throw new Error("Fehler beim Speichern");
-      toast.success("Kalender verbunden und ausgewaehlt");
+      toast.success("Kalender verbunden und ausgewählt");
       resetDialog();
       fetchKonten();
     } catch {
@@ -196,12 +196,12 @@ export function CalDavTab() {
       const res = await fetch(`/api/caldav-konten/${kontoId}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Fehler beim Loeschen");
+      if (!res.ok) throw new Error("Fehler beim Löschen");
       toast.success("Kalenderverbindung entfernt");
       setDeleteConfirmId(null);
       fetchKonten();
     } catch {
-      toast.error("Loeschen fehlgeschlagen");
+      toast.error("Löschen fehlgeschlagen");
     }
   };
 
@@ -393,7 +393,7 @@ export function CalDavTab() {
               <h3 className="text-sm font-heading text-foreground">
                 {dialogStep === "provider" && "Kalender verbinden"}
                 {dialogStep === "credentials" && `${selectedProvider === "GOOGLE" ? "Google" : "Apple"} Kalender verbinden`}
-                {dialogStep === "calendars" && "Kalender auswaehlen"}
+                {dialogStep === "calendars" && "Kalender auswählen"}
               </h3>
               <button
                 onClick={resetDialog}
@@ -501,7 +501,7 @@ export function CalDavTab() {
                     }}
                   >
                     <ChevronLeft className="w-3.5 h-3.5 mr-1" />
-                    Zurueck
+                    Zurück
                   </Button>
                   <Button
                     size="sm"
@@ -528,7 +528,7 @@ export function CalDavTab() {
             {dialogStep === "calendars" && (
               <div className="space-y-4">
                 <p className="text-xs text-muted-foreground">
-                  Waehlen Sie den Kalender aus, der synchronisiert werden soll:
+                  Wählen Sie den Kalender aus, der synchronisiert werden soll:
                 </p>
                 <div className="space-y-1.5 max-h-48 overflow-y-auto">
                   {calendars.map((cal) => (
@@ -571,7 +571,7 @@ export function CalDavTab() {
                     {saving && (
                       <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
                     )}
-                    Kalender auswaehlen
+                    Kalender auswählen
                   </Button>
                 </div>
               </div>

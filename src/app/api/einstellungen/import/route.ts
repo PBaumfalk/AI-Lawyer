@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
   const role = (session.user as any).role as UserRole;
   if (role !== "ADMIN") {
     return NextResponse.json(
-      { error: "Nur Administratoren koennen Einstellungen importieren" },
+      { error: "Nur Administratoren können Einstellungen importieren" },
       { status: 403 }
     );
   }
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     data = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltige JSON-Datei" },
+      { error: "Ungültige JSON-Datei" },
       { status: 400 }
     );
   }

@@ -131,10 +131,10 @@ export function SyncDashboard() {
       <div className="text-center py-12 glass rounded-xl">
         <RefreshCw className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
         <p className="text-foreground font-medium">
-          Keine aktiven Postfaecher
+          Keine aktiven Postfächer
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          Aktivieren Sie ein Postfach im Tab "Postfaecher", um den Sync-Status zu sehen.
+          Aktivieren Sie ein Postfach im Tab "Postfächer", um den Sync-Status zu sehen.
         </p>
       </div>
     );
@@ -143,8 +143,8 @@ export function SyncDashboard() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Synchronisationsstatus fuer {konten.length} aktive{" "}
-        Postfach{konten.length !== 1 ? "faecher" : ""}. Aktualisiert sich automatisch alle 30 Sekunden.
+        Synchronisationsstatus für {konten.length} aktive{" "}
+        {konten.length !== 1 ? "Postfächer" : "Postfach"}. Aktualisiert sich automatisch alle 30 Sekunden.
       </p>
 
       {konten.map((konto) => {

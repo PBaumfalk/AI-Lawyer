@@ -87,6 +87,7 @@ export function BiFilters({ filters, onChange }: BiFiltersProps) {
             Zeitraum
           </label>
           <Select
+            aria-label="Zeitraum"
             value={filters.zeitraum}
             onChange={(e) => handleChange("zeitraum", e.target.value)}
           >
@@ -107,9 +108,10 @@ export function BiFilters({ filters, onChange }: BiFiltersProps) {
               </label>
               <input
                 type="date"
+                aria-label="Von"
                 value={filters.von ?? ""}
                 onChange={(e) => handleChange("von", e.target.value)}
-                className="flex h-10 rounded-lg glass-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(45%_0.2_260)]"
+                className="flex h-10 rounded-lg glass-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -118,9 +120,10 @@ export function BiFilters({ filters, onChange }: BiFiltersProps) {
               </label>
               <input
                 type="date"
+                aria-label="Bis"
                 value={filters.bis ?? ""}
                 onChange={(e) => handleChange("bis", e.target.value)}
-                className="flex h-10 rounded-lg glass-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(45%_0.2_260)]"
+                className="flex h-10 rounded-lg glass-input px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
           </>
@@ -132,10 +135,11 @@ export function BiFilters({ filters, onChange }: BiFiltersProps) {
             Anwalt
           </label>
           <Select
+            aria-label="Anwalt"
             value={filters.anwaltId ?? ""}
             onChange={(e) => handleChange("anwaltId", e.target.value)}
           >
-            <option value="">Alle Anwaelte</option>
+            <option value="">Alle Anwälte</option>
             {anwaelte.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name}
@@ -150,6 +154,7 @@ export function BiFilters({ filters, onChange }: BiFiltersProps) {
             Sachgebiet
           </label>
           <Select
+            aria-label="Sachgebiet"
             value={filters.sachgebiet ?? ""}
             onChange={(e) => handleChange("sachgebiet", e.target.value)}
           >

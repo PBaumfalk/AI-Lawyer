@@ -122,7 +122,7 @@ export function MentionPicker({
           }}
           className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
             idx === clampedIndex
-              ? "bg-violet-500/20 text-foreground"
+              ? "bg-brand-500/20 text-foreground"
               : "text-muted-foreground hover:bg-white/5 dark:hover:bg-white/[0.03]"
           }`}
         >

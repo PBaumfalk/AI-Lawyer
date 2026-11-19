@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
       estimatedTotalHits: 0,
       processingTimeMs: 0,
       query: q,
-      error: "Volltextsuche nicht verfuegbar",
+      error: "Volltextsuche nicht verfügbar",
     });
   }
 }

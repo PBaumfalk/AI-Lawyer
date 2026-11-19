@@ -27,7 +27,7 @@ interface DraftRejectFormProps {
 
 const REJECTION_CATEGORIES = [
   "Inhaltlich falsch",
-  "Unvollstaendig",
+  "Unvollständig",
   "Ton/Stil unpassend",
   "Formatierung",
 ] as const;
@@ -62,7 +62,7 @@ function Checkbox({
         id={id}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-border text-violet-600 focus:ring-violet-500"
+        className="h-4 w-4 rounded border-border text-brand-600 focus:ring-ring"
       />
       <span className="text-sm">{label}</span>
     </label>
@@ -126,7 +126,7 @@ export function DraftRejectForm({
           id="reject-text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Weitere Hinweise fuer Helena..."
+          placeholder="Weitere Hinweise für Helena..."
           className={cn(
             "w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm",
             "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -141,7 +141,7 @@ export function DraftRejectForm({
           id="reject-no-revise"
           checked={noRevise}
           onChange={setNoRevise}
-          label="Nicht ueberarbeiten"
+          label="Nicht überarbeiten"
           className="text-muted-foreground"
         />
         <p className="text-xs text-muted-foreground mt-1 ml-6">

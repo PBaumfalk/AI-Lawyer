@@ -161,7 +161,7 @@ export default function EinstellungenPage() {
             {isAdmin && (
               <TabsTrigger value="briefkoepfe">
                 <Stamp className="w-4 h-4 mr-1.5" />
-                Briefkoepfe
+                Briefköpfe
               </TabsTrigger>
             )}
             {isAdmin && (
@@ -231,14 +231,16 @@ export default function EinstellungenPage() {
               <GlassCard className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-base font-semibold text-foreground">
+                    <h2 id="gamification-titel" className="text-base font-semibold text-foreground">
                       Gamification
                     </h2>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p id="gamification-hinweis" className="text-sm text-muted-foreground mt-1">
                       Quest-Widget und XP-Fortschritt auf dem Dashboard anzeigen
                     </p>
                   </div>
                   <Switch
+                    aria-labelledby="gamification-titel"
+                    aria-describedby="gamification-hinweis"
                     checked={gamificationOptIn}
                     onCheckedChange={handleOptInToggle}
                     disabled={optInLoading}

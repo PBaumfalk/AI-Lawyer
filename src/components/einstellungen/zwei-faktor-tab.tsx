@@ -222,7 +222,7 @@ export function ZweiFaktorTab() {
             <Button
               onClick={handleActivate}
               disabled={setupLoading}
-              className="bg-brand-600 hover:bg-brand-700 text-white"
+              className="bg-primary hover:bg-primary-hover text-primary-foreground"
             >
               {setupLoading ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

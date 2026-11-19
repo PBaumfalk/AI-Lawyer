@@ -39,7 +39,7 @@ export async function POST(
   // 2. Validate MIME type is image (PDFs are not supported for vision)
   if (!dokument.mimeType.startsWith("image/")) {
     return NextResponse.json(
-      { error: "Vision-Analyse ist nur fuer Bilddokumente verfuegbar" },
+      { error: "Vision-Analyse ist nur für Bilddokumente verfügbar" },
       { status: 400 }
     );
   }
@@ -72,7 +72,7 @@ export async function POST(
             },
             {
               type: "text",
-              text: "Extrahiere den gesamten Text aus diesem Dokument. Gib nur den extrahierten Text zurueck, keine Kommentare oder Erklaerungen.",
+              text: "Extrahiere den gesamten Text aus diesem Dokument. Gib nur den extrahierten Text zurück, keine Kommentare oder Erklärungen.",
             },
           ],
         },
@@ -108,7 +108,7 @@ export async function POST(
     const message =
       err instanceof Error
         ? err.message?.includes("vision") || err.message?.includes("image")
-          ? "Das konfigurierte KI-Modell unterstuetzt keine Bilderkennung. Bitte OpenAI oder Anthropic als Provider konfigurieren."
+          ? "Das konfigurierte KI-Modell unterstützt keine Bilderkennung. Bitte OpenAI oder Anthropic als Provider konfigurieren."
           : err.message?.slice(0, 200) ?? "Vision-Analyse fehlgeschlagen"
         : "Vision-Analyse fehlgeschlagen";
     return NextResponse.json({ error: message }, { status: 500 });

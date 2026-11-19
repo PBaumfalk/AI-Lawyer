@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 type Theme = "light" | "dark" | "system";
 
@@ -16,39 +17,42 @@ const ThemeContext = createContext<ThemeContextValue>({
   setTheme: () => {},
 });
 
+export function resolveTheme(theme: Theme): "light" | "dark" {
+  return theme === "dark" ? "dark" : "light";
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
 
-  // Load stored preference from API on mount
+  // Load the stored preference once the user is in the firm workspace. Not on
+  // the public sign-in pages and not in the client portal: there is no firm
+  // session, the request would only end in 401/403 (console error) and the
+  // portal stays light. Depends on the path because sign-in navigates to the
+  // dashboard without a full reload.
+  const pathname = usePathname();
+  const geladen = useRef(false);
   useEffect(() => {
+    if (geladen.current) return;
+    if (/^\/(login|2fa-setup-required|portal)(\/|$)/.test(pathname ?? "")) return;
+    geladen.current = true;
     fetch("/api/user/theme")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.theme) setThemeState(d.theme as Theme);
       })
       .catch(() => {});
-  }, []);
+  }, [pathname]);
 
-  // Apply .dark class to <html> whenever theme state changes
+  // Apply .dark class to <html> whenever theme state changes.
+  // Persimmon CI-Contract §8: the light theme is the default and dark mode is
+  // never switched on automatically. "system" (the stored default for users
+  // who never chose) therefore resolves to light; only an explicit "dark"
+  // selection activates the dark palette.
   useEffect(() => {
-    const root = document.documentElement;
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-    const apply = () => {
-      const resolved =
-        theme === "system"
-          ? mediaQuery.matches
-            ? "dark"
-            : "light"
-          : theme;
-      root.classList.toggle("dark", resolved === "dark");
-      setResolvedTheme(resolved as "light" | "dark");
-    };
-
-    apply();
-    mediaQuery.addEventListener("change", apply);
-    return () => mediaQuery.removeEventListener("change", apply);
+    const resolved = resolveTheme(theme);
+    document.documentElement.classList.toggle("dark", resolved === "dark");
+    setResolvedTheme(resolved);
   }, [theme]);
 
   const setTheme = (t: Theme) => {

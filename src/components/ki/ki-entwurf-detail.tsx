@@ -129,7 +129,7 @@ export function KiEntwurfDetail({ entwurf }: KiEntwurfDetailProps) {
 
       {/* Labels */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Badge className="bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-400">
+        <Badge className="bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-400">
           <Bot className="w-3 h-3 mr-1" />
           KI-generiert
         </Badge>

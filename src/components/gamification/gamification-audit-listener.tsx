@@ -25,11 +25,11 @@ export function GamificationAuditListener() {
     if (!socket) return;
 
     function handleAuditNeeded(event: AuditEvent) {
-      toast("Stichproben-Pruefung", {
-        description: `Erledigung "${event.questName}" bestaetigen?`,
+      toast("Stichproben-Prüfung", {
+        description: `Erledigung "${event.questName}" bestätigen?`,
         duration: Infinity,
         action: {
-          label: "Bestaetigen",
+          label: "Bestätigen",
           onClick: () => {
             fetch("/api/gamification/audit/confirm", {
               method: "POST",
@@ -42,7 +42,7 @@ export function GamificationAuditListener() {
           },
         },
         cancel: {
-          label: "Zuruecknehmen",
+          label: "Zurücknehmen",
           onClick: () => {
             fetch("/api/gamification/audit/confirm", {
               method: "POST",

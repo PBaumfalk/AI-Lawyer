@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
   ];
   if (!validTypes.includes(file.type) && !file.name.endsWith(".docx")) {
     return NextResponse.json(
-      { error: "Nur DOCX-Dateien werden als Vorlagen unterstuetzt" },
+      { error: "Nur DOCX-Dateien werden als Vorlagen unterstützt" },
       { status: 400 }
     );
   }
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
         customFelder = JSON.parse(customFelderRaw);
       } catch {
         return NextResponse.json(
-          { error: "Ungueltiges customFelder JSON" },
+          { error: "Ungültiges customFelder JSON" },
           { status: 400 }
         );
       }

@@ -53,7 +53,7 @@ export function createCreateDraftFristTool(ctx: ToolContext) {
       // Validate date format
       const parsedDate = new Date(datum);
       if (isNaN(parsedDate.getTime())) {
-        return { error: "Ungueltiges Datum. Bitte ISO-Format verwenden (z.B. 2026-03-15)." };
+        return { error: "Ungültiges Datum. Bitte ISO-Format verwenden (z.B. 2026-03-15)." };
       }
 
       const draft = await ctx.prisma.helenaDraft.create({

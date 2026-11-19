@@ -34,12 +34,12 @@ const log = createLogger("helena-memory");
  * Matches the locked content structure from CONTEXT.md.
  */
 export const HelenaMemoryContentSchema = z.object({
-  summary: z.string().describe("Detaillierte Fallzusammenfassung in 1-2 Absaetzen"),
+  summary: z.string().describe("Detaillierte Fallzusammenfassung in 1-2 Absätzen"),
   risks: z.array(z.string()).describe("Erkannte Risiken und Schwachstellen"),
   nextSteps: z.array(z.string()).describe("Ausstehende Handlungen und Fristen"),
   openQuestions: z.array(z.string()).describe("Unbeantwortete Fragen zum Fall"),
   relevantNorms: z.array(z.string()).describe("Relevante Rechtsnormen, z.B. 'BGB SS 626'"),
-  strategy: z.string().describe("Strategie des Anwalts aus bisherigen Gespraechen"),
+  strategy: z.string().describe("Strategie des Anwalts aus bisherigen Gesprächen"),
   keyEvents: z.array(z.object({
     date: z.string().describe("Datum im Format TT.MM.JJJJ"),
     event: z.string().describe("Beschreibung des Ereignisses"),
@@ -99,15 +99,15 @@ function markRefreshed(akteId: string): void {
 // Memory generation system prompt
 // ---------------------------------------------------------------------------
 
-const MEMORY_GENERATION_SYSTEM_PROMPT = `Du bist Helena, juristische KI-Assistentin. Deine Aufgabe: Erstelle eine strukturierte Fallzusammenfassung fuer eine Akte.
+const MEMORY_GENERATION_SYSTEM_PROMPT = `Du bist Helena, juristische KI-Assistentin. Deine Aufgabe: Erstelle eine strukturierte Fallzusammenfassung für eine Akte.
 
-Analysiere die Akte-Daten und die bisherigen Gespraeche und erstelle:
-1. **summary**: Detaillierte Zusammenfassung des Falls (Sachverhalt, Parteien, Kernkonflikt, Verfahrensstand) in 1-2 Absaetzen
+Analysiere die Akte-Daten und die bisherigen Gespräche und erstelle:
+1. **summary**: Detaillierte Zusammenfassung des Falls (Sachverhalt, Parteien, Kernkonflikt, Verfahrensstand) in 1-2 Absätzen
 2. **risks**: Erkannte Risiken und Schwachstellen der Position
-3. **nextSteps**: Konkrete naechste Handlungen
-4. **openQuestions**: Unbeantwortete Fragen die geklaert werden muessen
+3. **nextSteps**: Konkrete nächste Handlungen
+4. **openQuestions**: Unbeantwortete Fragen die geklärt werden müssen
 5. **relevantNorms**: Anwendbare Rechtsnormen (Format: "BGB SS 626")
-6. **strategy**: Falls aus Gespraechen erkennbar, die Strategie des Anwalts
+6. **strategy**: Falls aus Gesprächen erkennbar, die Strategie des Anwalts
 7. **keyEvents**: Chronologie der wichtigsten Ereignisse mit Datum (Format TT.MM.JJJJ)
 8. **beteiligteNotes**: Erkenntnisse zu einzelnen Beteiligten (Name als Key, Erkenntnis als Value)
 9. **proceduralStatus**: Aktueller Verfahrensstand in einem Satz
@@ -115,10 +115,10 @@ Analysiere die Akte-Daten und die bisherigen Gespraeche und erstelle:
 REGELN:
 - Schreibe auf Deutsch
 - Erfinde keine Fakten -- nur was in den Daten steht
-- Fasse Gespraeche zusammen, zitiere nicht woertlich
-- Halte die Zusammenfassung praegnant aber vollstaendig
-- Wenn keine Gespraeche vorliegen, nutze nur die Akte-Daten
-- Leere Arrays/Strings fuer Felder ohne passende Informationen`;
+- Fasse Gespräche zusammen, zitiere nicht wörtlich
+- Halte die Zusammenfassung prägnant aber vollständig
+- Wenn keine Gespräche vorliegen, nutze nur die Akte-Daten
+- Leere Arrays/Strings für Felder ohne passende Informationen`;
 
 // ---------------------------------------------------------------------------
 // formatMemoryForPrompt (pure function)
@@ -141,10 +141,10 @@ export function formatMemoryForPrompt(
     year: "numeric",
   });
 
-  let md = `\n\n## Fallgedaechtnis (Stand: ${now})\n`;
+  let md = `\n\n## Fallgedächtnis (Stand: ${now})\n`;
 
   if (changes && changes.length > 0) {
-    md += `\n### Aenderungen seit letztem Gespraech\n`;
+    md += `\n### Änderungen seit letztem Gespräch\n`;
     md += changes.map((c) => `- ${c}`).join("\n") + "\n";
   }
 
@@ -162,7 +162,7 @@ export function formatMemoryForPrompt(
   }
 
   if (content.nextSteps.length > 0) {
-    md += `\n### Naechste Schritte\n`;
+    md += `\n### Nächste Schritte\n`;
     md += content.nextSteps.map((s) => `- ${s}`).join("\n") + "\n";
   }
 
@@ -317,11 +317,11 @@ ${beteiligteStr || "(keine)"}
 ## Dokumente (letzte 30)
 ${dokumenteStr || "(keine)"}
 
-## Fristen/Termine (naechste 20, aktiv)
+## Fristen/Termine (nächste 20, aktiv)
 ${fristenStr || "(keine)"}
 
-## Bisherige Helena-Gespraeche (${conversations.length})
-${conversationStr || "Keine bisherigen Helena-Gespraeche vorhanden."}`;
+## Bisherige Helena-Gespräche (${conversations.length})
+${conversationStr || "Keine bisherigen Helena-Gespräche vorhanden."}`;
 
   // LLM call via generateObject
   const model = await getModel();

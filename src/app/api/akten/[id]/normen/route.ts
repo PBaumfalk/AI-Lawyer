@@ -5,7 +5,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { z } from "zod";
 
 const addNormSchema = z.object({
-  gesetzKuerzel: z.string().min(1, "Gesetzkuerzel ist erforderlich"),
+  gesetzKuerzel: z.string().min(1, "Gesetzkürzel ist erforderlich"),
   paragraphNr: z.string().min(1, "Paragraph-Nummer ist erforderlich"),
   anmerkung: z.string().optional(),
 });
@@ -81,7 +81,7 @@ export async function POST(
 
   if (existing) {
     return NextResponse.json(
-      { error: "Diese Norm ist bereits an die Akte verknuepft" },
+      { error: "Diese Norm ist bereits an die Akte verknüpft" },
       { status: 409 }
     );
   }

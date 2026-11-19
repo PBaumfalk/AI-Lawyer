@@ -23,12 +23,12 @@ interface ChatInputProps {
 const quickActions = [
   {
     label: "Zusammenfassung",
-    prompt: "Erstelle eine ausfuehrliche Zusammenfassung aller Dokumente in dieser Akte.",
+    prompt: "Erstelle eine ausführliche Zusammenfassung aller Dokumente in dieser Akte.",
     icon: ScrollText,
   },
   {
-    label: "Fristen pruefen",
-    prompt: "Pruefe alle Dokumente auf genannte Fristen und Termine. Liste sie chronologisch auf.",
+    label: "Fristen prüfen",
+    prompt: "Prüfe alle Dokumente auf genannte Fristen und Termine. Liste sie chronologisch auf.",
     icon: Clock,
   },
   {
@@ -93,7 +93,7 @@ export function ChatInput({ append, isLoading }: ChatInputProps) {
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       toast.info(
-        "Dokument-Upload in den Chat wird in einer spaeteren Version unterstuetzt.",
+        "Dokument-Upload in den Chat wird in einer späteren Version unterstützt.",
         { description: `${files.length} Datei(en) abgelegt` }
       );
     }
@@ -135,18 +135,18 @@ export function ChatInput({ append, isLoading }: ChatInputProps) {
             onKeyDown={handleKeyDown}
             placeholder={
               isDragOver
-                ? "Dokument hier ablegen fuer sofortige Analyse..."
+                ? "Dokument hier ablegen für sofortige Analyse..."
                 : "Frage an Helena stellen..."
             }
             rows={1}
-            className="w-full resize-none bg-white/50 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500/30 transition-colors"
+            className="w-full resize-none bg-white/50 dark:bg-white/[0.03] border border-white/20 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary-strong transition-colors"
             disabled={isLoading}
           />
         </div>
         <button
           onClick={() => handleSubmit(inputValue)}
           disabled={!inputValue.trim() || isLoading}
-          className="flex-shrink-0 p-2.5 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-shrink-0 p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Senden"
         >
           <Send className="w-4 h-4" />
@@ -155,7 +155,7 @@ export function ChatInput({ append, isLoading }: ChatInputProps) {
 
       {isDragOver && (
         <p className="text-xs text-brand-600 dark:text-brand-400 mt-1.5 text-center">
-          Dokument hier ablegen fuer sofortige Analyse
+          Dokument hier ablegen für sofortige Analyse
         </p>
       )}
     </div>

@@ -52,13 +52,13 @@ const OCR_STATUS_OPTIONS = [
   { label: "Ausstehend", value: "AUSSTEHEND" },
   { label: "In Bearbeitung", value: "IN_BEARBEITUNG" },
   { label: "Fehlgeschlagen", value: "FEHLGESCHLAGEN" },
-  { label: "Nicht noetig", value: "NICHT_NOETIG" },
+  { label: "Nicht nötig", value: "NICHT_NOETIG" },
 ];
 
 const DOKUMENT_STATUS_OPTIONS = [
   { label: "Alle", value: "" },
   { label: "Entwurf", value: "ENTWURF" },
-  { label: "Zur Pruefung", value: "ZUR_PRUEFUNG" },
+  { label: "Zur Prüfung", value: "ZUR_PRUEFUNG" },
   { label: "Freigegeben", value: "FREIGEGEBEN" },
   { label: "Versendet", value: "VERSENDET" },
 ];
@@ -437,7 +437,7 @@ export function SearchPage() {
                   e.target.value = "";
                 }}
               >
-                <option value="">Tag hinzufuegen...</option>
+                <option value="">Tag hinzufügen...</option>
                 {tagKategorien
                   .filter((t) => !selectedTags.includes(t.name))
                   .map((t) => (
@@ -471,7 +471,7 @@ export function SearchPage() {
                 onClick={resetFilters}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                Filter zuruecksetzen
+                Filter zurücksetzen
               </button>
             </div>
           )}

@@ -66,7 +66,7 @@ export function MailboxList() {
         setKonten(Array.isArray(data) ? data : []);
       }
     } catch {
-      toast.error("Fehler beim Laden der Postfaecher");
+      toast.error("Fehler beim Laden der Postfächer");
     } finally {
       setLoading(false);
     }
@@ -95,7 +95,7 @@ export function MailboxList() {
         );
       }
     } catch {
-      toast.error("Fehler beim Aendern des Status");
+      toast.error("Fehler beim Ändern des Status");
     }
   };
 
@@ -108,17 +108,17 @@ export function MailboxList() {
       if (res.ok || res.status === 204) {
         const data = res.status === 204 ? null : await res.json();
         if (data?.deaktiviert) {
-          toast.info("Postfach wurde deaktiviert (noch verknuepfte E-Mails vorhanden)");
+          toast.info("Postfach wurde deaktiviert (noch verknüpfte E-Mails vorhanden)");
           loadKonten();
         } else {
           setKonten((prev) => prev.filter((k) => k.id !== kontoId));
-          toast.success("Postfach geloescht");
+          toast.success("Postfach gelöscht");
         }
       } else {
-        toast.error("Fehler beim Loeschen");
+        toast.error("Fehler beim Löschen");
       }
     } catch {
-      toast.error("Netzwerkfehler beim Loeschen");
+      toast.error("Netzwerkfehler beim Löschen");
     }
     setDeleteConfirmId(null);
   };
@@ -136,7 +136,7 @@ export function MailboxList() {
   if (loading) {
     return (
       <div className="text-center py-8 text-muted-foreground text-sm">
-        Lade Postfaecher...
+        Lade Postfächer...
       </div>
     );
   }
@@ -146,15 +146,15 @@ export function MailboxList() {
       {/* Header with add button */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {konten.length} Postfach{konten.length !== 1 ? "faecher" : ""} konfiguriert
+          {konten.length} {konten.length !== 1 ? "Postfächer" : "Postfach"} konfiguriert
         </p>
         <button
           type="button"
           onClick={handleAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-medium rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Neues Postfach hinzufuegen
+          Neues Postfach hinzufügen
         </button>
       </div>
 
@@ -166,7 +166,7 @@ export function MailboxList() {
             Noch kein Postfach konfiguriert
           </p>
           <p className="text-sm text-muted-foreground mt-1">
-            Fuegen Sie Ihr erstes E-Mail-Postfach hinzu, um E-Mails zu empfangen und zu senden.
+            Fügen Sie Ihr erstes E-Mail-Postfach hinzu, um E-Mails zu empfangen und zu senden.
           </p>
         </div>
       ) : (
@@ -211,7 +211,7 @@ export function MailboxList() {
                 type="button"
                 onClick={() => handleToggleAktiv(konto)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
-                  konto.aktiv ? "bg-brand-600" : "bg-slate-300 dark:bg-slate-600"
+                  konto.aktiv ? "bg-primary-strong" : "bg-[var(--al-line)]"
                 }`}
               >
                 <span
@@ -235,7 +235,7 @@ export function MailboxList() {
                   type="button"
                   onClick={() => setDeleteConfirmId(konto.id)}
                   className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
-                  title="Loeschen"
+                  title="Löschen"
                 >
                   <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-500" />
                 </button>
@@ -250,10 +250,10 @@ export function MailboxList() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-white/20 dark:border-white/[0.08] w-full max-w-sm p-6">
             <h3 className="text-lg font-heading text-foreground">
-              Postfach loeschen?
+              Postfach löschen?
             </h3>
             <p className="text-sm text-muted-foreground mt-2">
-              Diese Aktion kann nicht rueckgaengig gemacht werden. Wenn noch
+              Diese Aktion kann nicht rückgängig gemacht werden. Wenn noch
               E-Mails vorhanden sind, wird das Postfach stattdessen deaktiviert.
             </p>
             <div className="flex justify-end gap-3 mt-6">
@@ -269,7 +269,7 @@ export function MailboxList() {
                 onClick={() => handleDelete(deleteConfirmId)}
                 className="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
               >
-                Loeschen
+                Löschen
               </button>
             </div>
           </div>

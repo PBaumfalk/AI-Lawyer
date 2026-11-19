@@ -71,7 +71,7 @@ export function ImportExportTab() {
     if (!file) return;
 
     if (!file.name.endsWith(".json")) {
-      toast.error("Bitte eine JSON-Datei auswaehlen");
+      toast.error("Bitte eine JSON-Datei auswählen");
       return;
     }
 
@@ -80,7 +80,7 @@ export function ImportExportTab() {
       const data = JSON.parse(text) as ImportPreview;
 
       if (!data.version) {
-        toast.error("Ungueltige Import-Datei: Fehlende Version");
+        toast.error("Ungültige Import-Datei: Fehlende Version");
         return;
       }
 
@@ -135,8 +135,8 @@ export function ImportExportTab() {
           </h3>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Exportieren Sie alle Kanzlei-Einstellungen als JSON-Datei fuer Backup
-          oder Uebertragung auf ein anderes System.
+          Exportieren Sie alle Kanzlei-Einstellungen als JSON-Datei für Backup
+          oder Übertragung auf ein anderes System.
         </p>
         <Button onClick={handleExport} disabled={exporting}>
           <Download className="w-4 h-4 mr-2" />
@@ -155,7 +155,7 @@ export function ImportExportTab() {
 
         <p className="text-sm text-muted-foreground mb-4">
           Importieren Sie Einstellungen aus einer zuvor exportierten JSON-Datei.
-          Bestehende Einstellungen werden ueberschrieben.
+          Bestehende Einstellungen werden überschrieben.
         </p>
 
         <div className="mb-4">
@@ -202,7 +202,7 @@ export function ImportExportTab() {
                   </Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Briefkoepfe</span>
+                  <span className="text-muted-foreground">Briefköpfe</span>
                   <Badge variant="muted">
                     {preview.briefkoepfe?.length ?? 0}
                   </Badge>
@@ -229,11 +229,11 @@ export function ImportExportTab() {
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="w-4 h-4 text-amber-500" />
                   <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                    Bestehende Einstellungen werden ueberschrieben
+                    Bestehende Einstellungen werden überschrieben
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Gleichnamige Einstellungen, Presets, Briefkoepfe und Schemata
+                  Gleichnamige Einstellungen, Presets, Briefköpfe und Schemata
                   werden durch die importierten Werte ersetzt.
                 </p>
                 <div className="flex gap-2">
@@ -271,22 +271,22 @@ export function ImportExportTab() {
               <div>
                 Einstellungen: {importResult.systemSettings.imported} importiert
                 {importResult.systemSettings.skipped > 0 &&
-                  `, ${importResult.systemSettings.skipped} uebersprungen`}
+                  `, ${importResult.systemSettings.skipped} übersprungen`}
               </div>
               <div>
                 Presets: {importResult.fristPresets.imported} importiert
                 {importResult.fristPresets.skipped > 0 &&
-                  `, ${importResult.fristPresets.skipped} uebersprungen`}
+                  `, ${importResult.fristPresets.skipped} übersprungen`}
               </div>
               <div>
-                Briefkoepfe: {importResult.briefkoepfe.imported} importiert
+                Briefköpfe: {importResult.briefkoepfe.imported} importiert
                 {importResult.briefkoepfe.skipped > 0 &&
-                  `, ${importResult.briefkoepfe.skipped} uebersprungen`}
+                  `, ${importResult.briefkoepfe.skipped} übersprungen`}
               </div>
               <div>
                 Schemata: {importResult.ordnerSchemata.imported} importiert
                 {importResult.ordnerSchemata.skipped > 0 &&
-                  `, ${importResult.ordnerSchemata.skipped} uebersprungen`}
+                  `, ${importResult.ordnerSchemata.skipped} übersprungen`}
               </div>
             </div>
           </div>
@@ -303,8 +303,8 @@ export function ImportExportTab() {
             </p>
             <p>
               Exportiert werden: Allgemeine Einstellungen, Fristen-Presets,
-              Ordner-Schemata. Briefkopf-Dateien und Vorlagen-Dateien muessen
-              separat uebertragen werden.
+              Ordner-Schemata. Briefkopf-Dateien und Vorlagen-Dateien müssen
+              separat übertragen werden.
             </p>
           </div>
         </div>

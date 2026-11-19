@@ -326,7 +326,7 @@ export async function runAgent(
       finalText =
         finalText ||
         "Ich habe die maximale Anzahl an Schritten erreicht. Hier ist meine bisherige Zusammenfassung: " +
-          (result.text || "Leider konnte ich keine vollstaendige Antwort generieren.");
+          (result.text || "Leider konnte ich keine vollständige Antwort generieren.");
       if (!stallDetected) {
         finalFinishReason = "length";
       }
@@ -408,7 +408,7 @@ export async function runAgent(
 
     const fallbackText =
       abortReason === "timeout"
-        ? "Die Anfrage hat das Zeitlimit ueberschritten. Hier ist, was ich bisher erarbeitet habe: " +
+        ? "Die Anfrage hat das Zeitlimit überschritten. Hier ist, was ich bisher erarbeitet habe: " +
           (partialText || "Leider konnte ich noch keine Antwort generieren.")
         : abortReason === "abort"
           ? "Die Anfrage wurde abgebrochen."

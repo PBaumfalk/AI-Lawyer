@@ -85,7 +85,7 @@ export function VersionTimeline({
           Noch keine Versionen vorhanden.
         </p>
         <p className="text-[10px] text-slate-400 mt-1">
-          Versionen werden automatisch bei Aenderungen erstellt.
+          Versionen werden automatisch bei Änderungen erstellt.
         </p>
       </div>
     );
@@ -99,8 +99,8 @@ export function VersionTimeline({
       <div className="space-y-0">
         {/* Current version (not in the versions list, but shown as reference) */}
         <div className="relative flex items-start gap-3 pb-4">
-          <div className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 dark:bg-blue-600 flex-shrink-0">
-            <FileText className="w-3 h-3 text-white" />
+          <div className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-primary flex-shrink-0">
+            <FileText className="w-3 h-3 text-primary-foreground" />
           </div>
           <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-center gap-2">

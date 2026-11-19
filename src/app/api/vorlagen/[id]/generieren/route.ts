@@ -51,14 +51,14 @@ export async function POST(
     raw = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger Request-Body" },
+      { error: "Ungültiger Request-Body" },
       { status: 400 }
     );
   }
   const parsed = vorlageGenerierenSchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Ungueltiger Request-Body" },
+      { error: parsed.error.issues[0]?.message ?? "Ungültiger Request-Body" },
       { status: 400 }
     );
   }

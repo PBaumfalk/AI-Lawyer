@@ -16,7 +16,7 @@ export default async function KiChatLayout({
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden -m-6">
+    <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden -m-4 sm:-m-6">
       {children}
     </div>
   );

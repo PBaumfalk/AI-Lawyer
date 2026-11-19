@@ -40,6 +40,7 @@ export function TicketStatusSelect({ ticketId, currentStatus }: TicketStatusSele
   return (
     <Select
       value={currentStatus}
+      aria-label="Status ändern"
       onChange={handleChange}
       disabled={loading}
       className="w-36 text-xs py-1"
@@ -88,6 +89,7 @@ export function TicketVerantwortlichSelect({
   return (
     <Select
       value={currentUserId ?? ""}
+      aria-label="Zuständige Person ändern"
       onChange={handleChange}
       disabled={loading}
       className="w-36 text-xs py-1"

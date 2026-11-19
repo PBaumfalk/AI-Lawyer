@@ -148,11 +148,11 @@ export function UserAssignment() {
         <Users className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
         <p className="text-foreground font-medium">
           {konten.length === 0
-            ? "Keine Postfaecher vorhanden"
+            ? "Keine Postfächer vorhanden"
             : "Keine Benutzer vorhanden"}
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          Erstellen Sie zuerst Postfaecher und Benutzer, um Zuweisungen vornehmen zu koennen.
+          Erstellen Sie zuerst Postfächer und Benutzer, um Zuweisungen vornehmen zu können.
         </p>
       </div>
     );
@@ -161,8 +161,8 @@ export function UserAssignment() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Weisen Sie Benutzer ihren E-Mail-Postfaechern zu. Benutzer koennen nur auf
-        zugewiesene Postfaecher zugreifen.
+        Weisen Sie Benutzer ihren E-Mail-Postfächern zu. Benutzer können nur auf
+        zugewiesene Postfächer zugreifen.
       </p>
 
       <div className="overflow-x-auto">
@@ -214,7 +214,7 @@ export function UserAssignment() {
                         disabled={updating}
                         className={`w-6 h-6 rounded border transition-colors inline-flex items-center justify-center ${
                           assigned
-                            ? "bg-brand-600 border-brand-600 text-white"
+                            ? "bg-primary border-brand-600 text-primary-foreground"
                             : "border-white/30 dark:border-white/[0.15] hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/10"
                         } ${updating ? "opacity-50" : ""}`}
                       >

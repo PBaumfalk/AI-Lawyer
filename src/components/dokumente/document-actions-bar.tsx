@@ -146,13 +146,13 @@ export function DocumentActionsBar({
       }
       const labels: Record<string, string> = {
         ENTWURF: "als Entwurf markiert",
-        ZUR_PRUEFUNG: "zur Pruefung vorgelegt",
+        ZUR_PRUEFUNG: "zur Prüfung vorgelegt",
         FREIGEGEBEN: "freigegeben",
       };
       toast.success(`Dokument ${labels[status] ?? "aktualisiert"}`);
       onUpdate();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Statusaenderung fehlgeschlagen";
+      const message = err instanceof Error ? err.message : "Statusänderung fehlgeschlagen";
       toast.error(message);
     } finally {
       setActionLoading(null);
@@ -174,7 +174,7 @@ export function DocumentActionsBar({
 
   // Delete handler
   const handleDelete = async () => {
-    if (!confirm(`"${dokument.name}" wirklich loeschen? Diese Aktion kann nicht rueckgaengig gemacht werden.`)) {
+    if (!confirm(`"${dokument.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) {
       return;
     }
     setActionLoading("delete");
@@ -183,11 +183,11 @@ export function DocumentActionsBar({
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Fehler");
-      toast.success("Dokument geloescht");
+      toast.success("Dokument gelöscht");
       router.push(`/akten/${dokument.akteId}`);
       router.refresh();
     } catch {
-      toast.error("Loeschen fehlgeschlagen");
+      toast.error("Löschen fehlgeschlagen");
     } finally {
       setActionLoading(null);
     }
@@ -226,7 +226,7 @@ export function DocumentActionsBar({
     case "ENTWURF":
       statusActions.push({
         status: "ZUR_PRUEFUNG",
-        label: "Zur Pruefung vorlegen",
+        label: "Zur Prüfung vorlegen",
         icon: FileSearch,
         color: "text-amber-600 dark:text-amber-400",
       });
@@ -242,7 +242,7 @@ export function DocumentActionsBar({
       }
       statusActions.push({
         status: "ENTWURF",
-        label: "Zurueck zu Entwurf",
+        label: "Zurück zu Entwurf",
         icon: Undo2,
         color: "text-foreground/80",
       });
@@ -426,7 +426,7 @@ export function DocumentActionsBar({
           size="sm"
           variant="ghost"
           onClick={() => setPdfToolsOpen(true)}
-          className="w-full justify-start h-8 px-2 text-xs text-violet-600 dark:text-violet-400"
+          className="w-full justify-start h-8 px-2 text-xs text-brand-600 dark:text-brand-400"
         >
           <Wrench className="w-3.5 h-3.5 mr-2" />
           PDF-Tools
@@ -444,7 +444,7 @@ export function DocumentActionsBar({
           className="w-full justify-start h-8 px-2 text-xs text-blue-600 dark:text-blue-400"
         >
           <ExternalLink className="w-3.5 h-3.5 mr-2" />
-          In OnlyOffice oeffnen
+          In OnlyOffice öffnen
         </Button>
       )}
 
@@ -481,7 +481,7 @@ export function DocumentActionsBar({
         ) : (
           <Trash2 className="w-3.5 h-3.5 mr-2" />
         )}
-        Loeschen
+        Löschen
       </Button>
 
       {/* PDF Tools Dialog */}

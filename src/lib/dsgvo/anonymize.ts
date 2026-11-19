@@ -143,7 +143,7 @@ export async function anonymizeKontakt(
         aufbewahrungBis: formattedDate,
         overridden: false,
       },
-      error: `Aufbewahrungspflicht: Anonymisierung erst ab ${formattedDate} moeglich`,
+      error: `Aufbewahrungspflicht: Anonymisierung erst ab ${formattedDate} möglich`,
     };
   }
 

@@ -271,7 +271,7 @@ export function DraftDetailModal({
         description: `${typeLabels[draft.typ] ?? draft.typ}-Entwurf wurde angenommen.`,
         action: result
           ? {
-              label: "Rueckgaengig",
+              label: "Rückgängig",
               onClick: async () => {
                 try {
                   await fetch(`/api/helena/drafts/${draft.id}/undo`, {
@@ -282,7 +282,7 @@ export function DraftDetailModal({
                       typ: result.typ,
                     }),
                   });
-                  toast.info("Rueckgaengig gemacht");
+                  toast.info("Rückgängig gemacht");
                 } catch {
                   toast.error("Undo fehlgeschlagen");
                 }
@@ -307,7 +307,7 @@ export function DraftDetailModal({
         toast.success("Abgelehnt", {
           description: data.noRevise
             ? "Entwurf abgelehnt, keine Revision."
-            : "Entwurf abgelehnt, Helena ueberarbeitet.",
+            : "Entwurf abgelehnt, Helena überarbeitet.",
         });
         onClose();
       } catch {
@@ -342,7 +342,7 @@ export function DraftDetailModal({
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <TypeIcon className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+            <TypeIcon className="w-5 h-5 text-brand-600 dark:text-brand-400" />
             <DialogTitle className="text-lg">
               {typeLabel}-Entwurf: {shown?.titel ?? draft.titel}
             </DialogTitle>
@@ -361,10 +361,10 @@ export function DraftDetailModal({
 
         {/* Revision context box */}
         {draft.parentDraftId && parentFeedback && (
-          <div className="rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-950/20 p-3 mb-2">
+          <div className="rounded-lg border border-brand-200 dark:border-brand-800 bg-brand-50/50 dark:bg-brand-950/20 p-3 mb-2">
             <div className="flex items-center gap-1.5 mb-1">
-              <MessageSquare className="w-3.5 h-3.5 text-violet-500" />
-              <span className="text-xs font-medium text-violet-700 dark:text-violet-300">
+              <MessageSquare className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+              <span className="text-xs font-medium text-brand-700 dark:text-brand-300">
                 Revision basiert auf Feedback:
               </span>
             </div>
@@ -388,7 +388,7 @@ export function DraftDetailModal({
           {/* FRIST: show date prominently */}
           {draft.typ === "FRIST" && !!draft.meta?.datum && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-              <Calendar className="w-4 h-4 text-violet-500" />
+              <Calendar className="w-4 h-4 text-brand-600 dark:text-brand-400" />
               <span className="text-sm font-medium">
                 Fristdatum:{" "}
                 {new Date(draft.meta.datum as string).toLocaleDateString("de-DE", {
@@ -464,7 +464,7 @@ export function DraftDetailModal({
               disabled={!hasNext}
               onClick={navigateNext}
             >
-              Naechster
+              Nächster
               <ChevronRight className="w-3.5 h-3.5 ml-1" />
             </Button>
           </div>

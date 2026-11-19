@@ -68,7 +68,7 @@ export function MessageBubble({
     return (
       <div className="flex justify-center py-1">
         <span className="text-xs italic text-muted-foreground/60">
-          Nachricht geloescht
+          Nachricht gelöscht
         </span>
       </div>
     );
@@ -79,8 +79,8 @@ export function MessageBubble({
     return (
       <div className="flex justify-center py-1">
         <div className="flex items-center gap-2 max-w-[80%]">
-          <div className="w-7 h-7 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0">
-            <Bot className="w-4 h-4 text-violet-400" />
+          <div className="w-7 h-7 rounded-full bg-brand-500/20 flex items-center justify-center flex-shrink-0">
+            <Bot className="w-4 h-4 text-brand-400" />
           </div>
           <div className="glass-card rounded-xl px-3 py-2 text-sm text-muted-foreground">
             {message.body}
@@ -125,7 +125,7 @@ export function MessageBubble({
         <div
           className={`max-w-[70%] mb-1 ${isOwnMessage ? "ml-auto" : "mr-auto"}`}
         >
-          <div className="border-l-2 border-violet-400 bg-slate-100 dark:bg-slate-800 rounded-r-lg px-2.5 py-1.5 text-xs">
+          <div className="border-l-2 border-brand-400 bg-slate-100 dark:bg-slate-800 rounded-r-lg px-2.5 py-1.5 text-xs">
             <span className="font-medium text-foreground">
               {message.parent.authorName}
             </span>
@@ -142,7 +142,7 @@ export function MessageBubble({
       <div
         className={`max-w-[70%] glass-card rounded-xl px-3 py-2 text-sm ${
           isOwnMessage
-            ? "bg-[oklch(45%_0.2_260/0.15)] text-foreground"
+            ? "bg-primary-soft text-foreground"
             : "text-foreground"
         }`}
       >
@@ -180,7 +180,7 @@ export function MessageBubble({
                 onClick={() => onReaction(message.id, r.emoji)}
                 className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded-full border transition-colors ${
                   isOwn
-                    ? "bg-violet-500/20 border-violet-500/30 text-violet-300"
+                    ? "bg-brand-500/20 border-brand-500/30 text-brand-300"
                     : "bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10"
                 }`}
               >

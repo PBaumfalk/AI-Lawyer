@@ -15,7 +15,7 @@ export default function EmailLayout({
 }) {
   return (
     <ComposeManager>
-      <div className="h-[calc(100vh-4rem)] -m-6 overflow-hidden">
+      <div className="h-[calc(100vh-4rem)] -m-4 sm:-m-6 overflow-hidden">
         {children}
       </div>
       <ComposeFab />

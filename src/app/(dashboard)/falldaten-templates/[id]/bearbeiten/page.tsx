@@ -134,7 +134,7 @@ export default function BearbeitenFalldatenTemplatePage({
           href="/falldaten-templates"
           className="text-sm text-primary hover:underline mt-4 inline-block"
         >
-          Zurueck zur Uebersicht
+          Zurück zur Übersicht
         </a>
       </div>
     );
@@ -155,7 +155,7 @@ export default function BearbeitenFalldatenTemplatePage({
           href="/falldaten-templates"
           className="text-sm text-primary hover:underline mt-4 inline-block"
         >
-          Zurueck zur Uebersicht
+          Zurück zur Übersicht
         </a>
       </div>
     );

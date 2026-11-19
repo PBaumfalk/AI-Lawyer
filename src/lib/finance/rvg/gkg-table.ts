@@ -19,7 +19,7 @@ import type { GkgTableVersion } from './types';
  */
 export const GKG_2025: GkgTableVersion = {
   id: 'GKG_2025',
-  name: 'GKG Gebuehrentabelle 2025',
+  name: 'GKG Gebührentabelle 2025',
   lawReference: 'KostBRaeG 2025, Anlage 2 GKG',
   validFrom: new Date('2025-06-01'),
   validUntil: null,

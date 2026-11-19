@@ -53,7 +53,7 @@ export async function POST(
     // Enforce 50MB file size limit
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "Maximale Dateigroesse: 50 MB" },
+        { error: "Maximale Dateigröße: 50 MB" },
         { status: 413 }
       );
     }

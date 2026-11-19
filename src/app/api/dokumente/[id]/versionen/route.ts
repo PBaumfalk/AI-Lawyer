@@ -84,7 +84,7 @@ export async function POST(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger Request-Body" },
+      { error: "Ungültiger Request-Body" },
       { status: 400 }
     );
   }

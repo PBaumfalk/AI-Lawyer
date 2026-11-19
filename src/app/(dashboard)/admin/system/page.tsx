@@ -181,7 +181,7 @@ export default function AdminSystemPage() {
         <div>
           <h1 className="text-2xl font-semibold font-bold">System-Status</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Service-Verfuegbarkeit und Systemprotokoll
+            Service-Verfügbarkeit und Systemprotokoll
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -225,12 +225,12 @@ export default function AdminSystemPage() {
             <p className="font-medium">
               {allHealthy
                 ? "Alle Systeme betriebsbereit"
-                : "Eingeschraenkter Betrieb"}
+                : "Eingeschränkter Betrieb"}
             </p>
             <p className="text-sm opacity-80">
               Laufzeit: {formatUptime(health.uptime)}
               {lastChecked && (
-                <> &middot; Letzte Pruefung: {lastChecked.toLocaleTimeString("de-DE")}</>
+                <> &middot; Letzte Prüfung: {lastChecked.toLocaleTimeString("de-DE")}</>
               )}
             </p>
           </div>
@@ -409,7 +409,7 @@ export default function AdminSystemPage() {
           ) : (
             !logsMessage && (
               <p className="text-sm text-muted-foreground text-center py-8">
-                {logsLoading ? "Lade Logs..." : "Keine Log-Eintraege vorhanden"}
+                {logsLoading ? "Lade Logs..." : "Keine Log-Einträge vorhanden"}
               </p>
             )
           )}

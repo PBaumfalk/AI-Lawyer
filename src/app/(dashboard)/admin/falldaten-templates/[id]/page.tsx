@@ -57,7 +57,7 @@ const FIELD_TYPE_LABELS: Record<string, string> = {
   text: "Text",
   textarea: "Textbereich",
   number: "Zahl",
-  currency: "Waehrung",
+  currency: "Währung",
   date: "Datum",
   select: "Dropdown",
   boolean: "Checkbox",
@@ -191,7 +191,7 @@ export default function AdminFalldatenTemplateDetailPage({
           href="/admin/falldaten-templates"
           className="text-sm text-primary hover:underline mt-4 inline-block"
         >
-          Zurueck zur Uebersicht
+          Zurück zur Übersicht
         </Link>
       </div>
     );
@@ -214,7 +214,7 @@ export default function AdminFalldatenTemplateDetailPage({
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
-          Zurueck zur Uebersicht
+          Zurück zur Übersicht
         </Link>
 
         <div className="flex items-start justify-between gap-4">
@@ -331,7 +331,7 @@ export default function AdminFalldatenTemplateDetailPage({
               <CheckCircle2 className="w-8 h-8 mx-auto mb-2" />
               <p className="font-medium">Template wurde genehmigt</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Weiterleitung zur Uebersicht...
+                Weiterleitung zur Übersicht...
               </p>
             </div>
           ) : (
@@ -339,7 +339,7 @@ export default function AdminFalldatenTemplateDetailPage({
               <XCircle className="w-8 h-8 mx-auto mb-2" />
               <p className="font-medium">Template wurde abgelehnt</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Weiterleitung zur Uebersicht...
+                Weiterleitung zur Übersicht...
               </p>
             </div>
           )}
@@ -360,7 +360,7 @@ export default function AdminFalldatenTemplateDetailPage({
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Bitte geben Sie einen Grund fuer die Ablehnung an..."
+                placeholder="Bitte geben Sie einen Grund für die Ablehnung an..."
                 rows={3}
                 maxLength={2000}
                 className="w-full rounded-md border border-rose-200 dark:border-rose-700 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
@@ -463,7 +463,7 @@ export default function AdminFalldatenTemplateDetailPage({
           href="/admin/falldaten-templates"
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          Zurueck zur Uebersicht
+          Zurück zur Übersicht
         </Link>
       </div>
     </div>

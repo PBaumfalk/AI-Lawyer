@@ -150,12 +150,12 @@ function InactivityWarningDialog({
       React.createElement(
         "h2",
         { className: "text-lg font-heading text-foreground mb-2" },
-        "Sitzung laeuft ab"
+        "Sitzung läuft ab"
       ),
       React.createElement(
         "p",
         { className: "text-sm text-muted-foreground mb-6" },
-        `Ihre Sitzung laeuft in ${minutesRemaining} ${minutesRemaining === 1 ? "Minute" : "Minuten"} ab. Klicken Sie um fortzufahren.`
+        `Ihre Sitzung läuft in ${minutesRemaining} ${minutesRemaining === 1 ? "Minute" : "Minuten"} ab. Klicken Sie um fortzufahren.`
       ),
       React.createElement(
         "button",

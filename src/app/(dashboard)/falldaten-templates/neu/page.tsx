@@ -105,7 +105,7 @@ export default function NeuFalldatenTemplatePage() {
         return;
       }
 
-      toast.success("Template erstellt und zur Pruefung eingereicht");
+      toast.success("Template erstellt und zur Prüfung eingereicht");
       router.push("/falldaten-templates");
     } catch (err: unknown) {
       setServerErrors([

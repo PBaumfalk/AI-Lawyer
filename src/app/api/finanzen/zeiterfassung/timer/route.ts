@@ -113,7 +113,7 @@ export async function PATCH(request: NextRequest) {
     console.error('Timer stop error:', err);
 
     // Stundenhonorar validation error returns 400
-    if (err.message?.includes('Taetigkeitsbeschreibung ist Pflicht')) {
+    if (err.message?.includes('Tätigkeitsbeschreibung ist Pflicht')) {
       return NextResponse.json(
         { error: err.message },
         { status: 400 },

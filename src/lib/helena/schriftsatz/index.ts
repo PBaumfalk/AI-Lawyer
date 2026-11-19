@@ -182,7 +182,7 @@ export async function runSchriftsatzPipeline(
       return {
         status: "needs_input",
         rueckfrage:
-          "Ich bin mir nicht sicher, was fuer einen Schriftsatz du brauchst. Kannst du genauer beschreiben, was du erstellen moechtest?",
+          "Ich bin mir nicht sicher, was für einen Schriftsatz du brauchst. Kannst du genauer beschreiben, was du erstellen möchtest?",
         intentState: intent,
         warnungen: [],
         retrieval_belege: [],
@@ -203,7 +203,7 @@ export async function runSchriftsatzPipeline(
       return {
         status: "needs_input",
         rueckfrage:
-          slotResult.rueckfrage ?? "Ich benoetigen weitere Informationen.",
+          slotResult.rueckfrage ?? "Ich benötigen weitere Informationen.",
         slotState: slotResult.slots,
         intentState: intent,
         warnungen: [],
@@ -231,7 +231,7 @@ export async function runSchriftsatzPipeline(
     if (abortSignal?.aborted) throw new Error("Aborted");
     onStepUpdate?.({
       stage: "validation",
-      detail: "Pruefe formale Anforderungen...",
+      detail: "Prüfe formale Anforderungen...",
     });
 
     // Parse the assembled object through the Zod schema
@@ -393,7 +393,7 @@ export function renderSchriftsatzMarkdown(schriftsatz: Schriftsatz): string {
   }
 
   // Antraege
-  lines.push("\n## Antraege\n");
+  lines.push("\n## Anträge\n");
   schriftsatz.antraege.forEach((antrag, i) => {
     lines.push(`${i + 1}. ${antrag}`);
   });
@@ -403,7 +403,7 @@ export function renderSchriftsatzMarkdown(schriftsatz: Schriftsatz): string {
   lines.push(schriftsatz.sachverhalt);
 
   // Rechtliche Wuerdigung
-  lines.push("\n## Rechtliche Wuerdigung\n");
+  lines.push("\n## Rechtliche Würdigung\n");
   lines.push(schriftsatz.rechtlicheWuerdigung);
 
   // Beweisangebote
@@ -451,9 +451,9 @@ export function renderSchriftsatzMarkdown(schriftsatz: Schriftsatz): string {
   });
 
   // ERV Pruefbericht
-  lines.push("\n---\n### Pruefbericht (ERV-Validierung)\n");
+  lines.push("\n---\n### Prüfbericht (ERV-Validierung)\n");
   if (schriftsatz.warnungen.length === 0) {
-    lines.push("Alle Pruefungen bestanden.");
+    lines.push("Alle Prüfungen bestanden.");
   } else {
     schriftsatz.warnungen.forEach((w) => {
       // Simple rendering: use warning emoji convention
@@ -464,7 +464,7 @@ export function renderSchriftsatzMarkdown(schriftsatz: Schriftsatz): string {
   // Vollstaendigkeit
   if (!schriftsatz.vollstaendig) {
     lines.push(
-      `\n**Achtung:** Entwurf ist noch nicht vollstaendig. ${schriftsatz.unresolved_platzhalter.length} Platzhalter offen.`,
+      `\n**Achtung:** Entwurf ist noch nicht vollständig. ${schriftsatz.unresolved_platzhalter.length} Platzhalter offen.`,
     );
   }
 

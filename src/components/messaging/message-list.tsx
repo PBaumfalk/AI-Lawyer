@@ -87,9 +87,9 @@ export function MessageList({
           <button
             type="button"
             onClick={onLoadMore}
-            className="text-xs text-violet-500 hover:text-violet-400 transition-colors"
+            className="text-xs text-brand-600 dark:text-brand-400 hover:text-brand-400 transition-colors"
           >
-            Aeltere laden
+            Ältere laden
           </button>
         </div>
       )}

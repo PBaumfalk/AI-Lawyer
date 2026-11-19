@@ -101,7 +101,7 @@ export async function PATCH(
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         return NextResponse.json(
-          { error: `Uebernahme fehlgeschlagen: ${errMsg}` },
+          { error: `Übernahme fehlgeschlagen: ${errMsg}` },
           { status: 500 }
         );
       }

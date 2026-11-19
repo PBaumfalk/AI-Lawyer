@@ -106,7 +106,7 @@ function formatDate(dateStr: string): string {
 
 /**
  * Card showing a Helena draft in the Akte feed.
- * Dashed violet border, type icon, status badge, action buttons.
+ * Dashed brand-orange border (Entwurf), type icon, status badge, action buttons.
  */
 export function DraftCard({
   draft,
@@ -136,16 +136,16 @@ export function DraftCard({
       }}
       className={cn(
         "relative rounded-lg p-4 cursor-pointer transition-colors",
-        "border-2 border-dashed border-violet-300 dark:border-violet-700",
-        "bg-violet-50/50 dark:bg-violet-950/20",
-        "hover:bg-violet-50 dark:hover:bg-violet-950/30",
+        "border-2 border-dashed border-brand-300 dark:border-brand-700",
+        "bg-brand-50/50 dark:bg-brand-950/20",
+        "hover:bg-brand-50 dark:hover:bg-brand-950/30",
         className
       )}
     >
       {/* Header: type icon + label + status badge */}
       <div className="flex items-center gap-2 mb-2">
-        <TypeIcon className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-        <span className="text-xs font-medium text-violet-600 dark:text-violet-400">
+        <TypeIcon className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+        <span className="text-xs font-medium text-brand-600 dark:text-brand-400">
           Entwurf: {typeLabel}
         </span>
         <Badge variant="outline" className="ml-auto text-xs">
@@ -161,8 +161,8 @@ export function DraftCard({
       {/* FRIST: show proposed deadline date */}
       {draft.typ === "FRIST" && !!draft.meta?.datum && (
         <div className="flex items-center gap-1.5 mb-1.5">
-          <Calendar className="w-3.5 h-3.5 text-violet-500" />
-          <span className="text-xs font-medium text-violet-700 dark:text-violet-300">
+          <Calendar className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+          <span className="text-xs font-medium text-brand-700 dark:text-brand-300">
             Fristdatum: {formatDate(draft.meta.datum as string)}
           </span>
         </div>

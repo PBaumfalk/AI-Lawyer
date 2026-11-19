@@ -114,7 +114,7 @@ export function UploadPanel() {
                   <div className="mt-1">
                     <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-500 transition-all duration-300 rounded-full"
+                        className="h-full bg-primary transition-all duration-300 rounded-full"
                         style={{ width: `${item.progress}%` }}
                       />
                     </div>

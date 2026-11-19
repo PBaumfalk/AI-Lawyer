@@ -68,6 +68,7 @@ export function KontakteSearchBar({
             <button
               type="button"
               onClick={handleClear}
+              aria-label="Suche leeren"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
             >
               <X className="w-4 h-4" />
@@ -78,6 +79,7 @@ export function KontakteSearchBar({
           value={defaultTyp ?? ""}
           onChange={handleTypChange}
           className="w-48"
+          aria-label="Kontakttyp filtern"
         >
           <option value="">Alle Typen</option>
           <option value="NATUERLICH">Natürliche Personen</option>

@@ -4,36 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
-  FolderOpen,
-  Users,
-  Calendar,
-  FileText,
-  FileCheck,
-  Wallet,
-  Mail,
-  MessageSquare,
-  Settings,
-  Scale,
-  Shield,
   Store,
   IdCard,
   LogOut,
   ChevronLeft,
-  TicketCheck,
-  Sparkles,
-  BarChart3,
-  Bot,
   Activity,
   Server,
-  Wrench,
   Workflow,
   Building2,
-  ShieldCheck,
   Sun,
   Moon,
-  Bell,
 } from "lucide-react";
+import { Icon, type IconName } from "@/components/icons/persimmon";
+import { BrandMark, BrandWordmark } from "@/components/brand/brand-logo";
 import { signOut, useSession } from "next-auth/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
@@ -53,28 +36,35 @@ type NavItem = {
   badgeKey?: string;
 };
 
+/** Navigationsicon aus dem Designpaket (icons/navigation-map.json). */
+function navIcon(name: IconName): NavItem["icon"] {
+  const NavIcon = ({ className }: { className?: string }) => <Icon name={name} className={className} />;
+  NavIcon.displayName = `NavIcon(${name})`;
+  return NavIcon;
+}
+
 const navigation: NavItem[] = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Akten", href: "/akten", icon: FolderOpen },
-  { name: "Kontakte", href: "/kontakte", icon: Users },
-  { name: "Kalender", href: "/kalender", icon: Calendar },
-  { name: "Dokumente", href: "/dokumente", icon: FileText },
-  { name: "Entwuerfe", href: "/entwuerfe", icon: FileCheck, badgeKey: "pendingDrafts" },
-  { name: "Warnungen", href: "/alerts", icon: Bell, badgeKey: "unreadAlerts" },
-  { name: "E-Mails", href: "/email", icon: Mail },
-  { name: "Tickets", href: "/tickets", icon: TicketCheck },
-  { name: "Helena", href: "/ki-chat", icon: Sparkles },
-  { name: "KI-Chat", href: "/ki", icon: Bot },
-  { name: "Finanzen", href: "/finanzen", icon: Wallet },
-  { name: "BI-Dashboard", href: "/bi", icon: BarChart3 },
-  { name: "beA", href: "/bea", icon: Shield },
-  { name: "Nachrichten", href: "/nachrichten", icon: MessageSquare, badgeKey: "unreadMessages" },
+  { name: "Dashboard", href: "/dashboard", icon: navIcon("dashboard") },
+  { name: "Akten", href: "/akten", icon: navIcon("cases") },
+  { name: "Kontakte", href: "/kontakte", icon: navIcon("contacts") },
+  { name: "Kalender", href: "/kalender", icon: navIcon("calendar") },
+  { name: "Dokumente", href: "/dokumente", icon: navIcon("documents") },
+  { name: "Entwürfe", href: "/entwuerfe", icon: navIcon("drafts"), badgeKey: "pendingDrafts" },
+  { name: "Warnungen", href: "/alerts", icon: navIcon("alerts"), badgeKey: "unreadAlerts" },
+  { name: "E-Mails", href: "/email", icon: navIcon("email") },
+  { name: "Tickets", href: "/tickets", icon: navIcon("tickets") },
+  { name: "Helena", href: "/ki-chat", icon: navIcon("helena") },
+  { name: "KI-Chat", href: "/ki", icon: navIcon("ai-chat") },
+  { name: "Finanzen", href: "/finanzen", icon: navIcon("finances") },
+  { name: "BI-Dashboard", href: "/bi", icon: navIcon("analytics") },
+  { name: "beA", href: "/bea", icon: navIcon("bea") },
+  { name: "Nachrichten", href: "/nachrichten", icon: navIcon("messages"), badgeKey: "unreadMessages" },
   { name: "Shop", href: "/shop", icon: Store },
   { name: "Heldenkarte", href: "/heldenkarte", icon: IdCard },
   {
     name: "Einstellungen",
     href: "/einstellungen",
-    icon: Settings,
+    icon: navIcon("settings"),
     hideForRoles: ["SEKRETARIAT"],
   },
 ];
@@ -84,8 +74,8 @@ const adminNavigation: NavItem[] = [
   { name: "System", href: "/admin/system", icon: Server },
   { name: "Pipeline", href: "/admin/pipeline", icon: Workflow },
   { name: "Dezernate", href: "/admin/dezernate", icon: Building2 },
-  { name: "Rollen", href: "/admin/rollen", icon: ShieldCheck },
-  { name: "Einstellungen", href: "/admin/settings", icon: Wrench },
+  { name: "Rollen", href: "/admin/rollen", icon: navIcon("shield") },
+  { name: "Einstellungen", href: "/admin/settings", icon: navIcon("settings") },
 ];
 
 export function Sidebar() {
@@ -249,31 +239,22 @@ export function Sidebar() {
           : { type: "spring", stiffness: 300, damping: 30 }
       }
       className={cn(
-        "glass-sidebar flex flex-col h-screen select-none overflow-hidden shrink-0",
-        "text-[oklch(20%_0.01_250)] dark:text-[oklch(92%_0.005_250)]"
+        "glass-sidebar flex flex-col h-screen select-none overflow-hidden shrink-0 text-foreground"
       )}
     >
       {/* Logo area */}
-      <div className="flex items-center gap-2 px-3 py-4">
-        <div className="flex items-center gap-2 px-2 py-1.5 rounded-[10px] bg-white/15 backdrop-blur-[8px] min-w-0">
-          <div className="flex-shrink-0 w-7 h-7 bg-[oklch(45%_0.2_260)] rounded-lg flex items-center justify-center shadow-lg">
-            <Scale className="w-3.5 h-3.5 text-white" />
-          </div>
-          {!collapsed && (
-            <motion.span
-              className="font-semibold text-sm truncate"
-              initial={prefersReducedMotion ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.15 }}
-            >
-              AI-Lawyer
-            </motion.span>
-          )}
-        </div>
+      <div className={cn("flex items-center gap-2 px-3 py-4", collapsed && "flex-col px-2")}>
+        <Link href="/dashboard" className="flex items-center min-w-0 rounded-lg px-1 py-1" aria-label="AI-Lawyer – zum Dashboard">
+          {collapsed ? <BrandMark height={22} label="" /> : <BrandWordmark width={140} />}
+        </Link>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto p-1.5 rounded-lg hover:bg-white/10 dark:hover:bg-white/5 transition-colors flex-shrink-0"
+          className={cn(
+            "inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-primary-soft hover:text-foreground transition-colors flex-shrink-0",
+            !collapsed && "ml-auto"
+          )}
           aria-label={collapsed ? "Sidebar aufklappen" : "Sidebar einklappen"}
+          aria-expanded={!collapsed}
         >
           <ChevronLeft
             className={cn("w-4 h-4 transition-transform", collapsed && "rotate-180")}
@@ -281,8 +262,9 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 py-2 px-2 space-y-1 overflow-y-auto">
+      {/* Navigation und Administration scrollen gemeinsam */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+      <nav className="py-2 px-2 space-y-1" aria-label="Hauptnavigation">
         {filteredNavigation.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
@@ -294,11 +276,13 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               title={collapsed ? item.name : undefined}
+              aria-label={collapsed ? item.name : undefined}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
+                "relative flex min-h-[44px] items-center gap-3 px-3 py-2 rounded-lg border-l-[3px] text-sm font-medium transition-colors duration-150",
                 isActive
-                  ? "bg-[oklch(45%_0.2_260/0.15)] text-[oklch(45%_0.2_260)] border-l-2 border-[oklch(45%_0.2_260)] -ml-[2px]"
-                  : "text-[oklch(40%_0.015_250)] dark:text-[oklch(65%_0.01_250)] hover:bg-white/5 dark:hover:bg-white/[0.03]"
+                  ? "bg-primary-soft text-primary-strong border-primary-strong font-semibold"
+                  : "text-muted-foreground border-transparent hover:bg-primary-soft hover:text-foreground"
               )}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -315,7 +299,7 @@ export function Sidebar() {
                   {badgeCount > 0 && (
                     <Badge
                       variant="secondary"
-                      className="ml-auto h-5 min-w-[20px] px-1.5 text-[10px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300"
+                      className="ml-auto h-5 min-w-[20px] px-1.5 text-[11px] font-semibold bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300"
                     >
                       {badgeCount}
                     </Badge>
@@ -323,7 +307,7 @@ export function Sidebar() {
                 </>
               )}
               {collapsed && badgeCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-violet-500" />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" aria-hidden="true" />
               )}
             </Link>
           );
@@ -333,14 +317,14 @@ export function Sidebar() {
       {/* Administration section -- ADMIN only */}
       {isAdmin && (
         <div className="px-2 pb-2">
-          <div className="border-t border-[oklch(0%_0_0/0.08)] dark:border-[oklch(100%_0_0/0.06)] pt-3 mb-1">
+          <div className="border-t border-border/60 pt-3 mb-1">
             {!collapsed && (
-              <span className="px-3 text-[10px] uppercase tracking-wider text-[oklch(60%_0.01_250)] dark:text-[oklch(50%_0.01_250)] font-semibold">
+              <span className="px-3 text-xs font-semibold text-muted-foreground">
                 Administration
               </span>
             )}
           </div>
-          <nav className="space-y-1">
+          <nav className="space-y-1" aria-label="Administration">
             {adminNavigation.map((item) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + "/");
@@ -349,11 +333,13 @@ export function Sidebar() {
                   key={item.href}
                   href={item.href}
                   title={collapsed ? item.name : undefined}
+                  aria-label={collapsed ? item.name : undefined}
+                  aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
+                    "flex min-h-[44px] items-center gap-3 px-3 py-2 rounded-lg border-l-[3px] text-sm font-medium transition-colors duration-150",
                     isActive
-                      ? "bg-[oklch(45%_0.2_260/0.15)] text-[oklch(45%_0.2_260)] border-l-2 border-[oklch(45%_0.2_260)] -ml-[2px]"
-                      : "text-[oklch(40%_0.015_250)] dark:text-[oklch(65%_0.01_250)] hover:bg-white/5 dark:hover:bg-white/[0.03]"
+                      ? "bg-primary-soft text-primary-strong border-primary-strong font-semibold"
+                      : "text-muted-foreground border-transparent hover:bg-primary-soft hover:text-foreground"
                   )}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -374,6 +360,8 @@ export function Sidebar() {
         </div>
       )}
 
+      </div>
+
       {/* Timer Widget */}
       {!collapsed && (
         <div className="px-2 py-1">
@@ -384,11 +372,12 @@ export function Sidebar() {
       )}
 
       {/* Sidebar bottom — dark mode toggle + profile chip */}
-      <div className="border-t border-[oklch(0%_0_0/0.08)] dark:border-[oklch(100%_0_0/0.06)] p-2 space-y-1">
+      <div className="border-t border-border/60 p-2 space-y-1">
         {/* Dark mode toggle */}
         <button
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 dark:hover:bg-white/5 transition-colors w-full"
+          className="flex min-h-[44px] items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-primary-soft hover:text-foreground transition-colors w-full"
+          aria-label={collapsed ? (resolvedTheme === "dark" ? "Heller Modus" : "Dunkler Modus") : undefined}
           title={collapsed ? (resolvedTheme === "dark" ? "Hell" : "Dunkel") : undefined}
         >
           {resolvedTheme === "dark" ? (
@@ -410,7 +399,7 @@ export function Sidebar() {
 
         {/* Profile chip */}
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg glass-card">
-          <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[oklch(45%_0.2_260)] flex items-center justify-center text-white text-xs font-semibold shadow-md">
+          <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-semibold" aria-hidden="true">
             {session?.user?.name
               ?.split(" ")
               .map((n: string) => n[0])
@@ -432,7 +421,7 @@ export function Sidebar() {
               </motion.div>
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}
-                className="flex-shrink-0 p-1 rounded-md hover:bg-white/10 transition-colors"
+                className="flex-shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-primary-soft hover:text-foreground transition-colors"
                 aria-label="Abmelden"
               >
                 <LogOut className="w-4 h-4" />

@@ -49,15 +49,15 @@ export type ExtractedParty = z.infer<typeof partySchema>["parties"][number];
 const SYSTEM_PROMPT = `Du bist ein juristischer Assistent, spezialisiert auf die Erkennung von Parteien und Beteiligten in deutschen Rechtstexten.
 
 Extrahiere alle Parteien und Beteiligten aus dem folgenden juristischen Text. Suche nach:
-- Klaeger und Beklagte (auch "Antragsteller" / "Antragsgegner")
-- Rechtsanwaelte und Prozessbevollmaechtigte
+- Kläger und Beklagte (auch "Antragsteller" / "Antragsgegner")
+- Rechtsanwälte und Prozessbevollmächtigte
 - Richter und Vorsitzende
-- Zeugen und Sachverstaendige
-- Behoerden und Gerichte
+- Zeugen und Sachverständige
+- Behörden und Gerichte
 - Sonstige genannte Personen und Organisationen
 
-Klassifiziere jede Partei nach ihrer Rolle und ob es sich um eine natuerliche oder juristische Person handelt.
-Extrahiere wenn moeglich auch die Adresse und das Aktenzeichen.
+Klassifiziere jede Partei nach ihrer Rolle und ob es sich um eine natürliche oder juristische Person handelt.
+Extrahiere wenn möglich auch die Adresse und das Aktenzeichen.
 Bewerte dein Vertrauen (confidence) realistisch.`;
 
 // ---------------------------------------------------------------------------
@@ -78,7 +78,7 @@ export async function extractParties(
   const helenaId = await getHelenaUserId();
 
   // Truncate very long texts to stay within token limits
-  const truncatedText = text.length > 15000 ? text.slice(0, 15000) + "\n\n[... Text gekuerzt ...]" : text;
+  const truncatedText = text.length > 15000 ? text.slice(0, 15000) + "\n\n[... Text gekürzt ...]" : text;
 
   const contextInfo = metadata?.dokumentName
     ? `\n\nDokument: "${metadata.dokumentName}"`

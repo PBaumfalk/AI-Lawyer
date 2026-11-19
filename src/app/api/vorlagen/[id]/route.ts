@@ -111,7 +111,7 @@ export async function PUT(
         updateData.customFelder = JSON.parse(customFelderRaw);
       } catch {
         return NextResponse.json(
-          { error: "Ungueltiges customFelder JSON" },
+          { error: "Ungültiges customFelder JSON" },
           { status: 400 }
         );
       }

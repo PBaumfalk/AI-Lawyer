@@ -295,7 +295,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
           <Link href={`/akten/${akteId}`}>
             <Button variant="outline" size="sm">
               <ArrowLeft className="w-4 h-4 mr-1.5" />
-              Zurueck zur Akte
+              Zurück zur Akte
             </Button>
           </Link>
         </div>
@@ -377,10 +377,10 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
       <div className="flex-1 min-h-0">
         <ResizablePanelGroup
           orientation="horizontal"
-          autoSaveId="document-detail"
+          autoSaveId="document-detail-v2"
         >
           {/* Left panel: PDF viewer */}
-          <ResizablePanel id="pdf-panel" defaultSize={65} minSize={30}>
+          <ResizablePanel id="pdf-panel" defaultSize="65%" minSize="30%">
             <div className="h-full flex flex-col">
               {/* OnlyOffice button for editable non-PDF documents */}
               {isEditable && (
@@ -389,7 +389,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                     href={`/dokumente/${dokument.id}/bearbeiten`}
                     className="inline-flex items-center gap-1.5"
                   >
-                    <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
+                    <Button size="sm" variant="default">
                       <ExternalLink className="w-4 h-4 mr-1.5" />
                       In OnlyOffice bearbeiten
                     </Button>
@@ -466,14 +466,14 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                     )}
                     {dokument.previewPfad !== null && !dokument.previewUrl && (
                       <p className="text-sm text-slate-500">
-                        Keine Vorschau verfuegbar
+                        Keine Vorschau verfügbar
                       </p>
                     )}
                     {isEditable && (
                       <Link href={`/dokumente/${dokument.id}/bearbeiten`}>
                         <Button size="sm" variant="outline">
                           <ExternalLink className="w-4 h-4 mr-1.5" />
-                          In OnlyOffice oeffnen
+                          In OnlyOffice öffnen
                         </Button>
                       </Link>
                     )}
@@ -486,7 +486,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
           <ResizableHandle withHandle />
 
           {/* Right panel: Metadata + actions */}
-          <ResizablePanel id="meta-panel" defaultSize={35} minSize={25}>
+          <ResizablePanel id="meta-panel" defaultSize="35%" minSize="25%">
             <div className="h-full overflow-y-auto bg-white/50 dark:bg-slate-800/50 p-4 space-y-5">
               {/* Metadata card */}
               <section>
@@ -501,7 +501,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                   />
                   <MetadataRow
                     icon={HardDrive}
-                    label="Groesse"
+                    label="Größe"
                     value={formatFileSize(dokument.groesse)}
                   />
                   <MetadataRow
@@ -520,7 +520,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                       <span className="text-[11px] text-slate-400 block">Akte</span>
                       <Link
                         href={`/akten/${dokument.akte.id}`}
-                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate block"
+                        className="text-sm text-primary-strong dark:text-brand-300 hover:underline truncate block"
                       >
                         {dokument.akte.aktenzeichen} - {dokument.akte.kurzrubrum}
                       </Link>
@@ -557,7 +557,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                           </span>
                         )}
                         {dokument.ocrStatus === "NICHT_NOETIG" && (
-                          <span className="text-xs text-slate-500">Nicht noetig</span>
+                          <span className="text-xs text-slate-500">Nicht nötig</span>
                         )}
                       </div>
                     </div>
@@ -678,7 +678,7 @@ function DocumentHistorie({ dokumentId, akteId }: { dokumentId: string; akteId: 
 
   if (items.length === 0) {
     return (
-      <p className="text-xs text-slate-400 py-2">Keine Eintraege vorhanden</p>
+      <p className="text-xs text-slate-400 py-2">Keine Einträge vorhanden</p>
     );
   }
 

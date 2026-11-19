@@ -72,13 +72,13 @@ export function EmailActionsBar({
     // Soft delete with 5s undo toast (undo = bulk "restore")
     try {
       await emailBulkAktion({ action: "delete", emailIds: [emailId] });
-      toast("E-Mail geloescht", {
+      toast("E-Mail gelöscht", {
         action: {
-          label: "Rueckgaengig",
+          label: "Rückgängig",
           onClick: async () => {
             try {
               await emailBulkAktion({ action: "restore", emailIds: [emailId] });
-              toast.success("Loeschung rueckgaengig gemacht");
+              toast.success("Löschung rückgängig gemacht");
             } catch (err) {
               toast.error(err instanceof Error ? err.message : "Wiederherstellen fehlgeschlagen");
             }
@@ -88,7 +88,7 @@ export function EmailActionsBar({
       });
       onEmailDeleted?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Fehler beim Loeschen");
+      toast.error(err instanceof Error ? err.message : "Fehler beim Löschen");
     }
   }, [emailId, onEmailDeleted]);
 
@@ -177,7 +177,7 @@ export function EmailActionsBar({
           onClick={handleDelete}
         >
           <Trash2 className="w-4 h-4" />
-          Loeschen
+          Löschen
         </Button>
       </div>
 
@@ -203,7 +203,7 @@ export function EmailActionsBar({
             onClick={() => setShowVeraktungBanner(false)}
             className="text-amber-400 hover:text-amber-600 text-xs"
           >
-            Spaeter
+            Später
           </button>
         </div>
       )}

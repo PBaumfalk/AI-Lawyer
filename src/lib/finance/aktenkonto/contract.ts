@@ -28,7 +28,7 @@ export const bookingSchema = z
     richtung: z.enum(FREMDGELD_RICHTUNG).optional(),
   })
   .refine((b) => b.richtung === undefined || b.buchungstyp === 'FREMDGELD', {
-    message: 'Richtung ist nur bei Fremdgeld zulaessig',
+    message: 'Richtung ist nur bei Fremdgeld zulässig',
     path: ['richtung'],
   });
 export type BookingBody = z.infer<typeof bookingSchema>;

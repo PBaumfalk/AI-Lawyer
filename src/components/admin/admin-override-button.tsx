@@ -99,10 +99,10 @@ export function AdminOverrideButton({ akteId, aktenzeichen }: AdminOverrideButto
     <>
       <button
         onClick={() => setDialogOpen(true)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900 transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900 transition-colors"
       >
         <Shield className="w-4 h-4" />
-        Zugriff uebernehmen
+        Zugriff übernehmen
       </button>
       <AdminOverrideDialog
         open={dialogOpen}

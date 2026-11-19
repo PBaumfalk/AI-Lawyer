@@ -31,7 +31,7 @@ export async function PATCH(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger Request-Body" },
+      { error: "Ungültiger Request-Body" },
       { status: 400 }
     );
   }
@@ -125,7 +125,7 @@ export async function DELETE(
     return NextResponse.json(
       {
         error:
-          "Ein Standard-Schema kann nicht geloescht werden. Entfernen Sie zuerst den Standard-Status.",
+          "Ein Standard-Schema kann nicht gelöscht werden. Entfernen Sie zuerst den Standard-Status.",
       },
       { status: 400 }
     );

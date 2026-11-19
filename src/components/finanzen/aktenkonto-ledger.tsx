@@ -289,7 +289,7 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
               <AlertTriangle className="w-5 h-5 shrink-0" />
               <div className="flex-1">
                 <p className="font-medium text-sm">
-                  Fremdgeld-Weiterleitung faellig:{" "}
+                  Fremdgeld-Weiterleitung fällig:{" "}
                   {formatEuroFromRaw(alert.offenerBetrag)}
                   {alert.offenerBetrag !== alert.betrag &&
                     ` (von ${formatEuroFromRaw(alert.betrag)})`}
@@ -319,7 +319,7 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
           <Shield className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
           <div className="flex-1">
             <p className="font-medium text-sm text-red-700 dark:text-red-400">
-              15.000 EUR Anderkonto-Schwelle ueberschritten!
+              15.000 EUR Anderkonto-Schwelle überschritten!
             </p>
             <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">
               Aktuelles Fremdgeld:{" "}
@@ -387,7 +387,7 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
         <button
           type="button"
           onClick={() => setShowNewBooking(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-primary hover:bg-primary-hover text-primary-foreground transition-colors"
         >
           <Plus className="w-4 h-4" />
           Neue Buchung
@@ -446,7 +446,7 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
                 value={newKonto}
                 onChange={(e) => setNewKonto(e.target.value)}
               >
-                <option value="GESCHAEFT">Geschaeftskonto</option>
+                <option value="GESCHAEFT">Geschäftskonto</option>
                 <option value="ANDERKONTO">Anderkonto</option>
               </Select>
             </div>
@@ -456,7 +456,7 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
               type="button"
               onClick={handleCreateBooking}
               disabled={bookingSaving || !newBetrag || !newVerwendungszweck.trim()}
-              className="px-4 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary-hover text-primary-foreground transition-colors disabled:opacity-50"
             >
               {bookingSaving ? "Buchen..." : "Buchen"}
             </button>
@@ -485,7 +485,7 @@ export function AktenkontoLedger({ akteId, aktenzeichen }: AktenkontoLedgerProps
               type="text"
               value={stornoGrund}
               onChange={(e) => setStornoGrund(e.target.value)}
-              placeholder="Grund fuer die Stornierung"
+              placeholder="Grund für die Stornierung"
               className="w-full h-10 px-3 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               autoFocus
             />

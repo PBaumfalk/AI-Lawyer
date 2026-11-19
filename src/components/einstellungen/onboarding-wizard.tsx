@@ -32,7 +32,7 @@ const STEPS = [
 ];
 
 const BUNDESLAENDER = [
-  { code: "BW", name: "Baden-Wuerttemberg" },
+  { code: "BW", name: "Baden-Württemberg" },
   { code: "BY", name: "Bayern" },
   { code: "BE", name: "Berlin" },
   { code: "BB", name: "Brandenburg" },
@@ -47,7 +47,7 @@ const BUNDESLAENDER = [
   { code: "SN", name: "Sachsen" },
   { code: "ST", name: "Sachsen-Anhalt" },
   { code: "SH", name: "Schleswig-Holstein" },
-  { code: "TH", name: "Thueringen" },
+  { code: "TH", name: "Thüringen" },
 ];
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
@@ -139,8 +139,10 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="glass rounded-2xl w-full max-w-2xl mx-4 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex overflow-y-auto p-4 bg-black/60 backdrop-blur-sm">
+      {/* m-auto centers the dialog but lets the overlay scroll when it is
+          taller than the viewport (small screens, 200 % zoom) */}
+      <div className="glass m-auto rounded-2xl w-full max-w-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-white/[0.06]">
           <div>
@@ -153,7 +155,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           </div>
           <Button variant="ghost" size="sm" onClick={dismissWizard}>
             <X className="w-4 h-4 mr-1" />
-            Spaeter einrichten
+            Später einrichten
           </Button>
         </div>
 
@@ -164,7 +166,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               key={s.id}
               className={`h-1 flex-1 rounded-full transition-colors ${
                 s.id <= step
-                  ? "bg-blue-500"
+                  ? "bg-primary"
                   : "bg-muted/30"
               }`}
             />
@@ -181,7 +183,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 onClick={() => s.id <= step && setStep(s.id)}
                 className={`flex items-center gap-1.5 text-xs whitespace-nowrap transition-colors ${
                   s.id === step
-                    ? "text-blue-500 font-medium"
+                    ? "text-primary-strong font-medium"
                     : s.id < step
                       ? "text-foreground/70 cursor-pointer"
                       : "text-muted-foreground/40"
@@ -204,8 +206,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           {step === 1 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground mb-4">
-                Geben Sie die grundlegenden Kanzleidaten ein. Diese werden fuer
-                Briefkoepfe und Dokumente verwendet.
+                Geben Sie die grundlegenden Kanzleidaten ein. Diese werden für
+                Briefköpfe und Dokumente verwendet.
               </p>
               <div>
                 <label className="text-sm font-medium block mb-1">
@@ -214,7 +216,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 <Input
                   value={kanzleiName}
                   onChange={(e) => setKanzleiName(e.target.value)}
-                  placeholder="Rechtsanwaelte Muster & Partner"
+                  placeholder="Rechtsanwälte Muster & Partner"
                 />
               </div>
               <div>
@@ -224,7 +226,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 <Input
                   value={kanzleiAdresse}
                   onChange={(e) => setKanzleiAdresse(e.target.value)}
-                  placeholder="Musterstrasse 1, 50667 Koeln"
+                  placeholder="Musterstraße 1, 50667 Köln"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -257,7 +259,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground mb-4">
                 Richten Sie einen Standard-Briefkopf ein. Logo und Dateien
-                koennen spaeter in den Einstellungen hochgeladen werden.
+                können später in den Einstellungen hochgeladen werden.
               </p>
               <div>
                 <label className="text-sm font-medium block mb-1">
@@ -272,7 +274,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               <div className="p-4 rounded-lg bg-muted/20 text-sm text-muted-foreground">
                 <FileText className="w-5 h-5 mb-2 text-muted-foreground/60" />
                 Logo-Upload und detaillierte Briefkopf-Konfiguration sind
-                spaeter unter Einstellungen verfuegbar.
+                später unter Einstellungen verfügbar.
               </div>
             </div>
           )}
@@ -281,8 +283,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           {step === 3 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground mb-4">
-                Waehlen Sie das Standard-Bundesland fuer die Fristenberechnung.
-                Feiertage werden automatisch beruecksichtigt.
+                Wählen Sie das Standard-Bundesland für die Fristenberechnung.
+                Feiertage werden automatisch berücksichtigt.
               </p>
               <div>
                 <label className="text-sm font-medium block mb-1">
@@ -355,7 +357,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           {step === 5 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground mb-4">
-                Waehlen Sie ein Standard-Ordnerschema fuer neue Akten. Dieses
+                Wählen Sie ein Standard-Ordnerschema für neue Akten. Dieses
                 legt die automatisch erstellte Ordnerstruktur fest.
               </p>
               <div className="space-y-2">
@@ -408,8 +410,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           {step === 6 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground mb-4">
-                Uebersicht der vorhandenen Benutzer. Weitere Benutzer koennen
-                spaeter in der Benutzerverwaltung hinzugefuegt werden.
+                Übersicht der vorhandenen Benutzer. Weitere Benutzer können
+                später in der Benutzerverwaltung hinzugefügt werden.
               </p>
               {users.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
@@ -431,8 +433,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 </div>
               )}
               <div className="p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 text-sm text-muted-foreground">
-                Weitere Benutzer koennen spaeter unter Einstellungen &gt;
-                Benutzerverwaltung hinzugefuegt werden.
+                Weitere Benutzer können später unter Einstellungen &gt;
+                Benutzerverwaltung hinzugefügt werden.
               </div>
             </div>
           )}
@@ -444,13 +446,13 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             {step > 1 && (
               <Button variant="ghost" onClick={() => setStep(step - 1)}>
                 <ChevronLeft className="w-4 h-4 mr-1" />
-                Zurueck
+                Zurück
               </Button>
             )}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={skipStep}>
-              Ueberspringen
+              Überspringen
             </Button>
             {step < 6 ? (
               <Button onClick={() => setStep(step + 1)}>
@@ -459,7 +461,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               </Button>
             ) : (
               <Button onClick={completeWizard} disabled={saving}>
-                {saving ? "Speichere..." : "Einrichtung abschliessen"}
+                {saving ? "Speichere..." : "Einrichtung abschließen"}
                 <Check className="w-4 h-4 ml-1" />
               </Button>
             )}

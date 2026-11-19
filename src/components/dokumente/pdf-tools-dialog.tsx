@@ -127,7 +127,7 @@ export function PdfToolsDialog({
               ? Array.from(selectedSplitPages).sort((a, b) => a - b).join(",")
               : "");
           if (!range) {
-            toast.error("Bitte waehlen Sie Seiten aus oder geben Sie einen Seitenbereich ein");
+            toast.error("Bitte wählen Sie Seiten aus oder geben Sie einen Seitenbereich ein");
             setLoading(false);
             return;
           }
@@ -158,7 +158,7 @@ export function PdfToolsDialog({
             .map((t) => t.trim())
             .filter(Boolean);
           if (patterns.length === 0 && customTerms.length === 0) {
-            toast.error("Bitte waehlen Sie mindestens ein Muster oder geben Sie Suchbegriffe ein");
+            toast.error("Bitte wählen Sie mindestens ein Muster oder geben Sie Suchbegriffe ein");
             setLoading(false);
             return;
           }
@@ -196,7 +196,7 @@ export function PdfToolsDialog({
     rotate: "Drehen",
     compress: "Komprimieren",
     watermark: "Wasserzeichen anwenden",
-    redact: "Schwaerzen",
+    redact: "Schwärzen",
   };
 
   return (
@@ -226,7 +226,7 @@ export function PdfToolsDialog({
             </TabsTrigger>
             <TabsTrigger value="redact" className="text-xs gap-1">
               <ShieldAlert className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Schwaerzen</span>
+              <span className="hidden sm:inline">Schwärzen</span>
             </TabsTrigger>
           </TabsList>
 
@@ -248,7 +248,7 @@ export function PdfToolsDialog({
             </div>
 
             <div>
-              <Label className="text-sm font-medium">Seiten auswaehlen (klicken)</Label>
+              <Label className="text-sm font-medium">Seiten auswählen (klicken)</Label>
               <div className="mt-2 max-h-[200px] overflow-y-auto">
                 <PdfPageThumbnails
                   pageCount={pageCount}
@@ -345,7 +345,7 @@ export function PdfToolsDialog({
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Hoehere Komprimierung = kleinere Datei, aber moeglicher Qualitaetsverlust
+                Höhere Komprimierung = kleinere Datei, aber möglicher Qualitätsverlust
               </p>
             </div>
 
@@ -388,14 +388,14 @@ export function PdfToolsDialog({
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label className="text-xs">Schriftgroesse ({fontSize})</Label>
+                <Label className="text-xs">Schriftgröße ({fontSize})</Label>
                 <input
                   type="range"
                   min={20}
                   max={60}
                   value={fontSize}
                   onChange={(e) => setFontSize(Number(e.target.value))}
-                  className="w-full mt-1 accent-blue-500"
+                  className="w-full mt-1 accent-[var(--al-brand-strong)]"
                 />
               </div>
               <div>
@@ -406,7 +406,7 @@ export function PdfToolsDialog({
                   max={90}
                   value={watermarkRotation}
                   onChange={(e) => setWatermarkRotation(Number(e.target.value))}
-                  className="w-full mt-1 accent-blue-500"
+                  className="w-full mt-1 accent-[var(--al-brand-strong)]"
                 />
               </div>
               <div>
@@ -417,7 +417,7 @@ export function PdfToolsDialog({
                   max={100}
                   value={Math.round(opacity * 100)}
                   onChange={(e) => setOpacity(Number(e.target.value) / 100)}
-                  className="w-full mt-1 accent-blue-500"
+                  className="w-full mt-1 accent-[var(--al-brand-strong)]"
                 />
               </div>
             </div>
@@ -436,7 +436,7 @@ export function PdfToolsDialog({
             <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-amber-800 dark:text-amber-200">
-                Bitte pruefen Sie das Ergebnis vor dem Speichern. Geschwaerzte Bereiche koennen nicht wiederhergestellt werden.
+                Bitte prüfen Sie das Ergebnis vor dem Speichern. Geschwärzte Bereiche können nicht wiederhergestellt werden.
               </p>
             </div>
 
@@ -446,7 +446,7 @@ export function PdfToolsDialog({
                   type="checkbox"
                   checked={useDsgvo}
                   onChange={toggleUseDsgvo}
-                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-500"
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-ring accent-[var(--al-brand-strong)]"
                 />
                 <span className="text-sm font-medium">DSGVO-Muster anwenden</span>
               </label>
@@ -460,7 +460,7 @@ export function PdfToolsDialog({
                       type="checkbox"
                       checked={dsgvoPatterns.has(pat.pattern)}
                       onChange={() => toggleDsgvoPattern(pat.pattern)}
-                      className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-500"
+                      className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-ring accent-[var(--al-brand-strong)]"
                     />
                     <span className="text-sm">{pat.label}</span>
                   </label>
@@ -469,7 +469,7 @@ export function PdfToolsDialog({
             )}
 
             <div>
-              <Label className="text-sm font-medium">Zusaetzliche Suchbegriffe</Label>
+              <Label className="text-sm font-medium">Zusätzliche Suchbegriffe</Label>
               <Input
                 value={customRedactTerms}
                 onChange={(e) => setCustomRedactTerms(e.target.value)}
@@ -477,7 +477,7 @@ export function PdfToolsDialog({
                 className="mt-1"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Optionale zusaetzliche Begriffe zum Schwaerzen
+                Optionale zusätzliche Begriffe zum Schwärzen
               </p>
             </div>
 
@@ -516,7 +516,7 @@ function SharedFooter({
           type="checkbox"
           checked={saveAsNew}
           onChange={(e) => onSaveAsNewChange(e.target.checked)}
-          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-500"
+          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-ring accent-[var(--al-brand-strong)]"
         />
         <span className="text-sm">Als neue Datei speichern</span>
       </label>

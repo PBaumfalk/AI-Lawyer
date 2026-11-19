@@ -12,7 +12,7 @@ import type { PkhTableVersion } from './types';
  */
 export const PKH_2025: PkhTableVersion = {
   id: 'PKH_2025',
-  name: 'PKH Gebuehrentabelle 2025',
+  name: 'PKH Gebührentabelle 2025',
   lawReference: 'KostBRaeG 2025, SS 49 RVG',
   validFrom: new Date('2025-06-01'),
   validUntil: null,
@@ -50,7 +50,7 @@ export const PKH_2025: PkhTableVersion = {
  */
 export const PKH_2021: PkhTableVersion = {
   id: 'PKH_2021',
-  name: 'PKH Gebuehrentabelle 2021',
+  name: 'PKH Gebührentabelle 2021',
   lawReference: 'KostRaeG 2021, SS 49 RVG',
   validFrom: new Date('2021-01-01'),
   validUntil: new Date('2025-05-31'),

@@ -75,13 +75,6 @@ export function QuestWidget() {
 
         if (cancelled) return;
 
-        // 404 = user opted out, render nothing
-        if (res.status === 404) {
-          setData(null);
-          setLoaded(true);
-          return;
-        }
-
         if (!res.ok) {
           console.error("QuestWidget: failed to load gamification data");
           setError(true);
@@ -89,8 +82,9 @@ export function QuestWidget() {
           return;
         }
 
-        const json: DashboardData = await res.json();
-        setData(json);
+        const json = (await res.json()) as DashboardData | { enabled: false };
+        // Opted out: render nothing
+        setData("enabled" in json && json.enabled === false ? null : (json as DashboardData));
         setLoaded(true);
       } catch {
         if (!cancelled) {

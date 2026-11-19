@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   const role = (session.user as any).role as UserRole;
   if (role !== "ADMIN") {
     return NextResponse.json(
-      { error: "Nur Administratoren koennen Token-Verbrauch einsehen" },
+      { error: "Nur Administratoren können Token-Verbrauch einsehen" },
       { status: 403 }
     );
   }
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   // Validate period
   if (!["day", "week", "month"].includes(period)) {
     return NextResponse.json(
-      { error: "Ungueltiger Zeitraum" },
+      { error: "Ungültiger Zeitraum" },
       { status: 400 }
     );
   }

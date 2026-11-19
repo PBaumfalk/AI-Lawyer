@@ -93,8 +93,8 @@ export default async function AkteDetailPage({ params }: AkteDetailPageProps) {
       {/* Helena quick action + Admin override */}
       <div className="flex items-center gap-2 flex-wrap">
         <Link
-          href={`/ki-chat?akteId=${id}&q=${encodeURIComponent("Erstelle eine Fallzusammenfassung fuer diese Akte")}`}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900 transition-colors"
+          href={`/ki-chat?akteId=${id}&q=${encodeURIComponent("Erstelle eine Fallzusammenfassung für diese Akte")}`}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900 transition-colors"
         >
           <Sparkles className="w-4 h-4" />
           Fallzusammenfassung

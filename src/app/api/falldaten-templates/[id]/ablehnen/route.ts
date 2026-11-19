@@ -57,7 +57,7 @@ export async function POST(
     // Only EINGEREICHT can be rejected
     if (template.status !== FalldatenTemplateStatus.EINGEREICHT) {
       return NextResponse.json(
-        { error: "Nur eingereichte Templates koennen abgelehnt werden" },
+        { error: "Nur eingereichte Templates können abgelehnt werden" },
         { status: 400 }
       );
     }

@@ -66,7 +66,7 @@ export function PortalMessageBubble({
     return (
       <div className="flex justify-center py-1">
         <span className="text-xs italic text-muted-foreground/60">
-          [Nachricht geloescht]
+          [Nachricht gelöscht]
         </span>
       </div>
     );
@@ -77,8 +77,8 @@ export function PortalMessageBubble({
     return (
       <div className="flex justify-center py-1">
         <div className="flex items-center gap-2 max-w-[80%]">
-          <div className="w-7 h-7 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0">
-            <Bot className="w-4 h-4 text-violet-400" />
+          <div className="w-7 h-7 rounded-full bg-brand-500/20 flex items-center justify-center flex-shrink-0">
+            <Bot className="w-4 h-4 text-brand-400" />
           </div>
           <div className="glass-card rounded-xl px-3 py-2 text-sm text-muted-foreground">
             {message.body}
@@ -148,7 +148,7 @@ export function PortalMessageBubble({
       <div
         className={`max-w-[70%] glass-card rounded-xl px-3 py-2 text-sm ${
           isOwn
-            ? "bg-[oklch(45%_0.2_260/0.15)] text-foreground"
+            ? "bg-primary-soft text-foreground"
             : "text-foreground"
         }`}
       >

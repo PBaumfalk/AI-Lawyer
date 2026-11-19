@@ -125,7 +125,7 @@ export async function stopTimer(
   if (!beschreibung || beschreibung.trim() === '') {
     const isStundenhonorar = await isStundenhonorarAkte(running.akteId);
     if (isStundenhonorar) {
-      throw new Error('Taetigkeitsbeschreibung ist Pflicht bei Stundenhonorar-Akten');
+      throw new Error('Tätigkeitsbeschreibung ist Pflicht bei Stundenhonorar-Akten');
     }
   }
 

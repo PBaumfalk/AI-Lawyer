@@ -80,7 +80,7 @@ export function VorlagenTab() {
         throw new Error(data.error ?? "Fehler");
       }
       toast.success(
-        vorlage.freigegeben ? "Vorlage zurueckgezogen" : "Vorlage freigegeben"
+        vorlage.freigegeben ? "Vorlage zurückgezogen" : "Vorlage freigegeben"
       );
       fetchVorlagen();
     } catch (err: any) {
@@ -90,33 +90,33 @@ export function VorlagenTab() {
 
   // Delete vorlage
   const handleDelete = async (vorlage: VorlageItem) => {
-    if (!confirm(`Vorlage "${vorlage.name}" wirklich loeschen?`)) return;
+    if (!confirm(`Vorlage "${vorlage.name}" wirklich löschen?`)) return;
     try {
       const res = await fetch(`/api/vorlagen/${vorlage.id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Fehler");
-      toast.success("Vorlage geloescht");
+      toast.success("Vorlage gelöscht");
       fetchVorlagen();
     } catch {
-      toast.error("Fehler beim Loeschen");
+      toast.error("Fehler beim Löschen");
     }
   };
 
   // Reset (remove all non-standard templates)
   const handleReset = async () => {
     setShowResetConfirm(false);
-    toast.info("Vorlagen-Einstellungen zurueckgesetzt");
+    toast.info("Vorlagen-Einstellungen zurückgesetzt");
     // Reset is conceptual: revoke all Freigaben
     try {
       for (const v of vorlagen.filter((v) => v.freigegeben)) {
         const { url, init } = vorlageFreigabeRequest(v.id, false);
         const res = await fetch(url, init);
-        if (!res.ok) throw new Error("Freigabe konnte nicht zurueckgezogen werden");
+        if (!res.ok) throw new Error("Freigabe konnte nicht zurückgezogen werden");
       }
       fetchVorlagen();
     } catch {
-      toast.error("Fehler beim Zuruecksetzen");
+      toast.error("Fehler beim Zurücksetzen");
     }
   };
 
@@ -197,7 +197,7 @@ export function VorlagenTab() {
                   {v.freigegeben ? (
                     <>
                       <XCircle className="w-3.5 h-3.5 mr-1" />
-                      Zurueckziehen
+                      Zurückziehen
                     </>
                   ) : (
                     <>
@@ -225,7 +225,7 @@ export function VorlagenTab() {
           className="text-muted-foreground"
         >
           <RotateCcw className="w-4 h-4 mr-1.5" />
-          Auf Standard zuruecksetzen
+          Auf Standard zurücksetzen
         </Button>
       </div>
 
@@ -234,11 +234,11 @@ export function VorlagenTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="glass rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
             <h3 className="text-lg font-heading text-foreground">
-              Einstellungen zuruecksetzen?
+              Einstellungen zurücksetzen?
             </h3>
             <p className="text-sm text-muted-foreground">
-              Moechten Sie die Einstellungen in diesem Bereich auf die Standardwerte
-              zuruecksetzen? Diese Aktion kann nicht rueckgaengig gemacht werden.
+              Möchten Sie die Einstellungen in diesem Bereich auf die Standardwerte
+              zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.
             </p>
             <div className="flex gap-2 justify-end">
               <Button
@@ -248,7 +248,7 @@ export function VorlagenTab() {
                 Abbrechen
               </Button>
               <Button variant="destructive" onClick={handleReset}>
-                Zuruecksetzen
+                Zurücksetzen
               </Button>
             </div>
           </div>

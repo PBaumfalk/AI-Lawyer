@@ -21,13 +21,13 @@ export default function BiDashboardPage() {
   } = useBiTrends(filters);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 sm:p-6">
       {/* Page header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">BI-Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Kanzlei-Analytics im Ueberblick
+            Kanzlei-Analytics im Überblick
           </p>
         </div>
         <ExportBar filters={filters} />

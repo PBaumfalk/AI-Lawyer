@@ -86,7 +86,7 @@ export function FolderTree({
       ]);
 
       if (!kontenRes.ok || !foldersRes.ok) {
-        throw new Error("Postfaecher konnten nicht geladen werden");
+        throw new Error("Postfächer konnten nicht geladen werden");
       }
 
       const kontenData = await kontenRes.json();
@@ -231,7 +231,7 @@ export function FolderTree({
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
       <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700/50">
-        <h2 className="text-sm font-semibold text-foreground">Postfaecher</h2>
+        <h2 className="text-sm font-semibold text-foreground">Postfächer</h2>
       </div>
 
       {/* Mailbox folders */}
@@ -259,7 +259,7 @@ export function FolderTree({
                   {konto.name}
                 </span>
                 {totalUnread > 0 && (
-                  <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-brand-600 text-white text-[10px] font-bold">
+                  <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
                     {totalUnread > 99 ? "99+" : totalUnread}
                   </span>
                 )}
@@ -295,7 +295,7 @@ export function FolderTree({
                             className={cn(
                               "flex-shrink-0 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold",
                               isSelected
-                                ? "bg-brand-600 text-white"
+                                ? "bg-primary text-primary-foreground"
                                 : "bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300"
                             )}
                           >

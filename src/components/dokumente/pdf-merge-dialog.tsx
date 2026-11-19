@@ -123,11 +123,11 @@ export function PdfMergeDialog({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "Zusammenfuehren fehlgeschlagen");
+        throw new Error(data.error ?? "Zusammenführen fehlgeschlagen");
       }
 
       const data = await res.json();
-      toast.success(`PDFs zusammengefuehrt: ${data.name}`);
+      toast.success(`PDFs zusammengeführt: ${data.name}`);
       onComplete();
       onOpenChange(false);
     } catch (err: unknown) {
@@ -143,7 +143,7 @@ export function PdfMergeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>PDFs zusammenfuehren</DialogTitle>
+          <DialogTitle>PDFs zusammenführen</DialogTitle>
         </DialogHeader>
 
         {pdfDocuments.length < 2 ? (
@@ -161,7 +161,7 @@ export function PdfMergeDialog({
           <div className="space-y-4 mt-2">
             <div>
               <Label className="text-sm font-medium">
-                Reihenfolge (per Drag & Drop aenderbar)
+                Reihenfolge (per Drag & Drop änderbar)
               </Label>
               <div className="mt-2 space-y-1.5">
                 {selectedDocs.map((doc, index) => {
@@ -205,7 +205,7 @@ export function PdfMergeDialog({
               </div>
               {selectedIds.length < 2 && (
                 <p className="text-xs text-rose-500 mt-1">
-                  Mindestens 2 Dokumente muessen ausgewaehlt sein
+                  Mindestens 2 Dokumente müssen ausgewählt sein
                 </p>
               )}
             </div>
@@ -228,7 +228,7 @@ export function PdfMergeDialog({
                 {loading && (
                   <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
                 )}
-                Zusammenfuehren
+                Zusammenführen
               </Button>
             </div>
           </div>

@@ -94,7 +94,7 @@ export async function sendMessage(params: {
   for (const userId of uniqueTargets) {
     createNotification({
       type: "message:mention",
-      title: `${message.author.name || "Jemand"} hat dich erwaehnt`,
+      title: `${message.author.name || "Jemand"} hat dich erwähnt`,
       message: body.slice(0, 100),
       userId,
       data: { channelId, messageId: message.id },
@@ -177,7 +177,7 @@ export async function editMessage(
   }
 
   if (existing.deletedAt) {
-    return { error: "Geloeschte Nachricht kann nicht bearbeitet werden", status: 400 };
+    return { error: "Gelöschte Nachricht kann nicht bearbeitet werden", status: 400 };
   }
 
   if (existing.authorId !== userId) {
@@ -228,11 +228,11 @@ export async function softDeleteMessage(
   }
 
   if (existing.deletedAt) {
-    return { error: "Nachricht ist bereits geloescht", status: 400 };
+    return { error: "Nachricht ist bereits gelöscht", status: 400 };
   }
 
   if (existing.authorId !== userId && userRole !== "ADMIN") {
-    return { error: "Keine Berechtigung zum Loeschen dieser Nachricht", status: 403 };
+    return { error: "Keine Berechtigung zum Löschen dieser Nachricht", status: 403 };
   }
 
   await prisma.message.update({

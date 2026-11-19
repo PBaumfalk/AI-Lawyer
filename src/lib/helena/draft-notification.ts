@@ -80,7 +80,7 @@ export async function notifyDraftRevision(draft: {
     try {
       await createNotification({
         type: "helena:draft-revision",
-        title: `Helena-Entwurf ueberarbeitet: ${draft.titel}`,
+        title: `Helena-Entwurf überarbeitet: ${draft.titel}`,
         message: `Helena hat eine Revision erstellt.`,
         userId: recipientId,
         data: {

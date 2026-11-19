@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // shadcn/ui CSS variable-based colors (raw var() — values are oklch in globals.css)
+        // shadcn/ui-Variablen; Werte leiten sich aus den Persimmon-Tokens (--al-*) in globals.css ab
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
@@ -18,7 +18,10 @@ const config: Config = {
         foreground: "var(--foreground)",
         primary: {
           DEFAULT: "var(--primary)",
+          hover: "var(--primary-hover)",
           foreground: "var(--primary-foreground)",
+          strong: "var(--al-brand-strong)",
+          soft: "var(--al-brand-soft)",
         },
         secondary: {
           DEFAULT: "var(--secondary)",
@@ -44,31 +47,39 @@ const config: Config = {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
         },
-        // Brand blue — oklch(45% 0.2 260)
+        // Persimmon-Markenskala (Werte in globals.css, --brand-*): 500 = Persimmon,
+        // 600 = Burnt Orange für Text, Links und Akzente auf hellen Flächen.
         brand: {
-          50: "#eff4ff",
-          100: "#dbe6fe",
-          200: "#bfd3fe",
-          300: "#93b4fd",
-          400: "#6090fa",
-          500: "#3b6cf6",
-          600: "#254deb",
-          700: "#1d3bd8",
-          800: "#1e32af",
-          900: "#1e2f8a",
-          950: "#172054",
+          50: "rgb(var(--brand-50) / <alpha-value>)",
+          100: "rgb(var(--brand-100) / <alpha-value>)",
+          200: "rgb(var(--brand-200) / <alpha-value>)",
+          300: "rgb(var(--brand-300) / <alpha-value>)",
+          400: "rgb(var(--brand-400) / <alpha-value>)",
+          500: "rgb(var(--brand-500) / <alpha-value>)",
+          600: "rgb(var(--brand-600) / <alpha-value>)",
+          700: "rgb(var(--brand-700) / <alpha-value>)",
+          800: "rgb(var(--brand-800) / <alpha-value>)",
+          900: "rgb(var(--brand-900) / <alpha-value>)",
+          950: "rgb(var(--brand-950) / <alpha-value>)",
         },
+        // Semantische Statusfarben (CI-Contract §7)
+        success: { DEFAULT: "var(--al-success)", soft: "var(--al-success-soft)" },
+        warning: { DEFAULT: "var(--al-warning)", soft: "var(--al-warning-soft)" },
+        danger: { DEFAULT: "var(--al-danger)", soft: "var(--al-danger-soft)" },
+        info: { DEFAULT: "var(--al-info)", soft: "var(--al-info-soft)" },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
         xl: "calc(var(--radius) + 4px)",
-        "2xl": "calc(var(--radius) + 8px)",
+        "2xl": "var(--al-radius-card)",
+        "3xl": "var(--al-radius-panel)",
       },
       fontFamily: {
-        heading: ["SF Pro Display", "SF Pro Text", "Inter", "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
-        sans: ["SF Pro Text", "Inter", "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+        // Systemschrift, keine Webfonts (CI-Contract §4)
+        heading: ["var(--al-font)"],
+        sans: ["var(--al-font)"],
       },
       boxShadow: {
         glass: "var(--glass-shadow)",

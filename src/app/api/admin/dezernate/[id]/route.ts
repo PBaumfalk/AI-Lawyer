@@ -136,7 +136,7 @@ export async function DELETE(
 
   if (dezernat._count.akten > 0) {
     return NextResponse.json(
-      { error: "Dezernat kann nicht geloescht werden, solange Akten zugewiesen sind" },
+      { error: "Dezernat kann nicht gelöscht werden, solange Akten zugewiesen sind" },
       { status: 409 }
     );
   }

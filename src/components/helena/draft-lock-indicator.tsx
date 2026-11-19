@@ -25,7 +25,7 @@ export function DraftLockIndicator({
       )}
     >
       <Lock className="w-3 h-3" />
-      <span>Wird von {lockedBy} geprueft</span>
+      <span>Wird von {lockedBy} geprüft</span>
     </div>
   );
 }

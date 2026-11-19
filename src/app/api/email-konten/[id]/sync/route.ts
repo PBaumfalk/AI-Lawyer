@@ -18,7 +18,7 @@ export async function POST(
 
   if ((session.user as any).role !== "ADMIN") {
     return Response.json(
-      { error: "Nur Administratoren koennen die Synchronisation starten" },
+      { error: "Nur Administratoren können die Synchronisation starten" },
       { status: 403 }
     );
   }

@@ -70,7 +70,7 @@ export function OcrStatusBadge({ status, dokumentId, onRetry }: OcrStatusBadgePr
           className="text-[10px] bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 gap-1"
         >
           <Loader2 className="w-3 h-3 animate-spin" />
-          OCR laeuft...
+          OCR läuft...
         </Badge>
       );
 

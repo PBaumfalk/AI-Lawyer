@@ -100,7 +100,7 @@ export function VertretungUrlaubTab() {
       const data = await res.json();
       setUrlaubZeitraeume(data);
     } catch {
-      toast.error("Fehler beim Laden der Urlaubszeitraeume");
+      toast.error("Fehler beim Laden der Urlaubszeiträume");
     }
   }, []);
 
@@ -173,7 +173,7 @@ export function VertretungUrlaubTab() {
   };
 
   const resetAllVertretungen = async () => {
-    if (!confirm("Alle Vertretungszuweisungen zuruecksetzen?")) return;
+    if (!confirm("Alle Vertretungszuweisungen zurücksetzen?")) return;
     try {
       for (const user of users) {
         if (user.vertreterId || user.vertretungAktiv) {
@@ -189,10 +189,10 @@ export function VertretungUrlaubTab() {
           });
         }
       }
-      toast.success("Alle Vertretungen zurueckgesetzt");
+      toast.success("Alle Vertretungen zurückgesetzt");
       loadUsers();
     } catch {
-      toast.error("Fehler beim Zuruecksetzen");
+      toast.error("Fehler beim Zurücksetzen");
     }
   };
 
@@ -208,7 +208,7 @@ export function VertretungUrlaubTab() {
         const err = await res.json();
         throw new Error(err.error || "Fehler");
       }
-      toast.success("Urlaubszeitraum hinzugefuegt");
+      toast.success("Urlaubszeitraum hinzugefügt");
       setShowUrlaubDialog(false);
       setUrlaubVon("");
       setUrlaubBis("");
@@ -227,10 +227,10 @@ export function VertretungUrlaubTab() {
         { method: "DELETE" }
       );
       if (!res.ok) throw new Error("Fehler");
-      toast.success("Urlaubszeitraum geloescht");
+      toast.success("Urlaubszeitraum gelöscht");
       loadUrlaub(selectedUserId);
     } catch {
-      toast.error("Fehler beim Loeschen");
+      toast.error("Fehler beim Löschen");
     }
   };
 
@@ -306,7 +306,7 @@ export function VertretungUrlaubTab() {
           </div>
           <Button variant="ghost" size="sm" onClick={resetAllVertretungen}>
             <RotateCcw className="w-4 h-4 mr-1" />
-            Auf Standard zuruecksetzen
+            Auf Standard zurücksetzen
           </Button>
         </div>
 
@@ -369,7 +369,7 @@ export function VertretungUrlaubTab() {
             value={selectedUserId ?? ""}
             onChange={(e) => setSelectedUserId(e.target.value || null)}
           >
-            <option value="">Benutzer auswaehlen...</option>
+            <option value="">Benutzer auswählen...</option>
             {users.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name} ({u.email})
@@ -382,7 +382,7 @@ export function VertretungUrlaubTab() {
           <>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium">
-                Urlaubszeitraeume fuer{" "}
+                Urlaubszeiträume für{" "}
                 {users.find((u) => u.id === selectedUserId)?.name}
               </span>
               <Button
@@ -390,13 +390,13 @@ export function VertretungUrlaubTab() {
                 onClick={() => setShowUrlaubDialog(true)}
               >
                 <Plus className="w-4 h-4 mr-1" />
-                Urlaub hinzufuegen
+                Urlaub hinzufügen
               </Button>
             </div>
 
             {urlaubZeitraeume.length === 0 ? (
               <p className="text-sm text-muted-foreground py-4 text-center">
-                Keine Urlaubszeitraeume eingetragen.
+                Keine Urlaubszeiträume eingetragen.
               </p>
             ) : (
               <div className="space-y-2">
@@ -436,7 +436,7 @@ export function VertretungUrlaubTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="glass rounded-xl p-6 w-full max-w-md space-y-4 mx-4">
             <h3 className="text-lg font-heading">
-              Vertretung fuer{" "}
+              Vertretung für{" "}
               {users.find((u) => u.id === dialogUserId)?.name}
             </h3>
 
@@ -449,7 +449,7 @@ export function VertretungUrlaubTab() {
                 value={vertreterId}
                 onChange={(e) => setVertreterId(e.target.value)}
               >
-                <option value="">Vertreter auswaehlen...</option>
+                <option value="">Vertreter auswählen...</option>
                 {allUsers
                   .filter((u) => u.id !== dialogUserId)
                   .map((u) => (
@@ -512,7 +512,7 @@ export function VertretungUrlaubTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="glass rounded-xl p-6 w-full max-w-md space-y-4 mx-4">
             <h3 className="text-lg font-heading">
-              Urlaub fuer{" "}
+              Urlaub für{" "}
               {users.find((u) => u.id === selectedUserId)?.name}
             </h3>
 

@@ -40,12 +40,12 @@ export default function PasswortVergessenPage() {
             </h1>
             <p className="text-sm text-muted-foreground mb-6">
               Falls ein Account mit dieser E-Mail existiert, erhalten Sie in
-              Kuerze eine E-Mail mit Anweisungen zum Zuruecksetzen Ihres
+              Kürze eine E-Mail mit Anweisungen zum Zurücksetzen Ihres
               Passworts.
             </p>
             <Link href="/portal/login">
               <Button variant="outline" className="w-full">
-                Zurueck zur Anmeldung
+                Zurück zur Anmeldung
               </Button>
             </Link>
           </div>
@@ -60,15 +60,15 @@ export default function PasswortVergessenPage() {
         <div className="glass-lg rounded-2xl p-8">
           {/* Logo & Title */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-600 rounded-xl mb-4 shadow-lg shadow-brand-600/25">
-              <Shield className="w-7 h-7 text-white" />
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">
+              <Shield className="w-7 h-7" aria-hidden="true" />
             </div>
             <h1 className="text-2xl font-heading text-foreground">
               Passwort vergessen
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Geben Sie Ihre E-Mail-Adresse ein, um Ihr Passwort
-              zurueckzusetzen.
+              zurückzusetzen.
             </p>
           </div>
 
@@ -93,7 +93,7 @@ export default function PasswortVergessenPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Wird gesendet..." : "Zuruecksetzen"}
+              {loading ? "Wird gesendet..." : "Zurücksetzen"}
             </Button>
           </form>
 
@@ -102,7 +102,7 @@ export default function PasswortVergessenPage() {
               href="/portal/login"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Zurueck zur Anmeldung
+              Zurück zur Anmeldung
             </Link>
           </div>
         </div>

@@ -25,7 +25,7 @@ interface TicketTagBadgeProps {
 
 /**
  * Displays a single ticket tag with special styling for ai:-prefixed tags.
- * AI tags get a purple/violet accent; regular tags use the muted variant.
+ * AI tags get the brand (Persimmon) accent; regular tags use the muted variant.
  */
 export function TicketTagBadge({ tag, onRemove, className }: TicketTagBadgeProps) {
   const isAiTag = tag.startsWith("ai:");
@@ -36,7 +36,7 @@ export function TicketTagBadge({ tag, onRemove, className }: TicketTagBadgeProps
     return (
       <Badge
         className={cn(
-          "gap-1 bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800",
+          "gap-1 bg-brand-100 text-brand-700 border-brand-200 dark:bg-brand-950 dark:text-brand-300 dark:border-brand-800",
           className
         )}
         title={aiConfig?.description}

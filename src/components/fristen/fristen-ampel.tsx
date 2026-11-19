@@ -49,7 +49,7 @@ export function FristenAmpel({
   } else if (diff < 0) {
     colorClasses = "text-slate-900 dark:text-slate-100";
     dotColor = "bg-slate-900 dark:bg-slate-100";
-    label = `${Math.abs(diff)}d ueberfaellig`;
+    label = `${Math.abs(diff)}d überfällig`;
   } else if (diff < 3) {
     colorClasses = "text-rose-600 dark:text-rose-400";
     dotColor = "bg-rose-500";
@@ -87,7 +87,7 @@ export function FristenAmpel({
         erledigt
           ? "Erledigt"
           : diff < 0
-            ? `${Math.abs(diff)} Tage ueberfaellig`
+            ? `${Math.abs(diff)} Tage überfällig`
             : `Noch ${diff} Tage`
       }
     >

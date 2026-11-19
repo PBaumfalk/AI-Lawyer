@@ -70,7 +70,7 @@ function relativeTime(dateStr: string): string {
 
 function severityBadgeClass(severity: number): string {
   if (severity >= 8) return "bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300";
-  if (severity >= 5) return "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300";
+  if (severity >= 5) return "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300";
   return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300";
 }
 
@@ -193,7 +193,7 @@ export function AkteAlertsSection({ akteId }: AkteAlertsSectionProps) {
       <div className="glass-card rounded-xl p-12 text-center">
         <Bell className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
         <p className="text-sm text-muted-foreground">
-          Keine Warnungen fuer diese Akte
+          Keine Warnungen für diese Akte
         </p>
       </div>
     );
@@ -209,7 +209,7 @@ export function AkteAlertsSection({ akteId }: AkteAlertsSectionProps) {
         {total > 0 && (
           <Badge
             variant="secondary"
-            className="h-5 min-w-[20px] px-1.5 text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+            className="h-5 min-w-[20px] px-1.5 text-[10px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
           >
             {total}
           </Badge>
@@ -233,7 +233,7 @@ export function AkteAlertsSection({ akteId }: AkteAlertsSectionProps) {
               className={cn(
                 "flex items-start gap-4 px-6 py-4 transition-colors",
                 !alert.gelesen &&
-                  "border-l-2 border-[oklch(45%_0.2_260)] bg-[oklch(45%_0.2_260/0.03)]",
+                  "border-l-2 border-primary-strong bg-brand-50/60 dark:bg-brand-950/30",
                 alert.gelesen && "opacity-60",
               )}
             >
@@ -285,7 +285,7 @@ export function AkteAlertsSection({ akteId }: AkteAlertsSectionProps) {
                       className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-[10px]"
                     >
                       <CheckCircle2 className="w-3 h-3 mr-1" />
-                      Automatisch geloest
+                      Automatisch gelöst
                       {resolveReason && (
                         <span className="ml-1 font-normal">
                           — {resolveReason}

@@ -343,7 +343,7 @@ export function BossfightBanner() {
               <span className="font-semibold text-foreground">
                 {teaser.remaining}
               </span>{" "}
-              Wiedervorlagen bis zum naechsten Boss
+              Wiedervorlagen bis zum nächsten Boss
             </span>
           </div>
           <span className="text-xs text-muted-foreground tabular-nums">

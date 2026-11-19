@@ -80,7 +80,7 @@ export async function mergePdfs(
   filenames: string[]
 ): Promise<Buffer> {
   if (buffers.length < 2) {
-    throw new Error("Mindestens 2 PDFs zum Zusammenfuehren erforderlich");
+    throw new Error("Mindestens 2 PDFs zum Zusammenführen erforderlich");
   }
 
   const formData = new FormData();
@@ -104,7 +104,7 @@ export async function splitPdf(
   pages: string
 ): Promise<Buffer> {
   if (!pages || pages.trim().length === 0) {
-    throw new Error("Seitenbereiche muessen angegeben werden (z.B. '1-3,5')");
+    throw new Error("Seitenbereiche müssen angegeben werden (z.B. '1-3,5')");
   }
 
   const formData = new FormData();
@@ -202,7 +202,7 @@ export async function autoRedact(
   redactColor = "#000000"
 ): Promise<Buffer> {
   if (!searchText || searchText.trim().length === 0) {
-    throw new Error("Suchtext fuer Schwärzung darf nicht leer sein");
+    throw new Error("Suchtext für Schwärzung darf nicht leer sein");
   }
 
   const formData = new FormData();
@@ -231,7 +231,7 @@ export function buildDsgvoPiiPattern(
     .filter(Boolean);
 
   if (patterns.length === 0) {
-    throw new Error("Keine DSGVO-Muster ausgewaehlt");
+    throw new Error("Keine DSGVO-Muster ausgewählt");
   }
 
   return patterns.map((p) => `(${p})`).join("|");

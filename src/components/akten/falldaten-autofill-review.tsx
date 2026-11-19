@@ -120,11 +120,11 @@ export function FalldatenAutofillReview({
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/20 dark:border-white/[0.08]">
           <div>
             <h2 className="text-base font-semibold text-foreground">
-              KI-Vorschlaege pruefen
+              KI-Vorschläge prüfen
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {suggestions.length} Vorschlaege gefunden --{" "}
-              {acceptedCount} ausgewaehlt
+              {suggestions.length} Vorschläge gefunden --{" "}
+              {acceptedCount} ausgewählt
             </p>
           </div>
           <button
@@ -231,7 +231,7 @@ export function FalldatenAutofillReview({
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <CheckCheck className="w-3.5 h-3.5" />
-            {allAccepted ? "Alle abwaehlen" : "Alle akzeptieren"}
+            {allAccepted ? "Alle abwählen" : "Alle akzeptieren"}
           </button>
 
           <div className="flex items-center gap-2">
@@ -244,7 +244,7 @@ export function FalldatenAutofillReview({
               disabled={acceptedCount === 0}
             >
               <Check className="w-3.5 h-3.5 mr-1" />
-              {acceptedCount} Vorschlaege uebernehmen
+              {acceptedCount} Vorschläge übernehmen
             </Button>
           </div>
         </div>

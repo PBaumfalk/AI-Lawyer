@@ -14,7 +14,7 @@ import type { ToolContext, ToolResult } from "../types";
 export function createSearchMusterTool(ctx: ToolContext) {
   return tool({
     description:
-      "Search document templates (Muster/Vorlagen) by semantic similarity. Finds relevant templates for Schriftsaetze, Klagen, Vertraege, etc. Kanzlei-eigene templates are boosted in ranking.",
+      "Search document templates (Muster/Vorlagen) by semantic similarity. Finds relevant templates for Schriftsätze, Klagen, Verträge, etc. Kanzlei-eigene templates are boosted in ranking.",
     parameters: z.object({
       query: z
         .string()
@@ -38,7 +38,7 @@ export function createSearchMusterTool(ctx: ToolContext) {
       } catch {
         return {
           error:
-            "Embedding-Dienst nicht verfuegbar. Versuche es spaeter erneut.",
+            "Embedding-Dienst nicht verfügbar. Versuche es später erneut.",
         };
       }
 

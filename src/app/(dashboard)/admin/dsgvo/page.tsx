@@ -178,7 +178,7 @@ export default function AdminDsgvoPage() {
       <div>
         <h1 className="text-2xl font-semibold">DSGVO-Verwaltung</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Datenauskunft, Loeschkonzept und Anonymisierung
+          Datenauskunft, Löschkonzept und Anonymisierung
         </p>
       </div>
 
@@ -190,7 +190,7 @@ export default function AdminDsgvoPage() {
             <CardTitle className="text-lg">Auskunftsrecht (Art. 15 DSGVO)</CardTitle>
           </div>
           <p className="text-sm text-muted-foreground">
-            Generieren Sie eine vollstaendige Datenauskunft fuer einen Kontakt als PDF.
+            Generieren Sie eine vollständige Datenauskunft für einen Kontakt als PDF.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -255,10 +255,10 @@ export default function AdminDsgvoPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-amber-600" />
-            <CardTitle className="text-lg">Loeschkonzept / Anonymisierung</CardTitle>
+            <CardTitle className="text-lg">Löschkonzept / Anonymisierung</CardTitle>
           </div>
           <p className="text-sm text-muted-foreground">
-            Anonymisieren Sie personenbezogene Daten unter Beachtung der 10-jaehrigen Aufbewahrungspflicht (BRAO/GoBD).
+            Anonymisieren Sie personenbezogene Daten unter Beachtung der 10-jährigen Aufbewahrungspflicht (BRAO/GoBD).
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -326,7 +326,7 @@ export default function AdminDsgvoPage() {
                     setPreview(null);
                   }}
                 >
-                  Zurueck
+                  Zurück
                 </Button>
               </div>
 
@@ -357,8 +357,8 @@ export default function AdminDsgvoPage() {
                       </p>
                       <p className="text-xs opacity-80">
                         {preview.retentionCheck.passed
-                          ? "Aufbewahrungsfrist abgelaufen - Anonymisierung moeglich"
-                          : "Aufbewahrungsfrist laeuft noch - Admin-Override erforderlich"}
+                          ? "Aufbewahrungsfrist abgelaufen - Anonymisierung möglich"
+                          : "Aufbewahrungsfrist läuft noch - Admin-Override erforderlich"}
                       </p>
                     </div>
                   </div>
@@ -395,7 +395,7 @@ export default function AdminDsgvoPage() {
                       <textarea
                         value={grund}
                         onChange={(e) => setGrund(e.target.value)}
-                        placeholder="z.B. Betroffenenanfrage gemaess Art. 17 DSGVO..."
+                        placeholder="z.B. Betroffenenanfrage gemäß Art. 17 DSGVO..."
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       />
                     </div>
@@ -410,10 +410,10 @@ export default function AdminDsgvoPage() {
                         />
                         <div>
                           <p className="text-sm font-medium text-amber-800">
-                            Aufbewahrungsfrist ueberschreiben
+                            Aufbewahrungsfrist überschreiben
                           </p>
                           <p className="text-xs text-amber-600">
-                            Ich bestaetige, dass eine vorzeitige Anonymisierung rechtlich zulaessig ist.
+                            Ich bestätige, dass eine vorzeitige Anonymisierung rechtlich zulässig ist.
                           </p>
                         </div>
                       </label>
@@ -492,7 +492,7 @@ function AnonymizedKontakteList() {
           </div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
-            Noch keine Anonymisierungen durchgefuehrt.
+            Noch keine Anonymisierungen durchgeführt.
           </p>
         ) : (
           <div className="divide-y">

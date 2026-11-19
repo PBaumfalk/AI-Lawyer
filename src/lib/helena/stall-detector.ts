@@ -80,7 +80,7 @@ export function hashResult(result: unknown): string {
 // ---------------------------------------------------------------------------
 
 const FORCE_MESSAGE =
-  "Du wiederholst dich. Gib jetzt deine beste Antwort mit dem, was du bisher weisst. Fasse zusammen und antworte dem Nutzer.";
+  "Du wiederholst dich. Gib jetzt deine beste Antwort mit dem, was du bisher weißt. Fasse zusammen und antworte dem Nutzer.";
 
 /**
  * Create a new stall detector instance.

@@ -209,7 +209,7 @@ export function EmailList({
 
   const handleQuickAction = useCallback(
     (emailId: string, action: "markRead" | "archive" | "delete") => {
-      const texte = { markRead: "Als gelesen markiert", archive: "E-Mail archiviert", delete: "E-Mail geloescht" };
+      const texte = { markRead: "Als gelesen markiert", archive: "E-Mail archiviert", delete: "E-Mail gelöscht" };
       void runAktion(action, [emailId], texte[action]);
     },
     [runAktion]
@@ -242,10 +242,10 @@ export function EmailList({
           >
             {checkedEmailIds.size === emails.length
               ? "Auswahl aufheben"
-              : "Alle auswaehlen"}
+              : "Alle auswählen"}
           </button>
           <span className="text-xs text-brand-600 dark:text-brand-400">
-            {checkedEmailIds.size} ausgewaehlt
+            {checkedEmailIds.size} ausgewählt
           </span>
           <div className="ml-auto flex items-center gap-1">
             {onVerakten && (
@@ -277,13 +277,13 @@ export function EmailList({
               disabled={aktionLaeuft}
               onClick={() => {
                 const ids = Array.from(checkedEmailIds);
-                if (window.confirm(`${ids.length} E-Mail(s) loeschen?`)) {
-                  void runAktion("delete", ids, `${ids.length} E-Mail(s) geloescht`);
+                if (window.confirm(`${ids.length} E-Mail(s) löschen?`)) {
+                  void runAktion("delete", ids, `${ids.length} E-Mail(s) gelöscht`);
                 }
               }}
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Loeschen
+              Löschen
             </Button>
           </div>
         </div>

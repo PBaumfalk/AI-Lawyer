@@ -51,7 +51,7 @@ export default async function KontaktePage({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">
             Kontakte
@@ -87,7 +87,7 @@ export default async function KontaktePage({
           )}
         </GlassPanel>
       ) : (
-        <GlassPanel elevation="panel" className="overflow-hidden rounded-xl">
+        <GlassPanel elevation="panel" className="overflow-x-auto rounded-xl">
           <table className="w-full">
             <thead>
               <tr className="border-b border-[var(--glass-border-color)]">

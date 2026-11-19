@@ -80,7 +80,7 @@ const ROLLE_LABELS: Record<string, string> = {
   GEGNERVERTRETER: "Gegnervertreter",
   GERICHT: "Gericht",
   ZEUGE: "Zeuge",
-  SACHVERSTAENDIGER: "Sachverstaendiger",
+  SACHVERSTAENDIGER: "Sachverständiger",
   SONSTIGER: "Sonstiger",
 };
 
@@ -199,7 +199,7 @@ export function ActivityFeedEntry({ entry }: ActivityFeedEntryProps) {
     ? entry.typ === "HELENA_ALERT"
       ? severityBorderClass(entry.meta?.severity)
       : entry.typ === "HELENA_DRAFT"
-        ? "border-l-2 border-l-[oklch(45%_0.2_260)]"
+        ? "border-l-2 border-l-primary-strong"
         : ""
     : "";
 
@@ -532,7 +532,7 @@ function ExpandedContent({ entry }: { entry: FeedEntryData }) {
           {entry.inhalt && <p>{entry.inhalt}</p>}
           {meta?.datum && (
             <p className="text-xs text-slate-500 mt-1">
-              Faellig: {new Date(meta.datum).toLocaleDateString("de-DE")}
+              Fällig: {new Date(meta.datum).toLocaleDateString("de-DE")}
             </p>
           )}
         </div>
@@ -605,7 +605,7 @@ function ExpandedContent({ entry }: { entry: FeedEntryData }) {
             <p className="text-xs"><span className="font-medium">Stichworte:</span> {meta.stichworte}</p>
           )}
           {meta?.naechsterSchritt && (
-            <p className="text-xs"><span className="font-medium">Naechster Schritt:</span> {meta.naechsterSchritt}</p>
+            <p className="text-xs"><span className="font-medium">Nächster Schritt:</span> {meta.naechsterSchritt}</p>
           )}
         </div>
       );
@@ -618,7 +618,7 @@ function ExpandedContent({ entry }: { entry: FeedEntryData }) {
           )}
           {meta?.faelligAm && (
             <p className="text-xs text-slate-500 mt-1">
-              Faellig: {new Date(meta.faelligAm as string).toLocaleDateString("de-DE")}
+              Fällig: {new Date(meta.faelligAm as string).toLocaleDateString("de-DE")}
             </p>
           )}
         </div>

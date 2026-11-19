@@ -11,7 +11,7 @@ export const CALCULATOR_PRESETS: CalculatorPreset[] = [
   {
     id: 'klageverfahren-1-instanz',
     name: 'Typisches Klageverfahren 1. Instanz',
-    description: 'Verfahrensgebuehr + Terminsgebuehr + Auslagen + USt',
+    description: 'Verfahrensgebühr + Terminsgebühr + Auslagen + USt',
     vvPositions: [
       { nr: '3100' },
       { nr: '3104' },
@@ -21,8 +21,8 @@ export const CALCULATOR_PRESETS: CalculatorPreset[] = [
   },
   {
     id: 'aussergerichtlich',
-    name: 'Aussergerichtliche Vertretung',
-    description: 'Geschaeftsgebuehr + Auslagen + USt',
+    name: 'Außergerichtliche Vertretung',
+    description: 'Geschäftsgebühr + Auslagen + USt',
     vvPositions: [
       { nr: '2300' },
       { nr: '7002' },
@@ -32,7 +32,7 @@ export const CALCULATOR_PRESETS: CalculatorPreset[] = [
   {
     id: 'klageverfahren-einigung',
     name: 'Klageverfahren mit Einigung',
-    description: 'Verfahrensgebuehr + Terminsgebuehr + Einigungsgebuehr + Auslagen + USt',
+    description: 'Verfahrensgebühr + Terminsgebühr + Einigungsgebühr + Auslagen + USt',
     vvPositions: [
       { nr: '3100' },
       { nr: '3104' },
@@ -44,7 +44,7 @@ export const CALCULATOR_PRESETS: CalculatorPreset[] = [
   {
     id: 'berufung',
     name: 'Berufung',
-    description: 'Verfahrensgebuehr Berufung + Terminsgebuehr + Auslagen + USt',
+    description: 'Verfahrensgebühr Berufung + Terminsgebühr + Auslagen + USt',
     vvPositions: [
       { nr: '3200' },
       { nr: '3202' },
@@ -55,7 +55,7 @@ export const CALCULATOR_PRESETS: CalculatorPreset[] = [
   {
     id: 'mahnverfahren',
     name: 'Mahnverfahren',
-    description: 'Verfahrensgebuehr Mahnverfahren + Auslagen + USt',
+    description: 'Verfahrensgebühr Mahnverfahren + Auslagen + USt',
     vvPositions: [
       { nr: '3305' },
       { nr: '7002' },
@@ -71,7 +71,7 @@ export const CALCULATOR_PRESETS: CalculatorPreset[] = [
 export const STREITWERT_VORSCHLAEGE: StreitwertVorschlag[] = [
   {
     id: 'kuendigungsschutz',
-    name: 'Kuendigungsschutzklage',
+    name: 'Kündigungsschutzklage',
     formel: '3 x Bruttomonatsgehalt',
     beispiel: 12000,
     multiplier: 3,
@@ -88,13 +88,13 @@ export const STREITWERT_VORSCHLAEGE: StreitwertVorschlag[] = [
   {
     id: 'verkehrsunfall',
     name: 'Verkehrsunfall',
-    formel: 'Schadenshoehe (Reparatur + Mietwagen + Schmerzensgeld)',
+    formel: 'Schadenshöhe (Reparatur + Mietwagen + Schmerzensgeld)',
     beispiel: 8000,
   },
   {
     id: 'schmerzensgeld',
     name: 'Schmerzensgeld',
-    formel: 'Geschaetzte Schmerzensgeldsumme',
+    formel: 'Geschätzte Schmerzensgeldsumme',
     beispiel: 5000,
   },
   {
@@ -106,7 +106,7 @@ export const STREITWERT_VORSCHLAEGE: StreitwertVorschlag[] = [
   {
     id: 'werkvertrag',
     name: 'Werkvertragsstreitigkeit',
-    formel: 'Maengelbeseitigungskosten oder Minderungsbetrag',
+    formel: 'Mängelbeseitigungskosten oder Minderungsbetrag',
     beispiel: 15000,
   },
   {
@@ -119,7 +119,7 @@ export const STREITWERT_VORSCHLAEGE: StreitwertVorschlag[] = [
   },
   {
     id: 'raeumungsklage',
-    name: 'Raeumungsklage',
+    name: 'Räumungsklage',
     formel: '12 x Monatsmiete',
     beispiel: 9600,
     multiplier: 12,

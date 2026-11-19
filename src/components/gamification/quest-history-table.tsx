@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button";
 
 const QUEST_TYP_STYLES: Record<string, { label: string; className: string }> = {
   DAILY: {
-    label: "Taeglich",
+    label: "Täglich",
     className:
       "bg-sky-500/10 text-sky-400 dark:bg-sky-400/10 dark:text-sky-300",
   },
   WEEKLY: {
-    label: "Woechentlich",
+    label: "Wöchentlich",
     className:
       "bg-emerald-500/10 text-emerald-400 dark:bg-emerald-400/10 dark:text-emerald-300",
   },
@@ -126,7 +126,7 @@ export function QuestHistoryTable({
                   onClick={() => onPageChange(page - 1)}
                   disabled={page <= 1}
                 >
-                  Zurueck
+                  Zurück
                 </Button>
                 <Button
                   variant="outline"

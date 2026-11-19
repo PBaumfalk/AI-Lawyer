@@ -11,7 +11,7 @@ export const createKalenderSchema = z.object({
   typ: z.enum(["TERMIN", "FRIST", "WIEDERVORLAGE"]),
   titel: z.string().min(1, "Titel ist erforderlich"),
   beschreibung: z.string().nullable().optional(),
-  datum: z.string().datetime({ message: "Ungueltiges Datumsformat" }),
+  datum: z.string().datetime({ message: "Ungültiges Datumsformat" }),
   datumBis: z.string().datetime().nullable().optional(),
   ganztaegig: z.boolean().optional(),
   akteId: z.string().nullable().optional(),

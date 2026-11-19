@@ -37,7 +37,7 @@ export function BacklogTrendChart({ data }: BacklogTrendChartProps) {
   if (data.length < 2) {
     return (
       <div className="flex items-center justify-center h-[280px] text-muted-foreground text-sm">
-        Keine Daten verfuegbar
+        Keine Daten verfügbar
       </div>
     );
   }

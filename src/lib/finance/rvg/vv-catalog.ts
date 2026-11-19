@@ -19,7 +19,7 @@ export const VV_CATALOG: VVPosition[] = [
   // ============================================
   {
     nr: '1000',
-    name: 'Einigungsgebuehr (aussergerichtlich)',
+    name: 'Einigungsgebühr (außergerichtlich)',
     feeType: 'wertgebuehr',
     defaultRate: 1.5,
     minRate: 0.2,
@@ -29,11 +29,11 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Einigungsgebuehr fuer aussergerichtliche Einigung (VV 1000 RVG)',
+    description: 'Einigungsgebühr für außergerichtliche Einigung (VV 1000 RVG)',
   },
   {
     nr: '1003',
-    name: 'Einigungsgebuehr (gerichtlich)',
+    name: 'Einigungsgebühr (gerichtlich)',
     feeType: 'wertgebuehr',
     defaultRate: 1.0,
     minRate: 0.2,
@@ -43,11 +43,11 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Einigungsgebuehr fuer gerichtliche Einigung/Vergleich (VV 1003 RVG)',
+    description: 'Einigungsgebühr für gerichtliche Einigung/Vergleich (VV 1003 RVG)',
   },
   {
     nr: '1008',
-    name: 'Erhoehungsgebuehr (Streitgenossen)',
+    name: 'Erhöhungsgebühr (Streitgenossen)',
     feeType: 'wertgebuehr',
     defaultRate: 0.3,
     minRate: 0.3,
@@ -57,7 +57,7 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Erhoehung fuer mehrere Auftraggeber: 0.3 je weiterem Auftraggeber, max. Gesamterhoehung 2.0 (VV 1008 RVG)',
+    description: 'Erhöhung für mehrere Auftraggeber: 0.3 je weiterem Auftraggeber, max. Gesamterhöhung 2.0 (VV 1008 RVG)',
   },
 
   // ============================================
@@ -65,7 +65,7 @@ export const VV_CATALOG: VVPosition[] = [
   // ============================================
   {
     nr: '2300',
-    name: 'Geschaeftsgebuehr',
+    name: 'Geschäftsgebühr',
     feeType: 'wertgebuehr',
     defaultRate: 1.3,
     minRate: 0.5,
@@ -75,7 +75,7 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: true,
     anrechnungTarget: '3100',
     isAutoAddable: false,
-    description: 'Geschaeftsgebuehr fuer aussergerichtliche Vertretung. Anrechnung auf VV 3100 nach Vorbem. 3 Abs. 4 VV RVG.',
+    description: 'Geschäftsgebühr für außergerichtliche Vertretung. Anrechnung auf VV 3100 nach Vorbem. 3 Abs. 4 VV RVG.',
   },
 
   // ============================================
@@ -83,7 +83,7 @@ export const VV_CATALOG: VVPosition[] = [
   // ============================================
   {
     nr: '3100',
-    name: 'Verfahrensgebuehr',
+    name: 'Verfahrensgebühr',
     feeType: 'wertgebuehr',
     defaultRate: 1.3,
     minRate: 0.5,
@@ -93,11 +93,11 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Verfahrensgebuehr 1. Instanz (VV 3100 RVG)',
+    description: 'Verfahrensgebühr 1. Instanz (VV 3100 RVG)',
   },
   {
     nr: '3104',
-    name: 'Terminsgebuehr',
+    name: 'Terminsgebühr',
     feeType: 'wertgebuehr',
     defaultRate: 1.2,
     minRate: 0.5,
@@ -107,11 +107,11 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Terminsgebuehr 1. Instanz (VV 3104 RVG)',
+    description: 'Terminsgebühr 1. Instanz (VV 3104 RVG)',
   },
   {
     nr: '3200',
-    name: 'Verfahrensgebuehr Berufung',
+    name: 'Verfahrensgebühr Berufung',
     feeType: 'wertgebuehr',
     defaultRate: 1.6,
     minRate: 0.5,
@@ -121,11 +121,11 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Verfahrensgebuehr in der Berufungsinstanz (VV 3200 RVG)',
+    description: 'Verfahrensgebühr in der Berufungsinstanz (VV 3200 RVG)',
   },
   {
     nr: '3202',
-    name: 'Terminsgebuehr Berufung',
+    name: 'Terminsgebühr Berufung',
     feeType: 'wertgebuehr',
     defaultRate: 1.2,
     minRate: 0.5,
@@ -135,11 +135,11 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Terminsgebuehr in der Berufungsinstanz (VV 3202 RVG)',
+    description: 'Terminsgebühr in der Berufungsinstanz (VV 3202 RVG)',
   },
   {
     nr: '3305',
-    name: 'Verfahrensgebuehr Mahnverfahren',
+    name: 'Verfahrensgebühr Mahnverfahren',
     feeType: 'wertgebuehr',
     // Nr. 3305 VV RVG: 1,0 (0,5 gilt nur fuer 3306 vorzeitige Beendigung und 3307 Antragsgegner)
     defaultRate: 1.0,
@@ -150,11 +150,11 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Verfahrensgebuehr fuer die Vertretung des Antragstellers im Mahnverfahren (VV 3305 RVG), 1,0 Gebuehr.',
+    description: 'Verfahrensgebühr für die Vertretung des Antragstellers im Mahnverfahren (VV 3305 RVG), 1,0 Gebühr.',
   },
   {
     nr: '3307',
-    name: 'Verfahrensgebuehr Mahnverfahren (Widerspruch)',
+    name: 'Verfahrensgebühr Mahnverfahren (Widerspruch)',
     feeType: 'wertgebuehr',
     defaultRate: 0.5,
     minRate: null,
@@ -164,7 +164,7 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Verfahrensgebuehr bei Widerspruch/Einspruch im Mahnverfahren (VV 3307 RVG)',
+    description: 'Verfahrensgebühr bei Widerspruch/Einspruch im Mahnverfahren (VV 3307 RVG)',
   },
 
   // ============================================
@@ -182,7 +182,7 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: true,
-    description: 'Pauschale fuer Entgelte fuer Post- und Telekommunikationsdienstleistungen: 20% der Gebuehren, max. 20.00 EUR (VV 7002 RVG)',
+    description: 'Pauschale für Entgelte für Post- und Telekommunikationsdienstleistungen: 20% der Gebühren, max. 20.00 EUR (VV 7002 RVG)',
   },
   {
     nr: '7003',
@@ -210,7 +210,7 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: false,
-    description: 'Tage-/Abwesenheitsgeld: bis 4h = 30 EUR, 4-8h = 50 EUR, ueber 8h = 80 EUR (VV 7005 RVG)',
+    description: 'Tage-/Abwesenheitsgeld: bis 4h = 30 EUR, 4-8h = 50 EUR, über 8h = 80 EUR (VV 7005 RVG)',
   },
   {
     nr: '7008',
@@ -224,7 +224,7 @@ export const VV_CATALOG: VVPosition[] = [
     triggersAnrechnung: false,
     anrechnungTarget: null,
     isAutoAddable: true,
-    description: 'Umsatzsteuer auf die Verguetung: 19% (VV 7008 RVG)',
+    description: 'Umsatzsteuer auf die Vergütung: 19% (VV 7008 RVG)',
   },
 ];
 

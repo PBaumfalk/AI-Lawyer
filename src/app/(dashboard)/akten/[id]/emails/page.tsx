@@ -19,7 +19,7 @@ export default async function AkteEmailsPage({ params }: AkteEmailsPageProps) {
           Akte E-Mails
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Alle verakteten E-Mails fuer diese Akte
+          Alle verakteten E-Mails für diese Akte
         </p>
       </div>
       <AkteEmailTab akteId={id} />

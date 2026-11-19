@@ -3,6 +3,33 @@
 Die Versionen entsprechen den Meilensteinen der Entwicklung. Die Tags `v3.4` und
 `v3.5` stammen aus einer früheren Zählung und liegen zeitlich vor `v0.1`.
 
+## Unveröffentlicht – Persimmon-Design
+
+- **Neues Erscheinungsbild „Persimmon“:** warmes Orange für Marke, Auswahl und
+  Hauptaktionen, Graphit für Text, ruhige helle Glasflächen; neue Wortmarke,
+  App-Icons, Favicons und Web-App-Manifest. Tokens zentral in `globals.css`,
+  Regeln und Umsetzung in [docs/design](docs/design/README.md).
+- **Eigene Icons** für alle Bereiche; Helena als Roboter mit Brille.
+- **Bedienung:** Hauptaktionen 44 px hoch, sichtbarer 3-px-Fokusring, Status
+  mit Text, Hell als Standard (Dunkel wählbar), lesbar ohne Transparenzeffekte
+  und bei reduzierter Bewegung.
+- **Schmale Bildschirme:** Seitenleiste eingeklappt, E-Mail, Nachrichten und
+  KI-Chats einspaltig mit Zurück-Navigation, Kopfzeilen brechen um, Tabellen
+  scrollen in ihrem Container; geprüft bei 375, 768 und 1440 px und 200 % Zoom.
+- **E-Mail:** Der Ordnerbereich war durch eine Pixel-statt-Prozent-Angabe nur
+  etwa 30 px breit.
+- **Erweiterungsicons:** 90 zusätzliche Icons im Persimmon-Stil gezeichnet;
+  in der Oberfläche erscheinen keine Lucide-Formen mehr.
+- **Umlaute:** sichtbare Texte mit ä, ö, ü und ß statt ae, oe, ue und ss.
+- **Konsolenfehler behoben:** kein 401/403 für die Theme-Einstellung auf der
+  Anmeldeseite und im Portal, kein 404 vom Quest-Widget bei abgeschalteter
+  Gamification; der Akten-Timer stoppte vorzeitig und beim Verlassen mit 404.
+- **Barrierefreiheit:** automatische Prüfung mit axe (WCAG 2.1 A/AA) auf 19
+  Seiten in Desktop- und Mobilansicht; behoben wurden u. a. Auswahllisten und
+  Senden-Knöpfe ohne Namen, ein Link mit verschachteltem Knopf, ein Schalter
+  ohne Beschriftung, der Suchknopf (sichtbarer Text nicht im Namen) und zu
+  schwacher Kontrast bei Bernstein-Hinweisen.
+
 ## Unveröffentlicht – Betriebsreife
 
 - **Kein bekanntes Startpasswort mehr:** Eine Produktionsinstallation legt nur

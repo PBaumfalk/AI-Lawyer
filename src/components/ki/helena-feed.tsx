@@ -94,7 +94,7 @@ export function HelenaFeed() {
 
   const statusTabs = [
     { value: "NEU", label: "Neu" },
-    { value: "UEBERNOMMEN", label: "Uebernommen" },
+    { value: "UEBERNOMMEN", label: "Übernommen" },
     { value: "ABGELEHNT", label: "Abgelehnt" },
     { value: "ALLE", label: "Alle" },
   ];
@@ -103,7 +103,7 @@ export function HelenaFeed() {
     { value: "", label: "Alle Typen" },
     { value: "FRIST_ERKANNT", label: "Fristen" },
     { value: "BETEILIGTE_ERKANNT", label: "Beteiligte" },
-    { value: "ANTWORT_ENTWURF", label: "Antwort-Entwuerfe" },
+    { value: "ANTWORT_ENTWURF", label: "Antwort-Entwürfe" },
     { value: "HINWEIS", label: "Hinweise" },
     { value: "BRIEFING", label: "Briefings" },
   ];
@@ -120,7 +120,7 @@ export function HelenaFeed() {
               onClick={() => setActiveStatus(tab.value)}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeStatus === tab.value
-                  ? "bg-brand-600 text-white"
+                  ? "bg-primary text-primary-foreground"
                   : "bg-white/50 dark:bg-white/[0.05] text-foreground/70 hover:bg-white/70 dark:hover:bg-white/[0.08]"
               }`}
             >
@@ -131,6 +131,7 @@ export function HelenaFeed() {
 
         {/* Type filter */}
         <Select
+          aria-label="Typ filtern"
           value={typFilter}
           onChange={(e) => setTypFilter(e.target.value)}
           className="h-8 text-xs w-40"
@@ -145,6 +146,7 @@ export function HelenaFeed() {
         {/* Akte filter */}
         {akten.length > 0 && (
           <Select
+            aria-label="Akte filtern"
             value={akteFilter}
             onChange={(e) => setAkteFilter(e.target.value)}
             className="h-8 text-xs w-48"
@@ -182,7 +184,7 @@ export function HelenaFeed() {
         <div className="glass rounded-xl p-12 text-center">
           <Bot className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
           <p className="text-muted-foreground">
-            Helena hat noch keine Vorschlaege.
+            Helena hat noch keine Vorschläge.
           </p>
           <p className="text-sm text-muted-foreground/70 mt-1">
             Neue Dokumente und E-Mails werden automatisch analysiert.

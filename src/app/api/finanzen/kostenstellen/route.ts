@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 });
+    return NextResponse.json({ error: 'Ungültiger Request-Body' }, { status: 400 });
   }
 
   const parsed = createSchema.safeParse(body);
@@ -136,7 +136,7 @@ export async function PATCH(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 });
+    return NextResponse.json({ error: 'Ungültiger Request-Body' }, { status: 400 });
   }
 
   const parsed = updateSchema.safeParse(body);

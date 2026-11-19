@@ -5,6 +5,7 @@ import { useChat } from "@ai-sdk/react";
 import { Bot, Plus, Send, PanelLeft, PanelLeftClose, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import { useIsMobile } from "@/hooks/use-media-query";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,6 +41,11 @@ function stripThinkTags(text: string): string {
 
 export default function GlobalKiChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Below md the history is an overlay that starts closed
+  const isMobile = useIsMobile();
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [loadingConversations, setLoadingConversations] = useState(true);
@@ -161,23 +167,33 @@ export default function GlobalKiChatPage() {
   const latestSources = Object.values(sourcesMap).at(-1) ?? [];
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] -m-6 overflow-hidden">
+    <div className="relative flex h-[calc(100vh-4rem)] -m-4 sm:-m-6 overflow-hidden">
+      {/* Mobile: backdrop behind the overlay history */}
+      {sidebarOpen && isMobile && (
+        <button
+          type="button"
+          aria-label="Gesprächsverlauf schließen"
+          onClick={() => setSidebarOpen(false)}
+          className="absolute inset-0 z-10 bg-foreground/20"
+        />
+      )}
       {/* Sidebar: Conversation history */}
       <div
         className={cn(
-          "flex-shrink-0 border-r border-white/10 dark:border-white/[0.06] bg-white/30 dark:bg-white/[0.02] backdrop-blur-md transition-all duration-200 flex flex-col",
-          sidebarOpen ? "w-64" : "w-0 overflow-hidden",
-          "max-md:absolute max-md:z-20 max-md:h-full"
+          "flex-shrink-0 border-white/10 dark:border-white/[0.06] bg-white/30 dark:bg-white/[0.02] backdrop-blur-md transition-all duration-200 flex flex-col",
+          // Zugeklappt unsichtbar: kein Fokus und keine Vorlese-Inhalte in 0 px Breite
+          sidebarOpen ? "w-64 border-r" : "w-0 overflow-hidden invisible",
+          "max-md:absolute max-md:z-20 max-md:h-full max-md:max-w-[85%] max-md:bg-background max-md:shadow-xl"
         )}
       >
         {/* Sidebar header */}
         <div className="p-3 border-b border-white/10 dark:border-white/[0.06]">
           <button
             onClick={handleNewConversation}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-[oklch(45%_0.2_260)] text-white text-sm font-medium hover:bg-[oklch(40%_0.2_260)] transition-colors"
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-hover transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Neues Gespraech
+            Neues Gespräch
           </button>
         </div>
 
@@ -189,17 +205,20 @@ export default function GlobalKiChatPage() {
             </div>
           ) : conversations.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-8">
-              Noch keine Gespraeche
+              Noch keine Gespräche
             </p>
           ) : (
             conversations.map((conv) => (
               <button
                 key={conv.id}
-                onClick={() => handleLoadConversation(conv)}
+                onClick={() => {
+                  handleLoadConversation(conv);
+                  if (isMobile) setSidebarOpen(false);
+                }}
                 className={cn(
                   "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors truncate",
                   activeConversationId === conv.id
-                    ? "bg-[oklch(45%_0.2_260/0.15)] text-[oklch(45%_0.2_260)] font-medium"
+                    ? "bg-primary-soft text-primary-strong font-medium"
                     : "text-foreground/70 hover:bg-white/50 dark:hover:bg-white/[0.06]"
                 )}
                 title={conv.titel}
@@ -218,7 +237,7 @@ export default function GlobalKiChatPage() {
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-1.5 rounded-lg hover:bg-white/20 dark:hover:bg-white/[0.06] transition-colors"
-            aria-label={sidebarOpen ? "Sidebar schliessen" : "Sidebar oeffnen"}
+            aria-label={sidebarOpen ? "Gesprächsverlauf schließen" : "Gesprächsverlauf öffnen"}
           >
             {sidebarOpen ? (
               <PanelLeftClose className="w-5 h-5 text-foreground/60" />
@@ -226,13 +245,13 @@ export default function GlobalKiChatPage() {
               <PanelLeft className="w-5 h-5 text-foreground/60" />
             )}
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[oklch(45%_0.2_260)] flex items-center justify-center">
-              <Bot className="w-4 h-4 text-white" />
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="w-8 h-8 shrink-0 rounded-lg bg-primary flex items-center justify-center">
+              <Bot className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
               <h1 className="text-base font-semibold text-foreground">Helena KI-Chat</h1>
-              <p className="text-xs text-muted-foreground">Aktenuebergreifende Recherche</p>
+              <p className="text-xs text-muted-foreground">Aktenübergreifende Recherche</p>
             </div>
           </div>
         </div>
@@ -241,14 +260,14 @@ export default function GlobalKiChatPage() {
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 rounded-2xl bg-[oklch(45%_0.2_260/0.1)] flex items-center justify-center mb-4">
-                <Bot className="w-8 h-8 text-[oklch(45%_0.2_260)]" />
+              <div className="w-16 h-16 rounded-2xl bg-primary-soft flex items-center justify-center mb-4">
+                <Bot className="w-8 h-8 text-primary-strong" />
               </div>
               <h2 className="text-lg font-semibold text-foreground mb-1">
-                Aktenuebergreifende Recherche
+                Aktenübergreifende Recherche
               </h2>
               <p className="text-sm text-muted-foreground max-w-md">
-                Stelle Fragen ueber alle Akten hinweg. Helena durchsucht den gesamten Aktenbestand und
+                Stelle Fragen über alle Akten hinweg. Helena durchsucht den gesamten Aktenbestand und
                 liefert Antworten mit Quellenangaben.
               </p>
             </div>
@@ -266,7 +285,7 @@ export default function GlobalKiChatPage() {
                 className={cn(
                   "max-w-[80%] rounded-2xl px-4 py-3 text-sm",
                   message.role === "user"
-                    ? "bg-[oklch(45%_0.2_260)] text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-white/50 dark:bg-white/[0.05] backdrop-blur-md border border-white/20 dark:border-white/[0.08] text-foreground"
                 )}
               >
@@ -293,9 +312,9 @@ export default function GlobalKiChatPage() {
             <div className="flex justify-start">
               <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md border border-white/20 dark:border-white/[0.08] rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-[oklch(45%_0.2_260)] rounded-full animate-bounce [animation-delay:0ms]" />
-                  <span className="w-2 h-2 bg-[oklch(45%_0.2_260)] rounded-full animate-bounce [animation-delay:150ms]" />
-                  <span className="w-2 h-2 bg-[oklch(45%_0.2_260)] rounded-full animate-bounce [animation-delay:300ms]" />
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0ms]" />
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:150ms]" />
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:300ms]" />
                 </div>
               </div>
             </div>
@@ -320,9 +339,9 @@ export default function GlobalKiChatPage() {
               value={input}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              placeholder="Frage ueber alle Akten stellen..."
+              placeholder="Frage über alle Akten stellen..."
               rows={1}
-              className="flex-1 resize-none rounded-xl glass-input px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(45%_0.2_260)] max-h-40"
+              className="flex-1 resize-none rounded-xl glass-input px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-h-40"
             />
             <button
               type="submit"
@@ -330,7 +349,7 @@ export default function GlobalKiChatPage() {
               className={cn(
                 "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
                 input.trim() && !isLoading
-                  ? "bg-[oklch(45%_0.2_260)] text-white hover:bg-[oklch(40%_0.2_260)]"
+                  ? "bg-primary text-primary-foreground hover:bg-primary-hover"
                   : "bg-white/30 dark:bg-white/[0.05] text-foreground/30 cursor-not-allowed"
               )}
               aria-label="Senden"
@@ -355,7 +374,7 @@ function SourceCitations({ sources }: { sources: SourceData[] }) {
     <div className="mt-3 pt-2 border-t border-white/10 dark:border-white/[0.06]">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="text-xs font-medium text-[oklch(45%_0.2_260)] hover:underline"
+        className="text-xs font-medium text-primary-strong hover:underline"
       >
         {expanded ? "Quellen ausblenden" : `${sources.length} Quellen anzeigen`}
       </button>

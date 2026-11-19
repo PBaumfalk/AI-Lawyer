@@ -199,3 +199,27 @@ unzip -p j-lawyer-org/j-lawyer-proprietary/libs/j-lawyer-bea-wrapper.jar META-IN
 ```
 
 Weitere Quellen: https://bea.expert/api/ (Preise, Prinzip), https://hub.docker.com/r/jlawyerorg/beastie, https://portal.beasupport.de (BRAK-Support), Bezug des Softwarezertifikats: https://zertifizierungsstelle.bnotk.de/bestellen/beaprodukte/bea-produkte-softwarezertifikat
+
+---
+
+## 8. Umsetzungsstand (19.11.2026)
+
+- Umgesetzt auf dem Branch `feat/bea-expert`: serverseitige Anbindung an die bea.expert-REST-API (Anmeldung mit Softwarezertifikat, Abruf alle 5 Minuten, Zuordnung zu Akten, Versand, eEB). Zertifikat und PIN verlassen den eigenen Server nicht; Signatur und Entschlüsselung laufen lokal.
+- Smoke-Test: `scripts/bea-smoke.ts` (Lauf mit eigenem Zertifikat steht aus, siehe `BEA_SMOKE_P12`, `BEA_SMOKE_PIN`, `BEA_EXPERT_IDENT`, `--senden`).
+
+**Annahmen, die der Smoke-Test bestätigen oder korrigieren muss**
+
+1. Ordnertyp des Posteingangs ist `INBOX`.
+2. Nachrichtentext kommt aus `beaMessage.json` bzw. `nachricht.xml`.
+3. Die Validierungsantwort beim Senden enthält ein Feld `messageId`.
+4. `eeb_date` = `""` bedeutet „heute“.
+5. eEB-Anhänge: `[]` oder `[""]`.
+6. Variante der Größenangabe (`sizeKB`).
+7. Format der Zeitstempel in Ordnerübersicht und Nachrichtenköpfen.
+
+**Entscheidungen, die man kennen sollte**
+
+- Wo die Dokumentation der API eine Feldbezeichnung offenließ, wurden die Namen aus den öffentlichen Referenzclients übernommen (`bea-api-javascript`, `n8n-nodes-bea-expert`), soweit diese sie geklärt haben.
+- Die Login-Optionen `p12_certificate_file`, `p12_certificate_pass` und `allow_endless_sessions` werden bewusst nicht genutzt.
+- TLS-Prüfung bleibt an (der n8n-Node schaltet sie ab; nicht übernommen).
+- Kein automatischer Wiederholversuch bei Versand, Entwurf und eEB; unklarer Versandstatus wird als `FEHLER` gespeichert.

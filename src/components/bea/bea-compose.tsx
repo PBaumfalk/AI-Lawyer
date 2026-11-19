@@ -119,6 +119,11 @@ export function BeaCompose() {
   // After an unclear send the form stays locked: a retry could send twice
   const [gesperrt, setGesperrt] = useState(false);
   const [erfolg, setErfolg] = useState<{ entwurf: boolean; warnungen: string[] } | null>(null);
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (redirectTimer.current) clearTimeout(redirectTimer.current);
+  }, []);
 
   // Fetch Kontakte with beaSafeId for autocomplete
   useEffect(() => {
@@ -233,7 +238,7 @@ export function BeaCompose() {
 
       if (res.ok) {
         setErfolg({ entwurf: alsEntwurf, warnungen: data.warnungen ?? [] });
-        setTimeout(() => router.push("/bea"), 2500);
+        redirectTimer.current = setTimeout(() => router.push("/bea"), 2500);
         return;
       }
       if (res.status === 422 && Array.isArray(data.fehler)) {
@@ -327,7 +332,7 @@ export function BeaCompose() {
           {/* Recipient with SAFE-ID autocomplete */}
           <div className="glass rounded-xl p-6 space-y-4">
             <div className="space-y-2">
-              <Label>Empfänger (SAFE-ID)</Label>
+              <Label htmlFor="bea-empfaenger-suche">Empfänger (SAFE-ID)</Label>
               <div className="relative">
                 {recipientSafeId && !safeIdSearch && recipientName ? (
                   <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
@@ -351,6 +356,7 @@ export function BeaCompose() {
                     <div className="relative">
                       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
+                        id="bea-empfaenger-suche"
                         value={safeIdSearch}
                         onChange={(e) => setSafeIdSearch(e.target.value)}
                         onFocus={() => {
@@ -376,8 +382,9 @@ export function BeaCompose() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>Oder SAFE-ID direkt eingeben:</span>
+                      <label htmlFor="bea-empfaenger-safeid">Oder SAFE-ID direkt eingeben:</label>
                       <Input
+                        id="bea-empfaenger-safeid"
                         value={recipientSafeId}
                         onChange={(e) => {
                           setRecipientSafeId(e.target.value);
@@ -406,7 +413,7 @@ export function BeaCompose() {
 
             {/* Akte selector (optional) */}
             <div className="space-y-2">
-              <Label>Akte (optional)</Label>
+              <Label htmlFor="bea-akte-suche">Akte (optional)</Label>
               <AkteSelector
                 value={akteId}
                 displayName={akteName}
@@ -703,6 +710,7 @@ function AkteSelector({
   return (
     <div className="relative">
       <Input
+        id="bea-akte-suche"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Aktenzeichen oder Rubrum suchen…"
@@ -795,6 +803,7 @@ function DocumentPicker({
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Dokument suchen…"
+            aria-label="Dokument suchen"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"

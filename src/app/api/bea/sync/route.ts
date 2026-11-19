@@ -25,12 +25,22 @@ export async function POST() {
     );
   }
 
+  // Stable id per user: a job still waiting or running means a retrieval is already under way.
+  // (BullMQ would silently ignore a second add with the same id.)
+  const jobId = `bea-sync-${userId}`;
+  const vorhanden = await beaSyncQueue.getJob(jobId);
+  if (vorhanden) {
+    const zustand = await vorhanden.getState();
+    if (zustand !== "completed" && zustand !== "failed" && zustand !== "unknown") {
+      return NextResponse.json({ error: "Abruf läuft bereits" }, { status: 409 });
+    }
+  }
+
   await beaSyncQueue.add(
     "bea-sync",
     { userId },
     {
-      // Stable id: while a job for this user is waiting or running, a second request is ignored
-      jobId: `bea-sync-${userId}`,
+      jobId,
       // Remove when finished so the id is free for the next manual retrieval
       removeOnComplete: true,
       removeOnFail: true,

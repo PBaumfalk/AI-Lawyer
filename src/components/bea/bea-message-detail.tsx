@@ -27,7 +27,6 @@ import { Badge } from "@/components/ui/badge";
 interface BeaMessageProps {
   nachricht: {
     id: string;
-    nachrichtenId: string | null;
     betreff: string;
     absender: string;
     empfaenger: string;
@@ -38,7 +37,7 @@ interface BeaMessageProps {
     safeIdAbsender: string | null;
     safeIdEmpfaenger: string | null;
     pruefprotokoll: any;
-    anhaenge: any;
+    anhaenge: BeaAnhangAnzeige[];
     xjustizData: any;
     eebStatus: string | null;
     eebDatum: string | null;
@@ -70,20 +69,21 @@ const statusBadgeConfig: Record<string, { label: string; variant: BadgeVariant }
   FEHLER: { label: "Fehler", variant: "danger" },
 };
 
-/** Attachment entry in BeaNachricht.anhaenge. */
-interface Anhang {
-  id?: string;
+/** Attachment as passed to the client (no storage keys). */
+export interface BeaAnhangAnzeige {
+  id: string | null;
   name: string;
-  storageKey?: string;
-  mimeType?: string;
-  groesse?: number;
-  art?: string | null;
-  dokumentId?: string;
+  mimeType: string | null;
+  groesse: number | null;
+  art: string | null;
+  dokumentId: string | null;
+  /** True if the beA file is stored and served by the message route under `id`. */
+  herunterladbar: boolean;
 }
 
 /** Download URL: stored beA file via the message route, else the Akte document. */
-function anhangUrl(nachrichtId: string, a: Anhang): string | null {
-  if (a.id && a.storageKey) {
+function anhangUrl(nachrichtId: string, a: BeaAnhangAnzeige): string | null {
+  if (a.id && a.herunterladbar) {
     return `/api/bea/messages/${encodeURIComponent(nachrichtId)}?download=${encodeURIComponent(a.id)}`;
   }
   if (a.dokumentId) return `/api/dokumente/${encodeURIComponent(a.dokumentId)}?download=true`;
@@ -98,7 +98,7 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
     datum: nachricht.eebDatum,
   });
   const statusCfg = statusBadgeConfig[nachricht.status] || statusBadgeConfig.EINGANG;
-  const attachments: Anhang[] = Array.isArray(nachricht.anhaenge) ? nachricht.anhaenge : [];
+  const attachments = nachricht.anhaenge;
   const isIncoming = nachricht.richtung !== "AUSGANG";
   const isAnwalt = userRole === "ANWALT";
   const zeigeEeb =

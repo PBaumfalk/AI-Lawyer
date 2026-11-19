@@ -2,9 +2,10 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { prisma } from "@/lib/db";
 import { resetDb, createUser, createAkte, asUser, req, params } from "./helpers";
 
-const { dateien, queueAdd, kaputt } = vi.hoisted(() => ({
+const { dateien, queueAdd, queueGetJob, kaputt } = vi.hoisted(() => ({
   dateien: new Map<string, Buffer>(),
   queueAdd: vi.fn(async () => ({})),
+  queueGetJob: vi.fn(async (): Promise<{ getState: () => Promise<string> } | undefined> => undefined),
   kaputt: { aktiv: false },
 }));
 
@@ -21,7 +22,7 @@ vi.mock("@/lib/storage", () => ({
   }),
   generateStorageKey: (akteId: string, name: string) => `akten/${akteId}/dokumente/${name}`,
 }));
-vi.mock("@/lib/queue/queues", () => ({ ocrQueue: { add: queueAdd }, beaSyncQueue: { add: queueAdd } }));
+vi.mock("@/lib/queue/queues", () => ({ ocrQueue: { add: queueAdd }, beaSyncQueue: { add: queueAdd, getJob: queueGetJob } }));
 vi.mock("@/lib/bea/provider", () => ({ getBeaProvider: () => ({}) }));
 
 const route = () => import("@/app/api/bea/messages/[id]/route");
@@ -44,6 +45,8 @@ beforeEach(async () => {
   dateien.clear();
   kaputt.aktiv = false;
   queueAdd.mockClear();
+  queueGetJob.mockReset();
+  queueGetJob.mockResolvedValue(undefined);
   anwalt = await createUser("ANWALT");
   fremd = await createUser("ANWALT");
   akte = await createAkte({ anwaltId: anwalt.id });
@@ -126,5 +129,40 @@ describe("POST /api/bea/sync", () => {
     asUser(anwalt);
     const { POST } = await import("@/app/api/bea/sync/route");
     expect((await POST()).status).toBe(409);
+  });
+
+  it("laufender Abruf desselben Benutzers → 409 „Abruf läuft bereits“, nicht erneut eingereiht", async () => {
+    await prisma.beaZertifikat.create({
+      data: {
+        userId: anwalt.id, p12Verschluesselt: "x", pinVerschluesselt: "x", seriennummer: "1",
+        inhaber: "RA", gueltigBis: new Date(Date.now() + 86_400_000),
+      },
+    });
+    queueGetJob.mockResolvedValue({ getState: async () => "active" });
+    asUser(anwalt);
+    const { POST } = await import("@/app/api/bea/sync/route");
+    const r = await POST();
+    expect(r.status).toBe(409);
+    expect((await r.json()).error).toBe("Abruf läuft bereits");
+    expect(queueGetJob).toHaveBeenCalledWith(`bea-sync-${anwalt.id}`);
+    expect(queueAdd).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/bea/messages – Richtung", () => {
+  it("filtert serverseitig nach richtung und lehnt ungültige Werte ab", async () => {
+    await nachricht({ richtung: "EINGANG", betreff: "Eingang" });
+    await nachricht({ richtung: "AUSGANG", betreff: "Ausgang", status: "GESENDET" });
+    asUser(anwalt);
+    const { GET } = await import("@/app/api/bea/messages/route");
+
+    const aus = await (await GET(req("/x?richtung=AUSGANG") as any)).json();
+    expect(aus.nachrichten.map((n: any) => n.betreff)).toEqual(["Ausgang"]);
+    expect(aus.total).toBe(1);
+
+    const ein = await (await GET(req("/x?richtung=EINGANG") as any)).json();
+    expect(ein.nachrichten.map((n: any) => n.betreff)).toEqual(["Eingang"]);
+
+    expect((await GET(req("/x?richtung=SEITWAERTS") as any)).status).toBe(400);
   });
 });

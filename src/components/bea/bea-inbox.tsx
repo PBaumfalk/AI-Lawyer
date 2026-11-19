@@ -64,6 +64,7 @@ export function BeaInbox() {
   const fetchStored = useCallback(async () => {
     try {
       const params = new URLSearchParams();
+      params.set("richtung", tab === "eingang" ? "EINGANG" : "AUSGANG");
       if (search) params.set("q", search);
       params.set("take", "100");
 
@@ -71,8 +72,7 @@ export function BeaInbox() {
       if (!res.ok) throw new Error("Fehler beim Laden der Nachrichten");
       const data = await res.json();
 
-      const richtung = tab === "eingang" ? "EINGANG" : "AUSGANG";
-      setMessages((data.nachrichten as StoredMessage[]).filter((m) => (m.richtung ?? "EINGANG") === richtung));
+      setMessages(data.nachrichten as StoredMessage[]);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unbekannter Fehler");
@@ -101,8 +101,8 @@ export function BeaInbox() {
       const res = await fetch("/api/bea/sync", { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        // A retrieval for this user is already queued or running
-        if (res.status === 429 || /läuft bereits|already/i.test(data.error ?? "")) {
+        // 409 "Abruf läuft bereits": a retrieval for this user is already queued or running
+        if (res.status === 409 && data.error === "Abruf läuft bereits") {
           setSyncHinweis("Abruf läuft bereits");
         } else {
           throw new Error(data.error || `Abruf fehlgeschlagen (${res.status})`);
@@ -190,6 +190,7 @@ export function BeaInbox() {
             <input
               type="text"
               placeholder="Suchen…"
+              aria-label="Nachrichten durchsuchen"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-64 rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -400,6 +401,7 @@ function AkteAssignDialog({
           <input
             type="text"
             placeholder="Aktenzeichen oder Rubrum suchen…"
+            aria-label="Akte suchen"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"

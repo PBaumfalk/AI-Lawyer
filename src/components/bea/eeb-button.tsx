@@ -24,8 +24,10 @@ export function EebButton({ messageId, eebStatus, onConfirmed }: EebButtonProps)
   const [loading, setLoading] = useState(false);
   const laeuft = useRef(false); // guards against double submit before the state re-renders
   const [error, setError] = useState<string | null>(null);
+  // 409: another submission is running or already done; the outcome must be checked in beA
+  const [konflikt, setKonflikt] = useState(false);
 
-  const unklar = eebStatus === "WIRD_ABGEGEBEN";
+  const unklar = eebStatus === "WIRD_ABGEGEBEN" || konflikt;
   const datumFehler = abgabeDatum ? pruefeEebDatum(abgabeDatum) : "Bitte ein Abgabedatum wählen";
 
   const handleConfirm = async () => {
@@ -42,6 +44,11 @@ export function EebButton({ messageId, eebStatus, onConfirmed }: EebButtonProps)
         body: JSON.stringify({ abgabeDatum }),
       });
       const data = await res.json().catch(() => ({}));
+      // A 409 with details is the missing-certificate case, which is a plain error
+      if (res.status === 409 && !data.details) {
+        setKonflikt(true);
+        return;
+      }
       if (!res.ok) {
         throw new Error(data.error || `Das eEB konnte nicht abgegeben werden (${res.status})`);
       }

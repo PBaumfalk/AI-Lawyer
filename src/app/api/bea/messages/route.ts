@@ -23,6 +23,10 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
+  const richtung = searchParams.get("richtung");
+  if (richtung !== null && richtung !== "EINGANG" && richtung !== "AUSGANG") {
+    return NextResponse.json({ error: "Ungültige Richtung" }, { status: 400 });
+  }
   const akteId = searchParams.get("akteId");
   const q = searchParams.get("q");
   const take = Math.min(parseInt(searchParams.get("take") ?? "50"), 100);
@@ -39,6 +43,9 @@ export async function GET(request: NextRequest) {
 
   if (status) {
     where.status = status;
+  }
+  if (richtung) {
+    where.richtung = richtung;
   }
   if (akteId) {
     where.akteId = akteId;
@@ -249,12 +256,13 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  logAuditEvent({
+  // Awaited so the entry exists when the response arrives; a failure must not turn a sent message into an error.
+  await logAuditEvent({
     userId,
     akteId: nachricht.akteId,
     aktion: "BEA_NACHRICHT_GESENDET",
     details: { nachrichtId: nachricht.id, ...auditDetails, ergebnis: "ERFOLG" },
-  }).catch(() => {});
+  }).catch((e) => log.warn({ err: fehlermeldung(e) }, "Audit-Eintrag für beA-Versand fehlgeschlagen"));
 
   return NextResponse.json({ nachricht, warnungen: pruefung.warnungen }, { status: 201 });
 }
@@ -273,11 +281,11 @@ async function versandUnklar(
   } catch (e) {
     log.error({ err: fehlermeldung(e) }, "beA-Nachricht mit unklarem Versandstatus konnte nicht gespeichert werden");
   }
-  logAuditEvent({
+  await logAuditEvent({
     userId,
     akteId: nachricht?.akteId ?? null,
     aktion: "BEA_NACHRICHT_FEHLER",
     details: { nachrichtId: nachricht?.id ?? null, ...auditDetails, ursache, ergebnis: "UNKLAR" },
-  }).catch(() => {});
+  }).catch((e) => log.warn({ err: fehlermeldung(e) }, "Audit-Eintrag für unklaren beA-Versand fehlgeschlagen"));
   return NextResponse.json({ error: VERSANDSTATUS_UNKLAR, nachricht }, { status: 502 });
 }

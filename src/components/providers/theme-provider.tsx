@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 type Theme = "light" | "dark" | "system";
 
@@ -24,15 +25,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
 
-  // Load stored preference from API on mount
+  // Load the stored preference once the user is in the firm workspace. Not on
+  // the public sign-in pages and not in the client portal: there is no firm
+  // session, the request would only end in 401/403 (console error) and the
+  // portal stays light. Depends on the path because sign-in navigates to the
+  // dashboard without a full reload.
+  const pathname = usePathname();
+  const geladen = useRef(false);
   useEffect(() => {
+    if (geladen.current) return;
+    if (/^\/(login|2fa-setup-required|portal)(\/|$)/.test(pathname ?? "")) return;
+    geladen.current = true;
     fetch("/api/user/theme")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.theme) setThemeState(d.theme as Theme);
       })
       .catch(() => {});
-  }, []);
+  }, [pathname]);
 
   // Apply .dark class to <html> whenever theme state changes.
   // Persimmon CI-Contract §8: the light theme is the default and dark mode is

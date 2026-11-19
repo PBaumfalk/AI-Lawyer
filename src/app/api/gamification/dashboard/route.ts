@@ -4,8 +4,10 @@
  * Combined endpoint returning GameProfile (level, XP, Runen, streak)
  * plus quest progress grouped by type (daily, weekly, special).
  *
- * Returns 401 if not authenticated, 404 if user has gamificationOptIn=false.
- * Widget uses 404 to know user is opted out and render nothing.
+ * Returns 401 if not authenticated and { enabled: false } (200) if the user
+ * has gamificationOptIn=false; the widget then renders nothing. (Previously
+ * 404, which showed up as an error in the browser console on every dashboard
+ * load.)
  *
  * Quest filtering:
  * - Only universal (klasse=null) and user's class quests are returned
@@ -47,10 +49,7 @@ export async function GET() {
   });
 
   if (!user?.gamificationOptIn) {
-    return NextResponse.json(
-      { error: "Gamification nicht aktiviert" },
-      { status: 404 },
-    );
+    return NextResponse.json({ enabled: false });
   }
 
   // Get profile data

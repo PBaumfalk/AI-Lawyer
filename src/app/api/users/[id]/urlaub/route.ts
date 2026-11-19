@@ -5,10 +5,8 @@ import { logAuditEvent } from "@/lib/audit";
 import type { UserRole } from "@prisma/client";
 
 // GET /api/users/[id]/urlaub -- List vacation periods for a user
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json(
@@ -28,10 +26,8 @@ export async function GET(
 }
 
 // POST /api/users/[id]/urlaub -- Create vacation period
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json(
@@ -116,10 +112,8 @@ export async function POST(
 }
 
 // DELETE /api/users/[id]/urlaub -- Delete vacation period by zeitraumId query param
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json(

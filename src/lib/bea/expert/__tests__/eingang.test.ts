@@ -64,6 +64,28 @@ function cocoXml(refs: string[], keys: Buffer[]): string {
   );
 }
 
+const OSCI = "http://www.osci.de/2002/04/osci";
+
+/** beaMessage.json object content: OSCI XML with Base64 JSON (bea2email:173-192). */
+function beaMessageJsonXml(body: string): string {
+  const json = Buffer.from(JSON.stringify({ messageSubject: BETREFF, messageBody: body }), "utf8").toString("base64");
+  return `<osci:Content xmlns:osci="${OSCI}"><osci:Base64Content>${json}</osci:Base64Content></osci:Content>`;
+}
+
+/** project_coco content with a nachricht.xml Base64Content holding <Freitext> (bea2email:219-239). */
+function cocoMitFreitext(freitext: string): string {
+  const nachricht = Buffer.from(
+    `<?xml version="1.0" encoding="UTF-8"?><Nachricht><Betreff>x</Betreff><Freitext>${freitext}</Freitext></Nachricht>`,
+    "utf8",
+  ).toString("base64");
+  return (
+    `<osci:Root xmlns:osci="${OSCI}"><osci:Content>` +
+    `<osci:Base64Content Id="additional_infos">${Buffer.from("user_id=x").toString("base64")}</osci:Base64Content>` +
+    `<osci:Base64Content Id="nachricht.xml">${nachricht}</osci:Base64Content>` +
+    `</osci:Content></osci:Root>`
+  );
+}
+
 function encObjekt(name: string, inhalt: Buffer, sessionKey: Buffer, modus: "gcm" | "cbc" = "gcm") {
   const objectKey = crypto.randomBytes(32);
   const encKey = gcm(objectKey, sessionKey);
@@ -114,56 +136,104 @@ describe("bea.expert Eingang", () => {
     };
   }
 
-  it("holePostfaecher ruft bea_get_postboxes mit token auf", async () => {
+  // Fixtures below follow the response classes of bea-api-c-sharp (Bex_types.cs)
+  it("holePostfaecher mappt GetPostboxesResponse (postboxSafeId, displayName, kein Typ)", async () => {
     fetchMock.mockResolvedValueOnce(
-      json({ postboxes: [{ postboxSafeId: "DE.BRAK.test.1", postboxName: "RA Müller", type: "PERSONAL" }] }),
+      json({
+        postboxes: [
+          {
+            displayName: "RA Müller",
+            folder: [{ id: "1", name: "Posteingang", postboxSafeId: "DE.BRAK.test.1", type: "INBOX", parentFolderId: "" }],
+            postboxSafeId: "DE.BRAK.test.1",
+          },
+        ],
+        token: "tok-1",
+      }),
     );
     const p = await holePostfaecher(s);
     expect(String(fetchMock.mock.calls[0][0])).toMatch(/\/bea_get_postboxes$/);
     expect(bodyVon(fetchMock.mock.calls[0])).toEqual({ token: "tok-1" });
-    expect(p).toEqual([{ safeId: "DE.BRAK.test.1", name: "RA Müller", typ: "PERSONAL" }]);
+    expect(p).toEqual([{ safeId: "DE.BRAK.test.1", name: "RA Müller", typ: "" }]);
   });
 
-  it("holeOrdner ruft bea_get_folderstructure mit postboxSafeId auf", async () => {
+  it("holeOrdner mappt GetFolderStructureResponse (folders, parentFolderId)", async () => {
     fetchMock.mockResolvedValueOnce(
-      json({ folder: [{ id: "1", name: "Posteingang", type: "INBOX", parentId: null }] }),
+      json({
+        displayName: "RA Müller",
+        folders: [
+          { id: "1", name: "Posteingang", postboxSafeId: "DE.BRAK.test.1", type: "INBOX", parentFolderId: "" },
+          { id: "2", name: "Mandat Schäfer", postboxSafeId: "DE.BRAK.test.1", type: "USER", parentFolderId: "1" },
+        ],
+        postboxSafeId: "DE.BRAK.test.1",
+        token: "tok-1",
+      }),
     );
     const o = await holeOrdner(s, "DE.BRAK.test.1");
     expect(bodyVon(fetchMock.mock.calls[0])).toEqual({ token: "tok-1", postboxSafeId: "DE.BRAK.test.1" });
-    expect(o).toEqual([{ id: "1", name: "Posteingang", typ: "INBOX", parentId: null }]);
+    expect(o).toEqual([
+      { id: "1", name: "Posteingang", typ: "INBOX", parentId: null },
+      { id: "2", name: "Mandat Schäfer", typ: "USER", parentId: "1" },
+    ]);
   });
 
-  it("holeNachrichtenkoepfe entschlüsselt den Betreff", async () => {
-    fetchMock.mockResolvedValueOnce(
-      json({
-        messages: [
-          {
-            messageId: "4711",
-            subject: gcm(BETREFF, sessionKey),
-            sender: "AG Köln",
-            receptionTime: 1763550000000,
-            eebAngefordert: true,
-          },
-        ],
-      }),
-    );
+  function overviewNachricht(extra: Record<string, unknown>) {
+    return {
+      addressees: [],
+      attachments: "1",
+      checkRequired: "false",
+      confidential: "false",
+      encSubject: gcm(BETREFF, sessionKey),
+      folderId: "1",
+      messageId: "4711",
+      osciSubjectType: "",
+      received: "",
+      referenceNumber: "",
+      referenceNumberJustice: "",
+      sender: { safeId: "DE.Justiz.1", surname: "Schäfer", firstname: "Jörg", postalcode: "50667" },
+      sent: "",
+      symEncAlgorithm: "",
+      urgent: "false",
+      zugegangen: "1763550000000",
+      ...extra,
+    };
+  }
+
+  it("holeNachrichtenkoepfe mappt GetFolderOverviewResponse (encSubject, sender.surname/firstname, zugegangen)", async () => {
+    fetchMock.mockResolvedValueOnce(json({ messages: [overviewNachricht({})] }));
     const k = await holeNachrichtenkoepfe(s, "1");
     expect(bodyVon(fetchMock.mock.calls[0])).toEqual({ token: "tok-1", folderId: "1" });
     expect(k).toEqual([
       {
         messageId: "4711",
         betreff: BETREFF,
-        absender: "AG Köln",
+        absender: "Schäfer, Jörg",
         empfangenAm: new Date(1763550000000),
-        eebAngefordert: true,
+        eebAngefordert: false,
       },
     ]);
+  });
+
+  it("holeNachrichtenkoepfe: leerer encSubject ergibt '' und received ist Ersatz für zugegangen", async () => {
+    fetchMock.mockResolvedValueOnce(
+      json({
+        messages: [
+          overviewNachricht({ encSubject: { iv: "", tag: "", value: "" }, zugegangen: "", received: "1763550000000" }),
+        ],
+      }),
+    );
+    const [k] = await holeNachrichtenkoepfe(s, "1");
+    expect(k.betreff).toBe("");
+    expect(k.empfangenAm).toEqual(new Date(1763550000000));
   });
 
   it("entschlüsselt Betreff 'Klage Müller ./. Schäfer €' aus metaData.subject", async () => {
     const text = "Sehr geehrte Damen und Herren, anbei Müller ß €.";
     fetchMock.mockResolvedValueOnce(
-      json(nachricht({ objekte: [encObjekt("nachrichtentext", Buffer.from(text, "utf8"), sessionKey, "cbc")] })),
+      json(
+        nachricht({
+          objekte: [encObjekt("beaMessage.json", Buffer.from(beaMessageJsonXml(text), "utf8"), sessionKey, "cbc")],
+        }),
+      ),
     );
     const n = await holeNachricht(s, "4711");
     expect(bodyVon(fetchMock.mock.calls[0])).toEqual({ token: "tok-1", messageId: "4711" });
@@ -239,6 +309,62 @@ describe("bea.expert Eingang", () => {
     );
     const n = await holeNachricht(s, "4711");
     expect(n.anhaenge.map((x) => x.inhalt.toString())).toEqual(["A", "B"]);
+  });
+
+  it("Nachrichtentext: beaMessage.json hat Vorrang vor project_coco-Freitext", async () => {
+    fetchMock.mockResolvedValueOnce(
+      json(
+        nachricht({
+          objekte: [
+            encObjekt("project_coco", Buffer.from(cocoMitFreitext("Freitext Schäfer"), "utf8"), sessionKey),
+            encObjekt("beaMessage.json", Buffer.from(beaMessageJsonXml("Body Müller €"), "utf8"), sessionKey),
+          ],
+        }),
+      ),
+    );
+    expect((await holeNachricht(s, "4711")).text).toBe("Body Müller €");
+  });
+
+  it("Nachrichtentext: ohne beaMessage.json aus Freitext von nachricht.xml (auch govello_coco)", async () => {
+    fetchMock.mockResolvedValueOnce(
+      json(
+        nachricht({
+          objekte: [encObjekt("govello_coco", Buffer.from(cocoMitFreitext("Freitext Schäfer ß"), "utf8"), sessionKey)],
+        }),
+      ),
+    );
+    expect((await holeNachricht(s, "4711")).text).toBe("Freitext Schäfer ß");
+  });
+
+  it("leerer metaData.subject ergibt '' statt Fehler", async () => {
+    fetchMock.mockResolvedValueOnce(json(nachricht({ metaData: { subject: { iv: "", tag: "", value: "" } } })));
+    expect((await holeNachricht(s, "4711")).betreff).toBe("");
+  });
+
+  it("Anhang ohne CipherReference nutzt element.key (AES-CBC), exakter Treffer hat Vorrang", async () => {
+    const k1 = crypto.randomBytes(32);
+    const kEigen = crypto.randomBytes(32);
+    const a = gcm(Buffer.from("A"), k1);
+    fetchMock.mockResolvedValueOnce(
+      json(
+        nachricht({
+          objekte: [encObjekt("project_coco", Buffer.from(cocoXml(["a.pdf"], [k1]), "utf8"), sessionKey)],
+          anhaenge: [
+            { reference: "a.pdf", data: a.value, iv: a.iv, tag: a.tag, key: "", symEncAlgorithm: "" },
+            {
+              reference: "extra.txt",
+              data: cbc(Buffer.from("E"), kEigen),
+              iv: "",
+              tag: "",
+              key: kEigen.toString("base64"),
+              symEncAlgorithm: CBC,
+            },
+          ],
+        }),
+      ),
+    );
+    const n = await holeNachricht(s, "4711");
+    expect(n.anhaenge.map((x) => x.inhalt.toString())).toEqual(["A", "E"]);
   });
 
   it("liefert eebAngefordert true aus metaData.eebAngefordert", async () => {

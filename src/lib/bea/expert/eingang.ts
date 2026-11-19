@@ -2,8 +2,9 @@
  * Incoming beA messages via bea.expert: postboxes, folders, message list and
  * full message retrieval with local decryption.
  *
- * Response field names marked "assumption" are not yet verified against the
- * V4 API documentation. Each response type is mapped in exactly one function
+ * Field names follow the public bea.expert reference clients (bea-api-javascript,
+ * bea-api-python, bea-api-c-sharp, bea2email); names still marked "assumption"
+ * are not settled there. Each response type is mapped in exactly one function
  * so a correction stays local. Never log token, keys or decrypted content.
  */
 import { XMLParser } from "fast-xml-parser";
@@ -19,9 +20,10 @@ import type {
 } from "../provider";
 
 const AES256_CBC = "http://www.w3.org/2001/04/xmlenc#aes256-cbc";
-const COCO_NAME = "project_coco";
-// Assumption: name of the encrypted object holding the message body (per V4)
-const TEXT_NAME = /^nachrichtentext/i;
+// "govello_coco" is the older name of the same object
+const COCO_NAMEN = new Set(["project_coco", "govello_coco"]);
+// Encrypted object carrying an OSCI Base64Content with JSON { messageSubject, messageBody }
+const BEA_MESSAGE_JSON = "beaMessage.json";
 
 type Roh = Record<string, unknown>;
 interface GcmTeil { value: string; iv: string; tag: string }
@@ -60,10 +62,16 @@ function liste(antwort: unknown, schluessel: string[]): Roh[] {
   return [];
 }
 
+/**
+ * Message metadata persons carry `name`; folder overview senders carry
+ * `surname`/`firstname` (rendered "Surname, Firstname").
+ */
 function person(x: unknown): { safeId: string; name: string } {
   if (typeof x === "string") return { safeId: "", name: x };
   const o = obj(x);
-  return { safeId: str(o.safeId ?? o.safeid), name: str(o.name ?? o.displayName) };
+  const name =
+    str(o.name) || [str(o.surname), str(o.firstname)].filter(Boolean).join(", ") || str(o.displayName);
+  return { safeId: str(o.safeId), name };
 }
 
 function gcmTeil(x: unknown): GcmTeil {
@@ -71,11 +79,16 @@ function gcmTeil(x: unknown): GcmTeil {
   return { value: str(o.value), iv: str(o.iv), tag: str(o.tag) };
 }
 
-/** Decrypts an encrypted text field with the session key; plain strings pass through. */
+/**
+ * Decrypts an encrypted text field with the session key. A missing field or an
+ * empty `value` yields "" (the overview often has no subject); plain strings pass through.
+ */
 function entschluessleText(x: unknown, sessionKey: Buffer): string {
   if (x === null || x === undefined) return "";
   if (typeof x === "string") return x;
-  return aesGcmEntschluesseln(gcmTeil(x), sessionKey).toString("utf8");
+  const teil = gcmTeil(x);
+  if (teil.value === "") return "";
+  return aesGcmEntschluesseln(teil, sessionKey).toString("utf8");
 }
 
 /**
@@ -100,35 +113,40 @@ function mitEntschluesselung<T>(funktion: string, f: () => T): T {
 
 // ---------- mappings (one per response type) ----------
 
-/** bea_get_postboxes. Assumption: `{ postboxes: [{ postboxSafeId, postboxName, type }] }`. */
+/**
+ * bea_get_postboxes: `{ postboxes: [{ postboxSafeId, displayName, folder[] }] }`.
+ * The reference has no postbox type; `typ` stays "" unless a `type` field appears.
+ */
 function mappePostfaecher(antwort: unknown): BeaPostfachInfo[] {
-  return liste(antwort, ["postboxes", "postbox"]).map((p) => ({
-    safeId: str(p.postboxSafeId ?? p.safeId),
-    name: str(p.postboxName ?? p.name),
-    typ: str(p.type ?? p.postboxType),
+  return liste(antwort, ["postboxes"]).map((p) => ({
+    safeId: str(p.postboxSafeId),
+    name: str(p.displayName),
+    typ: str(p.type),
   }));
 }
 
-/** bea_get_folderstructure. Assumption: `{ folder: [{ id, name, type, parentId }] }`. */
+/** bea_get_folderstructure: `{ folders: [{ id, name, postboxSafeId, type, parentFolderId }] }`. */
 function mappeOrdner(antwort: unknown): BeaOrdnerInfo[] {
-  return liste(antwort, ["folder", "folders"]).map((f) => ({
+  return liste(antwort, ["folders", "folder"]).map((f) => ({
     id: str(f.id),
     name: str(f.name),
     typ: str(f.type),
-    parentId: strOderNull(f.parentId),
+    parentId: strOderNull(f.parentFolderId),
   }));
 }
 
 /**
- * bea_get_folderoverview. Assumption: `{ messages: [{ messageId, subject{value,iv,tag},
- * sender, receptionTime, eebAngefordert, attachments }] }`.
+ * bea_get_folderoverview: `{ messages: [{ messageId, encSubject{value,iv,tag},
+ * sender{surname, firstname, ...}, zugegangen, received, ... }] }`.
+ * The overview carries no eEB flag: `eebAngefordert` is only reliable from
+ * holeNachricht; here it is read if present, else false.
  */
 function mappeKoepfe(antwort: unknown, sessionKey: Buffer): BeaNachrichtKopf[] {
-  return liste(antwort, ["messages", "message"]).map((m) => ({
+  return liste(antwort, ["messages"]).map((m) => ({
     messageId: str(m.messageId),
-    betreff: entschluessleText(m.subject, sessionKey),
+    betreff: entschluessleText(m.encSubject, sessionKey),
     absender: person(m.sender).name,
-    empfangenAm: datum(m.receptionTime),
+    empfangenAm: datum(m.zugegangen) ?? datum(m.received),
     eebAngefordert: bool(m.eebAngefordert),
   }));
 }
@@ -138,13 +156,14 @@ function mappeNachricht(antwort: unknown, sessionKey: Buffer): BeaNachrichtVoll 
   const n = obj(antwort);
   const meta = obj(n.metaData);
 
-  let text: string | null = null;
+  let textJson: string | null = null;
+  let textCoco: string | null = null;
   const schluessel = new Map<string, Buffer>();
   let standardSchluessel: Buffer | null = null;
 
   for (const roh of Array.isArray(n.encryptedObjects) ? n.encryptedObjects : []) {
     const o = obj(roh);
-    const name = str(o.enc_name ?? o.name);
+    const name = str(o.enc_name);
     const objectKey = aesGcmEntschluesseln(gcmTeil(obj(o.encKeyInfo).encKey), sessionKey);
     const iv = str(o.enc_iv);
     const tag = str(o.enc_tag);
@@ -153,12 +172,13 @@ function mappeNachricht(antwort: unknown, sessionKey: Buffer): BeaNachrichtVoll 
         ? aesCbcEntschluesseln(str(o.enc_data), objectKey)
         : aesGcmEntschluesseln({ value: str(o.enc_data), iv, tag }, objectKey);
 
-    if (name === COCO_NAME) {
+    if (COCO_NAMEN.has(name)) {
       const coco = leseCoco(daten.toString("utf8"));
       for (const [ref, key] of coco.schluessel) schluessel.set(ref, key);
       standardSchluessel ??= coco.standard;
-    } else if (TEXT_NAME.test(name)) {
-      text = daten.toString("utf8");
+      textCoco ??= coco.freitext;
+    } else if (name === BEA_MESSAGE_JSON) {
+      textJson ??= leseBeaMessageJson(daten.toString("utf8"));
     }
   }
 
@@ -168,8 +188,8 @@ function mappeNachricht(antwort: unknown, sessionKey: Buffer): BeaNachrichtVoll 
     const name = str(a.reference);
     const elementKey = str(a.key);
     const key =
-      standardSchluessel ??
       schluessel.get(name) ??
+      standardSchluessel ??
       (elementKey ? Buffer.from(elementKey, "base64") : null);
     if (!key) {
       throw new BeaExpertError(`Kein Schlüssel für einen Anhang gefunden.`, "bea_get_message");
@@ -187,12 +207,13 @@ function mappeNachricht(antwort: unknown, sessionKey: Buffer): BeaNachrichtVoll 
     messageId: str(n.messageId),
     osciMessageId: strOderNull(n.osciMessageId),
     betreff: entschluessleText(meta.subject, sessionKey),
-    text,
+    // beaMessage.json is the primary body source, project_coco's Freitext the fallback
+    text: textJson ?? textCoco,
     absender: person(meta.sender),
     empfaenger: (Array.isArray(meta.addressees) ? meta.addressees : []).map(person),
     aktenzeichenAbsender: strOderNull(meta.referenceNumber),
     aktenzeichenJustiz: strOderNull(meta.referenceJustice),
-    empfangenAm: datum(meta.receptionTime),
+    empfangenAm: datum(meta.receptionTime) ?? datum(meta.zugegangen),
     eebAngefordert: bool(meta.eebAngefordert),
     vertraulich: bool(meta.confidential),
     dringend: bool(meta.urgent),
@@ -226,12 +247,50 @@ function sammle(knoten: unknown, tag: string, ziel: unknown[]): void {
   }
 }
 
+function textVon(knoten: unknown): string {
+  return typeof knoten === "string" ? knoten : str(obj(knoten)["#text"]);
+}
+
+/** Decodes an OSCI Base64Content node to UTF-8. */
+function base64Inhalt(knoten: unknown): string {
+  return Buffer.from(textVon(knoten).trim(), "base64").toString("utf8");
+}
+
+/** beaMessage.json: OSCI XML whose Base64Content holds JSON with `messageBody`. */
+function leseBeaMessageJson(xml: string): string | null {
+  const inhalte: unknown[] = [];
+  sammle(cocoParser.parse(xml), "Base64Content", inhalte);
+  if (inhalte.length === 0) return null;
+  try {
+    return strOderNull(obj(JSON.parse(base64Inhalt(inhalte[0]))).messageBody);
+  } catch {
+    // JSON.parse errors quote the input (plaintext); fall back to the coco Freitext
+    return null;
+  }
+}
+
+/** Freitext from the Base64Content with Id "nachricht.xml" inside project_coco. */
+function leseFreitext(baum: unknown): string | null {
+  const inhalte: unknown[] = [];
+  sammle(baum, "Base64Content", inhalte);
+  const nachricht = inhalte.find((k) => str(obj(k)["@_Id"]) === "nachricht.xml");
+  if (!nachricht) return null;
+  const freitext: unknown[] = [];
+  sammle(cocoParser.parse(base64Inhalt(nachricht)), "Freitext", freitext);
+  return freitext.length > 0 ? strOderNull(textVon(freitext[0])) : null;
+}
+
 /**
  * Parses the project_coco XML: the n-th CipherReference@URI (without "cid:")
  * belongs to the n-th MgmtData (Base64 key). If the counts differ, the first
- * key applies to all attachments (returned as `standard`).
+ * key applies to all attachments (also returned as `standard`). Also extracts
+ * the Freitext as a fallback message body.
  */
-function leseCoco(xml: string): { schluessel: Map<string, Buffer>; standard: Buffer | null } {
+function leseCoco(xml: string): {
+  schluessel: Map<string, Buffer>;
+  standard: Buffer | null;
+  freitext: string | null;
+} {
   const baum = cocoParser.parse(xml);
   const refs: unknown[] = [];
   const keys: unknown[] = [];
@@ -239,15 +298,17 @@ function leseCoco(xml: string): { schluessel: Map<string, Buffer>; standard: Buf
   sammle(baum, "MgmtData", keys);
 
   const uris = refs.map((r) => str(obj(r)["@_URI"]).replace(/^cid:/, ""));
-  const schluesselB64 = keys.map((k) => (typeof k === "string" ? k : str(obj(k)["#text"])).trim());
-  const puffer = schluesselB64.map((k) => Buffer.from(k, "base64"));
+  const puffer = keys.map((k) => Buffer.from(textVon(k).trim(), "base64"));
+  const freitext = leseFreitext(baum);
 
   const schluessel = new Map<string, Buffer>();
-  if (uris.length !== puffer.length) {
-    return { schluessel, standard: puffer[0] ?? null };
-  }
-  uris.forEach((u, i) => schluessel.set(u, puffer[i]));
-  return { schluessel, standard: null };
+  const gleich = uris.length === puffer.length;
+  const standard = gleich ? null : (puffer[0] ?? null);
+  uris.forEach((u, i) => {
+    const k = gleich ? puffer[i] : standard;
+    if (k) schluessel.set(u, k);
+  });
+  return { schluessel, standard, freitext };
 }
 
 // ---------- public API ----------

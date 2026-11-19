@@ -16,3 +16,16 @@ export interface BeaNachrichtVoll {
   empfangenAm: Date | null; eebAngefordert: boolean; vertraulich: boolean; dringend: boolean;
   anhaenge: BeaAnhangDaten[];
 }
+export type BeaNachrichtenTyp = "ALLGEMEINE_NACHRICHT" | "MAHN_ANTRAG" | "TESTNACHRICHT";
+export interface BeaVersandAuftrag {
+  postfachSafeId: string; empfaengerSafeIds: string[]; betreff: string; text: string;
+  aktenzeichenAbsender?: string; aktenzeichenEmpfaenger?: string;
+  nachrichtenTyp: BeaNachrichtenTyp; eebAnfordern: boolean; dringend: boolean;
+  anhaenge: { name: string; inhalt: Buffer; art: "SCHRIFTSATZ" | "ATTACHMENT" }[];
+}
+export interface BeaEebAuftrag {
+  postfachSafeId: string; empfaengerSafeId: string; betreff: string;
+  aktenzeichenAbsender?: string; aktenzeichenEmpfaenger?: string;
+  fremdId: string; abgabeDatum: string /* YYYY-MM-DD */;
+}
+export interface BeaVersandErgebnis { messageId: string | null }

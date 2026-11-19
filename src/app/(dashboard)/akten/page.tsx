@@ -85,7 +85,7 @@ export default async function AktenPage({ searchParams }: AktenPageProps) {
           )}
         </GlassPanel>
       ) : (
-        <GlassPanel className="overflow-hidden">
+        <GlassPanel className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10 dark:border-white/[0.06]">

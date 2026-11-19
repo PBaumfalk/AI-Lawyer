@@ -399,7 +399,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
           </div>
 
           {/* Positions table */}
-          <div className="glass rounded-xl overflow-hidden">
+          <div className="glass rounded-xl overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">

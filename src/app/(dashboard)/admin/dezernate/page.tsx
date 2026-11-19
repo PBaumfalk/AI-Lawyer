@@ -222,7 +222,7 @@ export default function DezernatePage() {
             </p>
           </GlassPanel>
         ) : (
-          <GlassPanel elevation="panel" className="overflow-hidden">
+          <GlassPanel elevation="panel" className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/50 text-left">

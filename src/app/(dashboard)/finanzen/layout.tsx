@@ -22,7 +22,7 @@ export default function FinanzenLayout({
   return (
     <div className="space-y-6">
       {/* Sub-navigation tabs */}
-      <nav className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
+      <nav className="flex flex-wrap gap-1 p-1 bg-muted rounded-lg w-fit max-w-full">
         {finanzenTabs.map((tab) => {
           const isActive =
             tab.href === "/finanzen"

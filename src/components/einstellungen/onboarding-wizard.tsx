@@ -139,8 +139,10 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="glass rounded-2xl w-full max-w-2xl mx-4 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex overflow-y-auto p-4 bg-black/60 backdrop-blur-sm">
+      {/* m-auto centers the dialog but lets the overlay scroll when it is
+          taller than the viewport (small screens, 200 % zoom) */}
+      <div className="glass m-auto rounded-2xl w-full max-w-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-white/[0.06]">
           <div>
@@ -181,7 +183,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 onClick={() => s.id <= step && setStep(s.id)}
                 className={`flex items-center gap-1.5 text-xs whitespace-nowrap transition-colors ${
                   s.id === step
-                    ? "text-blue-500 font-medium"
+                    ? "text-primary-strong font-medium"
                     : s.id < step
                       ? "text-foreground/70 cursor-pointer"
                       : "text-muted-foreground/40"

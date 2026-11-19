@@ -209,7 +209,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
           )}
         </GlassPanel>
       ) : (
-        <GlassPanel elevation="panel" className="overflow-hidden">
+        <GlassPanel elevation="panel" className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10 dark:border-white/[0.06]">

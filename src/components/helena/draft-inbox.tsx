@@ -206,7 +206,7 @@ export function DraftInbox() {
         <Filter className="w-4 h-4 text-muted-foreground" />
 
         {/* Type filter buttons */}
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           {DRAFT_TYPES.map((dt) => (
             <Button
               key={dt.value}

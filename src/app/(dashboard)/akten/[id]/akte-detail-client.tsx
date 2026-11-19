@@ -26,7 +26,7 @@ interface StatMiniProps {
 function StatMini({ icon: Icon, label, value, onClick }: StatMiniProps) {
   return (
     <div
-      className={`glass-card rounded-xl px-4 py-3 flex items-center gap-3 ${
+      className={`glass-card rounded-xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3 ${
         onClick
           ? "cursor-pointer hover:bg-white/70 dark:hover:bg-white/[0.08] transition-colors"
           : ""
@@ -45,8 +45,8 @@ function StatMini({ icon: Icon, label, value, onClick }: StatMiniProps) {
           : undefined
       }
     >
-      <Icon className="w-4 h-4 text-muted-foreground" />
-      <div>
+      <Icon className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <div className="min-w-0">
         <p className="text-lg font-semibold text-foreground">{value}</p>
         <p className="text-xs text-muted-foreground">{label}</p>
       </div>

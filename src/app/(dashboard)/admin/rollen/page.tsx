@@ -239,7 +239,7 @@ export default function RollenPage() {
 
             {/* Accessible Akten */}
             {selectedUser.accessibleAkten.length > 0 ? (
-              <GlassPanel elevation="panel" className="overflow-hidden">
+              <GlassPanel elevation="panel" className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/50">

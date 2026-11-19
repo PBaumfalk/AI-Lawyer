@@ -244,7 +244,7 @@ export function KalenderListe() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">
             Kalender
@@ -448,7 +448,7 @@ function KalenderEintragRow({
 
   return (
     <div
-      className={`glass-card rounded-xl p-4 flex items-center gap-4 group transition-colors hover:bg-white/30 dark:hover:bg-white/[0.05] ${
+      className={`glass-card rounded-xl p-3 sm:p-4 flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4 group transition-colors hover:bg-white/30 dark:hover:bg-white/[0.05] ${
         isOverdue
           ? "border-rose-300 dark:border-rose-800"
           : isCompleted
@@ -474,7 +474,7 @@ function KalenderEintragRow({
 
       {/* Type icon */}
       <div
-        className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${config.bgColor}`}
+        className={`hidden sm:flex w-10 h-10 rounded-lg items-center justify-center flex-shrink-0 ${config.bgColor}`}
       >
         <Icon className="w-5 h-5" />
       </div>
@@ -514,8 +514,8 @@ function KalenderEintragRow({
         </div>
       </div>
 
-      {/* Date + type badge */}
-      <div className="text-right flex-shrink-0">
+      {/* Date + type badge: own line below md so the title keeps its width */}
+      <div className="order-last basis-full pl-7 flex items-center gap-2 sm:order-none sm:basis-auto sm:pl-0 sm:block text-left sm:text-right flex-shrink-0">
         <p
           className={`text-sm font-medium ${
             isOverdue
@@ -533,7 +533,7 @@ function KalenderEintragRow({
             </span>
           )}
         </p>
-        <Badge variant={config.badgeVariant} className="mt-1">
+        <Badge variant={config.badgeVariant} className="sm:mt-1">
           {config.label}
         </Badge>
       </div>
@@ -545,7 +545,8 @@ function KalenderEintragRow({
             e.stopPropagation();
             onContextMenu(eintrag.id);
           }}
-          className="p-1.5 rounded-md hover:bg-white/20 dark:hover:bg-white/[0.06] transition-colors opacity-0 group-hover:opacity-100"
+          className="p-1.5 rounded-md hover:bg-white/20 dark:hover:bg-white/[0.06] transition-colors sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
+          aria-label="Aktionen"
         >
           <MoreVertical className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -612,14 +613,14 @@ function ExternerEintragRow({
   const Icon = config.icon;
   return (
     <div
-      className={`glass-card rounded-xl p-4 flex items-center gap-4 border-white/20 dark:border-white/[0.08] ${
+      className={`glass-card rounded-xl p-3 sm:p-4 flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4 border-white/20 dark:border-white/[0.08] ${
         isOverdue ? "opacity-75" : ""
       }`}
       title="Termin aus externem Kalender (nur lesend)"
     >
-      <div className="w-5 h-5 flex-shrink-0" />
+      <div className="hidden sm:block w-5 h-5 flex-shrink-0" />
       <div
-        className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${config.bgColor}`}
+        className={`hidden sm:flex w-10 h-10 rounded-lg items-center justify-center flex-shrink-0 ${config.bgColor}`}
       >
         <Icon className="w-5 h-5" />
       </div>
@@ -635,17 +636,18 @@ function ExternerEintragRow({
           )}
         </div>
       </div>
-      <div className="text-right flex-shrink-0">
+      {/* Date + type badge: own line below md so the title keeps its width */}
+      <div className="order-last basis-full pl-7 flex items-center gap-2 sm:order-none sm:basis-auto sm:pl-0 sm:block text-left sm:text-right flex-shrink-0">
         <p className="text-sm font-medium text-foreground/80">
           {eintrag.ganztaegig
             ? formatDatumKurz(eintrag.datum)
             : formatDatumZeit(eintrag.datum)}
         </p>
-        <Badge variant={config.badgeVariant} className="mt-1">
+        <Badge variant={config.badgeVariant} className="sm:mt-1">
           {config.label}
         </Badge>
       </div>
-      <div className="w-7 flex-shrink-0" />
+      <div className="hidden sm:block w-7 flex-shrink-0" />
     </div>
   );
 }

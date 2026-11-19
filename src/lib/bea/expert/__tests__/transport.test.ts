@@ -97,4 +97,19 @@ describe("bea.expert transport", () => {
     expect(err.status).toBeNull();
     expect(err.message).toContain("Zeitüberschreitung");
   });
+
+  it("gibt die ursprüngliche Ursache bei Netzwerkfehlern als cause weiter", async () => {
+    const ursache = new Error("getaddrinfo ENOTFOUND");
+    fetchMock.mockRejectedValue(ursache);
+    const err = await fangFehler(bexAufruf("x", {}));
+    expect(err).toBeInstanceOf(BeaExpertError);
+    expect(err.cause).toBe(ursache);
+  });
+
+  it("wirft BeaExpertError bei 2xx mit Nicht-JSON-Antwort", async () => {
+    fetchMock.mockResolvedValue(new Response("<html>Bad Gateway</html>", { status: 200 }));
+    const err = await fangFehler(bexAufruf("x", {}));
+    expect(err).toBeInstanceOf(BeaExpertError);
+    expect(err.status).toBe(200);
+  });
 });

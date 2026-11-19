@@ -3,7 +3,10 @@ import { getSetting } from "@/lib/settings/service";
 const DEFAULT_API_URL = "https://api.bea.expert";
 const DEFAULT_TIMEOUT_MS = 60_000;
 
-/** Error raised for any failed bea.expert call. Never carries credentials. */
+/**
+ * Error raised for any failed bea.expert call. Never carries credentials.
+ * `antwort` holds the raw API response and must never be logged or serialized as a whole.
+ */
 export class BeaExpertError extends Error {
   funktion: string;
   status: number | null;
@@ -14,8 +17,9 @@ export class BeaExpertError extends Error {
     funktion: string,
     status: number | null = null,
     antwort: unknown = null,
+    options?: { cause?: unknown },
   ) {
-    super(message);
+    super(message, options);
     this.name = "BeaExpertError";
     this.funktion = funktion;
     this.status = status;
@@ -67,20 +71,34 @@ export async function bexAufruf<T = unknown>(
         ? `Zeitüberschreitung bei beA-Aufruf ${funktion} nach ${timeoutMs} ms.`
         : `beA-Dienst nicht erreichbar (${funktion}).`,
       funktion,
+      null,
+      null,
+      { cause: err },
     );
   }
 
   const text = await res.text();
   let antwort: unknown = null;
+  let istJson = true;
   try {
     antwort = text ? JSON.parse(text) : null;
   } catch {
     antwort = text;
+    istJson = false;
   }
 
   if (!res.ok) {
     throw new BeaExpertError(
       `beA-Dienst antwortete mit HTTP ${res.status} (${funktion}).`,
+      funktion,
+      res.status,
+      antwort,
+    );
+  }
+
+  if (!istJson) {
+    throw new BeaExpertError(
+      `beA-Dienst lieferte keine gültige JSON-Antwort (${funktion}).`,
       funktion,
       res.status,
       antwort,

@@ -32,6 +32,35 @@ function kinder(node: forge.asn1.Asn1): forge.asn1.Asn1[] {
   return node.value as forge.asn1.Asn1[];
 }
 
+// Splits a CMS SignedData (Base64) into the parts needed for verification
+function zerlegeCms(b64: string) {
+  const root = forge.asn1.fromDer(Buffer.from(b64, "base64").toString("binary"));
+  const signedData = kinder(kinder(kinder(root)[1])[0]);
+  const eContent = Buffer.from(kinder(kinder(signedData[2])[1])[0].value as string, "binary");
+  const si = kinder(kinder(signedData[signedData.length - 1])[0]);
+  const sattrs = si[3];
+  const sattrsDer = Buffer.from(forge.asn1.toDer(sattrs).getBytes(), "binary");
+  sattrsDer[0] = 0x31; // [0] IMPLICIT -> SET for signature input
+  const md = kinder(sattrs).find(
+    (a) => forge.asn1.derToOid(kinder(a)[0].value as string) === "1.2.840.113549.1.9.4",
+  )!;
+  return {
+    eContent,
+    sattrsDer,
+    signatur: Buffer.from(si[5].value as string, "binary"),
+    messageDigestHex: Buffer.from(kinder(kinder(md)[1])[0].value as string, "binary").toString("hex"),
+  };
+}
+
+function pssGueltig(daten: Buffer, signatur: Buffer, zertifikatPem: string): boolean {
+  return crypto.verify(
+    "sha512",
+    daten,
+    { key: zertifikatPem, padding: crypto.constants.RSA_PKCS1_PSS_PADDING, saltLength: 64 },
+    signatur,
+  );
+}
+
 describe("leseP12", () => {
   it("leseP12 liefert Schlüssel, Zertifikat und SHA-1-Thumbprint über das DER-Zertifikat (40 Hex-Zeichen)", () => {
     const ergebnis = leseP12(fixture.p12, PIN);
@@ -59,6 +88,22 @@ describe("leseP12", () => {
     expect(() => leseP12(Buffer.from("kein p12"), PIN)).toThrow(
       "PIN falsch oder Datei ist kein beA-Softwarezertifikat",
     );
+  });
+});
+
+describe("leseP12 Zuordnung", () => {
+  it("leseP12 wirft, wenn kein Zertifikat zum Schlüssel passt", () => {
+    const fremd = forge.pki.rsa.generateKeyPair({ bits: 1024, e: 0x10001 });
+    const cert = forge.pki.createCertificate();
+    cert.publicKey = fremd.publicKey;
+    cert.serialNumber = "01";
+    cert.setSubject([{ name: "commonName", value: "Fremd" }]);
+    cert.setIssuer([{ name: "commonName", value: "Fremd" }]);
+    cert.sign(fremd.privateKey, forge.md.sha256.create());
+    const key = forge.pki.privateKeyFromPem(fixture.privateKeyPem);
+    const asn1 = forge.pkcs12.toPkcs12Asn1(key, [cert], PIN, { algorithm: "3des" });
+    const p12 = Buffer.from(forge.asn1.toDer(asn1).getBytes(), "binary");
+    expect(() => leseP12(p12, PIN)).toThrow("PIN falsch oder Datei ist kein beA-Softwarezertifikat");
   });
 });
 
@@ -117,6 +162,22 @@ describe("signiereChallenge", () => {
   });
 });
 
+describe("signiereChallenge mit Rohbytes", () => {
+  it("signiert einen Buffer (kein gültiges UTF-8) unverändert als eContent", () => {
+    const roh = Buffer.from([0xff, 0x00, 0x80, 0xc3, 0x28]);
+    const teile = zerlegeCms(signiereChallenge(roh, fixture.zertifikatPem, fixture.privateKeyPem));
+    expect(teile.eContent.equals(roh)).toBe(true);
+    expect(teile.messageDigestHex).toBe(crypto.createHash("sha512").update(roh).digest("hex"));
+    expect(pssGueltig(teile.sattrsDer, teile.signatur, fixture.zertifikatPem)).toBe(true);
+  });
+
+  it("signiert einen String als UTF-8-Bytes", () => {
+    const teile = zerlegeCms(signiereChallenge("Müller ß €", fixture.zertifikatPem, fixture.privateKeyPem));
+    expect(teile.eContent.equals(Buffer.from("Müller ß €", "utf8"))).toBe(true);
+    expect(pssGueltig(teile.sattrsDer, teile.signatur, fixture.zertifikatPem)).toBe(true);
+  });
+});
+
 describe("RSA-OAEP und AES", () => {
   it("rsaOaepEntschluesseln entschlüsselt, was node:crypto publicEncrypt mit OAEP/SHA-256 verschlüsselt hat", () => {
     const klartext = Buffer.from("Sitzungsschlüssel Müller ß €", "utf8");
@@ -167,5 +228,40 @@ describe("RSA-OAEP und AES", () => {
     expect(
       aesCbcEntschluesseln(chiffrat.toString("base64"), schluessel, iv.toString("base64")).equals(klartext),
     ).toBe(true);
+  });
+
+  it("aesGcmEntschluesseln wirft bei gekürztem Tag (12 und 4 Byte)", () => {
+    const schluessel = crypto.randomBytes(32);
+    const teil = aesGcmVerschluesseln(Buffer.from("geheim"), schluessel);
+    const tag = Buffer.from(teil.tag, "base64");
+    for (const laenge of [12, 4]) {
+      const kurz = tag.subarray(0, laenge).toString("base64");
+      expect(() => aesGcmEntschluesseln({ value: teil.data, iv: teil.iv, tag: kurz }, schluessel)).toThrow(
+        "Ungültige GCM-Taglänge",
+      );
+    }
+  });
+
+  it("aesGcmEntschluesseln wirft bei IV, der nicht 16 Byte lang ist", () => {
+    const schluessel = crypto.randomBytes(32);
+    const teil = aesGcmVerschluesseln(Buffer.from("geheim"), schluessel);
+    const iv12 = crypto.randomBytes(12).toString("base64");
+    expect(() => aesGcmEntschluesseln({ value: teil.data, iv: iv12, tag: teil.tag }, schluessel)).toThrow(
+      "Ungültige GCM-IV-Länge",
+    );
+  });
+
+  it("aesCbcEntschluesseln meldet zu kurzes Chiffrat und falsche IV-Länge", () => {
+    const schluessel = crypto.randomBytes(32);
+    expect(() => aesCbcEntschluesseln(crypto.randomBytes(8).toString("base64"), schluessel)).toThrow(
+      "CBC-Chiffrat zu kurz",
+    );
+    expect(() =>
+      aesCbcEntschluesseln(
+        crypto.randomBytes(16).toString("base64"),
+        schluessel,
+        crypto.randomBytes(8).toString("base64"),
+      ),
+    ).toThrow("Ungültige CBC-IV-Länge");
   });
 });

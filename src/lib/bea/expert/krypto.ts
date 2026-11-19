@@ -57,7 +57,8 @@ export function leseP12(p12: Buffer, pin: string): P12Inhalt {
   // Pick the certificate belonging to the private key (the file may hold a chain)
   const spki = (k: crypto.KeyObject) => k.export({ format: "der", type: "spki" });
   const eigenerPub = spki(crypto.createPublicKey(privateKeyPem));
-  const x509 = zertifikate.find((z) => spki(z.publicKey).equals(eigenerPub)) ?? zertifikate[0];
+  const x509 = zertifikate.find((z) => spki(z.publicKey).equals(eigenerPub));
+  if (!x509) throw new Error(P12_FEHLER);
   const cn = x509.subject
     .split("\n")
     .find((zeile) => zeile.startsWith("CN="))
@@ -90,11 +91,17 @@ function utcTime(d: Date): string {
 /**
  * Signs the bea.expert login challenge as CMS SignedData
  * (RSASSA-PSS with SHA-512/MGF1-SHA-512, signed attributes incl. signingCertificateV2).
- * Returns DER as Base64 without PEM armour.
+ * A string challenge is signed as its UTF-8 bytes, a Buffer as-is (raw bytes,
+ * e.g. a Base64-decoded non-UUID challenge). Returns DER as Base64 without PEM armour.
  */
-export function signiereChallenge(challenge: string, zertifikatPem: string, privateKeyPem: string): string {
-  const inhaltHex = Buffer.from(challenge, "utf8").toString("hex");
-  const digestHex = crypto.createHash("sha512").update(challenge, "utf8").digest("hex");
+export function signiereChallenge(
+  challenge: string | Buffer,
+  zertifikatPem: string,
+  privateKeyPem: string,
+): string {
+  const inhalt = typeof challenge === "string" ? Buffer.from(challenge, "utf8") : challenge;
+  const inhaltHex = inhalt.toString("hex");
+  const digestHex = crypto.createHash("sha512").update(inhalt).digest("hex");
 
   const sd = new KJUR.asn1.cms.SignedData({
     // fixed: use the parameters as given (jsrsasign would otherwise recompute
@@ -151,12 +158,18 @@ export function aesGcmEntschluesseln(
   teil: { value: string; iv: string; tag: string },
   schluessel: Buffer,
 ): Buffer {
+  const iv = Buffer.from(teil.iv, "base64");
+  if (iv.length !== 16) throw new Error(`Ungültige GCM-IV-Länge: ${iv.length} Byte (erwartet 16)`);
+  // Enforce the full 128-bit tag; truncated tags would weaken authentication
+  const tag = Buffer.from(teil.tag, "base64");
+  if (tag.length !== 16) throw new Error(`Ungültige GCM-Taglänge: ${tag.length} Byte (erwartet 16)`);
   const decipher = crypto.createDecipheriv(
     aesAlgorithmus("gcm", schluessel) as crypto.CipherGCMTypes,
     schluessel,
-    Buffer.from(teil.iv, "base64"),
+    iv,
+    { authTagLength: 16 },
   );
-  decipher.setAuthTag(Buffer.from(teil.tag, "base64"));
+  decipher.setAuthTag(tag);
   return Buffer.concat([decipher.update(Buffer.from(teil.value, "base64")), decipher.final()]);
 }
 
@@ -188,7 +201,9 @@ export function aesCbcEntschluesseln(chiffratB64: string, schluessel: Buffer, iv
   let iv: Buffer;
   if (ivB64) {
     iv = Buffer.from(ivB64, "base64");
+    if (iv.length !== 16) throw new Error(`Ungültige CBC-IV-Länge: ${iv.length} Byte (erwartet 16)`);
   } else {
+    if (daten.length < 16) throw new Error("CBC-Chiffrat zu kurz: kein vorangestellter IV (16 Byte)");
     iv = daten.subarray(0, 16);
     daten = daten.subarray(16);
   }

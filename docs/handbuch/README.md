@@ -52,7 +52,7 @@ die Kanzlei-Admins, Teil C an die IT, die AI-Lawyer installiert und betreibt.
 | --- | --- |
 | [19 — Installation](19-installation.md) | Vom leeren Server bis zum ersten Login, Reverse Proxy, KI-Modelle |
 | [20 — Konfiguration](20-konfiguration.md) | Alle Umgebungsvariablen |
-| [21 — Betrieb und Sicherung](21-betrieb-und-sicherung.md) | Sicherung, Wiederherstellung, Updates, Hintergrund-Jobs, Logs |
+| [21 — Betrieb und Sicherung](21-betrieb-und-sicherung.md) | Sicherung (S3, SFTP, rest-server), Wiederherstellung, Updates, Hintergrund-Jobs, Logs |
 | [22 — Architektur und Entwicklung](22-architektur-und-entwicklung.md) | Aufbau, Datenmodell, Entwicklungsumgebung, Tests |
 | [23 — Einschränkungen und häufige Fragen](23-einschraenkungen-und-fragen.md) | Was (noch) nicht geht, Antworten auf häufige Fragen |
 

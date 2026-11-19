@@ -29,11 +29,18 @@ export function PasswortAendern() {
       return;
     }
     setLaeuft(true);
-    const res = await fetch("/api/user/passwort", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(geprueft.data),
-    });
+    let res: Response;
+    try {
+      res = await fetch("/api/user/passwort", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(geprueft.data),
+      });
+    } catch {
+      setLaeuft(false);
+      setFehler("Der Server ist nicht erreichbar. Bitte erneut versuchen.");
+      return;
+    }
     const body = await res.json().catch(() => null);
     setLaeuft(false);
     if (!res.ok) {

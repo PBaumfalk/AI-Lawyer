@@ -3,6 +3,8 @@ import crypto from "crypto";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email/send";
 import { portalPasswordResetEmail } from "@/lib/email/templates/portal-password-reset";
+import { quelleBegrenzt } from "@/lib/oeffentlich-limit";
+import { fensterUeberschritten } from "@/lib/login-throttle";
 
 const GENERIC_MESSAGE =
   "Falls ein Account mit dieser E-Mail existiert, erhalten Sie eine E-Mail mit Anweisungen.";
@@ -14,11 +16,20 @@ const GENERIC_MESSAGE =
  * Always returns 200 to prevent email enumeration.
  */
 export async function POST(req: NextRequest) {
+  // Per source: stops mass requests (mail bombing, enumeration attempts).
+  const begrenzt = await quelleBegrenzt(req, "portal-reset-anfrage", 10, 60 * 60);
+  if (begrenzt) return begrenzt;
   try {
     const body = await req.json();
     const { email } = body as { email?: string };
 
     if (!email || typeof email !== "string") {
+      return NextResponse.json({ message: GENERIC_MESSAGE }, { status: 200 });
+    }
+
+    // Per address: at most 3 mails per hour. Silently, with the same answer,
+    // so the limit does not reveal whether the account exists.
+    if (await fensterUeberschritten("portal-reset-adresse", email, 3, 60 * 60)) {
       return NextResponse.json({ message: GENERIC_MESSAGE }, { status: 200 });
     }
 
@@ -68,12 +79,13 @@ export async function POST(req: NextRequest) {
       kanzleiName,
     });
 
-    await sendEmail({
+    // Not awaited: the response time must not reveal whether a mail is sent.
+    sendEmail({
       to: user.email,
       subject: emailContent.subject,
       text: emailContent.text,
       html: emailContent.html,
-    });
+    }).catch((err) => console.error("Password reset mail failed:", err instanceof Error ? err.message : err));
 
     return NextResponse.json({ message: GENERIC_MESSAGE }, { status: 200 });
   } catch (error) {

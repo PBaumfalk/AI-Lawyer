@@ -4,7 +4,8 @@ import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/db";
 import { verifyTotpCode, verifyBackupCode } from "@/lib/totp";
 import { logAuditEvent } from "@/lib/audit";
-import { totpGesperrt, totpErfolgreich } from "@/lib/login-throttle";
+import { totpGesperrt, totpErfolgreich, LimiterNichtVerfuegbar, ANMELDESCHUTZ_FEHLT } from "@/lib/login-throttle";
+import { GERAET_COOKIE, geraetCookieOptionen, geraetTokenErzeugen } from "@/lib/login-geraet";
 
 const TOTP_PENDING_COOKIE = "totp_pending";
 
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
 
   const userId = payload.userId;
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const code: string = body?.code;
   const isBackupCode: boolean = body?.isBackupCode === true;
 
@@ -51,7 +52,17 @@ export async function POST(request: NextRequest) {
 
   // Without a limit, a 6-digit code could be guessed within the 10-minute
   // window of the pending cookie.
-  if (await totpGesperrt(userId)) {
+  let gesperrt: boolean;
+  try {
+    gesperrt = await totpGesperrt(userId);
+  } catch (err) {
+    if (!(err instanceof LimiterNichtVerfuegbar)) throw err;
+    return NextResponse.json(
+      { error: ANMELDESCHUTZ_FEHLT },
+      { status: 503, headers: { "Retry-After": "60" } }
+    );
+  }
+  if (gesperrt) {
     return NextResponse.json(
       { error: "Zu viele falsche Codes. Bitte in 15 Minuten erneut anmelden." },
       { status: 429 }
@@ -97,6 +108,8 @@ export async function POST(request: NextRequest) {
     maxAge: 0,
     path: "/",
   });
+  const geraet = geraetTokenErzeugen(user.email);
+  if (geraet) response.cookies.set(GERAET_COOKIE, geraet, geraetCookieOptionen);
 
   await logAuditEvent({
     userId,

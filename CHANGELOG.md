@@ -13,15 +13,48 @@ Die Versionen entsprechen den Meilensteinen der Entwicklung. Die Tags `v3.4` und
   unter Einstellungen → Sicherheit.
 - **Sitzungen folgen dem Konto:** Deaktivieren, Rollenwechsel und
   Passwortwechsel wirken sofort statt erst nach Ablauf des 30-Tage-JWT.
-- **Anmeldeschutz:** höchstens 10 Versuche je Konto und 50 je IP in 15 Minuten,
-  ebenso für Zwei-Faktor-Codes. `/api/auth/totp/init` prüfte Passwörter vorher
-  ohne Begrenzung.
+- **Anmeldeschutz ohne Aussperren:** Grenzen je Quelle+Konto (10/15 min), je
+  Quelle (100) und – nur bei verteilten Angriffen – je Konto (50), dann nur noch
+  Geräte mit Geräte-Cookie. Fremde können ein Konto nicht mehr durch
+  Fehlversuche sperren. `X-Forwarded-For` zählt nur mit `TRUST_PROXY_HOPS`.
+  Admin: **Entsperren** ohne Passwortwechsel. Zwei-Faktor-Codes, „Passwort
+  vergessen“ (Portal), Aktivierung und eigener Passwortwechsel ebenfalls
+  begrenzt; gleiche Laufzeit für unbekannte Konten. `/api/auth/totp/init`
+  prüfte Passwörter vorher ohne Begrenzung.
+- **Redis-Ausfall:** Neue Anmeldungen werden mit 503 und verständlicher
+  Meldung abgelehnt statt ungebremst zugelassen (Timeouts 0,5 s/1 s,
+  automatische Wiederkehr, Log-Signal `login_limiter_unavailable`);
+  bestehende Sitzungen bleiben gültig.
+- **Next.js 15.5.29 und React 19:** behebt drei kritische RCE-Lücken
+  (GHSA-p293-qw3h-jr36, GHSA-2xp9-vwfh-vxw4, GHSA-2464-fhr4-w9xw), für die es in
+  Next 14 keinen Patch gibt.
+- **Mobil:** Seitenleiste startet auf schmalen Bildschirmen eingeklappt,
+  Kopfzeile und Reiterleisten laufen nicht mehr über den Rand.
+- **Browsertests** (`npm run test:e2e`, Playwright mit lokalem Chrome) für
+  Anmeldung, Drosselung, Ausfall des Anmeldeschutzes, Benutzerverwaltung und
+  Passwortwechsel auf Desktop und 390 px.
 - **Zwei-Faktor-Umgehung geschlossen:** Konten mit TOTP ließen sich mit dem
   Passwort allein anmelden, wenn man die Anmeldeseite umging.
-- **Datensicherung:** `scripts/backup.sh` und `scripts/restore.sh` mit
-  Rundlauftest `scripts/test-backup-restore.sh`.
+- **Datensicherung verschlüsselt und extern:** `scripts/backup.sh` sichert
+  Datenbank und MinIO mit restic 0.19.1 (Docker-Image, AES-256 + Poly1305,
+  dedupliziert) in ein externes Ziel (S3, SFTP, rest-server); Schlüssel in
+  `/etc/ai-lawyer/backup.key`, Zugangsdaten in `/etc/ai-lawyer/backup.env`,
+  beides außerhalb des Repos. Aufbewahrung (`forget --prune`), rollierende
+  Integritätsprüfung (`check --read-data-subset`), Statusdateien,
+  `scripts/backup-status.sh` für die Überwachung, optionaler
+  Healthchecks-Ping, systemd-Timer-Vorlage. Die `.env` wird nicht mehr
+  mitgesichert (nur mit `BACKUP_INCLUDE_ENV=1`). Sicherungen im alten
+  Ordnerformat stellt `restore.sh` nicht mehr her (Handbuch Kap. 21).
+- **Wiederherstellung ohne Handarbeit:** `scripts/restore.sh` entschlüsselt
+  und prüft den Snapshot vor jeder Änderung und baut danach den Suchindex
+  automatisch neu auf (`node dist-worker/reindex-suche.mjs`, auch einzeln
+  nutzbar). Der Reindex prüft jetzt jeden Meilisearch-Task und die
+  Dokumentanzahl, statt Fehler zu verschlucken.
+- **Rundlauftest** `scripts/test-backup-restore.sh`: Sicherung in einen
+  getrennten S3-Container, Totalverlust, Wiederherstellung inklusive Suche,
+  Negativtests mit falschem Schlüssel und manipuliertem Repository.
 - **Abhängigkeiten:** Sicherheitslücken in Produktionspaketen von 49 auf 20
-  (kritisch 5 → 1) ohne Major-Updates.
+  (kritisch 5 → 0 nach dem Next-15-Update).
 
 ## v0.9 – Sicherheit, Migration & Produktivität (2026-07-23)
 

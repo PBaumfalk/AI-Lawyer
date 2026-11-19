@@ -46,6 +46,8 @@ x-app-env: &app-env
   SMTP_PASS: ${SMTP_PASS:-}
   SMTP_FROM: ${SMTP_FROM:-}
   LOG_LEVEL: ${LOG_LEVEL:-info}
+  # Anmeldeschutz: Anzahl vertrauenswürdiger Reverse-Proxys vor der App (0 = keiner)
+  TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-0}
   # Nur beim allerersten Start (leere Datenbank) ausgewertet
   KANZLEI_NAME: ${KANZLEI_NAME:-Kanzlei}
   INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin@kanzlei.de}

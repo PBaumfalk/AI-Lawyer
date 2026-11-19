@@ -1,0 +1,32 @@
+# AI-Lawyer – nächtliche verschlüsselte Sicherung (Vorlage)
+#
+# Installation (Pfad /opt/ai-lawyer an den Projektordner anpassen):
+#   sudo cp scripts/systemd/ai-lawyer-backup.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now ai-lawyer-backup.timer
+# Test sofort:      sudo systemctl start ai-lawyer-backup.service
+# Protokoll:        journalctl -u ai-lawyer-backup.service
+# Nächster Termin:  systemctl list-timers ai-lawyer-backup.timer
+#
+# Fehlschläge: Exit-Code != 0 → Unit "failed" (systemctl --failed), dazu
+# Statusdatei /var/lib/ai-lawyer/backup/last-run und optional Ping an
+# BACKUP_HEALTHCHECK_URL (in /etc/ai-lawyer/backup.env).
+
+[Unit]
+Description=AI-Lawyer verschlüsselte Datensicherung (restic)
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/ai-lawyer
+Environment=BACKUP_CONFIG=/etc/ai-lawyer/backup.env
+Environment=RESTIC_PASSWORD_FILE=/etc/ai-lawyer/backup.key
+Environment=BACKUP_STATE_DIR=/var/lib/ai-lawyer/backup
+ExecStart=/opt/ai-lawyer/scripts/backup.sh run
+# Erste Sicherung großer Bestände kann Stunden dauern
+TimeoutStartSec=12h
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

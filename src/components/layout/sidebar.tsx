@@ -91,6 +91,16 @@ const adminNavigation: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+
+  // Narrow screens: start as icon rail, otherwise the 240px sidebar leaves
+  // less than half of a phone screen for the content.
+  useEffect(() => {
+    const schmal = window.matchMedia("(max-width: 767px)");
+    if (schmal.matches) setCollapsed(true);
+    const wechsel = (e: MediaQueryListEvent) => setCollapsed(e.matches);
+    schmal.addEventListener("change", wechsel);
+    return () => schmal.removeEventListener("change", wechsel);
+  }, []);
   const { data: session } = useSession();
   const { resolvedTheme, setTheme } = useTheme();
   const prefersReducedMotion = useReducedMotion();
@@ -239,7 +249,7 @@ export function Sidebar() {
           : { type: "spring", stiffness: 300, damping: 30 }
       }
       className={cn(
-        "glass-sidebar flex flex-col h-screen select-none overflow-hidden",
+        "glass-sidebar flex flex-col h-screen select-none overflow-hidden shrink-0",
         "text-[oklch(20%_0.01_250)] dark:text-[oklch(92%_0.005_250)]"
       )}
     >

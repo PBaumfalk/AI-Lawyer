@@ -69,3 +69,7 @@ target/
 
 # Datensicherungen (scripts/backup.sh)
 /backups/
+
+# Playwright
+/test-results/
+/playwright-report/

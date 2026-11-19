@@ -210,6 +210,12 @@ nach zwölf Monaten wird gelöscht.
   gesperrt (Middleware und serverseitige Prüfung, mit Tests abgesichert).
 - Audit-Trail für Akten, Freigaben und Admin-Eingriffe, DSGVO-Anonymisierung
   von Kontakten.
+- Datensicherung mit restic: verschlüsselt (AES-256 + Poly1305), dedupliziert,
+  in ein externes Ziel (S3, SFTP, rest-server), mit Aufbewahrung,
+  Integritätsprüfung, Überwachung und systemd-Timer. Die Wiederherstellung
+  baut den Suchindex selbst neu auf; ein Rundlauftest belegt das
+  ([Kapitel 21](docs/handbuch/21-betrieb-und-sicherung.md#sicherung)).
+  Das externe Ziel und die getrennte Verwahrung der Schlüssel stellt die Kanzlei.
 
 <details>
 <summary><strong>Rollen und Berechtigungen</strong></summary>

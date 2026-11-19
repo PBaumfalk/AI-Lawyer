@@ -11,7 +11,18 @@ export async function resetDb() {
   )
   if (rows.length === 0) return
   const list = rows.map((r) => `"public"."${r.tablename}"`).join(', ')
-  await prisma.$executeRawUnsafe(`TRUNCATE ${list} RESTART IDENTITY CASCADE`)
+  // Fire-and-forget writes of the previous test (e.g. audit entries) can still
+  // be running; TRUNCATE then occasionally deadlocks with them (40P01).
+  for (let versuch = 1; ; versuch++) {
+    try {
+      await prisma.$executeRawUnsafe(`TRUNCATE ${list} RESTART IDENTITY CASCADE`)
+      return
+    } catch (e: any) {
+      const deadlock = e?.meta?.code === '40P01' || /deadlock detected/.test(String(e?.message))
+      if (!deadlock || versuch >= 5) throw e
+      await new Promise((r) => setTimeout(r, 100 * versuch))
+    }
+  }
 }
 
 export async function createKanzlei() {

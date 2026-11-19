@@ -1,4 +1,4 @@
-import Redis from "ioredis";
+import Redis, { type RedisOptions } from "ioredis";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("redis");
@@ -6,6 +6,8 @@ const log = createLogger("redis");
 interface RedisConnectionOptions {
   /** Set to null for BullMQ workers (required by BullMQ). Default: 20. */
   maxRetriesPerRequest?: number | null;
+  /** Additional ioredis options (e.g. commandTimeout, enableOfflineQueue). */
+  extra?: RedisOptions;
 }
 
 /**
@@ -30,6 +32,7 @@ export function createRedisConnection(
       return Math.max(Math.min(Math.exp(times), 20000), 1000);
     },
     // Do NOT set keyPrefix — incompatible with BullMQ
+    ...options.extra,
   });
 
   redis.on("connect", () => {

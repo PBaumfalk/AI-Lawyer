@@ -5,10 +5,8 @@ import { logAuditEvent } from "@/lib/audit";
 import type { UserRole } from "@prisma/client";
 
 // GET /api/users/[id]/vertretung -- Return current Vertretung status
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json(
@@ -53,10 +51,8 @@ export async function GET(
 }
 
 // PUT /api/users/[id]/vertretung -- Set or update Vertretung
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json(

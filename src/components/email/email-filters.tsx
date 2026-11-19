@@ -18,7 +18,7 @@ interface EmailFiltersProps {
 
 export function EmailFilters({ filters, onUpdateFilters }: EmailFiltersProps) {
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Debounced search (300ms)
   useEffect(() => {

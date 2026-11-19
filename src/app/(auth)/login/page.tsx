@@ -30,19 +30,28 @@ export default function LoginPage() {
     const password = formData.get("password") as string;
 
     // Step 1: Check credentials and whether TOTP is required
-    const initRes = await fetch("/api/auth/totp/init", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    let initRes: Response;
+    try {
+      initRes = await fetch("/api/auth/totp/init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+    } catch {
+      setLoading(false);
+      setError("Der Server ist nicht erreichbar. Bitte Verbindung prüfen und erneut versuchen.");
+      return;
+    }
 
     if (!initRes.ok) {
       setLoading(false);
       const body = await initRes.json().catch(() => null);
       setError(
-        initRes.status === 429 && body?.error
+        (initRes.status === 429 || initRes.status === 503) && body?.error
           ? body.error
-          : "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut."
+          : initRes.status >= 500
+            ? "Die Anmeldung ist gerade nicht möglich. Bitte in einer Minute erneut versuchen."
+            : "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut."
       );
       return;
     }
@@ -65,7 +74,11 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.");
+      setError(
+        result.code === "anmeldeschutz"
+          ? "Die Anmeldung ist gerade nicht möglich, weil der Anmeldeschutz nicht erreichbar ist. Bitte in einer Minute erneut versuchen."
+          : "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut."
+      );
     } else {
       router.push("/dashboard");
       router.refresh();
@@ -129,7 +142,7 @@ export default function LoginPage() {
               <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">{hinweis}</p>
             )}
             {error && (
-              <div className="text-sm text-red-600 dark:text-red-400 bg-red-500/10 rounded-lg p-3 border border-red-500/20">
+              <div role="alert" className="text-sm text-red-600 dark:text-red-400 bg-red-500/10 rounded-lg p-3 border border-red-500/20">
                 {error}
               </div>
             )}

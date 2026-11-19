@@ -8,10 +8,8 @@ import { ALL_QUEUES } from "@/lib/queue/queues";
  * Accessible by the job owner or any ADMIN.
  * Called by the "Erneut versuchen" button in notification-center.tsx.
  */
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: { jobId: string } }
-) {
+export async function POST(_request: NextRequest, props: { params: Promise<{ jobId: string }> }) {
+  const params = await props.params;
   const session = await auth();
 
   if (!session?.user) {

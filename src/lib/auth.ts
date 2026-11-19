@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { NextAuthConfig } from "next-auth";
@@ -7,6 +7,11 @@ import { z } from "zod";
 import { authConfig } from "./auth.config";
 import { refreshTokenFromDb } from "@/lib/auth-session";
 import { pruefePasswort } from "@/lib/auth-credentials";
+
+/** Login limiter unavailable (Redis): the client shows a "try again shortly" message. */
+class AnmeldeschutzNichtVerfuegbar extends CredentialsSignin {
+  code = "anmeldeschutz";
+}
 
 // Schema for TOTP nonce path (second step after TOTP challenge)
 const totpNonceSchema = z.object({
@@ -77,6 +82,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // Normal password path (rate-limited; refuses accounts with 2FA)
         const pruefung = await pruefePasswort(credentials, request);
+        if (!pruefung.ok && pruefung.grund === "dienst") throw new AnmeldeschutzNichtVerfuegbar();
         return pruefung.ok ? pruefung.user : null;
       },
     }),

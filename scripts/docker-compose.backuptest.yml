@@ -11,3 +11,19 @@ services:
   meilisearch:
     container_name: ailawyer-backuptest-meilisearch
     ports: !reset []
+  # Stellvertreter für "app" beim Suchindex-Neuaufbau (scripts/backuptest-reindexer.Dockerfile):
+  # gleiches Bundle, gleiche Umgebungsvariablen für DB und Meilisearch.
+  reindexer:
+    image: ailawyer-backuptest-reindexer:local
+    pull_policy: never
+    container_name: ailawyer-backuptest-reindexer
+    init: true
+    environment:
+      DATABASE_URL: postgresql://ailawyer:${POSTGRES_PASSWORD}@db:5432/ailawyer?schema=public
+      MEILISEARCH_URL: http://meilisearch:7700
+      MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy

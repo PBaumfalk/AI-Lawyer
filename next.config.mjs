@@ -8,18 +8,16 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  experimental: {
-    serverComponentsExternalPackages: [
-      "bullmq", "ioredis", "pino", "pino-roll", "pino-pretty",
-      "pdf-parse", "imapflow", "nodemailer", "@prisma/client",
-    ],
-    // Turbopack: alias @napi-rs/canvas to empty module -- pdfjs-dist optional
-    // Node.js dependency that is not needed in the browser (client components)
-    turbo: {
-      resolveAlias: {
-        "@napi-rs/canvas": { browser: "./src/lib/empty-module.ts" },
-        canvas: { browser: "./src/lib/empty-module.ts" },
-      },
+  serverExternalPackages: [
+    "bullmq", "ioredis", "pino", "pino-roll", "pino-pretty",
+    "pdf-parse", "imapflow", "nodemailer", "@prisma/client",
+  ],
+  // Turbopack: alias @napi-rs/canvas to empty module -- pdfjs-dist optional
+  // Node.js dependency that is not needed in the browser (client components)
+  turbopack: {
+    resolveAlias: {
+      "@napi-rs/canvas": { browser: "./src/lib/empty-module.ts" },
+      canvas: { browser: "./src/lib/empty-module.ts" },
     },
   },
 

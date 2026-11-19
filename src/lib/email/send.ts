@@ -6,15 +6,15 @@
  * Used for dual-channel delivery (in-app + email) of Frist reminders.
  */
 
-import nodemailer from "nodemailer";
+import nodemailer, { type Transporter } from "nodemailer";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("email");
 
 /** Lazily created transporter (avoids connection at import time) */
-let _transporter: nodemailer.Transporter | null = null;
+let _transporter: Transporter | null = null;
 
-function getTransporter(): nodemailer.Transporter {
+function getTransporter(): Transporter {
   if (!_transporter) {
     const host = process.env.SMTP_HOST ?? "localhost";
     const port = parseInt(process.env.SMTP_PORT ?? "587", 10);

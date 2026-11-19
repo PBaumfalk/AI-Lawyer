@@ -5,19 +5,24 @@ import type { UserRole } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
-import { loginGesperrt, loginErfolgreich } from "@/lib/login-throttle";
+import { loginGesperrt, loginErfolgreich, LimiterNichtVerfuegbar } from "@/lib/login-throttle";
+import { geraetCookieAus, geraetVertraut } from "@/lib/login-geraet";
+import { clientIp } from "@/lib/client-ip";
+
+export { clientIp };
 
 const loginSchema = z.object({
   email: z.string().email("Ungültige E-Mail-Adresse"),
   password: z.string().min(1, "Passwort ist erforderlich"),
 });
 
-export function clientIp(request?: Request | null): string | null {
-  const h = request?.headers;
-  if (!h || typeof h.get !== "function") return null;
-  const fwd = h.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0]!.trim() || null;
-  return h.get("x-real-ip");
+// Vergleichs-Hash für unbekannte oder deaktivierte Konten: bcrypt läuft immer,
+// damit die Antwortzeit nicht verrät, ob es ein Konto gibt (Kostenfaktor wie
+// bei echten Konten).
+let dummyHash: Promise<string> | null = null;
+function vergleichsHash(): Promise<string> {
+  dummyHash ??= bcrypt.hash(`kein-konto-${Math.random()}`, 12);
+  return dummyHash;
 }
 
 export interface AngemeldeterBenutzer {
@@ -32,7 +37,7 @@ export interface AngemeldeterBenutzer {
 
 export type Pruefung =
   | { ok: true; user: AngemeldeterBenutzer }
-  | { ok: false; grund: "ungueltig" | "gesperrt" | "totp_erforderlich" };
+  | { ok: false; grund: "ungueltig" | "gesperrt" | "totp_erforderlich" | "dienst" };
 
 /**
  * Prüft E-Mail und Passwort.
@@ -53,19 +58,41 @@ export async function pruefePasswort(
   const email = parsed.data.email.trim().toLowerCase();
   const ip = clientIp(request);
 
-  const sperre = await loginGesperrt(email, ip);
+  const vertraut = geraetVertraut(geraetCookieAus(request), email);
+
+  let sperre: Awaited<ReturnType<typeof loginGesperrt>>;
+  try {
+    sperre = await loginGesperrt(email, ip, { geraetVertraut: vertraut });
+  } catch (err) {
+    if (err instanceof LimiterNichtVerfuegbar) return { ok: false, grund: "dienst" };
+    throw err;
+  }
   if (sperre) {
     logAuditEvent({
       aktion: "LOGIN_FEHLGESCHLAGEN",
-      details: { email, grund: sperre === "konto" ? "Zu viele Versuche (Konto)" : "Zu viele Versuche (IP)" },
+      details: {
+        email,
+        grund:
+          sperre === "quelle_konto"
+            ? "Zu viele Versuche von dieser Quelle für dieses Konto"
+            : sperre === "quelle"
+              ? "Zu viele Versuche von dieser Quelle"
+              : "Verteilter Angriff auf das Konto, unbekanntes Gerät",
+      },
       ipAdresse: ip ?? undefined,
     }).catch(() => {});
     return { ok: false, grund: "gesperrt" };
   }
 
   const user = await prisma.user.findUnique({ where: { email } });
+  const nutzbar = !!user && user.aktiv && !user.isSystem;
+  // Immer vergleichen, auch ohne nutzbares Konto (gleiche Laufzeit).
+  const passwordMatch = await bcrypt.compare(
+    parsed.data.password,
+    nutzbar ? user.passwordHash : await vergleichsHash()
+  );
 
-  if (!user || !user.aktiv || user.isSystem) {
+  if (!nutzbar) {
     logAuditEvent({
       aktion: "LOGIN_FEHLGESCHLAGEN",
       details: { email, grund: !user ? "Benutzer nicht gefunden" : "Konto deaktiviert" },
@@ -74,7 +101,6 @@ export async function pruefePasswort(
     return { ok: false, grund: "ungueltig" };
   }
 
-  const passwordMatch = await bcrypt.compare(parsed.data.password, user.passwordHash);
   if (!passwordMatch) {
     logAuditEvent({
       userId: user.id,
@@ -85,7 +111,7 @@ export async function pruefePasswort(
     return { ok: false, grund: "ungueltig" };
   }
 
-  await loginErfolgreich(email);
+  await loginErfolgreich(email, ip);
   if (user.totpEnabled && !opts.fuerTotpVorstufe) {
     logAuditEvent({
       userId: user.id,

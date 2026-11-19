@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { logAuditEvent } from "@/lib/audit";
+import { quelleBegrenzt } from "@/lib/oeffentlich-limit";
 
 // Password: min 8 chars, at least 1 uppercase, at least 1 number
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -13,6 +14,8 @@ const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
  * Creates a new User with role MANDANT and links it to the Kontakt.
  */
 export async function POST(req: NextRequest) {
+  const begrenzt = await quelleBegrenzt(req, "portal-aktivierung", 20, 15 * 60);
+  if (begrenzt) return begrenzt;
   try {
     const body = await req.json();
     const { token, password, passwordConfirm } = body as {

@@ -60,6 +60,9 @@ export type AuditAktion =
   | "BEA_NACHRICHT_GELESEN"
   | "BEA_ZUORDNUNG_GEAENDERT"
   | "BEA_ANHANG_HERUNTERGELADEN"
+  | "HELENA_DATEI_VERARBEITET"
+  | "HELENA_DATEI_GESTOPPT"
+  | "KI_EINWILLIGUNG_GEAENDERT"
   | "BEA_SAFEID_GEAENDERT"
   | "BEA_POSTFACH_GEWECHSELT" // BEA_POSTFACH_GEWECHSELT: reserved for future multi-postbox UI
   | "BEA_ZERTIFIKAT_HINTERLEGT"
@@ -146,6 +149,9 @@ export const AKTION_LABELS: Record<string, string> = {
   BEA_NACHRICHT_GELESEN: "beA Nachricht gelesen",
   BEA_ZUORDNUNG_GEAENDERT: "beA Zuordnung geändert",
   BEA_ANHANG_HERUNTERGELADEN: "beA Anhang heruntergeladen",
+  HELENA_DATEI_VERARBEITET: "hat Dateien anonymisiert durch Helena verarbeiten lassen",
+  HELENA_DATEI_GESTOPPT: "Helena-Dateiverarbeitung gestoppt",
+  KI_EINWILLIGUNG_GEAENDERT: "hat die KI-Einwilligung der Mandantschaft geändert",
   BEA_SAFEID_GEAENDERT: "Safe-ID geändert",
   BEA_POSTFACH_GEWECHSELT: "beA Postfach gewechselt",
   BEA_ZERTIFIKAT_HINTERLEGT: "hat ein beA-Zertifikat hinterlegt",

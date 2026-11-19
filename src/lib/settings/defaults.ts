@@ -182,6 +182,52 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     label: "Briefing-Uhrzeit (HH:MM)",
   },
 
+  // Helena Datei-Pipeline (anymize)
+  {
+    key: "anymize.apiKey",
+    value: "",
+    type: "string",
+    category: "ai",
+    label: "anymize API-Schlüssel (Datei-Pipeline)",
+    secret: true,
+  },
+  {
+    key: "anymize.baseUrl",
+    value: "https://app.anymize.ai",
+    type: "string",
+    category: "ai",
+    label: "anymize API-Adresse",
+  },
+  {
+    key: "helena.datei.verarbeiter",
+    value: "anymize",
+    type: "string",
+    category: "ai",
+    label: "Datei-Pipeline: KI für die Verarbeitung (anymize-Modelle nach Aufgabe oder lokales Ollama)",
+    options: ["anymize", "lokal"],
+  },
+  {
+    key: "helena.datei.modellRouting",
+    value: "",
+    type: "json",
+    category: "ai",
+    label: "Datei-Pipeline: Modell je Aufgabe (leer = Standard; nur Modelle der Positivliste)",
+  },
+  {
+    key: "helena.datei.einwilligungErforderlich",
+    value: "true",
+    type: "boolean",
+    category: "ai",
+    label: "Datei-Pipeline: nur Akten mit vermerkter Einwilligung der Mandantschaft (§ 43e Abs. 5 BRAO)",
+  },
+  {
+    key: "helena.datei.nerPruefung",
+    value: "true",
+    type: "boolean",
+    category: "ai",
+    label: "Datei-Pipeline: lokale Namensprüfung (Ollama) vor dem Versand",
+  },
+
   // Scanner category
   {
     key: "scanner.enabled",

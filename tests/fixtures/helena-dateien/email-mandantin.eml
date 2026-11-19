@@ -1,0 +1,27 @@
+From: =?UTF-8?Q?Sabine_Kr=C3=BCger-Wendt?= <sabine.krueger-wendt@beispielmail.de>
+To: kanzlei@example.org
+Subject: =?UTF-8?B?S8O8bmRpZ3VuZyBlcmhhbHRlbg==?=
+Date: Tue, 03 Nov 2026 18:12:00 +0100
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="XYZ"
+
+--XYZ
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Sehr geehrte Damen und Herren,
+
+heute hat mir Herr Dr. Matthias Oberl=C3=A4nder die K=C3=BCndigung =C3=BCberreicht.
+Ich bin unter 0221 4789123 erreichbar. Meine Kollegin Aylin Demirta=C5=9F war da=
+bei.
+
+Viele Gr=C3=BC=C3=9Fe
+Sabine Kr=C3=BCger-Wendt
+Lindenstra=C3=9Fe 42, 50674 K=C3=B6ln
+--XYZ
+Content-Type: application/pdf; name="kuendigung.pdf"
+Content-Disposition: attachment; filename="kuendigung.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQK
+--XYZ--

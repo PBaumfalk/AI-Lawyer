@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/rbac";
 import { findeKanzleiKonto } from "@/lib/benutzer/service";
 import { fehlerAntwort } from "@/lib/benutzer/http";
 import { logAuditEvent } from "@/lib/audit";
+import { P12_FEHLER } from "@/lib/bea/expert/krypto";
 import {
   speichereZertifikat,
   zertifikatInfo,
@@ -12,8 +13,10 @@ import {
 
 // A beA software certificate is a few KB; anything larger is not a .p12.
 const MAX_GROESSE = 100 * 1024;
+// Headroom for multipart boundaries and the PIN field
+const MAX_ANFRAGE = MAX_GROESSE + 8 * 1024;
 const ERLAUBTE_ENDUNGEN = [".p12", ".pfx"];
-const P12_FEHLER = "PIN falsch oder Datei ist kein beA-Softwarezertifikat";
+const ZU_GROSS = "Die Datei ist zu groß für ein beA-Softwarezertifikat (höchstens 100 KB)";
 
 type Kontext = { params: Promise<{ id: string }> };
 
@@ -41,6 +44,12 @@ export async function POST(request: NextRequest, { params }: Kontext) {
     return fehlerAntwort(e);
   }
 
+  // Reject oversized bodies before buffering them in request.formData()
+  const laenge = Number(request.headers.get("content-length"));
+  if (Number.isFinite(laenge) && laenge > MAX_ANFRAGE) {
+    return NextResponse.json({ error: ZU_GROSS }, { status: 413 });
+  }
+
   let form: FormData;
   try {
     form = await request.formData();
@@ -57,7 +66,7 @@ export async function POST(request: NextRequest, { params }: Kontext) {
     return NextResponse.json({ error: "Bitte eine .p12- oder .pfx-Datei hochladen" }, { status: 400 });
   }
   if (datei.size > MAX_GROESSE) {
-    return NextResponse.json({ error: "Die Datei ist zu groß für ein beA-Softwarezertifikat (höchstens 100 KB)" }, { status: 413 });
+    return NextResponse.json({ error: ZU_GROSS }, { status: 413 });
   }
 
   let info: Awaited<ReturnType<typeof speichereZertifikat>>;

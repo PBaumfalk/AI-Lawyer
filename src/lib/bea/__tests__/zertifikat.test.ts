@@ -6,6 +6,7 @@ vi.mock("@/lib/db", () => ({
       upsert: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }));
@@ -21,7 +22,7 @@ import {
 
 const mockUpsert = vi.mocked(prisma.beaZertifikat.upsert);
 const mockFindUnique = vi.mocked(prisma.beaZertifikat.findUnique);
-const mockUpdate = vi.mocked(prisma.beaZertifikat.update);
+const mockUpdateMany = vi.mocked(prisma.beaZertifikat.updateMany);
 
 const PIN = "Geheim-PIN-4711";
 let gueltig: ReturnType<typeof erzeugeTestP12>;
@@ -39,7 +40,7 @@ beforeAll(() => {
 beforeEach(() => {
   vi.resetAllMocks();
   mockUpsert.mockResolvedValue({} as any);
-  mockUpdate.mockResolvedValue({} as any);
+  mockUpdateMany.mockResolvedValue({ count: 1 } as any);
 });
 
 function gespeicherterDatensatz() {
@@ -113,10 +114,15 @@ describe("ladeZertifikat", () => {
 describe("markiereZertifikatFehler / zertifikatInfo", () => {
   it("markiereZertifikatFehler setzt Status FEHLER mit Meldung", async () => {
     await markiereZertifikatFehler("user-1", "PIN falsch");
-    expect(mockUpdate).toHaveBeenCalledWith({
+    expect(mockUpdateMany).toHaveBeenCalledWith({
       where: { userId: "user-1" },
       data: { status: "FEHLER", letzterFehler: "PIN falsch" },
     });
+  });
+
+  it("markiereZertifikatFehler wirft nicht, wenn das Zertifikat inzwischen entfernt wurde", async () => {
+    mockUpdateMany.mockResolvedValue({ count: 0 } as any);
+    await expect(markiereZertifikatFehler("user-1", "PIN falsch")).resolves.toBeUndefined();
   });
 
   it("zertifikatInfo gibt keine Geheimnisse heraus", async () => {

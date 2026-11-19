@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { FileKey2, Trash2, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Mirrors the GET/POST response of /api/admin/benutzer/[id]/bea-zertifikat (dates as ISO strings)
 interface ZertifikatInfo {
@@ -147,10 +158,29 @@ export function BeaZertifikatDialog({
               <dt className="text-muted-foreground">Letzter Abruf</dt>
               <dd>{datum(info.letzterAbruf, true)}</dd>
             </dl>
-            <Button variant="destructive" size="sm" onClick={entfernen} disabled={laeuft}>
-              <Trash2 className="w-4 h-4 mr-1.5" />
-              Zertifikat entfernen
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={laeuft}>
+                  <Trash2 className="w-4 h-4 mr-1.5" />
+                  Zertifikat entfernen
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>beA-Zertifikat entfernen?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Das Zertifikat von {benutzer?.name} wird gelöscht. Abruf und Versand über beA sind danach erst
+                    nach einem neuen Upload wieder möglich.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                  <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={entfernen}>
+                    Entfernen
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         ) : info === null ? (
           <p className="text-sm text-muted-foreground flex items-center gap-2">

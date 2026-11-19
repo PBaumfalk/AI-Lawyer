@@ -9,7 +9,7 @@ import crypto from "node:crypto";
 import forge from "node-forge";
 import { KJUR } from "jsrsasign";
 
-const P12_FEHLER = "PIN falsch oder Datei ist kein beA-Softwarezertifikat";
+export const P12_FEHLER = "PIN falsch oder Datei ist kein beA-Softwarezertifikat";
 
 export interface P12Inhalt {
   privateKeyPem: string;

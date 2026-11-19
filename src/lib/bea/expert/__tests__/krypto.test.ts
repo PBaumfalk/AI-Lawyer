@@ -78,7 +78,7 @@ describe("leseP12", () => {
 
     expect(ergebnis.seriennummer).toBe("0a1b2c3d");
     expect(ergebnis.inhaber).toBe("Max Müller");
-    expect(ergebnis.gueltigBis.toISOString()).toBe("2028-12-31T23:59:59.000Z");
+    expect(ergebnis.gueltigBis.toISOString()).toBe(fixture.gueltigBis.toISOString());
   });
 
   it("leseP12 wirft bei falscher PIN die deutsche Fehlermeldung", () => {

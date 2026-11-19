@@ -70,9 +70,12 @@ export async function ladeZertifikat(userId: string): Promise<{ p12: Buffer; pin
   };
 }
 
-/** Marks the certificate as failed so background jobs stop using it. */
+/**
+ * Marks the certificate as failed so background jobs stop using it.
+ * updateMany: a certificate removed meanwhile (e.g. during a sync job) is a no-op.
+ */
 export async function markiereZertifikatFehler(userId: string, meldung: string): Promise<void> {
-  await prisma.beaZertifikat.update({
+  await prisma.beaZertifikat.updateMany({
     where: { userId },
     data: { status: "FEHLER", letzterFehler: meldung },
   });

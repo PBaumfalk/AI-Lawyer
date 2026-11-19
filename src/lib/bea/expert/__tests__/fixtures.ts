@@ -1,5 +1,13 @@
 import forge from "node-forge";
 
+// Relative to now so the fixture never expires; whole seconds because
+// X.509 validity has no sub-second precision.
+function standardGueltigkeit(): { von: Date; bis: Date } {
+  const jetzt = Math.floor(Date.now() / 1000) * 1000;
+  const tag = 24 * 60 * 60 * 1000;
+  return { von: new Date(jetzt - tag), bis: new Date(jetzt + 2 * 365 * tag) };
+}
+
 /**
  * Creates a self-signed RSA-2048 test certificate packed as PKCS#12,
  * comparable to a beA software certificate. Key generation is slow,
@@ -7,14 +15,12 @@ import forge from "node-forge";
  */
 export function erzeugeTestP12(
   pin: string,
-  gueltigkeit: { von: Date; bis: Date } = {
-    von: new Date(Date.UTC(2026, 0, 1)),
-    bis: new Date(Date.UTC(2028, 11, 31, 23, 59, 59)),
-  }
+  gueltigkeit: { von: Date; bis: Date } = standardGueltigkeit()
 ): {
   p12: Buffer;
   privateKeyPem: string;
   zertifikatPem: string;
+  gueltigBis: Date;
 } {
   const keys = forge.pki.rsa.generateKeyPair({ bits: 2048, e: 0x10001 });
   const cert = forge.pki.createCertificate();
@@ -42,5 +48,6 @@ export function erzeugeTestP12(
     p12,
     privateKeyPem: forge.pki.privateKeyToPem(keys.privateKey),
     zertifikatPem: forge.pki.certificateToPem(cert),
+    gueltigBis: gueltigkeit.bis,
   };
 }

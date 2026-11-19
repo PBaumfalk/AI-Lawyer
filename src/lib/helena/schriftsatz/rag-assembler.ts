@@ -61,10 +61,10 @@ const SECTION_PROMPTS: Record<string, string> = {
     "Formuliere die Anträge basierend auf der Klageart und den Anspruchsgrundlagen. Verwende die bereitgestellten Muster als Orientierung. Die Anträge müssen bestimmt und vollstreckbar formuliert sein (SS 253 Abs. 2 Nr. 2 ZPO). Gib jeden Antrag als separaten Eintrag zurück.",
 
   sachverhalt:
-    "Erstelle den Sachverhalt chronologisch und präzise. Verwende nur die bereitgestellten Fakten. Wo Details fehlen, setze {{ERGAENZUNG_SACHVERHALT}} als Platzhalter. Der Sachverhalt muss alle anspruchsbegründenden Tatsachen enthalten.",
+    "Erstelle den Sachvortrag chronologisch und präzise im Schriftsatzstil, jeweils mit Beweisangebot. Verwende nur die bereitgestellten Fakten. Wo Details fehlen, setze {{ERGAENZUNG_SACHVERHALT}} als Platzhalter. Der Sachverhalt muss alle anspruchsbegründenden Tatsachen enthalten.",
 
   rechtliche_wuerdigung:
-    "Erstelle die Rechtliche Würdigung mit vollständig ausformulierten Absätzen pro Anspruchsgrundlage. Stütze dich auf die bereitgestellten Normen und Urteile. Wo fallspezifische Details fehlen, setze {{ERGAENZUNG}} als Platzhalter. Zitiere konkrete Paragraphen und Entscheidungen.",
+    "Erstelle die rechtlichen Ausführungen des Schriftsatzes im Urteilsstil, nie im Gutachtenstil: Ergebnis voranstellen, dann begründen (\"Die Kündigung ist sozial ungerechtfertigt, weil …\"). Keine Prüfungsschemata, keine Gliederung nach Anspruchsgrundlagen, keine Ausführungen zur Zulässigkeit, sofern nicht konkret Anlass besteht. Knapp und schriftsatzmäßig, nur die für das Gericht tragenden Punkte. Stütze dich auf die bereitgestellten Normen und Urteile und zitiere konkret. Wo fallspezifische Details fehlen, setze {{ERGAENZUNG}} als Platzhalter.",
 
   beweisangebote:
     "Erstelle die Beweisangebote basierend auf den Akten-Dokumenten. Weise jedem Dokument eine Anlagennummer zu (K1-Kn für Kläger, B1-Bn für Beklagter). Ordne die Beweise den jeweiligen Behauptungen zu.",

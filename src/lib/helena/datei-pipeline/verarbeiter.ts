@@ -197,9 +197,9 @@ export const AUFGABEN_ANWEISUNG: Record<string, string> = {
   mandantenbrief:
     "Aufgabe: Schreibe an die Mandantschaft in verständlicher Sprache, ohne Fachjargon, freundlich und klar. Nenne nächste Schritte und was die Mandantschaft tun muss.",
   schriftsatz:
-    "Aufgabe: Entwirf einen Schriftsatz für ein deutsches Gericht mit Rubrum, Anträgen und Begründung. Kennzeichne fehlende Angaben als [FEHLT: …]. Zitiere nur Normen, die du sicher kennst; Rechtsprechung nur mit Kennzeichnung [PRÜFEN].",
+    "Aufgabe: Entwirf einen Schriftsatz für ein deutsches Gericht mit Rubrum, Anträgen und Begründung, durchgehend im Urteilsstil (Ergebnis voran, dann Begründung), nie im Gutachtenstil. Kennzeichne fehlende Angaben als [FEHLT: …]. Zitiere nur Normen, die du sicher kennst; Rechtsprechung nur mit Kennzeichnung [PRÜFEN].",
   wuerdigung:
-    "Aufgabe: Prüfe die Rechtslage gutachterlich. Benenne Anspruchsgrundlagen bzw. Angriffspunkte, Beweislast, Risiken und fehlende Informationen. Rechtsprechung nur mit Kennzeichnung [PRÜFEN].",
+    "Aufgabe: Prüfe die Rechtslage und schreibe im Urteilsstil (Ergebnis voran, dann Begründung); Gutachtenstil nur, wenn ausdrücklich ein Gutachten verlangt ist. Benenne Anspruchsgrundlagen bzw. Angriffspunkte, Beweislast, Risiken und fehlende Informationen. Rechtsprechung nur mit Kennzeichnung [PRÜFEN].",
   allgemein: "",
 };
 

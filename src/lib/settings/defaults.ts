@@ -214,13 +214,6 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     label: "Datei-Pipeline: Modell je Aufgabe (leer = Standard; nur Modelle der Positivliste)",
   },
   {
-    key: "helena.datei.einwilligungErforderlich",
-    value: "false",
-    type: "boolean",
-    category: "ai",
-    label: "Datei-Pipeline: auch für deutsche Modelle eine vermerkte Einwilligung der Mandantschaft verlangen (berufsrechtlich nicht nötig: anymize ist Infrastruktur nach § 43e Abs. 1 BRAO; Fremdmodelle brauchen stets eine Einwilligung, § 43e Abs. 4 BRAO)",
-  },
-  {
     key: "ai.schleuse.erlaubteBegriffe",
     value: "[]",
     type: "json",

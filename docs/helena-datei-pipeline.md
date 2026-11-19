@@ -48,14 +48,14 @@ Code: `src/lib/helena/datei-pipeline/`, API: `POST /api/helena/datei-verarbeitun
 
 Die Pipeline wählt das Modell nach der Aufgabe (`aufgabe` in der API). Erlaubt sind nur Modelle der Positivliste in `src/lib/helena/datei-pipeline/modelle.ts`. Neue anymize-Modelle sind gesperrt, bis sie dort per Code-Review aufgenommen werden.
 
-| Aufgabe | bevorzugt | Ersatz ohne Einwilligung in Fremdmodelle |
-|---|---|---|
-| `extrahieren` (Daten, Fristen, Beteiligte) | `waterfall-2.0` | `waterfall-2.0` |
-| `zusammenfassen` (Sachstand) | `waterfall-2.0` | `waterfall-2.0` |
-| `mandantenbrief` (Brief, Vermerk) | `waterfall-2.0` | `waterfall-2.0` |
-| `schriftsatz` | `anthropic/claude-opus-5.5` | `waterfall-2.0` |
-| `wuerdigung` (Erfolgsaussichten) | `anthropic/claude-opus-5.5` | `waterfall-2.0` |
-| `allgemein` | `waterfall-2.0` | `waterfall-2.0` |
+| Aufgabe | Modell |
+|---|---|
+| `extrahieren` (Daten, Fristen, Beteiligte) | `waterfall-2.0` |
+| `zusammenfassen` (Sachstand) | `waterfall-2.0` |
+| `mandantenbrief` (Brief, Vermerk) | `waterfall-2.0` |
+| `schriftsatz` | `anthropic/claude-opus-5.5` |
+| `wuerdigung` (Erfolgsaussichten) | `anthropic/claude-opus-5.5` |
+| `allgemein` | `waterfall-2.0` |
 
 **Gesperrt:**
 - `auto`: Wohin anymize die Anfrage leitet, ist nicht steuerbar.
@@ -65,16 +65,9 @@ Die Pipeline wählt das Modell nach der Aufgabe (`aufgabe` in der API). Erlaubt 
 - `claude-fable-5.1`: Anthropic speichert hier laut anymize 30 Tage.
 - `*-us`-Varianten und Preview-Modelle.
 
-Admins können die Zuordnung in der Einstellung `helena.datei.modellRouting` überschreiben (JSON, z. B. `{"zusammenfassen": {"modell": "anthropic/claude-sonnet-5.5", "ersatz": "waterfall-2.0"}}`). Einträge mit Modellen außerhalb der Positivliste oder mit nicht-deutschem Ersatz werden verworfen.
+Admins können die Zuordnung in der Einstellung `helena.datei.modellRouting` überschreiben (JSON, z. B. `{"zusammenfassen": {"modell": "anthropic/claude-sonnet-5.5"}}`). Einträge mit Modellen außerhalb der Positivliste werden verworfen.
 
-**Einwilligung der Mandantschaft:** Die Einwilligung wird je Akte vermerkt (`PUT /api/akten/[id]/ki-einwilligung`). Das dürfen nur Anwältinnen, Anwälte und Admins, und jede Änderung landet im Audit-Log.
-
-- `KEINE` und `DE_MODELLE`: anymize-Anonymisierung und die deutschen anymize-Modelle.
-- `FREMDMODELLE`: zusätzlich Foundation-Modelle über anymize.
-
-Berufsrechtliche Einordnung (geprüft am 19.11.2026): anymize wird für den Kanzleibetrieb insgesamt eingesetzt und ist damit Infrastruktur nach § 43e Abs. 1 BRAO, keine Dienstleistung, die unmittelbar einem einzelnen Mandat dient. Eine Einwilligung nach § 43e Abs. 5 BRAO ist deshalb nicht nötig; es genügen sorgfältige Auswahl und ein Vertrag in Textform nach Abs. 2 und 3. Fremdmodelle außerhalb der EU bleiben wegen § 43e Abs. 4 BRAO an die Einwilligung `FREMDMODELLE` gebunden.
-
-Wer strenger arbeiten will, schaltet `helena.datei.einwilligungErforderlich` ein (Standard: aus). Dann ist bei `KEINE` jede Verarbeitung gesperrt (`EINWILLIGUNG_FEHLT`).
+**Keine Einwilligungsprüfung:** KI-Dienste einschließlich anymize sind Infrastruktur nach § 43e Abs. 1 BRAO. § 43e Abs. 5 BRAO betrifft mandatsbezogene Dienstleister wie Sachverständige, Dolmetscher und Übersetzer. Die berufsrechtliche Zulässigkeit prüft die Kanzlei selbst; die Software verlangt und prüft keine Einwilligung der Mandantschaft. Mit eingerichteter anymize-Schleuse wählt Helena das Modell je Aufgabe selbst.
 
 **Qualitätsvergleich:** `ANYMIZE_API_KEY=… npx tsx scripts/helena-modellvergleich.ts` schickt fünf Kanzleiaufgaben auf fiktiven Daten an fünf Modelle. Das Skript schreibt einen blinden Bericht (Modelle A–E) nach `docs/modellvergleich/<Datum>/`.
 
@@ -94,10 +87,8 @@ Seit dem 19.11.2026 läuft **jedes externe Modell**, das Helena benutzt, durch d
 - Beim Streaming hält die Schleuse Platzhalter zurück, die über mehrere Stream-Stücke verteilt sind, bis sie vollständig sind.
 
 **Aktenbezug**
-- Agent (`runHelenaAgent`), Schriftsatz-Ablauf und Chat setzen den Aktenkontext. Alle Modellaufrufe eines Laufs teilen sich dann eine Zuordnung und die Einwilligung dieser Akte.
-- Deckt die Einwilligung das Modell nicht ab, weicht die Schleuse auf waterfall-2.0 aus.
-- Fehlt jede Einwilligung, bricht sie ab, bevor etwas gesendet wird.
-- Ohne Aktenbezug sind nur deutsche Modelle erlaubt.
+- Agent (`runHelenaAgent`), Schriftsatz-Ablauf und Chat setzen den Aktenkontext. Alle Modellaufrufe eines Laufs teilen sich dann eine Zuordnung, und die Beteiligten der Akte gehen als bekannte Werte in den Ausgangs-Check.
+- Ohne Aktenbezug (Hintergrundaufgaben) läuft dieselbe Schleuse, nur ohne bekannte Werte der Akte.
 
 **Anbieter**
 - Neuer KI-Anbieter `anymize` in den Einstellungen; Standardmodell ist `waterfall-2.0`.
@@ -123,8 +114,6 @@ Aufbau: isolierter Test-Stack (Postgres mit pgvector, Redis, Ollama mit Embeddin
 |---|---|
 | Sachstand, Schnellmodus | vollständig, echte Namen, Klagefrist 24.11.2026 richtig |
 | Kündigungsschutzklage, Hintergrundmodus | Muster genutzt, Klageentwurf und Fristentwurf in der Akte angelegt, Rückführung vollständig |
-| Einwilligung nur DE-Modelle | vollständig |
-| ohne Einwilligung | gestoppt, bevor etwas gesendet wurde |
 
 Über alle Läufe: kein Personendatum in den Anfragen an die KI, kein anderes externes Ziel als anymize, alle anymize-Jobs gelöscht.
 
@@ -139,9 +128,9 @@ Aufbau: isolierter Test-Stack (Postgres mit pgvector, Redis, Ollama mit Embeddin
 0. ~~Modellwahl im Agenten~~ behoben: Helena entscheidet weiter selbst über ihre Komplexitätsstufe, die Regeln sind korrigiert.
    - Stufe 3 gilt jetzt auch für Entwürfe benannter Schriftsätze („Entwurf der Kündigungsschutzklage“, „Entwirf eine Klageerwiderung“) und für rechtliche Würdigungen (Erfolgsaussichten, Rechtslage, Wirksamkeit).
    - Umlaute werden vereinheitlicht („prüfe“ entspricht „pruefe“).
-   - Mit anymize gilt ohne eigene Einstellung: Stufe 1 und 2 → waterfall-2.0, Stufe 3 → Claude Opus 5.5. Ohne Einwilligung in Fremdmodelle greift der deutsche Ersatz.
+   - Mit anymize gilt ohne eigene Einstellung: Stufe 1 und 2 → waterfall-2.0, Stufe 3 → Claude Opus 5.5.
    - Live mit Datenbank noch nicht nachgeprüft.
-1. Hintergrundaufgaben ohne Aktenkontext laufen pseudonymisiert und nur über deutsche Modelle, prüfen aber die Einwilligung nicht. Betroffen sind:
+1. Hintergrundaufgaben ohne Aktenkontext laufen pseudonymisiert, aber ohne die bekannten Werte der Akte im Ausgangs-Check. Betroffen sind:
    - Scanner,
    - Tagesbriefing,
    - Fristen- und Beteiligten-Extraktion,
@@ -164,17 +153,17 @@ Dieser Abschnitt ist eine Arbeitsgrundlage für den Datenschutzbeauftragten, kei
 - anymize ist Auftragsverarbeiter nach Art. 28 DSGVO. Ein AVV liegt vor (Version 1.6 vom 06.11.2026) und gilt mit Kontoerstellung. Eine beidseitig unterschriebene Fassung gibt es auf Anfrage.
 - Der KI-Anbieter erhält nur pseudonymisierten Text.
   - anymize-eigene Modelle (fountain, waterfall): laufen nach Anlage 2 bei Hetzner und OVH in Deutschland. Hetzner und OVH sind ständige Unterauftragsverarbeiter, die laut anymize nach § 203 Abs. 4 StGB verpflichtet sind.
-  - OpenAI, Anthropic, Mistral, xAI und das Gateway Requesty: Diese Anbieter sind laut anymize ausdrücklich **nicht** nach § 203 Abs. 4 StGB verpflichtet (Anlage 2 § 1). Die Pipeline sperrt sie deshalb standardmäßig (Fehlercode `ANBIETER_NICHT_FREIGEGEBEN`).
+  - OpenAI, Anthropic, Mistral, xAI und das Gateway Requesty: Diese Anbieter sind laut anymize ausdrücklich **nicht** nach § 203 Abs. 4 StGB verpflichtet (Anlage 2 § 1). Sie erhalten nur pseudonymisierten Text; die Kanzlei hat den Einsatz berufsrechtlich selbst bewertet (Infrastruktur nach § 43e Abs. 1 BRAO).
 
 **§ 203 StGB und § 43e BRAO**
 
-- Das Berufsgeheimnis schützt den gesamten Sachverhalt, nicht nur Namen. Ein pseudonymisierter Sachverhalt kann über Kontextwissen wieder identifizierbar sein. Deshalb gilt die Standardregel: Verarbeitung nur lokal oder bei den deutschen anymize-Modellen.
+- Das Berufsgeheimnis schützt den gesamten Sachverhalt, nicht nur Namen. Ein pseudonymisierter Sachverhalt kann über Kontextwissen wieder identifizierbar sein.
+- KI-Dienste sind Infrastruktur nach § 43e Abs. 1 BRAO; eine Einwilligung nach Abs. 5 ist nicht erforderlich (Abs. 5 betrifft Sachverständige, Dolmetscher, Übersetzer).
 - Für anymize als Dienstleister verlangt § 43e Abs. 3 BRAO einen Vertrag in Textform. Er muss enthalten:
   - die Verschwiegenheitsverpflichtung unter Belehrung über die strafrechtlichen Folgen,
   - die Beschränkung auf das erforderliche Maß an Kenntnisnahme,
   - die Regelung zu Unterbeauftragungen.
 - anymize bietet eine Verschwiegenheitsvereinbarung und eine „BRAO-Einverständniserklärung“ im Governance-Center an. **Vor dem Produktivbetrieb: beide Dokumente lesen und unterschrieben ablegen.** Ihr Wortlaut war öffentlich nicht einsehbar.
-- § 43e Abs. 4 BRAO (Dienstleistungen im Ausland) spricht ebenfalls dafür, Drittlandanbieter gesperrt zu lassen.
 
 **Pseudonymisierung**
 
@@ -216,8 +205,7 @@ Alle Fehler brechen den Lauf ab, ohne dass etwas an die KI geht.
 | `ANYMIZE_JOB_FEHLGESCHLAGEN`, `ANYMIZE_ZEITUEBERSCHREITUNG` | Job fehlgeschlagen oder dauert länger als 5 Minuten | erneut versuchen, sonst anymize-Support |
 | `PII_IM_AUSGANG` | Ausgangs-Check hat Personendaten im Ausgang gefunden | Fundkategorien im Protokoll ansehen. Häufig hilft es, den Wert ins Wörterbuch „Immer anonymisieren“ einzutragen oder den Beteiligten in der Akte zu erfassen. Den Check niemals umgehen. |
 | `PRUEFER_FEHLER` | lokale Namensprüfung (Ollama) ausgefallen | Ollama prüfen |
-| `ANBIETER_NICHT_FREIGEGEBEN` | Modell durch die Einwilligung nicht gedeckt und kein deutscher Ersatz konfiguriert | Routing prüfen |
-| `EINWILLIGUNG_FEHLT` | an der Akte ist keine Einwilligung vermerkt | Einwilligung einholen und vermerken |
+| `ANBIETER_NICHT_FREIGEGEBEN` | für die Aufgabe ist kein Modell der Positivliste konfiguriert | Routing prüfen |
 | `KI_FEHLER` | KI-Aufruf gescheitert | erneut versuchen |
 
 **Nicht gelöschte Jobs:** Steht im Protokoll `anymizeJobsGeloescht: false`, enthält das Audit-Log unter `nichtGeloeschteJobs` die Job-IDs. Job-IDs enthalten keine Personendaten. So holen Sie die Löschung nach:
@@ -258,7 +246,7 @@ ANYMIZE_API_KEY=ANYM_... npx tsx scripts/helena-datei.ts --trocken --auftrag "Fa
 
 - anymize übersieht einen Namen, eine E-Mail, eine IBAN, eine Telefonnummer, eine Anschrift, ein Geburtsdatum oder eine Steuer-ID: Der Check stoppt, es gibt keinen KI-Aufruf.
 - Fehler bei Schlüssel, Server, Rate-Limit, Job, Zeitüberschreitung, Löschung, KI und OCR.
-- ZDR, verstümmelte Platzhalter, Sperre für Fremdanbieter-Modelle ohne Einwilligung.
+- ZDR, verstümmelte Platzhalter, Fremdanbieter-Modelle bekommen nur Platzhalter.
 - Restrisiko „unbekannter Name ohne Namensprüfung“ (dokumentiert).
 
 ## 6. Offen vor Produktivbetrieb

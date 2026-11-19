@@ -42,10 +42,6 @@ function modell(id: string): LanguageModel {
   });
   return schuetzeModell(p.chat(id), {
     anymize: () => new AnymizeClient({ apiKey: KEY, baseUrl: BASE }),
-    standort: modellEintrag(id)!.standort,
-    ersatzModell: () => createOpenAI({ apiKey: KEY, baseURL: `${BASE}/api/v1/llm`, compatibility: "compatible" }).chat("waterfall-2.0"),
-    einwilligungLaden: async () => "FREMDMODELLE",
-    einwilligungErforderlich: true,
     bekannteWerteLaden: async () => ["Sabine Krüger-Wendt", "Aylin Demirtaş", "Jürgen Pakulla"],
     log: { warn: (o) => console.log("  Guard-Funde:", JSON.stringify(o)) },
   });

@@ -270,20 +270,12 @@ describe("Fehlerfälle (Betrieb)", () => {
   });
 });
 
-describe("Berufsrecht: Anbieterfreigabe", () => {
-  it("Fremdanbieter-Modell wird blockiert, bevor irgendetwas gesendet wird", async () => {
+describe("Fremdanbieter-Modelle", () => {
+  it("bekommen nur Platzhalter", async () => {
     const { mock, anymize } = aufbau();
     const us = anymizeLlmVerarbeiter({ apiKey: "ANYM_test", baseUrl: BASIS, modell: "anthropic/claude-opus-5.5", fetchImpl: mock.fetchImpl });
     expect(us.standort).toBe("fremdanbieter");
-    const f = await fehlerVon(verarbeiteDateien({ dateien: [datei("akte.md")], auftrag: AUFTRAG, anymize, verarbeiter: us }));
-    expect(f.code).toBe("ANBIETER_NICHT_FREIGEGEBEN");
-    expect(mock.aufzeichnungen).toHaveLength(0);
-  });
-
-  it("Fremdanbieter nur mit ausdrücklicher Freigabe", async () => {
-    const { mock, anymize } = aufbau();
-    const us = anymizeLlmVerarbeiter({ apiKey: "ANYM_test", baseUrl: BASIS, modell: "anthropic/claude-opus-5.5", fetchImpl: mock.fetchImpl });
-    const r = await verarbeiteDateien({ dateien: [datei("akte.md")], auftrag: AUFTRAG, anymize, verarbeiter: us, erlaubteStandorte: ["lokal", "anymize-de", "fremdanbieter"] });
+    const r = await verarbeiteDateien({ dateien: [datei("akte.md")], auftrag: AUFTRAG, anymize, verarbeiter: us });
     expect(r.protokoll.guardOk).toBe(true);
     expect(findeLecks(mock.ausgehendOhneAnonymize, PII)).toEqual([]);
   });
@@ -340,7 +332,7 @@ describe("Denkmodelle und Streaming (live beobachtet 2026-11-19)", () => {
     const de = anymizeLlmVerarbeiter({ apiKey: "ANYM_test", baseUrl: BASIS, modell: "fountain-2.0", fetchImpl: mock.fetchImpl });
     await verarbeiteDateien({ dateien: [datei("akte.md")], auftrag: AUFTRAG, anymize, verarbeiter: de, aufgabe: "schriftsatz" });
     const fremd = anymizeLlmVerarbeiter({ apiKey: "ANYM_test", baseUrl: BASIS, modell: "anthropic/claude-opus-5.5", fetchImpl: mock.fetchImpl });
-    await verarbeiteDateien({ dateien: [datei("akte.md")], auftrag: AUFTRAG, anymize, verarbeiter: fremd, aufgabe: "schriftsatz", erlaubteStandorte: ["anymize-de", "fremdanbieter"] });
+    await verarbeiteDateien({ dateien: [datei("akte.md")], auftrag: AUFTRAG, anymize, verarbeiter: fremd, aufgabe: "schriftsatz" });
     const [a, b] = llmAufrufe(mock).map((x) => JSON.parse(x.body));
     expect(a).toMatchObject({ model: "fountain-2.0", stream: true, reasoning_effort: "medium" });
     expect(b.reasoning_effort).toBeUndefined();

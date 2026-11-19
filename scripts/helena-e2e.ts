@@ -98,16 +98,13 @@ async function main() {
 
   const akte = await prisma.akte.upsert({
     where: { aktenzeichen: "E2E-17/26" },
-    update: { kiEinwilligung: "FREMDMODELLE" },
+    update: {},
     create: {
       aktenzeichen: "E2E-17/26",
       kurzrubrum: "Krüger-Wendt ./. Rheinland Logistik Hoffmann GmbH",
       wegen: "Kündigungsschutz",
       sachgebiet: "ARBEITSRECHT",
       anwaltId: user.id,
-      kiEinwilligung: "FREMDMODELLE",
-      kiEinwilligungAm: new Date(),
-      kiEinwilligungErfasstVon: user.id,
     },
   });
   for (const [k, rolle] of [[mandantin, "MANDANT"], [gegner, "GEGNER"], [vorgesetzter, "SONSTIGER"]] as const) {
@@ -134,18 +131,16 @@ async function main() {
     });
     await insertMusterChunks(m.id, MUSTER_TEXT);
   }
-  console.log(`Seed: Akte ${akte.aktenzeichen}, Einwilligung FREMDMODELLE, 3 Beteiligte, 2 Dokumente, 1 Muster`);
+  console.log(`Seed: Akte ${akte.aktenzeichen}, 3 Beteiligte, 2 Dokumente, 1 Muster`);
 
   // --- Runs ------------------------------------------------------------------
-  const laeufe: Array<{ name: string; message: string; einwilligung: "FREMDMODELLE" | "DE_MODELLE" | "KEINE"; mode?: "inline" | "background" }> = [
-    { name: "Sachstand (Agent mit Werkzeugen)", message: "Wie ist der Sachstand in dieser Akte? Nenne auch das Ende der Klagefrist nach § 4 KSchG.", einwilligung: "FREMDMODELLE" },
-    { name: "Kündigungsschutzklage (Schriftsatz-Ablauf)", message: "Erstelle einen Entwurf der Kündigungsschutzklage für unsere Mandantin gegen die Arbeitgeberin. Nutze unser kanzleieigenes Muster.", einwilligung: "FREMDMODELLE", mode: "background" },
-    { name: "Sachstand mit Einwilligung nur DE-Modelle", message: "Fasse den Stand der Akte kurz zusammen.", einwilligung: "DE_MODELLE" },
-    { name: "Ohne Einwilligung", message: "Fasse den Stand der Akte kurz zusammen.", einwilligung: "KEINE" },
+  const laeufe: Array<{ name: string; message: string; mode?: "inline" | "background" }> = [
+    { name: "Sachstand (Agent mit Werkzeugen)", message: "Wie ist der Sachstand in dieser Akte? Nenne auch das Ende der Klagefrist nach § 4 KSchG." },
+    { name: "Kündigungsschutzklage (Schriftsatz-Ablauf)", message: "Erstelle einen Entwurf der Kündigungsschutzklage für unsere Mandantin gegen die Arbeitgeberin. Nutze unser kanzleieigenes Muster.", mode: "background" },
+    { name: "Kurzer Sachstand", message: "Fasse den Stand der Akte kurz zusammen." },
   ];
 
   for (const l of laeufe) {
-    await prisma.akte.update({ where: { id: akte.id }, data: { kiEinwilligung: l.einwilligung } });
     const entwuerfeVorher = await prisma.helenaDraft.count({ where: { akteId: akte.id } });
     const seit = ausgehend.length;
     const t0 = Date.now();
@@ -165,7 +160,7 @@ async function main() {
     const geloescht = neu.filter((a) => a.url.includes("/api/v1/jobs/")).length;
     const lecks = lecksIn(llm.map((a) => a.body));
     const modelle = [...new Set(llm.map((a) => { try { return JSON.parse(a.body).model; } catch { return "?"; } }))];
-    console.log(`\n=== ${l.name} (Einwilligung ${l.einwilligung}) — ${Math.round((Date.now() - t0) / 1000)} s`);
+    console.log(`\n=== ${l.name} — ${Math.round((Date.now() - t0) / 1000)} s`);
     console.log(`  ${detail}`);
     console.log(`  KI-Anfragen: ${llm.length} (Modelle: ${modelle.join(", ") || "–"}), anymize-Anonymisierungen: ${anonymize.length}, Job-Löschungen: ${geloescht}`);
     console.log(`  Lecks an die KI: ${lecks.length ? lecks.join(", ") : "keine"} | fremde Ziele: ${fremdeZiele.join(", ") || "keine"}`);

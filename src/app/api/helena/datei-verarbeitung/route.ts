@@ -2,7 +2,7 @@
  * POST /api/helena/datei-verarbeitung
  *
  * multipart/form-data: dateien (1..10 files), auftrag (string), aufgabe (see modelle.ts),
- * akteId (required while helena.datei.einwilligungErforderlich is on: consent is recorded per Akte)
+ * akteId (optional: known values of the Beteiligte for the egress guard)
  *
  * Runs the privacy-first Datei-Pipeline: local conversion, anymize
  * anonymisation, local egress guard, LLM on placeholders only, local
@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, requireAkteAccess } from "@/lib/rbac";
 import { logAuditEvent } from "@/lib/audit";
 import { verarbeiteDateien, MAX_DATEIEN } from "@/lib/helena/datei-pipeline/pipeline";
-import { pipelineAbhaengigkeiten, bekannteWerteDerAkte, einwilligungDerAkte } from "@/lib/helena/datei-pipeline/aus-einstellungen";
+import { pipelineAbhaengigkeiten, bekannteWerteDerAkte } from "@/lib/helena/datei-pipeline/aus-einstellungen";
 import { AUFGABEN, type Aufgabe } from "@/lib/helena/datei-pipeline/modelle";
 import { PipelineFehler, type EingangsDatei } from "@/lib/helena/datei-pipeline/types";
 import { MAX_DATEI_BYTES } from "@/lib/helena/datei-pipeline/konvertieren";
@@ -60,14 +60,13 @@ export async function POST(request: NextRequest) {
   );
 
   try {
-    const { auswahl, ...abh } = await pipelineAbhaengigkeiten({ aufgabe, einwilligung: await einwilligungDerAkte(akteId || null) });
+    const { auswahl, ...abh } = await pipelineAbhaengigkeiten({ aufgabe });
     const bekannteWerte = akteId ? await bekannteWerteDerAkte(akteId) : [];
     const r = await verarbeiteDateien({
       dateien,
       auftrag,
       aufgabe,
       bekannteWerte,
-      erlaubteStandorte: auswahl.erlaubteStandorte,
       zusatzHinweise: auswahl.hinweise,
       ...abh,
     });
@@ -76,7 +75,7 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       akteId: akteId || null,
       aktion: "HELENA_DATEI_VERARBEITET",
-      details: { ...auditDetails(r.protokoll), einwilligung: auswahl.einwilligung },
+      details: { ...auditDetails(r.protokoll), modell: auswahl.modell },
     });
     return NextResponse.json({ ergebnis: r.ergebnis, protokoll: oeffentlich(r.protokoll) });
   } catch (e) {
@@ -87,7 +86,7 @@ export async function POST(request: NextRequest) {
       aktion: "HELENA_DATEI_GESTOPPT",
       details: { schritt: f.schritt, code: f.code, ...(f.protokoll ? auditDetails(f.protokoll) : {}) },
     }).catch(() => {});
-    const status = f.code === "NICHT_EINGERICHTET" ? 503 : f.code === "EINWILLIGUNG_FEHLT" ? 403 : f.code === "PII_IM_AUSGANG" ? 422 : f.schritt === "einlesen" || f.schritt === "konvertieren" ? 400 : 502;
+    const status = f.code === "NICHT_EINGERICHTET" ? 503 : f.code === "PII_IM_AUSGANG" ? 422 : f.schritt === "einlesen" || f.schritt === "konvertieren" ? 400 : 502;
     return NextResponse.json(
       { error: f.message, code: f.code, schritt: f.schritt, protokoll: f.protokoll ? oeffentlich(f.protokoll) : undefined },
       { status },

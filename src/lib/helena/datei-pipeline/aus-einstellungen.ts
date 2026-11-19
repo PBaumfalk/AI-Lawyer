@@ -10,22 +10,21 @@ import { nerPruefer } from "./ner-pruefer";
 import { ocrPdf, convertImageToPdf } from "@/lib/ocr/stirling-client";
 import { AnymizeClient } from "./anymize-client";
 import { pdfText } from "./konvertieren";
-import { anymizeLlmVerarbeiter, aiSdkVerarbeiter, type Standort, type Verarbeiter } from "./verarbeiter";
-import { erlaubteStandorte, routingAusEinstellung, waehleModell, type Aufgabe, type Einwilligung } from "./modelle";
+import { anymizeLlmVerarbeiter, aiSdkVerarbeiter, type Verarbeiter } from "./verarbeiter";
+import { routingAusEinstellung, waehleModell, type Aufgabe } from "./modelle";
 import { PipelineFehler, type OcrProvider, type ZusatzPruefer } from "./types";
 import type { SicheresLog } from "./pipeline";
-import { einwilligungDerAkte, bekannteWerteDerAkte } from "./akte-daten";
+import { bekannteWerteDerAkte } from "./akte-daten";
 
-export { einwilligungDerAkte, bekannteWerteDerAkte };
+export { bekannteWerteDerAkte };
 
 export interface Auswahl {
   aufgabe: Aufgabe;
-  einwilligung: Einwilligung;
-  erlaubteStandorte: Standort[];
+  modell?: string;
   hinweise: string[];
 }
 
-export async function pipelineAbhaengigkeiten(o: { aufgabe: Aufgabe; einwilligung: Einwilligung }): Promise<{
+export async function pipelineAbhaengigkeiten(o: { aufgabe: Aufgabe }): Promise<{
   anymize: AnymizeClient;
   verarbeiter: Verarbeiter;
   ocr: OcrProvider;
@@ -40,19 +39,11 @@ export async function pipelineAbhaengigkeiten(o: { aufgabe: Aufgabe; einwilligun
   }
   const anymize = new AnymizeClient({ apiKey, baseUrl });
 
-  const pflicht = await getSettingTyped<boolean>("helena.datei.einwilligungErforderlich", false);
-  const erlaubt = erlaubteStandorte(o.einwilligung, pflicht);
-  if (erlaubt.length === 0) {
-    throw new PipelineFehler(
-      "einlesen",
-      "EINWILLIGUNG_FEHLT",
-      "Für diese Akte ist keine Einwilligung der Mandantschaft in die KI-Verarbeitung vermerkt (Kanzleieinstellung „Einwilligung auch für deutsche Modelle“)",
-    );
-  }
   const hinweise: string[] = [];
 
   const art = await getSettingTyped<string>("helena.datei.verarbeiter", "anymize");
   let verarbeiter: Verarbeiter;
+  let modell: string | undefined;
   if (art === "lokal") {
     const provider = await getSettingTyped<string>("ai.provider", "ollama");
     // "lokal" only means local if Helena's provider really is Ollama.
@@ -60,14 +51,12 @@ export async function pipelineAbhaengigkeiten(o: { aufgabe: Aufgabe; einwilligun
   } else {
     const { routing, verworfen } = routingAusEinstellung(await getSettingTyped<unknown>("helena.datei.modellRouting", null));
     if (verworfen.length) hinweise.push(`Ungültige Routing-Einträge ignoriert: ${verworfen.join(", ")}`);
-    const wahl = waehleModell(o.aufgabe, erlaubt, routing);
+    const wahl = waehleModell(o.aufgabe, routing);
     if (!wahl) {
       throw new PipelineFehler("verarbeiten", "ANBIETER_NICHT_FREIGEGEBEN", "Für diese Aufgabe ist kein freigegebenes Modell konfiguriert");
     }
-    if (wahl.ersatzGenutzt) {
-      hinweise.push(`Ersatzmodell ${wahl.modell.id} genutzt, weil die Einwilligung das bevorzugte Modell nicht abdeckt`);
-    }
-    verarbeiter = anymizeLlmVerarbeiter({ apiKey, baseUrl, modell: wahl.modell.id });
+    modell = wahl.id;
+    verarbeiter = anymizeLlmVerarbeiter({ apiKey, baseUrl, modell });
   }
 
   const ocr: OcrProvider = {
@@ -91,7 +80,7 @@ export async function pipelineAbhaengigkeiten(o: { aufgabe: Aufgabe; einwilligun
     ocr,
     zusatzPruefer,
     log,
-    auswahl: { aufgabe: o.aufgabe, einwilligung: o.einwilligung, erlaubteStandorte: erlaubt, hinweise },
+    auswahl: { aufgabe: o.aufgabe, modell, hinweise },
   };
 }
 

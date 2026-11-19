@@ -12,9 +12,6 @@
  *   after a call   placeholders in text and tool-call arguments -> original values,
  *                  locally (tools run on real data, users read real names);
  *                  JSON outputs get JSON-escaped values
- *   consent        per Akte (§ 43e Abs. 4 BRAO for non-EU models): a model the consent does not
- *                  cover is replaced by the German fallback model; no consent
- *                  at all blocks before anything is sent
  *
  * The Akte context travels via AsyncLocalStorage: wrap an entry point in
  * `mitKiKontext({ akteId }, fn)`; all model calls inside share one Schleuse,
@@ -31,8 +28,6 @@ import type {
 } from "@ai-sdk/provider";
 import { DatenschutzSchleuse } from "@/lib/helena/datei-pipeline/schleuse";
 import type { AnymizeClient } from "@/lib/helena/datei-pipeline/anymize-client";
-import { erlaubteStandorte, type Einwilligung } from "@/lib/helena/datei-pipeline/modelle";
-import type { Standort } from "@/lib/helena/datei-pipeline/verarbeiter";
 import { PipelineFehler, type ZusatzPruefer } from "@/lib/helena/datei-pipeline/types";
 import { PLATZHALTER_REGEX } from "@/lib/helena/datei-pipeline/pii-guard";
 
@@ -44,7 +39,6 @@ interface KiKontext {
   akteId?: string;
   schleuse?: DatenschutzSchleuse;
   bekannteWerte?: Promise<string[]>;
-  einwilligung?: Promise<Einwilligung>;
 }
 
 const kontextSpeicher = new AsyncLocalStorage<KiKontext>();
@@ -81,12 +75,6 @@ export function aktuellerKiKontext(): { akteId?: string } | undefined {
 
 export interface SchleusenKonfig {
   anymize: () => AnymizeClient;
-  /** Where the wrapped model runs. */
-  standort: Standort;
-  /** German fallback (anymize-de) used when consent does not cover `standort`. */
-  ersatzModell?: () => LanguageModelV1;
-  einwilligungLaden: (akteId: string) => Promise<Einwilligung>;
-  einwilligungErforderlich: boolean;
   bekannteWerteLaden?: (akteId: string) => Promise<string[]>;
   /** Terms that are never personal data (assistant name, legal vocabulary, own firm). */
   erlaubteBegriffe?: string[];
@@ -108,7 +96,6 @@ export const STANDARD_ERLAUBTE_BEGRIFFE = [
 
 interface Lauf {
   schleuse: DatenschutzSchleuse;
-  ersatz?: LanguageModelV1;
 }
 
 const NICHT_PSEUDONYMISIERBAR = () =>
@@ -125,31 +112,7 @@ export function schleusenMiddleware(k: SchleusenKonfig): LanguageModelV1Middlewa
     async transformParams({ params }) {
       const ctx = kontextSpeicher.getStore();
 
-      // 1. Consent, before anything leaves the process.
-      let erlaubt: Standort[];
-      if (ctx?.akteId) {
-        ctx.einwilligung ??= k.einwilligungLaden(ctx.akteId);
-        erlaubt = erlaubteStandorte(await ctx.einwilligung, k.einwilligungErforderlich);
-        if (erlaubt.length === 0) {
-          throw new PipelineFehler(
-            "einlesen",
-            "EINWILLIGUNG_FEHLT",
-            "Für diese Akte ist keine Einwilligung der Mandantschaft in die KI-Verarbeitung vermerkt (Kanzleieinstellung „Einwilligung auch für deutsche Modelle“)",
-          );
-        }
-      } else {
-        // No Akte context: content may still be mandate data. Only German models.
-        erlaubt = ["lokal", "anymize-de"];
-      }
-      let ersatz: LanguageModelV1 | undefined;
-      if (!erlaubt.includes(k.standort)) {
-        if (!k.ersatzModell || !erlaubt.includes("anymize-de")) {
-          throw new PipelineFehler("verarbeiten", "ANBIETER_NICHT_FREIGEGEBEN", "Das gewählte KI-Modell ist für diese Akte nicht freigegeben");
-        }
-        ersatz = k.ersatzModell();
-      }
-
-      // 2. One Schleuse per Akte context (shared mapping across agent steps).
+      // 1. One Schleuse per Akte context (shared mapping across agent steps).
       let schleuse: DatenschutzSchleuse;
       if (ctx) {
         if (!ctx.schleuse) {
@@ -171,10 +134,10 @@ export function schleusenMiddleware(k: SchleusenKonfig): LanguageModelV1Middlewa
       // Constants from code-defined tool/schema definitions are not personal data.
       schleuse.erlaubeBegriffe(JSON.stringify(params.mode).match(/\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b|\b[A-Z]{3,}\b/g) ?? []);
 
-      // 3. Pseudonymise. First everything new (anymize), then the model's own output (local).
+      // 2. Pseudonymise. First everything new (anymize), then the model's own output (local).
       const prompt = await pseudonymisierePrompt(params.prompt, schleuse);
 
-      // 4. Egress guard over the complete request (prompt + tool definitions).
+      // 3. Egress guard over the complete request (prompt + tool definitions).
       const nutzlast = JSON.stringify({ prompt, mode: params.mode });
       const funde = await schleuse.pruefe(nutzlast);
       if (funde.length > 0) {
@@ -183,7 +146,7 @@ export function schleusenMiddleware(k: SchleusenKonfig): LanguageModelV1Middlewa
       }
 
       const neu: LanguageModelV1CallOptions = { ...params, prompt };
-      laeufe.set(neu, { schleuse, ersatz });
+      laeufe.set(neu, { schleuse });
       return neu;
     },
 
@@ -193,11 +156,7 @@ export function schleusenMiddleware(k: SchleusenKonfig): LanguageModelV1Middlewa
       // Non-streaming requests are cut by anymize's gateway after ~100 s (HTTP 504,
       // observed live 2026-11-19); long Schriftsatz sections take longer. So even
       // generate calls are fetched as a stream and assembled here.
-      const r = k.immerStreamen
-        ? await alsGenerate(lauf.ersatz ? lauf.ersatz.doStream(params) : doStream())
-        : lauf.ersatz
-          ? await lauf.ersatz.doGenerate(params)
-          : await doGenerate();
+      const r = k.immerStreamen ? await alsGenerate(doStream()) : await doGenerate();
       const json = params.mode.type !== "regular";
       const text = r.text === undefined ? undefined : params.mode.type === "object-json" ? jsonBereinigen(r.text) : r.text;
       return {
@@ -211,7 +170,7 @@ export function schleusenMiddleware(k: SchleusenKonfig): LanguageModelV1Middlewa
     async wrapStream({ doStream, params }) {
       const lauf = laeufe.get(params);
       if (!lauf) throw new PipelineFehler("guard", "UNGEPRUEFT", "Interner Fehler: Anfrage wurde nicht durch die Datenschutz-Schleuse geleitet");
-      const r = lauf.ersatz ? await lauf.ersatz.doStream(params) : await doStream();
+      const r = await doStream();
       const json = params.mode.type !== "regular";
       return { ...r, stream: r.stream.pipeThrough(rueckfuehrungsStrom(lauf.schleuse, json)) };
     },

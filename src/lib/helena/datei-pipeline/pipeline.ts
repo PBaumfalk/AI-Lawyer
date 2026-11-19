@@ -22,7 +22,6 @@ import { lokaleRueckfuehrung } from "./rueckfuehrung";
 import {
   systemPromptFuer,
   baueNutzerPrompt,
-  type Standort,
   type Verarbeiter,
 } from "./verarbeiter";
 import {
@@ -53,7 +52,6 @@ export interface PipelineOptionen {
   bekannteWerte?: string[];
   erlaubteWerte?: string[];
   zusatzPruefer?: ZusatzPruefer;
-  erlaubteStandorte?: Standort[];
   /** Allow server-side reverse mapping when no hash pairs are available (ZDR off but pairs missing). */
   serverRueckfuehrung?: boolean;
   /** Zero the input buffers after conversion (default true). */
@@ -89,15 +87,7 @@ export async function verarbeiteDateien(o: PipelineOptionen): Promise<PipelineEr
   const uhr = (name: string, t0: number) => (protokoll.dauerMs[name] = Math.round(performance.now() - t0));
 
   try {
-    // -- 0/1 Policy and input checks before anything leaves the process -------
-    const erlaubt = o.erlaubteStandorte ?? ["lokal", "anymize-de"];
-    if (!erlaubt.includes(o.verarbeiter.standort)) {
-      throw new PipelineFehler(
-        "verarbeiten",
-        "ANBIETER_NICHT_FREIGEGEBEN",
-        `KI-Anbieter mit Standort "${o.verarbeiter.standort}" ist für Mandatsdaten nicht freigegeben`,
-      );
-    }
+    // -- 1 Input checks before anything leaves the process ---------------------
     if (o.dateien.length === 0) throw new PipelineFehler("einlesen", "KEINE_DATEI", "Keine Datei übergeben");
     if (o.dateien.length > MAX_DATEIEN) throw new PipelineFehler("einlesen", "ZU_VIELE_DATEIEN", `Höchstens ${MAX_DATEIEN} Dateien je Auftrag`);
     if (!o.auftrag.trim()) throw new PipelineFehler("einlesen", "KEIN_AUFTRAG", "Kein Auftrag angegeben");

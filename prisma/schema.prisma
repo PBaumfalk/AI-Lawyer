@@ -41,13 +41,6 @@ enum BeteiligterRolle {
   SONSTIGER
 }
 
-/// Mandant consent to AI processing via external service providers (foreign models: § 43e Abs. 4 BRAO).
-enum KiEinwilligung {
-  KEINE
-  DE_MODELLE   // anymize anonymisation + anymize models hosted in Germany
-  FREMDMODELLE // additionally foundation models via anymize (not bound under § 203 Abs. 4 StGB)
-}
-
 enum AkteStatus {
   OFFEN
   RUHEND
@@ -854,11 +847,6 @@ model Akte {
   geaendert        DateTime    @updatedAt
   archiviert       DateTime?
   jlawyerId        String?          @unique  // J-Lawyer case ID for idempotent migration
-
-  // Helena Datei-Pipeline: Mandant consent (foreign models: § 43e Abs. 4 BRAO), recorded by a user
-  kiEinwilligung          KiEinwilligung @default(KEINE)
-  kiEinwilligungAm        DateTime?
-  kiEinwilligungErfasstVon String?
 
   // Phase 30: Summary embedding for Neu-Urteil matching (SCAN-05)
   summaryEmbedding     Unsupported("vector(1024)")?

@@ -1,17 +1,9 @@
 /**
- * Akte data the Datenschutz-Schleuse needs: Mandant consent and the personal
- * values of all Beteiligte (known values for the egress guard).
+ * Akte data the Datenschutz-Schleuse needs: the personal values of all
+ * Beteiligte (known values for the egress guard).
  */
 
 import { prisma } from "@/lib/db";
-import type { Einwilligung } from "./modelle";
-
-/** Reads the consent of an Akte; no Akte means no consent. */
-export async function einwilligungDerAkte(akteId: string | null): Promise<Einwilligung> {
-  if (!akteId) return "KEINE";
-  const a = await prisma.akte.findUnique({ where: { id: akteId }, select: { kiEinwilligung: true } });
-  return (a?.kiEinwilligung as Einwilligung | undefined) ?? "KEINE";
-}
 
 function fmtDatum(d: Date): string {
   return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;

@@ -8,8 +8,8 @@
  *                      sub-processors bound under § 203 Abs. 4 StGB (anymize Anlage 2)
  *     "fremdanbieter"  foundation models routed by anymize to Anthropic, Mistral, ...;
  *                      NOT bound under § 203 Abs. 4 StGB (anymize Anlage 2 § 1)
- * - AUFGABEN map a task type to a preferred model plus a German fallback,
- *   used when the Mandant's consent does not cover the preferred model.
+ * - AUFGABEN map a task type to a model. Helena chooses freely within the
+ *   Positivliste; everything goes through the Datenschutz-Schleuse (anymize).
  *
  * Deliberately NOT listed (2026-11-19 model list): "auto" (routing not
  * controllable), zai/* (China), x-ai/*, perplexity/* (web search),
@@ -56,31 +56,20 @@ export const AUFGABEN_LABEL: Record<Aufgabe, string> = {
 
 export interface Route {
   modell: string;
-  /** German fallback when consent does not cover `modell`. */
-  ersatz: string;
 }
 
 export const STANDARD_ROUTING: Record<Aufgabe, Route> = {
-  extrahieren: { modell: "waterfall-2.0", ersatz: "waterfall-2.0" }, // Modellvergleich 2026-11-19: Note 5
-  zusammenfassen: { modell: "waterfall-2.0", ersatz: "waterfall-2.0" },
-  mandantenbrief: { modell: "waterfall-2.0", ersatz: "waterfall-2.0" },
-  schriftsatz: { modell: "anthropic/claude-opus-5.5", ersatz: "waterfall-2.0" },
-  wuerdigung: { modell: "anthropic/claude-opus-5.5", ersatz: "waterfall-2.0" },
-  allgemein: { modell: "waterfall-2.0", ersatz: "waterfall-2.0" },
+  extrahieren: { modell: "waterfall-2.0" }, // Modellvergleich 2026-11-19: Note 5
+  zusammenfassen: { modell: "waterfall-2.0" },
+  mandantenbrief: { modell: "waterfall-2.0" },
+  schriftsatz: { modell: "anthropic/claude-opus-5.5" },
+  wuerdigung: { modell: "anthropic/claude-opus-5.5" },
+  allgemein: { modell: "waterfall-2.0" },
 };
-
-/** Mirrors the Prisma enum KiEinwilligung. */
-export type Einwilligung = "KEINE" | "DE_MODELLE" | "FREMDMODELLE";
-
-export function erlaubteStandorte(e: Einwilligung, einwilligungErforderlich: boolean): Standort[] {
-  if (e === "FREMDMODELLE") return ["lokal", "anymize-de", "fremdanbieter"];
-  if (e === "DE_MODELLE" || !einwilligungErforderlich) return ["lokal", "anymize-de"];
-  return [];
-}
 
 /**
  * Merges an admin override (JSON setting) with the defaults. Entries naming
- * models outside the Positivliste, or a fallback that is not German, are ignored.
+ * models outside the Positivliste are ignored.
  */
 export function routingAusEinstellung(roh: unknown): { routing: Record<Aufgabe, Route>; verworfen: string[] } {
   const routing = { ...STANDARD_ROUTING };
@@ -93,29 +82,19 @@ export function routingAusEinstellung(roh: unknown): { routing: Record<Aufgabe, 
       }
       const r = wert as Partial<Route>;
       const m = typeof r?.modell === "string" ? modellEintrag(r.modell) : undefined;
-      const e = typeof r?.ersatz === "string" ? modellEintrag(r.ersatz) : modellEintrag(routing[aufgabe as Aufgabe].ersatz);
-      if (!m || !e || e.standort !== "anymize-de") {
+      if (!m) {
         verworfen.push(aufgabe);
         continue;
       }
-      routing[aufgabe as Aufgabe] = { modell: m.id, ersatz: e.id };
+      routing[aufgabe as Aufgabe] = { modell: m.id };
     }
   }
   return { routing, verworfen };
 }
 
-/** Picks the model for a task under the given consent. */
-export function waehleModell(
-  aufgabe: Aufgabe,
-  erlaubt: Standort[],
-  routing: Record<Aufgabe, Route> = STANDARD_ROUTING,
-): { modell: ModellEintrag; ersatzGenutzt: boolean } | null {
-  const r = routing[aufgabe];
-  const bevorzugt = modellEintrag(r.modell);
-  if (bevorzugt && erlaubt.includes(bevorzugt.standort)) return { modell: bevorzugt, ersatzGenutzt: false };
-  const ersatz = modellEintrag(r.ersatz);
-  if (ersatz && erlaubt.includes(ersatz.standort)) return { modell: ersatz, ersatzGenutzt: true };
-  return null;
+/** Picks the model for a task. */
+export function waehleModell(aufgabe: Aufgabe, routing: Record<Aufgabe, Route> = STANDARD_ROUTING): ModellEintrag | null {
+  return modellEintrag(routing[aufgabe].modell) ?? null;
 }
 
 /**

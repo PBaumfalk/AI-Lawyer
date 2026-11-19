@@ -85,9 +85,12 @@ async function main() {
     BERUFSBEZEICHNUNG: "Disponentin",
     KUENDIGUNGSART: "ordentlich",
   };
-  for (const [id, einwilligung] of [["helena-opus", "FREMDMODELLE"], ["helena-waterfall", "DE_MODELLE"]] as const) {
+  // The Schriftsatz pipeline takes its model from ai.helena.tier3_model; set it per variant, restore afterwards.
+  const { getSetting, updateSetting } = await import("../src/lib/settings/service");
+  const tier3Vorher = (await getSetting("ai.helena.tier3_model")) ?? "";
+  for (const [id, modell] of [["helena-opus", "anthropic/claude-opus-5.5"], ["helena-waterfall", "waterfall-2.0"]] as const) {
     await lauf(id, async () => {
-      await prisma.akte.update({ where: { id: akte.id }, data: { kiEinwilligung: einwilligung } });
+      await updateSetting("ai.helena.tier3_model", modell);
       const vorher = new Date();
       const r = await runSchriftsatzPipeline({
         prisma, userId: user.id, userRole: "ANWALT", userName: user.name, akteId: akte.id, message: AUFTRAG,
@@ -100,6 +103,8 @@ async function main() {
     });
   }
 
+  await updateSetting("ai.helena.tier3_model", tier3Vorher);
+
   // --- Single-call variants (the pipeline from the first comparison) ---
   const anymize = new AnymizeClient({ apiKey: KEY });
   for (const [id, modell] of [["einzel-opus", "anthropic/claude-opus-5.5"], ["einzel-waterfall", "waterfall-2.0"]] as const) {
@@ -110,7 +115,6 @@ async function main() {
         aufgabe: "schriftsatz",
         anymize,
         verarbeiter: anymizeLlmVerarbeiter({ apiKey: KEY, modell }),
-        erlaubteStandorte: ["anymize-de", "fremdanbieter"], // fictitious test data only
       });
       return r.ergebnis;
     });

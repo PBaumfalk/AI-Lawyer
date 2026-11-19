@@ -26,7 +26,7 @@ import { createLogger } from "@/lib/logger";
 import { schuetzeModell } from "./datenschutz-schleuse";
 import { AnymizeClient } from "@/lib/helena/datei-pipeline/anymize-client";
 import { modellEintrag, DENKAUFWAND } from "@/lib/helena/datei-pipeline/modelle";
-import { einwilligungDerAkte, bekannteWerteDerAkte } from "@/lib/helena/datei-pipeline/akte-daten";
+import { bekannteWerteDerAkte } from "@/lib/helena/datei-pipeline/akte-daten";
 import { nerPruefer } from "@/lib/helena/datei-pipeline/ner-pruefer";
 
 // ---------------------------------------------------------------------------
@@ -102,29 +102,20 @@ export async function schleusenModell(provider: string, modellName: string): Pro
   }
   const providerKey = await getSettingTyped<string>("ai.provider.apiKey", "");
   let basis: LanguageModel;
-  let standort: "anymize-de" | "fremdanbieter";
   if (provider === "anymize") {
     basis = anymizeChatModell(anymizeKey, anymizeUrl, modellName);
-    standort = modellEintrag(modellName)!.standort;
   } else if (provider === "openai") {
     basis = createOpenAI({ apiKey: providerKey })(modellName);
-    standort = "fremdanbieter";
   } else if (provider === "anthropic") {
     basis = createAnthropic({ apiKey: providerKey })(modellName);
-    standort = "fremdanbieter";
   } else {
     throw new Error(`Unbekannter KI-Anbieter: ${provider}`);
   }
   const nerAn = await getSettingTyped<boolean>("helena.datei.nerPruefung", true);
-  const pflicht = await getSettingTyped<boolean>("helena.datei.einwilligungErforderlich", false);
   const kanzlei = await prisma.kanzlei.findFirst({ select: { name: true } }).catch(() => null);
   const zusatzBegriffe = await getSettingTyped<unknown>("ai.schleuse.erlaubteBegriffe", []);
   return schuetzeModell(basis, {
     anymize: () => new AnymizeClient({ apiKey: anymizeKey, baseUrl: anymizeUrl }),
-    standort,
-    ersatzModell: () => anymizeChatModell(anymizeKey, anymizeUrl, "waterfall-2.0"),
-    einwilligungLaden: (akteId) => einwilligungDerAkte(akteId),
-    einwilligungErforderlich: pflicht,
     bekannteWerteLaden: (akteId) => bekannteWerteDerAkte(akteId),
     // Own firm name and admin-configured terms are not client data.
     erlaubteBegriffe: [

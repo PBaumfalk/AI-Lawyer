@@ -8,7 +8,6 @@ import { z } from "zod";
 import { mitKiKontext, schuetzeModell, type SchleusenKonfig } from "../datenschutz-schleuse";
 import { AnymizeClient } from "@/lib/helena/datei-pipeline/anymize-client";
 import { PipelineFehler, type ZusatzPruefer } from "@/lib/helena/datei-pipeline/types";
-import type { Einwilligung } from "@/lib/helena/datei-pipeline/modelle";
 import { erstelleAnymizeMock, BASIS } from "@/lib/helena/datei-pipeline/__tests__/anymize-mock";
 
 const DIR = path.join(process.cwd(), "tests/fixtures/helena-dateien");
@@ -21,26 +20,15 @@ function gesehenOhnePii(prompts: LanguageModelV1CallOptions["prompt"][]) {
   for (const w of PII) expect(alles, `"${w}" ging an das Modell`).not.toContain(w);
 }
 
-function aufbau(o: { erkennt?: string[]; einwilligung?: Einwilligung; standort?: SchleusenKonfig["standort"]; bekannte?: string[]; zusatz?: ZusatzPruefer } = {}) {
+function aufbau(o: { erkennt?: string[]; bekannte?: string[]; zusatz?: ZusatzPruefer } = {}) {
   const mock = erstelleAnymizeMock({ erkennt: o.erkennt ?? PII, pollsBisFertig: 1 });
   const anymize = new AnymizeClient({ apiKey: "ANYM_test", baseUrl: BASIS, fetchImpl: mock.fetchImpl, schlafen: async () => {} });
-  const ersatzAufrufe: LanguageModelV1CallOptions["prompt"][] = [];
-  const ersatz = new MockLanguageModelV1({
-    doGenerate: async (opt) => {
-      ersatzAufrufe.push(opt.prompt);
-      return { rawCall: { rawPrompt: null, rawSettings: {} }, finishReason: "stop", usage: USAGE, text: "Antwort vom Ersatzmodell" };
-    },
-  });
   const konfig: SchleusenKonfig = {
     anymize: () => anymize,
-    standort: o.standort ?? "anymize-de",
-    ersatzModell: () => ersatz,
-    einwilligungLaden: async () => o.einwilligung ?? "FREMDMODELLE",
-    einwilligungErforderlich: true,
     bekannteWerteLaden: async () => o.bekannte ?? [],
     zusatzPruefer: o.zusatz,
   };
-  return { mock, anymize, konfig, ersatzAufrufe };
+  return { mock, anymize, konfig };
 }
 
 const platzhalterIn = (prompt: LanguageModelV1CallOptions["prompt"]) => (JSON.stringify(prompt).match(/\[\[person-[0-9A-F]{6}\]\]/g) ?? []);
@@ -126,27 +114,19 @@ describe("Datenschutz-Schleuse als Middleware", () => {
     expect(r.object.klaeger).toMatch(/Krüger-Wendt/);
   });
 
-  it("keine Einwilligung: Abbruch, bevor irgendetwas gesendet wird", async () => {
-    const { mock, konfig } = aufbau({ einwilligung: "KEINE" });
-    const modell = new MockLanguageModelV1({ doGenerate: async () => { throw new Error("darf nicht aufgerufen werden"); } });
-    await expect(mitKiKontext({ akteId: "a" }, () => generateText({ model: schuetzeModell(modell, konfig), prompt: AKTE }))).rejects.toThrow(/Einwilligung/);
-    expect(mock.aufzeichnungen).toHaveLength(0);
-  });
-
-  it("Einwilligung nur für deutsche Modelle: Fremdmodell wird durch Ersatz ersetzt", async () => {
-    const { konfig, ersatzAufrufe } = aufbau({ einwilligung: "DE_MODELLE", standort: "fremdanbieter" });
-    const modell = new MockLanguageModelV1({ doGenerate: async () => { throw new Error("Fremdmodell darf nicht aufgerufen werden"); } });
-    const r = await mitKiKontext({ akteId: "a" }, () => generateText({ model: schuetzeModell(modell, konfig), prompt: AKTE }));
-    expect(r.text).toBe("Antwort vom Ersatzmodell");
-    expect(ersatzAufrufe).toHaveLength(1);
-    gesehenOhnePii(ersatzAufrufe);
-  });
-
-  it("ohne Aktenbezug: nur deutsche Modelle", async () => {
-    const { konfig, ersatzAufrufe } = aufbau({ standort: "fremdanbieter" });
-    const modell = new MockLanguageModelV1({ doGenerate: async () => { throw new Error("nein"); } });
-    await generateText({ model: schuetzeModell(modell, konfig), prompt: AKTE });
-    expect(ersatzAufrufe).toHaveLength(1);
+  it("ohne Aktenbezug: Fremdmodell wird genutzt, aber nur mit Platzhaltern", async () => {
+    const { konfig } = aufbau();
+    const gesehen: LanguageModelV1CallOptions["prompt"][] = [];
+    const modell = new MockLanguageModelV1({
+      doGenerate: async (opt) => {
+        gesehen.push(opt.prompt);
+        return { rawCall: { rawPrompt: null, rawSettings: {} }, finishReason: "stop", usage: USAGE, text: "ok" };
+      },
+    });
+    const r = await generateText({ model: schuetzeModell(modell, konfig), prompt: AKTE });
+    expect(r.text).toBe("ok");
+    expect(gesehen).toHaveLength(1);
+    gesehenOhnePii(gesehen);
   });
 
   it("Bilder werden gesperrt", async () => {

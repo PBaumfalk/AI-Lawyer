@@ -131,7 +131,6 @@ async function main() {
           aufgabe: t.aufgabe,
           anymize,
           verarbeiter: anymizeLlmVerarbeiter({ apiKey: key, modell }),
-          erlaubteStandorte: ["anymize-de", "fremdanbieter"], // fictitious test data only
         });
         laeufe.push({ modell, aufgabe: t.aufgabe, ok: true, text: r.ergebnis, protokoll: r.protokoll, dauerMs: Date.now() - start });
         process.stderr.write("ok\n");

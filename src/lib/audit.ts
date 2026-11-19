@@ -60,6 +60,8 @@ export type AuditAktion =
   | "BEA_ANHANG_HERUNTERGELADEN"
   | "BEA_SAFEID_GEAENDERT"
   | "BEA_POSTFACH_GEWECHSELT" // BEA_POSTFACH_GEWECHSELT: reserved for future multi-postbox UI
+  | "BEA_ZERTIFIKAT_HINTERLEGT"
+  | "BEA_ZERTIFIKAT_ENTFERNT"
   | "NORM_VERKNUEPFT"
   | "NORM_ENTFERNT"
   | "PORTAL_EINLADUNG"
@@ -142,6 +144,8 @@ export const AKTION_LABELS: Record<string, string> = {
   BEA_ANHANG_HERUNTERGELADEN: "beA Anhang heruntergeladen",
   BEA_SAFEID_GEAENDERT: "Safe-ID geaendert",
   BEA_POSTFACH_GEWECHSELT: "beA Postfach gewechselt",
+  BEA_ZERTIFIKAT_HINTERLEGT: "hat ein beA-Zertifikat hinterlegt",
+  BEA_ZERTIFIKAT_ENTFERNT: "hat ein beA-Zertifikat entfernt",
   NORM_VERKNUEPFT: "hat Norm verknuepft",
   NORM_ENTFERNT: "hat Norm entfernt",
   PORTAL_EINLADUNG: "hat Portal-Einladung versendet",
@@ -174,6 +178,8 @@ export const SECURITY_ACTIONS: Set<string> = new Set([
   "BENUTZER_PASSWORT_ZURUECKGESETZT",
   "BENUTZER_ENTSPERRT",
   "PASSWORT_GEAENDERT",
+  "BEA_ZERTIFIKAT_HINTERLEGT",
+  "BEA_ZERTIFIKAT_ENTFERNT",
 ]);
 
 // German labels for field names used in change diffs

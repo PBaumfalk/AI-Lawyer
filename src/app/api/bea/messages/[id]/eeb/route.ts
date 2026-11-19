@@ -59,6 +59,7 @@ export async function POST(
     nachricht.richtung !== "EINGANG" ||
     !nachricht.eebAngefordert ||
     nachricht.eebStatus === "BESTAETIGT" ||
+    nachricht.eebStatus === "NICHT_ERFORDERLICH" ||
     !nachricht.xjustizNachrichtenId ||
     !nachricht.postfachSafeId ||
     !nachricht.safeIdAbsender
@@ -93,7 +94,14 @@ export async function POST(
   // requests only one gets count 1 and may submit.
   const vorher = nachricht.eebStatus;
   const claim = await prisma.beaNachricht.updateMany({
-    where: { id, eebStatus: { notIn: ["BESTAETIGT", ABGABE_LAEUFT] } },
+    // Preconditions repeated so the read/claim race is closed. `notIn` never
+    // matches NULL in SQL, so legacy rows without status need an explicit branch.
+    where: {
+      id,
+      richtung: "EINGANG",
+      eebAngefordert: true,
+      OR: [{ eebStatus: null }, { eebStatus: { notIn: ["BESTAETIGT", ABGABE_LAEUFT, "NICHT_ERFORDERLICH"] } }],
+    },
     data: { eebStatus: ABGABE_LAEUFT },
   });
   if (claim.count === 0) {

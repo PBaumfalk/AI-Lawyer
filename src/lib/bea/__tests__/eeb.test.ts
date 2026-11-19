@@ -9,10 +9,18 @@ const { nachrichten, akten, store, zert, prismaFake, auditLog } = vi.hoisted(() 
   const prismaFake = {
     beaNachricht: {
       findUnique: vi.fn(async ({ where }: { where: { id: string } }) => nachrichten.find((n) => n.id === where.id) ?? null),
-      updateMany: vi.fn(async ({ where, data }: { where: { id: string; eebStatus: { notIn: string[] } | string }; data: Record<string, unknown> }) => {
+      updateMany: vi.fn(async ({ where, data }: { where: Record<string, any>; data: Record<string, unknown> }) => {
+        // Mimics SQL three-valued logic: NULL never matches `notIn`.
+        const cond = (n: Zeile, c: Record<string, any>): boolean =>
+          Object.entries(c).every(([k, v]) => {
+            if (k === "OR") return (v as Record<string, any>[]).some((x) => cond(n, x));
+            const val = n[k];
+            if (v === null) return val === null || val === undefined;
+            if (v && typeof v === "object" && "notIn" in v) return val != null && !v.notIn.includes(val);
+            return val === v;
+          });
         const n = nachrichten.find((x) => x.id === where.id);
-        const s = n?.eebStatus as string;
-        const ok = !!n && (typeof where.eebStatus === "string" ? s === where.eebStatus : !where.eebStatus.notIn.includes(s));
+        const ok = !!n && cond(n, where);
         if (ok) Object.assign(n!, data);
         return { count: ok ? 1 : 0 };
       }),
@@ -164,6 +172,21 @@ describe("POST /api/bea/messages/[id]/eeb – serverseitige Abgabe", () => {
     frei();
     expect((await erste).status).toBe(200);
     expect(abgabe).toHaveBeenCalledTimes(1);
+  });
+
+  it("eEB-angeforderte Nachricht mit eebStatus null → Claim gelingt, eEB wird abgegeben", async () => {
+    nachricht({ eebStatus: null });
+    const abgabe = vi.spyOn(provider, "gibEebAb");
+    expect((await post({ abgabeDatum: heuteBerlin() })).status).toBe(200);
+    expect(abgabe).toHaveBeenCalledTimes(1);
+    expect(nachrichten[0].eebStatus).toBe("BESTAETIGT");
+  });
+
+  it("NICHT_ERFORDERLICH → 422, Provider nicht aufgerufen", async () => {
+    nachricht({ eebStatus: "NICHT_ERFORDERLICH" });
+    const abgabe = vi.spyOn(provider, "gibEebAb");
+    expect((await post({ abgabeDatum: heuteBerlin() })).status).toBe(422);
+    expect(abgabe).not.toHaveBeenCalled();
   });
 
   it("Provider-Fehler setzt den vorherigen Status zurück", async () => {

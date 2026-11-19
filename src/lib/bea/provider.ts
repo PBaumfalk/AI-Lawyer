@@ -1,3 +1,6 @@
+import { BeaExpertProvider } from "./expert/provider";
+import { MockProvider } from "./mock-provider";
+
 /** Active beA session at bea.expert. Never log or serialize (token and sessionKey are secrets). */
 export interface BeaSitzung {
   token: string;
@@ -29,3 +32,40 @@ export interface BeaEebAuftrag {
   fremdId: string; abgabeDatum: string /* YYYY-MM-DD */;
 }
 export interface BeaVersandErgebnis { messageId: string | null }
+
+export interface BeaProvider {
+  anmelden(p12: Buffer, pin: string): Promise<BeaSitzung>;
+  pruefeSitzung(s: BeaSitzung): Promise<boolean>;
+  abmelden(s: BeaSitzung): Promise<void>;
+  listePostfaecher(s: BeaSitzung): Promise<BeaPostfachInfo[]>;
+  listeOrdner(s: BeaSitzung, postfachSafeId: string): Promise<BeaOrdnerInfo[]>;
+  listeNachrichten(s: BeaSitzung, ordnerId: string): Promise<BeaNachrichtKopf[]>;
+  holeNachricht(s: BeaSitzung, messageId: string): Promise<BeaNachrichtVoll>;
+  sende(s: BeaSitzung, a: BeaVersandAuftrag): Promise<BeaVersandErgebnis>;
+  speichereEntwurf(s: BeaSitzung, a: BeaVersandAuftrag): Promise<{ messageId: string | null }>;
+  gibEebAb(s: BeaSitzung, a: BeaEebAuftrag): Promise<BeaVersandErgebnis>;
+  sucheIdentitaet(
+    s: BeaSitzung,
+    q: { name?: string; plz?: string; ort?: string },
+  ): Promise<{ safeId: string; name: string; ort: string | null }[]>;
+}
+
+// Module-level singleton so mock state survives across requests in development.
+let mockInstanz: MockProvider | null = null;
+
+/**
+ * Selects the beA provider. null = beA disabled (production without bea.expert ident).
+ * Default: expert if BEA_EXPERT_IDENT is set, else mock outside production.
+ * BEA_PROVIDER overrides explicitly; mock is never available in production.
+ */
+export function getBeaProvider(): BeaProvider | null {
+  const ident = process.env.BEA_EXPERT_IDENT?.trim();
+  const produktion = process.env.NODE_ENV === "production";
+  const wahl = process.env.BEA_PROVIDER?.trim().toLowerCase();
+
+  const art = wahl === "expert" || wahl === "mock" ? wahl : ident ? "expert" : "mock";
+
+  if (art === "expert") return ident ? new BeaExpertProvider() : null;
+  if (produktion) return null;
+  return (mockInstanz ??= new MockProvider());
+}

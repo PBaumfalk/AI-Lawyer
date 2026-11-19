@@ -3,8 +3,7 @@
 // Prüft die Anmeldeseite und die Hauptseiten nach Anmeldung als Admin, in
 // beiden Projekten (desktop, mobil). Verstöße mit Impact "serious" oder
 // "critical" lassen den Test fehlschlagen; "moderate" und "minor" werden nur
-// protokolliert. beA-Komponenten ([data-bea]) sind ausgenommen, sie gehören
-// zur laufenden beA-Arbeit.
+// protokolliert.
 //
 // Eine automatische Prüfung findet nur einen Teil der Probleme. Bedienung
 // mit Screenreader und Tastatur bleibt Handarbeit (docs/design/README.md).
@@ -32,6 +31,8 @@ const SEITEN = [
   "/finanzen",
   "/bi",
   "/nachrichten",
+  "/bea",
+  "/bea/compose",
   "/einstellungen",
   "/suche",
   "/admin/benutzer",
@@ -58,7 +59,7 @@ async function ruhig(page: Page) {
 
 async function pruefen(page: Page, name: string): Promise<string[]> {
   await ruhig(page);
-  const { violations } = await new AxeBuilder({ page }).withTags(WCAG).exclude("[data-bea]").analyze();
+  const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
   const blockierend = violations.filter((v) => BLOCKIEREND.has(v.impact ?? ""));
   const hinweise = violations.filter((v) => !BLOCKIEREND.has(v.impact ?? ""));
   for (const v of hinweise) console.log(`[axe] ${name}: Hinweis ${zeile(v)}`);

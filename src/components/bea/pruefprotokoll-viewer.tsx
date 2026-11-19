@@ -24,12 +24,12 @@ interface PruefprotokollViewerProps {
 function ResultIcon({ result }: { result: string }) {
   const lower = result.toLowerCase();
   if (lower.includes("gueltig") || lower.includes("ok") || lower.includes("bestanden") || lower === "true") {
-    return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+    return <CheckCircle2 className="h-4 w-4 text-success" />;
   }
   if (lower.includes("ungueltig") || lower.includes("fehler") || lower.includes("failed") || lower === "false") {
-    return <XCircle className="h-4 w-4 text-rose-500" />;
+    return <XCircle className="h-4 w-4 text-danger" />;
   }
-  return <HelpCircle className="h-4 w-4 text-amber-500" />;
+  return <HelpCircle className="h-4 w-4 text-warning" />;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -44,10 +44,10 @@ export function PruefprotokollViewer({ data }: PruefprotokollViewerProps) {
 
   const overallColorClass =
     overallResult === "GUELTIG"
-      ? "text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30"
+      ? "text-success border-success bg-success-soft"
       : overallResult === "UNGUELTIG"
-      ? "text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/30"
-      : "text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30";
+      ? "text-danger border-danger bg-danger-soft"
+      : "text-warning border-warning bg-warning-soft";
 
   return (
     <div className={`rounded-xl border p-4 ${overallColorClass}`}>

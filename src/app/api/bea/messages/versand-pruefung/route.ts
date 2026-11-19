@@ -1,41 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import type { UserRole } from "@prisma/client";
-import { requirePermission } from "@/lib/rbac";
-import { resolveEmailAnhaenge } from "@/lib/email/anhaenge";
-import type { BeaVersandPruefungRequest, BeaVersandPruefungResponse } from "@/lib/bea/versand";
-
-const schema: z.ZodType<BeaVersandPruefungRequest> = z.object({
-  dokumentIds: z.array(z.string().min(1)).max(100),
-});
+import { requirePermission, akteAccessDenied } from "@/lib/rbac";
+import { beaVersandPruefungSchema, type BeaVersandPruefungResponse } from "@/lib/bea/versand";
+import { pruefeVersand } from "@/lib/bea/regeln";
+import { loeseVersandDokumenteAuf } from "@/lib/bea/versand-dokumente";
 
 /**
  * POST /api/bea/messages/versand-pruefung — pre-flight before a beA send.
- * Checks Akte access and the Versand-Gate (FREIGEGEBEN) for the documents
- * BEFORE bea.expert transmits anything, so a send is never performed that
- * could not be recorded afterwards.
+ * Checks Akte access, the Versand-Gate (FREIGEGEBEN) and the beA rules
+ * (limits, character set). Never contacts beA.
+ * 400: a document is not approved (errors); 404: document not accessible;
+ * 200: { ok, fehler, warnungen, verstoesse } — ok only without fehler and verstoesse.
  */
 export async function POST(request: NextRequest) {
   const result = await requirePermission("canSendBeA");
   if (result.error) return result.error;
 
-  const parsed = schema.safeParse(await request.json().catch(() => null));
+  const parsed = beaVersandPruefungSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Validierungsfehler", details: parsed.error.flatten() }, { status: 400 });
   }
+  const data = parsed.data;
 
-  const user = { id: result.session!.user.id, role: result.session!.user.role as UserRole };
-  const check = await resolveEmailAnhaenge(
-    user,
-    parsed.data.dokumentIds.map((dokumentId) => ({ quelle: "dms" as const, dokumentId }))
-  );
-  const response: BeaVersandPruefungResponse = check.ok
-    ? { ok: true, errors: [] }
-    : {
-        ok: false,
-        errors: Array.isArray(check.details)
-          ? (check.details as BeaVersandPruefungResponse["errors"])
-          : [{ dokumentId: "", name: "", status: String(check.status), reason: check.error }],
-      };
-  return NextResponse.json(response, { status: check.ok ? 200 : 400 });
+  if (data.akteId) {
+    const denied = await akteAccessDenied(result.session, data.akteId);
+    if (denied) return denied;
+  }
+
+  const user = { id: result.session.user.id, role: result.session.user.role as UserRole };
+  const doks = await loeseVersandDokumenteAuf(user, data.anhaenge);
+  if (!doks.ok) {
+    const response: BeaVersandPruefungResponse = {
+      ok: false, fehler: [doks.error], warnungen: [], verstoesse: [], errors: doks.errors,
+    };
+    return NextResponse.json(response, { status: doks.status });
+  }
+
+  // Sizes from the DMS metadata: the pre-flight does not load file contents.
+  const pruefung = pruefeVersand({
+    ...data,
+    anhaenge: doks.dokumente.map((d) => ({ name: d.name, groesse: d.groesse })),
+  });
+  const response: BeaVersandPruefungResponse = {
+    ok: pruefung.fehler.length === 0 && pruefung.verstoesse.length === 0,
+    ...pruefung,
+    errors: [],
+  };
+  return NextResponse.json(response);
 }

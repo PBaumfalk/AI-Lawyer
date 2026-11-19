@@ -11,6 +11,7 @@ import crypto from "node:crypto";
 import { createLogger } from "@/lib/logger";
 import { bexAufruf, BeaExpertError } from "./transport";
 import { aesGcmEntschluesseln, aesGcmVerschluesseln } from "./krypto";
+import { heuteBerlin } from "../regeln";
 import type {
   BeaSitzung,
   BeaVersandAuftrag,
@@ -37,22 +38,11 @@ function istEeb(a: BeaVersandAuftrag | BeaEebAuftrag): a is BeaEebAuftrag {
   return "fremdId" in a;
 }
 
-/** Today's date (YYYY-MM-DD) in Europe/Berlin. */
-function heuteBerlinLokal(): string {
-  // en-CA formats as YYYY-MM-DD
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Berlin",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-}
-
 /**
  * eeb_date for bea.expert. Assumption: "" means "use server time" and is sent
  * when the eEB is given today (Europe/Berlin); otherwise the date as YYYY-MM-DD.
  */
-export function formatEebDatum(abgabeDatum: string, heute: string = heuteBerlinLokal()): string {
+export function formatEebDatum(abgabeDatum: string, heute: string = heuteBerlin()): string {
   return abgabeDatum === heute ? "" : abgabeDatum;
 }
 

@@ -143,11 +143,22 @@ export function BeaCompose() {
         const pruefung = await fetch("/api/bea/messages/versand-pruefung", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ dokumentIds } satisfies BeaVersandPruefungRequest),
+          body: JSON.stringify({
+            betreff: subject,
+            text: body,
+            empfaengerSafeIds: [recipientSafeId],
+            anhaenge: dokumentIds.map((dokumentId) => ({ dokumentId, art: "ATTACHMENT" as const })),
+          } satisfies BeaVersandPruefungRequest),
         });
-        const pr: BeaVersandPruefungResponse = await pruefung.json().catch(() => ({ ok: false, errors: [] }));
+        const pr: BeaVersandPruefungResponse = await pruefung
+          .json()
+          .catch(() => ({ ok: false, fehler: [], warnungen: [], verstoesse: [], errors: [] }));
         if (!pruefung.ok || !pr.ok) {
-          const gruende = pr.errors.map((e) => `${e.name || e.dokumentId}: ${e.reason}`).join("; ");
+          const gruende = [
+            ...pr.errors.map((e) => `${e.name || e.dokumentId}: ${e.reason}`),
+            ...pr.fehler,
+            ...pr.verstoesse.map((v) => `Unzulässiges Zeichen ${v.zeichen} (${v.codePoint})`),
+          ].join("; ");
           throw new Error(`Versand nicht moeglich. ${gruende || "Dokumente nicht freigegeben."}`);
         }
       }

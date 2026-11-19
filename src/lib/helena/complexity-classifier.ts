@@ -236,8 +236,7 @@ export async function getModelForTier(
   }
 
   // anymize: tiers follow the blind model comparison of 2026-11-19 unless configured.
-  // Routine work on waterfall-2.0 (Germany), filings and assessments on Claude Opus 5.5;
-  // without consent for foundation models the Datenschutz-Schleuse falls back to waterfall.
+  // Routine work on waterfall-2.0 (Germany), filings and assessments on Claude Opus 5.5.
   if (!modelName && provider === "anymize") {
     modelName = tier === 3 ? "anthropic/claude-opus-5.5" : "waterfall-2.0";
   }

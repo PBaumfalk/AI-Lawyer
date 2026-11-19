@@ -126,3 +126,58 @@ Extrahiere die Werte aus der Antwort und mappe sie auf die erwarteten Slot-Keys.
 
   return object.extractedValues;
 }
+
+// ---------------------------------------------------------------------------
+// Slot Values from the initial request
+// ---------------------------------------------------------------------------
+
+/** Slot as the extractor needs it (subset of SlotDefinition). */
+export interface AuftragsSlot {
+  key: string;
+  label: string;
+  type: string;
+}
+
+/**
+ * Extract slot values the user already stated in the request that started the
+ * pipeline ("Kündigung vom 03.11.2026, zugegangen am selben Tag, 3.850 EUR brutto").
+ * Without this step every such value was asked again as a Rückfrage.
+ *
+ * Only explicitly stated values are kept: no guesses, no placeholders. Unknown
+ * keys are dropped. Errors return {} so the pipeline falls back to Rückfragen.
+ */
+export async function extractSlotValuesFromAuftrag(
+  auftrag: string,
+  slots: AuftragsSlot[],
+): Promise<Record<string, string>> {
+  if (!auftrag.trim() || slots.length === 0) return {};
+  const erlaubt = new Set(slots.map((s) => s.key));
+  try {
+    const model = await getModel();
+    const { object } = await generateObject({
+      model,
+      schema: SlotExtractionSchema,
+      prompt: `Du bist ein Slot-Extractor für einen juristischen Schriftsatz-Workflow.
+
+Auftrag der Anwältin bzw. des Anwalts: "${auftrag}"
+
+Mögliche Slots (Key: Bedeutung, Typ):
+${slots.map((s) => `- ${s.key}: ${s.label} (${s.type})`).join("\n")}
+
+Übernimm nur Angaben, die im Auftrag ausdrücklich stehen. Rate nichts und leite nichts ab, was nicht dasteht.
+- Datumsangaben im Format TT.MM.JJJJ; "am selben Tag" o. Ä. nur, wenn das Bezugsdatum im Auftrag steht
+- Geldbeträge als Zahl ohne Währung (z.B. "3.850 EUR brutto" -> "3850")
+- Nicht genannte Slots weglassen, keine Platzhalter
+- Nur Keys aus der Liste verwenden`,
+    });
+    const werte: Record<string, string> = {};
+    for (const [key, roh] of Object.entries(object.extractedValues ?? {})) {
+      const wert = typeof roh === "string" ? roh.trim() : "";
+      if (!erlaubt.has(key) || !wert || wert.startsWith("{{")) continue;
+      werte[key] = wert;
+    }
+    return werte;
+  } catch {
+    return {};
+  }
+}

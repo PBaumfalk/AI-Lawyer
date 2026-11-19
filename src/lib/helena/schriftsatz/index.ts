@@ -20,6 +20,7 @@ import type { IntentResult, Schriftsatz, ErvWarnung, RetrievalBeleg } from "./sc
 import { recognizeIntent, buildAkteContext } from "./intent-router";
 import { prefillSlotsFromAkte, fillSlots, type SlotValues } from "./slot-filler";
 import { assembleSchriftsatz } from "./rag-assembler";
+import { extractSlotValuesFromAuftrag } from "./answer-parser";
 import { validateErv } from "./erv-validator";
 import {
   extractUnresolvedPlatzhalter,
@@ -159,8 +160,7 @@ export function isSchriftsatzIntent(message: string): boolean {
 export async function runSchriftsatzPipeline(
   options: SchriftsatzPipelineOptions,
 ): Promise<SchriftsatzPipelineResult> {
-  // Datenschutz-Schleuse: all model calls of this run share one placeholder mapping
-  // and the consent of this Akte.
+  // Datenschutz-Schleuse: all model calls of this run share one placeholder mapping.
   return mitKiKontext({ akteId: options.akteId }, () => runSchriftsatzPipelineImKontext(options));
 }
 
@@ -209,6 +209,13 @@ async function runSchriftsatzPipelineImKontext(
     // The court named in the request ("zum Arbeitsgericht Köln") was recognised by the
     // intent router but never used: only a GERICHT-Beteiligter or a Rückfrage filled it.
     if (!prefilled["GERICHT"] && intent.gericht?.trim()) prefilled["GERICHT"] = intent.gericht.trim();
+    // Values stated in the initial request override Akte data. On resume
+    // (userSlotValues present) they are already part of the saved slot state.
+    if (!userSlotValues || Object.keys(userSlotValues).length === 0) {
+      const def = getKlageartDefinition(intent.klageart);
+      const ausAuftrag = await extractSlotValuesFromAuftrag(message, [...def.requiredSlots, ...def.optionalSlots]);
+      Object.assign(prefilled, ausAuftrag);
+    }
     const slotResult = fillSlots(intent, prefilled, userSlotValues ?? {});
 
     if (!slotResult.vollstaendig) {

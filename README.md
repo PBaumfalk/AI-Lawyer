@@ -1,4 +1,7 @@
-<img src="assets/logo.svg" width="72" alt="AI-Lawyer">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/brand/logos/wordmark-white.svg">
+  <img src="public/brand/logos/wordmark-primary.svg" width="220" alt="AI-Lawyer">
+</picture>
 
 # AI-Lawyer
 
@@ -25,7 +28,7 @@ Die Daten bleiben auf Ihrem Server. Die KI kann vollständig lokal laufen
 > chat and a client portal. The built-in agent *Helena* runs a bounded ReAct loop
 > with 18 tools and RAG over statutes, case law and templates (pgvector, hybrid
 > search, reranking), with local models via Ollama or OpenAI/Anthropic.
-> Next.js 14, TypeScript, PostgreSQL 16, Prisma, BullMQ, Docker Compose.
+> Next.js 15, React 19, TypeScript, PostgreSQL 16, Prisma, BullMQ, Docker Compose.
 > UI and documentation are in German.
 
 ![Dashboard mit Tagesübersicht, Fristen und zuletzt bearbeiteten Akten](docs/screenshots/dashboard.png)
@@ -159,7 +162,9 @@ verpflichtend machen.
 - **Migration aus j-lawyer.org:** Akten, Kontakte, Beteiligte, Dokumente und
   Kalender werden über die REST-API übernommen und lassen sich gefahrlos
   wiederholt einlesen
-- **Hell und dunkel**, Glass-Oberfläche, Befehlspalette (⌘K bzw. Strg+K)
+- **Oberfläche:** Persimmon-Design mit hellen Glasflächen (Standard) und
+  dunklem Modus, eigene Icons, Befehlspalette (⌘K bzw. Strg+K), nutzbar ab
+  375 px Breite
 
 | Akten | Dunkler Modus |
 | --- | --- |
@@ -187,6 +192,15 @@ verpflichtend machen.
   Menschen. Ein QA-Dashboard misst Qualität und Halluzinationen.
 - **Ihre Wahl des Modells:** lokal mit Ollama, ohne dass Daten das Haus
   verlassen, oder über OpenAI bzw. Anthropic.
+
+## Design
+
+Die Oberfläche folgt dem Designsystem **Persimmon**: warmes Orange für Marke,
+Auswahl und Hauptaktionen, Graphit für Text, ruhige helle Glasflächen. Eigene
+Icons für alle Bereiche, Helena als freundlicher Roboter mit Brille. Hell ist
+Standard, der dunkle Modus ist wählbar; ohne Transparenzeffekte und bei
+reduzierter Bewegung bleibt alles lesbar. Regeln, Tokens und Umsetzung:
+[docs/design](docs/design/README.md).
 
 ## Gamification
 
@@ -265,12 +279,12 @@ Einbettungen und Reranking gebraucht.
 
 ## Für Entwickler
 
-TypeScript durchgehend, Next.js 14 (App Router) mit eigenem Server für
+TypeScript durchgehend, Next.js 15 (App Router) mit eigenem Server für
 Socket.IO, ein separater Worker für die Hintergrundaufgaben.
 
 | Schicht | Technik |
 | --- | --- |
-| Oberfläche | Next.js 14, React, Tailwind CSS, shadcn/ui, Motion |
+| Oberfläche | Next.js 15, React 19, Tailwind CSS, shadcn/ui, Persimmon-Tokens und -Icons |
 | Daten | PostgreSQL 16 mit pgvector, Prisma (86 Modelle) |
 | Suche | Meilisearch |
 | Dateien | MinIO (S3-kompatibel) |
@@ -312,6 +326,8 @@ npm run db:generate      # Prisma-Client erzeugen
 npm run dev              # Oberfläche und API auf :3000
 npm run dev:worker       # Hintergrund-Worker
 npm test                 # Unit-Tests (vitest)
+npm run test:integration # Integrationstests (PostgreSQL + Redis, siehe vitest.integration.config.ts)
+npm run test:e2e         # Browsertests (Playwright, siehe tests/e2e/README.md)
 npx tsc --noEmit         # Typecheck
 ```
 
@@ -323,9 +339,7 @@ steht im [Änderungsprotokoll](CHANGELOG.md).
 
 ## Bekannte Grenzen
 
-Behoben im Branch `fix/stabilisierung` (Aktenzugriff, Mandantentrennung,
-Migrationen, MinIO-Image, Socket.IO im Image, BI, Rechnungen, Fristen,
-E-Mail-Anhänge, j-lawyer-Migration u. a., jeweils mit Tests). Offen sind:
+Offen sind:
 
 - **beA:** Die kommerzielle Bibliothek von bea.expert ist nicht eingebunden.
   Ohne sie scheitern Anmeldung, Versand und eEB mit klarer Meldung; es wird
@@ -334,7 +348,9 @@ E-Mail-Anhänge, j-lawyer-Migration u. a., jeweils mit Tests). Offen sind:
   noch nicht.
 - **KI-Einwilligung:** Das Feld „KI-Verarbeitung erlaubt“ am Kontakt wird
   gespeichert, aber nicht ausgewertet. Die Regel muss die Kanzlei festlegen.
-- **Next.js 14** ist veraltet; der Umstieg ist für v1.0 geplant.
+- **Abhängigkeiten:** Das KI-SDK (Vercel AI SDK 4) und zod 3 haben bekannte
+  Sicherheitsmeldungen; der Umstieg auf AI SDK 7 mit zod 4 steht aus
+  (Gegenmaßnahme: Größengrenze für JSON-Anfragen).
 
 Die vollständige Liste steht in
 [Kapitel 23 des Handbuchs](docs/handbuch/23-einschraenkungen-und-fragen.md).

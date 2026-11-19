@@ -1,0 +1,176 @@
+{
+  "version": "1.1.0",
+  "date": "2026-11-19",
+  "iconCount": 82,
+  "contrastChecks": [
+    {
+      "name": "primary text",
+      "foreground": "#2D2A27",
+      "background": "#FF5C34",
+      "contrast": 4.64,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "hover primary",
+      "foreground": "#2D2A27",
+      "background": "#FF754F",
+      "contrast": 5.37,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light body",
+      "foreground": "#2D2A27",
+      "background": "#F8F6F2",
+      "contrast": 13.22,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light muted",
+      "foreground": "#68615B",
+      "background": "#F8F6F2",
+      "contrast": 5.64,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light brand link",
+      "foreground": "#B94720",
+      "background": "#F8F6F2",
+      "contrast": 4.88,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light focus",
+      "foreground": "#B94720",
+      "background": "#F8F6F2",
+      "contrast": 4.88,
+      "minimum": 3,
+      "pass": true
+    },
+    {
+      "name": "danger white",
+      "foreground": "#FFFFFF",
+      "background": "#B42335",
+      "contrast": 6.5,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light success",
+      "foreground": "#13724D",
+      "background": "#E2F4E9",
+      "contrast": 5.18,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light warning",
+      "foreground": "#8C5700",
+      "background": "#FFF1CF",
+      "contrast": 5.39,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light danger",
+      "foreground": "#B42335",
+      "background": "#FDE8EB",
+      "contrast": 5.54,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light info",
+      "foreground": "#295CAA",
+      "background": "#E9F0FD",
+      "contrast": 5.72,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light ink",
+      "foreground": "#2D2A27",
+      "background": "#F8F6F2",
+      "contrast": 13.22,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light text-muted",
+      "foreground": "#68615B",
+      "background": "#F8F6F2",
+      "contrast": 5.64,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "light brand-strong",
+      "foreground": "#B94720",
+      "background": "#F8F6F2",
+      "contrast": 4.88,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "dark success",
+      "foreground": "#7DDEAB",
+      "background": "#17392A",
+      "contrast": 7.8,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "dark warning",
+      "foreground": "#F1C66A",
+      "background": "#3B2F16",
+      "contrast": 8.12,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "dark danger",
+      "foreground": "#FF9BA7",
+      "background": "#421F29",
+      "contrast": 7.19,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "dark info",
+      "foreground": "#A1C4FF",
+      "background": "#1F304A",
+      "contrast": 7.5,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "dark ink",
+      "foreground": "#F5F0EB",
+      "background": "#191715",
+      "contrast": 15.79,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "dark text-muted",
+      "foreground": "#BEB3A9",
+      "background": "#191715",
+      "contrast": 8.69,
+      "minimum": 4.5,
+      "pass": true
+    },
+    {
+      "name": "dark brand-strong",
+      "foreground": "#FF997C",
+      "background": "#191715",
+      "contrast": 8.6,
+      "minimum": 4.5,
+      "pass": true
+    }
+  ],
+  "scope": "Calculated solid-color pairs, not blanket WCAG certification. Glass surfaces require checking against actual composited backgrounds. Repository integration and React compilation were not tested."
+}

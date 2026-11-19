@@ -197,7 +197,6 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
           ) : isAnwalt ? (
             <EebButton
               messageId={nachricht.id}
-              nachrichtenId={nachricht.nachrichtenId || ""}
               onConfirmed={() => setEebConfirmed(true)}
             />
           ) : (

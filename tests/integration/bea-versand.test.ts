@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { prisma } from "@/lib/db";
 import { resetDb, createUser, createAkte, createKontakt, asUser, req, params } from "./helpers";
-import { buildEebBestaetigung } from "@/lib/bea/versand";
 
 const { dateien, provider, sitzungAufrufe } = vi.hoisted(() => ({
   dateien: new Map<string, Buffer>(),
   provider: {
     sende: vi.fn(async () => ({ messageId: "bea-1" })),
     speichereEntwurf: vi.fn(async () => ({ messageId: "bea-entwurf-1" })),
+    gibEebAb: vi.fn(async () => ({ messageId: "bea-eeb-1" })),
   },
   sitzungAufrufe: [] as { wiederholen: boolean }[],
 }));
@@ -115,10 +115,51 @@ describe("beA-Versand (serverseitig)", () => {
 
   it("Dokument einer fremden Akte → 404, Provider nicht aufgerufen", async () => {
     const fremd = await createUser("ANWALT");
+    const fremdAkte = await createAkte({ anwaltId: fremd.id });
     asUser(fremd);
-    const res = await postMessage(versand({ akteId: undefined }));
+    const res = await postMessage(versand({ akteId: fremdAkte.id }));
     expect(res.status).toBe(404);
     expect(provider.sende).not.toHaveBeenCalled();
+  });
+
+  it("Anhang aus einer anderen (zugänglichen) Akte oder ohne Akte → 400, Provider nicht aufgerufen", async () => {
+    const akte2 = await createAkte({ anwaltId: anwalt.id });
+    asUser(anwalt);
+    const r1 = await postMessage(versand({ akteId: akte2.id }));
+    expect(r1.status).toBe(400);
+    expect((await r1.json()).error).toBe("Dokument gehört nicht zur Akte");
+    const r2 = await postMessage(versand({ akteId: undefined }));
+    expect(r2.status).toBe(400);
+    expect((await r2.json()).error).toBe("Für Anhänge muss eine Akte angegeben werden");
+    const pruef = (await import("@/app/api/bea/messages/versand-pruefung/route")).POST;
+    const r3 = await pruef(req("/x", { method: "POST", json: versand({ akteId: akte2.id }) }));
+    expect(r3.status).toBe(400);
+    expect(provider.sende).not.toHaveBeenCalled();
+    expect(await prisma.beaNachricht.count()).toBe(0);
+  });
+
+  it("GET listet nur Nachrichten ohne Akte oder mit zugänglicher Akte", async () => {
+    const fremd = await createUser("ANWALT");
+    const fremdAkte = await createAkte({ anwaltId: fremd.id });
+    await prisma.beaNachricht.createMany({
+      data: [
+        { betreff: "eigene", absender: "a", empfaenger: "e", akteId: akte.id },
+        { betreff: "fremde", absender: "a", empfaenger: "e", akteId: fremdAkte.id },
+        { betreff: "offen", absender: "a", empfaenger: "e" },
+      ],
+    });
+    const { GET } = await import("@/app/api/bea/messages/route");
+    const liste = async () => {
+      const j = await (await GET(req("/api/bea/messages"))).json();
+      return { betreffs: j.nachrichten.map((n: any) => n.betreff).sort(), total: j.total };
+    };
+    asUser(anwalt);
+    expect(await liste()).toEqual({ betreffs: ["eigene", "offen"], total: 2 });
+    asUser(fremd);
+    expect(await liste()).toEqual({ betreffs: ["fremde", "offen"], total: 2 });
+    const admin = await createUser("ADMIN");
+    asUser(admin);
+    expect((await liste()).total).toBe(3);
   });
 
   it("SACHBEARBEITER ohne canSendBeA → 403", async () => {
@@ -143,11 +184,16 @@ describe("beA-Versand (serverseitig)", () => {
   });
 });
 
-describe("eEB speichern", () => {
+describe("eEB abgeben", () => {
   let eingang: any;
   beforeEach(async () => {
+    provider.gibEebAb.mockClear();
     eingang = await prisma.beaNachricht.create({
-      data: { nachrichtenId: "bea-in-1", betreff: "Urteil", absender: "AG", empfaenger: "RA", eebStatus: "AUSSTEHEND" },
+      data: {
+        nachrichtenId: "bea-in-1", xjustizNachrichtenId: "xj-1", betreff: "Urteil", absender: "AG", empfaenger: "RA",
+        richtung: "EINGANG", eebAngefordert: true, eebStatus: "AUSSTEHEND",
+        postfachSafeId: "DE.BRAK.1", safeIdAbsender: "DE.J.2", akteId: akte.id,
+      },
     });
   });
   const eeb = async (id: string, body?: unknown) =>
@@ -155,28 +201,33 @@ describe("eEB speichern", () => {
       req(`/x`, { method: "POST", ...(body !== undefined ? { json: body } : {}) }),
       params({ id })
     );
+  const heute = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(new Date());
 
-  it("ohne bea.expert-Bestätigung → 400, Status bleibt AUSSTEHEND", async () => {
+  it("ohne Abgabedatum → 400, Provider nicht aufgerufen, Status bleibt AUSSTEHEND", async () => {
     asUser(anwalt);
     expect((await eeb(eingang.id)).status).toBe(400);
-    expect((await eeb(eingang.id, { nachrichtenId: "andere", eebDatum: new Date().toISOString() })).status).toBe(400);
+    expect(provider.gibEebAb).not.toHaveBeenCalled();
     expect((await prisma.beaNachricht.findUniqueOrThrow({ where: { id: eingang.id } })).eebStatus).toBe("AUSSTEHEND");
   });
 
-  it("Nachricht ohne beA-ID → 409", async () => {
-    const ohne = await prisma.beaNachricht.create({ data: { betreff: "x", absender: "a", empfaenger: "e", eebStatus: "AUSSTEHEND" } });
+  it("Nachricht ohne xjustizNachrichtenId → 422", async () => {
+    const ohne = await prisma.beaNachricht.create({
+      data: { betreff: "x", absender: "a", empfaenger: "e", eebAngefordert: true, eebStatus: "AUSSTEHEND", postfachSafeId: "p", safeIdAbsender: "s" },
+    });
     asUser(anwalt);
-    expect((await eeb(ohne.id, { nachrichtenId: "x", eebDatum: new Date().toISOString() })).status).toBe(409);
+    expect((await eeb(ohne.id, { abgabeDatum: heute() })).status).toBe(422);
   });
 
-  it("mit Bestätigung → BESTAETIGT mit dem abgegebenen Datum", async () => {
+  it("gibt serverseitig ab → BESTAETIGT, Akten-Aktenzeichen im eEB, wiederholen: false", async () => {
     asUser(anwalt);
-    const d = new Date("2026-11-18T09:30:00Z");
-    const res = await eeb(eingang.id, buildEebBestaetigung({ ok: true, data: { success: true } }, "bea-in-1", d));
+    const res = await eeb(eingang.id, { abgabeDatum: heute() });
     expect(res.status).toBe(200);
+    expect(provider.gibEebAb).toHaveBeenCalledTimes(1);
+    expect((provider.gibEebAb.mock.calls[0] as any[])[1]).toMatchObject({ fremdId: "xj-1", empfaengerSafeId: "DE.J.2", aktenzeichenAbsender: "00042/26" });
+    expect(sitzungAufrufe.at(-1)).toEqual({ wiederholen: false });
     const n = await prisma.beaNachricht.findUniqueOrThrow({ where: { id: eingang.id } });
     expect(n.eebStatus).toBe("BESTAETIGT");
-    expect(n.eebDatum?.toISOString()).toBe(d.toISOString());
+    expect(n.eebDatum).not.toBeNull();
   });
 
   it("PATCH kann GESENDET / BESTAETIGT nicht direkt setzen", async () => {

@@ -7,9 +7,9 @@
  * are not settled there. Each response type is mapped in exactly one function
  * so a correction stays local. Never log token, keys or decrypted content.
  */
-import { XMLParser } from "fast-xml-parser";
 import { bexAufruf, BeaExpertError } from "./transport";
 import { aesGcmEntschluesseln, aesCbcEntschluesseln } from "./krypto";
+import { leseCoco, leseBeaMessageJson, COCO_NAMEN, BEA_MESSAGE_JSON } from "./coco";
 import type {
   BeaSitzung,
   BeaPostfachInfo,
@@ -20,10 +20,6 @@ import type {
 } from "../provider";
 
 const AES256_CBC = "http://www.w3.org/2001/04/xmlenc#aes256-cbc";
-// "govello_coco" is the older name of the same object
-const COCO_NAMEN = new Set(["project_coco", "govello_coco"]);
-// Encrypted object carrying an OSCI Base64Content with JSON { messageSubject, messageBody }
-const BEA_MESSAGE_JSON = "beaMessage.json";
 
 type Roh = Record<string, unknown>;
 interface GcmTeil { value: string; iv: string; tag: string }
@@ -187,10 +183,12 @@ function mappeNachricht(antwort: unknown, sessionKey: Buffer): BeaNachrichtVoll 
     const a = obj(roh);
     const name = str(a.reference);
     const elementKey = str(a.key);
+    // As in the reference client: exact CipherReference match, then the
+    // attachment's own key, then the first coco key as a last resort
     const key =
       schluessel.get(name) ??
-      standardSchluessel ??
-      (elementKey ? Buffer.from(elementKey, "base64") : null);
+      (elementKey ? Buffer.from(elementKey, "base64") : null) ??
+      standardSchluessel;
     if (!key) {
       throw new BeaExpertError(`Kein Schlüssel für einen Anhang gefunden.`, "bea_get_message");
     }
@@ -219,96 +217,6 @@ function mappeNachricht(antwort: unknown, sessionKey: Buffer): BeaNachrichtVoll 
     dringend: bool(meta.urgent),
     anhaenge,
   };
-}
-
-// ---------- project_coco ----------
-
-const cocoParser = new XMLParser({
-  ignoreAttributes: false,
-  removeNSPrefix: true,
-  parseTagValue: false,
-  parseAttributeValue: false,
-  trimValues: true,
-});
-
-/** Collects all nodes of a tag in document order (per tag) from a parsed tree. */
-function sammle(knoten: unknown, tag: string, ziel: unknown[]): void {
-  if (Array.isArray(knoten)) {
-    for (const k of knoten) sammle(k, tag, ziel);
-    return;
-  }
-  if (!knoten || typeof knoten !== "object") return;
-  for (const [k, v] of Object.entries(knoten as Roh)) {
-    if (k === tag) {
-      for (const e of Array.isArray(v) ? v : [v]) ziel.push(e);
-    } else {
-      sammle(v, tag, ziel);
-    }
-  }
-}
-
-function textVon(knoten: unknown): string {
-  return typeof knoten === "string" ? knoten : str(obj(knoten)["#text"]);
-}
-
-/** Decodes an OSCI Base64Content node to UTF-8. */
-function base64Inhalt(knoten: unknown): string {
-  return Buffer.from(textVon(knoten).trim(), "base64").toString("utf8");
-}
-
-/** beaMessage.json: OSCI XML whose Base64Content holds JSON with `messageBody`. */
-function leseBeaMessageJson(xml: string): string | null {
-  const inhalte: unknown[] = [];
-  sammle(cocoParser.parse(xml), "Base64Content", inhalte);
-  if (inhalte.length === 0) return null;
-  try {
-    return strOderNull(obj(JSON.parse(base64Inhalt(inhalte[0]))).messageBody);
-  } catch {
-    // JSON.parse errors quote the input (plaintext); fall back to the coco Freitext
-    return null;
-  }
-}
-
-/** Freitext from the Base64Content with Id "nachricht.xml" inside project_coco. */
-function leseFreitext(baum: unknown): string | null {
-  const inhalte: unknown[] = [];
-  sammle(baum, "Base64Content", inhalte);
-  const nachricht = inhalte.find((k) => str(obj(k)["@_Id"]) === "nachricht.xml");
-  if (!nachricht) return null;
-  const freitext: unknown[] = [];
-  sammle(cocoParser.parse(base64Inhalt(nachricht)), "Freitext", freitext);
-  return freitext.length > 0 ? strOderNull(textVon(freitext[0])) : null;
-}
-
-/**
- * Parses the project_coco XML: the n-th CipherReference@URI (without "cid:")
- * belongs to the n-th MgmtData (Base64 key). If the counts differ, the first
- * key applies to all attachments (also returned as `standard`). Also extracts
- * the Freitext as a fallback message body.
- */
-function leseCoco(xml: string): {
-  schluessel: Map<string, Buffer>;
-  standard: Buffer | null;
-  freitext: string | null;
-} {
-  const baum = cocoParser.parse(xml);
-  const refs: unknown[] = [];
-  const keys: unknown[] = [];
-  sammle(baum, "CipherReference", refs);
-  sammle(baum, "MgmtData", keys);
-
-  const uris = refs.map((r) => str(obj(r)["@_URI"]).replace(/^cid:/, ""));
-  const puffer = keys.map((k) => Buffer.from(textVon(k).trim(), "base64"));
-  const freitext = leseFreitext(baum);
-
-  const schluessel = new Map<string, Buffer>();
-  const gleich = uris.length === puffer.length;
-  const standard = gleich ? null : (puffer[0] ?? null);
-  uris.forEach((u, i) => {
-    const k = gleich ? puffer[i] : standard;
-    if (k) schluessel.set(u, k);
-  });
-  return { schluessel, standard, freitext };
 }
 
 // ---------- public API ----------

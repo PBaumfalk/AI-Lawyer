@@ -367,6 +367,63 @@ describe("bea.expert Eingang", () => {
     expect(n.anhaenge.map((x) => x.inhalt.toString())).toEqual(["A", "E"]);
   });
 
+  it("bei Anzahl CipherReference ≠ MgmtData nutzt ein nicht gelisteter Anhang element.key", async () => {
+    const k1 = crypto.randomBytes(32);
+    const kFalsch = crypto.randomBytes(32);
+    const kEigen = crypto.randomBytes(32);
+    const a = gcm(Buffer.from("A"), k1);
+    fetchMock.mockResolvedValueOnce(
+      json(
+        nachricht({
+          objekte: [
+            encObjekt("project_coco", Buffer.from(cocoXml(["a.pdf"], [k1, kFalsch]), "utf8"), sessionKey),
+          ],
+          anhaenge: [
+            { reference: "a.pdf", data: a.value, iv: a.iv, tag: a.tag, key: "", symEncAlgorithm: "" },
+            {
+              reference: "nicht_gelistet.xml",
+              data: cbc(Buffer.from("E"), kEigen),
+              iv: "",
+              tag: "",
+              key: kEigen.toString("base64"),
+              symEncAlgorithm: CBC,
+            },
+          ],
+        }),
+      ),
+    );
+    const n = await holeNachricht(s, "4711");
+    expect(n.anhaenge.map((x) => x.inhalt.toString())).toEqual(["A", "E"]);
+  });
+
+  it("nicht lesbares project_coco-XML: BeaExpertError ohne Klartext in Meldung und cause", async () => {
+    const geheim = "<<< Mandant Müller geheim";
+    fetchMock.mockResolvedValueOnce(
+      json(nachricht({ objekte: [encObjekt("project_coco", Buffer.from(geheim, "utf8"), sessionKey)] })),
+    );
+    const err = (await holeNachricht(s, "4711").catch((e: unknown) => e)) as BeaExpertError;
+    expect(err).toBeInstanceOf(BeaExpertError);
+    expect(err.funktion).toBe("bea_get_message");
+    expect(err.message).not.toContain("geheim");
+    expect(err.cause).toBeUndefined();
+    expect(JSON.stringify(err.antwort ?? null)).not.toContain("geheim");
+  });
+
+  it("nicht lesbares beaMessage.json fällt auf den coco-Freitext zurück", async () => {
+    const kaputt = `<osci:Content xmlns:osci="${OSCI}"><osci:Base64Content>${Buffer.from("{kein json geheim").toString("base64")}</osci:Base64Content></osci:Content>`;
+    fetchMock.mockResolvedValueOnce(
+      json(
+        nachricht({
+          objekte: [
+            encObjekt("beaMessage.json", Buffer.from(kaputt, "utf8"), sessionKey),
+            encObjekt("project_coco", Buffer.from(cocoMitFreitext("Freitext"), "utf8"), sessionKey),
+          ],
+        }),
+      ),
+    );
+    expect((await holeNachricht(s, "4711")).text).toBe("Freitext");
+  });
+
   it("liefert eebAngefordert true aus metaData.eebAngefordert", async () => {
     fetchMock.mockResolvedValueOnce(json(nachricht({ metaData: { eebAngefordert: true } })));
     const n = await holeNachricht(s, "4711");

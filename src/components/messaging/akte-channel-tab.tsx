@@ -109,7 +109,7 @@ export function PortalChannelTab({ akteId }: PortalChannelTabProps) {
       const res = await fetch(`/api/akten/${akteId}/portal-channels`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "Fehler beim Laden der Portal-Kanaele");
+        throw new Error(data.error ?? "Fehler beim Laden der Portal-Kanäle");
       }
       const data = await res.json();
       setChannels(data.channels ?? []);
@@ -117,7 +117,7 @@ export function PortalChannelTab({ akteId }: PortalChannelTabProps) {
       setError(
         err instanceof Error
           ? err.message
-          : "Portal-Kanaele konnten nicht geladen werden"
+          : "Portal-Kanäle konnten nicht geladen werden"
       );
     } finally {
       setLoading(false);
@@ -167,7 +167,7 @@ export function PortalChannelTab({ akteId }: PortalChannelTabProps) {
           Noch keine Portal-Nachrichten
         </p>
         <p className="text-xs text-muted-foreground/60">
-          Mandanten koennen ueber das Portal Nachrichten senden.
+          Mandanten können über das Portal Nachrichten senden.
         </p>
       </div>
     );
@@ -184,7 +184,7 @@ export function PortalChannelTab({ akteId }: PortalChannelTabProps) {
             className="flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Zurueck zur Uebersicht
+            Zurück zur Übersicht
           </button>
         )}
         <MessageView channelId={selectedChannelId} />

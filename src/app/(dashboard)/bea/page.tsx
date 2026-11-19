@@ -133,7 +133,7 @@ function BeaLoginForm({
               >
                 <Upload className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 <span className="text-sm truncate">
-                  {tokenFile ? tokenFile.name : "Token-Datei auswaehlen..."}
+                  {tokenFile ? tokenFile.name : "Token-Datei auswählen..."}
                 </span>
               </div>
               <input
@@ -186,8 +186,8 @@ function BeaLoginForm({
           </form>
 
           <p className="text-xs text-muted-foreground text-center">
-            Die Authentifizierung erfolgt vollstaendig im Browser.
-            Ihre Schluessel verlassen niemals dieses Geraet.
+            Die Authentifizierung erfolgt vollständig im Browser.
+            Ihre Schlüssel verlassen niemals dieses Gerät.
           </p>
         </GlassPanel>
       </div>

@@ -201,7 +201,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
           onClick={() => router.push("/finanzen/rechnungen")}
           className="mt-4 text-sm text-blue-600 hover:text-blue-700"
         >
-          Zurueck zur Liste
+          Zurück zur Liste
         </button>
       </div>
     );
@@ -224,7 +224,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Zurueck
+            Zurück
           </button>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-heading text-foreground">
@@ -235,7 +235,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
           <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
             <span>Datum: {formatDate(invoice.rechnungsdatum)}</span>
             {invoice.faelligAm && (
-              <span>Faellig: {formatDate(invoice.faelligAm)}</span>
+              <span>Fällig: {formatDate(invoice.faelligAm)}</span>
             )}
           </div>
         </div>
@@ -246,11 +246,11 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
             <button
               type="button"
               disabled
-              title="Eine Bearbeitungsmaske fuer Rechnungsentwuerfe gibt es noch nicht"
+              title="Eine Bearbeitungsmaske für Rechnungsentwürfe gibt es noch nicht"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-border opacity-50 cursor-not-allowed"
             >
               <Edit className="w-4 h-4" />
-              Bearbeiten (noch nicht verfuegbar)
+              Bearbeiten (noch nicht verfügbar)
             </button>
           )}
           {invoice.downloads.pdf && invoice.status !== "ENTWURF" && (
@@ -305,7 +305,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-800 dark:hover:bg-amber-950/30 transition-colors"
             >
               <AlertTriangle className="w-4 h-4" />
-              {invoice.mahnStufe ? "Naechste Mahnstufe" : "Zahlungserinnerung"}
+              {invoice.mahnStufe ? "Nächste Mahnstufe" : "Zahlungserinnerung"}
             </button>
           )}
           {invoice.erlaubteAktionen.includes("stornieren") && (
@@ -327,7 +327,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/30 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              Loeschen
+              Löschen
             </button>
           )}
         </div>
@@ -347,10 +347,10 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
             {showConfirm === "bezahlen" && "Rechnung als bezahlt markieren?"}
             {showConfirm === "mahnen" &&
               (invoice.mahnStufe
-                ? `Naechste Mahnstufe nach "${MAHN_STUFE_LABEL[invoice.mahnStufe]}" anlegen?`
+                ? `Nächste Mahnstufe nach "${MAHN_STUFE_LABEL[invoice.mahnStufe]}" anlegen?`
                 : "Zahlungserinnerung anlegen?")}
             {showConfirm === "stornieren" && "Rechnung stornieren? Eine Stornorechnung wird erstellt."}
-            {showConfirm === "delete" && "Entwurf endgueltig loeschen?"}
+            {showConfirm === "delete" && "Entwurf endgültig löschen?"}
           </p>
           <div className="flex gap-2">
             <button
@@ -361,7 +361,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
               }}
               className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary-hover text-primary-foreground transition-colors"
             >
-              Bestaetigen
+              Bestätigen
             </button>
             <button
               type="button"
@@ -380,7 +380,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
           {/* Recipient block */}
           <div className="glass rounded-xl p-6">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Empfaenger
+              Empfänger
             </h2>
             <div className="text-foreground">
               <p className="font-medium">{invoice.empfaenger?.name ?? invoice.mandantName ?? "-"}</p>

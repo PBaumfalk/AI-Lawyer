@@ -31,7 +31,7 @@ export function PortalLoginForm() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Ungueltige Anmeldedaten. Bitte versuchen Sie es erneut.");
+      setError("Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.");
     } else {
       router.push("/portal/dashboard");
       router.refresh();

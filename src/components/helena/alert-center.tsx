@@ -139,7 +139,7 @@ const TYPE_CHIPS = [
 ] as const;
 
 const PRIORITY_CHIPS = [
-  { value: null, label: "Alle Prioritaeten" },
+  { value: null, label: "Alle Prioritäten" },
   { value: "7", label: "Hoch (7+)" },
 ] as const;
 
@@ -286,7 +286,7 @@ export function AlertCenter() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-medium text-muted-foreground mr-1">
-              Prioritaet:
+              Priorität:
             </span>
             {PRIORITY_CHIPS.map((chip) => (
               <button
@@ -437,7 +437,7 @@ export function AlertCenter() {
                         className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-[10px]"
                       >
                         <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Automatisch geloest
+                        Automatisch gelöst
                         {resolveReason && (
                           <span className="ml-1 font-normal">
                             — {resolveReason}
@@ -486,7 +486,7 @@ export function AlertCenter() {
             disabled={page <= 1}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
-            Zurueck
+            Zurück
           </Button>
           <span className="text-sm text-muted-foreground">
             Seite {page} von {pages}

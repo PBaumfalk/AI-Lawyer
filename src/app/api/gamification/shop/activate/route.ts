@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Ungueltige Eingabe" },
+        { error: "Ungültige Eingabe" },
         { status: 400 },
       );
     }

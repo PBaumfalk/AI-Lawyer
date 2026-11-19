@@ -145,7 +145,7 @@ export function ComposeToolbar({ editor }: ComposeToolbarProps) {
         <Link2 className={iconSize} />
       </ToolbarButton>
 
-      <ToolbarButton onClick={addImage} title="Bild einfuegen">
+      <ToolbarButton onClick={addImage} title="Bild einfügen">
         <ImagePlus className={iconSize} />
       </ToolbarButton>
 
@@ -155,7 +155,7 @@ export function ComposeToolbar({ editor }: ComposeToolbarProps) {
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         active={editor.isActive("bulletList")}
-        title="Aufzaehlung"
+        title="Aufzählung"
       >
         <List className={iconSize} />
       </ToolbarButton>
@@ -171,7 +171,7 @@ export function ComposeToolbar({ editor }: ComposeToolbarProps) {
       <div className="w-px h-5 bg-white/10 dark:bg-white/[0.06] mx-1" />
 
       {/* Table */}
-      <ToolbarButton onClick={insertTable} title="Tabelle einfuegen">
+      <ToolbarButton onClick={insertTable} title="Tabelle einfügen">
         <Table className={iconSize} />
       </ToolbarButton>
 
@@ -183,7 +183,7 @@ export function ComposeToolbar({ editor }: ComposeToolbarProps) {
           editor.chain().focus().toggleHeading({ level: 1 }).run()
         }
         active={editor.isActive("heading", { level: 1 })}
-        title="Ueberschrift 1"
+        title="Überschrift 1"
       >
         <Heading1 className={iconSize} />
       </ToolbarButton>
@@ -193,7 +193,7 @@ export function ComposeToolbar({ editor }: ComposeToolbarProps) {
           editor.chain().focus().toggleHeading({ level: 2 }).run()
         }
         active={editor.isActive("heading", { level: 2 })}
-        title="Ueberschrift 2"
+        title="Überschrift 2"
       >
         <Heading2 className={iconSize} />
       </ToolbarButton>
@@ -203,7 +203,7 @@ export function ComposeToolbar({ editor }: ComposeToolbarProps) {
           editor.chain().focus().toggleHeading({ level: 3 }).run()
         }
         active={editor.isActive("heading", { level: 3 })}
-        title="Ueberschrift 3"
+        title="Überschrift 3"
       >
         <Heading3 className={iconSize} />
       </ToolbarButton>

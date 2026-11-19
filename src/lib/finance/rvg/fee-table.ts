@@ -61,7 +61,7 @@ const RVG_2025_LOOKUP = buildLookup(51.50, RVG_2025_RANGES);
 
 export const RVG_2025: FeeTableVersion = {
   id: 'RVG_2025',
-  name: 'RVG Gebuehrentabelle 2025',
+  name: 'RVG Gebührentabelle 2025',
   lawReference: 'KostBRaeG 2025, Anlage 2 zu SS 13 RVG',
   validFrom: new Date('2025-06-01'),
   validUntil: null,
@@ -95,7 +95,7 @@ const RVG_2021_LOOKUP = buildLookup(49.00, RVG_2021_RANGES);
 
 export const RVG_2021: FeeTableVersion = {
   id: 'RVG_2021',
-  name: 'RVG Gebuehrentabelle 2021',
+  name: 'RVG Gebührentabelle 2021',
   lawReference: 'KostRaeG 2021, Anlage 2 zu SS 13 RVG',
   validFrom: new Date('2021-01-01'),
   validUntil: new Date('2025-05-31'),

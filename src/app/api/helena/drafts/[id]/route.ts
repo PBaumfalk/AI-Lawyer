@@ -100,7 +100,7 @@ export async function PATCH(
   const allowedRoles = ["ADMIN", "ANWALT", "SACHBEARBEITER"];
   if (!allowedRoles.includes(session.user.role)) {
     return NextResponse.json(
-      { error: "Keine Berechtigung fuer Draft-Aktionen" },
+      { error: "Keine Berechtigung für Draft-Aktionen" },
       { status: 403 },
     );
   }
@@ -111,7 +111,7 @@ export async function PATCH(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltige Eingabe" },
+      { error: "Ungültige Eingabe" },
       { status: 400 },
     );
   }
@@ -119,7 +119,7 @@ export async function PATCH(
   const parsed = ActionSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Ungueltige Aktion", details: parsed.error.errors },
+      { error: "Ungültige Aktion", details: parsed.error.errors },
       { status: 400 },
     );
   }
@@ -185,7 +185,7 @@ export async function PATCH(
 
             const originalAuftrag =
               originalDraft?.helenaTask?.auftrag ??
-              "Ueberarbeite den folgenden Entwurf";
+              "Überarbeite den folgenden Entwurf";
 
             const feedbackContext = [
               action.categories?.length

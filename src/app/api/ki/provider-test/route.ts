@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   const role = (session.user as any).role as UserRole;
   if (role !== "ADMIN") {
     return NextResponse.json(
-      { error: "Nur Administratoren koennen Provider testen" },
+      { error: "Nur Administratoren können Provider testen" },
       { status: 403 }
     );
   }
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltige Anfrage" },
+      { error: "Ungültige Anfrage" },
       { status: 400 }
     );
   }

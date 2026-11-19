@@ -124,8 +124,8 @@ export function PortalInviteDialog({
           {/* Info text */}
           {hasEmail && (
             <p className="text-xs text-muted-foreground">
-              Der Mandant erhaelt eine E-Mail mit einem Aktivierungslink, der 7
-              Tage gueltig ist. Nach Aktivierung kann der Mandant freigegebene
+              Der Mandant erhält eine E-Mail mit einem Aktivierungslink, der 7
+              Tage gültig ist. Nach Aktivierung kann der Mandant freigegebene
               Dokumente und Akteninformationen im Portal einsehen.
             </p>
           )}

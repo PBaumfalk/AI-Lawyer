@@ -28,7 +28,7 @@ export async function createCalDavClient(
   try {
     if (provider === "GOOGLE") {
       if (!credentials.oauthTokens?.accessToken) {
-        throw new Error("OAuth2 Access-Token fuer Google Calendar erforderlich");
+        throw new Error("OAuth2 Access-Token für Google Calendar erforderlich");
       }
 
       const client = new DAVClient({
@@ -50,7 +50,7 @@ export async function createCalDavClient(
 
     // APPLE -- Basic auth with app-specific password
     if (!credentials.password) {
-      throw new Error("App-spezifisches Passwort fuer Apple iCloud Calendar erforderlich");
+      throw new Error("App-spezifisches Passwort für Apple iCloud Calendar erforderlich");
     }
 
     const client = new DAVClient({

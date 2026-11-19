@@ -183,7 +183,7 @@ const DAILY_QUESTS: QuestSeedData[] = [
   },
   {
     name: "Wacht am Kalender",
-    beschreibung: "Erledige 2 Kalendereintraege",
+    beschreibung: "Erledige 2 Kalendereinträge",
     typ: "DAILY",
     klasse: "WAECHTER",
     bedingung: {

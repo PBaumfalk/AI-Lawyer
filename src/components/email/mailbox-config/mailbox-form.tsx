@@ -12,7 +12,7 @@ import { ConnectionTest } from "./connection-test";
 
 const mailboxSchema = z.object({
   name: z.string().min(1, "Name ist erforderlich"),
-  emailAdresse: z.string().email("Ungueltige E-Mail-Adresse"),
+  emailAdresse: z.string().email("Ungültige E-Mail-Adresse"),
   benutzername: z.string().min(1, "Benutzername ist erforderlich"),
   passwort: z.string().optional(),
   authTyp: z.enum(["PASSWORT", "OAUTH2"]).default("PASSWORT"),
@@ -168,7 +168,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-white/[0.06]">
           <h2 className="text-lg font-heading text-foreground">
-            {kontoId ? "Postfach bearbeiten" : "Neues Postfach hinzufuegen"}
+            {kontoId ? "Postfach bearbeiten" : "Neues Postfach hinzufügen"}
           </h2>
           <button
             type="button"
@@ -311,7 +311,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  Verschluesselung
+                  Verschlüsselung
                 </label>
                 <select
                   value={form.imapSecure ? "ssl" : "starttls"}
@@ -368,7 +368,7 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  Verschluesselung
+                  Verschlüsselung
                 </label>
                 <select
                   value={form.smtpSecure ? "ssl" : "starttls"}
@@ -400,14 +400,14 @@ export function MailboxForm({ kontoId, onClose, onSaved }: MailboxFormProps) {
                   type="password"
                   value={form.passwort || ""}
                   onChange={(e) => updateField("passwort", e.target.value)}
-                  placeholder={kontoId ? "Neues Passwort (leer = unveraendert)" : "Passwort eingeben"}
+                  placeholder={kontoId ? "Neues Passwort (leer = unverändert)" : "Passwort eingeben"}
                   className="w-full px-3 py-2 text-sm bg-transparent border border-white/20 dark:border-white/[0.08] rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary-strong"
                 />
               </div>
             ) : (
               <div className="flex items-center gap-2 px-3 py-2 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-700 dark:text-blue-300">
                 <Info className="w-4 h-4" />
-                OAuth2 wird in einer zukuenftigen Version unterstuetzt.
+                OAuth2 wird in einer zukünftigen Version unterstützt.
               </div>
             )}
           </div>

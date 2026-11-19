@@ -259,7 +259,7 @@ export async function resolveStaleAlerts(): Promise<number> {
           data: {
             gelesen: true,
             gelesenAt: new Date(),
-            meta: withResolution(meta, "Neue Aktivitaet erkannt") as any,
+            meta: withResolution(meta, "Neue Aktivität erkannt") as any,
           },
         });
         totalResolved++;
@@ -306,7 +306,7 @@ export async function resolveStaleAlerts(): Promise<number> {
           data: {
             gelesen: true,
             gelesenAt: new Date(),
-            meta: withResolution(meta, "Beteiligte ergaenzt") as any,
+            meta: withResolution(meta, "Beteiligte ergänzt") as any,
           },
         });
         totalResolved++;

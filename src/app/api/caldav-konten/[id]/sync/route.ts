@@ -42,7 +42,7 @@ export async function POST(
   // Prevent duplicate concurrent syncs
   if (konto.syncStatus === "SYNCHRONISIEREND") {
     return Response.json(
-      { message: "Synchronisation laeuft bereits" },
+      { message: "Synchronisation läuft bereits" },
       { status: 200 }
     );
   }

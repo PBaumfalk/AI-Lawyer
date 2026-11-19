@@ -23,13 +23,13 @@ export function PasswordChangeForm() {
     // Client-side validation
     if (!PASSWORD_REGEX.test(newPassword)) {
       setError(
-        "Passwort muss mindestens 8 Zeichen, 1 Grossbuchstabe und 1 Zahl enthalten."
+        "Passwort muss mindestens 8 Zeichen, 1 Großbuchstabe und 1 Zahl enthalten."
       );
       return;
     }
 
     if (newPassword !== newPasswordConfirm) {
-      setError("Passwoerter stimmen nicht ueberein.");
+      setError("Passwörter stimmen nicht überein.");
       return;
     }
 
@@ -57,7 +57,7 @@ export function PasswordChangeForm() {
         setNewPasswordConfirm("");
       }
     } catch {
-      setError("Verbindungsfehler. Bitte versuchen Sie es spaeter erneut.");
+      setError("Verbindungsfehler. Bitte versuchen Sie es später erneut.");
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export function PasswordChangeForm() {
   return (
     <div className="glass-card rounded-xl p-6">
       <h2 className="text-lg font-heading text-foreground mb-4">
-        Passwort aendern
+        Passwort ändern
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -111,7 +111,7 @@ export function PasswordChangeForm() {
             htmlFor="newPasswordConfirm"
             className="block text-sm font-medium text-muted-foreground mb-1.5"
           >
-            Neues Passwort bestaetigen
+            Neues Passwort bestätigen
           </label>
           <Input
             id="newPasswordConfirm"
@@ -125,7 +125,7 @@ export function PasswordChangeForm() {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Mindestens 8 Zeichen, 1 Grossbuchstabe, 1 Zahl
+          Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl
         </p>
 
         {error && (
@@ -137,12 +137,12 @@ export function PasswordChangeForm() {
         {success && (
           <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 rounded-lg p-3 border border-emerald-500/20">
             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-            Passwort erfolgreich geaendert.
+            Passwort erfolgreich geändert.
           </div>
         )}
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Wird gespeichert..." : "Passwort aendern"}
+          {loading ? "Wird gespeichert..." : "Passwort ändern"}
         </Button>
       </form>
     </div>

@@ -139,7 +139,7 @@ export function generateBiPdfReport(
   doc.text("KPI", colX[0] + 2, y);
   doc.text("Wert", colX[1] + 2, y);
   doc.text("Vorperiode", colX[2] + 2, y);
-  doc.text("Veraenderung", colX[3] + 2, y);
+  doc.text("Veränderung", colX[3] + 2, y);
   y += 6;
 
   doc.setFont("helvetica", "normal");

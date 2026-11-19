@@ -72,7 +72,7 @@ export function FristenRechnerSheet({
           </SheetTitle>
           <SheetDescription>
             Berechnen Sie Fristen nach BGB Sections 187-193 mit
-            Feiertagsberuecksichtigung.
+            Feiertagsberücksichtigung.
           </SheetDescription>
         </SheetHeader>
 

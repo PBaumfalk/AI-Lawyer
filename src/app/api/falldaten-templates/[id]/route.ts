@@ -109,7 +109,7 @@ export async function PATCH(
     // STANDARD templates are immutable
     if (template.status === FalldatenTemplateStatus.STANDARD) {
       return NextResponse.json(
-        { error: "Standard-Templates koennen nicht bearbeitet werden" },
+        { error: "Standard-Templates können nicht bearbeitet werden" },
         { status: 403 }
       );
     }
@@ -151,7 +151,7 @@ export async function PATCH(
     // Validate sachgebiet if provided
     if (sachgebiet && !Object.values(Sachgebiet).includes(sachgebiet as Sachgebiet)) {
       return NextResponse.json(
-        { error: `Ungueltiges Sachgebiet: ${sachgebiet}` },
+        { error: `Ungültiges Sachgebiet: ${sachgebiet}` },
         { status: 400 }
       );
     }
@@ -217,7 +217,7 @@ export async function DELETE(
     // STANDARD templates cannot be deleted
     if (template.status === FalldatenTemplateStatus.STANDARD) {
       return NextResponse.json(
-        { error: "Standard-Templates koennen nicht geloescht werden" },
+        { error: "Standard-Templates können nicht gelöscht werden" },
         { status: 403 }
       );
     }
@@ -233,7 +233,7 @@ export async function DELETE(
     // Only ENTWURF can be deleted
     if (template.status !== FalldatenTemplateStatus.ENTWURF) {
       return NextResponse.json(
-        { error: "Nur Entwuerfe koennen geloescht werden" },
+        { error: "Nur Entwürfe können gelöscht werden" },
         { status: 403 }
       );
     }
@@ -256,7 +256,7 @@ export async function DELETE(
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
-      { error: `Template konnte nicht geloescht werden: ${message}` },
+      { error: `Template konnte nicht gelöscht werden: ${message}` },
       { status: 500 }
     );
   }

@@ -175,7 +175,7 @@ export function PortalMessageList({
                 Laden...
               </span>
             ) : (
-              "Aeltere Nachrichten laden"
+              "Ältere Nachrichten laden"
             )}
           </button>
         </div>

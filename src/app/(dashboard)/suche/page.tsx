@@ -4,7 +4,7 @@ import { SearchPage } from "@/components/search/search-page";
 
 export const metadata: Metadata = {
   title: "Dokumentensuche",
-  description: "Volltextsuche ueber alle Dokumente mit Filtern und OCR-Text",
+  description: "Volltextsuche über alle Dokumente mit Filtern und OCR-Text",
 };
 
 export default function SuchePage() {

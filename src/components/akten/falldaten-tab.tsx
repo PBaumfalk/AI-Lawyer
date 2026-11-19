@@ -97,7 +97,7 @@ export function FalldatenTab({
       }
       const data = await res.json();
       if (!data.suggestions || data.suggestions.length === 0) {
-        toast.info("Keine Vorschlaege gefunden -- keine OCR-Texte verfuegbar?");
+        toast.info("Keine Vorschläge gefunden -- keine OCR-Texte verfügbar?");
         return;
       }
       setAutofillSuggestions(data.suggestions);
@@ -114,7 +114,7 @@ export function FalldatenTab({
       setPendingOverrides(accepted);
       setShowAutofillReview(false);
       setAutofillSuggestions(null);
-      toast.success("Vorschlaege uebernommen -- bitte speichern");
+      toast.success("Vorschläge übernommen -- bitte speichern");
     },
     []
   );
@@ -305,13 +305,13 @@ export function FalldatenTab({
         <div className="bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl border border-white/20 dark:border-white/[0.08] p-8 max-w-md w-full text-center space-y-4">
           <FileSpreadsheet className="w-10 h-10 text-slate-400 mx-auto" />
           <h3 className="text-sm font-medium text-foreground">
-            Kein Standardtemplate verfuegbar
+            Kein Standardtemplate verfügbar
           </h3>
           <p className="text-xs text-muted-foreground">
-            Fuer dieses Sachgebiet ist kein Standardtemplate verfuegbar.
+            Für dieses Sachgebiet ist kein Standardtemplate verfügbar.
             {alternatives.length > 0
-              ? " Waehlen Sie ein verfuegbares Template:"
-              : " Templates koennen im Verwaltungsbereich erstellt werden."}
+              ? " Wählen Sie ein verfügbares Template:"
+              : " Templates können im Verwaltungsbereich erstellt werden."}
           </p>
 
           {alternatives.length > 0 && (

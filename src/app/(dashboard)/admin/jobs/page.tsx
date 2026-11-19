@@ -53,7 +53,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
   waiting: { label: "Wartend", color: "bg-slate-500/10 text-slate-700 border-slate-200", icon: Clock },
   completed: { label: "Abgeschlossen", color: "bg-emerald-500/10 text-emerald-700 border-emerald-200", icon: CheckCircle2 },
   failed: { label: "Fehlgeschlagen", color: "bg-rose-500/10 text-rose-700 border-rose-200", icon: XCircle },
-  delayed: { label: "Verzoegert", color: "bg-amber-500/10 text-amber-700 border-amber-200", icon: Timer },
+  delayed: { label: "Verzögert", color: "bg-amber-500/10 text-amber-700 border-amber-200", icon: Timer },
   paused: { label: "Pausiert", color: "bg-purple-500/10 text-purple-700 border-purple-200", icon: Pause },
 };
 
@@ -164,7 +164,7 @@ export default function AdminJobsPage() {
         <div>
           <h1 className="text-2xl font-semibold font-bold">Job-Monitor</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            BullMQ Job-Queues ueberwachen und verwalten
+            BullMQ Job-Queues überwachen und verwalten
           </p>
         </div>
         <Button

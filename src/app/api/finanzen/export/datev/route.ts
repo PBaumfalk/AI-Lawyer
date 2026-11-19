@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   const role = (session.user as any).role;
   if (!['ADMIN', 'ANWALT'].includes(role)) {
     return NextResponse.json(
-      { error: 'Keine Berechtigung fuer DATEV-Export' },
+      { error: 'Keine Berechtigung für DATEV-Export' },
       { status: 403 },
     );
   }

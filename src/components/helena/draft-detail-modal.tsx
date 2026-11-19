@@ -271,7 +271,7 @@ export function DraftDetailModal({
         description: `${typeLabels[draft.typ] ?? draft.typ}-Entwurf wurde angenommen.`,
         action: result
           ? {
-              label: "Rueckgaengig",
+              label: "Rückgängig",
               onClick: async () => {
                 try {
                   await fetch(`/api/helena/drafts/${draft.id}/undo`, {
@@ -282,7 +282,7 @@ export function DraftDetailModal({
                       typ: result.typ,
                     }),
                   });
-                  toast.info("Rueckgaengig gemacht");
+                  toast.info("Rückgängig gemacht");
                 } catch {
                   toast.error("Undo fehlgeschlagen");
                 }
@@ -307,7 +307,7 @@ export function DraftDetailModal({
         toast.success("Abgelehnt", {
           description: data.noRevise
             ? "Entwurf abgelehnt, keine Revision."
-            : "Entwurf abgelehnt, Helena ueberarbeitet.",
+            : "Entwurf abgelehnt, Helena überarbeitet.",
         });
         onClose();
       } catch {
@@ -464,7 +464,7 @@ export function DraftDetailModal({
               disabled={!hasNext}
               onClick={navigateNext}
             >
-              Naechster
+              Nächster
               <ChevronRight className="w-3.5 h-3.5 ml-1" />
             </Button>
           </div>

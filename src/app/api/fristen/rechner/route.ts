@@ -16,7 +16,7 @@ const BUNDESLAENDER: BundeslandCode[] = [
 ];
 
 const rechnerSchema = z.object({
-  zustellungsdatum: z.string().datetime({ message: "Unguelitges Datumsformat" }),
+  zustellungsdatum: z.string().datetime({ message: "Ungültiges Datumsformat" }),
   fristArt: z.enum(["EREIGNISFRIST", "BEGINNFRIST"]),
   dauer: z.object({
     tage: z.number().int().min(0).optional(),
@@ -25,7 +25,7 @@ const rechnerSchema = z.object({
     jahre: z.number().int().min(0).optional(),
   }),
   bundesland: z.string().refine((v) => BUNDESLAENDER.includes(v as BundeslandCode), {
-    message: "Ungueltiges Bundesland",
+    message: "Ungültiges Bundesland",
   }),
   section193: z.boolean().optional().default(true),
   richtung: z.enum(["vorwaerts", "rueckwaerts"]).optional().default("vorwaerts"),
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     zustellungsdatum = new Date(zustellungsdatum);
     zustellungsdatum.setMonth(zustellungsdatum.getMonth() + 1);
     sonderfallInfo = {
-      beschreibung: "Oeffentliche Zustellung (Section 188 ZPO): Fristbeginn 1 Monat nach Aushang",
+      beschreibung: "Öffentliche Zustellung (Section 188 ZPO): Fristbeginn 1 Monat nach Aushang",
       zusatzTage: Math.round(
         (zustellungsdatum.getTime() - originalDatum.getTime()) / (1000 * 60 * 60 * 24)
       ),
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     zustellungsdatum.setDate(zustellungsdatum.getDate() + 14);
     sonderfallInfo = {
       beschreibung:
-        "Auslandszustellung (EU-ZustVO): Verlaengerte Zustellungsdauer (+14 Tage EU)",
+        "Auslandszustellung (EU-ZustVO): Verlängerte Zustellungsdauer (+14 Tage EU)",
       zusatzTage: 14,
     };
   }

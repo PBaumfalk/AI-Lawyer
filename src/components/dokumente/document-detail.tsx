@@ -295,7 +295,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
           <Link href={`/akten/${akteId}`}>
             <Button variant="outline" size="sm">
               <ArrowLeft className="w-4 h-4 mr-1.5" />
-              Zurueck zur Akte
+              Zurück zur Akte
             </Button>
           </Link>
         </div>
@@ -466,14 +466,14 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                     )}
                     {dokument.previewPfad !== null && !dokument.previewUrl && (
                       <p className="text-sm text-slate-500">
-                        Keine Vorschau verfuegbar
+                        Keine Vorschau verfügbar
                       </p>
                     )}
                     {isEditable && (
                       <Link href={`/dokumente/${dokument.id}/bearbeiten`}>
                         <Button size="sm" variant="outline">
                           <ExternalLink className="w-4 h-4 mr-1.5" />
-                          In OnlyOffice oeffnen
+                          In OnlyOffice öffnen
                         </Button>
                       </Link>
                     )}
@@ -501,7 +501,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                   />
                   <MetadataRow
                     icon={HardDrive}
-                    label="Groesse"
+                    label="Größe"
                     value={formatFileSize(dokument.groesse)}
                   />
                   <MetadataRow
@@ -557,7 +557,7 @@ export function DocumentDetail({ akteId, dokumentId }: DocumentDetailProps) {
                           </span>
                         )}
                         {dokument.ocrStatus === "NICHT_NOETIG" && (
-                          <span className="text-xs text-slate-500">Nicht noetig</span>
+                          <span className="text-xs text-slate-500">Nicht nötig</span>
                         )}
                       </div>
                     </div>
@@ -678,7 +678,7 @@ function DocumentHistorie({ dokumentId, akteId }: { dokumentId: string; akteId: 
 
   if (items.length === 0) {
     return (
-      <p className="text-xs text-slate-400 py-2">Keine Eintraege vorhanden</p>
+      <p className="text-xs text-slate-400 py-2">Keine Einträge vorhanden</p>
     );
   }
 

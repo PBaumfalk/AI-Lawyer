@@ -80,7 +80,7 @@ export class RvgCalculator {
           const additionalPersons = Math.max(0, anzahl - 1);
           rate = Math.min(additionalPersons * 0.3, 2.0);
           amount = Math.round(rate * baseFee * 100) / 100;
-          notes = `${anzahl} Auftraggeber (${additionalPersons} zusaetzlich), Erhoehung ${rate.toFixed(1)}`;
+          notes = `${anzahl} Auftraggeber (${additionalPersons} zusätzlich), Erhöhung ${rate.toFixed(1)}`;
         } else {
           rate = options.rate ?? vvPos.defaultRate;
           // Validate rate against min/max if defined

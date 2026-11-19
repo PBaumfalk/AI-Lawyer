@@ -92,9 +92,9 @@ Wenn Akten-Dokumente als Quellen vorliegen, beziehe dich konkret auf sie und zit
 Erfinde keine Falldetails, Namen, Daten oder Fakten die nicht in den Quellen stehen — allgemeines juristisches Fachwissen bringst du selbstverständlich ein.
 
 ## Denkprozess
-Schreibe deine internen Ueberlegungen in <think>-Tags bevor du antwortest.
-Halte sie kurz (3-5 Saetze) und auf Deutsch. Beispiel:
-<think>Der Mandant fragt nach Kuendigungsschutz. Ich pruefe: Betriebsgroesse, Dauer, Sozialauswahl...</think>
+Schreibe deine internen Überlegungen in <think>-Tags bevor du antwortest.
+Halte sie kurz (3-5 Sätze) und auf Deutsch. Beispiel:
+<think>Der Mandant fragt nach Kündigungsschutz. Ich prüfe: Betriebsgröße, Dauer, Sozialauswahl...</think>
 
 ## Zwei Modi — gleicher Charakter, unterschiedliche Offenheit
 
@@ -254,7 +254,7 @@ export async function POST(req: NextRequest) {
       if (isSchriftsatzIntent(queryText)) {
         const responsePayload = {
           type: "schriftsatz_conflict" as const,
-          text: `Du hast noch einen offenen Entwurf fuer einen Schriftsatz. Verwerfen und neu starten?`,
+          text: `Du hast noch einen offenen Entwurf für einen Schriftsatz. Verwerfen und neu starten?`,
           pendingRueckfrage: pending.rueckfrage,
           round: pending.round,
           maxRounds: MAX_ROUNDS,
@@ -366,7 +366,7 @@ export async function POST(req: NextRequest) {
             .filter(([, v]) => v === null || (typeof v === "string" && v.startsWith("{{")))
             .map(([k]) => k);
 
-          const fallbackMessage = `Ich erstelle den Entwurf mit Platzhaltern fuer: ${unresolved.join(", ")}. Diese kannst du spaeter ergaenzen.`;
+          const fallbackMessage = `Ich erstelle den Entwurf mit Platzhaltern für: ${unresolved.join(", ")}. Diese kannst du später ergänzen.`;
 
           // Force-complete the pipeline by filling missing slots with PLATZHALTERs
           const forcedSlotValues = { ...mergedSlotValues };
@@ -403,7 +403,7 @@ export async function POST(req: NextRequest) {
         if (pipelineResult.status === "complete") {
           const responsePayload = {
             type: "schriftsatz_complete" as const,
-            text: `Schriftsatz erstellt. Der Entwurf liegt zur Pruefung bereit.`,
+            text: `Schriftsatz erstellt. Der Entwurf liegt zur Prüfung bereit.`,
             draftId: pipelineResult.draftId ?? null,
             warnungen: pipelineResult.warnungen,
           };
@@ -477,7 +477,7 @@ export async function POST(req: NextRequest) {
       if (pipelineResult.status === "complete") {
         const responsePayload = {
           type: "schriftsatz_complete" as const,
-          text: `Schriftsatz erstellt. Der Entwurf liegt zur Pruefung bereit.`,
+          text: `Schriftsatz erstellt. Der Entwurf liegt zur Prüfung bereit.`,
           draftId: pipelineResult.draftId ?? null,
           warnungen: pipelineResult.warnungen,
         };
@@ -612,7 +612,7 @@ export async function POST(req: NextRequest) {
                   d.ocrStatus === "ABGESCHLOSSEN"
                     ? "OCR OK"
                     : d.ocrStatus === "IN_BEARBEITUNG"
-                      ? "OCR laeuft"
+                      ? "OCR läuft"
                       : d.ocrStatus === "FEHLGESCHLAGEN"
                         ? "OCR fehlgeschlagen"
                         : "OCR ausstehend";
@@ -643,7 +643,7 @@ ${beteiligteLines}
 Dokumente in dieser Akte (${akte.dokumente.length}):
 ${dokumenteLines}
 
-Anstehende Fristen/Termine (naechste 10):
+Anstehende Fristen/Termine (nächste 10):
 ${terminLines}
 --- ENDE AKTEN-KONTEXT ---`;
 

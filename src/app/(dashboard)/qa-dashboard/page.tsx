@@ -18,7 +18,7 @@ export default async function QADashboardPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">QA Dashboard</h1>
         <p className="text-sm text-muted-foreground">
-          Helena Qualitaetsmetriken und Release-Gates
+          Helena Qualitätsmetriken und Release-Gates
         </p>
       </div>
 

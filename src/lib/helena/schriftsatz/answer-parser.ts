@@ -54,18 +54,18 @@ export async function classifyAnswerIntent(
   const { object } = await generateObject({
     model,
     schema: IntentClassificationSchema,
-    prompt: `Du bist ein Intent-Classifier fuer einen Schriftsatz-Workflow. Der Nutzer hat eine offene Rueckfrage:
+    prompt: `Du bist ein Intent-Classifier für einen Schriftsatz-Workflow. Der Nutzer hat eine offene Rückfrage:
 
-Aktuelle Rueckfrage: "${pendingRueckfrage}"
+Aktuelle Rückfrage: "${pendingRueckfrage}"
 
 Bisherige Angaben: ${JSON.stringify(currentSlots, null, 2)}
 
 Nachricht des Nutzers: "${userMessage}"
 
 Klassifiziere die Nachricht:
-- "answer": Der Nutzer beantwortet die Rueckfrage oder liefert die angefragten Informationen
-- "correction": Der Nutzer korrigiert eine fruehere Angabe (nenne den Slot-Key in correctedSlotKey, z.B. KLAEGER_NAME)
-- "cancel": Der Nutzer moechte abbrechen (z.B. "abbrechen", "stop", "vergiss es", "lass mal")
+- "answer": Der Nutzer beantwortet die Rückfrage oder liefert die angefragten Informationen
+- "correction": Der Nutzer korrigiert eine frühere Angabe (nenne den Slot-Key in correctedSlotKey, z.B. KLAEGER_NAME)
+- "cancel": Der Nutzer möchte abbrechen (z.B. "abbrechen", "stop", "vergiss es", "lass mal")
 - "unrelated": Der Nutzer stellt eine komplett andere Frage die nichts mit dem Schriftsatz zu tun hat`,
   });
 
@@ -106,7 +106,7 @@ export async function extractSlotValues(
   const { object } = await generateObject({
     model,
     schema: SlotExtractionSchema,
-    prompt: `Du bist ein Slot-Extractor fuer einen juristischen Schriftsatz-Workflow.
+    prompt: `Du bist ein Slot-Extractor für einen juristischen Schriftsatz-Workflow.
 
 Gestellte Frage: "${pendingRueckfrage}"
 
@@ -118,10 +118,10 @@ Antwort des Nutzers: "${userMessage}"
 
 Extrahiere die Werte aus der Antwort und mappe sie auf die erwarteten Slot-Keys.
 - Datumsangaben im Format TT.MM.JJJJ (z.B. "letzten Freitag" -> berechne das Datum)
-- Geldbetraege als Zahl (z.B. "dreitausend" -> "3000")
-- Wenn der Nutzer "weiss ich noch nicht" oder aehnliches sagt, setze den Wert auf "{{SLOT_KEY}}"
+- Geldbeträge als Zahl (z.B. "dreitausend" -> "3000")
+- Wenn der Nutzer "weiß ich noch nicht" oder ähnliches sagt, setze den Wert auf "{{SLOT_KEY}}"
 - Nur Keys aus der erwarteten Liste verwenden
-- Wenn der Nutzer eine fruehere Angabe korrigiert, auch den korrigierten Slot-Key einbeziehen`,
+- Wenn der Nutzer eine frühere Angabe korrigiert, auch den korrigierten Slot-Key einbeziehen`,
   });
 
   return object.extractedValues;

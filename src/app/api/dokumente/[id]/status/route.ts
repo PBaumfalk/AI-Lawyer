@@ -49,7 +49,7 @@ export async function PATCH(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger Request-Body" },
+      { error: "Ungültiger Request-Body" },
       { status: 400 }
     );
   }
@@ -58,7 +58,7 @@ export async function PATCH(
   if (!targetStatus || !Object.values(DokumentStatus).includes(targetStatus)) {
     return NextResponse.json(
       {
-        error: `Ungueltiger Status. Erlaubt: ${Object.values(DokumentStatus).join(", ")}`,
+        error: `Ungültiger Status. Erlaubt: ${Object.values(DokumentStatus).join(", ")}`,
       },
       { status: 400 }
     );
@@ -83,7 +83,7 @@ export async function PATCH(
   if (!allowedTargets.includes(targetStatus)) {
     return NextResponse.json(
       {
-        error: `Uebergang von ${dokument.status} nach ${targetStatus} ist nicht erlaubt. Erlaubte Uebergaenge: ${allowedTargets.join(", ") || "keine"}`,
+        error: `Übergang von ${dokument.status} nach ${targetStatus} ist nicht erlaubt. Erlaubte Übergänge: ${allowedTargets.join(", ") || "keine"}`,
       },
       { status: 400 }
     );
@@ -95,7 +95,7 @@ export async function PATCH(
     if (userRole !== "ANWALT" && userRole !== "ADMIN") {
       return NextResponse.json(
         {
-          error: `Nur Anwalt oder Admin kann den Uebergang ${dokument.status} -> ${targetStatus} durchfuehren`,
+          error: `Nur Anwalt oder Admin kann den Übergang ${dokument.status} -> ${targetStatus} durchführen`,
         },
         { status: 403 }
       );

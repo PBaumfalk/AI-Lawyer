@@ -101,7 +101,7 @@ export function setupSocketAuth(io: Server): void {
 
       if (!decoded || !decoded.sub) {
         log.debug("Connection rejected: token decoded but no subject");
-        return next(new Error("Ungueltiges Token"));
+        return next(new Error("Ungültiges Token"));
       }
 
       socket.data.userId = decoded.sub;
@@ -112,7 +112,7 @@ export function setupSocketAuth(io: Server): void {
       next();
     } catch (err) {
       log.debug({ err }, "Token decode failed");
-      return next(new Error("Ungueltiges Token"));
+      return next(new Error("Ungültiges Token"));
     }
   });
 }

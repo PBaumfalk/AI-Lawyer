@@ -54,7 +54,7 @@ export async function createBooking(
 
   if (periode?.status === 'GESPERRT') {
     throw new Error(
-      `Buchungsperiode ${monat.toString().padStart(2, '0')}/${jahr} ist gesperrt. Keine Buchungen moeglich.`,
+      `Buchungsperiode ${monat.toString().padStart(2, '0')}/${jahr} ist gesperrt. Keine Buchungen möglich.`,
     );
   }
 
@@ -70,7 +70,7 @@ export async function createBooking(
     const verfuegbar = bestand._sum.betrag?.toNumber() ?? 0;
     if (Math.abs(input.betrag) > verfuegbar + 0.005) {
       throw new Error(
-        `Weiterleitung ueber ${Math.abs(input.betrag).toFixed(2)} EUR uebersteigt das vorhandene Fremdgeld (${verfuegbar.toFixed(2)} EUR)`,
+        `Weiterleitung über ${Math.abs(input.betrag).toFixed(2)} EUR übersteigt das vorhandene Fremdgeld (${verfuegbar.toFixed(2)} EUR)`,
       );
     }
   }

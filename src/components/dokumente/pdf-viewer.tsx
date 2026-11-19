@@ -232,7 +232,7 @@ export function PdfViewer({ url, className }: PdfViewerProps) {
           variant="ghost"
           onClick={nextPage}
           disabled={pageNumber >= numPages}
-          title="Naechste Seite"
+          title="Nächste Seite"
           className="h-8 w-8 p-0"
         >
           <ChevronRight className="w-4 h-4" />
@@ -269,7 +269,7 @@ export function PdfViewer({ url, className }: PdfViewerProps) {
           variant="ghost"
           onClick={zoomIn}
           disabled={scale >= 3.0}
-          title="Vergroessern"
+          title="Vergrößern"
           className="h-8 w-8 p-0"
         >
           <ZoomIn className="w-4 h-4" />

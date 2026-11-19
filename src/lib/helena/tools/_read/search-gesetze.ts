@@ -38,7 +38,7 @@ export function createSearchGesetzeTool(ctx: ToolContext) {
       } catch {
         return {
           error:
-            "Embedding-Dienst nicht verfuegbar. Versuche es spaeter erneut.",
+            "Embedding-Dienst nicht verfügbar. Versuche es später erneut.",
         };
       }
 

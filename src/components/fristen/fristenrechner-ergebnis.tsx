@@ -90,12 +90,12 @@ export function FristenRechnerErgebnis({
       <div className="space-y-4">
         <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
           <h3 className="text-sm font-heading text-blue-800 dark:text-blue-300 mb-3">
-            Rueckwaertsberechnung
+            Rückwärtsberechnung
           </h3>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                Spaetester Zustellungstermin
+                Spätester Zustellungstermin
               </span>
               <span className="text-sm font-semibold text-foreground">
                 {formatDate(ergebnis.spaetesterZustellungstermin)}
@@ -180,7 +180,7 @@ export function FristenRechnerErgebnis({
             NOTFRIST
           </span>
           <span className="text-xs text-rose-700 dark:text-rose-400">
-            Diese Frist ist nicht verlaengerbar!
+            Diese Frist ist nicht verlängerbar!
           </span>
         </div>
       )}
@@ -290,7 +290,7 @@ export function FristenRechnerErgebnis({
                   <span className="text-foreground">
                     {entry.result?.ergebnis?.endDatum
                       ? formatDate(entry.result.ergebnis.endDatum)
-                      : "Rueckwaerts"}
+                      : "Rückwärts"}
                   </span>
                 </div>
               ))}

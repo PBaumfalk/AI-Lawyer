@@ -63,21 +63,21 @@ export async function POST(
 
   if (eintrag.typ !== "FRIST") {
     return NextResponse.json(
-      { error: "Verlaengerung ist nur fuer Fristen moeglich" },
+      { error: "Verlängerung ist nur für Fristen möglich" },
       { status: 400 }
     );
   }
 
   if (eintrag.istNotfrist) {
     return NextResponse.json(
-      { error: "Notfristen koennen nicht verlaengert werden" },
+      { error: "Notfristen können nicht verlängert werden" },
       { status: 400 }
     );
   }
 
   if (eintrag.erledigt) {
     return NextResponse.json(
-      { error: "Erledigte Fristen koennen nicht verlaengert werden" },
+      { error: "Erledigte Fristen können nicht verlängert werden" },
       { status: 400 }
     );
   }
@@ -108,7 +108,7 @@ export async function POST(
   historie.push({
     altesEnde: eintrag.fristablauf?.toISOString() ?? eintrag.datum.toISOString(),
     neuesEnde: neuesErgebnis.endDatum.toISOString(),
-    grund: parsed.data.grund ?? "Fristverlaengerung",
+    grund: parsed.data.grund ?? "Fristverlängerung",
     datum: new Date().toISOString(),
   });
 
@@ -122,7 +122,7 @@ export async function POST(
       data: {
         erledigt: true,
         erledigtAm: new Date(),
-        erledigungsgrund: "Frist verlaengert",
+        erledigungsgrund: "Frist verlängert",
       },
     });
   }
@@ -169,7 +169,7 @@ export async function POST(
       aenderung: "Fristverlaengerung",
       altesEnde: eintrag.fristablauf?.toISOString() ?? eintrag.datum.toISOString(),
       neuesEnde: neuesErgebnis.endDatum.toISOString(),
-      grund: parsed.data.grund ?? "Fristverlaengerung",
+      grund: parsed.data.grund ?? "Fristverlängerung",
     },
   });
 

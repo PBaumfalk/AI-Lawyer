@@ -84,7 +84,7 @@ export const SHOP_ITEM_CATALOG: ShopItemSeed[] = [
   {
     slug: "azur-rahmen",
     name: "Azur-Rahmen",
-    beschreibung: "Ein leuchtend blauer Ring fuer erfahrene Kanzlei-Helden",
+    beschreibung: "Ein leuchtend blauer Ring für erfahrene Kanzlei-Helden",
     typ: "AVATAR_RAHMEN",
     rarity: "RARE",
     preis: 50,
@@ -104,7 +104,7 @@ export const SHOP_ITEM_CATALOG: ShopItemSeed[] = [
   {
     slug: "assessor-titel",
     name: "Assessor",
-    beschreibung: "Fuer Helden die sich bewiesen haben",
+    beschreibung: "Für Helden die sich bewiesen haben",
     typ: "PROFIL_TITEL",
     rarity: "RARE",
     preis: 50,
@@ -124,7 +124,7 @@ export const SHOP_ITEM_CATALOG: ShopItemSeed[] = [
   {
     slug: "streak-schutz",
     name: "Streak-Schutz",
-    beschreibung: "Schuetzt deinen Streak vor dem naechsten verpassten Arbeitstag. Einmalverbrauch.",
+    beschreibung: "Schützt deinen Streak vor dem nächsten verpassten Arbeitstag. Einmalverbrauch.",
     typ: "PERK",
     rarity: "RARE",
     preis: 50,
@@ -136,7 +136,7 @@ export const SHOP_ITEM_CATALOG: ShopItemSeed[] = [
   {
     slug: "amethyst-rahmen",
     name: "Amethyst-Rahmen",
-    beschreibung: "Ein violett schimmernder Ring fuer wahre Meister",
+    beschreibung: "Ein violett schimmernder Ring für wahre Meister",
     typ: "AVATAR_RAHMEN",
     rarity: "EPIC",
     preis: 120,
@@ -146,7 +146,7 @@ export const SHOP_ITEM_CATALOG: ShopItemSeed[] = [
   {
     slug: "justiz-palast-banner",
     name: "Justizpalast-Banner",
-    beschreibung: "Die Saeulen der Gerechtigkeit als Hintergrund",
+    beschreibung: "Die Säulen der Gerechtigkeit als Hintergrund",
     typ: "BANNER",
     rarity: "EPIC",
     preis: 120,
@@ -156,7 +156,7 @@ export const SHOP_ITEM_CATALOG: ShopItemSeed[] = [
   {
     slug: "syndikus-titel",
     name: "Syndikus",
-    beschreibung: "Titel fuer die Elite der Kanzlei",
+    beschreibung: "Titel für die Elite der Kanzlei",
     typ: "PROFIL_TITEL",
     rarity: "EPIC",
     preis: 120,
@@ -166,7 +166,7 @@ export const SHOP_ITEM_CATALOG: ShopItemSeed[] = [
   {
     slug: "feuerwerk-animation",
     name: "Feuerwerk",
-    beschreibung: "Praechtiges Feuerwerk bei Quest-Abschluss",
+    beschreibung: "Prächtiges Feuerwerk bei Quest-Abschluss",
     typ: "ABSCHLUSS_ANIMATION",
     rarity: "EPIC",
     preis: 120,
@@ -188,7 +188,7 @@ export const SHOP_ITEM_CATALOG: ShopItemSeed[] = [
   {
     slug: "gold-rahmen",
     name: "Goldener Rahmen",
-    beschreibung: "Der legendaere goldene Ring -- nur fuer die Wuerdigsten",
+    beschreibung: "Der legendäre goldene Ring -- nur für die Würdigsten",
     typ: "AVATAR_RAHMEN",
     rarity: "LEGENDARY",
     preis: 300,
@@ -208,7 +208,7 @@ export const SHOP_ITEM_CATALOG: ShopItemSeed[] = [
   {
     slug: "kanzleipartner-titel",
     name: "Kanzleipartner",
-    beschreibung: "Der hoechste Titel in der Kanzlei -- Legende",
+    beschreibung: "Der höchste Titel in der Kanzlei -- Legende",
     typ: "PROFIL_TITEL",
     rarity: "LEGENDARY",
     preis: 300,

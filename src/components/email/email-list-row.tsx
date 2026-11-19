@@ -189,7 +189,7 @@ export const EmailListRow = memo(function EmailListRow({
           />
         )}
         <QuickAction icon={Archive} title="Archivieren" onClick={() => onQuickAction(email.id, "archive")} />
-        <QuickAction icon={Trash2} title="Loeschen" onClick={() => onQuickAction(email.id, "delete")} />
+        <QuickAction icon={Trash2} title="Löschen" onClick={() => onQuickAction(email.id, "delete")} />
       </div>
     </div>
   );

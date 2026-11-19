@@ -222,7 +222,7 @@ export function TicketFromEmailDialog({
 
               {/* Prioritaet */}
               <div className="space-y-1.5">
-                <Label htmlFor="ticket-prioritaet">Prioritaet</Label>
+                <Label htmlFor="ticket-prioritaet">Priorität</Label>
                 <select
                   id="ticket-prioritaet"
                   value={prioritaet}
@@ -238,7 +238,7 @@ export function TicketFromEmailDialog({
 
               {/* Faellig am */}
               <div className="space-y-1.5">
-                <Label htmlFor="ticket-faellig">Faellig am</Label>
+                <Label htmlFor="ticket-faellig">Fällig am</Label>
                 <Input
                   id="ticket-faellig"
                   type="date"

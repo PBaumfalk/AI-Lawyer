@@ -171,14 +171,14 @@ export async function extractFalldaten(
 
   const systemPrompt = `Du bist Helena, KI-Assistentin einer Kanzlei. Extrahiere strukturierte Falldaten aus den folgenden Dokumenten.
 
-Fuer jedes Feld:
+Für jedes Feld:
 - Gib den extrahierten Wert passend zum Feldtyp an
-- Gib eine Konfidenz-Einschaetzung: HOCH (klar im Text), MITTEL (abgeleitet/interpretiert), NIEDRIG (unsicher/geraten)
+- Gib eine Konfidenz-Einschätzung: HOCH (klar im Text), MITTEL (abgeleitet/interpretiert), NIEDRIG (unsicher/geraten)
 - Gib ein kurzes Zitat aus dem Quelldokument (max 200 Zeichen)
-- Fuer "select"-Felder: verwende nur die angegebenen Optionswerte
-- Fuer "date"-Felder: verwende das Format YYYY-MM-DD
-- Fuer "boolean"-Felder: verwende true oder false
-- Fuer "currency"/"number"-Felder: verwende Zahlen ohne Waehrungszeichen
+- Für "select"-Felder: verwende nur die angegebenen Optionswerte
+- Für "date"-Felder: verwende das Format YYYY-MM-DD
+- Für "boolean"-Felder: verwende true oder false
+- Für "currency"/"number"-Felder: verwende Zahlen ohne Währungszeichen
 
 Wenn ein Feld nicht aus den Dokumenten ableitbar ist, lasse es weg.`;
 
@@ -188,7 +188,7 @@ ${documentContext}
 
 ---
 
-Extrahiere Daten fuer folgende Felder:
+Extrahiere Daten für folgende Felder:
 
 ${fieldDefinitions}`;
 

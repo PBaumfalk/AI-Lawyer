@@ -381,7 +381,7 @@ export function KalenderEintragDialog({
                 className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600"
               />
               <span className="text-sm text-foreground/80">
-                Ganztaegig
+                Ganztägig
               </span>
             </label>
 
@@ -442,7 +442,7 @@ export function KalenderEintragDialog({
                 </div>
               </div>
               <p className="text-[10px] text-rose-600/70 dark:text-rose-400/70">
-                Tipp: Nutzen Sie den Fristenrechner (Cmd+Shift+F) fuer praezise Berechnung mit Feiertagen.
+                Tipp: Nutzen Sie den Fristenrechner (Cmd+Shift+F) für präzise Berechnung mit Feiertagen.
               </p>
             </div>
           )}

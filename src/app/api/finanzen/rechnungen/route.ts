@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   );
   if (!parsedQuery.success) {
     return NextResponse.json(
-      { error: 'Ungueltige Abfrageparameter', details: parsedQuery.error.flatten() },
+      { error: 'Ungültige Abfrageparameter', details: parsedQuery.error.flatten() },
       { status: 400 },
     );
   }
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 });
+    return NextResponse.json({ error: 'Ungültiger Request-Body' }, { status: 400 });
   }
 
   const parsed = createInvoiceSchema.safeParse(body);

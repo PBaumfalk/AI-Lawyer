@@ -143,7 +143,7 @@ export default function ShopPage() {
           toast.error(err.error || "Aktion fehlgeschlagen");
           return;
         }
-        toast.success(equip ? "Ausgeruestet!" : "Abgelegt!");
+        toast.success(equip ? "Ausgerüstet!" : "Abgelegt!");
         await fetchShop();
       } catch {
         toast.error("Aktion fehlgeschlagen");
@@ -301,7 +301,7 @@ export default function ShopPage() {
           {filteredItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <ShoppingBag className="w-12 h-12 mb-3 opacity-50" />
-              <p className="text-sm">Keine Gegenstaende in dieser Kategorie.</p>
+              <p className="text-sm">Keine Gegenstände in dieser Kategorie.</p>
             </div>
           )}
         </TabsContent>
@@ -312,7 +312,7 @@ export default function ShopPage() {
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <ShoppingBag className="w-12 h-12 mb-3 opacity-50" />
               <p className="text-sm mb-2">
-                Noch keine Gegenstaende erworben.
+                Noch keine Gegenstände erworben.
               </p>
               <Button
                 variant="outline"

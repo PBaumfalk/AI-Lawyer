@@ -55,19 +55,19 @@ export interface AssemblyResult {
 
 const SECTION_PROMPTS: Record<string, string> = {
   rubrum:
-    "Erstelle das Rubrum des Schriftsatzes. Verwende die Informationen der Parteien und des Gerichts. Das Rubrum muss die Bezeichnung der Parteien, das zustaendige Gericht und den Streitgegenstand enthalten.",
+    "Erstelle das Rubrum des Schriftsatzes. Verwende die Informationen der Parteien und des Gerichts. Das Rubrum muss die Bezeichnung der Parteien, das zuständige Gericht und den Streitgegenstand enthalten.",
 
   antraege:
-    "Formuliere die Antraege basierend auf der Klageart und den Anspruchsgrundlagen. Verwende die bereitgestellten Muster als Orientierung. Die Antraege muessen bestimmt und vollstreckbar formuliert sein (SS 253 Abs. 2 Nr. 2 ZPO). Gib jeden Antrag als separaten Eintrag zurueck.",
+    "Formuliere die Anträge basierend auf der Klageart und den Anspruchsgrundlagen. Verwende die bereitgestellten Muster als Orientierung. Die Anträge müssen bestimmt und vollstreckbar formuliert sein (SS 253 Abs. 2 Nr. 2 ZPO). Gib jeden Antrag als separaten Eintrag zurück.",
 
   sachverhalt:
-    "Erstelle den Sachverhalt chronologisch und praezise. Verwende nur die bereitgestellten Fakten. Wo Details fehlen, setze {{ERGAENZUNG_SACHVERHALT}} als Platzhalter. Der Sachverhalt muss alle anspruchsbegruendenden Tatsachen enthalten.",
+    "Erstelle den Sachverhalt chronologisch und präzise. Verwende nur die bereitgestellten Fakten. Wo Details fehlen, setze {{ERGAENZUNG_SACHVERHALT}} als Platzhalter. Der Sachverhalt muss alle anspruchsbegründenden Tatsachen enthalten.",
 
   rechtliche_wuerdigung:
-    "Erstelle die Rechtliche Wuerdigung mit vollstaendig ausformulierten Absaetzen pro Anspruchsgrundlage. Stuetze dich auf die bereitgestellten Normen und Urteile. Wo fallspezifische Details fehlen, setze {{ERGAENZUNG}} als Platzhalter. Zitiere konkrete Paragraphen und Entscheidungen.",
+    "Erstelle die Rechtliche Würdigung mit vollständig ausformulierten Absätzen pro Anspruchsgrundlage. Stütze dich auf die bereitgestellten Normen und Urteile. Wo fallspezifische Details fehlen, setze {{ERGAENZUNG}} als Platzhalter. Zitiere konkrete Paragraphen und Entscheidungen.",
 
   beweisangebote:
-    "Erstelle die Beweisangebote basierend auf den Akten-Dokumenten. Weise jedem Dokument eine Anlagennummer zu (K1-Kn fuer Klaeger, B1-Bn fuer Beklagter). Ordne die Beweise den jeweiligen Behauptungen zu.",
+    "Erstelle die Beweisangebote basierend auf den Akten-Dokumenten. Weise jedem Dokument eine Anlagennummer zu (K1-Kn für Kläger, B1-Bn für Beklagter). Ordne die Beweise den jeweiligen Behauptungen zu.",
 
   kosten:
     "Berechne Streitwert und Gerichtskosten basierend auf Klageart und Akte-Daten. Erstelle eine Kostenaufstellung.",
@@ -364,7 +364,7 @@ async function generateSectionWithRag(
   const result = await generateObject({
     model,
     schema: z.object({ text: z.string() }),
-    system: `${sectionPrompt}\n\nDu schreibst fuer eine ${intent.klageart} (${intent.rechtsgebiet}).`,
+    system: `${sectionPrompt}\n\nDu schreibst für eine ${intent.klageart} (${intent.rechtsgebiet}).`,
     prompt: `Relevante Quellen:\n${ragContext}\n\nBekannte Informationen:\n${slotContext}`,
   });
 
@@ -503,7 +503,7 @@ function buildFormales(slots: SlotValues): Record<string, unknown> {
     datum,
     unterschrift,
     hinweise: [
-      "Abschriften fuer Gegenseite beifuegen",
+      "Abschriften für Gegenseite beifügen",
       "Ggf. beglaubigte Vollmacht beilegen",
     ],
   };
@@ -529,7 +529,7 @@ function buildKosten(
         `Streitwert: ${streitwert.toLocaleString("de-DE")} EUR`,
       );
       hinweise.push(
-        `Gerichtskosten (3-fache Gebuehr): ${gerichtskosten.toLocaleString("de-DE")} EUR`,
+        `Gerichtskosten (3-fache Gebühr): ${gerichtskosten.toLocaleString("de-DE")} EUR`,
       );
     } catch {
       hinweise.push("Gerichtskosten konnten nicht berechnet werden");
@@ -540,10 +540,10 @@ function buildKosten(
 
   if (klageart.rechtsgebiet === "ARBEITSRECHT") {
     hinweise.push(
-      "Kein Gebuehrenvorschuss beim Arbeitsgericht erforderlich",
+      "Kein Gebührenvorschuss beim Arbeitsgericht erforderlich",
     );
     hinweise.push(
-      "Kosten erster Instanz: Jede Partei traegt eigene Anwaltskosten (SS 12a ArbGG)",
+      "Kosten erster Instanz: Jede Partei trägt eigene Anwaltskosten (SS 12a ArbGG)",
     );
   }
 

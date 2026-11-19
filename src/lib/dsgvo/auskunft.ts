@@ -92,7 +92,7 @@ export async function generateAuskunftPdf(kontaktId: string): Promise<Buffer> {
   }
 
   // ─── Header ────────────────────────────────────────────────
-  drawText("Datenauskunft gemaess Art. 15 DSGVO", { bold: true, size: 18, color: [0.1, 0.1, 0.3] });
+  drawText("Datenauskunft gemäß Art. 15 DSGVO", { bold: true, size: 18, color: [0.1, 0.1, 0.3] });
   y -= 8;
   drawText(`Erstellt am: ${new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}`, {
     size: 9,
@@ -107,7 +107,7 @@ export async function generateAuskunftPdf(kontaktId: string): Promise<Buffer> {
       ? `${kontakt.vorname ?? ""} ${kontakt.nachname ?? ""}`.trim()
       : kontakt.firma ?? "Unbekannt";
   drawKeyValue("Name", displayName);
-  drawKeyValue("Typ", kontakt.typ === "NATUERLICH" ? "Natuerliche Person" : "Juristische Person");
+  drawKeyValue("Typ", kontakt.typ === "NATUERLICH" ? "Natürliche Person" : "Juristische Person");
   drawKeyValue("Anrede", kontakt.anrede);
   drawKeyValue("Titel", kontakt.titel);
   drawKeyValue("E-Mail", kontakt.email);
@@ -157,7 +157,7 @@ export async function generateAuskunftPdf(kontaktId: string): Promise<Buffer> {
   }
 
   // ─── 3. Dokumente ─────────────────────────────────────────
-  drawSection("3. Dokumente in zugehoerigen Akten");
+  drawSection("3. Dokumente in zugehörigen Akten");
   let docCount = 0;
   for (const bet of kontakt.beteiligte) {
     for (const dok of bet.akte.dokumente) {
@@ -167,7 +167,7 @@ export async function generateAuskunftPdf(kontaktId: string): Promise<Buffer> {
       );
       docCount++;
       if (docCount >= 200) {
-        drawText("... (weitere Dokumente nicht aufgefuehrt, max. 200)");
+        drawText("... (weitere Dokumente nicht aufgeführt, max. 200)");
         break;
       }
     }
@@ -178,7 +178,7 @@ export async function generateAuskunftPdf(kontaktId: string): Promise<Buffer> {
   }
 
   // ─── 4. Kalendereintraege ─────────────────────────────────
-  drawSection("4. Kalendereintraege");
+  drawSection("4. Kalendereinträge");
   let calCount = 0;
   for (const bet of kontakt.beteiligte) {
     for (const ke of bet.akte.kalenderEintraege) {
@@ -188,14 +188,14 @@ export async function generateAuskunftPdf(kontaktId: string): Promise<Buffer> {
       );
       calCount++;
       if (calCount >= 100) {
-        drawText("... (weitere Eintraege nicht aufgefuehrt, max. 100)");
+        drawText("... (weitere Einträge nicht aufgeführt, max. 100)");
         break;
       }
     }
     if (calCount >= 100) break;
   }
   if (calCount === 0) {
-    drawText("Keine Kalendereintraege vorhanden.");
+    drawText("Keine Kalendereinträge vorhanden.");
   }
 
   // ─── 5. Buchungen (Aktenkonto) ────────────────────────────

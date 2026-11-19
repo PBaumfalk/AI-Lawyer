@@ -17,7 +17,7 @@ export function PortalAkteTabs({ akteId }: { akteId: string }) {
 
   const tabs: Tab[] = [
     {
-      name: "Uebersicht",
+      name: "Übersicht",
       href: `/portal/akten/${akteId}`,
       icon: ClipboardList,
       exact: true,

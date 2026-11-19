@@ -101,7 +101,7 @@ export function InventoryItem({
         {loading ? (
           <Loader2 className="w-4 h-4 animate-spin mr-1" />
         ) : null}
-        Ausruesten
+        Ausrüsten
       </Button>
     );
   }

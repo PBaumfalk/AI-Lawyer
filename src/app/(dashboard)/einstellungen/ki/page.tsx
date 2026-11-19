@@ -209,7 +209,7 @@ export default function KiEinstellungenPage() {
               value: apiKey,
               type: "string",
               category: "ai",
-              label: "API-Schluessel",
+              label: "API-Schlüssel",
             },
             {
               key: "ai.provider.model",
@@ -304,10 +304,10 @@ export default function KiEinstellungenPage() {
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
           <div>
             <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
-              Helena ist gerade nicht verfuegbar
+              Helena ist gerade nicht verfügbar
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Der KI-Provider ist nicht erreichbar. Bitte pruefen Sie die
+              Der KI-Provider ist nicht erreichbar. Bitte prüfen Sie die
               Verbindungseinstellungen.
             </p>
           </div>
@@ -360,7 +360,7 @@ export default function KiEinstellungenPage() {
           {(provider === "openai" || provider === "anthropic") && (
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">
-                API-Schluessel
+                API-Schlüssel
               </label>
               <input
                 type="password"
@@ -483,7 +483,7 @@ export default function KiEinstellungenPage() {
                 Proaktive Aktenanalyse
               </p>
               <p className="text-xs text-muted-foreground">
-                Helena analysiert Akten regelmaessig auf neue Aufgaben
+                Helena analysiert Akten regelmäßig auf neue Aufgaben
               </p>
             </div>
             <button
@@ -511,7 +511,7 @@ export default function KiEinstellungenPage() {
                 Tagesbriefing
               </p>
               <p className="text-xs text-muted-foreground">
-                Helena erstellt taeglich ein Briefing ueber anstehende Aufgaben
+                Helena erstellt täglich ein Briefing über anstehende Aufgaben
               </p>
             </div>
             <button
@@ -672,7 +672,7 @@ export default function KiEinstellungenPage() {
 
             {usage.totalTokens === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Keine Token-Nutzung im gewaehlten Zeitraum.
+                Keine Token-Nutzung im gewählten Zeitraum.
               </p>
             )}
           </div>

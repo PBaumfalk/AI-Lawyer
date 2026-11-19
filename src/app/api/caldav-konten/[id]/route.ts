@@ -120,7 +120,7 @@ export async function PATCH(
 
   if (!parsed.success) {
     return Response.json(
-      { error: "Ungueltige Eingabe", details: parsed.error.flatten() },
+      { error: "Ungültige Eingabe", details: parsed.error.flatten() },
       { status: 400 }
     );
   }

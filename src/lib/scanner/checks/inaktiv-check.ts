@@ -72,7 +72,7 @@ export async function runInaktivCheck(thresholdDays: number): Promise<number> {
         typ: "AKTE_INAKTIV",
         severity: 4,
         titel: `Inaktive Akte: ${akte.aktenzeichen}`,
-        inhalt: `Keine Aktivitaet seit ${thresholdDays} Tagen. Letzte Aenderung: ${formattedDate}`,
+        inhalt: `Keine Aktivität seit ${thresholdDays} Tagen. Letzte Änderung: ${formattedDate}`,
         meta: {
           lastActivity: akte.geaendert.toISOString(),
           thresholdDays,

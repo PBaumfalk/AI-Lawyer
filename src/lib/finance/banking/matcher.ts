@@ -88,7 +88,7 @@ export async function matchTransactions(
       // 2. Check exact amount match within 0.01 EUR (confidence 0.7)
       const rBetrag = rechnung.betragBrutto.toNumber();
       if (Math.abs(txBetrag - rBetrag) < 0.01) {
-        matchReasons.push(`Betrag ${rBetrag.toFixed(2)} EUR stimmt ueberein`);
+        matchReasons.push(`Betrag ${rBetrag.toFixed(2)} EUR stimmt überein`);
         maxConfidence = Math.max(maxConfidence, 0.7);
       }
 

@@ -112,9 +112,9 @@ function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: 
           </div>
         </div>
         <div>
-          <p className="text-sm font-medium text-foreground">Noch keine E-Mails verknuepft</p>
+          <p className="text-sm font-medium text-foreground">Noch keine E-Mails verknüpft</p>
           <p className="text-xs text-muted-foreground mt-1">
-            E-Mails koennen direkt aus dem Posteingang zu dieser Akte hinzugefuegt werden.
+            E-Mails können direkt aus dem Posteingang zu dieser Akte hinzugefügt werden.
           </p>
         </div>
         <div className="flex justify-center gap-2 flex-wrap">
@@ -123,7 +123,7 @@ function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: 
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
           >
             <Mail className="w-3.5 h-3.5" />
-            Posteingang oeffnen
+            Posteingang öffnen
           </Link>
           <a
             href={`/akten/${akteId}/emails`}
@@ -145,9 +145,9 @@ function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: 
           </div>
         </div>
         <div>
-          <p className="text-sm font-medium text-foreground">Noch keine Helena-Aktivitaeten</p>
+          <p className="text-sm font-medium text-foreground">Noch keine Helena-Aktivitäten</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Starten Sie eine Anfrage an Helena, um KI-gestuetzte Entwuerfe und Analysen zu erhalten.
+            Starten Sie eine Anfrage an Helena, um KI-gestützte Entwürfe und Analysen zu erhalten.
           </p>
         </div>
       </div>
@@ -161,9 +161,9 @@ function FeedEmptyState({ filterLabel, akteId }: { filterLabel: string; akteId: 
           <Clock className="w-6 h-6 text-slate-400" />
         </div>
       </div>
-      <p className="text-sm font-medium text-foreground">Keine Aktivitaeten vorhanden</p>
+      <p className="text-sm font-medium text-foreground">Keine Aktivitäten vorhanden</p>
       <p className="text-xs text-muted-foreground">
-        Neue Aktivitaeten erscheinen hier automatisch.
+        Neue Aktivitäten erscheinen hier automatisch.
       </p>
     </div>
   );
@@ -317,7 +317,7 @@ export function ActivityFeed({ akteId }: ActivityFeedProps) {
           className="w-full py-2 text-xs text-center text-brand-600 bg-brand-50 dark:bg-brand-950 hover:bg-brand-100 dark:hover:bg-brand-900 transition-colors rounded-lg mb-2 flex items-center justify-center gap-1.5"
         >
           <RefreshCw className="w-3 h-3" />
-          Neue Eintraege verfuegbar -- klicken zum Aktualisieren
+          Neue Einträge verfügbar -- klicken zum Aktualisieren
         </button>
       )}
 

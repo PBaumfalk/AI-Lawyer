@@ -123,7 +123,7 @@ export default async function PortalProfilPage() {
           </div>
 
           <p className="text-xs text-muted-foreground mt-6">
-            Kontaktdaten werden von Ihrer Kanzlei verwaltet. Bei Aenderungen
+            Kontaktdaten werden von Ihrer Kanzlei verwaltet. Bei Änderungen
             wenden Sie sich bitte an Ihren Anwalt.
           </p>
         </div>

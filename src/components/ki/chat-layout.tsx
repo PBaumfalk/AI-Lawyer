@@ -351,7 +351,7 @@ export function ChatLayout({
           <span className="text-[10px] text-muted-foreground ml-1">
             {crossAkte
               ? "Suche in allen zugewiesenen Akten"
-              : "Suche in ausgewaehlter Akte"}
+              : "Suche in ausgewählter Akte"}
           </span>
         </div>
 

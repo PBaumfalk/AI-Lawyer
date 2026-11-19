@@ -110,25 +110,25 @@ export async function processBriefing(job: Job<BriefingJobData>): Promise<void> 
     ? dueFristen
         .map(
           (f) =>
-            `- ${f.titel} (${f.akte?.aktenzeichen ?? "Ohne Akte"}: ${f.akte?.kurzrubrum ?? ""}) - faellig ${f.datum.toLocaleDateString("de-DE")}`
+            `- ${f.titel} (${f.akte?.aktenzeichen ?? "Ohne Akte"}: ${f.akte?.kurzrubrum ?? ""}) - fällig ${f.datum.toLocaleDateString("de-DE")}`
         )
         .join("\n")
-    : "Keine Fristen heute faellig.";
+    : "Keine Fristen heute fällig.";
 
   const upcomingText = upcomingFristen.length > 0
     ? upcomingFristen
         .map(
           (f) =>
-            `- ${f.titel} (${f.akte?.aktenzeichen ?? ""}) - faellig ${f.datum.toLocaleDateString("de-DE")}`
+            `- ${f.titel} (${f.akte?.aktenzeichen ?? ""}) - fällig ${f.datum.toLocaleDateString("de-DE")}`
         )
         .join("\n")
-    : "Keine anstehenden Fristen in den naechsten 7 Tagen.";
+    : "Keine anstehenden Fristen in den nächsten 7 Tagen.";
 
   const staleText = staleAkten.length > 0
     ? staleAkten
         .map(
           (a) =>
-            `- ${a.aktenzeichen}: ${a.kurzrubrum} (letzte Aenderung: ${a.geaendert.toLocaleDateString("de-DE")})`
+            `- ${a.aktenzeichen}: ${a.kurzrubrum} (letzte Änderung: ${a.geaendert.toLocaleDateString("de-DE")})`
         )
         .join("\n")
     : "Keine inaktiven Akten.";
@@ -140,18 +140,18 @@ export async function processBriefing(job: Job<BriefingJobData>): Promise<void> 
 
   const result = await generateText({
     model,
-    system: `Du bist Helena, die digitale Rechtsanwaltsfachangestellte. Erstelle ein kurzes, uebersichtliches Tagesbriefing fuer den Anwalt.
-Das Briefing soll strukturiert, sachlich und hilfreich sein. Verwende kurze Absaetze und Aufzaehlungszeichen.
-Beginne mit einer freundlichen Begruessung und fasse dann die wichtigsten Punkte zusammen.`,
+    system: `Du bist Helena, die digitale Rechtsanwaltsfachangestellte. Erstelle ein kurzes, übersichtliches Tagesbriefing für den Anwalt.
+Das Briefing soll strukturiert, sachlich und hilfreich sein. Verwende kurze Absätze und Aufzählungszeichen.
+Beginne mit einer freundlichen Begrüßung und fasse dann die wichtigsten Punkte zusammen.`,
     prompt: `Datum: ${today.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
 
 HEUTIGE FRISTEN:
 ${fristenText}
 
-ANSTEHENDE FRISTEN (naechste 7 Tage):
+ANSTEHENDE FRISTEN (nächste 7 Tage):
 ${upcomingText}
 
-INAKTIVE AKTEN (keine Aenderung seit 7+ Tagen):
+INAKTIVE AKTEN (keine Änderung seit 7+ Tagen):
 ${staleText}
 
 NEUE KI-VORSCHLAEGE: ${newSuggestions}
@@ -187,7 +187,7 @@ Erstelle ein kompaktes Tagesbriefing.`,
     userId,
     type: "ai_suggestion" as any,
     title: "Helena: Ihr Tagesbriefing",
-    message: `${dueFristen.length} Fristen heute faellig, ${newSuggestions} neue Vorschlaege`,
+    message: `${dueFristen.length} Fristen heute fällig, ${newSuggestions} neue Vorschläge`,
     data: {
       suggestionId: suggestion.id,
       typ: "BRIEFING",

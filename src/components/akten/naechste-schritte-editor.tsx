@@ -32,7 +32,7 @@ export function NaechsteSchritteEditor({
         throw new Error("Save failed");
       }
 
-      toast.success("Naechste Schritte gespeichert");
+      toast.success("Nächste Schritte gespeichert");
     } catch {
       toast.error("Fehler beim Speichern");
     } finally {
@@ -51,7 +51,7 @@ export function NaechsteSchritteEditor({
         <div className="flex items-center gap-2">
           <Eye className="w-4 h-4 text-primary" />
           <span className="text-sm font-semibold text-foreground">
-            Naechste Schritte (fuer Mandant)
+            Nächste Schritte (für Mandant)
           </span>
         </div>
         {isOpen ? (
@@ -65,7 +65,7 @@ export function NaechsteSchritteEditor({
       {isOpen && (
         <div className="px-4 pb-4 space-y-3">
           <p className="text-xs text-muted-foreground">
-            Dieser Text ist fuer den Mandanten im Portal sichtbar.
+            Dieser Text ist für den Mandanten im Portal sichtbar.
           </p>
 
           <textarea

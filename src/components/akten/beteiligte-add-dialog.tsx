@@ -101,7 +101,7 @@ export function BeteiligteAddDialog({
         const checkRes = await fetch(conflictCheckUrl(akteId, selectedKontakt.id, rolle));
         if (!checkRes.ok) {
           // Never add silently without the conflict check having run.
-          throw new Error("Kollisionspruefung fehlgeschlagen");
+          throw new Error("Kollisionsprüfung fehlgeschlagen");
         }
         {
           const result = (await checkRes.json()) as ConflictResult;

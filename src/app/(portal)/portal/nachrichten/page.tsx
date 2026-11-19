@@ -29,7 +29,7 @@ export default async function PortalNachrichtenPage() {
         <div className="text-center space-y-3">
           <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground/30" />
           <p className="text-muted-foreground text-sm">
-            Sie haben derzeit keine aktiven Vorgaenge.
+            Sie haben derzeit keine aktiven Vorgänge.
           </p>
         </div>
       </div>

@@ -9,11 +9,11 @@ export default function EntwuerfePage() {
           <div className="flex items-center gap-2">
             <FileCheck className="w-6 h-6 text-brand-600 dark:text-brand-400" />
             <h1 className="text-2xl font-semibold text-foreground">
-              Entwuerfe
+              Entwürfe
             </h1>
           </div>
           <p className="text-muted-foreground mt-1">
-            Helena-Entwuerfe zur Pruefung und Freigabe
+            Helena-Entwürfe zur Prüfung und Freigabe
           </p>
         </div>
       </div>

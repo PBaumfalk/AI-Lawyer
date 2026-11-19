@@ -46,7 +46,7 @@ async function resolvePortalChannel(akteId: string, userId: string, userName: st
   });
 
   if (!akte?.anwaltId) {
-    return { error: "Akte hat keinen zustaendigen Anwalt" };
+    return { error: "Akte hat keinen zuständigen Anwalt" };
   }
 
   const result = await createPortalChannel({
@@ -246,7 +246,7 @@ export async function POST(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger Request-Body" },
+      { error: "Ungültiger Request-Body" },
       { status: 400 }
     );
   }

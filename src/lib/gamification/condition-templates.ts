@@ -56,7 +56,7 @@ export const CONDITION_TEMPLATES: ConditionTemplate[] = [
   {
     id: "akten-aktualisieren",
     label: "Akten aktualisieren",
-    description: "Anzahl Aktenaktivitaeten im Kampagnenzeitraum",
+    description: "Anzahl Aktenaktivitäten im Kampagnenzeitraum",
     condition: {
       model: "AktenActivity",
       where: {},

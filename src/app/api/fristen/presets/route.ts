@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
   const userRole = (session.user as any).role;
   if (userRole !== "ADMIN") {
-    return NextResponse.json({ error: "Nur Administratoren koennen Presets erstellen" }, { status: 403 });
+    return NextResponse.json({ error: "Nur Administratoren können Presets erstellen" }, { status: 403 });
   }
 
   const body = await request.json();
@@ -134,7 +134,7 @@ export async function PUT(request: NextRequest) {
 
   const userRole = (session.user as any).role;
   if (userRole !== "ADMIN") {
-    return NextResponse.json({ error: "Nur Administratoren koennen Presets bearbeiten" }, { status: 403 });
+    return NextResponse.json({ error: "Nur Administratoren können Presets bearbeiten" }, { status: 403 });
   }
 
   const body = await request.json();
@@ -176,7 +176,7 @@ export async function DELETE(request: NextRequest) {
 
   const userRole = (session.user as any).role;
   if (userRole !== "ADMIN") {
-    return NextResponse.json({ error: "Nur Administratoren koennen Presets loeschen" }, { status: 403 });
+    return NextResponse.json({ error: "Nur Administratoren können Presets löschen" }, { status: 403 });
   }
 
   const { searchParams } = new URL(request.url);

@@ -56,7 +56,7 @@ export function createUpdateAkteRagTool(ctx: ToolContext) {
         (v) => v !== undefined && v !== null,
       );
       if (!hasUpdates) {
-        return { error: "Keine Aenderungen vorgeschlagen." };
+        return { error: "Keine Änderungen vorgeschlagen." };
       }
 
       const draft = await ctx.prisma.helenaDraft.create({

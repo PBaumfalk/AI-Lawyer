@@ -68,7 +68,7 @@ export async function GET(
     if (!xrechnungErlaubt(rechnung.status)) {
       return NextResponse.json(
         {
-          error: `E-Rechnung nur fuer gestellte, gemahnte oder bezahlte Rechnungen verfuegbar. Aktueller Status: ${rechnung.status}`,
+          error: `E-Rechnung nur für gestellte, gemahnte oder bezahlte Rechnungen verfügbar. Aktueller Status: ${rechnung.status}`,
         },
         { status: 400 },
       );
@@ -80,7 +80,7 @@ export async function GET(
       return NextResponse.json(
         {
           error:
-            'Kanzlei muss Steuernummer oder USt-IdNr konfiguriert haben fuer E-Rechnung-Erstellung. Bitte in den Kanzlei-Einstellungen hinterlegen.',
+            'Kanzlei muss Steuernummer oder USt-IdNr konfiguriert haben für E-Rechnung-Erstellung. Bitte in den Kanzlei-Einstellungen hinterlegen.',
         },
         { status: 400 },
       );

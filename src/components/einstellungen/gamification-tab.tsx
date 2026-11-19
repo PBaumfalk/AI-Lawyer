@@ -108,7 +108,7 @@ export function GamificationTab() {
   }
 
   async function handleDeleteQuest(id: string, name: string) {
-    if (!window.confirm(`"${name}" wirklich loeschen? Alle Fortschritte gehen verloren.`)) {
+    if (!window.confirm(`"${name}" wirklich löschen? Alle Fortschritte gehen verloren.`)) {
       return;
     }
 
@@ -117,10 +117,10 @@ export function GamificationTab() {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Delete failed");
-      toast.success("Special Quest geloescht");
+      toast.success("Special Quest gelöscht");
       fetchSpecialQuests();
     } catch {
-      toast.error("Loeschen fehlgeschlagen");
+      toast.error("Löschen fehlgeschlagen");
     }
   }
 
@@ -141,7 +141,7 @@ export function GamificationTab() {
         </h2>
         <p className="text-sm text-muted-foreground mb-6">
           Der Boss erscheint automatisch, wenn die offenen Wiedervorlagen den
-          Schwellenwert ueberschreiten.
+          Schwellenwert überschreiten.
         </p>
 
         <div className="space-y-5 max-w-md">
@@ -198,7 +198,7 @@ export function GamificationTab() {
               Special Quests
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Zeitlich begrenzte Kampagnen fuer das gesamte Team
+              Zeitlich begrenzte Kampagnen für das gesamte Team
             </p>
           </div>
           {!showForm && (

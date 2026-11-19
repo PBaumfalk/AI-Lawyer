@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltige Eingabe" },
+      { error: "Ungültige Eingabe" },
       { status: 400 },
     );
   }
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Ungueltige Eingabe", details: parsed.error.errors },
+      { error: "Ungültige Eingabe", details: parsed.error.errors },
       { status: 400 },
     );
   }

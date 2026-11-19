@@ -91,7 +91,7 @@ export interface KlageartDefinition {
 
 const SLOT_KLAEGER_NAME: SlotDefinition = {
   key: "KLAEGER_NAME",
-  label: "Name des Klaegers",
+  label: "Name des Klägers",
   type: "text",
   required: true,
   prefillFrom: "mandant",
@@ -99,7 +99,7 @@ const SLOT_KLAEGER_NAME: SlotDefinition = {
 
 const SLOT_KLAEGER_ADRESSE: SlotDefinition = {
   key: "KLAEGER_ADRESSE",
-  label: "Anschrift des Klaegers",
+  label: "Anschrift des Klägers",
   type: "text",
   required: true,
   prefillFrom: "mandant",
@@ -123,7 +123,7 @@ const SLOT_BEKLAGTER_ADRESSE: SlotDefinition = {
 
 const SLOT_GERICHT: SlotDefinition = {
   key: "GERICHT",
-  label: "Zustaendiges Gericht",
+  label: "Zuständiges Gericht",
   type: "text",
   required: true,
   prefillFrom: "gericht",
@@ -150,9 +150,9 @@ const STANDARD_SECTIONS: SectionConfig[] = [
   },
   {
     id: "antraege",
-    label: "Antraege",
+    label: "Anträge",
     ragSources: ["muster"],
-    ragQuery: "{{KLAGEART}} Antraege Muster",
+    ragQuery: "{{KLAGEART}} Anträge Muster",
     generateViaLlm: true,
   },
   {
@@ -164,7 +164,7 @@ const STANDARD_SECTIONS: SectionConfig[] = [
   },
   {
     id: "rechtliche_wuerdigung",
-    label: "Rechtliche Wuerdigung",
+    label: "Rechtliche Würdigung",
     ragSources: ["gesetz", "urteil", "muster"],
     ragQuery: "{{KLAGEART}} {{RECHTSGEBIET}} Anspruchsgrundlage Rechtsprechung",
     generateViaLlm: true,
@@ -216,7 +216,7 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
   // =========================================================================
   kschg_klage: {
     id: "kschg_klage",
-    label: "Kuendigungsschutzklage",
+    label: "Kündigungsschutzklage",
     rechtsgebiet: "ARBEITSRECHT",
     stadien: ["ERSTINSTANZ", "BERUFUNG"],
     requiredSlots: [
@@ -227,13 +227,13 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
       SLOT_GERICHT,
       {
         key: "KUENDIGUNGSDATUM",
-        label: "Datum der Kuendigung",
+        label: "Datum der Kündigung",
         type: "date",
         required: true,
       },
       {
         key: "ZUGANG_DATUM",
-        label: "Zugang der Kuendigung (wann erhalten?)",
+        label: "Zugang der Kündigung (wann erhalten?)",
         type: "date",
         required: true,
       },
@@ -251,13 +251,13 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
       },
       {
         key: "BERUFSBEZEICHNUNG",
-        label: "Berufsbezeichnung / Taetigkeit",
+        label: "Berufsbezeichnung / Tätigkeit",
         type: "text",
         required: true,
       },
       {
         key: "KUENDIGUNGSART",
-        label: "Art der Kuendigung (ordentlich/ausserordentlich/fristlos)",
+        label: "Art der Kündigung (ordentlich/außerordentlich/fristlos)",
         type: "text",
         required: true,
       },
@@ -266,13 +266,13 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
       SLOT_AKTENZEICHEN,
       {
         key: "KUENDIGUNGSGRUND",
-        label: "Vom Arbeitgeber genannter Kuendigungsgrund",
+        label: "Vom Arbeitgeber genannter Kündigungsgrund",
         type: "text",
         required: false,
       },
       {
         key: "BETRIEBSRAT_ANHOERUNG",
-        label: "Wurde der Betriebsrat angehoert? (ja/nein/kein Betriebsrat)",
+        label: "Wurde der Betriebsrat angehört? (ja/nein/kein Betriebsrat)",
         type: "text",
         required: false,
       },
@@ -284,13 +284,13 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
       },
       {
         key: "SONDERKUENDIGUNGSSCHUTZ",
-        label: "Besonderer Kuendigungsschutz (Schwangerschaft, Schwerbehinderung, Betriebsrat, etc.)",
+        label: "Besonderer Kündigungsschutz (Schwangerschaft, Schwerbehinderung, Betriebsrat, etc.)",
         type: "text",
         required: false,
       },
       {
         key: "WEITERBESCHAEFTIGUNG",
-        label: "Wird Weiterbeschaeftigung beantragt?",
+        label: "Wird Weiterbeschäftigung beantragt?",
         type: "boolean",
         required: false,
       },
@@ -304,13 +304,13 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
                 "gesetz" | "urteil" | "muster"
               >,
               ragQuery:
-                "Kuendigungsschutzklage KSchG SS 1 SS 4 Kuendigungsschutzgesetz Sozialwidrigkeit Kuendigung",
+                "Kündigungsschutzklage KSchG SS 1 SS 4 Kündigungsschutzgesetz Sozialwidrigkeit Kündigung",
             }
           : s.id === "antraege"
             ? {
                 ...s,
                 ragQuery:
-                  "Kuendigungsschutzklage Feststellungsantrag Weiterbeschaeftigungsantrag SS 4 KSchG Muster",
+                  "Kündigungsschutzklage Feststellungsantrag Weiterbeschäftigungsantrag SS 4 KSchG Muster",
               }
             : s
       ),
@@ -408,7 +408,7 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
                 "gesetz" | "urteil" | "muster"
               >,
               ragQuery:
-                "Lohnklage Gehaltsklage SS 611a BGB Verguetungsanspruch Arbeitsentgelt Verzug SS 288 BGB",
+                "Lohnklage Gehaltsklage SS 611a BGB Vergütungsanspruch Arbeitsentgelt Verzug SS 288 BGB",
             }
           : s.id === "antraege"
             ? {
@@ -437,7 +437,7 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
   // =========================================================================
   ev_antrag: {
     id: "ev_antrag",
-    label: "Antrag auf einstweilige Verfuegung",
+    label: "Antrag auf einstweilige Verfügung",
     rechtsgebiet: "SONSTIGES",
     stadien: ["EV"],
     requiredSlots: [
@@ -472,13 +472,13 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
       SLOT_GERICHT,
       {
         key: "VERFUEGUNGSANSPRUCH",
-        label: "Verfuegungsanspruch (welches Recht wird verletzt?)",
+        label: "Verfügungsanspruch (welches Recht wird verletzt?)",
         type: "text",
         required: true,
       },
       {
         key: "VERFUEGUNGSGRUND",
-        label: "Verfuegungsgrund (warum ist Eilbeduerftigkeit gegeben?)",
+        label: "Verfügungsgrund (warum ist Eilbedürftigkeit gegeben?)",
         type: "text",
         required: true,
       },
@@ -507,13 +507,13 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
                 "gesetz" | "urteil" | "muster"
               >,
               ragQuery:
-                "Einstweilige Verfuegung SS 935 SS 940 ZPO Verfuegungsanspruch Verfuegungsgrund Glaubhaftmachung",
+                "Einstweilige Verfügung SS 935 SS 940 ZPO Verfügungsanspruch Verfügungsgrund Glaubhaftmachung",
             }
           : s.id === "antraege"
             ? {
                 ...s,
                 ragQuery:
-                  "Einstweilige Verfuegung Antrag Eilantrag Muster SS 935 ZPO",
+                  "Einstweilige Verfügung Antrag Eilantrag Muster SS 935 ZPO",
               }
             : s
       ),
@@ -567,7 +567,7 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
       },
       {
         key: "ERWIDERUNGSFRIST",
-        label: "Frist fuer die Klageerwiderung",
+        label: "Frist für die Klageerwiderung",
         type: "date",
         required: false,
       },
@@ -615,14 +615,14 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
     requiredSlots: [
       {
         key: "BERUFUNGSKLAEGER",
-        label: "Name des Berufungsklaegers",
+        label: "Name des Berufungsklägers",
         type: "text",
         required: true,
         prefillFrom: "mandant",
       },
       {
         key: "BERUFUNGSKLAEGER_ADRESSE",
-        label: "Anschrift des Berufungsklaegers",
+        label: "Anschrift des Berufungsklägers",
         type: "text",
         required: true,
         prefillFrom: "mandant",
@@ -656,7 +656,7 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
       },
       {
         key: "BERUFUNGSGRUENDE",
-        label: "Wesentliche Berufungsgruende",
+        label: "Wesentliche Berufungsgründe",
         type: "text",
         required: true,
       },
@@ -684,13 +684,13 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
                 "gesetz" | "urteil" | "muster"
               >,
               ragQuery:
-                "Berufung {{RECHTSGEBIET}} SS 511 SS 513 SS 520 ZPO Berufungsbegruendung Rechtsfehler",
+                "Berufung {{RECHTSGEBIET}} SS 511 SS 513 SS 520 ZPO Berufungsbegründung Rechtsfehler",
             }
           : s.id === "antraege"
             ? {
                 ...s,
                 ragQuery:
-                  "Berufungsantrag Abgaenderungsantrag Aufhebungsantrag Muster SS 520 ZPO",
+                  "Berufungsantrag Abgänderungsantrag Aufhebungsantrag Muster SS 520 ZPO",
               }
             : s
       ),
@@ -738,21 +738,21 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
       },
       {
         key: "EMPFAENGER",
-        label: "Name des Empfaengers",
+        label: "Name des Empfängers",
         type: "text",
         required: true,
         prefillFrom: "gegner",
       },
       {
         key: "EMPFAENGER_ADRESSE",
-        label: "Anschrift des Empfaengers",
+        label: "Anschrift des Empfängers",
         type: "text",
         required: true,
         prefillFrom: "gegner",
       },
       {
         key: "VERSTOSS",
-        label: "Beschreibung des Verstosses / Abmahngrundes",
+        label: "Beschreibung des Verstoßes / Abmahngrundes",
         type: "text",
         required: true,
       },
@@ -778,7 +778,7 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
       },
       {
         key: "STRAFBEWEHRTE_UNTERLASSUNG",
-        label: "Strafbewehrte Unterlassungserklaerung beigefuegt?",
+        label: "Strafbewehrte Unterlassungserklärung beigefügt?",
         type: "boolean",
         required: false,
       },
@@ -786,7 +786,7 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
     sections: [
       {
         id: "rubrum",
-        label: "Absender/Empfaenger",
+        label: "Absender/Empfänger",
         ragSources: [],
         ragQuery: "",
         generateViaLlm: false,
@@ -800,7 +800,7 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
       },
       {
         id: "rechtliche_wuerdigung",
-        label: "Rechtliche Begruendung",
+        label: "Rechtliche Begründung",
         ragSources: ["gesetz", "urteil"],
         ragQuery:
           "Abmahnung {{RECHTSGEBIET}} Unterlassungsanspruch Beseitigungsanspruch",
@@ -810,7 +810,7 @@ export const KLAGEART_REGISTRY: Record<string, KlageartDefinition> = {
         id: "forderung",
         label: "Aufforderung / Fristsetzung",
         ragSources: ["muster"],
-        ragQuery: "Abmahnung Fristsetzung Unterlassungserklaerung Muster",
+        ragQuery: "Abmahnung Fristsetzung Unterlassungserklärung Muster",
         generateViaLlm: true,
       },
       {

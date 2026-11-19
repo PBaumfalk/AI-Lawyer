@@ -133,7 +133,7 @@ export default function RollenPage() {
           Rollen und Berechtigungen
         </h1>
         <p className="text-muted-foreground mt-1">
-          Uebersicht der Berechtigungsmatrix und benutzerspezifische Zugriffe.
+          Übersicht der Berechtigungsmatrix und benutzerspezifische Zugriffe.
           Berechtigungen sind im Code definiert und nicht konfigurierbar.
         </p>
       </div>
@@ -186,9 +186,9 @@ export default function RollenPage() {
 
       {/* Per-User Overview */}
       <div>
-        <h2 className="text-lg font-semibold mb-3">Benutzerspezifische Uebersicht</h2>
+        <h2 className="text-lg font-semibold mb-3">Benutzerspezifische Übersicht</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Waehlen Sie einen Benutzer aus, um dessen zugaengliche Akten und Zugriffsquellen einzusehen.
+          Wählen Sie einen Benutzer aus, um dessen zugängliche Akten und Zugriffsquellen einzusehen.
         </p>
 
         <div className="relative w-full max-w-md mb-4">
@@ -197,7 +197,7 @@ export default function RollenPage() {
             onChange={(e) => setSelectedUserId(e.target.value)}
             className="w-full appearance-none px-4 py-2.5 pr-10 border rounded-lg bg-background text-sm"
           >
-            <option value="">Benutzer waehlen...</option>
+            <option value="">Benutzer wählen...</option>
             {data.users.map((user) => (
               <option key={user.id} value={user.id}>
                 {user.name} ({user.roleLabel})

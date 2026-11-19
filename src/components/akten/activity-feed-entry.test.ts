@@ -3,14 +3,14 @@ import { sanitizeTitel, sanitizeInhalt } from "./activity-feed-entry";
 
 describe("sanitizeTitel", () => {
   it("translates status enum values in status change titles", () => {
-    expect(sanitizeTitel("Status geaendert: OFFEN → IN_BEARBEITUNG")).toBe(
-      "Status geaendert: Offen → In Bearbeitung"
+    expect(sanitizeTitel("Status geändert: OFFEN → IN_BEARBEITUNG")).toBe(
+      "Status geändert: Offen → In Bearbeitung"
     );
   });
 
   it("translates role enum values", () => {
-    expect(sanitizeTitel("Beteiligter hinzugefuegt: MANDANT")).toBe(
-      "Beteiligter hinzugefuegt: Mandant"
+    expect(sanitizeTitel("Beteiligter hinzugefügt: MANDANT")).toBe(
+      "Beteiligter hinzugefügt: Mandant"
     );
   });
 
@@ -54,8 +54,8 @@ describe("sanitizeInhalt", () => {
   });
 
   it("translates role enums in body text", () => {
-    expect(sanitizeInhalt("Rolle geaendert: MANDANT → GEGNER")).toBe(
-      "Rolle geaendert: Mandant → Gegner"
+    expect(sanitizeInhalt("Rolle geändert: MANDANT → GEGNER")).toBe(
+      "Rolle geändert: Mandant → Gegner"
     );
   });
 });

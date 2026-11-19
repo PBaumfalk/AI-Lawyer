@@ -16,7 +16,7 @@ const AKTEN_EXPORT_CONFIG: ExportConfig = {
     { key: "anwalt", header: "Anwalt", width: 22 },
     { key: "beteiligte", header: "Beteiligte", width: 30 },
     { key: "erstellt", header: "Erstellt", width: 14 },
-    { key: "geaendert", header: "Geaendert", width: 14 },
+    { key: "geaendert", header: "Geändert", width: 14 },
   ],
 };
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
   if (format !== "csv" && format !== "xlsx") {
     return NextResponse.json(
-      { error: "Ungueltiges Format. Erlaubt: csv, xlsx" },
+      { error: "Ungültiges Format. Erlaubt: csv, xlsx" },
       { status: 400 }
     );
   }

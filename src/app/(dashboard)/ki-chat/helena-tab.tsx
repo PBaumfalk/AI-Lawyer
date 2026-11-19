@@ -52,7 +52,7 @@ export function HelenaTab({
     },
     {
       id: "vorschlaege",
-      label: "Vorschlaege",
+      label: "Vorschläge",
       icon: Sparkles,
       count: neuCount,
     },

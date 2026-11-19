@@ -86,7 +86,7 @@ export function FolderTree({
       ]);
 
       if (!kontenRes.ok || !foldersRes.ok) {
-        throw new Error("Postfaecher konnten nicht geladen werden");
+        throw new Error("Postfächer konnten nicht geladen werden");
       }
 
       const kontenData = await kontenRes.json();
@@ -231,7 +231,7 @@ export function FolderTree({
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
       <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700/50">
-        <h2 className="text-sm font-semibold text-foreground">Postfaecher</h2>
+        <h2 className="text-sm font-semibold text-foreground">Postfächer</h2>
       </div>
 
       {/* Mailbox folders */}

@@ -58,19 +58,19 @@ export async function rerankWithOllama(
     .map((c, i) => `[${i}] id="${c.id}"\n${c.content.slice(0, 300)}`)
     .join("\n\n");
 
-  const prompt = `Du bist ein Relevanz-Bewerter fuer einen deutschen Rechtsanwalt.
+  const prompt = `Du bist ein Relevanz-Bewerter für einen deutschen Rechtsanwalt.
 
-Aufgabe: Bewerte jeden der folgenden Textausschnitte hinsichtlich ihrer Relevanz fuer die Suchanfrage.
-Bewertungsskala: 0 (voellig irrelevant) bis 10 (hochgradig relevant).
+Aufgabe: Bewerte jeden der folgenden Textausschnitte hinsichtlich ihrer Relevanz für die Suchanfrage.
+Bewertungsskala: 0 (völlig irrelevant) bis 10 (hochgradig relevant).
 
 Suchanfrage: "${query}"
 
 Textausschnitte:
 ${passages}
 
-Antworte NUR mit einem JSON-Objekt. Schluessel ist die id des Textausschnitts, Wert ist die ganzzahlige Bewertung 0-10.
+Antworte NUR mit einem JSON-Objekt. Schlüssel ist die id des Textausschnitts, Wert ist die ganzzahlige Bewertung 0-10.
 Beispiel: {"id-1": 8, "id-2": 3}
-Keine Erklaerungen, kein Text ausserhalb des JSON.`;
+Keine Erklärungen, kein Text außerhalb des JSON.`;
 
   const t0 = Date.now();
   try {

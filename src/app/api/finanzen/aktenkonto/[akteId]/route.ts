@@ -135,7 +135,7 @@ export async function POST(
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 });
+    return NextResponse.json({ error: 'Ungültiger Request-Body' }, { status: 400 });
   }
 
   const parsed = bookingSchema.safeParse(body);
@@ -190,7 +190,7 @@ export async function POST(
     console.error('Aktenkonto booking error:', err);
 
     // Handle period lock errors with clear message
-    if (err.message?.includes('gesperrt') || err.message?.includes('uebersteigt')) {
+    if (err.message?.includes('gesperrt') || err.message?.includes('übersteigt')) {
       return NextResponse.json({ error: err.message }, { status: 400 });
     }
 

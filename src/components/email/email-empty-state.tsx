@@ -46,7 +46,7 @@ export function EmailEmptyState({ type, lastSyncTime }: EmailEmptyStateProps) {
           Keine E-Mails
         </h3>
         <p className="text-sm text-muted-foreground max-w-xs">
-          Dieser Ordner enthaelt keine E-Mails.
+          Dieser Ordner enthält keine E-Mails.
         </p>
         {lastSyncTime && (
           <p className="text-xs text-muted-foreground/70 mt-2">
@@ -64,7 +64,7 @@ export function EmailEmptyState({ type, lastSyncTime }: EmailEmptyStateProps) {
         <Mail className="w-8 h-8 text-muted-foreground/50" />
       </div>
       <h3 className="text-base font-medium text-foreground mb-1">
-        Waehlen Sie eine E-Mail aus
+        Wählen Sie eine E-Mail aus
       </h3>
       <p className="text-sm text-muted-foreground max-w-xs">
         Klicken Sie auf eine E-Mail in der Liste, um sie hier anzuzeigen.

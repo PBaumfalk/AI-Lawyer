@@ -23,12 +23,12 @@ interface ChatInputProps {
 const quickActions = [
   {
     label: "Zusammenfassung",
-    prompt: "Erstelle eine ausfuehrliche Zusammenfassung aller Dokumente in dieser Akte.",
+    prompt: "Erstelle eine ausführliche Zusammenfassung aller Dokumente in dieser Akte.",
     icon: ScrollText,
   },
   {
-    label: "Fristen pruefen",
-    prompt: "Pruefe alle Dokumente auf genannte Fristen und Termine. Liste sie chronologisch auf.",
+    label: "Fristen prüfen",
+    prompt: "Prüfe alle Dokumente auf genannte Fristen und Termine. Liste sie chronologisch auf.",
     icon: Clock,
   },
   {
@@ -93,7 +93,7 @@ export function ChatInput({ append, isLoading }: ChatInputProps) {
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       toast.info(
-        "Dokument-Upload in den Chat wird in einer spaeteren Version unterstuetzt.",
+        "Dokument-Upload in den Chat wird in einer späteren Version unterstützt.",
         { description: `${files.length} Datei(en) abgelegt` }
       );
     }
@@ -135,7 +135,7 @@ export function ChatInput({ append, isLoading }: ChatInputProps) {
             onKeyDown={handleKeyDown}
             placeholder={
               isDragOver
-                ? "Dokument hier ablegen fuer sofortige Analyse..."
+                ? "Dokument hier ablegen für sofortige Analyse..."
                 : "Frage an Helena stellen..."
             }
             rows={1}
@@ -155,7 +155,7 @@ export function ChatInput({ append, isLoading }: ChatInputProps) {
 
       {isDragOver && (
         <p className="text-xs text-brand-600 dark:text-brand-400 mt-1.5 text-center">
-          Dokument hier ablegen fuer sofortige Analyse
+          Dokument hier ablegen für sofortige Analyse
         </p>
       )}
     </div>

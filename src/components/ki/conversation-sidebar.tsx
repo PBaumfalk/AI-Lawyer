@@ -76,7 +76,7 @@ export function ConversationSidebar({
 
   const handleDelete = async (e: React.MouseEvent, convId: string) => {
     e.stopPropagation();
-    if (!confirm("Unterhaltung loeschen?")) return;
+    if (!confirm("Unterhaltung löschen?")) return;
 
     setDeletingId(convId);
     try {
@@ -161,7 +161,7 @@ export function ConversationSidebar({
                       "opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-rose-100 dark:hover:bg-rose-900/30 text-rose-500 transition-opacity shrink-0",
                       deletingId === conv.id && "opacity-100"
                     )}
-                    title="Loeschen"
+                    title="Löschen"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>

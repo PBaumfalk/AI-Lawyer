@@ -44,7 +44,7 @@ export async function PUT(
         akteId,
         userId: session.user.id,
         typ: "STATUS_CHANGE",
-        titel: "Naechste Schritte aktualisiert",
+        titel: "Nächste Schritte aktualisiert",
         inhalt: text || null,
         mandantSichtbar: true,
       },
@@ -60,9 +60,9 @@ export async function PUT(
 
     return NextResponse.json(updatedAkte);
   } catch (error) {
-    console.error("[AKTEN] Error updating naechste Schritte:", error);
+    console.error("[AKTEN] Error updating nächste Schritte:", error);
     return NextResponse.json(
-      { error: "Fehler beim Aktualisieren der naechsten Schritte" },
+      { error: "Fehler beim Aktualisieren der nächsten Schritte" },
       { status: 500 }
     );
   }

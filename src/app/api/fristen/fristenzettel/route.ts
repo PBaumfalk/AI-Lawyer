@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   if (pdfFormat === "akte" && !akteId) {
     return NextResponse.json(
-      { error: "akteId ist fuer Format 'akte' erforderlich" },
+      { error: "akteId ist für Format 'akte' erforderlich" },
       { status: 400 }
     );
   }
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     if (denied) return denied;
   }
   if (datumStr && !Number.isFinite(new Date(datumStr).getTime())) {
-    return NextResponse.json({ error: "Ungueltiges Datum" }, { status: 400 });
+    return NextResponse.json({ error: "Ungültiges Datum" }, { status: 400 });
   }
 
   // Build where clause based on format. Entries without an Akte are personal
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
     { label: "Bundesland", x: margin + 420, w: 60 },
     { label: "Vorfristen", x: margin + 485, w: 120 },
     { label: "Verantwortlich", x: margin + 610, w: 100 },
-    { label: "Prioritaet", x: margin + 715, w: 80 },
+    { label: "Priorität", x: margin + 715, w: 80 },
   ];
 
   // Draw header row

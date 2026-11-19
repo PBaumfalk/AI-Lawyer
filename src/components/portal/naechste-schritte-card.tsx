@@ -13,7 +13,7 @@ export function NaechsteSchritteCard({
       <div className="flex items-center gap-2 mb-3">
         <ArrowRight className="w-4 h-4 text-primary" />
         <h2 className="text-sm font-semibold text-primary uppercase tracking-wide">
-          Naechste Schritte
+          Nächste Schritte
         </h2>
       </div>
 
@@ -24,7 +24,7 @@ export function NaechsteSchritteCard({
         </p>
       ) : (
         <p className="text-sm text-muted-foreground italic">
-          Ihr Anwalt hat noch keine naechsten Schritte hinterlegt.
+          Ihr Anwalt hat noch keine nächsten Schritte hinterlegt.
         </p>
       )}
     </div>

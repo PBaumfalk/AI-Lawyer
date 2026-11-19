@@ -105,7 +105,7 @@ export async function processProactive(job: Job<ProactiveJobData>): Promise<void
             akteId: akte.id,
             typ: "HINWEIS",
             titel: `Inaktive Akte: ${akte.aktenzeichen}`,
-            inhalt: `Die Akte "${akte.aktenzeichen} - ${akte.kurzrubrum}" hat seit ${daysSinceActivity} Tagen keine Aenderung. Bitte pruefen Sie, ob Handlungsbedarf besteht.`,
+            inhalt: `Die Akte "${akte.aktenzeichen} - ${akte.kurzrubrum}" hat seit ${daysSinceActivity} Tagen keine Änderung. Bitte prüfen Sie, ob Handlungsbedarf besteht.`,
             status: "NEU",
           },
         });
@@ -114,7 +114,7 @@ export async function processProactive(job: Job<ProactiveJobData>): Promise<void
           userId,
           type: "ai_suggestion" as any,
           title: "Helena: Inaktive Akte",
-          message: `${akte.aktenzeichen} seit ${daysSinceActivity} Tagen ohne Aenderung`,
+          message: `${akte.aktenzeichen} seit ${daysSinceActivity} Tagen ohne Änderung`,
           data: { suggestionId: suggestion.id, typ: "HINWEIS", titel: suggestion.titel },
         });
 
@@ -154,7 +154,7 @@ export async function processProactive(job: Job<ProactiveJobData>): Promise<void
             akteId: akte.id,
             typ: "HINWEIS",
             titel: `Keine offenen Fristen: ${akte.aktenzeichen}`,
-            inhalt: `Die Akte "${akte.aktenzeichen} - ${akte.kurzrubrum}" hat keine offenen Fristen. Bitte pruefen Sie, ob Fristen eingetragen werden muessen.`,
+            inhalt: `Die Akte "${akte.aktenzeichen} - ${akte.kurzrubrum}" hat keine offenen Fristen. Bitte prüfen Sie, ob Fristen eingetragen werden müssen.`,
             status: "NEU",
           },
         });

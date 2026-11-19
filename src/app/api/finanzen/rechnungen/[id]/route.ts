@@ -103,7 +103,7 @@ export async function PATCH(
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 });
+    return NextResponse.json({ error: 'Ungültiger Request-Body' }, { status: 400 });
   }
 
   // Determine mode: action (status transition) or edit
@@ -165,7 +165,7 @@ export async function PATCH(
     } catch (err: any) {
       console.error('Invoice transition error:', err);
       return NextResponse.json(
-        { error: err.message?.slice(0, 200) ?? 'Fehler bei der Statusaenderung' },
+        { error: err.message?.slice(0, 200) ?? 'Fehler bei der Statusänderung' },
         { status: 500 },
       );
     }
@@ -195,7 +195,7 @@ export async function PATCH(
 
     if (rechnung.status !== 'ENTWURF') {
       return NextResponse.json(
-        { error: 'Nur Entwuerfe koennen bearbeitet werden' },
+        { error: 'Nur Entwürfe können bearbeitet werden' },
         { status: 400 },
       );
     }
@@ -295,7 +295,7 @@ export async function DELETE(
 
     if (rechnung.status !== 'ENTWURF') {
       return NextResponse.json(
-        { error: 'Nur Entwuerfe koennen geloescht werden' },
+        { error: 'Nur Entwürfe können gelöscht werden' },
         { status: 400 },
       );
     }
@@ -316,7 +316,7 @@ export async function DELETE(
   } catch (err: any) {
     console.error('Invoice delete error:', err);
     return NextResponse.json(
-      { error: 'Fehler beim Loeschen der Rechnung' },
+      { error: 'Fehler beim Löschen der Rechnung' },
       { status: 500 },
     );
   }

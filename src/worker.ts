@@ -309,7 +309,7 @@ ocrWorker.on("failed", (job, err) => {
     socketEmitter.to("role:ADMIN").emit("notification", {
       type: "ocr:failed",
       title: "OCR fehlgeschlagen",
-      message: `OCR fuer "${job.data.fileName}" fehlgeschlagen: ${err.message}`,
+      message: `OCR für "${job.data.fileName}" fehlgeschlagen: ${err.message}`,
       data: { dokumentId: job.data.dokumentId, akteId: job.data.akteId },
     });
   }
@@ -803,7 +803,7 @@ scannerWorker.on("failed", (job, err) => {
   if (job.attemptsMade >= (job.opts.attempts ?? 2)) {
     socketEmitter.to("role:ADMIN").emit("notification", {
       type: "job:failed",
-      title: "Naechtlicher Scanner fehlgeschlagen",
+      title: "Nächtlicher Scanner fehlgeschlagen",
       message: `Scanner-Cron fehlgeschlagen: ${err.message}`,
       data: { jobId: job.id, queue: "scanner" },
     });

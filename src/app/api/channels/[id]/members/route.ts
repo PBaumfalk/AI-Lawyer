@@ -82,7 +82,7 @@ export async function POST(
   // Only ALLGEMEIN channels support manual join
   if (channel.typ !== "ALLGEMEIN") {
     return NextResponse.json(
-      { error: "Akte-Kanaele werden automatisch verwaltet" },
+      { error: "Akte-Kanäle werden automatisch verwaltet" },
       { status: 400 },
     );
   }
@@ -142,7 +142,7 @@ export async function DELETE(
   // Only ALLGEMEIN channels support manual leave
   if (channel.typ !== "ALLGEMEIN") {
     return NextResponse.json(
-      { error: "Akte-Kanaele werden automatisch verwaltet" },
+      { error: "Akte-Kanäle werden automatisch verwaltet" },
       { status: 400 },
     );
   }

@@ -114,7 +114,7 @@ export function AkteEmailTab({ akteId }: AkteEmailTabProps) {
         <Link href={`/email?akteId=${akteId}`}>
           <Button variant="outline" size="sm">
             <ExternalLink className="w-4 h-4 mr-1.5" />
-            Im E-Mail-Client oeffnen
+            Im E-Mail-Client öffnen
           </Button>
         </Link>
       </div>
@@ -124,10 +124,10 @@ export function AkteEmailTab({ akteId }: AkteEmailTabProps) {
           <div className="p-12 text-center">
             <Mail className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
             <p className="text-sm text-slate-400">
-              Keine E-Mails mit dieser Akte verknuepft.
+              Keine E-Mails mit dieser Akte verknüpft.
             </p>
             <p className="text-xs text-slate-400 mt-1">
-              E-Mails koennen ueber die E-Mail-Detailansicht veraktet werden.
+              E-Mails können über die E-Mail-Detailansicht veraktet werden.
             </p>
           </div>
         ) : (

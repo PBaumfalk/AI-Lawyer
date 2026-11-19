@@ -71,9 +71,9 @@ export function BenachrichtigungenTab() {
           ],
         }),
       });
-      toast.success("Benachrichtigungs-Einstellungen zurueckgesetzt");
+      toast.success("Benachrichtigungs-Einstellungen zurückgesetzt");
     } catch {
-      toast.error("Fehler beim Zuruecksetzen");
+      toast.error("Fehler beim Zurücksetzen");
     }
   };
 
@@ -88,7 +88,7 @@ export function BenachrichtigungenTab() {
           </h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          Hier koennen Benachrichtigungseinstellungen fuer Fristen und
+          Hier können Benachrichtigungseinstellungen für Fristen und
           Wiedervorlagen konfiguriert werden.
         </p>
       </div>
@@ -97,8 +97,8 @@ export function BenachrichtigungenTab() {
       <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30">
         <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-blue-800 dark:text-blue-200">
-          Benutzer koennen ihre eigenen Benachrichtigungseinstellungen nicht
-          aendern, um sicherzustellen, dass keine kritischen
+          Benutzer können ihre eigenen Benachrichtigungseinstellungen nicht
+          ändern, um sicherzustellen, dass keine kritischen
           Fristbenachrichtigungen deaktiviert werden.
         </p>
       </div>
@@ -163,7 +163,7 @@ export function BenachrichtigungenTab() {
                 E-Mail-Benachrichtigungen
               </h4>
               <p className="text-xs text-muted-foreground">
-                Verfuegbar nach Einrichtung des E-Mail-Systems (Phase 3)
+                Verfügbar nach Einrichtung des E-Mail-Systems (Phase 3)
               </p>
             </div>
           </div>
@@ -184,7 +184,7 @@ export function BenachrichtigungenTab() {
           className="text-muted-foreground"
         >
           <RotateCcw className="w-4 h-4 mr-1.5" />
-          Auf Standard zuruecksetzen
+          Auf Standard zurücksetzen
         </Button>
       </div>
 
@@ -193,11 +193,11 @@ export function BenachrichtigungenTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="glass rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
             <h3 className="text-lg font-heading text-foreground">
-              Einstellungen zuruecksetzen?
+              Einstellungen zurücksetzen?
             </h3>
             <p className="text-sm text-muted-foreground">
-              Moechten Sie die Einstellungen in diesem Bereich auf die Standardwerte
-              zuruecksetzen? Diese Aktion kann nicht rueckgaengig gemacht werden.
+              Möchten Sie die Einstellungen in diesem Bereich auf die Standardwerte
+              zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.
             </p>
             <div className="flex gap-2 justify-end">
               <Button
@@ -207,7 +207,7 @@ export function BenachrichtigungenTab() {
                 Abbrechen
               </Button>
               <Button variant="destructive" onClick={handleReset}>
-                Zuruecksetzen
+                Zurücksetzen
               </Button>
             </div>
           </div>

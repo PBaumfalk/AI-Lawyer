@@ -268,7 +268,7 @@ export function generateRueckfrage(
   const contextParts: string[] = [];
   if (existingSlots["KLAEGER_NAME"] || existingSlots["PARTEI_A_NAME"]) {
     contextParts.push(
-      `Klaeger: ${existingSlots["KLAEGER_NAME"] || existingSlots["PARTEI_A_NAME"]}`
+      `Kläger: ${existingSlots["KLAEGER_NAME"] || existingSlots["PARTEI_A_NAME"]}`
     );
   }
   if (existingSlots["BEKLAGTER_NAME"] || existingSlots["PARTEI_B_NAME"]) {
@@ -296,7 +296,7 @@ export function generateRueckfrage(
       ? `\n\nBereits bekannt: ${contextParts.join(", ")}`
       : "";
 
-  return `${question}${formatHint}${context}\n\n_Falls Sie diese Information gerade nicht zur Hand haben, koennen Sie "weiss ich noch nicht" antworten. Der Entwurf wird dann mit einem Platzhalter erstellt._`;
+  return `${question}${formatHint}${context}\n\n_Falls Sie diese Information gerade nicht zur Hand haben, können Sie "weiß ich noch nicht" antworten. Der Entwurf wird dann mit einem Platzhalter erstellt._`;
 }
 
 // ---------------------------------------------------------------------------
@@ -309,24 +309,24 @@ export function generateRueckfrage(
 function buildQuestion(slot: SlotDefinition, klageLabel: string): string {
   // Specific questions for well-known slots
   const specificQuestions: Record<string, string> = {
-    KUENDIGUNGSDATUM: `Fuer die ${klageLabel}: Wann wurde die Kuendigung ausgesprochen?`,
-    ZUGANG_DATUM: `Wann ist Ihrem Mandanten die Kuendigung zugegangen? Das ist wichtig fuer die 3-Wochen-Frist nach SS 4 KSchG.`,
-    EINTRITTSDATUM: `Seit wann ist Ihr Mandant bei dem Arbeitgeber beschaeftigt?`,
+    KUENDIGUNGSDATUM: `Für die ${klageLabel}: Wann wurde die Kündigung ausgesprochen?`,
+    ZUGANG_DATUM: `Wann ist Ihrem Mandanten die Kündigung zugegangen? Das ist wichtig für die 3-Wochen-Frist nach SS 4 KSchG.`,
+    EINTRITTSDATUM: `Seit wann ist Ihr Mandant bei dem Arbeitgeber beschäftigt?`,
     BRUTTOGEHALT: `Wie hoch ist das monatliche Bruttogehalt Ihres Mandanten?`,
-    BERUFSBEZEICHNUNG: `Welche Taetigkeit / Berufsbezeichnung hat Ihr Mandant?`,
-    KUENDIGUNGSART: `Handelt es sich um eine ordentliche, ausserordentliche oder fristlose Kuendigung?`,
-    ZEITRAUM_VON: `Fuer die ${klageLabel}: Ab welchem Monat steht das Gehalt aus?`,
+    BERUFSBEZEICHNUNG: `Welche Tätigkeit / Berufsbezeichnung hat Ihr Mandant?`,
+    KUENDIGUNGSART: `Handelt es sich um eine ordentliche, außerordentliche oder fristlose Kündigung?`,
+    ZEITRAUM_VON: `Für die ${klageLabel}: Ab welchem Monat steht das Gehalt aus?`,
     ZEITRAUM_BIS: `Bis zu welchem Monat steht das Gehalt aus?`,
     MONATSBETRAG: `Wie hoch ist das monatliche Bruttogehalt?`,
     ZAHLUNGSGRUND: `Woraus ergibt sich der Zahlungsanspruch? (z.B. Arbeitsvertrag vom..., Tarifvertrag, etc.)`,
-    VERFUEGUNGSANSPRUCH: `Fuer den Eilantrag: Welches Recht wird verletzt? (Verfuegungsanspruch)`,
-    VERFUEGUNGSGRUND: `Warum ist die Sache eilbeduertig? (Verfuegungsgrund)`,
+    VERFUEGUNGSANSPRUCH: `Für den Eilantrag: Welches Recht wird verletzt? (Verfügungsanspruch)`,
+    VERFUEGUNGSGRUND: `Warum ist die Sache eilbeduertig? (Verfügungsgrund)`,
     KLAGE_DATUM: `Wann ist die Klageschrift datiert?`,
-    URTEIL_DATUM: `Wann wurde das angefochtene Urteil verkuendet?`,
+    URTEIL_DATUM: `Wann wurde das angefochtene Urteil verkündet?`,
     URTEIL_AZ: `Welches Aktenzeichen hat das angefochtene Urteil?`,
-    BERUFUNGSGRUENDE: `Was sind die wesentlichen Gruende fuer die Berufung?`,
-    VERSTOSS: `Welcher Verstoss wird abgemahnt? Bitte beschreiben Sie den Sachverhalt.`,
-    FRIST: `Welche Frist soll fuer die Unterlassung / Abhilfe gesetzt werden?`,
+    BERUFUNGSGRUENDE: `Was sind die wesentlichen Gründe für die Berufung?`,
+    VERSTOSS: `Welcher Verstoß wird abgemahnt? Bitte beschreiben Sie den Sachverhalt.`,
+    FRIST: `Welche Frist soll für die Unterlassung / Abhilfe gesetzt werden?`,
     BETREFF: `Was ist der Gegenstand des Schriftsatzes?`,
   };
 
@@ -335,7 +335,7 @@ function buildQuestion(slot: SlotDefinition, klageLabel: string): string {
   }
 
   // Generic fallback: use the slot label
-  return `Fuer die ${klageLabel} benoetigen wir noch folgende Information: ${slot.label}`;
+  return `Für die ${klageLabel} benötigen wir noch folgende Information: ${slot.label}`;
 }
 
 /**
@@ -366,11 +366,11 @@ function checkKschgFrist(zugangDatum: string): string | null {
   const fristFormatted = formatGermanDate(fristEnde);
 
   if (daysRemaining < 0) {
-    return `ACHTUNG: Die 3-Wochen-Frist nach SS 4 KSchG ist bereits am ${fristFormatted} abgelaufen! Die Klage muss trotzdem eingereicht werden — eine nachtraegliche Zulassung nach SS 5 KSchG ist moeglich, aber die Voraussetzungen sind streng.`;
+    return `ACHTUNG: Die 3-Wochen-Frist nach SS 4 KSchG ist bereits am ${fristFormatted} abgelaufen! Die Klage muss trotzdem eingereicht werden — eine nachträgliche Zulassung nach SS 5 KSchG ist möglich, aber die Voraussetzungen sind streng.`;
   }
 
   if (daysRemaining <= 3) {
-    return `DRINGEND: Die 3-Wochen-Frist nach SS 4 KSchG endet am ${fristFormatted} — nur noch ${daysRemaining} Tag(e)! Die Klage muss spaetestens an diesem Tag bei Gericht eingehen.`;
+    return `DRINGEND: Die 3-Wochen-Frist nach SS 4 KSchG endet am ${fristFormatted} — nur noch ${daysRemaining} Tag(e)! Die Klage muss spätestens an diesem Tag bei Gericht eingehen.`;
   }
 
   if (daysRemaining <= 7) {

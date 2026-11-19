@@ -241,12 +241,12 @@ async function trySendEmail(
   if (!emailEnabled) return;
 
   const linkHint = akteId
-    ? `\n\nAkte oeffnen: /akten/${akteId}`
+    ? `\n\nAkte öffnen: /akten/${akteId}`
     : "";
 
   const html = `<p>${message.replace(/\n/g, "<br>")}</p>${
     akteId
-      ? `<p><a href="/akten/${akteId}">Akte oeffnen</a></p>`
+      ? `<p><a href="/akten/${akteId}">Akte öffnen</a></p>`
       : ""
   }`;
 
@@ -294,8 +294,8 @@ async function sendVorfristNotification(
 
   if (isUserOnVacation(verantwortlicher) && verantwortlicher.vertreter) {
     // Send to Vertreter with prefix
-    const vertreterTitle = `[Vertretung fuer ${verantwortlicher.name}] ${titleBase}${catchUpNote}`;
-    const vertreterMsg = `Fristablauf am ${deadlineStr} (noch ${daysText}). Vertretung fuer ${verantwortlicher.name}.`;
+    const vertreterTitle = `[Vertretung für ${verantwortlicher.name}] ${titleBase}${catchUpNote}`;
+    const vertreterMsg = `Fristablauf am ${deadlineStr} (noch ${daysText}). Vertretung für ${verantwortlicher.name}.`;
 
     await createNotification({
       userId: verantwortlicher.vertreter.id,
@@ -407,7 +407,7 @@ async function sendOverdueEscalation(
 
   // 1. Notify Verantwortlicher
   const verantwortlicherTitle = `UEBERFAELLIG: ${eintrag.titel}${akteRef}`;
-  const verantwortlicherMsg = `Frist war am ${deadlineStr} faellig und ist nicht erledigt!`;
+  const verantwortlicherMsg = `Frist war am ${deadlineStr} fällig und ist nicht erledigt!`;
 
   await createNotification({
     userId: verantwortlicher.id,
@@ -434,8 +434,8 @@ async function sendOverdueEscalation(
     verantwortlicher.vertreter &&
     !notifiedUserIds.has(verantwortlicher.vertreter.id)
   ) {
-    const vertreterTitle = `[Vertretung fuer ${verantwortlicher.name}] UEBERFAELLIG: ${eintrag.titel}${akteRef}`;
-    const vertreterMsg = `Frist war am ${deadlineStr} faellig. ${verantwortlicher.name} ist abwesend.`;
+    const vertreterTitle = `[Vertretung für ${verantwortlicher.name}] UEBERFAELLIG: ${eintrag.titel}${akteRef}`;
+    const vertreterMsg = `Frist war am ${deadlineStr} fällig. ${verantwortlicher.name} ist abwesend.`;
 
     await createNotification({
       userId: verantwortlicher.vertreter.id,
@@ -467,7 +467,7 @@ async function sendOverdueEscalation(
   for (const admin of admins) {
     if (!notifiedUserIds.has(admin.id)) {
       const adminTitle = `ESKALATION: ${eintrag.titel}${akteRef}`;
-      const adminMsg = `Ueberfaellige Frist (${deadlineStr}), Verantwortlich: ${verantwortlicher.name}.`;
+      const adminMsg = `Überfällige Frist (${deadlineStr}), Verantwortlich: ${verantwortlicher.name}.`;
 
       await createNotification({
         userId: admin.id,

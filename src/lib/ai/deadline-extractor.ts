@@ -74,7 +74,7 @@ export async function extractDeadlines(
   const helenaId = await getHelenaUserId();
 
   // Truncate very long texts to stay within token limits
-  const truncatedText = text.length > 15000 ? text.slice(0, 15000) + "\n\n[... Text gekuerzt ...]" : text;
+  const truncatedText = text.length > 15000 ? text.slice(0, 15000) + "\n\n[... Text gekürzt ...]" : text;
 
   const contextInfo = metadata?.dokumentName
     ? `\n\nDokument: "${metadata.dokumentName}"`

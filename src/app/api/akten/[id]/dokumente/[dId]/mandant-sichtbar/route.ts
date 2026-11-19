@@ -29,7 +29,7 @@ export async function PATCH(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger Request-Body" },
+      { error: "Ungültiger Request-Body" },
       { status: 400 }
     );
   }
@@ -72,7 +72,7 @@ export async function PATCH(
         akteId,
         userId: session.user.id,
         typ: "DOKUMENT",
-        titel: `Dokument "${dokument.name}" fuer Mandant freigegeben`,
+        titel: `Dokument "${dokument.name}" für Mandant freigegeben`,
         mandantSichtbar: true,
         meta: { dokumentId: dId, mandantSichtbar: true },
       },

@@ -196,12 +196,12 @@ export function OrdnerSchemataTab() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Fehler beim Loeschen");
+        throw new Error(err.error ?? "Fehler beim Löschen");
       }
-      toast.success("Schema geloescht");
+      toast.success("Schema gelöscht");
       fetchSchemata();
     } catch (err: any) {
-      toast.error(`Loeschen fehlgeschlagen: ${err.message || "Unbekannter Fehler"}`);
+      toast.error(`Löschen fehlgeschlagen: ${err.message || "Unbekannter Fehler"}`);
     }
   };
 
@@ -252,10 +252,10 @@ export function OrdnerSchemataTab() {
       for (const s of schemata.filter((s) => !s.istStandard)) {
         await fetch(`/api/ordner-schemata/${s.id}`, { method: "DELETE" });
       }
-      toast.success("Ordner-Schemata zurueckgesetzt");
+      toast.success("Ordner-Schemata zurückgesetzt");
       fetchSchemata();
     } catch {
-      toast.error("Fehler beim Zuruecksetzen");
+      toast.error("Fehler beim Zurücksetzen");
     }
   };
 
@@ -366,7 +366,7 @@ export function OrdnerSchemataTab() {
           className="text-muted-foreground"
         >
           <RotateCcw className="w-4 h-4 mr-1.5" />
-          Auf Standard zuruecksetzen
+          Auf Standard zurücksetzen
         </Button>
       </div>
 
@@ -576,10 +576,10 @@ export function OrdnerSchemataTab() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ordner-Schema loeschen</AlertDialogTitle>
+            <AlertDialogTitle>Ordner-Schema löschen</AlertDialogTitle>
             <AlertDialogDescription>
-              Ordner-Schema <strong>&laquo;{deleteTarget?.name}&raquo;</strong> wirklich loeschen?
-              Diese Aktion kann nicht rueckgaengig gemacht werden.
+              Ordner-Schema <strong>&laquo;{deleteTarget?.name}&raquo;</strong> wirklich löschen?
+              Diese Aktion kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -588,7 +588,7 @@ export function OrdnerSchemataTab() {
               onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Loeschen
+              Löschen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -599,11 +599,11 @@ export function OrdnerSchemataTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="glass rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
             <h3 className="text-lg font-heading text-foreground">
-              Einstellungen zuruecksetzen?
+              Einstellungen zurücksetzen?
             </h3>
             <p className="text-sm text-muted-foreground">
-              Moechten Sie die Einstellungen in diesem Bereich auf die Standardwerte
-              zuruecksetzen? Diese Aktion kann nicht rueckgaengig gemacht werden.
+              Möchten Sie die Einstellungen in diesem Bereich auf die Standardwerte
+              zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.
             </p>
             <div className="flex gap-2 justify-end">
               <Button
@@ -613,7 +613,7 @@ export function OrdnerSchemataTab() {
                 Abbrechen
               </Button>
               <Button variant="destructive" onClick={handleReset}>
-                Zuruecksetzen
+                Zurücksetzen
               </Button>
             </div>
           </div>

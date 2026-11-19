@@ -62,7 +62,7 @@ export default function AktenkontoPage() {
       {/* Akte selector */}
       <GlassPanel elevation="panel" className="p-6">
         <label className="block text-sm font-medium text-foreground mb-2">
-          Akte auswaehlen
+          Akte auswählen
         </label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -127,7 +127,7 @@ export default function AktenkontoPage() {
         <GlassPanel elevation="panel" className="p-12 text-center">
           <BookOpen className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
           <p className="text-muted-foreground">
-            Bitte waehlen Sie eine Akte aus, um das Aktenkonto anzuzeigen.
+            Bitte wählen Sie eine Akte aus, um das Aktenkonto anzuzeigen.
           </p>
         </GlassPanel>
       )}

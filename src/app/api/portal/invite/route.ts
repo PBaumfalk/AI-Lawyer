@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   const role = (session.user as any).role as UserRole;
   if (!ALLOWED_ROLES.includes(role)) {
     return NextResponse.json(
-      { error: "Keine Berechtigung. Nur Anwaelte und Admins koennen Einladungen versenden." },
+      { error: "Keine Berechtigung. Nur Anwälte und Admins können Einladungen versenden." },
       { status: 403 }
     );
   }
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     body = await req.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger Request-Body" },
+      { error: "Ungültiger Request-Body" },
       { status: 400 }
     );
   }
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
   // --- Validate rolle is MANDANT ---
   if (beteiligter.rolle !== "MANDANT") {
     return NextResponse.json(
-      { error: "Nur Beteiligte mit Rolle MANDANT koennen eingeladen werden" },
+      { error: "Nur Beteiligte mit Rolle MANDANT können eingeladen werden" },
       { status: 400 }
     );
   }
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
   // --- DSGVO: same e-mail consent gate as portal notifications ---
   if (!beteiligter.kontakt.einwilligungEmail) {
-    return NextResponse.json({ error: "Kontakt hat der Kontaktaufnahme per E-Mail nicht zugestimmt (Einwilligung E-Mail). Bitte Einwilligung im Kontakt erfassen oder Zugang auf anderem Weg uebermitteln." }, { status: 400 });
+    return NextResponse.json({ error: "Kontakt hat der Kontaktaufnahme per E-Mail nicht zugestimmt (Einwilligung E-Mail). Bitte Einwilligung im Kontakt erfassen oder Zugang auf anderem Weg übermitteln." }, { status: 400 });
   }
 
   // --- Check if Kontakt already has a portal User ---

@@ -13,12 +13,12 @@ const passwordChangeSchema = z
       .string()
       .regex(
         PASSWORD_REGEX,
-        "Passwort muss mindestens 8 Zeichen, 1 Grossbuchstabe und 1 Zahl enthalten."
+        "Passwort muss mindestens 8 Zeichen, 1 Großbuchstabe und 1 Zahl enthalten."
       ),
     newPasswordConfirm: z.string(),
   })
   .refine((data) => data.newPassword === data.newPasswordConfirm, {
-    message: "Passwoerter stimmen nicht ueberein.",
+    message: "Passwörter stimmen nicht überein.",
     path: ["newPasswordConfirm"],
   });
 
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     const parsed = passwordChangeSchema.safeParse(body);
 
     if (!parsed.success) {
-      const firstError = parsed.error.errors[0]?.message ?? "Ungueltige Eingabe.";
+      const firstError = parsed.error.errors[0]?.message ?? "Ungültige Eingabe.";
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 

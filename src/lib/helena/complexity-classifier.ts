@@ -85,7 +85,7 @@ export function classifyComplexity(query: string): ComplexityResult {
     return {
       mode: "background",
       tier: 3,
-      reason: `Schriftsatz mit ${FILING_TERMS.find((t) => lower.includes(t))} erkannt -- hoechste Qualitaetsstufe`,
+      reason: `Schriftsatz mit ${FILING_TERMS.find((t) => lower.includes(t))} erkannt -- höchste Qualitätsstufe`,
     };
   }
 
@@ -127,7 +127,7 @@ export function classifyComplexity(query: string): ComplexityResult {
     return {
       mode: "background",
       tier: 2,
-      reason: `Vollstaendige Analyse erkannt: ${EXHAUSTIVE_TERMS.find((t) => lower.includes(t))} + ${EXHAUSTIVE_SCOPE.find((s) => lower.includes(s))}`,
+      reason: `Vollständige Analyse erkannt: ${EXHAUSTIVE_TERMS.find((t) => lower.includes(t))} + ${EXHAUSTIVE_SCOPE.find((s) => lower.includes(s))}`,
     };
   }
 
@@ -156,7 +156,7 @@ export function classifyComplexity(query: string): ComplexityResult {
   return {
     mode: "inline",
     tier: 2,
-    reason: "Standard-Komplexitaet -- Inline mit mittlerem Modell",
+    reason: "Standard-Komplexität -- Inline mit mittlerem Modell",
   };
 }
 

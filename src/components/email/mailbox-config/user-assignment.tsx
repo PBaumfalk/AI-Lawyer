@@ -148,11 +148,11 @@ export function UserAssignment() {
         <Users className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
         <p className="text-foreground font-medium">
           {konten.length === 0
-            ? "Keine Postfaecher vorhanden"
+            ? "Keine Postfächer vorhanden"
             : "Keine Benutzer vorhanden"}
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          Erstellen Sie zuerst Postfaecher und Benutzer, um Zuweisungen vornehmen zu koennen.
+          Erstellen Sie zuerst Postfächer und Benutzer, um Zuweisungen vornehmen zu können.
         </p>
       </div>
     );
@@ -161,8 +161,8 @@ export function UserAssignment() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Weisen Sie Benutzer ihren E-Mail-Postfaechern zu. Benutzer koennen nur auf
-        zugewiesene Postfaecher zugreifen.
+        Weisen Sie Benutzer ihren E-Mail-Postfächern zu. Benutzer können nur auf
+        zugewiesene Postfächer zugreifen.
       </p>
 
       <div className="overflow-x-auto">

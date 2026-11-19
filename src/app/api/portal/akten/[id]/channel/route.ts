@@ -56,7 +56,7 @@ export async function GET(
 
   if (!akte?.anwaltId) {
     return NextResponse.json(
-      { error: "Akte hat keinen zustaendigen Anwalt" },
+      { error: "Akte hat keinen zuständigen Anwalt" },
       { status: 400 }
     );
   }

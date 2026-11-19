@@ -142,7 +142,7 @@ export default function LoginPage() {
               <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">{hinweis}</p>
             )}
             {error && (
-              <div className="text-sm text-red-600 dark:text-red-400 bg-red-500/10 rounded-lg p-3 border border-red-500/20">
+              <div role="alert" className="text-sm text-red-600 dark:text-red-400 bg-red-500/10 rounded-lg p-3 border border-red-500/20">
                 {error}
               </div>
             )}

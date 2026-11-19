@@ -3,12 +3,20 @@
 // <Icon name="cases" />            – mono, currentColor, aria-hidden
 // <Icon name="helena" tone="duotone" label="Helena" />
 //
+// Neben den 82 Paket-Icons (persimmon-shapes.tsx) stehen die Erweiterungs-
+// icons aus persimmon-erweiterung.tsx zur Verfügung.
+//
 // Größe kommt aus className (z. B. "w-4 h-4") oder `size`. Für die
 // lucide-kompatiblen Komponenten siehe ./lucide-compat.tsx.
 import * as React from "react";
-import { iconNames, shapes, type IconName } from "./persimmon-shapes";
+import { iconNames, shapes, type IconName as PaketName } from "./persimmon-shapes";
+import { erweiterungsNamen, erweiterungsFormen, type ErweiterungsName } from "./persimmon-erweiterung";
 
-export { iconNames, type IconName };
+export { iconNames, erweiterungsNamen, type PaketName, type ErweiterungsName };
+
+/** Paket-Icons (82) und Erweiterungsicons im Persimmon-Stil. */
+export type IconName = PaketName | ErweiterungsName;
+const formen: Record<IconName, React.ReactNode> = { ...shapes, ...erweiterungsFormen };
 
 export interface PersimmonIconProps extends Omit<React.SVGProps<SVGSVGElement>, "ref"> {
   name: IconName;
@@ -26,7 +34,7 @@ export const Icon = React.forwardRef<SVGSVGElement, PersimmonIconProps>(function
   { name, size = 24, label, tone = "mono", rotate, className, strokeWidth = 1.75, absoluteStrokeWidth: _a, children, ...rest },
   ref
 ) {
-  const form = shapes[name];
+  const form = formen[name];
   return (
     <svg
       ref={ref}

@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
   // RBAC: Only ADMIN or GATEWAY can trigger processing
   if (authResult.role !== "ADMIN" && authResult.role !== "GATEWAY") {
     return Response.json(
-      { error: "Nur Administratoren koennen KI-Verarbeitung ausloesen" },
+      { error: "Nur Administratoren können KI-Verarbeitung auslösen" },
       { status: 403 }
     );
   }
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
     return Response.json(
       {
         error: "KI-Provider nicht erreichbar",
-        details: "Helena ist gerade nicht verfuegbar",
+        details: "Helena ist gerade nicht verfügbar",
       },
       { status: 503 }
     );

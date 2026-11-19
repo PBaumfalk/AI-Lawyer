@@ -22,7 +22,7 @@ export async function GET(
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "kontaktId und gueltige rolle sind erforderlich" },
+      { error: "kontaktId und gültige rolle sind erforderlich" },
       { status: 400 }
     );
   }

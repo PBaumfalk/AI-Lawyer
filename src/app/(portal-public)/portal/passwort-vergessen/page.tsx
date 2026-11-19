@@ -40,12 +40,12 @@ export default function PasswortVergessenPage() {
             </h1>
             <p className="text-sm text-muted-foreground mb-6">
               Falls ein Account mit dieser E-Mail existiert, erhalten Sie in
-              Kuerze eine E-Mail mit Anweisungen zum Zuruecksetzen Ihres
+              Kürze eine E-Mail mit Anweisungen zum Zurücksetzen Ihres
               Passworts.
             </p>
             <Link href="/portal/login">
               <Button variant="outline" className="w-full">
-                Zurueck zur Anmeldung
+                Zurück zur Anmeldung
               </Button>
             </Link>
           </div>
@@ -68,7 +68,7 @@ export default function PasswortVergessenPage() {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Geben Sie Ihre E-Mail-Adresse ein, um Ihr Passwort
-              zurueckzusetzen.
+              zurückzusetzen.
             </p>
           </div>
 
@@ -93,7 +93,7 @@ export default function PasswortVergessenPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Wird gesendet..." : "Zuruecksetzen"}
+              {loading ? "Wird gesendet..." : "Zurücksetzen"}
             </Button>
           </form>
 
@@ -102,7 +102,7 @@ export default function PasswortVergessenPage() {
               href="/portal/login"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Zurueck zur Anmeldung
+              Zurück zur Anmeldung
             </Link>
           </div>
         </div>

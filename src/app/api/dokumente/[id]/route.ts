@@ -139,7 +139,7 @@ export async function GET(
   // Preview PDF streaming -- serves the generated previewPfad (DOCX/image converted to PDF)
   if (previewFile) {
     if (!dokument.previewPfad) {
-      return NextResponse.json({ error: "Keine Vorschau verfuegbar" }, { status: 404 });
+      return NextResponse.json({ error: "Keine Vorschau verfügbar" }, { status: 404 });
     }
     try {
       const stream = await getFileStream(dokument.previewPfad);
@@ -203,7 +203,7 @@ export async function PATCH(
 
     if (targetStatus === "VERSENDET") {
       return NextResponse.json(
-        { error: "Status 'VERSENDET' kann nur ueber Versand-Endpoints gesetzt werden." },
+        { error: "Status 'VERSENDET' kann nur über Versand-Endpoints gesetzt werden." },
         { status: 403 }
       );
     }
@@ -230,7 +230,7 @@ export async function PATCH(
     const allowed = allowedTransitions[currentStatus] ?? [];
     if (!allowed.includes(targetStatus)) {
       return NextResponse.json(
-        { error: `Statusaenderung von '${currentStatus}' zu '${targetStatus}' ist nicht erlaubt.` },
+        { error: `Statusänderung von '${currentStatus}' zu '${targetStatus}' ist nicht erlaubt.` },
         { status: 400 }
       );
     }
@@ -265,7 +265,7 @@ export async function PATCH(
   if (body.status !== undefined && body.status !== dokument.status) {
     const statusLabels: Record<string, string> = {
       ENTWURF: "Entwurf",
-      ZUR_PRUEFUNG: "Zur Pruefung",
+      ZUR_PRUEFUNG: "Zur Prüfung",
       FREIGEGEBEN: "Freigegeben",
       VERSENDET: "Versendet",
     };

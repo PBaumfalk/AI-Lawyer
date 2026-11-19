@@ -66,7 +66,7 @@ const SCHEDULE_OPTIONS: ScheduleOption[] = [
     getDate: () => getNextBusinessDay(8),
   },
   {
-    label: "Naechster Montag 09:00",
+    label: "Nächster Montag 09:00",
     getDate: () => getNextMonday(9),
   },
 ];
@@ -174,7 +174,7 @@ export function ComposePopup({
   const handleSend = async (scheduledDate?: Date) => {
     // Validation
     if (empfaenger.length === 0) {
-      toast.error("Bitte geben Sie mindestens einen Empfaenger an.");
+      toast.error("Bitte geben Sie mindestens einen Empfänger an.");
       return;
     }
 
@@ -184,7 +184,7 @@ export function ComposePopup({
     }
 
     if (!kontoId) {
-      toast.error("Bitte waehlen Sie ein Postfach aus.");
+      toast.error("Bitte wählen Sie ein Postfach aus.");
       return;
     }
 
@@ -192,13 +192,13 @@ export function ComposePopup({
     const totalRecipients = empfaenger.length + cc.length + bcc.length;
     if (totalRecipients >= 5) {
       const proceed = window.confirm(
-        `Sie senden an ${totalRecipients} Empfaenger. Fortfahren?`
+        `Sie senden an ${totalRecipients} Empfänger. Fortfahren?`
       );
       if (!proceed) return;
     }
 
     if (attachments.some((a) => a.uploading)) {
-      toast.error("Bitte warten Sie, bis alle Anhaenge hochgeladen sind.");
+      toast.error("Bitte warten Sie, bis alle Anhänge hochgeladen sind.");
       return;
     }
     if (attachments.some((a) => !a.ref)) {
@@ -253,14 +253,14 @@ export function ComposePopup({
           hour: "2-digit",
           minute: "2-digit",
         });
-        toast.success(`Geplant fuer ${formatted}`);
+        toast.success(`Geplant für ${formatted}`);
         onClose();
       } else {
         // Show 10-second undo toast
         toast("E-Mail wird in 10s gesendet", {
           duration: 10_000,
           action: {
-            label: "Rueckgaengig",
+            label: "Rückgängig",
             onClick: async () => {
               try {
                 const cancelRes = await fetch("/api/email-send/cancel", {
@@ -291,7 +291,7 @@ export function ComposePopup({
   const handleDiscard = () => {
     if (dirty) {
       const proceed = window.confirm(
-        "Nicht gespeicherte Aenderungen verwerfen?"
+        "Nicht gespeicherte Änderungen verwerfen?"
       );
       if (!proceed) return;
     }
@@ -350,7 +350,7 @@ export function ComposePopup({
             type="button"
             onClick={handleDiscard}
             className="p-1 rounded hover:bg-white/10 transition-colors"
-            title="Schliessen"
+            title="Schließen"
           >
             <X className="w-3.5 h-3.5 text-white/70" />
           </button>
@@ -550,7 +550,7 @@ export function ComposePopup({
               type="button"
               onClick={() => setShowSchedule(!showSchedule)}
               className="inline-flex items-center gap-1 px-2.5 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-white/20 dark:hover:bg-white/[0.06] rounded-lg transition-colors"
-              title="Spaeter senden"
+              title="Später senden"
             >
               <Clock className="w-4 h-4" />
               <ChevronDown className="w-3 h-3" />
@@ -559,7 +559,7 @@ export function ComposePopup({
             {showSchedule && (
               <div className="absolute bottom-full left-0 mb-1 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-white/20 dark:border-white/[0.08] w-64 z-50">
                 <div className="p-2 text-xs font-medium text-muted-foreground border-b border-white/10 dark:border-white/[0.06]">
-                  Spaeter senden
+                  Später senden
                 </div>
                 {SCHEDULE_OPTIONS.map((opt) => (
                   <button
@@ -623,7 +623,7 @@ export function ComposePopup({
               onChange={(e) => setLesebestaetigung(e.target.checked)}
               className="rounded border-white/30"
             />
-            Lesebestaetigung
+            Lesebestätigung
           </label>
         </div>
 

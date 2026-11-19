@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     if (password !== passwordConfirm) {
       return NextResponse.json(
-        { error: "Passwoerter stimmen nicht ueberein" },
+        { error: "Passwörter stimmen nicht überein" },
         { status: 400 }
       );
     }
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Passwort muss mindestens 8 Zeichen, 1 Grossbuchstabe und 1 Zahl enthalten",
+            "Passwort muss mindestens 8 Zeichen, 1 Großbuchstabe und 1 Zahl enthalten",
         },
         { status: 400 }
       );
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     if (!invite || invite.status !== "PENDING") {
       return NextResponse.json(
-        { error: "Einladung ungueltig oder abgelaufen" },
+        { error: "Einladung ungültig oder abgelaufen" },
         { status: 400 }
       );
     }
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         data: { status: "EXPIRED" },
       });
       return NextResponse.json(
-        { error: "Einladung ungueltig oder abgelaufen" },
+        { error: "Einladung ungültig oder abgelaufen" },
         { status: 400 }
       );
     }
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Portal activation error:", error);
     return NextResponse.json(
-      { error: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es spaeter erneut." },
+      { error: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut." },
       { status: 500 }
     );
   }

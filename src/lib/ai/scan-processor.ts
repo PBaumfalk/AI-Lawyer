@@ -318,17 +318,17 @@ async function processEmailDraft(
 
   // Truncate for token limits
   const truncatedContent = content.length > 10000
-    ? content.slice(0, 10000) + "\n\n[... Text gekuerzt ...]"
+    ? content.slice(0, 10000) + "\n\n[... Text gekürzt ...]"
     : content;
 
   const result = await generateText({
     model,
-    system: `Du bist Helena, eine erfahrene Rechtsanwaltsfachangestellte. Erstelle einen hoeflichen, professionellen Antwort-Entwurf auf die folgende E-Mail.
+    system: `Du bist Helena, eine erfahrene Rechtsanwaltsfachangestellte. Erstelle einen höflichen, professionellen Antwort-Entwurf auf die folgende E-Mail.
 Der Entwurf soll:
 - Formell und sachlich sein
 - Den Sachverhalt kurz zusammenfassen
 - Eine angemessene Antwort vorschlagen
-- Platzhalter fuer fehlende Informationen enthalten (z.B. [Mandantenname], [Aktenzeichen])
+- Platzhalter für fehlende Informationen enthalten (z.B. [Mandantenname], [Aktenzeichen])
 - Als ENTWURF gekennzeichnet sein
 
 Schreibe den Entwurf direkt als E-Mail-Text (ohne Metadaten).`,
@@ -376,7 +376,7 @@ ${truncatedContent}`,
     userId,
     type: "ai_suggestion" as any,
     title: "Helena: Antwort-Entwurf erstellt",
-    message: `Entwurf fuer "${metadata.betreff ?? "E-Mail"}" verfuegbar`,
+    message: `Entwurf für "${metadata.betreff ?? "E-Mail"}" verfügbar`,
     data: {
       suggestionId: suggestion.id,
       typ: "ANTWORT_ENTWURF",

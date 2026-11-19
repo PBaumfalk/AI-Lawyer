@@ -100,7 +100,7 @@ export async function POST(
         {
           locked: true,
           lockedBy,
-          message: `Wird von ${lockedBy.userName} geprueft`,
+          message: `Wird von ${lockedBy.userName} geprüft`,
         },
         { status: 409 },
       );
@@ -131,7 +131,7 @@ export async function POST(
     // Fail open: if Redis is down, allow the action
     return NextResponse.json({
       locked: false,
-      warning: "Lock-Service nicht verfuegbar",
+      warning: "Lock-Service nicht verfügbar",
     });
   }
 }
@@ -208,7 +208,7 @@ export async function DELETE(
 
     return NextResponse.json({
       released: false,
-      warning: "Lock-Service nicht verfuegbar",
+      warning: "Lock-Service nicht verfügbar",
     });
   }
 }

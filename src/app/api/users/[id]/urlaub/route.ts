@@ -83,7 +83,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
 
   if (overlapping) {
     return NextResponse.json(
-      { error: "Ueberschneidung mit bestehendem Urlaubszeitraum" },
+      { error: "Überschneidung mit bestehendem Urlaubszeitraum" },
       { status: 409 }
     );
   }

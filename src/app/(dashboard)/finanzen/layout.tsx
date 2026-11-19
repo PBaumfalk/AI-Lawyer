@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { LayoutDashboard, Calculator, Receipt, BookOpen } from "lucide-react";
 
 const finanzenTabs = [
-  { name: "Uebersicht", href: "/finanzen", icon: LayoutDashboard },
+  { name: "Übersicht", href: "/finanzen", icon: LayoutDashboard },
   { name: "Rechner", href: "/finanzen/rechner", icon: Calculator },
   { name: "Rechnungen", href: "/finanzen/rechnungen", icon: Receipt },
   { name: "Aktenkonto", href: "/finanzen/aktenkonto", icon: BookOpen },

@@ -43,7 +43,7 @@ export async function PATCH(request: Request) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger JSON-Body" },
+      { error: "Ungültiger JSON-Body" },
       { status: 400 },
     );
   }

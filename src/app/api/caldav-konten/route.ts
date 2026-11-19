@@ -9,7 +9,7 @@ import type { CalDavProvider } from "@/lib/caldav/types";
 const createSchema = z.object({
   provider: z.enum(["GOOGLE", "APPLE"]),
   name: z.string().min(1, "Name ist erforderlich"),
-  serverUrl: z.string().url("Ungueltige Server-URL"),
+  serverUrl: z.string().url("Ungültige Server-URL"),
   benutzername: z.string().min(1, "Benutzername ist erforderlich"),
   passwort: z.string().optional(),
   oauthTokens: z
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 
   if (!parsed.success) {
     return Response.json(
-      { error: "Ungueltige Eingabe", details: parsed.error.flatten() },
+      { error: "Ungültige Eingabe", details: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -82,14 +82,14 @@ export async function POST(req: NextRequest) {
   // Validate credentials are provided for the auth type
   if (authTyp === "PASSWORT" && !data.passwort) {
     return Response.json(
-      { error: "App-spezifisches Passwort ist fuer Apple iCloud erforderlich" },
+      { error: "App-spezifisches Passwort ist für Apple iCloud erforderlich" },
       { status: 400 }
     );
   }
 
   if (authTyp === "OAUTH2" && !data.oauthTokens) {
     return Response.json(
-      { error: "OAuth2-Tokens sind fuer Google Calendar erforderlich" },
+      { error: "OAuth2-Tokens sind für Google Calendar erforderlich" },
       { status: 400 }
     );
   }

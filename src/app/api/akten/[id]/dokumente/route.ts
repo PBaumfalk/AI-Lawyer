@@ -102,7 +102,7 @@ export async function POST(
   for (const file of files) {
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: `Datei "${file.name}" ueberschreitet das Limit von 100 MB` },
+        { error: `Datei "${file.name}" überschreitet das Limit von 100 MB` },
         { status: 413 }
       );
     }

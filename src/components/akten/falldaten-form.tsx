@@ -109,7 +109,7 @@ export function FalldatenForm({
       }
       toast.success("Falldaten gespeichert");
       if (completeness.filled < completeness.total) {
-        toast.info(`${completeness.total - completeness.filled} Pflichtfelder noch nicht ausgefuellt`);
+        toast.info(`${completeness.total - completeness.filled} Pflichtfelder noch nicht ausgefüllt`);
       }
       setDirty(false);
       router.refresh();
@@ -296,7 +296,7 @@ function FalldatenFeldInput({
           onChange={(e) => onChange(e.target.value)}
           className={cn("h-9 text-sm", amberBorder)}
         >
-          <option value="">Bitte waehlen...</option>
+          <option value="">Bitte wählen...</option>
           {feld.optionen.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}

@@ -41,10 +41,10 @@ interface DraftFromApi {
 
 // Type grouping labels
 const typeLabels: Record<string, string> = {
-  DOKUMENT: "Dokument-Entwuerfe",
-  FRIST: "Frist-Entwuerfe",
-  NOTIZ: "Notiz-Entwuerfe",
-  ALERT: "Alert-Entwuerfe",
+  DOKUMENT: "Dokument-Entwürfe",
+  FRIST: "Frist-Entwürfe",
+  NOTIZ: "Notiz-Entwürfe",
+  ALERT: "Alert-Entwürfe",
 };
 
 // ---------------------------------------------------------------------------
@@ -235,7 +235,7 @@ export function DraftPinnedSection({
           )}
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          Neue Entwuerfe verfuegbar -- klicken zum Laden
+          Neue Entwürfe verfügbar -- klicken zum Laden
         </button>
       )}
 
@@ -253,7 +253,7 @@ export function DraftPinnedSection({
             )}
             <Sparkles className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             <span className="text-sm font-semibold text-brand-700 dark:text-brand-300">
-              Helena-Entwuerfe
+              Helena-Entwürfe
             </span>
             <Badge
               variant="secondary"
@@ -292,7 +292,7 @@ export function DraftPinnedSection({
                               const result = await handleAccept(id);
                               toast.success("Angenommen", {
                                 action: {
-                                  label: "Rueckgaengig",
+                                  label: "Rückgängig",
                                   onClick: async () => {
                                     try {
                                       await fetch(
@@ -308,7 +308,7 @@ export function DraftPinnedSection({
                                           }),
                                         }
                                       );
-                                      toast.info("Rueckgaengig gemacht");
+                                      toast.info("Rückgängig gemacht");
                                       fetchDrafts();
                                     } catch {
                                       toast.error("Undo fehlgeschlagen");

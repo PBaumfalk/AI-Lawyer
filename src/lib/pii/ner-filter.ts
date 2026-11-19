@@ -63,39 +63,39 @@ export interface NerResult {
  * @returns The complete few-shot NER prompt string ready for Ollama
  */
 export function buildNerPrompt(text: string): string {
-  return `Du bist ein Datenschutz-Experte fuer deutsche Gerichtsentscheidungen.
-Deine Aufgabe: Extrahiere alle vollstaendigen Personennamen natuerlicher Personen aus dem Text.
+  return `Du bist ein Datenschutz-Experte für deutsche Gerichtsentscheidungen.
+Deine Aufgabe: Extrahiere alle vollständigen Personennamen natürlicher Personen aus dem Text.
 
 WICHTIGE REGELN:
-- Extrahiere NUR Namen von natuerlichen Personen (Klaeger, Beklagte, Zeugen, einzelne Richter bei Namensnennung)
+- Extrahiere NUR Namen von natürlichen Personen (Kläger, Beklagte, Zeugen, einzelne Richter bei Namensnennung)
 - NICHT extrahieren: Gerichtsnamen (Bundesgerichtshof, Amtsgericht, Landgericht, BAG, BGH usw.)
-- NICHT extrahieren: Behoerden und Institutionen (Bundesministerium, Staatsanwaltschaft usw.)
+- NICHT extrahieren: Behörden und Institutionen (Bundesministerium, Staatsanwaltschaft usw.)
 - NICHT extrahieren: Kammern, Senate, Gremien (2. Senat, 1. Kammer usw.)
 - NICHT extrahieren: Firmen und Organisationen
-- NICHT extrahieren: Abkuerzungen wie "Kl.", "Bekl.", "Klaegerin"
+- NICHT extrahieren: Abkürzungen wie "Kl.", "Bekl.", "Klägerin"
 
 Antworte AUSSCHLIESSLICH mit folgendem JSON-Format:
-{"persons": ["Vollstaendiger Name 1", "Vollstaendiger Name 2"]}
-Wenn keine natuerlichen Personen gefunden: {"persons": []}
+{"persons": ["Vollständiger Name 1", "Vollständiger Name 2"]}
+Wenn keine natürlichen Personen gefunden: {"persons": []}
 
 BEISPIELE:
 ---
 Text: "Die Beklagte, die Bundesrepublik Deutschland, vertreten durch das Bundesministerium der Finanzen, wendet sich gegen die Entscheidung des Bundesarbeitsgerichts vom 12.03.2021."
 Antwort: {"persons": []}
 
-Text: "Der Klaeger Hans Mueller, wohnhaft in Koeln, verklagte die Maria Schmidt GmbH vor dem Amtsgericht Koeln."
+Text: "Der Kläger Hans Mueller, wohnhaft in Köln, verklagte die Maria Schmidt GmbH vor dem Amtsgericht Köln."
 Antwort: {"persons": ["Hans Mueller"]}
 
 Text: "Richterin Dr. Sabine Hoffmann verlas die Entscheidung des 2. Senats des Bundesgerichtshofs."
 Antwort: {"persons": ["Dr. Sabine Hoffmann"]}
 
-Text: "Rechtsanwalt Dr. Klaus Weber vertritt den Klaeger Thomas Fischer gegen die Beklagte, vertreten durch Rechtsanwaeltin Anna Braun."
+Text: "Rechtsanwalt Dr. Klaus Weber vertritt den Kläger Thomas Fischer gegen die Beklagte, vertreten durch Rechtsanwältin Anna Braun."
 Antwort: {"persons": ["Dr. Klaus Weber", "Thomas Fischer", "Anna Braun"]}
 
 Text: "Das Landesarbeitsgericht Hamm, Kammer 5, hat unter Vorsitz von Richter am LAG Karl Lehmann entschieden."
 Antwort: {"persons": ["Karl Lehmann"]}
 
-Text: "Die Klage wird abgewiesen. Der Klaeger traegt die Kosten. Das Urteil ist vorbehaltlich einer Entscheidung des Bundesverfassungsgerichts vollstreckbar."
+Text: "Die Klage wird abgewiesen. Der Kläger trägt die Kosten. Das Urteil ist vorbehaltlich einer Entscheidung des Bundesverfassungsgerichts vollstreckbar."
 Antwort: {"persons": []}
 ---
 

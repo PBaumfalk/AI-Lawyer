@@ -134,14 +134,14 @@ export function EmailInlineReply({
 
   const handleSend = useCallback(async () => {
     if (!recipients.trim()) {
-      toast.error("Bitte geben Sie mindestens einen Empfaenger an");
+      toast.error("Bitte geben Sie mindestens einen Empfänger an");
       return;
     }
 
     // Warn on Reply-All with 5+ recipients
     if (recipientCount >= 5) {
       const confirmed = window.confirm(
-        `Sie antworten an ${recipientCount} Empfaenger. Fortfahren?`
+        `Sie antworten an ${recipientCount} Empfänger. Fortfahren?`
       );
       if (!confirmed) return;
     }
@@ -183,7 +183,7 @@ export function EmailInlineReply({
       // 10-second undo toast
       toast("E-Mail wird in 10s gesendet", {
         action: {
-          label: "Rueckgaengig",
+          label: "Rückgängig",
           onClick: async () => {
             try {
               const cancel = await fetch("/api/email-send/cancel", {
@@ -225,7 +225,7 @@ export function EmailInlineReply({
   const handleDiscard = useCallback(() => {
     if (hasEdited) {
       const confirmed = window.confirm(
-        "Entwurf verwerfen? Aenderungen gehen verloren."
+        "Entwurf verwerfen? Änderungen gehen verloren."
       );
       if (!confirmed) return;
     }
@@ -279,7 +279,7 @@ export function EmailInlineReply({
                 setRecipients(e.target.value);
                 setHasEdited(true);
               }}
-              placeholder="Empfaenger..."
+              placeholder="Empfänger..."
               className="h-7 text-xs flex-1"
             />
             {!showCcBcc && (
@@ -302,7 +302,7 @@ export function EmailInlineReply({
                     setCcField(e.target.value);
                     setHasEdited(true);
                   }}
-                  placeholder="CC-Empfaenger..."
+                  placeholder="CC-Empfänger..."
                   className="h-7 text-xs flex-1"
                 />
               </div>
@@ -314,7 +314,7 @@ export function EmailInlineReply({
                     setBccField(e.target.value);
                     setHasEdited(true);
                   }}
-                  placeholder="BCC-Empfaenger..."
+                  placeholder="BCC-Empfänger..."
                   className="h-7 text-xs flex-1"
                 />
               </div>
@@ -367,7 +367,7 @@ export function EmailInlineReply({
           originalEmail.anhaenge.length > 0 && (
             <div className="space-y-1.5">
               <p className="text-xs font-medium text-muted-foreground">
-                Anhaenge weiterleiten:
+                Anhänge weiterleiten:
               </p>
               {originalEmail.anhaenge.map((att) => (
                 <label

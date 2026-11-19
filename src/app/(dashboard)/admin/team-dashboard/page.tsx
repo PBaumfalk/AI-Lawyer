@@ -79,7 +79,7 @@ export default async function TeamDashboardPage() {
       {/* KPI Row: 3 GlassKpiCards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <GlassKpiCard
-          title="Quest-Erfuellungsquote"
+          title="Quest-Erfüllungsquote"
           value={`${questRate}%`}
           icon={<Target className="h-5 w-5" />}
           color="emerald"

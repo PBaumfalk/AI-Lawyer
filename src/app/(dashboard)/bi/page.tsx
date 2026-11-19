@@ -27,7 +27,7 @@ export default function BiDashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">BI-Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Kanzlei-Analytics im Ueberblick
+            Kanzlei-Analytics im Überblick
           </p>
         </div>
         <ExportBar filters={filters} />

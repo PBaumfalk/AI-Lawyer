@@ -307,7 +307,7 @@ export function RvgCalculator({
               className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
             >
               <Info className="w-4 h-4" />
-              Vorschlaege
+              Vorschläge
               {showStreitwertHinweise ? (
                 <ChevronUp className="w-3 h-3" />
               ) : (
@@ -404,7 +404,7 @@ export function RvgCalculator({
                 className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
               >
                 <Plus className="w-4 h-4" />
-                Position hinzufuegen
+                Position hinzufügen
               </button>
             </div>
 
@@ -440,7 +440,7 @@ export function RvgCalculator({
                         pos.vvNr !== "1008" && (
                           <div className="mt-2 flex items-center gap-3">
                             <label className="text-xs text-muted-foreground">
-                              Gebuehrensatz:
+                              Gebührensatz:
                             </label>
                             <input
                               type="range"
@@ -538,7 +538,7 @@ export function RvgCalculator({
                 className="mt-3 w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-border hover:bg-muted/50 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                Weitere Position hinzufuegen
+                Weitere Position hinzufügen
               </button>
             )}
           </div>
@@ -549,7 +549,7 @@ export function RvgCalculator({
           <div className="glass rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-foreground">
-                VV-Position hinzufuegen
+                VV-Position hinzufügen
               </h2>
               <button
                 type="button"
@@ -614,7 +614,7 @@ export function RvgCalculator({
         {positions.length === 0 && !showPresets && (
           <div className="glass rounded-xl p-8 text-center">
             <p className="text-muted-foreground mb-3">
-              Keine Positionen ausgewaehlt.
+              Keine Positionen ausgewählt.
             </p>
             <div className="flex gap-2 justify-center">
               <button
@@ -622,7 +622,7 @@ export function RvgCalculator({
                 onClick={() => setShowPresets(true)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                Preset waehlen
+                Preset wählen
               </button>
               <span className="text-muted-foreground">oder</span>
               <button
@@ -630,7 +630,7 @@ export function RvgCalculator({
                 onClick={() => setShowVvSearch(true)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                manuell hinzufuegen
+                manuell hinzufügen
               </button>
             </div>
           </div>
@@ -768,8 +768,8 @@ export function RvgCalculator({
                     >
                       <ArrowRightLeft className="w-4 h-4" />
                       {transferring
-                        ? "Wird uebernommen..."
-                        : "Uebernehmen als Rechnung"}
+                        ? "Wird übernommen..."
+                        : "Übernehmen als Rechnung"}
                     </button>
                   </>
                 )}
@@ -794,7 +794,7 @@ export function RvgCalculator({
               <p className="text-sm text-muted-foreground">
                 {streitwert <= 0
                   ? "Bitte Streitwert eingeben."
-                  : "Bitte VV-Positionen hinzufuegen."}
+                  : "Bitte VV-Positionen hinzufügen."}
               </p>
             </div>
           )}

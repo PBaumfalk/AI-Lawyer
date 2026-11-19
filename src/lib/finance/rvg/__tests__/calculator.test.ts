@@ -177,7 +177,7 @@ describe('VV Catalog', () => {
   it('getVvPosition returns correct data for VV 3100', () => {
     const pos = getVvPosition('3100');
     expect(pos).toBeDefined();
-    expect(pos!.name).toBe('Verfahrensgebuehr');
+    expect(pos!.name).toBe('Verfahrensgebühr');
     expect(pos!.defaultRate).toBe(1.3);
     expect(pos!.feeType).toBe('wertgebuehr');
     expect(pos!.part).toBe(3);

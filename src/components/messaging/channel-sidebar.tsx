@@ -77,7 +77,7 @@ export function ChannelSidebar({
     <div className={cn("glass-panel rounded-2xl w-60 flex-shrink-0 flex flex-col overflow-hidden", className)}>
       {/* Header */}
       <div className="px-3 py-3 border-b border-white/10 dark:border-white/[0.06]">
-        <h2 className="text-sm font-semibold text-foreground">Kanaele</h2>
+        <h2 className="text-sm font-semibold text-foreground">Kanäle</h2>
       </div>
 
       {/* Scrollable channel list */}
@@ -122,7 +122,7 @@ export function ChannelSidebar({
                   ))}
                   {allgemeinChannels.length === 0 && (
                     <p className="px-3 py-2 text-xs text-muted-foreground/60">
-                      Keine Kanaele
+                      Keine Kanäle
                     </p>
                   )}
                 </div>

@@ -122,7 +122,7 @@ export default function AdminAuditTrailPage() {
         <div>
           <h1 className="text-2xl font-semibold">Audit-Trail</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            System-weite Aktivitaeten und Aenderungshistorie
+            System-weite Aktivitäten und Änderungshistorie
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>

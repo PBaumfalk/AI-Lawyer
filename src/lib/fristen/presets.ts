@@ -20,7 +20,7 @@ export const DEFAULT_FRISTEN_PRESETS: FristPreset[] = [
     kategorie: 'zivilprozess',
   },
   {
-    name: 'Berufungsbegruendungsfrist',
+    name: 'Berufungsbegründungsfrist',
     rechtsgrundlage: '§ 520 Abs. 2 ZPO',
     fristArt: 'EREIGNISFRIST',
     dauer: { monate: 2 },
@@ -38,7 +38,7 @@ export const DEFAULT_FRISTEN_PRESETS: FristPreset[] = [
     kategorie: 'zivilprozess',
   },
   {
-    name: 'Revisionsbegruendungsfrist',
+    name: 'Revisionsbegründungsfrist',
     rechtsgrundlage: '§ 551 Abs. 2 ZPO',
     fristArt: 'EREIGNISFRIST',
     dauer: { monate: 2 },
@@ -47,7 +47,7 @@ export const DEFAULT_FRISTEN_PRESETS: FristPreset[] = [
     kategorie: 'zivilprozess',
   },
   {
-    name: 'Einspruchsfrist (Versaeumnisurteil)',
+    name: 'Einspruchsfrist (Versäumnisurteil)',
     rechtsgrundlage: '§ 339 Abs. 1 ZPO',
     fristArt: 'EREIGNISFRIST',
     dauer: { wochen: 2 },
@@ -143,7 +143,7 @@ export const DEFAULT_FRISTEN_PRESETS: FristPreset[] = [
 
   // === Arbeitsrecht ===
   {
-    name: 'Kuendigungsschutzklage',
+    name: 'Kündigungsschutzklage',
     rechtsgrundlage: '§ 4 KSchG',
     fristArt: 'EREIGNISFRIST',
     dauer: { wochen: 3 },
@@ -172,7 +172,7 @@ export const DEFAULT_FRISTEN_PRESETS: FristPreset[] = [
     kategorie: 'allgemein',
   },
   {
-    name: 'Verjährungsfrist (regelmässig)',
+    name: 'Verjährungsfrist (regelmäßig)',
     rechtsgrundlage: '§ 195 BGB',
     fristArt: 'EREIGNISFRIST',
     dauer: { jahre: 3 },

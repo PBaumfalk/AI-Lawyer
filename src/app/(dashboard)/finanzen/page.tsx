@@ -123,7 +123,7 @@ export default function FinanzenPage() {
           color="blue"
         />
         <GlassKpiCard
-          title="Ueberfaellige Rechnungen"
+          title="Überfällige Rechnungen"
           value={loading ? "..." : String(summary.ueberfaelligeRechnungen)}
           icon={<Clock className="w-5 h-5" />}
           color={summary.ueberfaelligeRechnungen > 0 ? "amber" : "emerald"}
@@ -152,7 +152,7 @@ export default function FinanzenPage() {
             <div>
               <p className="font-medium text-foreground">Neue Berechnung</p>
               <p className="text-sm text-muted-foreground">
-                RVG-Gebuehren berechnen
+                RVG-Gebühren berechnen
               </p>
             </div>
           </Link>
@@ -182,7 +182,7 @@ export default function FinanzenPage() {
             <div>
               <p className="font-medium text-foreground">Banking-Import</p>
               <p className="text-sm text-muted-foreground">
-                Kontoauszuege importieren
+                Kontoauszüge importieren
               </p>
             </div>
           </Link>

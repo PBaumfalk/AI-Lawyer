@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       totalHits: 0,
       query: q,
       processingTimeMs: 0,
-      error: "Volltextsuche nicht verfuegbar",
+      error: "Volltextsuche nicht verfügbar",
     });
   }
 }

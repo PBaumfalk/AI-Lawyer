@@ -85,7 +85,7 @@ export function VersionTimeline({
           Noch keine Versionen vorhanden.
         </p>
         <p className="text-[10px] text-slate-400 mt-1">
-          Versionen werden automatisch bei Aenderungen erstellt.
+          Versionen werden automatisch bei Änderungen erstellt.
         </p>
       </div>
     );

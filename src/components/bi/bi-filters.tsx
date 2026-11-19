@@ -135,7 +135,7 @@ export function BiFilters({ filters, onChange }: BiFiltersProps) {
             value={filters.anwaltId ?? ""}
             onChange={(e) => handleChange("anwaltId", e.target.value)}
           >
-            <option value="">Alle Anwaelte</option>
+            <option value="">Alle Anwälte</option>
             {anwaelte.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name}

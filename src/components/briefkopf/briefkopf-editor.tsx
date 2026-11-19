@@ -339,7 +339,7 @@ export function BriefkopfEditor({
                       className="max-h-16 mx-auto object-contain"
                     />
                     <label className="cursor-pointer text-xs text-primary hover:underline">
-                      Logo aendern
+                      Logo ändern
                       <input
                         type="file"
                         accept="image/*"
@@ -380,7 +380,7 @@ export function BriefkopfEditor({
               <Label>
                 <span className="flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5" />
-                  Anwaelte (BRAO-Pflichtangabe)
+                  Anwälte (BRAO-Pflichtangabe)
                 </span>
               </Label>
               <div className="space-y-1">
@@ -422,7 +422,7 @@ export function BriefkopfEditor({
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground">
-                Gem. BRAO/BORA muessen alle zugelassenen Anwaelte auf dem Briefkopf aufgefuehrt werden.
+                Gem. BRAO/BORA müssen alle zugelassenen Anwälte auf dem Briefkopf aufgeführt werden.
               </p>
             </div>
 
@@ -701,11 +701,11 @@ export function BriefkopfEditor({
         <div className="glass rounded-xl p-12 text-center">
           <FileText className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
           <p className="text-sm text-muted-foreground">
-            OnlyOffice-Modus: Oeffnet den Briefkopf als DOCX in OnlyOffice
-            fuer vollstaendige Bearbeitungsmoeglichkeiten.
+            OnlyOffice-Modus: Öffnet den Briefkopf als DOCX in OnlyOffice
+            für vollständige Bearbeitungsmöglichkeiten.
           </p>
           <p className="text-xs text-muted-foreground/60 mt-2">
-            Speichern Sie zuerst im Formular-Modus, dann oeffnen Sie die DOCX-Datei in OnlyOffice.
+            Speichern Sie zuerst im Formular-Modus, dann öffnen Sie die DOCX-Datei in OnlyOffice.
           </p>
         </div>
       )}

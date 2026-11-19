@@ -125,7 +125,7 @@ export async function checkAndAlertHealthStatus(
       `Service ${service.name} ist nicht erreichbar seit ${now}.`,
       service.error ? `Fehler: ${service.error}` : "",
       "",
-      "Bitte pruefen Sie den Service-Status im Admin-Bereich unter /admin/system.",
+      "Bitte prüfen Sie den Service-Status im Admin-Bereich unter /admin/system.",
     ]
       .filter(Boolean)
       .join("\n");
@@ -138,7 +138,7 @@ export async function checkAndAlertHealthStatus(
         ${service.error ? `<p><strong>Fehler:</strong> ${service.error}</p>` : ""}
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
         <p style="color: #64748b; font-size: 12px;">
-          Pruefen Sie den Status unter <a href="/admin/system">/admin/system</a>
+          Prüfen Sie den Status unter <a href="/admin/system">/admin/system</a>
         </p>
       </div>
     `;

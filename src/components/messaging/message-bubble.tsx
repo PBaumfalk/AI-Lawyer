@@ -68,7 +68,7 @@ export function MessageBubble({
     return (
       <div className="flex justify-center py-1">
         <span className="text-xs italic text-muted-foreground/60">
-          Nachricht geloescht
+          Nachricht gelöscht
         </span>
       </div>
     );

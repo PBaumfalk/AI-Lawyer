@@ -68,7 +68,7 @@ export async function POST(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger JSON-Body" },
+      { error: "Ungültiger JSON-Body" },
       { status: 400 }
     );
   }
@@ -84,7 +84,7 @@ export async function POST(
   if (!body.operation || !validOps.includes(body.operation)) {
     return NextResponse.json(
       {
-        error: `Ungueltige Operation. Erlaubt: ${validOps.join(", ")}`,
+        error: `Ungültige Operation. Erlaubt: ${validOps.join(", ")}`,
       },
       { status: 400 }
     );
@@ -112,7 +112,7 @@ export async function POST(
   // Verify document is a PDF
   if (dokument.mimeType !== "application/pdf") {
     return NextResponse.json(
-      { error: "Nur PDF-Dokumente koennen bearbeitet werden" },
+      { error: "Nur PDF-Dokumente können bearbeitet werden" },
       { status: 400 }
     );
   }
@@ -140,7 +140,7 @@ export async function POST(
       case "split": {
         if (!body.pages) {
           return NextResponse.json(
-            { error: "Seitenbereiche (pages) muessen angegeben werden" },
+            { error: "Seitenbereiche (pages) müssen angegeben werden" },
             { status: 400 }
           );
         }
@@ -202,7 +202,7 @@ export async function POST(
           return NextResponse.json(
             {
               error:
-                "Schwärzungsmuster (redactPatterns) oder useDsgvo muessen angegeben werden",
+                "Schwärzungsmuster (redactPatterns) oder useDsgvo müssen angegeben werden",
             },
             { status: 400 }
           );

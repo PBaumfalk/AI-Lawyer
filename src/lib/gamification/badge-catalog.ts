@@ -33,7 +33,7 @@ export interface BadgeDefinition {
 export const BADGE_CATALOG: BadgeDefinition[] = [
   {
     slug: "fristenwaechter",
-    name: "Fristenwaechter",
+    name: "Fristenwächter",
     beschreibung: "50 Fristen fristgerecht erledigt",
     icon: "Clock",
     type: "count",
@@ -43,8 +43,8 @@ export const BADGE_CATALOG: BadgeDefinition[] = [
   },
   {
     slug: "aktenkoenig",
-    name: "Aktenkoenig",
-    beschreibung: "100 Akten-Aktivitaeten erstellt",
+    name: "Aktenkönig",
+    beschreibung: "100 Akten-Aktivitäten erstellt",
     icon: "FolderOpen",
     type: "count",
     model: "AktenActivity",
@@ -97,7 +97,7 @@ export const BADGE_CATALOG: BadgeDefinition[] = [
   },
   {
     slug: "teamkaempfer",
-    name: "Teamkaempfer",
+    name: "Teamkämpfer",
     beschreibung: "An 3 Bossfights teilgenommen",
     icon: "Shield",
     type: "count",

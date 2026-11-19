@@ -69,7 +69,7 @@ export function Tagesuebersicht() {
       setTermine(gruppen.termine);
       setExterneTermine(gruppen.externeTermine);
     } catch {
-      toast.error("Tagesuebersicht konnte nicht geladen werden");
+      toast.error("Tagesübersicht konnte nicht geladen werden");
     } finally {
       setLoading(false);
     }
@@ -101,7 +101,7 @@ export function Tagesuebersicht() {
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           <span className="ml-2 text-sm text-muted-foreground">
-            Lade Tagesuebersicht...
+            Lade Tagesübersicht...
           </span>
         </div>
       </GlassCard>
@@ -115,7 +115,7 @@ export function Tagesuebersicht() {
       <GlassCard className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-heading text-foreground">
-            Tagesuebersicht
+            Tagesübersicht
           </h2>
           <span className="text-xs text-muted-foreground">
             {format(new Date(), "EEEE, dd. MMMM yyyy", { locale: de })}
@@ -124,7 +124,7 @@ export function Tagesuebersicht() {
 
         {totalItems === 0 ? (
           <div className="text-sm text-muted-foreground py-8 text-center">
-            Keine Eintraege fuer heute.
+            Keine Einträge für heute.
           </div>
         ) : (
           <div className="space-y-6">
@@ -190,7 +190,7 @@ export function Tagesuebersicht() {
                           <Link
                             href={`/akten/${frist.akte.id}`}
                             className="p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                            title="Akte oeffnen"
+                            title="Akte öffnen"
                           >
                             <ChevronRight className="w-4 h-4" />
                           </Link>
@@ -240,7 +240,7 @@ export function Tagesuebersicht() {
                           <Link
                             href={`/akten/${wv.akte.id}`}
                             className="p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                            title="Akte oeffnen"
+                            title="Akte öffnen"
                           >
                             <ChevronRight className="w-4 h-4" />
                           </Link>

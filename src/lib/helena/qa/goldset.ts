@@ -21,7 +21,7 @@ export interface GoldsetQuery {
   expectedNormen: string[];
   /** Expected rulings (e.g., ["BAG Az. 2 AZR 123/22"]) */
   expectedUrteile: string[];
-  /** Expected Schriftsatz sections (e.g., ["Rubrum", "Antraege", "Sachverhalt"]) */
+  /** Expected Schriftsatz sections (e.g., ["Rubrum", "Anträge", "Sachverhalt"]) */
   expectedSections: string[];
   /** Category (e.g., "Kuendigung", "Lohnklage", "Fristen") */
   schwerpunkt: string;
@@ -31,46 +31,46 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
   // --- Kuendigungsschutz (KSchG) ---
   {
     id: "kschg-01",
-    description: "Ordentliche Kuendigung Arbeitgeber wegen Krankheit",
+    description: "Ordentliche Kündigung Arbeitgeber wegen Krankheit",
     query:
-      "Erstelle eine Kuendigungsschutzklage gegen eine krankheitsbedingte Kuendigung. Mandant arbeitet seit 8 Jahren, Betrieb hat 200 Mitarbeiter.",
+      "Erstelle eine Kündigungsschutzklage gegen eine krankheitsbedingte Kündigung. Mandant arbeitet seit 8 Jahren, Betrieb hat 200 Mitarbeiter.",
     expectedNormen: ["KSchG SS 1", "KSchG SS 4", "KSchG SS 23"],
     expectedUrteile: [],
     expectedSections: [
       "Rubrum",
-      "Antraege",
+      "Anträge",
       "Sachverhalt",
-      "Rechtliche Wuerdigung",
+      "Rechtliche Würdigung",
     ],
     schwerpunkt: "Kuendigung",
   },
   {
     id: "kschg-02",
-    description: "Fristlose Kuendigung Arbeitnehmer wegen Diebstahl",
+    description: "Fristlose Kündigung Arbeitnehmer wegen Diebstahl",
     query:
-      "Kuendigungsschutzklage gegen fristlose Kuendigung wegen angeblichem Diebstahl (Pfandbon, Wert 1.30 EUR). Betriebszugehoerigkeit 20 Jahre.",
+      "Kündigungsschutzklage gegen fristlose Kündigung wegen angeblichem Diebstahl (Pfandbon, Wert 1.30 EUR). Betriebszugehörigkeit 20 Jahre.",
     expectedNormen: ["BGB SS 626", "KSchG SS 1", "KSchG SS 13"],
     expectedUrteile: [],
     expectedSections: [
       "Rubrum",
-      "Antraege",
+      "Anträge",
       "Sachverhalt",
-      "Rechtliche Wuerdigung",
+      "Rechtliche Würdigung",
     ],
     schwerpunkt: "Kuendigung",
   },
   {
     id: "kschg-03",
-    description: "Betriebsbedingte Kuendigung bei Sozialauswahl",
+    description: "Betriebsbedingte Kündigung bei Sozialauswahl",
     query:
-      "Kuendigungsschutzklage wegen betriebsbedingter Kuendigung. Mandant meint die Sozialauswahl war fehlerhaft.",
+      "Kündigungsschutzklage wegen betriebsbedingter Kündigung. Mandant meint die Sozialauswahl war fehlerhaft.",
     expectedNormen: ["KSchG SS 1", "KSchG SS 1 Abs. 3", "KSchG SS 4"],
     expectedUrteile: [],
     expectedSections: [
       "Rubrum",
-      "Antraege",
+      "Anträge",
       "Sachverhalt",
-      "Rechtliche Wuerdigung",
+      "Rechtliche Würdigung",
     ],
     schwerpunkt: "Kuendigung",
   },
@@ -78,10 +78,10 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
     id: "kschg-04",
     description: "Aenderungskuendigung",
     query:
-      "Klage gegen eine Aenderungskuendigung, Mandant soll unter schlechteren Bedingungen weiterarbeiten.",
+      "Klage gegen eine Änderungskündigung, Mandant soll unter schlechteren Bedingungen weiterarbeiten.",
     expectedNormen: ["KSchG SS 2", "KSchG SS 4", "BGB SS 622"],
     expectedUrteile: [],
-    expectedSections: ["Rubrum", "Antraege", "Sachverhalt"],
+    expectedSections: ["Rubrum", "Anträge", "Sachverhalt"],
     schwerpunkt: "Kuendigung",
   },
   // --- Lohn / Gehalt ---
@@ -89,20 +89,20 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
     id: "lohn-01",
     description: "Lohnklage wegen Zahlungsverzug",
     query:
-      "Klage auf ausstehende Lohnzahlung fuer 3 Monate. Arbeitgeber zahlt nicht trotz Mahnung.",
+      "Klage auf ausstehende Lohnzahlung für 3 Monate. Arbeitgeber zahlt nicht trotz Mahnung.",
     expectedNormen: ["BGB SS 611a", "BGB SS 614", "BGB SS 286"],
     expectedUrteile: [],
-    expectedSections: ["Rubrum", "Antraege", "Sachverhalt", "Kosten"],
+    expectedSections: ["Rubrum", "Anträge", "Sachverhalt", "Kosten"],
     schwerpunkt: "Lohnklage",
   },
   {
     id: "lohn-02",
     description: "Ueberstundenverguetung",
     query:
-      "Klage auf Verguetung von 200 Ueberstunden. Arbeitsvertrag regelt keine Ueberstundenpauschale.",
+      "Klage auf Vergütung von 200 Überstunden. Arbeitsvertrag regelt keine Überstundenpauschale.",
     expectedNormen: ["BGB SS 611a", "BGB SS 612", "ArbZG SS 3"],
     expectedUrteile: [],
-    expectedSections: ["Rubrum", "Antraege", "Sachverhalt"],
+    expectedSections: ["Rubrum", "Anträge", "Sachverhalt"],
     schwerpunkt: "Lohnklage",
   },
   // --- Abmahnung ---
@@ -110,47 +110,47 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
     id: "abm-01",
     description: "Klage auf Entfernung einer Abmahnung",
     query:
-      "Mandant moechte Abmahnung wegen angeblich ungerechtfertigtem Zuspaetkommen aus der Personalakte entfernen lassen.",
+      "Mandant möchte Abmahnung wegen angeblich ungerechtfertigtem Zuspätkommen aus der Personalakte entfernen lassen.",
     expectedNormen: ["BGB SS 1004", "BGB SS 241 Abs. 2"],
     expectedUrteile: [],
-    expectedSections: ["Rubrum", "Antraege", "Sachverhalt"],
+    expectedSections: ["Rubrum", "Anträge", "Sachverhalt"],
     schwerpunkt: "Abmahnung",
   },
   {
     id: "abm-02",
-    description: "Wirksamkeit einer Abmahnung pruefen",
+    description: "Wirksamkeit einer Abmahnung prüfen",
     query:
-      "Pruefe ob die Abmahnung formell und inhaltlich wirksam ist. Arbeitgeber hat nur muendlich abgemahnt.",
+      "Prüfe ob die Abmahnung formell und inhaltlich wirksam ist. Arbeitgeber hat nur mündlich abgemahnt.",
     expectedNormen: ["BGB SS 314 Abs. 2", "BGB SS 626"],
     expectedUrteile: [],
-    expectedSections: ["Sachverhalt", "Rechtliche Wuerdigung"],
+    expectedSections: ["Sachverhalt", "Rechtliche Würdigung"],
     schwerpunkt: "Abmahnung",
   },
   // --- Einstweilige Verfuegung ---
   {
     id: "ev-01",
-    description: "Einstweilige Verfuegung gegen Freistellung",
+    description: "Einstweilige Verfügung gegen Freistellung",
     query:
-      "Antrag auf einstweilige Verfuegung. Mandant wurde nach Kuendigung sofort freigestellt, will Weiterbeschaeftigung.",
+      "Antrag auf einstweilige Verfügung. Mandant wurde nach Kündigung sofort freigestellt, will Weiterbeschäftigung.",
     expectedNormen: ["ZPO SS 935", "ZPO SS 940", "BGB SS 611a"],
     expectedUrteile: [],
     expectedSections: [
       "Rubrum",
-      "Antraege",
+      "Anträge",
       "Sachverhalt",
-      "Rechtliche Wuerdigung",
+      "Rechtliche Würdigung",
     ],
-    schwerpunkt: "Einstweilige Verfuegung",
+    schwerpunkt: "Einstweilige Verfügung",
   },
   {
     id: "ev-02",
-    description: "Einstweilige Verfuegung Zeugnis",
+    description: "Einstweilige Verfügung Zeugnis",
     query:
-      "Eilantrag auf Erteilung eines Zwischenzeugnisses. Mandant braucht es dringend fuer Bewerbung.",
+      "Eilantrag auf Erteilung eines Zwischenzeugnisses. Mandant braucht es dringend für Bewerbung.",
     expectedNormen: ["GewO SS 109", "ZPO SS 935", "ZPO SS 940"],
     expectedUrteile: [],
-    expectedSections: ["Rubrum", "Antraege", "Sachverhalt"],
-    schwerpunkt: "Einstweilige Verfuegung",
+    expectedSections: ["Rubrum", "Anträge", "Sachverhalt"],
+    schwerpunkt: "Einstweilige Verfügung",
   },
   // --- Mahnverfahren ---
   {
@@ -160,15 +160,15 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
       "Mahnbescheid beantragen. Abfindung aus Aufhebungsvertrag wurde nicht gezahlt (15.000 EUR).",
     expectedNormen: ["ZPO SS 688", "ZPO SS 689", "BGB SS 286"],
     expectedUrteile: [],
-    expectedSections: ["Rubrum", "Antraege"],
+    expectedSections: ["Rubrum", "Anträge"],
     schwerpunkt: "Mahnverfahren",
   },
   // --- Fristen ---
   {
     id: "frist-01",
-    description: "3-Wochen-Frist Kuendigungsschutzklage",
+    description: "3-Wochen-Frist Kündigungsschutzklage",
     query:
-      "Mandant hat Kuendigung vor 2 Wochen erhalten. Wie berechnet sich die Klagefrist nach KSchG SS 4?",
+      "Mandant hat Kündigung vor 2 Wochen erhalten. Wie berechnet sich die Klagefrist nach KSchG SS 4?",
     expectedNormen: ["KSchG SS 4", "KSchG SS 5", "ZPO SS 222"],
     expectedUrteile: [],
     expectedSections: [],
@@ -176,9 +176,9 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
   },
   {
     id: "frist-02",
-    description: "Kuendigungsfrist bei langer Betriebszugehoerigkeit",
+    description: "Kündigungsfrist bei langer Betriebszugehörigkeit",
     query:
-      "Welche Kuendigungsfristen gelten bei 15 Jahren Betriebszugehoerigkeit?",
+      "Welche Kündigungsfristen gelten bei 15 Jahren Betriebszugehörigkeit?",
     expectedNormen: ["BGB SS 622"],
     expectedUrteile: [],
     expectedSections: [],
@@ -187,9 +187,9 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
   // --- Kosten ---
   {
     id: "kosten-01",
-    description: "Gerichtskosten Kuendigungsschutzklage berechnen",
+    description: "Gerichtskosten Kündigungsschutzklage berechnen",
     query:
-      "Berechne die Gerichts- und Anwaltskosten fuer eine Kuendigungsschutzklage bei einem Bruttomonatsgehalt von 4.500 EUR.",
+      "Berechne die Gerichts- und Anwaltskosten für eine Kündigungsschutzklage bei einem Bruttomonatsgehalt von 4.500 EUR.",
     expectedNormen: ["GKG Anlage 2", "RVG SS 2"],
     expectedUrteile: [],
     expectedSections: ["Kosten"],
@@ -198,42 +198,42 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
   // --- Aufhebungsvertrag ---
   {
     id: "aufh-01",
-    description: "Aufhebungsvertrag pruefen",
+    description: "Aufhebungsvertrag prüfen",
     query:
-      "Mandant wurde Aufhebungsvertrag mit Abfindung angeboten. Pruefen ob die Konditionen angemessen sind.",
+      "Mandant wurde Aufhebungsvertrag mit Abfindung angeboten. Prüfen ob die Konditionen angemessen sind.",
     expectedNormen: ["BGB SS 311 Abs. 1", "BGB SS 623", "SGB III SS 159"],
     expectedUrteile: [],
-    expectedSections: ["Sachverhalt", "Rechtliche Wuerdigung"],
+    expectedSections: ["Sachverhalt", "Rechtliche Würdigung"],
     schwerpunkt: "Aufhebungsvertrag",
   },
   {
     id: "aufh-02",
     description: "Anfechtung Aufhebungsvertrag wegen Drohung",
     query:
-      "Mandant hat Aufhebungsvertrag unter Druck unterschrieben. Arbeitgeber drohte mit fristloser Kuendigung.",
+      "Mandant hat Aufhebungsvertrag unter Druck unterschrieben. Arbeitgeber drohte mit fristloser Kündigung.",
     expectedNormen: ["BGB SS 123", "BGB SS 142", "BGB SS 119"],
     expectedUrteile: [],
     expectedSections: [
       "Rubrum",
-      "Antraege",
+      "Anträge",
       "Sachverhalt",
-      "Rechtliche Wuerdigung",
+      "Rechtliche Würdigung",
     ],
     schwerpunkt: "Aufhebungsvertrag",
   },
   // --- Betriebsrat ---
   {
     id: "br-01",
-    description: "Kuendigung ohne Betriebsratsanhoerung",
+    description: "Kündigung ohne Betriebsratsanhörung",
     query:
-      "Kuendigungsschutzklage. Betriebsrat wurde vor der Kuendigung nicht angehoert.",
+      "Kündigungsschutzklage. Betriebsrat wurde vor der Kündigung nicht angehört.",
     expectedNormen: ["BetrVG SS 102", "KSchG SS 1"],
     expectedUrteile: [],
     expectedSections: [
       "Rubrum",
-      "Antraege",
+      "Anträge",
       "Sachverhalt",
-      "Rechtliche Wuerdigung",
+      "Rechtliche Würdigung",
     ],
     schwerpunkt: "Betriebsrat",
   },
@@ -245,17 +245,17 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
       "Klage auf Erteilung eines qualifizierten Arbeitszeugnisses. Arbeitgeber hat nach 6 Monaten noch kein Zeugnis ausgestellt.",
     expectedNormen: ["GewO SS 109", "BGB SS 630"],
     expectedUrteile: [],
-    expectedSections: ["Rubrum", "Antraege", "Sachverhalt"],
+    expectedSections: ["Rubrum", "Anträge", "Sachverhalt"],
     schwerpunkt: "Zeugnis",
   },
   {
     id: "zeugnis-02",
     description: "Zeugnisberichtigung verlangen",
     query:
-      "Zeugnis enthaelt versteckte negative Formulierungen. Mandant moechte Berichtigung.",
+      "Zeugnis enthält versteckte negative Formulierungen. Mandant möchte Berichtigung.",
     expectedNormen: ["GewO SS 109", "BGB SS 241 Abs. 2"],
     expectedUrteile: [],
-    expectedSections: ["Rubrum", "Antraege", "Sachverhalt"],
+    expectedSections: ["Rubrum", "Anträge", "Sachverhalt"],
     schwerpunkt: "Zeugnis",
   },
   // --- Befristung ---
@@ -263,14 +263,14 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
     id: "befr-01",
     description: "Entfristungsklage",
     query:
-      "Klage auf Feststellung dass das Arbeitsverhaeltnis unbefristet fortbesteht. Befristung war sachgrundlos, aber es gab vorher schon 3 befristete Vertraege.",
+      "Klage auf Feststellung dass das Arbeitsverhältnis unbefristet fortbesteht. Befristung war sachgrundlos, aber es gab vorher schon 3 befristete Verträge.",
     expectedNormen: ["TzBfG SS 14", "TzBfG SS 17", "KSchG SS 4"],
     expectedUrteile: [],
     expectedSections: [
       "Rubrum",
-      "Antraege",
+      "Anträge",
       "Sachverhalt",
-      "Rechtliche Wuerdigung",
+      "Rechtliche Würdigung",
     ],
     schwerpunkt: "Befristung",
   },
@@ -278,16 +278,16 @@ export const GOLDSET_QUERIES: GoldsetQuery[] = [
   {
     id: "disk-01",
     description:
-      "Entschaedigung wegen Diskriminierung im Bewerbungsverfahren",
+      "Entschädigung wegen Diskriminierung im Bewerbungsverfahren",
     query:
-      "Mandant wurde wegen seines Alters im Bewerbungsverfahren abgelehnt. Klage auf Entschaedigung nach AGG.",
+      "Mandant wurde wegen seines Alters im Bewerbungsverfahren abgelehnt. Klage auf Entschädigung nach AGG.",
     expectedNormen: ["AGG SS 1", "AGG SS 7", "AGG SS 15"],
     expectedUrteile: [],
     expectedSections: [
       "Rubrum",
-      "Antraege",
+      "Anträge",
       "Sachverhalt",
-      "Rechtliche Wuerdigung",
+      "Rechtliche Würdigung",
     ],
     schwerpunkt: "Diskriminierung",
   },

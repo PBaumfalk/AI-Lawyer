@@ -355,7 +355,7 @@ export async function undoAcceptDraft(
         await tx.aktenActivity.delete({ where: { id: createdId } });
         break;
       default:
-        throw new Error(`Unbekannter Typ fuer Undo: ${typ}`);
+        throw new Error(`Unbekannter Typ für Undo: ${typ}`);
     }
 
     // 3. Revert draft to PENDING
@@ -419,7 +419,7 @@ export async function editDraft(
 
   if (draft.status !== "PENDING" && draft.status !== "EDITED") {
     throw new Error(
-      `Draft ${draftId} hat Status ${draft.status}, Bearbeitung nur bei PENDING/EDITED moeglich`,
+      `Draft ${draftId} hat Status ${draft.status}, Bearbeitung nur bei PENDING/EDITED möglich`,
     );
   }
 

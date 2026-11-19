@@ -136,7 +136,7 @@ export async function PATCH(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Ungueltiger Request-Body" }, { status: 400 });
+    return NextResponse.json({ error: "Ungültiger Request-Body" }, { status: 400 });
   }
 
   const parsed = patchSchema.safeParse(body);
@@ -161,7 +161,7 @@ export async function PATCH(request: NextRequest) {
 
   if (user.role !== "ANWALT") {
     return NextResponse.json(
-      { error: "Kanzleiweite Finanzen ist nur fuer Anwaelte verfuegbar" },
+      { error: "Kanzleiweite Finanzen ist nur für Anwälte verfügbar" },
       { status: 400 },
     );
   }

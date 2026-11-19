@@ -44,7 +44,7 @@ export async function PATCH(
     return Response.json(
       {
         error:
-          "Verantwortlicher-Zuweisung nur fuer Kanzlei-Postfaecher moeglich",
+          "Verantwortlicher-Zuweisung nur für Kanzlei-Postfächer möglich",
       },
       { status: 400 }
     );

@@ -65,7 +65,7 @@ export default function EmailEinstellungenPage() {
           E-Mail-Einstellungen
         </h1>
         <p className="text-muted-foreground mt-1">
-          Postfaecher, Signaturen, Synchronisation und Benutzerzuweisungen verwalten
+          Postfächer, Signaturen, Synchronisation und Benutzerzuweisungen verwalten
         </p>
       </div>
 
@@ -73,7 +73,7 @@ export default function EmailEinstellungenPage() {
         <TabsList>
           <TabsTrigger value="postfaecher">
             <Mail className="w-4 h-4 mr-1.5" />
-            Postfaecher
+            Postfächer
           </TabsTrigger>
           <TabsTrigger value="signatur">
             <FileSignature className="w-4 h-4 mr-1.5" />

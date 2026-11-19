@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 // Bundesland options
 const BUNDESLAENDER = [
-  { code: "BW", name: "Baden-Wuerttemberg" },
+  { code: "BW", name: "Baden-Württemberg" },
   { code: "BY", name: "Bayern" },
   { code: "BE", name: "Berlin" },
   { code: "BB", name: "Brandenburg" },
@@ -25,7 +25,7 @@ const BUNDESLAENDER = [
   { code: "SN", name: "Sachsen" },
   { code: "ST", name: "Sachsen-Anhalt" },
   { code: "SH", name: "Schleswig-Holstein" },
-  { code: "TH", name: "Thueringen" },
+  { code: "TH", name: "Thüringen" },
 ];
 
 interface FristPreset {
@@ -134,7 +134,7 @@ export function FristenRechnerForm({ onResult, onLoading }: FristenRechnerFormPr
         .filter(Boolean)
         .join(", ");
       setPresetWarning(
-        `Die uebliche Dauer fuer ${selectedPreset.name} ist ${presetDauerStr}. Sie haben ${currentDauerStr} eingetragen.`
+        `Die übliche Dauer für ${selectedPreset.name} ist ${presetDauerStr}. Sie haben ${currentDauerStr} eingetragen.`
       );
     } else {
       setPresetWarning(null);
@@ -251,7 +251,7 @@ export function FristenRechnerForm({ onResult, onLoading }: FristenRechnerFormPr
                 : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400"
             }`}
           >
-            Vorwaerts
+            Vorwärts
             <span className="block text-[10px] mt-0.5 opacity-70">
               Zustellung → Fristende
             </span>
@@ -265,7 +265,7 @@ export function FristenRechnerForm({ onResult, onLoading }: FristenRechnerFormPr
                 : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400"
             }`}
           >
-            Rueckwaerts
+            Rückwärts
             <span className="block text-[10px] mt-0.5 opacity-70">
               Fristende → Zustellung
             </span>
@@ -430,7 +430,7 @@ export function FristenRechnerForm({ onResult, onLoading }: FristenRechnerFormPr
             NOTFRIST
           </span>
           <span className="text-xs text-rose-700 dark:text-rose-400">
-            Diese Frist ist nicht verlaengerbar.
+            Diese Frist ist nicht verlängerbar.
           </span>
         </div>
       )}
@@ -438,7 +438,7 @@ export function FristenRechnerForm({ onResult, onLoading }: FristenRechnerFormPr
       {/* Sonderfaelle */}
       <div className="space-y-2">
         <div className="flex items-center gap-1.5">
-          <Label>Sonderfaelle</Label>
+          <Label>Sonderfälle</Label>
           <Info className="w-3.5 h-3.5 text-muted-foreground" />
         </div>
         <Select
@@ -447,7 +447,7 @@ export function FristenRechnerForm({ onResult, onLoading }: FristenRechnerFormPr
         >
           <option value="">Normale Zustellung</option>
           <option value="OEFFENTLICHE_ZUSTELLUNG">
-            Oeffentliche Zustellung (Section 188 ZPO)
+            Öffentliche Zustellung (Section 188 ZPO)
           </option>
           <option value="AUSLANDSZUSTELLUNG_EU">
             Auslandszustellung (EU-ZustVO)
@@ -460,7 +460,7 @@ export function FristenRechnerForm({ onResult, onLoading }: FristenRechnerFormPr
         )}
         {sonderfall === "AUSLANDSZUSTELLUNG_EU" && (
           <p className="text-[11px] text-muted-foreground italic">
-            Verlaengerte Zustellungsdauer (+14 Tage EU) vor Fristbeginn.
+            Verlängerte Zustellungsdauer (+14 Tage EU) vor Fristbeginn.
           </p>
         )}
       </div>

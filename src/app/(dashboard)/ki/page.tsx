@@ -192,7 +192,7 @@ export default function GlobalKiChatPage() {
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-hover transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Neues Gespraech
+            Neues Gespräch
           </button>
         </div>
 
@@ -204,7 +204,7 @@ export default function GlobalKiChatPage() {
             </div>
           ) : conversations.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-8">
-              Noch keine Gespraeche
+              Noch keine Gespräche
             </p>
           ) : (
             conversations.map((conv) => (
@@ -250,7 +250,7 @@ export default function GlobalKiChatPage() {
             </div>
             <div>
               <h1 className="text-base font-semibold text-foreground">Helena KI-Chat</h1>
-              <p className="text-xs text-muted-foreground">Aktenuebergreifende Recherche</p>
+              <p className="text-xs text-muted-foreground">Aktenübergreifende Recherche</p>
             </div>
           </div>
         </div>
@@ -263,10 +263,10 @@ export default function GlobalKiChatPage() {
                 <Bot className="w-8 h-8 text-primary-strong" />
               </div>
               <h2 className="text-lg font-semibold text-foreground mb-1">
-                Aktenuebergreifende Recherche
+                Aktenübergreifende Recherche
               </h2>
               <p className="text-sm text-muted-foreground max-w-md">
-                Stelle Fragen ueber alle Akten hinweg. Helena durchsucht den gesamten Aktenbestand und
+                Stelle Fragen über alle Akten hinweg. Helena durchsucht den gesamten Aktenbestand und
                 liefert Antworten mit Quellenangaben.
               </p>
             </div>
@@ -338,7 +338,7 @@ export default function GlobalKiChatPage() {
               value={input}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              placeholder="Frage ueber alle Akten stellen..."
+              placeholder="Frage über alle Akten stellen..."
               rows={1}
               className="flex-1 resize-none rounded-xl glass-input px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-h-40"
             />

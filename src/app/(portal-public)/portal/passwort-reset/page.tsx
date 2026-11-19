@@ -26,7 +26,7 @@ export default function PasswortResetPage() {
           <div className="glass-lg rounded-2xl p-8 text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h1 className="text-xl font-heading text-foreground mb-2">
-              Ungueltiger Link
+              Ungültiger Link
             </h1>
             <p className="text-sm text-muted-foreground mb-6">
               Bitte verwenden Sie den Link aus Ihrer E-Mail.
@@ -49,10 +49,10 @@ export default function PasswortResetPage() {
           <div className="glass-lg rounded-2xl p-8 text-center">
             <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
             <h1 className="text-xl font-heading text-foreground mb-2">
-              Passwort geaendert
+              Passwort geändert
             </h1>
             <p className="text-sm text-muted-foreground mb-6">
-              Ihr Passwort wurde erfolgreich geaendert. Sie koennen sich jetzt
+              Ihr Passwort wurde erfolgreich geändert. Sie können sich jetzt
               mit Ihrem neuen Passwort anmelden.
             </p>
             <Link href="/portal/login">
@@ -69,13 +69,13 @@ export default function PasswortResetPage() {
     setError(null);
 
     if (password !== passwordConfirm) {
-      setError("Passwoerter stimmen nicht ueberein.");
+      setError("Passwörter stimmen nicht überein.");
       return;
     }
 
     if (!PASSWORD_REGEX.test(password)) {
       setError(
-        "Passwort muss mindestens 8 Zeichen, 1 Grossbuchstabe und 1 Zahl enthalten."
+        "Passwort muss mindestens 8 Zeichen, 1 Großbuchstabe und 1 Zahl enthalten."
       );
       return;
     }
@@ -97,7 +97,7 @@ export default function PasswortResetPage() {
         setSuccess(true);
       }
     } catch {
-      setError("Verbindungsfehler. Bitte versuchen Sie es spaeter erneut.");
+      setError("Verbindungsfehler. Bitte versuchen Sie es später erneut.");
     } finally {
       setLoading(false);
     }
@@ -145,7 +145,7 @@ export default function PasswortResetPage() {
                 htmlFor="passwordConfirm"
                 className="block text-sm font-medium text-foreground/80 mb-1.5"
               >
-                Passwort bestaetigen
+                Passwort bestätigen
               </label>
               <Input
                 id="passwordConfirm"
@@ -159,7 +159,7 @@ export default function PasswortResetPage() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Mindestens 8 Zeichen, 1 Grossbuchstabe, 1 Zahl
+              Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl
             </p>
 
             {error && (

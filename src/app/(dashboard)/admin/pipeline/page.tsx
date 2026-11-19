@@ -58,7 +58,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   IN_VERARBEITUNG: { label: "In Verarbeitung", color: "bg-blue-100 text-blue-700" },
   ABGESCHLOSSEN: { label: "Abgeschlossen", color: "bg-emerald-100 text-emerald-700" },
   FEHLGESCHLAGEN: { label: "Fehlgeschlagen", color: "bg-rose-100 text-rose-700" },
-  NICHT_NOETIG: { label: "Nicht noetig", color: "bg-slate-100 text-slate-500" },
+  NICHT_NOETIG: { label: "Nicht nötig", color: "bg-slate-100 text-slate-500" },
 };
 
 function formatDate(dateStr: string): string {

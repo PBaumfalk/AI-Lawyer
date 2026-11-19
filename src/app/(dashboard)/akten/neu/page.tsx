@@ -187,7 +187,7 @@ export default function NeueAktePage() {
             <Input
               id="wegen"
               name="wegen"
-              placeholder="z.B. Kuendigungsschutzklage, Schadensersatz"
+              placeholder="z.B. Kündigungsschutzklage, Schadensersatz"
             />
           </div>
 
@@ -280,7 +280,7 @@ export default function NeueAktePage() {
           {/* Anwalt + Sachbearbeiter */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="anwaltId">Zustaendiger Anwalt</Label>
+              <Label htmlFor="anwaltId">Zuständiger Anwalt</Label>
               <Select id="anwaltId" name="anwaltId" defaultValue="">
                 <option value="">-- Nicht zugewiesen --</option>
                 {anwaelte.map((u) => (

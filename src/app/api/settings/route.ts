@@ -93,19 +93,19 @@ export async function PUT(req: NextRequest) {
       const num = parseInt(String(value), 10);
       if (isNaN(num)) {
         return NextResponse.json(
-          { error: `Wert fuer '${key}' muss eine Zahl sein` },
+          { error: `Wert für '${key}' muss eine Zahl sein` },
           { status: 400 }
         );
       }
       if (def.min !== undefined && num < def.min) {
         return NextResponse.json(
-          { error: `Wert fuer '${key}' muss mindestens ${def.min} sein` },
+          { error: `Wert für '${key}' muss mindestens ${def.min} sein` },
           { status: 400 }
         );
       }
       if (def.max !== undefined && num > def.max) {
         return NextResponse.json(
-          { error: `Wert fuer '${key}' darf hoechstens ${def.max} sein` },
+          { error: `Wert für '${key}' darf höchstens ${def.max} sein` },
           { status: 400 }
         );
       }
@@ -113,7 +113,7 @@ export async function PUT(req: NextRequest) {
 
     if (def.type === "boolean" && value !== "true" && value !== "false") {
       return NextResponse.json(
-        { error: `Wert fuer '${key}' muss 'true' oder 'false' sein` },
+        { error: `Wert für '${key}' muss 'true' oder 'false' sein` },
         { status: 400 }
       );
     }
@@ -121,7 +121,7 @@ export async function PUT(req: NextRequest) {
     if (def.options && !def.options.includes(String(value))) {
       return NextResponse.json(
         {
-          error: `Ungueltiger Wert fuer '${key}'. Erlaubt: ${def.options.join(", ")}`,
+          error: `Ungültiger Wert für '${key}'. Erlaubt: ${def.options.join(", ")}`,
         },
         { status: 400 }
       );

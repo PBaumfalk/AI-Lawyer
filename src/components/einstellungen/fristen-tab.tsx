@@ -34,7 +34,7 @@ interface FristenSettings {
 }
 
 const BUNDESLAENDER: Record<string, string> = {
-  BW: "Baden-Wuerttemberg",
+  BW: "Baden-Württemberg",
   BY: "Bayern",
   BE: "Berlin",
   BB: "Brandenburg",
@@ -49,7 +49,7 @@ const BUNDESLAENDER: Record<string, string> = {
   SN: "Sachsen",
   ST: "Sachsen-Anhalt",
   SH: "Schleswig-Holstein",
-  TH: "Thueringen",
+  TH: "Thüringen",
 };
 
 const DEFAULT_SETTINGS: FristenSettings = {
@@ -194,7 +194,7 @@ export function FristenTab() {
     setNewPresetName("");
     setNewPresetDauer("14");
     await saveSetting("fristen_presets", JSON.stringify(updated), "Fristen-Presets");
-    toast.success("Preset hinzugefuegt");
+    toast.success("Preset hinzugefügt");
   };
 
   // Delete preset
@@ -230,9 +230,9 @@ export function FristenTab() {
           })),
         }),
       });
-      toast.success("Fristen-Einstellungen zurueckgesetzt");
+      toast.success("Fristen-Einstellungen zurückgesetzt");
     } catch {
-      toast.error("Fehler beim Zuruecksetzen");
+      toast.error("Fehler beim Zurücksetzen");
     }
   };
 
@@ -254,7 +254,7 @@ export function FristenTab() {
           {saving && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Erinnerungen vor Fristablauf (in Tagen). Standardmaessig 7, 3 und 1 Tag vorher.
+          Erinnerungen vor Fristablauf (in Tagen). Standardmäßig 7, 3 und 1 Tag vorher.
         </p>
         <div className="flex items-center gap-3">
           {settings.vorfristen.map((tage, i) => (
@@ -282,7 +282,7 @@ export function FristenTab() {
           Standard-Bundesland
         </h3>
         <p className="text-sm text-muted-foreground mb-3">
-          Fuer die Berechnung von Feiertagen bei Fristenberechnung.
+          Für die Berechnung von Feiertagen bei Fristenberechnung.
         </p>
         <select
           value={settings.defaultBundesland}
@@ -303,7 +303,7 @@ export function FristenTab() {
           Fristen-Presets
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Haeufig verwendete Fristen fuer schnelle Auswahl.
+          Häufig verwendete Fristen für schnelle Auswahl.
         </p>
 
         {presets.length > 0 && (
@@ -376,7 +376,7 @@ export function FristenTab() {
           <h3 className="text-lg font-heading text-foreground">Eskalation</h3>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Automatische Benachrichtigung bei ueberfaelligen Fristen.
+          Automatische Benachrichtigung bei überfälligen Fristen.
         </p>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -414,7 +414,7 @@ export function FristenTab() {
           Kanzlei-Arbeitszeiten
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Montag bis Freitag. Relevant fuer Fristenberechnung und Benachrichtigungen.
+          Montag bis Freitag. Relevant für Fristenberechnung und Benachrichtigungen.
         </p>
         <div className="flex items-center gap-4">
           <div className="space-y-1.5">
@@ -447,7 +447,7 @@ export function FristenTab() {
           className="text-muted-foreground"
         >
           <RotateCcw className="w-4 h-4 mr-1.5" />
-          Auf Standard zuruecksetzen
+          Auf Standard zurücksetzen
         </Button>
       </div>
 
@@ -456,11 +456,11 @@ export function FristenTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="glass rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
             <h3 className="text-lg font-heading text-foreground">
-              Einstellungen zuruecksetzen?
+              Einstellungen zurücksetzen?
             </h3>
             <p className="text-sm text-muted-foreground">
-              Moechten Sie die Einstellungen in diesem Bereich auf die Standardwerte
-              zuruecksetzen? Diese Aktion kann nicht rueckgaengig gemacht werden.
+              Möchten Sie die Einstellungen in diesem Bereich auf die Standardwerte
+              zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.
             </p>
             <div className="flex gap-2 justify-end">
               <Button
@@ -470,7 +470,7 @@ export function FristenTab() {
                 Abbrechen
               </Button>
               <Button variant="destructive" onClick={handleReset}>
-                Zuruecksetzen
+                Zurücksetzen
               </Button>
             </div>
           </div>

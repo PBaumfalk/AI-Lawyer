@@ -57,7 +57,7 @@ export async function POST(
     return NextResponse.json(
       {
         error:
-          "Dokument ist schreibgeschuetzt. Status muss zurueckgesetzt werden bevor eine Version wiederhergestellt werden kann.",
+          "Dokument ist schreibgeschützt. Status muss zurückgesetzt werden bevor eine Version wiederhergestellt werden kann.",
       },
       { status: 403 }
     );

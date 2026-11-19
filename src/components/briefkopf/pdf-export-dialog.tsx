@@ -173,7 +173,7 @@ export function PdfExportDialog({
             <div>
               <span className="text-sm text-foreground">PDF/A-Format</span>
               <p className="text-xs text-muted-foreground">
-                Fuer Langzeitarchivierung geeignet
+                Für Langzeitarchivierung geeignet
               </p>
             </div>
           </label>

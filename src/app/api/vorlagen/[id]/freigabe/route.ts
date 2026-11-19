@@ -24,7 +24,7 @@ export async function POST(
   const userRole = (session.user as any).role as string;
   if (!FREIGABE_ROLES.has(userRole)) {
     return NextResponse.json(
-      { error: "Nur ADMIN oder ANWALT duerfen Vorlagen freigeben" },
+      { error: "Nur ADMIN oder ANWALT dürfen Vorlagen freigeben" },
       { status: 403 }
     );
   }
@@ -81,7 +81,7 @@ export async function DELETE(
   const userRole = (session.user as any).role as string;
   if (!FREIGABE_ROLES.has(userRole)) {
     return NextResponse.json(
-      { error: "Nur ADMIN oder ANWALT duerfen Freigaben zurueckziehen" },
+      { error: "Nur ADMIN oder ANWALT dürfen Freigaben zurückziehen" },
       { status: 403 }
     );
   }

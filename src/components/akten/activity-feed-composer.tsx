@@ -10,7 +10,7 @@ type ComposerMode = "NOTIZ" | "TELEFONNOTIZ" | "AUFGABE";
 const ERGEBNIS_OPTIONS = [
   "Erreicht",
   "Nicht erreicht",
-  "Rueckruf erbeten",
+  "Rückruf erbeten",
   "Nachricht hinterlassen",
   "Besetzt",
 ] as const;
@@ -251,7 +251,7 @@ export function ActivityFeedComposer({
             type="button"
             onClick={insertHelenaMention}
             className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-brand-600 transition-colors"
-            title="@Helena erwaehnen"
+            title="@Helena erwähnen"
           >
             <Bot className="w-5 h-5" />
           </button>
@@ -260,7 +260,7 @@ export function ActivityFeedComposer({
             value={text}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            placeholder="Notiz schreiben oder @Helena erwaehnen..."
+            placeholder="Notiz schreiben oder @Helena erwähnen..."
             className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-slate-400 focus:outline-none min-h-[40px] max-h-[120px]"
             rows={1}
             disabled={submitting}
@@ -291,7 +291,7 @@ export function ActivityFeedComposer({
                 setBeteiligter(e.target.value);
                 if (telefonValidation.beteiligter) setTelefonValidation((v) => ({ ...v, beteiligter: false }));
               }}
-              placeholder="Name des Gespraechspartners"
+              placeholder="Name des Gesprächspartners"
               className={
                 "w-full px-3 py-2 text-sm rounded-lg border bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-ring " +
                 (telefonValidation.beteiligter ? "border-red-500" : "border-slate-200 dark:border-slate-700")
@@ -310,7 +310,7 @@ export function ActivityFeedComposer({
               }
               disabled={submitting}
             >
-              <option value="">Ergebnis waehlen...</option>
+              <option value="">Ergebnis wählen...</option>
               {ERGEBNIS_OPTIONS.map((opt) => (
                 <option key={opt} value={opt}>
                   {opt}
@@ -321,7 +321,7 @@ export function ActivityFeedComposer({
           <textarea
             value={stichworte}
             onChange={(e) => setStichworte(e.target.value)}
-            placeholder="Stichworte zum Gespraech..."
+            placeholder="Stichworte zum Gespräch..."
             className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
             rows={2}
             disabled={submitting}
@@ -331,7 +331,7 @@ export function ActivityFeedComposer({
               type="text"
               value={naechsterSchritt}
               onChange={(e) => setNaechsterSchritt(e.target.value)}
-              placeholder="Naechster Schritt / Follow-up"
+              placeholder="Nächster Schritt / Follow-up"
               className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-ring"
               disabled={submitting}
             />

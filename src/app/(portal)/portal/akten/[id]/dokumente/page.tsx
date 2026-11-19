@@ -119,7 +119,7 @@ export default function PortalDokumentePage() {
   // --- Upload handler ---
   const handleUpload = async (file: globalThis.File) => {
     if (file.size > MAX_UPLOAD_SIZE) {
-      toast.error("Maximale Dateigroesse: 50 MB");
+      toast.error("Maximale Dateigröße: 50 MB");
       return;
     }
 
@@ -221,7 +221,7 @@ export default function PortalDokumentePage() {
                 Datei hierher ziehen oder klicken
               </p>
               <p className="text-xs text-muted-foreground/60">
-                Maximale Dateigroesse: 50 MB
+                Maximale Dateigröße: 50 MB
               </p>
             </>
           )}

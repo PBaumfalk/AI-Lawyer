@@ -30,20 +30,20 @@ const ZEITRAEUME: readonly BiFilterParams["zeitraum"][] = ["monat", "quartal", "
 function parseDateParam(value: string | null, name: string): Date | null {
   if (!value) return null;
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) throw new BiFilterError(`Ungueltiges Datum fuer ${name}`);
+  if (Number.isNaN(d.getTime())) throw new BiFilterError(`Ungültiges Datum für ${name}`);
   return d;
 }
 
 export function parseBiFilters(searchParams: URLSearchParams): ParsedFilters {
   const zeitraumRaw = searchParams.get("zeitraum") || "monat";
   if (!ZEITRAEUME.includes(zeitraumRaw as BiFilterParams["zeitraum"])) {
-    throw new BiFilterError("Ungueltiger Zeitraum");
+    throw new BiFilterError("Ungültiger Zeitraum");
   }
   const zeitraum = zeitraumRaw as BiFilterParams["zeitraum"];
   const anwaltId = searchParams.get("anwaltId") || undefined;
   const sachgebiet = searchParams.get("sachgebiet") || undefined;
   if (sachgebiet && !(sachgebiet in Sachgebiet)) {
-    throw new BiFilterError("Ungueltiges Sachgebiet");
+    throw new BiFilterError("Ungültiges Sachgebiet");
   }
 
   const now = new Date();
@@ -402,7 +402,7 @@ export async function getFristenKpis(
       },
       {
         id: "fristen-ueberfaellig",
-        label: "Ueberfaellige Fristen",
+        label: "Überfällige Fristen",
         value: ueberfaelligCurrent,
         previousValue: ueberfaelligPrevious,
         delta: computeDelta(ueberfaelligCurrent, ueberfaelligPrevious),
@@ -523,7 +523,7 @@ export async function getHelenaKpis(
     return [
       {
         id: "helena-gespraeche",
-        label: "Helena-Gespraeche",
+        label: "Helena-Gespräche",
         value: gespraecheCurrent,
         previousValue: gespraechePrevious,
         delta: computeDelta(gespraecheCurrent, gespraechePrevious),
@@ -531,7 +531,7 @@ export async function getHelenaKpis(
       },
       {
         id: "helena-entwuerfe",
-        label: "Helena-Entwuerfe",
+        label: "Helena-Entwürfe",
         value: entwuerfeCurrent,
         previousValue: entwuerfePrevious,
         delta: computeDelta(entwuerfeCurrent, entwuerfePrevious),

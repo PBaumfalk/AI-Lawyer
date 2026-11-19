@@ -36,7 +36,7 @@ export function createCreateNotizTool(ctx: ToolContext) {
       if (!targetAkteId) {
         return {
           error:
-            "Keine Akte angegeben und kein Akte-Kontext vorhanden. Notizen benoetigen eine Akte.",
+            "Keine Akte angegeben und kein Akte-Kontext vorhanden. Notizen benötigen eine Akte.",
         };
       }
 

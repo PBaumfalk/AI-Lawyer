@@ -70,7 +70,7 @@ export function createCreateAlertTool(ctx: ToolContext) {
       }
 
       if (!ALERT_TYPES.includes(typ as HelenaAlertTyp)) {
-        return { error: `Ungueltiger Alert-Typ: ${typ}` };
+        return { error: `Ungültiger Alert-Typ: ${typ}` };
       }
 
       const alert = await ctx.prisma.helenaAlert.create({

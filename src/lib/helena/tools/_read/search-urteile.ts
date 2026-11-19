@@ -14,7 +14,7 @@ import type { ToolContext, ToolResult } from "../types";
 export function createSearchUrteileTool(ctx: ToolContext) {
   return tool({
     description:
-      "Search German court decisions (Urteile/Beschluesse) by semantic similarity. Finds relevant case law from BGH, BAG, OLG, etc. Returns Aktenzeichen, court, date, Rechtsgebiet, content excerpt, and relevance score.",
+      "Search German court decisions (Urteile/Beschlüsse) by semantic similarity. Finds relevant case law from BGH, BAG, OLG, etc. Returns Aktenzeichen, court, date, Rechtsgebiet, content excerpt, and relevance score.",
     parameters: z.object({
       query: z
         .string()
@@ -38,7 +38,7 @@ export function createSearchUrteileTool(ctx: ToolContext) {
       } catch {
         return {
           error:
-            "Embedding-Dienst nicht verfuegbar. Versuche es spaeter erneut.",
+            "Embedding-Dienst nicht verfügbar. Versuche es später erneut.",
         };
       }
 

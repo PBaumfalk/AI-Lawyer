@@ -193,7 +193,7 @@ export function AkteAlertsSection({ akteId }: AkteAlertsSectionProps) {
       <div className="glass-card rounded-xl p-12 text-center">
         <Bell className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
         <p className="text-sm text-muted-foreground">
-          Keine Warnungen fuer diese Akte
+          Keine Warnungen für diese Akte
         </p>
       </div>
     );
@@ -285,7 +285,7 @@ export function AkteAlertsSection({ akteId }: AkteAlertsSectionProps) {
                       className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-[10px]"
                     >
                       <CheckCircle2 className="w-3 h-3 mr-1" />
-                      Automatisch geloest
+                      Automatisch gelöst
                       {resolveReason && (
                         <span className="ml-1 font-normal">
                           — {resolveReason}

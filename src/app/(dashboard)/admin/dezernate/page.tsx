@@ -77,17 +77,17 @@ export default function DezernatePage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Dezernat wirklich loeschen?")) return;
+    if (!confirm("Dezernat wirklich löschen?")) return;
     try {
       const res = await fetch(`/api/admin/dezernate/${id}`, { method: "DELETE" });
       if (res.ok) {
         await loadDezernate();
       } else {
         const data = await res.json();
-        alert(data.error || "Fehler beim Loeschen");
+        alert(data.error || "Fehler beim Löschen");
       }
     } catch {
-      alert("Fehler beim Loeschen");
+      alert("Fehler beim Löschen");
     }
   };
 
@@ -126,7 +126,7 @@ export default function DezernatePage() {
           <Building2 className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
           <h3 className="font-medium text-lg">Keine Dezernate vorhanden</h3>
           <p className="text-muted-foreground mt-1">
-            Erstellen Sie ein Dezernat, um Nutzern gruppenbasierten Aktenzugriff zu ermoeglichen.
+            Erstellen Sie ein Dezernat, um Nutzern gruppenbasierten Aktenzugriff zu ermöglichen.
           </p>
         </GlassPanel>
       ) : (
@@ -152,7 +152,7 @@ export default function DezernatePage() {
                   <button
                     onClick={() => handleDelete(dezernat.id)}
                     className="p-1.5 rounded-md hover:bg-rose-50 transition-colors"
-                    title="Loeschen"
+                    title="Löschen"
                   >
                     <Trash2 className="w-4 h-4 text-rose-500" />
                   </button>
@@ -208,17 +208,17 @@ export default function DezernatePage() {
       {/* Active Admin Overrides Section */}
       <div className="mt-8 space-y-4">
         <h2 className="text-xl font-semibold font-bold">
-          Aktive Admin-Zugriffsueberschreibungen
+          Aktive Admin-Zugriffsüberschreibungen
         </h2>
         {overridesLoading ? (
           <div className="text-center py-8 text-muted-foreground">
-            Lade Ueberschreibungen...
+            Lade Überschreibungen...
           </div>
         ) : overrides.length === 0 ? (
           <GlassPanel elevation="panel" className="p-8 text-center">
             <ShieldAlert className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
             <p className="text-sm text-muted-foreground">
-              Keine aktiven Zugriffsueberschreibungen vorhanden
+              Keine aktiven Zugriffsüberschreibungen vorhanden
             </p>
           </GlassPanel>
         ) : (
@@ -229,7 +229,7 @@ export default function DezernatePage() {
                   <th className="px-4 py-3 font-medium">Akte</th>
                   <th className="px-4 py-3 font-medium">Grund</th>
                   <th className="px-4 py-3 font-medium">Erstellt am</th>
-                  <th className="px-4 py-3 font-medium">Gueltig bis</th>
+                  <th className="px-4 py-3 font-medium">Gültig bis</th>
                   <th className="px-4 py-3 font-medium text-right">Aktion</th>
                 </tr>
               </thead>

@@ -179,7 +179,7 @@ function KeyFactsPanel({ akte }: { akte: AkteData }) {
         <div className={cn("flex items-center gap-1.5", fristWarning ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground")}>
           {fristWarning && <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />}
           {!fristWarning && <Calendar className="w-3.5 h-3.5 flex-shrink-0" />}
-          <span className="text-xs">Naechste Frist:</span>
+          <span className="text-xs">Nächste Frist:</span>
           <span className={cn("font-medium text-xs", fristWarning ? "text-amber-700 dark:text-amber-300" : "text-foreground")}>
             {nextFrist.titel} &middot; {nextFristDate.toLocaleDateString("de-DE")}
             {daysUntilFrist !== null && daysUntilFrist <= 14 && (
@@ -193,7 +193,7 @@ function KeyFactsPanel({ akte }: { akte: AkteData }) {
       {overdueFrist && overdueDays !== null && (
         <div className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-          <span className="text-xs">Ueberfaellig:</span>
+          <span className="text-xs">Überfällig:</span>
           <span className="font-medium text-xs text-rose-700 dark:text-rose-300">
             {overdueFrist.titel} &middot; {new Date(overdueFrist.datum).toLocaleDateString("de-DE")}
             <span className="ml-1 text-xs">

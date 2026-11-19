@@ -126,7 +126,7 @@ export async function PATCH(
   // Cannot update AKTE channels (name derives from Akte kurzrubrum)
   if (channel.typ === "AKTE") {
     return NextResponse.json(
-      { error: "Akte-Kanaele koennen nicht manuell bearbeitet werden" },
+      { error: "Akte-Kanäle können nicht manuell bearbeitet werden" },
       { status: 400 },
     );
   }
@@ -136,7 +136,7 @@ export async function PATCH(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltige Eingabe" },
+      { error: "Ungültige Eingabe" },
       { status: 400 },
     );
   }
@@ -144,7 +144,7 @@ export async function PATCH(
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Ungueltige Eingabe", details: parsed.error.errors },
+      { error: "Ungültige Eingabe", details: parsed.error.errors },
       { status: 400 },
     );
   }
@@ -213,7 +213,7 @@ export async function DELETE(
   // Cannot archive AKTE channels (they live as long as the Akte)
   if (channel.typ === "AKTE") {
     return NextResponse.json(
-      { error: "Akte-Kanaele koennen nicht archiviert werden" },
+      { error: "Akte-Kanäle können nicht archiviert werden" },
       { status: 400 },
     );
   }

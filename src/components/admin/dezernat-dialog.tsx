@@ -282,7 +282,7 @@ export function DezernatDialog({
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Mitglieder ({selectedMembers.length} ausgewaehlt)
+              Mitglieder ({selectedMembers.length} ausgewählt)
             </label>
             <div className="border rounded-md max-h-48 overflow-y-auto">
               {availableUsers.map((user) => (
@@ -306,7 +306,7 @@ export function DezernatDialog({
               ))}
               {availableUsers.length === 0 && (
                 <div className="px-3 py-4 text-sm text-muted-foreground text-center">
-                  Keine Benutzer verfuegbar
+                  Keine Benutzer verfügbar
                 </div>
               )}
             </div>
@@ -315,7 +315,7 @@ export function DezernatDialog({
           {/* Akten multi-select section */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Zugewiesene Akten ({selectedAkten.length} ausgewaehlt)
+              Zugewiesene Akten ({selectedAkten.length} ausgewählt)
             </label>
             <div className="relative mb-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -355,7 +355,7 @@ export function DezernatDialog({
                 <div className="px-3 py-4 text-sm text-muted-foreground text-center">
                   {aktenFilter
                     ? "Keine Akten gefunden"
-                    : "Keine Akten verfuegbar"}
+                    : "Keine Akten verfügbar"}
                 </div>
               )}
             </div>

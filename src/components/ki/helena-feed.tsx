@@ -94,7 +94,7 @@ export function HelenaFeed() {
 
   const statusTabs = [
     { value: "NEU", label: "Neu" },
-    { value: "UEBERNOMMEN", label: "Uebernommen" },
+    { value: "UEBERNOMMEN", label: "Übernommen" },
     { value: "ABGELEHNT", label: "Abgelehnt" },
     { value: "ALLE", label: "Alle" },
   ];
@@ -103,7 +103,7 @@ export function HelenaFeed() {
     { value: "", label: "Alle Typen" },
     { value: "FRIST_ERKANNT", label: "Fristen" },
     { value: "BETEILIGTE_ERKANNT", label: "Beteiligte" },
-    { value: "ANTWORT_ENTWURF", label: "Antwort-Entwuerfe" },
+    { value: "ANTWORT_ENTWURF", label: "Antwort-Entwürfe" },
     { value: "HINWEIS", label: "Hinweise" },
     { value: "BRIEFING", label: "Briefings" },
   ];
@@ -182,7 +182,7 @@ export function HelenaFeed() {
         <div className="glass rounded-xl p-12 text-center">
           <Bot className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
           <p className="text-muted-foreground">
-            Helena hat noch keine Vorschlaege.
+            Helena hat noch keine Vorschläge.
           </p>
           <p className="text-sm text-muted-foreground/70 mt-1">
             Neue Dokumente und E-Mails werden automatisch analysiert.

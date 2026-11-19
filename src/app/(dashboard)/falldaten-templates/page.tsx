@@ -134,7 +134,7 @@ export default function FalldatenTemplatesPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? `HTTP ${res.status}`);
       }
-      toast.success("Template wurde zur Pruefung eingereicht");
+      toast.success("Template wurde zur Prüfung eingereicht");
       await loadTemplates();
     } catch (err: unknown) {
       toast.error(
@@ -148,7 +148,7 @@ export default function FalldatenTemplatesPage() {
   async function handleDelete(id: string, name: string) {
     if (
       !confirm(
-        `Template "${name}" wirklich loeschen? Diese Aktion kann nicht rueckgaengig gemacht werden.`
+        `Template "${name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`
       )
     ) {
       return;
@@ -162,11 +162,11 @@ export default function FalldatenTemplatesPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? `HTTP ${res.status}`);
       }
-      toast.success("Template wurde geloescht");
+      toast.success("Template wurde gelöscht");
       await loadTemplates();
     } catch (err: unknown) {
       toast.error(
-        err instanceof Error ? err.message : "Loeschen fehlgeschlagen"
+        err instanceof Error ? err.message : "Löschen fehlgeschlagen"
       );
     } finally {
       setActionLoading(null);
@@ -186,7 +186,7 @@ export default function FalldatenTemplatesPage() {
             Falldaten-Templates
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Vorlagen fuer strukturierte Falldatenerfassung
+            Vorlagen für strukturierte Falldatenerfassung
           </p>
         </div>
         <Link href="/falldaten-templates/neu">
@@ -213,7 +213,7 @@ export default function FalldatenTemplatesPage() {
             Noch keine Templates vorhanden
           </h3>
           <p className="text-sm text-muted-foreground mb-6">
-            Erstellen Sie Ihr erstes Template fuer die strukturierte
+            Erstellen Sie Ihr erstes Template für die strukturierte
             Falldatenerfassung.
           </p>
           <Link href="/falldaten-templates/neu">
@@ -342,7 +342,7 @@ export default function FalldatenTemplatesPage() {
                   {/* EINGEREICHT: Read-only notice */}
                   {t.status === "EINGEREICHT" && (
                     <span className="text-xs text-amber-600 dark:text-amber-400">
-                      Wartet auf Pruefung
+                      Wartet auf Prüfung
                     </span>
                   )}
 

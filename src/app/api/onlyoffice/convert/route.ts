@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger Request-Body" },
+      { error: "Ungültiger Request-Body" },
       { status: 400 }
     );
   }
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
   if (!validOutputTypes.includes(outputType)) {
     return NextResponse.json(
       {
-        error: `Ungueltiger outputType. Erlaubt: ${validOutputTypes.join(", ")}`,
+        error: `Ungültiger outputType. Erlaubt: ${validOutputTypes.join(", ")}`,
       },
       { status: 400 }
     );

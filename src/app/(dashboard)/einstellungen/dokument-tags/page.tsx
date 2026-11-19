@@ -150,7 +150,7 @@ export default function DokumentTagsPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Tag "${name}" wirklich loeschen?`)) return;
+    if (!confirm(`Tag "${name}" wirklich löschen?`)) return;
 
     try {
       const res = await fetch("/api/dokumente/tags", {
@@ -160,9 +160,9 @@ export default function DokumentTagsPage() {
       });
       if (!res.ok && res.status !== 204) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "Fehler beim Loeschen");
+        throw new Error(data.error ?? "Fehler beim Löschen");
       }
-      toast.success("Tag geloescht");
+      toast.success("Tag gelöscht");
       fetchTags();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unbekannter Fehler";
@@ -185,7 +185,7 @@ export default function DokumentTagsPage() {
           Dokument-Tags
         </h1>
         <p className="text-muted-foreground mt-1">
-          Tag-Kategorien fuer die Dokumentenverwaltung
+          Tag-Kategorien für die Dokumentenverwaltung
         </p>
       </div>
 
@@ -215,7 +215,7 @@ export default function DokumentTagsPage() {
                 value={newFarbe}
                 onChange={(e) => setNewFarbe(e.target.value)}
                 className="w-8 h-8 rounded cursor-pointer border-0"
-                title="Farbe waehlen"
+                title="Farbe wählen"
               />
               <Input
                 placeholder="Tag-Name..."
@@ -336,7 +336,7 @@ export default function DokumentTagsPage() {
                         <button
                           onClick={() => handleDelete(tag.id, tag.name)}
                           className="p-1.5 rounded hover:bg-rose-50 dark:hover:bg-rose-950 text-slate-400 hover:text-rose-600"
-                          title="Loeschen"
+                          title="Löschen"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

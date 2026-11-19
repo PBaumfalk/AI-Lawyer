@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   const role = (session.user as any).role;
   if (!['ADMIN', 'ANWALT'].includes(role)) {
     return NextResponse.json(
-      { error: 'Keine Berechtigung fuer SEPA-Export' },
+      { error: 'Keine Berechtigung für SEPA-Export' },
       { status: 403 },
     );
   }

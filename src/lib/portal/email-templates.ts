@@ -46,7 +46,7 @@ const EMAIL_CONTENT: Record<PortalEmailType, EmailContent> = {
     ctaLabel: "Nachricht lesen",
   },
   "neues-dokument": {
-    subjectSuffix: "Neues Dokument in Ihrem Portal verfuegbar",
+    subjectSuffix: "Neues Dokument in Ihrem Portal verfügbar",
     heading: "Neues Dokument",
     body: "Ein neues Dokument wurde in Ihrem Mandantenportal bereitgestellt. Bitte melden Sie sich an, um das Dokument einzusehen.",
     ctaLabel: "Dokument ansehen",

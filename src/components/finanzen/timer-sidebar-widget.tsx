@@ -171,8 +171,8 @@ export function TimerSidebarWidget() {
           <div className="space-y-2 pt-2 border-t border-border/50">
             <label className="block text-xs text-muted-foreground">
               {isStundenhonorar
-                ? "Taetigkeit (Pflichtangabe)"
-                : "Taetigkeit (optional)"}
+                ? "Tätigkeit (Pflichtangabe)"
+                : "Tätigkeit (optional)"}
             </label>
             <input
               type="text"

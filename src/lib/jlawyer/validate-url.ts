@@ -68,7 +68,7 @@ export function validateJLawyerBaseUrl(raw: string): { ok: boolean; error?: stri
   try {
     url = new URL(raw);
   } catch {
-    return { ok: false, error: "Ungueltige j-lawyer URL" };
+    return { ok: false, error: "Ungültige j-lawyer URL" };
   }
 
   if (url.protocol !== "https:" && url.protocol !== "http:") {
@@ -78,7 +78,7 @@ export function validateJLawyerBaseUrl(raw: string): { ok: boolean; error?: stri
   // Reject URLs with embedded credentials — fetch() would reject them at
   // request time with a confusing TypeError instead of a validation error.
   if (url.username || url.password) {
-    return { ok: false, error: "Zugangsdaten gehoeren nicht in die URL" };
+    return { ok: false, error: "Zugangsdaten gehören nicht in die URL" };
   }
 
   const allowPrivate = process.env.JLAWYER_ALLOW_PRIVATE_URLS === "true";
@@ -87,7 +87,7 @@ export function validateJLawyerBaseUrl(raw: string): { ok: boolean; error?: stri
     return {
       ok: false,
       error:
-        "Private/lokale Hosts sind nicht erlaubt. Fuer On-Premises-Installationen " +
+        "Private/lokale Hosts sind nicht erlaubt. Für On-Premises-Installationen " +
         "JLAWYER_ALLOW_PRIVATE_URLS=true setzen.",
     };
   }
@@ -96,7 +96,7 @@ export function validateJLawyerBaseUrl(raw: string): { ok: boolean; error?: stri
     return {
       ok: false,
       error:
-        "Unverschluesseltes http ist nicht erlaubt. Fuer On-Premises-Installationen " +
+        "Unverschlüsseltes http ist nicht erlaubt. Für On-Premises-Installationen " +
         "JLAWYER_ALLOW_PRIVATE_URLS=true setzen.",
     };
   }

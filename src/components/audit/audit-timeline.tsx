@@ -246,7 +246,7 @@ export function AuditTimeline({
   if (items.length === 0 && !loading) {
     return (
       <div className="p-12 text-center text-sm text-slate-400">
-        Keine Audit-Eintraege vorhanden.
+        Keine Audit-Einträge vorhanden.
       </div>
     );
   }

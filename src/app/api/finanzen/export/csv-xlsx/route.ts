@@ -72,14 +72,14 @@ export async function GET(request: NextRequest) {
 
   if (format !== "csv" && format !== "xlsx") {
     return NextResponse.json(
-      { error: "Ungueltiges Format. Erlaubt: csv, xlsx" },
+      { error: "Ungültiges Format. Erlaubt: csv, xlsx" },
       { status: 400 }
     );
   }
 
   if (!exportType || !["rechnungen", "buchungen", "zeiterfassung"].includes(exportType)) {
     return NextResponse.json(
-      { error: "Ungueltiger Typ. Erlaubt: rechnungen, buchungen, zeiterfassung" },
+      { error: "Ungültiger Typ. Erlaubt: rechnungen, buchungen, zeiterfassung" },
       { status: 400 }
     );
   }

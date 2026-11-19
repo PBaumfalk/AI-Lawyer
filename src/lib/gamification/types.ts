@@ -94,10 +94,10 @@ export type ShopItemRarity = "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
 export type ShopItemTyp = "AVATAR_RAHMEN" | "BANNER" | "PROFIL_TITEL" | "ABSCHLUSS_ANIMATION" | "PERK";
 
 export const RARITY_LABELS: Record<ShopItemRarity, string> = {
-  COMMON: "Gewoehnlich",
+  COMMON: "Gewöhnlich",
   RARE: "Selten",
   EPIC: "Episch",
-  LEGENDARY: "Legendaer",
+  LEGENDARY: "Legendär",
 };
 
 export const RARITY_COLORS: Record<ShopItemRarity, string> = {

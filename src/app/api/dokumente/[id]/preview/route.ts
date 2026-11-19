@@ -111,7 +111,7 @@ export async function POST(
 
   if (dokument.mimeType === "application/pdf") {
     return NextResponse.json({
-      message: "PDF-Dateien benoetigen keine Vorschau-Generierung",
+      message: "PDF-Dateien benötigen keine Vorschau-Generierung",
       status: "ready",
     });
   }

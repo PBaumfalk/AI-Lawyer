@@ -78,7 +78,7 @@ export async function GET() {
       })),
     });
   } catch (err: any) {
-    console.error('Taetigkeitskategorien list error:', err);
+    console.error('Tätigkeitskategorien list error:', err);
     return NextResponse.json(
       { error: 'Fehler beim Laden der Kategorien' },
       { status: 500 },
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
   const role = (session.user as any).role;
   if (role !== 'ADMIN') {
     return NextResponse.json(
-      { error: 'Nur Administratoren koennen Kategorien erstellen' },
+      { error: 'Nur Administratoren können Kategorien erstellen' },
       { status: 403 },
     );
   }
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (err: any) {
-    console.error('Taetigkeitskategorie create error:', err);
+    console.error('Tätigkeitskategorie create error:', err);
     return NextResponse.json(
       { error: 'Fehler beim Erstellen der Kategorie' },
       { status: 500 },
@@ -160,7 +160,7 @@ export async function PATCH(request: NextRequest) {
   const role = (session.user as any).role;
   if (role !== 'ADMIN') {
     return NextResponse.json(
-      { error: 'Nur Administratoren koennen Kategorien bearbeiten' },
+      { error: 'Nur Administratoren können Kategorien bearbeiten' },
       { status: 403 },
     );
   }
@@ -190,7 +190,7 @@ export async function PATCH(request: NextRequest) {
       aktiv: kategorie.aktiv,
     });
   } catch (err: any) {
-    console.error('Taetigkeitskategorie update error:', err);
+    console.error('Tätigkeitskategorie update error:', err);
     return NextResponse.json(
       { error: err.message || 'Fehler beim Aktualisieren der Kategorie' },
       { status: 500 },

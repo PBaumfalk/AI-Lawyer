@@ -247,7 +247,7 @@ export function VorlagenWizard({
           {step === 0 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Waehlen Sie eine Vorlage als Grundlage fuer das neue Dokument.
+                Wählen Sie eine Vorlage als Grundlage für das neue Dokument.
               </p>
               <div className="space-y-2">
                 {vorlagen.map((v) => (
@@ -280,7 +280,7 @@ export function VorlagenWizard({
           {step === 1 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Waehlen Sie die Akte, fuer die das Dokument generiert werden soll.
+                Wählen Sie die Akte, für die das Dokument generiert werden soll.
               </p>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -337,8 +337,8 @@ export function VorlagenWizard({
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
                 {customFelder.length > 0
-                  ? "Fueleln Sie die zusaetzlichen Felder fuer diese Vorlage aus."
-                  : "Diese Vorlage hat keine zusaetzlichen Felder. Sie koennen direkt fortfahren."}
+                  ? "Fueleln Sie die zusätzlichen Felder für diese Vorlage aus."
+                  : "Diese Vorlage hat keine zusätzlichen Felder. Sie können direkt fortfahren."}
               </p>
               {customFelder.map((feld) => (
                 <div key={feld.key} className="space-y-1.5">
@@ -383,7 +383,7 @@ export function VorlagenWizard({
                       }
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                      <option value="">Bitte auswaehlen...</option>
+                      <option value="">Bitte auswählen...</option>
                       {feld.optionen?.map((opt) => (
                         <option key={opt} value={opt}>{opt}</option>
                       ))}
@@ -398,7 +398,7 @@ export function VorlagenWizard({
           {step === 3 && (
             <div className="space-y-5">
               <p className="text-sm text-muted-foreground">
-                Pruefen Sie die Details und generieren Sie das Dokument.
+                Prüfen Sie die Details und generieren Sie das Dokument.
               </p>
 
               {/* Summary */}
@@ -476,7 +476,7 @@ export function VorlagenWizard({
                   onChange={(e) => setOpenInEditor(e.target.checked)}
                   className="rounded border-input"
                 />
-                <span className="text-sm text-foreground">In OnlyOffice oeffnen</span>
+                <span className="text-sm text-foreground">In OnlyOffice öffnen</span>
               </label>
             </div>
           )}
@@ -490,7 +490,7 @@ export function VorlagenWizard({
             disabled={generating}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
-            {step > 0 ? "Zurueck" : "Abbrechen"}
+            {step > 0 ? "Zurück" : "Abbrechen"}
           </Button>
           <Button onClick={handleNext} disabled={!canNext() || generating}>
             {generating ? (

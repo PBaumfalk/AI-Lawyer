@@ -30,7 +30,7 @@ export async function POST(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltige Eingabe" },
+      { error: "Ungültige Eingabe" },
       { status: 400 },
     );
   }
@@ -38,7 +38,7 @@ export async function POST(
   const parsed = UndoSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Ungueltige Eingabe", details: parsed.error.errors },
+      { error: "Ungültige Eingabe", details: parsed.error.errors },
       { status: 400 },
     );
   }

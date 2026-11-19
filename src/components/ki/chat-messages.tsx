@@ -136,7 +136,7 @@ function PendingReminderBanner({
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
-            Offene Rueckfrage ({reminder.round}/{reminder.maxRounds})
+            Offene Rückfrage ({reminder.round}/{reminder.maxRounds})
           </p>
           <p className="text-sm text-amber-700 dark:text-amber-300">
             {reminder.rueckfrage}
@@ -266,7 +266,7 @@ export function ChatMessages({
             Frage — zu Ihren Akten oder allgemein zu rechtlichen Themen.
           </p>
           <p className="text-xs text-muted-foreground mt-3 italic">
-            Hinweis: Dieser Assistent ersetzt keine anwaltliche Pruefung.
+            Hinweis: Dieser Assistent ersetzt keine anwaltliche Prüfung.
           </p>
         </div>
       </div>
@@ -486,7 +486,7 @@ export function ChatMessages({
               {error.message.includes("Nicht authentifiziert")
                 ? "Sitzung abgelaufen — bitte Seite neu laden."
                 : error.message.includes("Failed to fetch")
-                  ? "Verbindung zum Server fehlgeschlagen. Bitte pruefen Sie Ihre Internetverbindung."
+                  ? "Verbindung zum Server fehlgeschlagen. Bitte prüfen Sie Ihre Internetverbindung."
                   : "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."}
             </p>
           </div>

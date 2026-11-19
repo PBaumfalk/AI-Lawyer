@@ -124,7 +124,7 @@ export async function transitionInvoiceStatus(
   if (!isValidTransition(currentStatus, targetStatus)) {
     return {
       success: false,
-      error: `Ungueltige Statusaenderung: ${currentStatus} -> ${targetStatus}`,
+      error: `Ungültige Statusänderung: ${currentStatus} -> ${targetStatus}`,
     };
   }
 
@@ -135,7 +135,7 @@ export async function transitionInvoiceStatus(
   ) {
     return {
       success: false,
-      error: 'Hoechste Mahnstufe (3. Mahnung) bereits erreicht',
+      error: 'Höchste Mahnstufe (3. Mahnung) bereits erreicht',
     };
   }
 

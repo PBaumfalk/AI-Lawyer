@@ -80,7 +80,7 @@ export async function PATCH(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltige Eingabe" },
+      { error: "Ungültige Eingabe" },
       { status: 400 },
     );
   }
@@ -88,7 +88,7 @@ export async function PATCH(
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Ungueltige Aktion", details: parsed.error.errors },
+      { error: "Ungültige Aktion", details: parsed.error.errors },
       { status: 400 },
     );
   }

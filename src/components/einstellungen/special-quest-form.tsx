@@ -100,7 +100,7 @@ export function SpecialQuestForm({
     e.preventDefault();
 
     if (!name.trim() || !templateId || !count || !startDatum || !endDatum) {
-      toast.error("Bitte alle Pflichtfelder ausfuellen");
+      toast.error("Bitte alle Pflichtfelder ausfüllen");
       return;
     }
 
@@ -163,7 +163,7 @@ export function SpecialQuestForm({
             id="sq-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="z.B. Fruehlings-Sprint"
+            placeholder="z.B. Frühlings-Sprint"
             required
           />
         </div>
@@ -209,7 +209,7 @@ export function SpecialQuestForm({
             required
           />
           <p className="text-xs text-muted-foreground">
-            Wie viele Aktionen muessen im Zeitraum abgeschlossen werden?
+            Wie viele Aktionen müssen im Zeitraum abgeschlossen werden?
           </p>
         </div>
 
@@ -274,11 +274,11 @@ export function SpecialQuestForm({
             <option value="ALL">Alle Klassen</option>
             <option value="JURIST">Jurist</option>
             <option value="SCHREIBER">Schreiber</option>
-            <option value="WAECHTER">Waechter</option>
+            <option value="WAECHTER">Wächter</option>
             <option value="QUARTIERMEISTER">Quartiermeister</option>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Nur Spieler dieser Klasse sehen die Quest. &quot;Alle Klassen&quot; gilt fuer
+            Nur Spieler dieser Klasse sehen die Quest. &quot;Alle Klassen&quot; gilt für
             alle.
           </p>
         </div>

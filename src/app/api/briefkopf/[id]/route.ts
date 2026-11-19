@@ -299,7 +299,7 @@ export async function PATCH(
 
   if (body.action !== "setDefault") {
     return NextResponse.json(
-      { error: "Ungueltige Aktion" },
+      { error: "Ungültige Aktion" },
       { status: 400 }
     );
   }
@@ -362,7 +362,7 @@ export async function DELETE(
     return NextResponse.json(
       {
         error:
-          "Der Standard-Briefkopf kann nicht geloescht werden. Setzen Sie zuerst einen anderen als Standard.",
+          "Der Standard-Briefkopf kann nicht gelöscht werden. Setzen Sie zuerst einen anderen als Standard.",
       },
       { status: 400 }
     );
@@ -372,7 +372,7 @@ export async function DELETE(
   const count = await prisma.briefkopf.count();
   if (count <= 1) {
     return NextResponse.json(
-      { error: "Der letzte Briefkopf kann nicht geloescht werden" },
+      { error: "Der letzte Briefkopf kann nicht gelöscht werden" },
       { status: 400 }
     );
   }

@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
       entries: [],
       total: 0,
       message:
-        "Log-Datei nicht gefunden. Logs sind nur in der Produktionsumgebung verfuegbar.",
+        "Log-Datei nicht gefunden. Logs sind nur in der Produktionsumgebung verfügbar.",
     });
   }
 

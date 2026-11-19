@@ -111,7 +111,7 @@ function validateInhalt(
     warnungen.push({
       typ: "INHALT",
       schwere: "KRITISCH",
-      text: "Name des Klaegers fehlt im Rubrum (SS 253 Abs. 2 Nr. 1 ZPO)",
+      text: "Name des Klägers fehlt im Rubrum (SS 253 Abs. 2 Nr. 1 ZPO)",
       feld: "rubrum.klaeger.name",
     });
   }
@@ -135,7 +135,7 @@ function validateInhalt(
     warnungen.push({
       typ: "INHALT",
       schwere: "WARNUNG",
-      text: "Anschrift des Klaegers fehlt -- fuer Zustellungen erforderlich",
+      text: "Anschrift des Klägers fehlt -- für Zustellungen erforderlich",
       feld: "rubrum.klaeger.anschrift",
     });
   }
@@ -144,7 +144,7 @@ function validateInhalt(
     warnungen.push({
       typ: "INHALT",
       schwere: "WARNUNG",
-      text: "Anschrift des Beklagten fehlt -- fuer Zustellungen erforderlich",
+      text: "Anschrift des Beklagten fehlt -- für Zustellungen erforderlich",
       feld: "rubrum.beklagter.anschrift",
     });
   }
@@ -164,7 +164,7 @@ function validateInhalt(
     warnungen.push({
       typ: "INHALT",
       schwere: "KRITISCH",
-      text: "Keine Antraege formuliert (SS 253 Abs. 2 Nr. 2 ZPO erfordert bestimmten Antrag)",
+      text: "Keine Anträge formuliert (SS 253 Abs. 2 Nr. 2 ZPO erfordert bestimmten Antrag)",
       feld: "antraege",
     });
   }
@@ -226,7 +226,7 @@ function validateFormal(
   warnungen.push({
     typ: "FORM",
     schwere: "INFO",
-    text: "beA Dateigroesse max. 60 MB",
+    text: "beA Dateigröße max. 60 MB",
   });
 }
 
@@ -251,7 +251,7 @@ function validateFristen(
         warnungen.push({
           typ: "FRIST",
           schwere: "INFO",
-          text: "Pruefe Schlichtungsklausel: SS 15a EGZPO erfordert ggf. vorgerichtliche Streitschlichtung",
+          text: "Prüfe Schlichtungsklausel: SS 15a EGZPO erfordert ggf. vorgerichtliche Streitschlichtung",
         });
         break;
 
@@ -264,7 +264,7 @@ function validateFristen(
           warnungen.push({
             typ: "FRIST",
             schwere: "INFO",
-            text: "Kein Gebuehrenvorschuss beim Arbeitsgericht erforderlich",
+            text: "Kein Gebührenvorschuss beim Arbeitsgericht erforderlich",
           });
         }
         break;
@@ -278,7 +278,7 @@ function validateFristen(
         warnungen.push({
           typ: "FRIST",
           schwere: "INFO",
-          text: "Dringlichkeitsvermutung bei einstweiliger Verfuegung pruefen -- Verfuegungsgrund muss glaubhaft gemacht werden",
+          text: "Dringlichkeitsvermutung bei einstweiliger Verfügung prüfen -- Verfügungsgrund muss glaubhaft gemacht werden",
         });
         break;
 
@@ -305,7 +305,7 @@ function validateFristen(
     warnungen.push({
       typ: "FRIST",
       schwere: "INFO",
-      text: "Kein Gebuehrenvorschuss beim Arbeitsgericht erforderlich",
+      text: "Kein Gebührenvorschuss beim Arbeitsgericht erforderlich",
     });
   }
 }
@@ -353,14 +353,14 @@ function check3WochenFrist(
     warnungen.push({
       typ: "FRIST",
       schwere: "KRITISCH",
-      text: `3-Wochen-Frist nach SS 4 KSchG ist am ${fristStr} abgelaufen! Nachtraegliche Zulassung nach SS 5 KSchG pruefen.`,
+      text: `3-Wochen-Frist nach SS 4 KSchG ist am ${fristStr} abgelaufen! Nachträgliche Zulassung nach SS 5 KSchG prüfen.`,
       feld: slotKey,
     });
   } else if (daysRemaining < 7) {
     warnungen.push({
       typ: "FRIST",
       schwere: "WARNUNG",
-      text: `3-Wochen-Frist nach SS 4 KSchG endet am ${fristStr} (noch ${daysRemaining} Tag(e)). Eilbeduerftigkeit beachten!`,
+      text: `3-Wochen-Frist nach SS 4 KSchG endet am ${fristStr} (noch ${daysRemaining} Tag(e)). Eilbedürftigkeit beachten!`,
       feld: slotKey,
     });
   }
@@ -378,7 +378,7 @@ function checkBetriebsratAnhoerung(
     warnungen.push({
       typ: "INHALT",
       schwere: "WARNUNG",
-      text: "Betriebsrat-Anhoerung (SS 102 BetrVG) nicht angegeben -- wenn Betriebsrat vorhanden, ist fehlende Anhoerung Unwirksamkeitsgrund",
+      text: "Betriebsrat-Anhörung (SS 102 BetrVG) nicht angegeben -- wenn Betriebsrat vorhanden, ist fehlende Anhörung Unwirksamkeitsgrund",
       feld: slotKey,
     });
   }
@@ -403,7 +403,7 @@ function checkFaelligkeit(
     warnungen.push({
       typ: "FRIST",
       schwere: "WARNUNG",
-      text: `Lohnanspruch ab ${formatDate(parsed)} ist noch nicht faellig -- Klage ggf. verfrueht`,
+      text: `Lohnanspruch ab ${formatDate(parsed)} ist noch nicht fällig -- Klage ggf. verfrüht`,
       feld: slotKey,
     });
   }
@@ -533,14 +533,14 @@ function checkBerufungsbegruendungsfrist(
     warnungen.push({
       typ: "FRIST",
       schwere: "KRITISCH",
-      text: `Berufungsbegruendungsfrist (2 Monate, SS 520 ZPO) am ${formatDate(fristEnde)} abgelaufen!`,
+      text: `Berufungsbegründungsfrist (2 Monate, SS 520 ZPO) am ${formatDate(fristEnde)} abgelaufen!`,
       feld: slotKey,
     });
   } else if (daysRemaining < 14) {
     warnungen.push({
       typ: "FRIST",
       schwere: "WARNUNG",
-      text: `Berufungsbegruendungsfrist (SS 520 ZPO) endet am ${formatDate(fristEnde)} (noch ${daysRemaining} Tag(e)).`,
+      text: `Berufungsbegründungsfrist (SS 520 ZPO) endet am ${formatDate(fristEnde)} (noch ${daysRemaining} Tag(e)).`,
       feld: slotKey,
     });
   }
@@ -560,7 +560,7 @@ function validateVollstaendigkeit(
     warnungen.push({
       typ: "INHALT",
       schwere: "WARNUNG",
-      text: `${unresolved.length} unaufgeloeste Platzhalter: ${unresolved.map((p) => `{{${p}}}`).join(", ")}`,
+      text: `${unresolved.length} unaufgelöste Platzhalter: ${unresolved.map((p) => `{{${p}}}`).join(", ")}`,
       feld: "platzhalter",
     });
   }

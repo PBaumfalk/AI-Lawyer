@@ -20,7 +20,7 @@ const CLASS_ICONS: Record<string, LucideIcon> = {
 const CLASS_LABELS: Record<string, string> = {
   JURIST: "Jurist",
   SCHREIBER: "Schreiber",
-  WAECHTER: "Waechter",
+  WAECHTER: "Wächter",
   QUARTIERMEISTER: "Quartiermeister",
 };
 
@@ -126,7 +126,7 @@ export function HeroCard({
           {equippedCosmetics.length > 0 && (
             <div>
               <p className="text-xs text-muted-foreground mb-1.5">
-                Ausgeruestet
+                Ausgerüstet
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {equippedCosmetics.map((c) => (

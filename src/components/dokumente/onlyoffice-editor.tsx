@@ -50,10 +50,10 @@ const STATUS_CONFIG: Record<
     label: "Entwurf",
     color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
     icon: FileEdit,
-    transitions: [{ target: "ZUR_PRUEFUNG", label: "Zur Pruefung senden" }],
+    transitions: [{ target: "ZUR_PRUEFUNG", label: "Zur Prüfung senden" }],
   },
   ZUR_PRUEFUNG: {
-    label: "Zur Pruefung",
+    label: "Zur Prüfung",
     color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
     icon: FileSearch,
     transitions: [{ target: "FREIGEGEBEN", label: "Freigeben" }],
@@ -64,7 +64,7 @@ const STATUS_CONFIG: Record<
     icon: FileCheck2,
     transitions: [
       { target: "VERSENDET", label: "Als versendet markieren" },
-      { target: "ENTWURF", label: "Zurueck zum Entwurf" },
+      { target: "ENTWURF", label: "Zurück zum Entwurf" },
     ],
   },
   VERSENDET: {
@@ -270,10 +270,10 @@ export function OnlyOfficeEditor({
           }
         } else {
           const data = await response.json();
-          alert(data.error ?? "Statusaenderung fehlgeschlagen");
+          alert(data.error ?? "Statusänderung fehlgeschlagen");
         }
       } catch {
-        alert("Statusaenderung fehlgeschlagen");
+        alert("Statusänderung fehlgeschlagen");
       } finally {
         setTransitioning(false);
       }
@@ -418,7 +418,7 @@ export function OnlyOfficeEditor({
       {isReadOnly && (
         <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm">
           <ShieldAlert className="w-4 h-4 flex-shrink-0" />
-          <span className="font-medium">Schreibgeschuetzt</span>
+          <span className="font-medium">Schreibgeschützt</span>
           <span className="text-amber-600 dark:text-amber-400">
             -- Dokument ist {dokumentStatus === "FREIGEGEBEN" ? "freigegeben" : "versendet"} und kann nicht bearbeitet werden.
           </span>
@@ -429,7 +429,7 @@ export function OnlyOfficeEditor({
       {!isConnected && (
         <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm">
           <WifiOff className="w-4 h-4 flex-shrink-0" />
-          Offline -- Aenderungen werden gespeichert wenn Verbindung wiederhergestellt
+          Offline -- Änderungen werden gespeichert wenn Verbindung wiederhergestellt
         </div>
       )}
 

@@ -61,7 +61,7 @@ export async function POST(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger Request-Body" },
+      { error: "Ungültiger Request-Body" },
       { status: 400 },
     );
   }
@@ -91,7 +91,7 @@ export async function POST(
 
   if (message.deletedAt) {
     return NextResponse.json(
-      { error: "Reaktion auf geloeschte Nachricht nicht moeglich" },
+      { error: "Reaktion auf gelöschte Nachricht nicht möglich" },
       { status: 400 },
     );
   }
@@ -154,7 +154,7 @@ export async function DELETE(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ungueltiger Request-Body" },
+      { error: "Ungültiger Request-Body" },
       { status: 400 },
     );
   }

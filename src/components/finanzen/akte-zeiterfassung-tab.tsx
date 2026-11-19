@@ -279,7 +279,7 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
               onClick={handleStartTimer}
               disabled={timerLoading || (timerRunning && timerAkteId !== akteId)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 transition-colors disabled:opacity-50"
-              title={timerRunning && timerAkteId !== akteId ? "Timer laeuft bereits fuer eine andere Akte" : undefined}
+              title={timerRunning && timerAkteId !== akteId ? "Timer läuft bereits für eine andere Akte" : undefined}
             >
               {timerLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               Timer starten
@@ -308,7 +308,7 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm text-muted-foreground mb-1">Beschreibung</label>
-              <input type="text" value={newBeschreibung} onChange={(e) => setNewBeschreibung(e.target.value)} placeholder="Taetigkeit beschreiben" className="w-full h-10 px-3 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+              <input type="text" value={newBeschreibung} onChange={(e) => setNewBeschreibung(e.target.value)} placeholder="Tätigkeit beschreiben" className="w-full h-10 px-3 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
           </div>
           <div className="flex gap-2">
@@ -340,7 +340,7 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
               <tr><td colSpan={6} className="p-0">
                 <EmptyState
                   icon={Clock}
-                  title="Keine Zeiteintraege"
+                  title="Keine Zeiteinträge"
                   description="Starten Sie den Timer oder erfassen Sie Zeiten manuell."
                   actions={[
                     { label: "Manueller Eintrag", icon: Plus, onClick: () => setShowForm(true) },
@@ -385,7 +385,7 @@ export function AkteZeiterfassungTab({ akteId }: AkteZeiterfassungTabProps) {
                       }}
                       className="text-muted-foreground/50 italic cursor-pointer hover:text-foreground transition-colors"
                     >
-                      Beschreibung hinzufuegen
+                      Beschreibung hinzufügen
                     </button>
                   )}
                 </td>

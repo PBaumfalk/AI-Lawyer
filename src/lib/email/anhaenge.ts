@@ -49,7 +49,7 @@ export async function resolveEmailAnhaenge(
       return {
         ok: false,
         status: 400,
-        error: "Nicht freigegebene Dokumente koennen nicht versendet werden",
+        error: "Nicht freigegebene Dokumente können nicht versendet werden",
         details: check.errors,
       };
     }

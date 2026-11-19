@@ -184,7 +184,7 @@ export async function DELETE(
   }
   if (!isOwner) {
     return NextResponse.json(
-      { error: "Nur der Ersteller kann diese Unterhaltung loeschen" },
+      { error: "Nur der Ersteller kann diese Unterhaltung löschen" },
       { status: 403 }
     );
   }

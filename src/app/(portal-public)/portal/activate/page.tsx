@@ -50,7 +50,7 @@ export default function PortalActivatePage() {
               Account aktiviert!
             </h1>
             <p className="text-sm text-muted-foreground mb-6">
-              Ihr Account wurde erfolgreich aktiviert. Sie koennen sich jetzt anmelden.
+              Ihr Account wurde erfolgreich aktiviert. Sie können sich jetzt anmelden.
             </p>
             <Link href="/portal/login">
               <Button className="w-full">Zur Anmeldung</Button>
@@ -66,13 +66,13 @@ export default function PortalActivatePage() {
     setError(null);
 
     if (password !== passwordConfirm) {
-      setError("Passwoerter stimmen nicht ueberein.");
+      setError("Passwörter stimmen nicht überein.");
       return;
     }
 
     if (!PASSWORD_REGEX.test(password)) {
       setError(
-        "Passwort muss mindestens 8 Zeichen, 1 Grossbuchstabe und 1 Zahl enthalten."
+        "Passwort muss mindestens 8 Zeichen, 1 Großbuchstabe und 1 Zahl enthalten."
       );
       return;
     }
@@ -94,7 +94,7 @@ export default function PortalActivatePage() {
         setSuccess(true);
       }
     } catch {
-      setError("Verbindungsfehler. Bitte versuchen Sie es spaeter erneut.");
+      setError("Verbindungsfehler. Bitte versuchen Sie es später erneut.");
     } finally {
       setLoading(false);
     }
@@ -142,7 +142,7 @@ export default function PortalActivatePage() {
                 htmlFor="passwordConfirm"
                 className="block text-sm font-medium text-foreground/80 mb-1.5"
               >
-                Passwort bestaetigen
+                Passwort bestätigen
               </label>
               <Input
                 id="passwordConfirm"
@@ -156,7 +156,7 @@ export default function PortalActivatePage() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Mindestens 8 Zeichen, 1 Grossbuchstabe, 1 Zahl
+              Mindestens 8 Zeichen, 1 Großbuchstabe, 1 Zahl
             </p>
 
             {error && (

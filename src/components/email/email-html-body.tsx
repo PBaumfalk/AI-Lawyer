@@ -49,7 +49,7 @@ export function EmailHtmlBody({ html, text }: EmailHtmlBodyProps) {
     if (!text) {
       return (
         <p className="text-sm text-muted-foreground italic">
-          Kein Inhalt verfuegbar.
+          Kein Inhalt verfügbar.
         </p>
       );
     }

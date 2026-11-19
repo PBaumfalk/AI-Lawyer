@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 });
+    return NextResponse.json({ error: 'Ungültiger Request-Body' }, { status: 400 });
   }
 
   const parsed = lockSchema.safeParse(body);
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       const earliest = earlierOpenPeriods[0];
       return NextResponse.json(
         {
-          error: `Fruehere Perioden muessen zuerst gesperrt werden: ${earliest.monat.toString().padStart(2, '0')}/${earliest.jahr}`,
+          error: `Frühere Perioden müssen zuerst gesperrt werden: ${earliest.monat.toString().padStart(2, '0')}/${earliest.jahr}`,
         },
         { status: 400 },
       );
@@ -194,7 +194,7 @@ export async function PATCH(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 });
+    return NextResponse.json({ error: 'Ungültiger Request-Body' }, { status: 400 });
   }
 
   const parsed = unlockSchema.safeParse(body);

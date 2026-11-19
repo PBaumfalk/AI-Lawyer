@@ -66,7 +66,7 @@ export function decryptCalDavCredential(stored: string): string {
   const parts = stored.split(":");
 
   if (parts.length !== 3) {
-    throw new Error("Ungueltiges verschluesseltes Format. Erwartet: iv:authTag:ciphertext");
+    throw new Error("Ungültiges verschlüsseltes Format. Erwartet: iv:authTag:ciphertext");
   }
 
   const iv = Buffer.from(parts[0], "hex");

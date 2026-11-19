@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
   if (existing) {
     return NextResponse.json(
-      { error: "Zugriffsueberschreibung existiert bereits" },
+      { error: "Zugriffsüberschreibung existiert bereits" },
       { status: 409 }
     );
   }

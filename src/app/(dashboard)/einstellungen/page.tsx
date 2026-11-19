@@ -161,7 +161,7 @@ export default function EinstellungenPage() {
             {isAdmin && (
               <TabsTrigger value="briefkoepfe">
                 <Stamp className="w-4 h-4 mr-1.5" />
-                Briefkoepfe
+                Briefköpfe
               </TabsTrigger>
             )}
             {isAdmin && (

@@ -51,7 +51,7 @@ export function createCreateDraftZeiterfassungTool(ctx: ToolContext) {
       }
 
       if (dauer <= 0) {
-        return { error: "Dauer muss groesser als 0 Minuten sein." };
+        return { error: "Dauer muss größer als 0 Minuten sein." };
       }
 
       const effectiveDatum = datum ?? new Date().toISOString().split("T")[0];

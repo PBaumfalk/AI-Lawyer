@@ -179,7 +179,7 @@ export function QADashboardContent() {
             <p className="text-sm text-muted-foreground">
               {hasData
                 ? `${report.dataPoints} Datenpunkte, Goldset: ${report.goldsetSize} Queries`
-                : "Noch keine Retrieval-Logs vorhanden. Fuehren Sie die Goldset-Evaluation aus, um Metriken zu erhalten."}
+                : "Noch keine Retrieval-Logs vorhanden. Führen Sie die Goldset-Evaluation aus, um Metriken zu erhalten."}
             </p>
           </div>
         </div>
@@ -209,7 +209,7 @@ export function QADashboardContent() {
           passed={report.metrics.halluzinationsrate.passed}
         />
         <MetricCard
-          label="Formale Vollstaendigkeit"
+          label="Formale Vollständigkeit"
           value={report.metrics.formaleVollstaendigkeit.value}
           threshold={report.metrics.formaleVollstaendigkeit.threshold}
           passed={report.metrics.formaleVollstaendigkeit.passed}

@@ -37,7 +37,7 @@ type MigrationStatus = Partial<MigrationStatusResponse> & { status: MigrationSta
 
 const statusLabels: Record<string, string> = {
   idle: "Bereit",
-  running: "Laueft...",
+  running: "Läuft...",
   done: "Abgeschlossen",
   error: "Fehler",
 };
@@ -286,8 +286,8 @@ export default function JLawyerMigrationPage() {
       <div>
         <h1 className="text-2xl font-semibold font-bold">J-Lawyer Migration</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Akten, Kontakte, Dokumente und Kalendereintraege aus J-Lawyer importieren. Ein erneuter
-          Lauf legt nur fehlende Datensaetze an und aendert keine bereits uebernommenen.
+          Akten, Kontakte, Dokumente und Kalendereinträge aus J-Lawyer importieren. Ein erneuter
+          Lauf legt nur fehlende Datensätze an und ändert keine bereits übernommenen.
         </p>
       </div>
 
@@ -411,7 +411,7 @@ export default function JLawyerMigrationPage() {
             <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-800">
               <Loader2 className="w-5 h-5 animate-spin shrink-0" />
               <div>
-                <p className="font-medium">Migration laueft...</p>
+                <p className="font-medium">Migration läuft...</p>
                 <p className="text-sm text-blue-600 mt-0.5">
                   Dies kann mehrere Minuten dauern. Der Status wird automatisch aktualisiert.
                 </p>

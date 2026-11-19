@@ -34,8 +34,8 @@ interface ConnectionTestProps {
 const INITIAL_STEPS: ConnectionStep[] = [
   { id: "imap_connect", label: "Verbinde mit IMAP-Server...", status: "pending" },
   { id: "imap_auth", label: "Authentifiziere...", status: "pending" },
-  { id: "imap_folders", label: "Postfaecher abrufen...", status: "pending" },
-  { id: "smtp_connect", label: "SMTP-Server pruefen...", status: "pending" },
+  { id: "imap_folders", label: "Postfächer abrufen...", status: "pending" },
+  { id: "smtp_connect", label: "SMTP-Server prüfen...", status: "pending" },
 ];
 
 function StepIcon({ status }: { status: ConnectionStep["status"] }) {
@@ -231,7 +231,7 @@ export function ConnectionTest({ kontoId, testConfig }: ConnectionTestProps) {
       {overallResult === "error" && (
         <div className="flex items-center gap-2 px-3 py-2 bg-red-50/50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
           <XCircle className="w-4 h-4" />
-          Verbindungstest fehlgeschlagen. Bitte ueberpruefen Sie die
+          Verbindungstest fehlgeschlagen. Bitte überprüfen Sie die
           Zugangsdaten und Servereinstellungen.
         </div>
       )}

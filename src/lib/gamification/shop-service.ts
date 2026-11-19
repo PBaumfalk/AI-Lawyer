@@ -23,7 +23,7 @@ export async function purchaseItem(userId: string, shopItemId: string) {
     // 1. Validate item
     const item = await tx.shopItem.findUnique({ where: { id: shopItemId } });
     if (!item || !item.aktiv) {
-      throw new Error("Item nicht verfuegbar");
+      throw new Error("Item nicht verfügbar");
     }
 
     // 2. Validate profile
@@ -42,7 +42,7 @@ export async function purchaseItem(userId: string, shopItemId: string) {
 
     // 4. Balance check
     if (profile.runen < item.preis) {
-      throw new Error("Nicht genuegend Runen");
+      throw new Error("Nicht genügend Runen");
     }
 
     // 5. Atomic decrement
@@ -80,7 +80,7 @@ export async function equipItem(userId: string, inventoryItemId: string) {
 
     // 2. Perks cannot be equipped
     if (invItem.shopItem.typ === "PERK") {
-      throw new Error("Perks koennen nicht ausgeruestet werden");
+      throw new Error("Perks können nicht ausgerüstet werden");
     }
 
     // 3. Consumed items cannot be equipped

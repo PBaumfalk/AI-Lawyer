@@ -105,7 +105,7 @@ export default function AdminSettingsPage() {
       <div>
         <h1 className="text-2xl font-semibold font-bold">Einstellungen</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Laufzeit-Konfiguration ohne Neustart aendern
+          Laufzeit-Konfiguration ohne Neustart ändern
         </p>
       </div>
 
@@ -113,8 +113,8 @@ export default function AdminSettingsPage() {
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 flex items-start gap-3 text-blue-800">
         <Info className="w-5 h-5 mt-0.5 shrink-0" />
         <p className="text-sm">
-          Aenderungen werden sofort wirksam, kein Neustart erforderlich.
-          Der Worker uebernimmt neue Werte automatisch innerhalb weniger Sekunden.
+          Änderungen werden sofort wirksam, kein Neustart erforderlich.
+          Der Worker übernimmt neue Werte automatisch innerhalb weniger Sekunden.
         </p>
       </div>
 

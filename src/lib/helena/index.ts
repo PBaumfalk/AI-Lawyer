@@ -216,7 +216,7 @@ export async function runHelenaAgent(
         text: pipelineResult.rueckfrage ?? "Ich brauche weitere Informationen.",
         mode: actualMode,
         tier: 3,
-        steps: [{ type: "thought", content: "Schriftsatz-Pipeline: Rueckfrage", timestamp: new Date().toISOString() }],
+        steps: [{ type: "thought", content: "Schriftsatz-Pipeline: Rückfrage", timestamp: new Date().toISOString() }],
         totalTokens: pipelineResult.totalTokens,
         finishReason: "needs-input",
         capReached: false,
@@ -339,7 +339,7 @@ export async function runHelenaAgent(
       ...result,
       text:
         result.text +
-        "\n\nIch bin noch nicht fertig. Moechtest du, dass ich im Hintergrund weitermache?",
+        "\n\nIch bin noch nicht fertig. Möchtest du, dass ich im Hintergrund weitermache?",
     };
 
     log.info(

@@ -50,7 +50,7 @@ const FIELD_TYPE_OPTIONS: { value: FalldatenFeldTypDB; label: string }[] = [
   { value: "text", label: "Text" },
   { value: "textarea", label: "Textbereich" },
   { value: "number", label: "Zahl" },
-  { value: "currency", label: "Waehrung" },
+  { value: "currency", label: "Währung" },
   { value: "date", label: "Datum" },
   { value: "select", label: "Dropdown" },
   { value: "boolean", label: "Checkbox" },
@@ -197,7 +197,7 @@ export function TemplateBuilder({
     if (
       group.fields.length > 0 &&
       !confirm(
-        `Gruppe "${group.name}" hat ${group.fields.length} Felder. Wirklich loeschen?`
+        `Gruppe "${group.name}" hat ${group.fields.length} Felder. Wirklich löschen?`
       )
     ) {
       return;
@@ -275,7 +275,7 @@ export function TemplateBuilder({
       );
       if (validOpts.length === 0) {
         setErrors([
-          "Mindestens eine Option ist erforderlich fuer Dropdown/Mehrfachauswahl",
+          "Mindestens eine Option ist erforderlich für Dropdown/Mehrfachauswahl",
         ]);
         return;
       }
@@ -495,7 +495,7 @@ export function TemplateBuilder({
             onClick={() => setShowNewGroup(true)}
           >
             <Plus className="w-4 h-4 mr-1" />
-            Gruppe hinzufuegen
+            Gruppe hinzufügen
           </Button>
         </div>
 
@@ -536,7 +536,7 @@ export function TemplateBuilder({
         {groups.length === 0 ? (
           <p className="text-sm text-muted-foreground py-8 text-center">
             Noch keine Gruppen. Erstellen Sie eine Gruppe, um Felder
-            hinzuzufuegen.
+            hinzuzufügen.
           </p>
         ) : (
           <div className="space-y-3">
@@ -832,12 +832,12 @@ function FieldEditor({
               onClick={addOption}
             >
               <Plus className="w-3 h-3 mr-1" />
-              Option hinzufuegen
+              Option hinzufügen
             </Button>
           </div>
           {field.optionen.length === 0 && (
             <p className="text-xs text-muted-foreground">
-              Noch keine Optionen. Fuegen Sie mindestens eine hinzu.
+              Noch keine Optionen. Fügen Sie mindestens eine hinzu.
             </p>
           )}
           <div className="space-y-1.5">

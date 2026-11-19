@@ -350,7 +350,7 @@ export function buildAkteAccessFilter(
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: "Administrator",
-  ANWALT: "Anwalt/Anwaeltin",
+  ANWALT: "Anwalt/Anwältin",
   SACHBEARBEITER: "Sachbearbeiter/in",
   SEKRETARIAT: "Sekretariat",
   MANDANT: "Mandant",
@@ -358,7 +358,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 export const PERMISSION_LABELS: Record<keyof PermissionSet, string> = {
   canFreigeben: "Freigeben",
-  canLoeschen: "Loeschen",
+  canLoeschen: "Löschen",
   canSendBeA: "beA senden",
   canReadBeA: "beA lesen",
   canUseKI: "KI nutzen",

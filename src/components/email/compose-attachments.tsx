@@ -70,7 +70,7 @@ export function ComposeAttachments({
       const newFiles: { meta: AttachmentFile; file: File }[] = [];
       for (const file of Array.from(fileList)) {
         if (file.size > MAX_ATTACHMENT_SIZE) {
-          alert(`"${file.name}" ist groesser als 25 MB und kann nicht angehaengt werden.`);
+          alert(`"${file.name}" ist größer als 25 MB und kann nicht angehängt werden.`);
           continue;
         }
         newFiles.push({
@@ -131,7 +131,7 @@ export function ComposeAttachments({
   // DMS file picker
   const openDmsPicker = async () => {
     if (!akteId) {
-      alert("Bitte waehlen Sie zuerst eine Akte aus, um Dateien aus der Akte anzuhaengen.");
+      alert("Bitte wählen Sie zuerst eine Akte aus, um Dateien aus der Akte anzuhängen.");
       return;
     }
 
@@ -181,7 +181,7 @@ export function ComposeAttachments({
           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-white/20 dark:hover:bg-white/[0.06] rounded transition-colors"
         >
           <Paperclip className="w-3.5 h-3.5" />
-          Datei anhaengen
+          Datei anhängen
         </button>
 
         <button
@@ -197,7 +197,7 @@ export function ComposeAttachments({
           {isDragOver ? (
             <span className="text-brand-500">Dateien hier ablegen</span>
           ) : (
-            "Dateien per Drag & Drop hinzufuegen"
+            "Dateien per Drag & Drop hinzufügen"
           )}
         </span>
 
@@ -255,7 +255,7 @@ export function ComposeAttachments({
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-white/20 dark:border-white/[0.08] w-full max-w-md max-h-[60vh] flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 dark:border-white/[0.06]">
               <h3 className="font-heading text-sm text-foreground">
-                Datei aus Akte waehlen
+                Datei aus Akte wählen
               </h3>
               <button
                 type="button"
@@ -280,7 +280,7 @@ export function ComposeAttachments({
               ) : (
                 <div className="space-y-1">
                   <p className="px-1 pb-1 text-xs text-muted-foreground">
-                    Nur freigegebene Dokumente koennen versendet werden.
+                    Nur freigegebene Dokumente können versendet werden.
                   </p>
                   {dmsFiles.map((doc) => {
                     const freigegeben = doc.status === "FREIGEGEBEN";

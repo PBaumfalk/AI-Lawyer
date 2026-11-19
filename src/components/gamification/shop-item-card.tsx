@@ -101,7 +101,7 @@ export function ShopItemCard({
     if (insufficientRunen) {
       return (
         <Button variant="outline" disabled className="w-full">
-          Nicht genuegend Runen
+          Nicht genügend Runen
         </Button>
       );
     }
@@ -140,7 +140,7 @@ export function ShopItemCard({
                 await onPurchase(item.id);
               }}
             >
-              Bestaetigen
+              Bestätigen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

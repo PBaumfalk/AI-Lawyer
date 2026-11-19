@@ -78,7 +78,7 @@ export function AkteUebersicht({
       <div className="flex items-center gap-2 mb-4">
         <ClipboardList className="w-4 h-4 text-muted-foreground" />
         <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-          Uebersicht
+          Übersicht
         </h2>
       </div>
 

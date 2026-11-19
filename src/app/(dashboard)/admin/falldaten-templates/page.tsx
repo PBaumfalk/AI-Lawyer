@@ -93,10 +93,10 @@ export default function AdminFalldatenTemplatesPage() {
       {/* Page heading */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
-          Falldaten-Templates -- Pruefung
+          Falldaten-Templates -- Prüfung
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Templates pruefen, genehmigen oder ablehnen
+          Templates prüfen, genehmigen oder ablehnen
         </p>
       </div>
 
@@ -104,7 +104,7 @@ export default function AdminFalldatenTemplatesPage() {
       <GlassPanel className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <h2 className="text-base font-semibold">Zur Pruefung</h2>
+            <h2 className="text-base font-semibold">Zur Prüfung</h2>
             {pending.length > 0 && (
               <Badge
                 variant="default"
@@ -120,7 +120,7 @@ export default function AdminFalldatenTemplatesPage() {
             onClick={loadData}
             disabled={loading}
           >
-            {loading ? "Laedt..." : "Aktualisieren"}
+            {loading ? "Lädt..." : "Aktualisieren"}
           </Button>
         </div>
 
@@ -135,7 +135,7 @@ export default function AdminFalldatenTemplatesPage() {
           <div className="py-8 text-center">
             <ClipboardCheck className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
             <p className="text-sm text-muted-foreground">
-              Keine Templates zur Pruefung vorhanden.
+              Keine Templates zur Prüfung vorhanden.
             </p>
           </div>
         ) : (
@@ -194,7 +194,7 @@ export default function AdminFalldatenTemplatesPage() {
                     <td className="py-3 px-3">
                       <Link href={`/admin/falldaten-templates/${t.id}`}>
                         <Button variant="outline" size="sm">
-                          Pruefen
+                          Prüfen
                           <ArrowRight className="w-3.5 h-3.5 ml-1" />
                         </Button>
                       </Link>

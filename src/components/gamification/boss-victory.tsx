@@ -95,7 +95,7 @@ export function BossVictory({
         onClick={onDismiss}
         className="mt-4 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
-        Schliessen
+        Schließen
       </button>
     </motion.div>
   );

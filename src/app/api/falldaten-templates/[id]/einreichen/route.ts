@@ -46,7 +46,7 @@ export async function POST(
     // STANDARD templates cannot be submitted
     if (template.status === FalldatenTemplateStatus.STANDARD) {
       return NextResponse.json(
-        { error: "Standard-Templates koennen nicht eingereicht werden" },
+        { error: "Standard-Templates können nicht eingereicht werden" },
         { status: 403 }
       );
     }

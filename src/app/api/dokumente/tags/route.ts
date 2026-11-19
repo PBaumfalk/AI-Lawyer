@@ -192,7 +192,7 @@ export async function DELETE(request: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
-      { error: `Tag konnte nicht geloescht werden: ${message}` },
+      { error: `Tag konnte nicht gelöscht werden: ${message}` },
       { status: 500 }
     );
   }

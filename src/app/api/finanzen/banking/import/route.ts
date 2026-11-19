@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   const role = (session.user as any).role;
   if (!['ADMIN', 'ANWALT'].includes(role)) {
     return NextResponse.json(
-      { error: 'Keine Berechtigung fuer Bankimport' },
+      { error: 'Keine Berechtigung für Bankimport' },
       { status: 403 },
     );
   }

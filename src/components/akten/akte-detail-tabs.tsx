@@ -100,7 +100,7 @@ export const rolleLabels: Record<string, string> = {
   GEGNERVERTRETER: "Gegnervertreter",
   GERICHT: "Gericht",
   ZEUGE: "Zeuge",
-  SACHVERSTAENDIGER: "Sachverstaendiger",
+  SACHVERSTAENDIGER: "Sachverständiger",
   SONSTIGER: "Sonstiger",
 };
 
@@ -238,7 +238,7 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange, regi
       <Tabs defaultValue="feed" value={currentTab} onValueChange={handleTabChange}>
         <div className="flex items-center gap-1">
           <TabsList className="flex-1 justify-start">
-            <TabsTrigger value="feed">Aktivitaeten</TabsTrigger>
+            <TabsTrigger value="feed">Aktivitäten</TabsTrigger>
             <TabsTrigger value="dokumente">
               Dokumente ({akte.dokumente.length})
             </TabsTrigger>
@@ -368,10 +368,10 @@ export function AkteDetailTabs({ akte, activeTab: externalTab, onTabChange, regi
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ungespeicherte Aenderungen</AlertDialogTitle>
+            <AlertDialogTitle>Ungespeicherte Änderungen</AlertDialogTitle>
             <AlertDialogDescription>
-              Sie haben ungespeicherte Aenderungen in den Falldaten. Moechten
-              Sie trotzdem fortfahren? Ihre Aenderungen gehen verloren.
+              Sie haben ungespeicherte Änderungen in den Falldaten. Möchten
+              Sie trotzdem fortfahren? Ihre Änderungen gehen verloren.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

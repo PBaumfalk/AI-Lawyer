@@ -17,7 +17,7 @@ import type { ToolContext, ToolResult } from "../types";
 export function createGetKostenRulesTool(ctx: ToolContext) {
   return tool({
     description:
-      "Calculate German legal fees (RVG/Rechtsanwaltsverguetungsgesetz) for a given Streitwert. Can compute a single fee with a rate, or a full calculation with multiple VV positions (e.g. 3100, 3104). Automatically applies Anrechnung, Auslagenpauschale (VV 7002), and USt (VV 7008).",
+      "Calculate German legal fees (RVG/Rechtsanwaltsvergütungsgesetz) for a given Streitwert. Can compute a single fee with a rate, or a full calculation with multiple VV positions (e.g. 3100, 3104). Automatically applies Anrechnung, Auslagenpauschale (VV 7002), and USt (VV 7008).",
     parameters: z.object({
       streitwert: z
         .number()
@@ -41,7 +41,7 @@ export function createGetKostenRulesTool(ctx: ToolContext) {
       }
 
       if (streitwert <= 0) {
-        return { error: "Streitwert muss groesser als 0 sein." };
+        return { error: "Streitwert muss größer als 0 sein." };
       }
 
       try {

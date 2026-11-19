@@ -20,7 +20,7 @@ function RechnerContent() {
           RVG-Rechner
         </h1>
         <p className="text-muted-foreground mt-1">
-          Gebuehrenberechnung nach dem Rechtsanwaltsverguetungsgesetz
+          Gebührenberechnung nach dem Rechtsanwaltsvergütungsgesetz
         </p>
       </div>
 

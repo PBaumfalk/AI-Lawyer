@@ -349,6 +349,8 @@ Pegel 50 ist `error`, 60 `fatal`. `LOG_LEVEL` steuert, wie viel geschrieben wird
 | Viele fehlgeschlagene Jobs in `document-embedding` | Einbettungsmodell fehlt | `docker compose exec ollama ollama pull blaifa/multilingual-e5-large-instruct` |
 | Fehlgeschlagene Jobs in `gesetze-sync` mit Ratenlimit | GitHub-Limit ohne Token | `GITHUB_TOKEN` setzen |
 | Helena-Aufgabe mit dem Fehler „Worker wurde neu gestartet — Task war noch in Bearbeitung“ | Worker wurde während der Aufgabe neu gestartet; beim Start setzt er laufende Aufgaben auf fehlgeschlagen | Aufgabe neu stellen |
+| Login zeigt „Die Anmeldung ist gerade nicht möglich, weil der Anmeldeschutz nicht erreichbar ist“; im Log `"event":"login_limiter_unavailable"` | Redis nicht erreichbar oder zu langsam (über 1 s). Neue Anmeldungen werden absichtlich abgelehnt, statt ungebremst durchgelassen; angemeldete Personen arbeiten weiter | `docker compose ps redis`, `docker compose logs redis`; nach dem Neustart von Redis geht die Anmeldung von selbst wieder. Für eine Überwachung nach `login_limiter_unavailable` im Log alarmieren |
+| Alle Mitarbeitenden bekommen gleichzeitig „Zu viele Anmeldeversuche“ | Hinter einem Reverse-Proxy ohne `TRUST_PROXY_HOPS=1` sehen alle Anfragen wie eine Quelle aus | `TRUST_PROXY_HOPS=1` in der `.env`, `docker compose up -d app` ([Kapitel 20](20-konfiguration.md)) |
 
 ## Ressourcenbedarf im Betrieb
 

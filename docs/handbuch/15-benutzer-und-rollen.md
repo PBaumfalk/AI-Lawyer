@@ -19,15 +19,26 @@ Unter **Admin → Benutzer** verwalten Administratoren alle Kanzleikonten.
 | Konto anlegen | **Neues Konto**, Name, E-Mail (Anmeldename) und Rolle eintragen, **Konto anlegen**. AI-Lawyer erzeugt ein Startpasswort (Form `xxxx-xxxx-xxxx-xxxx`) und zeigt es **nur dieses eine Mal** an. Persönlich weitergeben. |
 | Rolle ändern | In der Liste die Rolle wählen. Wirkt sofort, auch für bereits angemeldete Personen. |
 | Konto deaktivieren | Schalter **Aktiv** ausschalten. Laufende Sitzungen enden sofort; Akten, Dokumente und der Audit-Trail bleiben erhalten. Wieder einschalten stellt den Zugang her. |
+| Konto gesperrt nach Fehlversuchen | **Entsperren**: hebt die Anmeldesperre auf, ohne das Passwort zu ändern und ohne Sitzungen zu beenden. |
 | Passwort vergessen | **Passwort zurücksetzen**: neues Startpasswort, alle Sitzungen des Kontos werden beendet, eine Anmeldesperre wird aufgehoben. Bei verlorenem Smartphone zusätzlich **Zwei-Faktor-Anmeldung ebenfalls zurücksetzen** wählen. |
 | Eigenes Passwort ändern | Jede Person selbst unter **Einstellungen → Sicherheit → Passwort ändern** (mindestens 12 Zeichen). Danach neu anmelden; andere Geräte werden abgemeldet. |
 | Mandanten-Zugang | Über die Portal-Einladung in der Akte, siehe [Kapitel 12](12-mandantenportal.md). Mandantenkonten erscheinen nicht in dieser Liste. |
 
 Schutzregeln: Das letzte aktive Administratorkonto lässt sich weder deaktivieren noch herabstufen, das eigene Konto nicht deaktivieren. Konten werden nicht gelöscht, nur deaktiviert, weil Akten, Fristen und Audit-Einträge auf sie verweisen. Jede Änderung steht im Audit-Trail (*Benutzerkonto angelegt/geändert*, *Passwort zurückgesetzt*).
 
-### Anmeldesperre
+### Anmeldeschutz
 
-Nach **10 Anmeldeversuchen in 15 Minuten** für dasselbe Konto (oder 50 von derselben IP-Adresse) weist AI-Lawyer weitere Versuche ab, auch mit richtigem Passwort, und meldet „Zu viele Anmeldeversuche“. Die Sperre endet nach 15 Minuten von selbst oder sofort durch **Passwort zurücksetzen**. Für falsche Zwei-Faktor-Codes gilt dieselbe Grenze. Konten mit Zwei-Faktor-Anmeldung kommen nur über Passwort **und** Code hinein, auch wenn jemand die Anmeldeseite umgeht.
+AI-Lawyer bremst das Raten von Passwörtern, ohne dass Fremde ein Konto aussperren können:
+
+- **Je Quelle und Konto:** Nach **10 Versuchen in 15 Minuten** von derselben Adresse für dasselbe Konto werden weitere Versuche von dort abgewiesen, auch mit richtigem Passwort („Zu viele Anmeldeversuche“). Die Inhaberin meldet sich von einem anderen Anschluss weiter normal an.
+- **Je Quelle:** Nach 100 Fehlversuchen in 15 Minuten über beliebige Konten wird die Adresse gebremst (Schutz gegen das Durchprobieren gestohlener Zugangsdaten).
+- **Verteilter Angriff:** Kommen mehr als 50 Versuche in 15 Minuten aus vielen Quellen auf ein Konto, lässt AI-Lawyer nur noch Browser zu, mit denen sich die Person schon einmal erfolgreich angemeldet hat (Geräte-Cookie, 180 Tage gültig). Am gewohnten Arbeitsplatz geht es also weiter; ein neues Gerät wartet bis zu 15 Minuten oder ein Admin klickt **Entsperren**.
+- **Zwei-Faktor-Codes:** höchstens 10 falsche Codes in 15 Minuten je Konto. Konten mit Zwei-Faktor-Anmeldung kommen nur über Passwort **und** Code hinein, auch wenn jemand die Anmeldeseite umgeht.
+- **Passwort vergessen (Portal), Aktivierung, eigenes Passwort ändern:** ebenfalls begrenzt. Die Antwort auf „Passwort vergessen“ verrät nie, ob es ein Konto gibt.
+
+Ist der Anmeldeschutz (Redis) nicht erreichbar, nimmt AI-Lawyer **keine neuen Anmeldungen** an und zeigt „Die Anmeldung ist gerade nicht möglich …“. Bereits angemeldete Personen arbeiten weiter. Sobald Redis wieder läuft, geht die Anmeldung von selbst wieder. Im Log der App steht dann `login_limiter_unavailable` (siehe [Kapitel 21](21-betrieb-und-sicherung.md)).
+
+Hinter einem Reverse-Proxy muss `TRUST_PROXY_HOPS=1` gesetzt sein ([Kapitel 20](20-konfiguration.md)), sonst sehen alle Anfragen wie eine einzige Quelle aus und teilen sich die Grenzen.
 
 ## Die fünf Rollen
 

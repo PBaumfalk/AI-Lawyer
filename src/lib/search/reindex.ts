@@ -37,7 +37,7 @@ export interface ReindexZeile {
 }
 
 /** Loads up to `anzahl` rows ordered by id, starting after `nachId`. */
-export type SeitenLader = (nachId: string | undefined, anzahl: number) => Promise<ReindexZeile[]>;
+export type SeitenLader = (_nachId: string | undefined, _anzahl: number) => Promise<ReindexZeile[]>;
 
 export interface ReindexOptionen {
   client: MeiliSearch;
@@ -47,7 +47,7 @@ export interface ReindexOptionen {
   /** Max wait per Meilisearch task in ms (default 120000). */
   taskTimeoutMs?: number;
   /** Called after each batch with the number of documents indexed so far. */
-  fortschritt?: (indexiert: number) => void;
+  fortschritt?: (_indexiert: number) => void;
 }
 
 export interface ReindexErgebnis {

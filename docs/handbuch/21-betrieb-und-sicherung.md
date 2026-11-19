@@ -59,7 +59,7 @@ Der Exit-Code ist bei jedem Fehler ungleich 0. Die `.env` wird standardmäßig n
 | Ziel | Was Sie brauchen | `RESTIC_REPOSITORY` |
 | --- | --- | --- |
 | S3-Objektspeicher (Hetzner, IONOS, Wasabi, AWS, MinIO an anderem Standort) | Bucket, Endpoint, Access-Key und Secret-Key nur für diesen Bucket | `s3:https://<endpoint>/<bucket>/ai-lawyer` |
-| SFTP (Hetzner Storage Box, NAS an anderem Ort) | Host, Port, Benutzer, eigener SSH-Schlüssel ohne Passphrase, `known_hosts` | Port 22: `sftp:<benutzer>@<host>:/ai-lawyer`; anderer Port: `sftp://<benutzer>@<host>:<port>/ai-lawyer` (Storage Box: Port 23). `ssh-keyscan -p <port>` muss denselben Port verwenden, sonst scheitert die Host-Prüfung. |
+| SFTP (Hetzner Storage Box, NAS an anderem Ort) | Host, Port, Benutzer, eigener SSH-Schlüssel ohne Passphrase, `known_hosts` | Port 22: `sftp:<benutzer>@<host>:/ai-lawyer`; anderer Port: `sftp://<benutzer>@<host>:<port>/ai-lawyer` (Storage Box: Port 23). `ssh-keyscan -p <port>` muss denselben Port verwenden, sonst scheitert die Host-Prüfung. Anleitung: [Sicherung auf einen SFTP-Server](#sicherung-auf-einen-sftp-server). |
 | rest-server an anderem Ort | URL, Benutzer, Passwort; am besten mit `--append-only` betrieben | `rest:https://<host>:8000/ai-lawyer` |
 
 Für Auftragsverarbeitung und Standort gelten die üblichen Regeln (AV-Vertrag, Speicherort in der EU). Die Daten verlassen den Server nur verschlüsselt; der Anbieter kann sie ohne Ihren Schlüssel nicht lesen. Schalten Sie, wo angeboten, Objekt-Versionierung oder Object Lock ein: Dann kann auch ein Angreifer mit den Zugangsdaten des Servers alte Sicherungen nicht löschen.
@@ -94,6 +94,76 @@ sudo scripts/backup.sh               # erste, volle Sicherung
 sudo scripts/backup.sh snapshots     # Ergebnis ansehen
 ```
 
+### Sicherung auf einen SFTP-Server
+
+SFTP eignet sich, wenn die Sicherung auf einem Rechner landen soll, den die Kanzlei selbst kontrolliert oder einfach mietet: ein NAS an einem anderen Ort (zum Beispiel beim Kanzleiinhaber zu Hause), ein Server in einer zweiten Niederlassung oder eine Hetzner Storage Box. Am Ablauf ändert sich nichts: restic verschlüsselt auf dem Kanzleiserver, über die SSH-Verbindung gehen nur verschlüsselte Pakete, und der SFTP-Server sieht weder Inhalte noch Dateinamen.
+
+**So funktioniert die Verbindung.** Der restic-Container startet für jeden Lauf `ssh` und meldet sich mit einem **eigenen Schlüsselpaar nur für die Sicherung** am Zielserver an. Passwörter werden nicht verwendet. Der Ordner `BACKUP_SSH_DIR` (empfohlen `/etc/ai-lawyer/ssh`) wird schreibgeschützt als `/root/.ssh` in den Container eingebunden. Er enthält:
+
+| Datei | Inhalt |
+| --- | --- |
+| `id_ed25519` | privater Schlüssel, ohne Passphrase (der Lauf ist unbeaufsichtigt), Rechte `600` |
+| `id_ed25519.pub` | öffentlicher Schlüssel, wird auf dem Zielserver hinterlegt |
+| `known_hosts` | Fingerabdruck des Zielservers; ohne passenden Eintrag verweigert `ssh` die Verbindung (Schutz gegen untergeschobene Server) |
+| `config` (optional) | z. B. `ServerAliveInterval 60` für lange erste Sicherungen |
+
+**Was Sie vom Zielserver brauchen:**
+
+- Hostname und Port (Standard 22; Hetzner Storage Box: 23),
+- ein **eigenes Konto nur für die Sicherung**, das ausschließlich SFTP darf (keine Shell) und nur in sein eigenes Verzeichnis schreiben kann, möglichst mit Speicherkontingent,
+- genug Platz: etwa die Größe von Datenbank und Dokumenten, dazu Zuwachs und Aufbewahrung (7 Tage, 5 Wochen, 12 Monate; dank Deduplizierung meist nur ein Bruchteil mehr als ein Vollstand),
+- für einen NAS hinter einem Heimanschluss: einen von außen erreichbaren SSH-Port (Portweiterleitung, feste Adresse oder DynDNS). Der Port darf nicht nur im lokalen Netz der Kanzlei erreichbar sein, sonst steht die Sicherung wieder am selben Ort.
+
+**Einrichten Schritt für Schritt** (auf dem Kanzleiserver, im Projektordner):
+
+```bash
+# 1. Ordner und Schlüsselpaar nur für die Sicherung
+sudo install -d -m 700 /etc/ai-lawyer/ssh
+sudo ssh-keygen -t ed25519 -N "" -C ai-lawyer-backup -f /etc/ai-lawyer/ssh/id_ed25519
+
+# 2. Öffentlichen Schlüssel auf dem Ziel hinterlegen
+#    Hetzner Storage Box (SSH-Unterstützung vorher in der Hetzner-Konsole einschalten):
+sudo ssh-copy-id -p 23 -s -i /etc/ai-lawyer/ssh/id_ed25519.pub u123456@u123456.your-storagebox.de
+#    NAS/eigener Server: Inhalt von id_ed25519.pub in ~/.ssh/authorized_keys
+#    des Sicherungskontos eintragen (über die Oberfläche des NAS oder per Admin).
+
+# 3. Fingerabdruck des Ziels eintragen – Port wie in RESTIC_REPOSITORY!
+sudo sh -c 'ssh-keyscan -p 23 u123456.your-storagebox.de >> /etc/ai-lawyer/ssh/known_hosts'
+sudo ssh-keygen -lf /etc/ai-lawyer/ssh/known_hosts
+#    Angezeigten Fingerabdruck mit dem vergleichen, den der Anbieter bzw. der
+#    NAS-Admin nennt. Stimmt er nicht überein: abbrechen.
+sudo chmod 600 /etc/ai-lawyer/ssh/known_hosts
+
+# 4. Verbindung von Hand prüfen (muss ohne Passwortabfrage eine sftp>-Eingabe zeigen)
+sudo sftp -P 23 -i /etc/ai-lawyer/ssh/id_ed25519 \
+  -o UserKnownHostsFile=/etc/ai-lawyer/ssh/known_hosts -o StrictHostKeyChecking=yes \
+  u123456@u123456.your-storagebox.de
+```
+
+Dann in `/etc/ai-lawyer/backup.env`:
+
+```bash
+# Port 22:
+RESTIC_REPOSITORY=sftp:backup@nas.example.de:/ai-lawyer
+# anderer Port (Pfad relativ zum Heimatverzeichnis; absolut mit zwei Schrägstrichen: :23//pfad):
+RESTIC_REPOSITORY=sftp://u123456@u123456.your-storagebox.de:23/ai-lawyer
+BACKUP_SSH_DIR=/etc/ai-lawyer/ssh
+```
+
+Weiter wie oben mit Schritt 3 (`sudo scripts/backup.sh init`), Schlüssel verwahren und erster Sicherung von Hand. `sudo scripts/backup.sh snapshots` zeigt danach den ersten Snapshot; auf dem Zielserver liegt nun ein Ordner `ai-lawyer` mit `config`, `data/`, `index/`, `keys/` und `snapshots/` – nur verschlüsselte Dateien.
+
+**Schutz gegen Löschen durch einen Angreifer.** Wer den Kanzleiserver übernimmt, hat auch den SSH-Schlüssel und könnte über SFTP die Sicherungen löschen; SFTP kennt kein „nur anhängen“. Deshalb auf der Zielseite zusätzlich Schnappschüsse einschalten, die der Sicherungs-Schlüssel nicht löschen kann: bei der Hetzner Storage Box automatische Snapshots in der Konsole, bei einem NAS die Snapshot-Funktion des Dateisystems (z. B. Btrfs-Snapshots, Aufbewahrung mindestens 30 Tage). Wer das nicht hat, nimmt besser einen rest-server mit `--append-only` oder S3 mit Object Lock.
+
+**Häufige Fehler beim SFTP-Ziel:**
+
+| Meldung im Protokoll | Ursache | Abhilfe |
+| --- | --- | --- |
+| `Host key verification failed` | `known_hosts` fehlt, ist für einen anderen Port erstellt (`ssh-keyscan -p 23`, Repository aber Port 22) oder der Server hat einen neuen Schlüssel | Port in `RESTIC_REPOSITORY` und `ssh-keyscan` angleichen; bei geändertem Schlüssel erst beim Anbieter klären, dann Eintrag erneuern |
+| `Permission denied (publickey)` | öffentlicher Schlüssel nicht hinterlegt, falscher Benutzer oder Rechte von `id_ed25519` zu offen | Schritt 2 wiederholen, `chmod 600 /etc/ai-lawyer/ssh/id_ed25519` |
+| `Connection refused`, `Connection timed out` | Port falsch, Firewall oder Portweiterleitung fehlt, NAS ausgeschaltet | Schritt 4 von Hand ausführen; die Überwachung meldet einen ausgebliebenen Erfolgs-Ping |
+| `permission denied` beim Anlegen von `ai-lawyer` | Pfad liegt außerhalb des beschreibbaren Bereichs (z. B. in einem chroot nur `upload/` beschreibbar) | Pfad anpassen, z. B. `…:22//upload/ai-lawyer` |
+| `repository does not exist` | `init` noch nicht gelaufen oder Pfad geändert | `sudo scripts/backup.sh init` |
+
 ### Schlüssel und Geheimnisse verwahren
 
 Für eine Wiederherstellung nach Totalverlust des Servers brauchen Sie vier Dinge, die **nicht** auf dem Server und **nicht** im Sicherungsziel liegen dürfen:
@@ -102,6 +172,7 @@ Für eine Wiederherstellung nach Totalverlust des Servers brauchen Sie vier Ding
 | --- | --- |
 | Inhalt von `/etc/ai-lawyer/backup.key` | entschlüsselt das Repository |
 | Inhalt von `/etc/ai-lawyer/backup.env` (Ziel und Zugangsdaten) | Zugriff auf das Sicherungsziel |
+| bei SFTP: Ordner `/etc/ai-lawyer/ssh` (privater Schlüssel und `known_hosts`) | Anmeldung am SFTP-Server; alternativ auf dem neuen Server ein neues Schlüsselpaar erzeugen und auf dem Ziel hinterlegen |
 | die `.env` des Projekts, insbesondere `EMAIL_ENCRYPTION_KEY`, `NEXTAUTH_SECRET`, `POSTGRES_PASSWORD`, `MINIO_SECRET_KEY`, `MEILISEARCH_API_KEY` | ohne `EMAIL_ENCRYPTION_KEY` bleiben E-Mail-, CalDAV- und j-lawyer-Zugangsdaten, KI-Schlüssel und Zwei-Faktor-Geheimnisse unlesbar |
 | gegebenenfalls eigene Compose-Zusatzdateien | gleiche Konfiguration wie vorher |
 
@@ -210,26 +281,27 @@ Danach eine Stichprobe machen (anmelden, Akte öffnen, Dokument herunterladen, i
 
 1. AI-Lawyer in **derselben Version** installieren ([Kapitel 19](19-installation.md)), aber noch nicht starten.
 2. Die verwahrte `.env` in den Projektordner legen (`chmod 600 .env`). Ohne sie bricht `restore.sh` ab (außer der Snapshot wurde mit `BACKUP_INCLUDE_ENV=1` erstellt).
-3. `/etc/ai-lawyer/backup.env` und `/etc/ai-lawyer/backup.key` aus der Verwahrung zurücklegen (siehe [Schlüssel wiederherstellen](#schlüssel-und-geheimnisse-verwahren)).
+3. `/etc/ai-lawyer/backup.env` und `/etc/ai-lawyer/backup.key` aus der Verwahrung zurücklegen (siehe [Schlüssel wiederherstellen](#schlüssel-und-geheimnisse-verwahren)). Bei SFTP zusätzlich `/etc/ai-lawyer/ssh` zurücklegen (Rechte `700` für den Ordner, `600` für die Dateien) oder ein neues Schlüsselpaar erzeugen und hinterlegen ([Sicherung auf einen SFTP-Server](#sicherung-auf-einen-sftp-server), Schritte 1–4).
 4. Images bauen (`docker compose build app worker`), dann `sudo scripts/restore.sh`.
 5. `docker compose up -d` für die übrigen Dienste und KI-Modelle laden, falls `ollama_data` neu ist. Das Entrypoint-Skript findet die Benutzer vor und überspringt den Seed.
 
 ### Wiederherstellung testen
 
 ```bash
-npm ci                              # einmalig, für den Bundle-Build
-scripts/test-backup-restore.sh
+npm ci                                        # einmalig, für den Bundle-Build
+scripts/test-backup-restore.sh                # Ziel: S3 (zweiter MinIO-Container)
+BACKUPTEST_ZIEL=sftp scripts/test-backup-restore.sh   # Ziel: SFTP-Server-Container
 ```
 
-Der Test läuft vollständig isoliert unter dem Projektnamen `ailawyer-backuptest` (eigene Container, Volumes und Netze, keine Ports nach außen außer einem zufälligen auf `127.0.0.1`, Wegwerf-`.env` und Wegwerf-Schlüssel) und berührt eine laufende Installation nicht. Er startet `db`, `minio`, `meilisearch`, einen schlanken Stellvertreter des App-Containers mit demselben Reindex-Programm und – als Sicherungsziel – einen **zweiten, getrennten MinIO-Container** mit S3-Schnittstelle. Geprüft wird:
+Der Test läuft vollständig isoliert unter dem Projektnamen `ailawyer-backuptest` (eigene Container, Volumes und Netze, keine Ports nach außen außer einem zufälligen auf `127.0.0.1`, Wegwerf-`.env` und Wegwerf-Schlüssel) und berührt eine laufende Installation nicht. Er startet `db`, `minio`, `meilisearch`, einen schlanken Stellvertreter des App-Containers mit demselben Reindex-Programm und – als Sicherungsziel – einen **zweiten, getrennten MinIO-Container** mit S3-Schnittstelle oder mit `BACKUPTEST_ZIEL=sftp` einen **SFTP-Server-Container** (Anmeldung nur mit eigenem Schlüssel, Fingerabdruck fest in `known_hosts`, Repository unter `sftp://…:22//upload/ai-lawyer`). Geprüft wird:
 
 - Einrichtung mit `init`, Schlüsseldatei mit Rechten `600`, Ablehnung bei `644`,
 - zwei Sicherungen, Aufbewahrung, Statusdateien, `backup-status.sh`, Pings an einen Testempfänger, keine Geheimnisse im Protokoll,
 - Sicherung mit falschem Schlüssel: Exit-Code ≠ 0, Status `fehler`, `/fail`-Ping,
 - Wiederherstellung eines bestimmten Snapshots über veränderte Daten,
 - Wiederherstellung mit falschem Schlüssel: Abbruch, Bestand unverändert,
-- **Totalverlust** (alle Volumes und der restic-Cache gelöscht), Wiederherstellung nur aus dem S3-Ziel, Vergleich von Datenbank-Prüfsummen und Dateiinhalt, und die Volltextsuche findet das Testdokument **ohne manuellen Reindex**,
-- ein manipuliertes Datenpaket im Ziel: `restic check --read-data` meldet den Fehler, die Wiederherstellung bricht ohne Änderung ab.
+- **Totalverlust** (alle Volumes und der restic-Cache gelöscht), Wiederherstellung nur aus dem Sicherungsziel, Vergleich von Datenbank-Prüfsummen und Dateiinhalt, und die Volltextsuche findet das Testdokument **ohne manuellen Reindex**,
+- ein manipuliertes Datenpaket im Ziel: `restic check --read-data` meldet einen echten Inhaltsfehler (Entschlüsselung schlägt fehl; ein bloßer Zugriffsfehler zählt nicht), die Wiederherstellung bricht ohne Änderung ab.
 
 Zum Schluss räumt er alles ab und meldet `ERGEBNIS: BESTANDEN` mit Laufzeiten (Exit-Code 0). Er dauert etwa zwei Minuten.
 

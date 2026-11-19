@@ -6,6 +6,12 @@ Anmeldeschutzes, Benutzerverwaltung und Passwortwechsel im echten Browser
 schmalem Mobil-Viewport (390 × 844). Jeder Test legt Bildschirmfotos für die
 Sichtprüfung ab.
 
+`barrierefreiheit.spec.ts` prüft zusätzlich die Anmeldeseite und die
+Hauptseiten mit axe-core (WCAG 2.1 A/AA); Verstöße „serious“/„critical“ lassen
+den Test scheitern, kleinere stehen nur im Protokoll (`[axe] …`). Die Seite
+mit der ersten Akte setzt mindestens eine Akte in der Testdatenbank voraus
+(Demo-Seed).
+
 **Nur gegen eine Testumgebung.** Die Tests legen Konten an, sperren Konten
 durch Fehlversuche und können Redis anhalten.
 

@@ -103,7 +103,7 @@ function CheckboxField({ label, checked, onChange }: { label: string; checked: b
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600"
+        className="h-4 w-4 rounded border-input accent-[var(--al-brand-strong)]"
       />
       <span className="text-sm text-muted-foreground">{label}</span>
     </label>

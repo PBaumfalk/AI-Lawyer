@@ -271,7 +271,7 @@ export function BeaCompose() {
     return (
       <div className="space-y-6">
         <div className="glass rounded-xl p-12 text-center space-y-3">
-          <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
+          <CheckCircle2 className="h-12 w-12 text-success mx-auto" />
           <h2 className="text-lg font-heading text-foreground">
             {erfolg.entwurf ? "Entwurf im beA gespeichert" : "Nachricht gesendet"}
           </h2>
@@ -855,7 +855,7 @@ function DocumentPicker({
                   <span className="text-sm text-foreground truncate flex-1">{doc.name}</span>
                   {isEntwurf && (
                     <>
-                      <span className="text-xs text-amber-600 dark:text-amber-400 flex-shrink-0">
+                      <span className="text-xs text-warning flex-shrink-0">
                         Noch nicht freigegeben
                       </span>
                       <button

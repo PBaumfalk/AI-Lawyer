@@ -64,9 +64,9 @@ export function useBeaStatus() {
 }
 
 const HINWEIS_STIL = {
-  fehler: { klasse: "border-destructive/50 bg-destructive/10 text-destructive", Icon: AlertCircle },
-  warnung: { klasse: "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300", Icon: AlertTriangle },
-  info: { klasse: "border-border bg-muted text-muted-foreground", Icon: Info },
+  fehler: { klasse: "border-danger bg-danger-soft text-danger", Icon: AlertCircle },
+  warnung: { klasse: "border-warning bg-warning-soft text-warning", Icon: AlertTriangle },
+  info: { klasse: "border-info bg-info-soft text-info", Icon: Info },
 } as const;
 
 /** Inline notice box built from design tokens. */

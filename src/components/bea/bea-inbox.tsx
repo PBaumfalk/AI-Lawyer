@@ -40,7 +40,7 @@ interface StoredMessage {
 const statusConfig: Record<string, { label: string; dotColor: string }> = {
   EINGANG: { label: "Eingang", dotColor: "bg-primary" },
   GELESEN: { label: "Gelesen", dotColor: "bg-muted-foreground/50" },
-  ZUGEORDNET: { label: "Zugeordnet", dotColor: "bg-emerald-500" },
+  ZUGEORDNET: { label: "Zugeordnet", dotColor: "bg-success" },
   GESENDET: { label: "Gesendet", dotColor: "bg-muted-foreground" },
   FEHLER: { label: "Fehler", dotColor: "bg-destructive" },
 };
@@ -333,7 +333,7 @@ export function BeaInbox() {
                       {msg.akte ? (
                         <Link
                           href={`/akten/${msg.akte.id}`}
-                          className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"
+                          className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-xs font-medium text-success"
                         >
                           {msg.akte.aktenzeichen}
                         </Link>
@@ -343,7 +343,7 @@ export function BeaInbox() {
                             e.preventDefault();
                             setShowAssignDialog(msg.id);
                           }}
-                          className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900 transition-colors"
+                          className="inline-flex items-center gap-1 rounded-full border border-transparent bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning hover:border-warning transition-colors"
                         >
                           <Link2 className="h-3 w-3" />
                           Zuordnen

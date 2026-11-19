@@ -237,7 +237,7 @@ export function BeaMessageDetail({ nachricht, suggestions, userRole }: BeaMessag
           </h2>
           {eeb.status === "BESTAETIGT" ? (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <div className="flex items-center gap-2 text-success">
                 <CheckCircle2 className="h-5 w-5" />
                 <span className="text-sm font-medium">Abgegeben am {formatDatum(eeb.datum)}</span>
               </div>
@@ -324,7 +324,7 @@ function AssignButton({ messageId }: { messageId: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-amber-600 dark:text-amber-400 font-medium">
+      <span className="text-warning font-medium">
         Nicht zugeordnet
       </span>
       <button

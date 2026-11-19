@@ -13,6 +13,16 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+// Awaits a call expected to fail and returns the thrown error
+async function fangFehler(p: Promise<unknown>): Promise<BeaExpertError> {
+  try {
+    await p;
+  } catch (e) {
+    return e as BeaExpertError;
+  }
+  throw new Error("expected rejection");
+}
+
 describe("bea.expert transport", () => {
   const fetchMock = vi.fn();
 
@@ -49,7 +59,7 @@ describe("bea.expert transport", () => {
 
   it("wirft BeaExpertError bei HTTP 500 mit status 500", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ detail: "boom" }, 500));
-    const err = await bexAufruf("x", {}).catch((e) => e as BeaExpertError);
+    const err = await fangFehler(bexAufruf("x", {}));
     expect(err).toBeInstanceOf(BeaExpertError);
     expect(err.status).toBe(500);
     expect(err.funktion).toBe("x");
@@ -57,7 +67,7 @@ describe("bea.expert transport", () => {
 
   it("wirft BeaExpertError, wenn die Antwort ein nicht-leeres Feld error hat", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ error: "invalid token" }));
-    const err = await bexAufruf("x", {}).catch((e) => e as BeaExpertError);
+    const err = await fangFehler(bexAufruf("x", {}));
     expect(err).toBeInstanceOf(BeaExpertError);
     expect(err.message).toContain("invalid token");
     expect(err.antwort).toEqual({ error: "invalid token" });
@@ -82,7 +92,7 @@ describe("bea.expert transport", () => {
           init.signal.addEventListener("abort", () => rej(init.signal.reason));
         }),
     );
-    const err = await bexAufruf("x", {}, { timeoutMs: 20 }).catch((e) => e as BeaExpertError);
+    const err = await fangFehler(bexAufruf("x", {}, { timeoutMs: 20 }));
     expect(err).toBeInstanceOf(BeaExpertError);
     expect(err.status).toBeNull();
     expect(err.message).toContain("Zeitüberschreitung");

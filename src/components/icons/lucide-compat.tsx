@@ -201,6 +201,7 @@ export const LUCIDE_ZU_PERSIMMON = {
   ImagePlus: "image",
   Inbox: "inbox",
   KeyRound: "key",
+  FileKey2: "key", // beA-Software-Token-Datei (feat/bea-expert)
   MailOpen: "mail-open",
   MinusCircle: "minus-circle",
   XCircle: "x-circle",
@@ -415,6 +416,7 @@ export const Image = persimmon("image", "Image");
 export const ImagePlus = persimmon("image", "ImagePlus");
 export const Inbox = persimmon("inbox", "Inbox");
 export const KeyRound = persimmon("key", "KeyRound");
+export const FileKey2 = persimmon("key", "FileKey2");
 export const MailOpen = persimmon("mail-open", "MailOpen");
 export const MinusCircle = persimmon("minus-circle", "MinusCircle");
 export const XCircle = persimmon("x-circle", "XCircle");

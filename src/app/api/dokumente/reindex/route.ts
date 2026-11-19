@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { ensureDokumenteIndex, indexDokument } from "@/lib/meilisearch";
+import { meiliClient } from "@/lib/meilisearch";
+import { prismaSeitenLader, reindexDokumente } from "@/lib/search/reindex";
 import { requireRole } from "@/lib/rbac";
 
 /**
- * POST /api/dokumente/reindex -- reindex all documents in Meilisearch
- * Admin-only: rebuilds the full-text search index
+ * POST /api/dokumente/reindex -- rebuild the Meilisearch index from the database
+ * Admin-only. Same logic as the CLI that scripts/restore.sh runs
+ * (node dist-worker/reindex-suche.mjs).
  */
 export async function POST(_request: NextRequest) {
   // RBAC: admin only
@@ -13,38 +15,15 @@ export async function POST(_request: NextRequest) {
   if (result.error) return result.error;
 
   try {
-    await ensureDokumenteIndex();
-
-    const dokumente = await prisma.dokument.findMany({
-      include: {
-        akte: { select: { aktenzeichen: true, kurzrubrum: true } },
-        createdBy: { select: { name: true } },
-      },
+    const { indexiert } = await reindexDokumente({
+      client: meiliClient,
+      ladeSeite: prismaSeitenLader(prisma),
     });
-
-    let indexed = 0;
-    for (const doc of dokumente) {
-      await indexDokument({
-        id: doc.id,
-        akteId: doc.akteId,
-        name: doc.name,
-        mimeType: doc.mimeType,
-        ordner: doc.ordner,
-        tags: doc.tags,
-        ocrText: doc.ocrText,
-        createdById: doc.createdById,
-        createdByName: doc.createdBy.name,
-        aktenzeichen: doc.akte.aktenzeichen,
-        kurzrubrum: doc.akte.kurzrubrum,
-        createdAt: Math.floor(new Date(doc.createdAt).getTime() / 1000),
-      });
-      indexed++;
-    }
 
     return NextResponse.json({
       success: true,
-      indexed,
-      message: `${indexed} Dokument${indexed !== 1 ? "e" : ""} indexiert`,
+      indexed: indexiert,
+      message: `${indexiert} Dokument${indexiert !== 1 ? "e" : ""} indexiert`,
     });
   } catch (err: any) {
     return NextResponse.json(

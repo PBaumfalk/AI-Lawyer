@@ -25,6 +25,27 @@ async function buildWorker() {
   });
 
   console.log("Worker bundle created: dist-worker/index.js");
+
+  // CLI for the search index rebuild (run by scripts/restore.sh inside the
+  // app container). Lives in dist-worker/ so the Dockerfile copies it.
+  await esbuild.build({
+    entryPoints: [path.resolve("src/cli/reindex-suche.ts")],
+    outfile: path.resolve("dist-worker/reindex-suche.mjs"),
+    bundle: true,
+    platform: "node",
+    target: "node20",
+    format: "esm",
+    external: ["@prisma/client"],
+    banner: {
+      js: 'import { createRequire } from "module"; const require = createRequire(import.meta.url);',
+    },
+    alias: {
+      "@": "./src",
+    },
+    logLevel: "info",
+  });
+
+  console.log("CLI bundle created: dist-worker/reindex-suche.mjs");
 }
 
 buildWorker().catch((err) => {

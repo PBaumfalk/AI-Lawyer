@@ -32,6 +32,24 @@ export interface DokumentSearchRecord {
   dokumentStatus?: string;
 }
 
+/** Index settings for "dokumente" (shared by ensureDokumenteIndex and the full reindex). */
+export const DOKUMENTE_INDEX_SETTINGS = {
+  searchableAttributes: ["name", "ocrText", "tags", "aktenzeichen", "kurzrubrum", "ordner", "createdByName"],
+  filterableAttributes: [
+    "akteId", "mimeType", "ordner", "tags", "createdById",
+    "ocrStatus", "dokumentStatus", "createdAt",
+  ],
+  sortableAttributes: ["createdAt", "name"],
+  displayedAttributes: [
+    "id", "akteId", "name", "mimeType", "ordner", "tags",
+    "createdById", "createdByName", "aktenzeichen", "kurzrubrum", "createdAt",
+    "ocrStatus", "dokumentStatus", "ocrText",
+  ],
+  rankingRules: [
+    "words", "typo", "proximity", "attribute", "sort", "exactness",
+  ],
+};
+
 /**
  * Ensure the dokumente index exists with correct settings.
  */
@@ -44,22 +62,7 @@ export async function ensureDokumenteIndex(): Promise<void> {
 
   const index = meiliClient.index(DOKUMENTE_INDEX);
 
-  await index.updateSettings({
-    searchableAttributes: ["name", "ocrText", "tags", "aktenzeichen", "kurzrubrum", "ordner", "createdByName"],
-    filterableAttributes: [
-      "akteId", "mimeType", "ordner", "tags", "createdById",
-      "ocrStatus", "dokumentStatus", "createdAt",
-    ],
-    sortableAttributes: ["createdAt", "name"],
-    displayedAttributes: [
-      "id", "akteId", "name", "mimeType", "ordner", "tags",
-      "createdById", "createdByName", "aktenzeichen", "kurzrubrum", "createdAt",
-      "ocrStatus", "dokumentStatus", "ocrText",
-    ],
-    rankingRules: [
-      "words", "typo", "proximity", "attribute", "sort", "exactness",
-    ],
-  });
+  await index.updateSettings(DOKUMENTE_INDEX_SETTINGS);
 }
 
 /**

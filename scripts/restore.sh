@@ -1,116 +1,157 @@
 #!/usr/bin/env bash
-# AI-Lawyer – Wiederherstellung einer Sicherung von scripts/backup.sh
+# AI-Lawyer – Wiederherstellung aus dem verschlüsselten restic-Repository
 #
 # Aufruf:
-#   scripts/restore.sh [--yes] <backup-ordner>
+#   scripts/restore.sh [--yes] [--snapshot <ID>|latest]
+#   scripts/restore.sh --list            vorhandene Snapshots anzeigen
 #
-# Ablauf: Prüfsummen kontrollieren → Bestätigung → app/worker anhalten →
-# Datenbank per pg_restore in frische DB einspielen und austauschen → MinIO-Volume
-# ersetzen → MinIO starten (minio-init passt Besitzrechte an) → Meilisearch-
-# Index verwerfen → app/worker starten → Hinweis zum Neuaufbau des Suchindex.
+# Ablauf:
+#   1. Snapshot (Standard: neuester mit Tag BACKUP_TAG) in ein Staging-Volume
+#      entschlüsseln (restic restore --verify), Prüfsumme und Lesbarkeit des
+#      Datenbank-Dumps sowie Dateianzahl von MinIO kontrollieren
+#      → bei falschem Schlüssel oder beschädigten Daten Abbruch OHNE Änderung
+#   2. Bestätigung (außer --yes)
+#   3. app/worker anhalten, Datenbank in frische DB <name>_restore einspielen
+#      und erst nach Erfolg gegen die bisherige tauschen
+#   4. MinIO-Volume ersetzen, MinIO starten (minio-init setzt Besitzrechte)
+#   5. Meilisearch-Index verwerfen, app/worker starten
+#   6. Suchindex automatisch neu aufbauen (node dist-worker/reindex-suche.mjs im
+#      App-Container) und Anzahl prüfen
 #
 # ACHTUNG: überschreibt die aktuelle Datenbank und alle Dateien in MinIO.
 #
-# Umgebungsvariablen:
-#   APP_SERVICES          Dienste, die angehalten und danach gestartet werden
-#                         (Standard: "app worker")
-#   BACKUP_HELPER_IMAGE   Image mit tar/gzip (Standard: pgvector/pgvector:pg16)
-#   ENV_FILE              Ziel der .env (Standard: <Projekt>/.env); fehlt sie,
-#                         wird die gesicherte Kopie dorthin gelegt
+# Voraussetzungen: .env (mit dem EMAIL_ENCRYPTION_KEY des gesicherten Stands)
+# liegt im Projektordner, Repository-Zugang (BACKUP_CONFIG) und Schlüsseldatei
+# (RESTIC_PASSWORD_FILE) sind vorhanden – siehe Handbuch Kapitel 21.
+#
+# Umgebungsvariablen (zusätzlich zu scripts/lib/backup-common.sh):
+#   APP_SERVICES      Dienste, die angehalten und danach gestartet werden (Standard: "app worker")
+#   REINDEX           1 (Standard): Suchindex nach dem Start neu aufbauen; 0: überspringen
+#   REINDEX_SERVICE   Dienst, in dem der Neuaufbau läuft (Standard: app)
+#   REINDEX_TRIES     Versuche, falls Meilisearch/DB noch nicht bereit (Standard: 5)
+#   ENV_FILE          .env des Projekts (Standard: <Projekt>/.env); fehlt sie und enthält
+#                     der Snapshot eine (.env nur bei BACKUP_INCLUDE_ENV=1), wird diese verwendet
 #   COMPOSE_FILE, COMPOSE_PROJECT_NAME  werden von docker compose direkt ausgewertet.
 
+# Befehle für Container stehen absichtlich in einfachen Anführungszeichen
+# (werden dort ausgewertet, nicht hier):
+# shellcheck disable=SC2016
 set -euo pipefail
 umask 077
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
+cd "$PROJECT_DIR"
+# shellcheck source=lib/backup-common.sh
+. "$SCRIPT_DIR/lib/backup-common.sh"
+
+usage() { echo "Aufruf: $0 [--yes] [--snapshot <ID>|latest] | --list" >&2; exit 2; }
+
+YES=0
+SNAP=latest
+LIST=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -y|--yes) YES=1 ;;
+    -s|--snapshot) [ $# -ge 2 ] || usage; SNAP=$2; shift ;;
+    -l|--list) LIST=1 ;;
+    -h|--help) usage ;;
+    *) echo "Unbekannte Option: $1" >&2; usage ;;
+  esac
+  shift
+done
+case "$SNAP" in latest|[0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) ;; *) die "Snapshot-ID ungültig: $SNAP" ;; esac
+
+command -v docker >/dev/null 2>&1 || die "docker nicht gefunden"
+load_backup_config "$PROJECT_DIR"
+check_key_file
 
 APP_SERVICES=${APP_SERVICES-app worker}
-BACKUP_HELPER_IMAGE=${BACKUP_HELPER_IMAGE:-pgvector/pgvector:pg16}
+REINDEX=${REINDEX:-1}
+REINDEX_SERVICE=${REINDEX_SERVICE:-app}
+REINDEX_TRIES=${REINDEX_TRIES:-5}
 ENV_FILE=${ENV_FILE:-$PROJECT_DIR/.env}
 DB_USER=ailawyer
 DB_NAME=ailawyer
 
-log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
-die() { printf '[%s] FEHLER: %s\n' "$(date '+%H:%M:%S')" "$*" >&2; exit 1; }
-dc() { docker compose "$@"; }
-# Compose-Fortschrittsausgabe nur bei Fehler zeigen
-quiet() { local out; if ! out=$("$@" 2>&1); then printf '%s\n' "$out" >&2; return 1; fi; }
-usage() { echo "Aufruf: $0 [--yes] <backup-ordner>" >&2; exit 2; }
-
-YES=0
-SRC=""
-while [ $# -gt 0 ]; do
-  case "$1" in
-    -y|--yes) YES=1 ;;
-    -h|--help) usage ;;
-    -*) echo "Unbekannte Option: $1" >&2; usage ;;
-    *) [ -z "$SRC" ] || usage; SRC=$1 ;;
-  esac
-  shift
-done
-[ -n "$SRC" ] || usage
-[ -d "$SRC" ] || die "Ordner nicht gefunden: $SRC"
-SRC=$(cd "$SRC" && pwd)
-cd "$PROJECT_DIR"
-
-if command -v sha256sum >/dev/null 2>&1; then SHA="sha256sum"
-elif command -v shasum >/dev/null 2>&1; then SHA="shasum -a 256"
-else die "weder sha256sum noch shasum gefunden"; fi
-
-# ── Prüfen ───────────────────────────────────────────────────────────────────
-for f in db.dump minio.tar.gz SHA256SUMS; do
-  [ -f "$SRC/$f" ] || die "$f fehlt in $SRC"
-done
-log "Prüfe Prüfsummen in $SRC"
-( cd "$SRC" && $SHA -c SHA256SUMS ) || die "Prüfsummen stimmen nicht – Sicherung beschädigt, Abbruch ohne Änderung"
-for f in db.dump minio.tar.gz; do
-  grep -q " \*\{0,1\}$f\$" "$SRC/SHA256SUMS" || die "$f ist nicht in SHA256SUMS erfasst"
-done
-
-PROJECT=${COMPOSE_PROJECT_NAME:-$(dc config --no-interpolate 2>/dev/null | sed -n 's/^name: //p' | head -n1)}
-[ -n "$PROJECT" ] || die "Compose-Projektname nicht ermittelbar"
-
-if [ ! -f "$ENV_FILE" ]; then
-  [ -f "$SRC/.env" ] || die "$ENV_FILE fehlt und die Sicherung enthält keine .env"
-  cp "$SRC/.env" "$ENV_FILE"
-  chmod 600 "$ENV_FILE"
-  log ".env aus der Sicherung nach $ENV_FILE gelegt (Rechte 600)"
+if [ "$LIST" = 1 ]; then
+  rc=0; restic_run snapshots --tag "$BACKUP_TAG" || rc=$?
+  [ "$rc" -eq 0 ] || die "$(restic_error_hint "$rc")"
+  exit 0
 fi
 
+PROJECT=$(compose_project)
+STAGE_VOL="${PROJECT}_restore-staging"
+cleanup() {
+  [ "${KEEP_STAGING:-0}" = 1 ] || docker volume rm -f "$STAGE_VOL" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+trap 'exit 130' INT TERM
+
+START=$SECONDS
+
+# ── 1. Entschlüsseln und prüfen (noch keine Änderung) ────────────────────────
+log "1/6 Snapshot '$SNAP' aus $(redact_repo "$RESTIC_REPOSITORY") entschlüsseln"
+SEL=("$SNAP")
+[ "$SNAP" != latest ] || SEL+=(--tag "$BACKUP_TAG")
+rc=0; restic_run snapshots "${SEL[@]}" 2>&1 | sed 's/^/    /' || rc=$?
+[ "$rc" -eq 0 ] || die "Repository nicht lesbar: $(restic_error_hint "$rc") – nichts verändert"
+
+docker volume rm -f "$STAGE_VOL" >/dev/null 2>&1 || true
+docker volume create "$STAGE_VOL" >/dev/null
+RESTIC_MOUNTS=(-v "$STAGE_VOL:/restore")
+rc=0
+restic_run restore "${SEL[@]}" --target /restore --verify 2>&1 | sed 's/^/    /' || rc=$?
+RESTIC_MOUNTS=()
+[ "$rc" -eq 0 ] || die "restic restore fehlgeschlagen: $(restic_error_hint "$rc") – nichts verändert"
+
+log "    prüfe Prüfsumme und Lesbarkeit des Datenbank-Dumps, Dateien von MinIO"
+helper_sh "$STAGE_VOL:/r" -- '
+  set -e
+  B=/r/backup
+  test -f $B/stage/db/db.dump || { echo "db.dump fehlt im Snapshot" >&2; exit 1; }
+  test -d $B/minio || { echo "MinIO-Daten fehlen im Snapshot" >&2; exit 1; }
+  cd $B/stage/db
+  sha256sum -c SHA256SUMS > /tmp/sha.out || { cat /tmp/sha.out >&2; exit 1; }
+  sed "s/^/    /" /tmp/sha.out
+  pg_restore -l db.dump > /dev/null
+  want=$(sed -n "s/^minio_dateien: *//p" $B/stage/meta/INFO.txt)
+  have=$(find $B/minio -type f | wc -l)
+  echo "    MinIO: $have Dateien (laut Sicherung: $want)"
+  test "$want" = "$have" || { echo "Dateianzahl MinIO weicht ab" >&2; exit 1; }' \
+  || die "Snapshot unvollständig oder beschädigt – nichts verändert"
+
 echo
-[ -f "$SRC/INFO.txt" ] && sed 's/^/    /' "$SRC/INFO.txt"
+helper_sh "$STAGE_VOL:/r" -- 'sed "s/^/    /" /r/backup/stage/meta/INFO.txt'
 echo
+
+if [ ! -f "$ENV_FILE" ]; then
+  if helper_sh "$STAGE_VOL:/r" -- 'test -s /r/backup/stage/config/.env'; then
+    helper_sh "$STAGE_VOL:/r" -- 'cat /r/backup/stage/config/.env' > "$ENV_FILE"
+    chmod 600 "$ENV_FILE"
+    log ".env aus dem Snapshot nach $ENV_FILE gelegt (Rechte 600)"
+  else
+    die "$ENV_FILE fehlt. Die .env (insbesondere EMAIL_ENCRYPTION_KEY, NEXTAUTH_SECRET, Passwörter) aus der getrennten Verwahrung zurücklegen (Handbuch Kap. 21) – nichts verändert"
+  fi
+fi
+
 echo "Ziel: Compose-Projekt '$PROJECT' in $PROJECT_DIR"
-echo "Die aktuelle Datenbank und ALLE Dateien in MinIO werden durch die Sicherung ersetzt."
+echo "Die aktuelle Datenbank und ALLE Dateien in MinIO werden durch den Snapshot ersetzt."
 if [ "$YES" -ne 1 ]; then
   printf 'Fortfahren? Zum Bestätigen "ja" eingeben: '
   read -r answer || answer=""
   [ "$answer" = "ja" ] || die "abgebrochen, nichts verändert"
 fi
 
-START=$SECONDS
-
-find_volume() {
-  local v
-  v=$(docker volume ls -q --filter "label=com.docker.compose.project=$PROJECT" \
-        --filter "label=com.docker.compose.volume=$1" | head -n1)
-  [ -n "$v" ] || v="${PROJECT}_$1"
-  docker volume inspect "$v" >/dev/null 2>&1 || return 1
-  echo "$v"
-}
-
-# ── 1. Anwendung anhalten ────────────────────────────────────────────────────
+# ── 2. Anwendung anhalten ────────────────────────────────────────────────────
 if [ -n "$APP_SERVICES" ]; then
-  log "1/5 Halte an: $APP_SERVICES"
+  log "2/6 Halte an: $APP_SERVICES"
   # shellcheck disable=SC2086
   dc stop $APP_SERVICES >/dev/null 2>&1 || true
-else
-  log "1/5 APP_SERVICES leer – keine Anwendungsdienste anzuhalten"
 fi
 
-# ── 2. Datenbank ─────────────────────────────────────────────────────────────
-log "2/5 Datenbank starten und auf Bereitschaft warten"
+# ── 3. Datenbank ─────────────────────────────────────────────────────────────
+log "3/6 Datenbank starten und auf Bereitschaft warten"
 quiet dc up -d db
 # pg_isready über TCP: während der Erstinitialisierung lauscht nur ein
 # temporärer Server auf dem Unix-Socket, der gleich wieder beendet wird.
@@ -122,15 +163,15 @@ done
 # Eingespielt wird in eine frische Datenbank <name>_restore, die erst nach
 # Erfolg die bisherige ersetzt. So bleibt bei einem Fehler der alte Stand
 # erhalten, und es bleiben keine Tabellen/Typen zurück, die erst nach der
-# Sicherung entstanden sind (z. B. durch Migrationen eines Updates) – das würde
-# ein pg_restore --clean direkt in die bestehende Datenbank nicht leisten.
+# Sicherung entstanden sind.
 TMP_DB="${DB_NAME}_restore"
 psql_admin() { dc exec -T -e PGOPTIONS="-c client_min_messages=warning" db psql -U "$DB_USER" -d postgres -XAtq -v ON_ERROR_STOP=1 -c "$1"; }
 log "    pg_restore in frische Datenbank $TMP_DB (eine Transaktion)"
 psql_admin "DROP DATABASE IF EXISTS \"$TMP_DB\";" >/dev/null
 psql_admin "CREATE DATABASE \"$TMP_DB\" OWNER \"$DB_USER\";" >/dev/null
-if ! dc exec -T db pg_restore -U "$DB_USER" -d "$TMP_DB" --clean --if-exists \
-    --no-owner --single-transaction --exit-on-error < "$SRC/db.dump"; then
+if ! helper_sh "$STAGE_VOL:/r:ro" -- 'cat /r/backup/stage/db/db.dump' \
+    | dc exec -T db pg_restore -U "$DB_USER" -d "$TMP_DB" --clean --if-exists \
+        --no-owner --single-transaction --exit-on-error; then
   psql_admin "DROP DATABASE IF EXISTS \"$TMP_DB\";" >/dev/null 2>&1 || true
   die "pg_restore fehlgeschlagen – bisherige Datenbank unverändert. app/worker sind angehalten (Start: docker compose up -d $APP_SERVICES)"
 fi
@@ -138,52 +179,60 @@ log "    ersetze Datenbank $DB_NAME durch den wiederhergestellten Stand"
 psql_admin "DROP DATABASE IF EXISTS \"$DB_NAME\" WITH (FORCE);" >/dev/null
 psql_admin "ALTER DATABASE \"$TMP_DB\" RENAME TO \"$DB_NAME\";" >/dev/null
 
-# ── 3. MinIO-Dateien ─────────────────────────────────────────────────────────
-log "3/5 MinIO-Volume ersetzen"
+# ── 4. MinIO-Dateien ─────────────────────────────────────────────────────────
+log "4/6 MinIO-Volume ersetzen"
 dc stop minio >/dev/null 2>&1 || true
 # Auf einem neuen Server legt "create" Container und Volume an, ohne zu starten
 MINIO_VOL=$(find_volume miniodata) || { dc create minio >/dev/null 2>&1 || true; MINIO_VOL=$(find_volume miniodata); } \
   || die "Volume miniodata des Projekts $PROJECT nicht gefunden"
-docker run --rm -i -v "$MINIO_VOL:/data" --entrypoint sh "$BACKUP_HELPER_IMAGE" -c \
-  'set -e; find /data -mindepth 1 -maxdepth 1 -exec rm -rf {} +; tar xzf - -C /data' \
-  < "$SRC/minio.tar.gz"
+helper_sh "$STAGE_VOL:/r:ro" "$MINIO_VOL:/data" -- \
+  'set -e; find /data -mindepth 1 -maxdepth 1 -exec rm -rf {} +; cp -a /r/backup/minio/. /data/'
 log "    starte MinIO (minio-init setzt Besitzrechte auf UID 65532)"
 quiet dc up -d --wait minio
 
-# ── 4. Suchindex verwerfen ───────────────────────────────────────────────────
-# Der Index wird nicht gesichert und auch nicht automatisch neu aufgebaut.
-# Damit keine Treffer auf nicht mehr vorhandene Dokumente zeigen, wird er hier
-# gelöscht; POST /api/dokumente/reindex legt ihn neu an und füllt ihn.
-log "4/5 Meilisearch"
-if dc ps --status running --services 2>/dev/null | grep -qx meilisearch; then
-  if dc exec -T meilisearch sh -c \
-      'curl -fsS -o /dev/null -X DELETE -H "Authorization: Bearer $MEILI_MASTER_KEY" http://localhost:7700/indexes/dokumente'; then
-    log "    Index 'dokumente' verworfen"
-  else
-    log "    WARNUNG: Index 'dokumente' ließ sich nicht löschen (evtl. gab es ihn nicht)"
-  fi
+# ── 5. Suchindex verwerfen, Anwendung starten ────────────────────────────────
+log "5/6 Meilisearch-Index verwerfen, Anwendung starten"
+quiet dc up -d --wait meilisearch
+if dc exec -T meilisearch sh -c \
+    'curl -fsS -o /dev/null -X DELETE -H "Authorization: Bearer $MEILI_MASTER_KEY" http://localhost:7700/indexes/dokumente'; then
+  log "    Index 'dokumente' verworfen"
 else
-  log "    Dienst meilisearch läuft nicht – Index beim Neuaufbau (s. u.) anlegen lassen"
+  log "    Index 'dokumente' war nicht vorhanden"
+fi
+if [ -n "$APP_SERVICES" ]; then
+  log "    starte: $APP_SERVICES (wartet auf Bereitschaft, beim ersten Start mit Migrationen)"
+  # shellcheck disable=SC2086
+  quiet dc up -d --wait --wait-timeout 900 $APP_SERVICES \
+    || die "Daten wiederhergestellt, aber $APP_SERVICES starten nicht – docker compose logs prüfen"
 fi
 
-# ── 5. Anwendung starten ─────────────────────────────────────────────────────
-if [ -n "$APP_SERVICES" ]; then
-  log "5/5 Starte: $APP_SERVICES"
-  # shellcheck disable=SC2086
-  quiet dc up -d $APP_SERVICES
+# ── 6. Suchindex neu aufbauen ────────────────────────────────────────────────
+if [ "$REINDEX" = 1 ]; then
+  log "6/6 Suchindex neu aufbauen (Dienst $REINDEX_SERVICE)"
+  dc exec -T "$REINDEX_SERVICE" test -f dist-worker/reindex-suche.mjs \
+    || die "Daten wiederhergestellt, aber das Image von $REINDEX_SERVICE enthält dist-worker/reindex-suche.mjs nicht (zu alt). Neu bauen und Index aufbauen: docker compose build app worker && docker compose up -d app worker && docker compose exec app node dist-worker/reindex-suche.mjs"
+  n=0
+  until OUT=$(dc exec -T "$REINDEX_SERVICE" node dist-worker/reindex-suche.mjs 2>&1) \
+        && printf '%s\n' "$OUT" | grep -q '^REINDEX_OK '; do
+    printf '%s\n' "$OUT" | sed 's/^/    /' >&2
+    n=$((n + 1))
+    [ "$n" -lt "$REINDEX_TRIES" ] \
+      || die "Daten wiederhergestellt, Suchindex-Neuaufbau aber fehlgeschlagen. Erneut: docker compose exec $REINDEX_SERVICE node dist-worker/reindex-suche.mjs"
+    log "    Versuch $n fehlgeschlagen, neuer Versuch in 10 s"
+    sleep 10
+  done
+  printf '%s\n' "$OUT" | grep -v '^REINDEX_OK ' | sed 's/^/    /'
+  INDEXED=$(printf '%s\n' "$OUT" | sed -n 's/^REINDEX_OK indexiert=\([0-9]*\).*/\1/p')
+  log "    $INDEXED Dokument(e) im Suchindex"
 else
-  log "5/5 APP_SERVICES leer – keine Anwendungsdienste zu starten"
+  log "6/6 REINDEX=0 – Suchindex NICHT neu aufgebaut (nachholen: docker compose exec app node dist-worker/reindex-suche.mjs)"
 fi
 
 log "Wiederherstellung fertig in $((SECONDS - START)) s."
 cat <<'EOF'
 
-Noch zu tun:
-  1. Suchindex neu aufbauen (geschieht NICHT automatisch): als ADMIN anmelden und in
-     der Entwicklerkonsole des Browsers ausführen:
-       await (await fetch("/api/dokumente/reindex", { method: "POST" })).json()
-     (Handbuch Kapitel 21, „Suchindex neu aufbauen“)
-  2. Prüfen, dass EMAIL_ENCRYPTION_KEY in der .env dem Stand der Sicherung entspricht,
+Bitte prüfen:
+  1. EMAIL_ENCRYPTION_KEY in der .env muss dem Stand der Sicherung entsprechen,
      sonst lassen sich gespeicherte Zugangsdaten und 2FA-Geheimnisse nicht entschlüsseln.
-  3. Stichprobe: anmelden, Akte öffnen, Dokument herunterladen und im Editor öffnen.
+  2. Stichprobe: anmelden, Akte öffnen, Dokument herunterladen, Volltextsuche testen.
 EOF

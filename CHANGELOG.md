@@ -18,8 +18,24 @@ Die Versionen entsprechen den Meilensteinen der Entwicklung. Die Tags `v3.4` und
   ohne Begrenzung.
 - **Zwei-Faktor-Umgehung geschlossen:** Konten mit TOTP ließen sich mit dem
   Passwort allein anmelden, wenn man die Anmeldeseite umging.
-- **Datensicherung:** `scripts/backup.sh` und `scripts/restore.sh` mit
-  Rundlauftest `scripts/test-backup-restore.sh`.
+- **Datensicherung verschlüsselt und extern:** `scripts/backup.sh` sichert
+  Datenbank und MinIO mit restic 0.19.1 (Docker-Image, AES-256 + Poly1305,
+  dedupliziert) in ein externes Ziel (S3, SFTP, rest-server); Schlüssel in
+  `/etc/ai-lawyer/backup.key`, Zugangsdaten in `/etc/ai-lawyer/backup.env`,
+  beides außerhalb des Repos. Aufbewahrung (`forget --prune`), rollierende
+  Integritätsprüfung (`check --read-data-subset`), Statusdateien,
+  `scripts/backup-status.sh` für die Überwachung, optionaler
+  Healthchecks-Ping, systemd-Timer-Vorlage. Die `.env` wird nicht mehr
+  mitgesichert (nur mit `BACKUP_INCLUDE_ENV=1`). Sicherungen im alten
+  Ordnerformat stellt `restore.sh` nicht mehr her (Handbuch Kap. 21).
+- **Wiederherstellung ohne Handarbeit:** `scripts/restore.sh` entschlüsselt
+  und prüft den Snapshot vor jeder Änderung und baut danach den Suchindex
+  automatisch neu auf (`node dist-worker/reindex-suche.mjs`, auch einzeln
+  nutzbar). Der Reindex prüft jetzt jeden Meilisearch-Task und die
+  Dokumentanzahl, statt Fehler zu verschlucken.
+- **Rundlauftest** `scripts/test-backup-restore.sh`: Sicherung in einen
+  getrennten S3-Container, Totalverlust, Wiederherstellung inklusive Suche,
+  Negativtests mit falschem Schlüssel und manipuliertem Repository.
 - **Abhängigkeiten:** Sicherheitslücken in Produktionspaketen von 49 auf 20
   (kritisch 5 → 1) ohne Major-Updates.
 

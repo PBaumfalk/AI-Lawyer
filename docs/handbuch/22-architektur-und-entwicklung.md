@@ -21,7 +21,7 @@ Browser ──HTTPS──► app (Next.js, Port 3000) ──► db (PostgreSQL 1
 | Prozess | Einstieg | Aufgabe |
 | --- | --- | --- |
 | **app** | `src/server.ts` (eigener Server), gebündelt nach `dist-server/index.js` | Seiten, API-Routen, Anmeldung und Socket.IO am selben HTTP-Server |
-| **worker** | `src/worker.ts`, gebündelt nach `dist-worker/index.js` | 20 BullMQ-Warteschlangen, Cron-Jobs, dauerhafte IMAP-Verbindungen ([Kapitel 21](21-betrieb-und-sicherung.md#hintergrund-jobs)) |
+| **worker** | `src/worker.ts`, gebündelt nach `dist-worker/index.js` | 20 BullMQ-Warteschlangen, Cron-Jobs, dauerhafte IMAP-Verbindungen ([Kapitel 21](21-betrieb-und-sicherung.md#hintergrund-jobs)). Im selben Build entsteht `dist-worker/reindex-suche.mjs` aus `src/cli/reindex-suche.ts` (Suchindex-Neuaufbau ohne Anmeldung, von `scripts/restore.sh` genutzt) |
 
 **Eigener Server und Socket.IO.** `src/server.ts` startet Next.js und hängt Socket.IO mit Redis-Adapter an denselben HTTP-Server (`src/lib/socket/server.ts`). Die Anmeldung am Socket prüft das NextAuth-JWT aus dem Cookie (`src/lib/socket/auth.ts`). Räume: `user:{id}`, `role:{ROLLE}`, `kanzlei:{id}` automatisch, `akte:{id}`, `mailbox:{id}`, `channel:{id}` bei Bedarf (`src/lib/socket/rooms.ts`). Der Worker sendet Ereignisse über `@socket.io/redis-emitter` (`src/lib/socket/emitter.ts`).
 

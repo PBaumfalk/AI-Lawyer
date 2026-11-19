@@ -24,97 +24,228 @@ Drei Dinge, und nur zusammen sind sie eine brauchbare Sicherung:
 
 1. **Die PostgreSQL-Datenbank** als Dump.
 2. **Die MinIO-Daten** (Volume `miniodata`). Die Datenbank enthält nur die Pfade der Dateien; ohne MinIO sind alle Dokumente weg.
-3. **Die Geheimnisse:** Ihre `.env`, gegebenenfalls eine eigene Zusatzdatei (z. B. `docker-compose.kanzlei.yml`) und vor allem `EMAIL_ENCRYPTION_KEY`. Ohne diesen Schlüssel lassen sich die gespeicherten Zugangsdaten für E-Mail, CalDAV und j-lawyer, die KI-API-Schlüssel und die Zwei-Faktor-Geheimnisse der Benutzer nicht mehr entschlüsseln ([Kapitel 20](20-konfiguration.md#anmeldung-und-sicherheit)). Bewahren Sie die Geheimnisse getrennt von den Daten auf, etwa im Passwortmanager der Kanzlei.
+3. **Die Geheimnisse:** Ihre `.env`, gegebenenfalls eine eigene Zusatzdatei (z. B. `docker-compose.kanzlei.yml`) und vor allem `EMAIL_ENCRYPTION_KEY`. Ohne diesen Schlüssel lassen sich die gespeicherten Zugangsdaten für E-Mail, CalDAV und j-lawyer, die KI-API-Schlüssel und die Zwei-Faktor-Geheimnisse der Benutzer nicht mehr entschlüsseln ([Kapitel 20](20-konfiguration.md#anmeldung-und-sicherheit)).
 
-Der Dump enthält Mandantendaten im Klartext. Zugangsdaten, KI-API-Schlüssel und Zwei-Faktor-Geheimnisse liegen darin verschlüsselt (mit `EMAIL_ENCRYPTION_KEY`); Zwei-Faktor-Geheimnisse aus der Zeit vor dieser Verschlüsselung bleiben im Klartext, bis der Benutzer die Zwei-Faktor-Anmeldung neu einrichtet. `scripts/backup.sh` legt eine Kopie der `.env` mit in den Sicherungsordner, damit eine Wiederherstellung auf dem Server vollständig ist. Bevor Sicherungen den Server verlassen, verschlüsseln Sie sie oder nehmen die `.env` heraus und bewahren sie getrennt auf.
+Datenbank und Dateien sichert `scripts/backup.sh` verschlüsselt in ein externes Repository. Die Geheimnisse gehören **nicht** in dieselbe Sicherung, sondern getrennt verwahrt (siehe [Schlüssel und Geheimnisse verwahren](#schlüssel-und-geheimnisse-verwahren)).
 
-**Meilisearch** muss nicht gesichert werden: Der Index entsteht aus der Datenbank (Name, Ordner, Schlagwörter, OCR-Text). Nach einer Wiederherstellung bauen Sie ihn neu auf (siehe [Suchindex neu aufbauen](#suchindex-neu-aufbauen)).
+**Meilisearch** muss nicht gesichert werden: Der Index entsteht aus der Datenbank (Name, Ordner, Schlagwörter, OCR-Text). `scripts/restore.sh` baut ihn nach einer Wiederherstellung automatisch neu auf.
 
 **Redis** muss nicht gesichert werden. Die zeitgesteuerten Jobs registriert der Worker bei jedem Start neu. Verloren gehen nur Jobs, die zum Zeitpunkt des Ausfalls warteten. Dokumente mit fehlgeschlagener OCR stellt der Worker beim Start selbst wieder in die Warteschlange.
 
 ## Sicherung
 
-`scripts/backup.sh` sichert alles Nötige mit einem Befehl:
+### Wie gesichert wird
+
+`scripts/backup.sh` verwendet [restic](https://restic.net) (Version 0.19.1, offizielles Docker-Image `restic/restic:0.19.1`; auf dem Server muss nichts installiert werden). restic verschlüsselt und authentifiziert alle Daten (AES-256-CTR mit Poly1305-AES), bevor sie den Server verlassen, speichert dedupliziert (jede Nacht wandern nur Änderungen über die Leitung) und kann das Ziel selbst auf Beschädigung prüfen. Das Ziel – S3-kompatibler Objektspeicher, SFTP, rest-server oder alles, was rclone kann – sieht nur verschlüsselte Pakete.
+
+Ein Lauf:
+
+1. hält `app` und `worker` an, damit niemand schreibt,
+2. erzeugt den Dump (`pg_dump -Fc`), prüft ihn mit `pg_restore -l` und bildet seine SHA-256-Prüfsumme,
+3. hält `minio` an und schreibt einen Snapshot aus Dump, Prüfsumme, `INFO.txt` (Zeitpunkt, Git-Stand, Dateianzahl) und dem ganzen Volume `miniodata` (Dateien, Versionen, Bucket-Einstellungen) ins Repository,
+4. startet die angehaltenen Dienste wieder – auch bei einem Fehler, und nur die, die vorher liefen,
+5. löscht alte Snapshots nach der Aufbewahrungsregel (`restic forget --prune`),
+6. prüft das Repository (`restic check`, dazu täglich ein anderes Dreißigstel der Daten vollständig gelesen und entschlüsselt – in 30 Tagen ist alles einmal geprüft),
+7. schreibt die Statusdateien und meldet Erfolg oder Fehler an eine Überwachung (optional).
+
+Die Anwendung ist während Schritt 1–4 nicht erreichbar. Bei einer nächtlichen Sicherung sind das nach der ersten Sicherung meist unter einer Minute; die **erste** Sicherung lädt alles hoch und kann bei großen Beständen Stunden dauern – starten Sie sie von Hand außerhalb der Bürozeit.
+
+Der Exit-Code ist bei jedem Fehler ungleich 0. Die `.env` wird standardmäßig nicht mitgesichert.
+
+### Einrichten (einmalig)
+
+**1. Externes Ziel beschaffen.** Ein Verzeichnis auf demselben Server oder einer daran angeschlossenen Platte ist **keine** externe Sicherung (Brand, Diebstahl, Ransomware und Überspannung treffen Original und Kopie zugleich); das Skript warnt in diesem Fall bei jedem Lauf. Geeignet sind zum Beispiel:
+
+| Ziel | Was Sie brauchen | `RESTIC_REPOSITORY` |
+| --- | --- | --- |
+| S3-Objektspeicher (Hetzner, IONOS, Wasabi, AWS, MinIO an anderem Standort) | Bucket, Endpoint, Access-Key und Secret-Key nur für diesen Bucket | `s3:https://<endpoint>/<bucket>/ai-lawyer` |
+| SFTP (Hetzner Storage Box, NAS an anderem Ort) | Host, Benutzer, eigener SSH-Schlüssel ohne Passphrase, `known_hosts` | `sftp:<benutzer>@<host>:/ai-lawyer` |
+| rest-server an anderem Ort | URL, Benutzer, Passwort; am besten mit `--append-only` betrieben | `rest:https://<host>:8000/ai-lawyer` |
+
+Für Auftragsverarbeitung und Standort gelten die üblichen Regeln (AV-Vertrag, Speicherort in der EU). Die Daten verlassen den Server nur verschlüsselt; der Anbieter kann sie ohne Ihren Schlüssel nicht lesen. Schalten Sie, wo angeboten, Objekt-Versionierung oder Object Lock ein: Dann kann auch ein Angreifer mit den Zugangsdaten des Servers alte Sicherungen nicht löschen.
+
+**2. Konfiguration außerhalb des Projektordners anlegen:**
 
 ```bash
-scripts/backup.sh
+sudo install -d -m 700 /etc/ai-lawyer
+sudo install -m 600 scripts/backup.env.example /etc/ai-lawyer/backup.env
+sudo nano /etc/ai-lawyer/backup.env      # Ziel und Zugangsdaten eintragen
 ```
 
-Das Skript legt `backups/<JJJJMMTT-HHMMSS>/` an mit:
+Die Datei hat das Format von `docker run --env-file`: eine Zeile `KEY=wert`, keine Anführungszeichen, kein `export`, Kommentare nur als eigene Zeile. Steht noch ein Platzhalter (`BITTE_EINTRAGEN`) darin, bricht das Skript ab. Das Repository-Passwort gehört **nicht** in diese Datei.
 
-| Datei | Inhalt |
+**3. Schlüssel erzeugen und Repository anlegen:**
+
+```bash
+cd /opt/ai-lawyer          # Projektordner
+sudo scripts/backup.sh init
+```
+
+`init` erzeugt, falls noch nicht vorhanden, `/etc/ai-lawyer/backup.key` (64 Zufallszeichen, Rechte `600`) und legt das Repository an. Das Skript lehnt eine Schlüsseldatei mit anderen Rechten als `600`/`400` ab, ebenso eine Schlüsseldatei im Projektordner und ein Passwort in `backup.env` oder in der Umgebungsvariable `RESTIC_PASSWORD`. Den Schlüssel gibt es nie aus.
+
+`sudo` verwirft Umgebungsvariablen. Braucht Ihre Installation `COMPOSE_FILE` (siehe [Kapitel 19](19-installation.md#installation-schritt-für-schritt)), geben Sie sie in der Zeile mit: `sudo COMPOSE_FILE=docker-compose.yml scripts/backup.sh`.
+
+**4. Schlüssel sofort ein zweites Mal verwahren** (nächster Abschnitt) – ohne ihn ist jede Sicherung wertlos.
+
+**5. Erste Sicherung von Hand, dann automatisieren:**
+
+```bash
+sudo scripts/backup.sh               # erste, volle Sicherung
+sudo scripts/backup.sh snapshots     # Ergebnis ansehen
+```
+
+### Schlüssel und Geheimnisse verwahren
+
+Für eine Wiederherstellung nach Totalverlust des Servers brauchen Sie vier Dinge, die **nicht** auf dem Server und **nicht** im Sicherungsziel liegen dürfen:
+
+| Was | Wozu |
 | --- | --- |
-| `db.dump` | Datenbank (`pg_dump -Fc`, im laufenden Betrieb konsistent) |
-| `minio.tar.gz` | das ganze Volume `miniodata` (Dateien, Versionen, Bucket-Einstellungen) |
-| `.env` | Kopie der Konfiguration, Rechte `600`, **enthält alle Schlüssel** |
-| `INFO.txt` | Zeitpunkt, Git-Stand, Projektname |
-| `SHA256SUMS` | Prüfsummen aller Dateien |
+| Inhalt von `/etc/ai-lawyer/backup.key` | entschlüsselt das Repository |
+| Inhalt von `/etc/ai-lawyer/backup.env` (Ziel und Zugangsdaten) | Zugriff auf das Sicherungsziel |
+| die `.env` des Projekts, insbesondere `EMAIL_ENCRYPTION_KEY`, `NEXTAUTH_SECRET`, `POSTGRES_PASSWORD`, `MINIO_SECRET_KEY`, `MEILISEARCH_API_KEY` | ohne `EMAIL_ENCRYPTION_KEY` bleiben E-Mail-, CalDAV- und j-lawyer-Zugangsdaten, KI-Schlüssel und Zwei-Faktor-Geheimnisse unlesbar |
+| gegebenenfalls eigene Compose-Zusatzdateien | gleiche Konfiguration wie vorher |
 
-Für die Dateisicherung hält das Skript `app`, `worker` und `minio` kurz an (bei wenigen GB einige Sekunden) und startet danach nur die Dienste wieder, die vorher liefen, auch bei einem Fehler. Es prüft den Dump (`pg_restore -l`) und das Archiv, schreibt erst in einen Ordner `….partial` und benennt ihn erst nach Erfolg um. Der Exit-Code ist bei jedem Fehler ungleich 0.
+So verwahren:
+
+- **Passwortmanager/Tresor der Kanzlei:** je ein Eintrag „AI-Lawyer Sicherungsschlüssel“ (Inhalt der Schlüsseldatei), „AI-Lawyer Sicherungsziel“ (Inhalt von `backup.env`) und „AI-Lawyer .env“. Zugriff nur für die Personen, die eine Wiederherstellung durchführen dürfen.
+- **Zweite Kopie offline:** Schlüssel und `.env` ausdrucken (`cat /etc/ai-lawyer/backup.key` am Bildschirm, nicht in Tickets, Chats oder E-Mails kopieren), in einen verschlossenen Umschlag mit Datum, in den Safe oder ins Bankschließfach.
+- Nach jeder Änderung der `.env` (z. B. neues Passwort) die verwahrte Fassung erneuern. `EMAIL_ENCRYPTION_KEY` nie ändern, solange Sicherungen mit dem alten Stand wiederhergestellt werden sollen.
+
+**Schlüssel wiederherstellen** auf einem neuen Server:
+
+```bash
+sudo install -d -m 700 /etc/ai-lawyer
+sudo sh -c 'umask 077; cat > /etc/ai-lawyer/backup.key'   # Schlüssel einfügen, Strg+D
+sudo chmod 600 /etc/ai-lawyer/backup.key
+```
+
+Achten Sie darauf, dass kein Zeilenumbruch oder Leerzeichen hinzukommt, das nicht im Original war (restic liest die erste Zeile). Ein falscher Schlüssel führt zur Meldung „falsches Repository-Passwort“, es wird nichts verändert.
+
+Wer die Datei `.env` lieber mit im (verschlüsselten) Snapshot haben will, setzt `BACKUP_INCLUDE_ENV=1`. Dann genügen für die Wiederherstellung Schlüssel und Zugangsdaten zum Ziel; die getrennte Verwahrung der `.env` empfehlen wir trotzdem.
+
+### Automatisieren
+
+**systemd (empfohlen):** Vorlagen liegen in `scripts/systemd/`. Pfad `/opt/ai-lawyer` in der `.service`-Datei an Ihren Projektordner anpassen, dann:
+
+```bash
+sudo cp scripts/systemd/ai-lawyer-backup.{service,timer} /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now ai-lawyer-backup.timer
+systemctl list-timers ai-lawyer-backup.timer       # nächster Lauf
+journalctl -u ai-lawyer-backup.service             # Protokoll
+```
+
+Der Timer läuft täglich um 02:30 Uhr (bis 15 Minuten Streuung) und holt einen verpassten Lauf nach, wenn der Server zu der Zeit aus war. Ein Fehlschlag erscheint in `systemctl --failed`.
+
+**Cron** (Alternative, als root):
+
+```cron
+30 2 * * * cd /opt/ai-lawyer && COMPOSE_FILE=docker-compose.yml scripts/backup.sh >> /var/log/ai-lawyer-backup.log 2>&1
+```
+
+Cron kennt die Umgebung der Anmelde-Shell nicht; setzen Sie `COMPOSE_FILE` so wie in Ihrer Installation. Die Worker-Nachtjobs (01:00–03:30, siehe [Hintergrund-Jobs](#hintergrund-jobs)) stören die Sicherung nicht, weil der Worker während der Sicherung angehalten ist; sie laufen danach weiter.
+
+### Fehlgeschlagene Sicherungen bemerken
+
+Eine Sicherung, deren Ausfall niemand bemerkt, ist keine. Drei Wege, kombinierbar:
+
+1. **Statusdateien** in `/var/lib/ai-lawyer/backup/`: `last-success` (Zeitpunkt, Snapshot-ID, Dauer der letzten erfolgreichen Sicherung) und `last-run` (`status=ok` oder `status=fehler` mit Meldung). Keine Geheimnisse darin.
+2. **Prüfskript** für die Überwachung (Icinga/Nagios, Cron mit Mail, Uptime Kuma):
+   ```bash
+   scripts/backup-status.sh          # Exit 0 = aktuell, 1 = zu alt oder letzter Lauf fehlgeschlagen, 2 = nie gesichert
+   BACKUP_MAX_AGE_HOURS=26 scripts/backup-status.sh
+   ```
+3. **Ping an einen Überwachungsdienst** (empfohlen, weil er auch einen ganz ausgefallenen Server bemerkt): `BACKUP_HEALTHCHECK_URL` in `backup.env` setzen, z. B. auf einen Check bei healthchecks.io oder einer eigenen Healthchecks-Instanz. Das Skript ruft `…/start` zu Beginn, die URL selbst bei Erfolg und `…/fail` bei einem Fehler auf (mit kurzer Meldung, ohne Geheimnisse). Bleibt der Erfolgs-Ping aus, meldet der Dienst sich per Mail.
+
+### Einstellungen
+
+Vorrang: Umgebungsvariable vor `backup.env` vor Standard.
 
 | Variable | Standard | Bedeutung |
 | --- | --- | --- |
-| `BACKUP_DIR` | `./backups` | Zielordner |
-| `BACKUP_KEEP` | `14` | so viele Sicherungen bleiben, ältere löscht das Skript (`0` = alle behalten) |
-| `BACKUP_STOP` | `1` | `0` sichert MinIO ohne Anhalten; gleichzeitige Uploads können dann fehlen |
-| `ENV_FILE` | `./.env` | zu sichernde Konfiguration |
+| `BACKUP_CONFIG` | `/etc/ai-lawyer/backup.env` | Datei mit Ziel und Zugangsdaten |
+| `RESTIC_PASSWORD_FILE` | `/etc/ai-lawyer/backup.key` | Schlüsseldatei (Rechte `600`) |
+| `RESTIC_REPOSITORY` | – | Ziel, siehe Tabelle oben |
+| `BACKUP_KEEP_DAILY` / `_WEEKLY` / `_MONTHLY` / `_YEARLY` / `_LAST` | `7` / `5` / `12` / `0` / `0` | Aufbewahrung (`0` = Regel aus). Gibt es weniger Tage/Wochen als verlangt, behält restic zusätzlich den ältesten Snapshot |
+| `BACKUP_PRUNE` | `1` | nicht mehr benötigte Daten im Ziel löschen |
+| `BACKUP_CHECK` | `1` | `restic check` nach jeder Sicherung |
+| `BACKUP_READ_DATA_SUBSET` | `auto` | täglich rollierend 1/30 der Daten lesen; oder z. B. `5%`, `1/10`; `0` = nur Struktur |
+| `BACKUP_HEALTHCHECK_URL` | – | Ping-URL (s. o.) |
+| `BACKUP_STOP` | `1` | `0` sichert ohne Anhalten; gleichzeitige Uploads können dann zwischen Datenbank und Dateien auseinanderlaufen |
+| `BACKUP_INCLUDE_ENV` | `0` | `1` legt die `.env` mit in den Snapshot |
+| `BACKUP_STATE_DIR` | `/var/lib/ai-lawyer/backup` | Statusdateien |
+| `BACKUP_HOSTNAME`, `BACKUP_TAG` | Rechnername, `ai-lawyer` | Kennzeichnung der Snapshots |
+| `BACKUP_SSH_DIR` | – | für `sftp:`: Ordner mit Schlüssel und `known_hosts`, wird als `/root/.ssh` eingebunden |
+| `BACKUP_DOCKER_NETWORK` | – | Docker-Netz für den restic-Container (nur für Sonderfälle) |
+| `RESTIC_IMAGE` | `restic/restic:0.19.1` | feste Version; Updates bewusst einspielen |
 | `COMPOSE_FILE`, `COMPOSE_PROJECT_NAME` | | werden wie bei `docker compose` beachtet |
 
-**Nächtlich per Cron** (z. B. `crontab -e` des Benutzers, der Docker bedienen darf), außerhalb der Worker-Nachtjobs (01:00–03:30, siehe [Hintergrund-Jobs](#hintergrund-jobs)):
-
-```cron
-30 23 * * * cd /srv/ai-lawyer && COMPOSE_FILE=docker-compose.yml BACKUP_DIR=/srv/backup/ai-lawyer scripts/backup.sh >> /var/log/ai-lawyer-backup.log 2>&1
-```
-
-Cron kennt die Umgebung der Anmelde-Shell nicht; setzen Sie `COMPOSE_FILE` in der Zeile so wie in Ihrer Installation. Prüfen Sie das Protokoll und den Exit-Code (z. B. über eine Überwachung, die bei fehlender neuer Sicherung warnt).
-
-**Wichtig:**
-
-- Die Sicherung enthält Mandantendaten im Klartext (siehe [Was gesichert werden muss](#was-gesichert-werden-muss)), und die mitgesicherte `.env` enthält `EMAIL_ENCRYPTION_KEY`. Wer beides hat, hat alles. Verschlüsseln Sie Sicherungen, bevor sie den Server verlassen (z. B. `restic`, `borg` oder `age`), und bewahren Sie die `.env` zusätzlich getrennt auf, etwa im Passwortmanager der Kanzlei. Ohne `EMAIL_ENCRYPTION_KEY` sind die verschlüsselten Einstellungen nicht wiederherstellbar ([Kapitel 20](20-konfiguration.md#anmeldung-und-sicherheit)).
-- Eine eigene Zusatzdatei (z. B. `docker-compose.kanzlei.yml`) sichert das Skript nicht mit; sie gehört ins Git-Repository der Kanzlei oder in die getrennte Ablage.
-- Eine Kopie auf derselben Platte schützt nicht vor Plattenausfall. Kopieren Sie `BACKUP_DIR` regelmäßig auf ein anderes Gerät.
+Weitere Befehle: `scripts/backup.sh check --read-data` (alle Daten im Ziel lesen und prüfen, dauert und kostet ggf. Abrufgebühren), `scripts/backup.sh unlock` (Sperre nach einem Absturz entfernen).
 
 Die Seite **Einstellungen** bietet zusätzlich einen Export und Import der Einstellungen, das ist keine Datensicherung ([Kapitel 16](16-einstellungen-und-vorlagen.md)).
+
+**Ältere Sicherungen** aus der Zeit vor restic (Ordner `backups/<Zeitstempel>/` mit `db.dump` und `minio.tar.gz`) stellt `scripts/restore.sh` nicht mehr her. Dafür das Skript aus dem Git-Stand `ed2f5c9` verwenden (`git show ed2f5c9:scripts/restore.sh > /tmp/restore-alt.sh`). Diese Ordner sind unverschlüsselt und enthalten eine Kopie der `.env` – nach Umstellung löschen.
 
 ## Wiederherstellung
 
 ```bash
-scripts/restore.sh backups/20261118-233000          # fragt nach, Bestätigung mit „ja“
-scripts/restore.sh --yes backups/20261118-233000    # ohne Rückfrage
+scripts/restore.sh --list                    # Snapshots anzeigen
+scripts/restore.sh                           # neuester Snapshot, fragt nach („ja“)
+scripts/restore.sh --snapshot 1a2b3c4d       # bestimmter Snapshot
+scripts/restore.sh --yes                     # ohne Rückfrage
 ```
 
 Das Skript
 
-1. prüft die Prüfsummen und bricht bei Abweichung ab, ohne etwas zu verändern,
+1. entschlüsselt den Snapshot in ein Docker-Volume (`restic restore --verify`), prüft die Prüfsumme und Lesbarkeit des Dumps und die Dateianzahl von MinIO – bei falschem Schlüssel, unerreichbarem Ziel oder beschädigten Daten bricht es hier ab, **ohne etwas zu verändern**,
 2. hält `app` und `worker` an,
 3. spielt den Dump in eine frische Datenbank `ailawyer_restore` ein (eine Transaktion) und tauscht sie erst nach Erfolg gegen `ailawyer` aus; bei einem Fehler bleibt die bisherige Datenbank unverändert, und es bleiben keine Tabellen aus späteren Updates zurück,
 4. ersetzt den Inhalt des Volumes `miniodata` und startet MinIO (`minio-init` passt die Besitzrechte an),
-5. verwirft den Meilisearch-Index `dokumente`,
-6. startet `app` und `worker`.
+5. verwirft den Meilisearch-Index und startet `app` und `worker` (wartet, bis sie bereit sind),
+6. **baut den Suchindex automatisch neu auf** (`node dist-worker/reindex-suche.mjs` im App-Container) und gibt die Zahl der indexierten Dokumente aus. Schlägt das fehl, endet das Skript mit Exit-Code ungleich 0 und nennt den Befehl zum Wiederholen; die Daten sind dann bereits wiederhergestellt.
 
-Danach von Hand: **Suchindex neu aufbauen** (nächster Abschnitt), denn das geschieht nicht automatisch, und eine Stichprobe machen (anmelden, Akte öffnen, Dokument herunterladen und im Editor öffnen). Die Datenbank braucht während der Wiederherstellung kurz doppelten Platz.
+Danach eine Stichprobe machen (anmelden, Akte öffnen, Dokument herunterladen, im Editor öffnen, Volltextsuche). Platzbedarf während der Wiederherstellung: Datenbank kurz doppelt, dazu der entschlüsselte Snapshot im Docker-Speicher.
 
-**Auf einem neuen Server:** AI-Lawyer in **derselben Version** installieren ([Kapitel 19](19-installation.md)), aber noch nicht starten; die Sicherung auf den Server kopieren und `scripts/restore.sh` aufrufen. Fehlt die `.env`, legt das Skript die gesicherte Kopie mit Rechten `600` an. Dann `docker compose up -d` für die übrigen Dienste und KI-Modelle laden, falls `ollama_data` neu ist. Das Entrypoint-Skript findet die Benutzer vor und überspringt den Seed.
+**Auf einem neuen Server (Totalverlust):**
+
+1. AI-Lawyer in **derselben Version** installieren ([Kapitel 19](19-installation.md)), aber noch nicht starten.
+2. Die verwahrte `.env` in den Projektordner legen (`chmod 600 .env`). Ohne sie bricht `restore.sh` ab (außer der Snapshot wurde mit `BACKUP_INCLUDE_ENV=1` erstellt).
+3. `/etc/ai-lawyer/backup.env` und `/etc/ai-lawyer/backup.key` aus der Verwahrung zurücklegen (siehe [Schlüssel wiederherstellen](#schlüssel-und-geheimnisse-verwahren)).
+4. Images bauen (`docker compose build app worker`), dann `sudo scripts/restore.sh`.
+5. `docker compose up -d` für die übrigen Dienste und KI-Modelle laden, falls `ollama_data` neu ist. Das Entrypoint-Skript findet die Benutzer vor und überspringt den Seed.
 
 ### Wiederherstellung testen
 
 ```bash
+npm ci                              # einmalig, für den Bundle-Build
 scripts/test-backup-restore.sh
 ```
 
-Der Test startet nur `db`, `minio` und `meilisearch` unter dem eigenen Projektnamen `ailawyer-backuptest` (eigene Container und Volumes, keine Ports, Wegwerf-`.env`) und berührt eine laufende Installation nicht. Er legt Testdaten an, sichert, prüft die Aufbewahrungsregel, lässt eine beschädigte Sicherung ablehnen, stellt über veränderte Daten (inklusive Verwerfen des Suchindex) und nach dem Löschen aller Volumes wieder her und vergleicht jeweils Datenbankinhalt und Datei-Prüfsumme. Zum Schluss räumt er alles ab und meldet `ERGEBNIS: BESTANDEN` (Exit-Code 0). Er dauert unter einer Minute.
+Der Test läuft vollständig isoliert unter dem Projektnamen `ailawyer-backuptest` (eigene Container, Volumes und Netze, keine Ports nach außen außer einem zufälligen auf `127.0.0.1`, Wegwerf-`.env` und Wegwerf-Schlüssel) und berührt eine laufende Installation nicht. Er startet `db`, `minio`, `meilisearch`, einen schlanken Stellvertreter des App-Containers mit demselben Reindex-Programm und – als Sicherungsziel – einen **zweiten, getrennten MinIO-Container** mit S3-Schnittstelle. Geprüft wird:
 
-Der Test belegt die Mechanik, nicht Ihre Sicherungen. Spielen Sie zusätzlich regelmäßig (z. B. vierteljährlich) eine echte Sicherung auf einem Testrechner ein.
+- Einrichtung mit `init`, Schlüsseldatei mit Rechten `600`, Ablehnung bei `644`,
+- zwei Sicherungen, Aufbewahrung, Statusdateien, `backup-status.sh`, Pings an einen Testempfänger, keine Geheimnisse im Protokoll,
+- Sicherung mit falschem Schlüssel: Exit-Code ≠ 0, Status `fehler`, `/fail`-Ping,
+- Wiederherstellung eines bestimmten Snapshots über veränderte Daten,
+- Wiederherstellung mit falschem Schlüssel: Abbruch, Bestand unverändert,
+- **Totalverlust** (alle Volumes und der restic-Cache gelöscht), Wiederherstellung nur aus dem S3-Ziel, Vergleich von Datenbank-Prüfsummen und Dateiinhalt, und die Volltextsuche findet das Testdokument **ohne manuellen Reindex**,
+- ein manipuliertes Datenpaket im Ziel: `restic check --read-data` meldet den Fehler, die Wiederherstellung bricht ohne Änderung ab.
+
+Zum Schluss räumt er alles ab und meldet `ERGEBNIS: BESTANDEN` mit Laufzeiten (Exit-Code 0). Er dauert etwa zwei Minuten.
+
+Der Test belegt die Mechanik, nicht Ihre Sicherungen und nicht Ihr Ziel. Spielen Sie zusätzlich regelmäßig (z. B. vierteljährlich) eine echte Sicherung aus dem externen Ziel auf einem Testrechner ein – mit dem verwahrten Schlüssel, nicht mit dem vom Server.
 
 ## Suchindex neu aufbauen
 
-Eine Schaltfläche dafür gibt es nicht. Der Endpunkt `POST /api/dokumente/reindex` (nur Rolle ADMIN) legt den Index `dokumente` an, falls er fehlt, und indexiert alle Dokumente aus der Datenbank neu. Am einfachsten rufen Sie ihn angemeldet als Admin in der Entwicklerkonsole des Browsers auf:
+`scripts/restore.sh` erledigt das automatisch. Von Hand (z. B. nach einem Meilisearch-Update):
 
-```js
-await (await fetch("/api/dokumente/reindex", { method: "POST" })).json()
+```bash
+docker compose exec app node dist-worker/reindex-suche.mjs
 ```
 
-Die Antwort lautet z. B. `{ success: true, indexed: 412, message: "412 Dokumente indexiert" }`. Bei vielen Dokumenten dauert das einige Minuten; der Aufruf arbeitet die Dokumente nacheinander ab. Die Vektoren für die Helena-Wissenssuche liegen in PostgreSQL und sind davon nicht betroffen.
+Das Programm löscht den Index `dokumente`, legt ihn mit den richtigen Einstellungen neu an, indexiert alle Dokumente aus der Datenbank in Blöcken zu 500 und vergleicht am Ende die Anzahl im Index mit der Datenbank. Ausgabe z. B. `Suchindex-Neuaufbau fertig: 412 indexiert, 412 im Index (3.1 s)`; bei einem Fehler Exit-Code 1 mit Meldung. Es lässt sich beliebig oft wiederholen. Während des Neuaufbaus liefert die Suche unvollständige Treffer.
+
+Dieselbe Logik steht angemeldet als Admin über `POST /api/dokumente/reindex` bereit (Antwort z. B. `{ success: true, indexed: 412 }`). Die Vektoren für die Helena-Wissenssuche liegen in PostgreSQL und sind davon nicht betroffen.
 
 ## Updates
 

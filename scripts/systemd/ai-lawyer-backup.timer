@@ -1,0 +1,14 @@
+# AI-Lawyer – Zeitplan für ai-lawyer-backup.service (Vorlage)
+# Täglich 02:30 Uhr (bis 15 min Streuung). Persistent=true holt einen
+# verpassten Lauf nach, wenn der Server zur geplanten Zeit aus war.
+
+[Unit]
+Description=AI-Lawyer Datensicherung täglich
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+RandomizedDelaySec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

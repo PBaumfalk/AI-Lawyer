@@ -32,7 +32,7 @@ j-lawyer-Migration. Die folgenden Tabellen nennen nur, was heute noch offen ist.
 | **`docker-compose.portainer.yml` ist nicht auf dem Stand von `docker-compose.yml`.** Redis läuft dort ohne Passwort; `POSTGRES_PASSWORD`, `MINIO_SECRET_KEY` und `MEILISEARCH_API_KEY` haben öffentlich bekannte Standardwerte; der MinIO-Port 9000 ist nicht veröffentlicht; der Worker bekommt keine SMTP-Werte. | Ohne eigene Werte unsichere Zugangsdaten, Downloads aus MinIO scheitern ohne zusätzlichen Proxy, keine Fristerinnerungen per Mail aus dem Worker. | Alle Geheimnisse ausdrücklich setzen oder `docker-compose.yml` mit `.env` verwenden ([Kapitel 19](19-installation.md)). |
 | **App, MinIO-API und OnlyOffice lauschen standardmäßig auf allen Schnittstellen.** `PUBLIC_BIND` ist in `.env.example` `0.0.0.0`; die internen Dienste (Datenbank, Redis, Meilisearch, Ollama u. a.) sind nur an `127.0.0.1` gebunden. | Ohne Reverse Proxy sind die Ports 3000, 9000 und 8080 aus dem Netz erreichbar; Docker umgeht `ufw`. | Hinter einem Reverse Proxy `PUBLIC_BIND="127.0.0.1"` setzen ([Kapitel 19](19-installation.md), [Kapitel 20](20-konfiguration.md)). |
 | **Protokollansicht unvollständig.** **System → Systemprotokoll** liest nur `<LOG_FILE_PATH>/app.log` im App-Container. | Worker-Protokolle erscheinen dort nicht; je nach Dateinamen der Rotation bleibt die Ansicht leer. | `docker compose logs` ([Kapitel 21](21-betrieb-und-sicherung.md)). |
-| **Kein eingebautes Backup, kein Knopf für den Suchindex.** | Sicherung und Neuaufbau des Index laufen über die Kommandozeile bzw. einen API-Aufruf. | [Kapitel 21](21-betrieb-und-sicherung.md). |
+| **Sicherung nur per Kommandozeile, kein Knopf für den Suchindex.** | Die verschlüsselte Sicherung (`scripts/backup.sh`, per systemd-Timer automatisierbar) und die Wiederherstellung samt Suchindex laufen über Skripte; ein externes Sicherungsziel müssen Sie selbst bereitstellen. Eine Oberfläche dafür gibt es nicht. | [Kapitel 21](21-betrieb-und-sicherung.md#sicherung). |
 | **Fremd-Images auf `latest`.** OnlyOffice, Stirling-PDF, Ollama, LanguageTool und das MinIO-Image von Chainguard | Ein `docker compose pull` kann unbemerkt eine inkompatible Version bringen. | Versionen in einer Zusatzdatei bzw. über `MINIO_IMAGE` festschreiben. |
 
 ### Konfiguration
@@ -101,7 +101,7 @@ Das Docker-Image startet inzwischen den eigenen Server mit Socket.IO; Team-Nachr
 
 ### Wie sichern wir die Daten, und was brauchen wir für die Wiederherstellung?
 
-Datenbank-Dump, MinIO-Volume und die Geheimnisse, vor allem `EMAIL_ENCRYPTION_KEY`. Der Suchindex lässt sich neu aufbauen. Anleitung in [Kapitel 21](21-betrieb-und-sicherung.md#was-gesichert-werden-muss).
+Datenbank-Dump und MinIO-Volume (verschlüsselt mit `scripts/backup.sh`) und, getrennt verwahrt, die Geheimnisse, vor allem `EMAIL_ENCRYPTION_KEY` und den Sicherungsschlüssel. Der Suchindex wird bei der Wiederherstellung automatisch neu aufgebaut. Anleitung in [Kapitel 21](21-betrieb-und-sicherung.md#was-gesichert-werden-muss).
 
 ### Läuft AI-Lawyer ohne Internet?
 

@@ -107,8 +107,7 @@ export interface HelenaAgentResult {
 export async function runHelenaAgent(
   options: HelenaAgentOptions,
 ): Promise<HelenaAgentResult> {
-  // Datenschutz-Schleuse: all model calls of this run share one placeholder mapping
-  // and the consent of this Akte.
+  // Datenschutz-Schleuse: all model calls of this run share one placeholder mapping.
   return mitKiKontext({ akteId: options.akteId }, () => runHelenaAgentImKontext(options));
 }
 

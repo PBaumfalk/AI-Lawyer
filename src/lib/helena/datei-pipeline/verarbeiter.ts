@@ -1,11 +1,9 @@
 /**
  * Processing step: the LLM only ever sees anonymised text.
  *
- * Every processor declares where it runs. The pipeline only allows
- * "lokal" (own Ollama) and "anymize-de" by default. "fremdanbieter" (foundation
- * models routed by anymize) needs explicit consent, because those providers
- * are not bound under § 203 Abs. 4 StGB (anymize Anlage 2 § 1) and pseudonymised
- * case facts can still be an attorney's secret. See modelle.ts.
+ * Every processor declares where it runs ("lokal", "anymize-de",
+ * "fremdanbieter") for the protocol. All of them only receive pseudonymised
+ * text. See modelle.ts.
  */
 
 import { streamText, type LanguageModel } from "ai";

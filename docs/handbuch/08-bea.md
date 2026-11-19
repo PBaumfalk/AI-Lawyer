@@ -71,7 +71,7 @@ AI-Lawyer legt für eine Nachricht kein Ticket an und trägt keine Frist ein. Da
 Vor dem Senden prüft AI-Lawyer:
 
 - **Zeichenprüfung:** beA erlaubt nur einen begrenzten Zeichensatz in Betreff, Text und Dateinamen. Unzulässige Zeichen werden gemeldet; **Typografische Zeichen ersetzen** wandelt z. B. typografische Anführungszeichen und Gedankenstriche um. Umlaute, „ß“ und „€“ bleiben erhalten.
-- **Grenzen:** höchstens **1000 Anhänge** und **200 MB** insgesamt. Warnungen erscheinen bei mehr als **50 MB** je Nachricht bzw. **60 MB** insgesamt. Warnungen müssen Sie bestätigen, Überschreitungen der Grenzen verhindern den Versand.
+- **Grenzen:** höchstens **1000 Anhänge** und **200 MB** insgesamt. Warnungen erscheinen bei mehr als **50 Anhängen** bzw. mehr als **60 MB** insgesamt. Warnungen müssen Sie bestätigen, Überschreitungen der Grenzen verhindern den Versand.
 - **Zugriff:** auf die Akte und alle Anhänge.
 
 Nach dem Versand bestätigt AI-Lawyer erst, wenn beA eine Nachrichten-ID liefert. Die angehängten Dokumente erhalten den Status **Versendet**.

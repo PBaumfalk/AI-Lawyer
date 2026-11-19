@@ -221,6 +221,13 @@ export const DEFAULT_SETTINGS: SettingDefinition[] = [
     label: "Datei-Pipeline: nur Akten mit vermerkter Einwilligung der Mandantschaft (§ 43e Abs. 5 BRAO)",
   },
   {
+    key: "ai.schleuse.erlaubteBegriffe",
+    value: "[]",
+    type: "json",
+    category: "ai",
+    label: "Datenschutz-Schleuse: Begriffe, die nie Personendaten sind (JSON-Liste, z. B. Produktnamen)",
+  },
+  {
     key: "helena.datei.nerPruefung",
     value: "true",
     type: "boolean",

@@ -114,7 +114,28 @@ Seit dem 19.11.2026 läuft **jedes externe Modell**, das Helena benutzt, durch d
 
 In allen Läufen gab es kein Leck, die Rückführung war vollständig, und das Werkzeug bekam den echten Namen. Einmal hat der Ausgangs-Check in einem waterfall-Lauf gesperrt. Die Ursache ließ sich in sechs Wiederholungen nicht nachstellen. Wahrscheinlich hatte anymize einen Wert im Werkzeugergebnis nicht ersetzt.
 
+**Gesamttest mit Datenbank (19.11.2026, `scripts/helena-e2e.ts`)**
+
+Aufbau: isolierter Test-Stack (Postgres mit pgvector, Redis, Ollama mit Embedding-Modell, keine Projekt-Volumes), fiktive Akte mit drei Beteiligten, zwei Dokumenten und einem kanzleieigenen Muster. Getestet wurde echtes anymize mit Helenas echtem Agenten und ihren Werkzeugen.
+
+| Lauf | Ergebnis |
+|---|---|
+| Sachstand, Schnellmodus | vollständig, echte Namen, Klagefrist 24.11.2026 richtig |
+| Kündigungsschutzklage, Hintergrundmodus | Muster genutzt, Klageentwurf und Fristentwurf in der Akte angelegt, Rückführung vollständig |
+| Einwilligung nur DE-Modelle | vollständig |
+| ohne Einwilligung | gestoppt, bevor etwas gesendet wurde |
+
+Über alle Läufe: kein Personendatum in den Anfragen an die KI, kein anderes externes Ziel als anymize, alle anymize-Jobs gelöscht.
+
+**Was erst der Gesamttest aufgedeckt hat (behoben)**
+- anymize markiert „Helena“ und „Kanzlei“ als Personendaten. Dafür gibt es jetzt erlaubte Begriffe. Heißt ein Beteiligter so, entfällt die Ausnahme für diese Akte.
+- Helenas Werkzeuge liefern JSON mit getrennten Feldern. Einen Vornamen allein erkennt anymize dort nicht. Bekannte Werte aus der Datenbank (Beteiligte, Mitarbeiter) werden deshalb **lokal und deterministisch** ersetzt, bevor etwas zu anymize geht.
+- In JSON werden Zeilenumbrüche zu `\n`. Werte, die über eine Zeile laufen, entgingen so der lokalen Ersetzung. Werkzeugergebnisse werden jetzt lesbar mit echten Zeilenumbrüchen übergeben, die Ersetzung behandelt `\n` als Leerraum.
+- Interne Datenbank-IDs sind keine Personendaten und bleiben lesbar, damit Werkzeugaufrufe funktionieren.
+- Der Schnellmodus hat mit Schleuse 90 statt 30 Sekunden Zeit.
+
 **Offen**
+0. Helenas Agent wählt das Modell über die Komplexitätsstufe, nicht über das Routing je Aufgabe. Im Test lief auch die Klage über waterfall (Stufe 2). Opus greift nur bei Stufe 3. Das Routing sollte in die Stufenwahl einfließen, zum Beispiel Schriftsatz → Stufe 3.
 1. Hintergrundaufgaben ohne Aktenkontext laufen pseudonymisiert und nur über deutsche Modelle, prüfen aber die Einwilligung nicht. Betroffen sind:
    - Scanner,
    - Tagesbriefing,
@@ -126,7 +147,7 @@ In allen Läufen gab es kein Leck, die Rückführung war vollständig, und das W
    Sie sollten `mitKiKontext({ akteId })` setzen.
 2. Die Dokumentanalyse mit Bildern (Vision) geht mit externen Anbietern nicht mehr.
 3. Der Chat schickt bei jeder Anfrage seinen großen System-Prompt (RAG-Kontext) neu an anymize. Gesetzes- und Urteilstexte könnte man über Anfragen hinweg zwischenspeichern.
-4. Helena wurde noch nicht vollständig gegen die Datenbank getestet. Geprüft sind die Middleware live und der gesamte Unit-Test-Bestand.
+4. Die lokale Namensprüfung (Ollama mit 35B-Modell) war im Gesamttest abgeschaltet, weil das Modell im Test-Stack fehlte.
 
 ## 3. Datenschutz und Berufsrecht
 

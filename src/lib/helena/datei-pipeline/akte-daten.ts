@@ -33,11 +33,19 @@ export async function bekannteWerteDerAkte(akteId: string): Promise<string[]> {
   const werte = new Set<string>();
   for (const { kontakt: k } of beteiligte) {
     const name = [k.vorname, k.nachname].filter(Boolean).join(" ");
-    for (const w of [name, k.nachname, k.firma, k.kurzname, k.strasse, k.telefon, k.mobil, k.email, k.iban]) {
+    for (const w of [name, k.vorname, k.nachname, k.firma, k.kurzname, k.strasse, k.telefon, k.mobil, k.email, k.iban]) {
       if (w && w.trim().length >= 3) werte.add(w.trim());
     }
     if (k.plz && k.ort) werte.add(`${k.plz} ${k.ort}`);
     if (k.geburtsdatum) werte.add(fmtDatum(k.geburtsdatum));
+  }
+  // Staff names (lawyer and clerk of the Akte, the user in the prompt) are personal data too.
+  const mitarbeiter = await prisma.user.findMany({ select: { name: true } });
+  for (const m of mitarbeiter) {
+    if (m.name && m.name.trim().length >= 3) {
+      werte.add(m.name.trim());
+      for (const teil of m.name.trim().split(/\s+/)) if (teil.length >= 3) werte.add(teil);
+    }
   }
   return [...werte];
 }

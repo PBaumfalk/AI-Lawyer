@@ -327,6 +327,7 @@ async function runHelenaAgentImKontext(
     onStepUpdate,
     abortSignal,
     repairToolCall,
+    timeoutMs: schleusenZeitbudget(providerName, actualMode),
   });
 
   // -----------------------------------------------------------------------
@@ -392,6 +393,7 @@ async function runHelenaAgentImKontext(
         abortSignal,
         repairToolCall:
           providerName === "ollama" ? ollamaResponseGuard : undefined,
+        timeoutMs: schleusenZeitbudget(providerName, actualMode),
       });
 
       if (!escalatedResult.stalled) {
@@ -473,3 +475,12 @@ export type { RateLimitResult } from "./rate-limiter";
 // Schriftsatz pipeline re-exports
 export { runSchriftsatzPipeline, isSchriftsatzIntent } from "./schriftsatz";
 export type { SchriftsatzPipelineResult, SchriftsatzPipelineOptions } from "./schriftsatz";
+
+/**
+ * External models run behind the Datenschutz-Schleuse (anymize adds 2-5 s per
+ * new tool result). Inline gets 90 s instead of 30 s; background stays at 3 min.
+ */
+function schleusenZeitbudget(provider: string, mode: "inline" | "background"): number | undefined {
+  if (provider === "ollama") return undefined;
+  return mode === "inline" ? 90_000 : undefined;
+}

@@ -162,13 +162,110 @@ describe("Datenschutz-Schleuse als Middleware", () => {
     ).rejects.toThrow(/Bilder und Dateien/);
   });
 
-  it("von anymize übersehener Beteiligter: Modell wird nie aufgerufen", async () => {
+  it("von anymize übersehene Beteiligte: lokal ersetzt, Anfrage geht geschützt hinaus", async () => {
     const { konfig } = aufbau({ erkennt: PII.filter((w) => !w.includes("Demirta")), bekannte: ["Aylin Demirtaş"] });
+    let gesehen = "";
+    const modell = new MockLanguageModelV1({
+      doGenerate: async (opt) => {
+        gesehen = JSON.stringify(opt.prompt);
+        return { rawCall: { rawPrompt: null, rawSettings: {} }, finishReason: "stop", usage: USAGE, text: "ok" };
+      },
+    });
+    await mitKiKontext({ akteId: "a" }, () => generateText({ model: schuetzeModell(modell, konfig), prompt: AKTE }));
+    expect(gesehen).not.toContain("Demirta");
+    expect(gesehen).toMatch(/\[\[person-L[0-9A-F]{5}\]\]/);
+  });
+
+  it("unbekannter, von anymize übersehener Name mit Zusatzprüfer: Modell wird nie aufgerufen", async () => {
+    const { konfig } = aufbau({
+      erkennt: PII.filter((w) => !w.includes("Demirta")),
+      zusatz: async (t) => ({ funde: t.includes("Aylin Demirtaş") ? ["Aylin Demirtaş"] : [] }),
+    });
     let aufgerufen = false;
     const modell = new MockLanguageModelV1({ doGenerate: async () => { aufgerufen = true; throw new Error("nein"); } });
     const e = await mitKiKontext({ akteId: "a" }, () => generateText({ model: schuetzeModell(modell, konfig), prompt: AKTE })).catch((x) => x);
     expect(e).toBeInstanceOf(PipelineFehler);
     expect((e as PipelineFehler).code).toBe("PII_IM_AUSGANG");
     expect(aufgerufen).toBe(false);
+  });
+});
+
+describe("Erlaubte Begriffe", () => {
+  it("von anymize als Name markierte Begriffe wie Helena bleiben lesbar und blockieren nicht", async () => {
+    const { konfig } = aufbau({ erkennt: [...PII, "Helena", "Kanzlei"] });
+    let gesehen = "";
+    const modell = new MockLanguageModelV1({
+      doGenerate: async (opt) => {
+        gesehen = JSON.stringify(opt.prompt);
+        return { rawCall: { rawPrompt: null, rawSettings: {} }, finishReason: "stop", usage: USAGE, text: "ok" };
+      },
+    });
+    await mitKiKontext({ akteId: "a" }, () =>
+      generateText({ model: schuetzeModell(modell, konfig), system: "Du bist Helena, die KI-Assistenz der Kanzlei.", prompt: AKTE }),
+    );
+    expect(gesehen).toContain("Du bist Helena, die KI-Assistenz der Kanzlei.");
+    for (const w of PII) expect(gesehen).not.toContain(w);
+  });
+
+  it("heißt eine Beteiligte Helena, gilt die Ausnahme für diese Akte nicht", async () => {
+    const { konfig } = aufbau({ erkennt: ["Helena", "Helena Sommer"], bekannte: ["Helena Sommer"] });
+    let gesehen = "";
+    const modell = new MockLanguageModelV1({
+      doGenerate: async (opt) => {
+        gesehen = JSON.stringify(opt.prompt);
+        return { rawCall: { rawPrompt: null, rawSettings: {} }, finishReason: "stop", usage: USAGE, text: "ok" };
+      },
+    });
+    await mitKiKontext({ akteId: "b" }, () =>
+      generateText({ model: schuetzeModell(modell, konfig), prompt: "Frau Helena Sommer schreibt: Helena ist mein Rufname." }),
+    );
+    expect(gesehen).not.toContain("Helena");
+  });
+});
+
+describe("Lokale Vorab-Pseudonymisierung bekannter Werte", () => {
+  it("Vorname allein in einem JSON-Werkzeugergebnis wird ersetzt, auch wenn anymize ihn übersieht", async () => {
+    const { konfig } = aufbau({ erkennt: [], bekannte: ["Sabine Krüger-Wendt", "Sabine", "Krüger-Wendt", "Lindenstraße 42"] });
+    const prompts: LanguageModelV1CallOptions["prompt"][] = [];
+    let schritt = 0;
+    const modell = new MockLanguageModelV1({
+      doGenerate: async (opt) => {
+        prompts.push(opt.prompt);
+        schritt++;
+        const basis = { rawCall: { rawPrompt: null, rawSettings: {} }, usage: USAGE };
+        if (schritt === 1) return { ...basis, finishReason: "tool-calls", toolCalls: [{ toolCallType: "function", toolCallId: "t1", toolName: "akte", args: JSON.stringify({ akteId: "cm3abcdefghijklmnopqrstu" }) }] };
+        return { ...basis, finishReason: "stop", text: "fertig" };
+      },
+    });
+    let idArg = "";
+    await mitKiKontext({ akteId: "a" }, () =>
+      generateText({
+        model: schuetzeModell(modell, konfig),
+        prompt: "Lies die Akte cm3abcdefghijklmnopqrstu.",
+        maxSteps: 3,
+        tools: {
+          akte: tool({
+            parameters: z.object({ akteId: z.string() }),
+            execute: async ({ akteId }) => ((idArg = akteId), { mandant: { vorname: "Sabine", nachname: "Krüger-Wendt", strasse: "Lindenstraße 42" } }),
+          }),
+        },
+      }),
+    );
+    expect(idArg).toBe("cm3abcdefghijklmnopqrstu");
+    const alles = JSON.stringify(prompts);
+    expect(alles).not.toContain("Sabine");
+    expect(alles).not.toContain("Krüger");
+    expect(alles).not.toContain("Lindenstraße");
+  });
+});
+
+describe("JSON-Zeilenumbrüche (live beobachtet)", () => {
+  it("bekannte Werte nach einem maskierten Zeilenumbruch werden lokal ersetzt", async () => {
+    const { DatenschutzSchleuse } = await import("@/lib/helena/datei-pipeline/schleuse");
+    const s = new DatenschutzSchleuse({} as never, { bekannteWerte: ["sabine.krueger-wendt@beispielmail.de", "50674 Köln", "Rheinland Logistik Hoffmann GmbH"] });
+    const json = JSON.stringify({ t: "E-Mail:\nsabine.krueger-wendt@beispielmail.de, 50674\nKöln, bei der Rheinland Logistik\nHoffmann GmbH" });
+    const r = s.lokalPseudonymisieren(json);
+    expect(r).not.toMatch(/sabine|50674|Hoffmann/);
+    expect(JSON.parse(r).t).toContain("E-Mail:\n[[email-L");
   });
 });

@@ -114,6 +114,8 @@ export async function schleusenModell(provider: string, modellName: string): Pro
   }
   const nerAn = await getSettingTyped<boolean>("helena.datei.nerPruefung", true);
   const pflicht = await getSettingTyped<boolean>("helena.datei.einwilligungErforderlich", true);
+  const kanzlei = await prisma.kanzlei.findFirst({ select: { name: true } }).catch(() => null);
+  const zusatzBegriffe = await getSettingTyped<unknown>("ai.schleuse.erlaubteBegriffe", []);
   return schuetzeModell(basis, {
     anymize: () => new AnymizeClient({ apiKey: anymizeKey, baseUrl: anymizeUrl }),
     standort,
@@ -121,6 +123,11 @@ export async function schleusenModell(provider: string, modellName: string): Pro
     einwilligungLaden: (akteId) => einwilligungDerAkte(akteId),
     einwilligungErforderlich: pflicht,
     bekannteWerteLaden: (akteId) => bekannteWerteDerAkte(akteId),
+    // Own firm name and admin-configured terms are not client data.
+    erlaubteBegriffe: [
+      ...(kanzlei?.name ? [kanzlei.name] : []),
+      ...(Array.isArray(zusatzBegriffe) ? zusatzBegriffe.filter((x): x is string => typeof x === "string") : []),
+    ],
     zusatzPruefer: nerAn ? nerPruefer : undefined,
     log: schleusenLog,
   });

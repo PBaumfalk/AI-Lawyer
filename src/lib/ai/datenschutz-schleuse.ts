@@ -88,9 +88,17 @@ export interface SchleusenKonfig {
   einwilligungLaden: (akteId: string) => Promise<Einwilligung>;
   einwilligungErforderlich: boolean;
   bekannteWerteLaden?: (akteId: string) => Promise<string[]>;
+  /** Terms that are never personal data (assistant name, legal vocabulary, own firm). */
+  erlaubteBegriffe?: string[];
   zusatzPruefer?: ZusatzPruefer;
   log?: { warn(obj: object, msg: string): void };
 }
+
+/** Never personal data; anymize sometimes tags them anyway (live 2026-11-19: "Helena", "Kanzlei"). */
+export const STANDARD_ERLAUBTE_BEGRIFFE = [
+  "Helena", "Kanzlei", "Mandant", "Mandantin", "Mandantschaft", "Rechtsanwalt", "Rechtsanwältin",
+  "Anwalt", "Anwältin", "Arbeitgeber", "Arbeitgeberin", "Arbeitnehmer", "Arbeitnehmerin", "Gegner", "Gegnerin",
+];
 
 interface Lauf {
   schleuse: DatenschutzSchleuse;
@@ -140,11 +148,18 @@ export function schleusenMiddleware(k: SchleusenKonfig): LanguageModelV1Middlewa
       if (ctx) {
         if (!ctx.schleuse) {
           ctx.bekannteWerte ??= ctx.akteId && k.bekannteWerteLaden ? k.bekannteWerteLaden(ctx.akteId).catch(() => []) : Promise.resolve([]);
-          ctx.schleuse = new DatenschutzSchleuse(k.anymize(), { bekannteWerte: await ctx.bekannteWerte, zusatzPruefer: k.zusatzPruefer });
+          ctx.schleuse = new DatenschutzSchleuse(k.anymize(), {
+            bekannteWerte: await ctx.bekannteWerte,
+            erlaubteWerte: [...STANDARD_ERLAUBTE_BEGRIFFE, ...(k.erlaubteBegriffe ?? [])],
+            zusatzPruefer: k.zusatzPruefer,
+          });
         }
         schleuse = ctx.schleuse;
       } else {
-        schleuse = new DatenschutzSchleuse(k.anymize(), { zusatzPruefer: k.zusatzPruefer });
+        schleuse = new DatenschutzSchleuse(k.anymize(), {
+          erlaubteWerte: [...STANDARD_ERLAUBTE_BEGRIFFE, ...(k.erlaubteBegriffe ?? [])],
+          zusatzPruefer: k.zusatzPruefer,
+        });
       }
 
       // 3. Pseudonymise. First everything new (anymize), then the model's own output (local).
@@ -218,7 +233,9 @@ async function pseudonymisierePrompt(prompt: LanguageModelV1Prompt, s: Datenschu
             content: await Promise.all(
               m.content.map(async (p) => {
                 if (p.content?.some((c) => c.type !== "text")) throw NICHT_PSEUDONYMISIERBAR();
-                const roh = typeof p.result === "string" ? p.result : JSON.stringify(p.result ?? null);
+                // Readable form with real line breaks: in compact JSON a value wrapped across
+                // lines ("50674\\nKöln") escapes both anymize and word-boundary matching.
+                const roh = typeof p.result === "string" ? p.result : lesbar(p.result);
                 return { ...p, result: await s.einlassen(roh), content: undefined };
               }),
             ),
@@ -285,6 +302,11 @@ export function rueckfuehrungsStrom(s: DatenschutzSchleuse, json: boolean): Tran
       leeren(ctrl);
     },
   });
+}
+
+/** Tool result as readable, JSON-like text with real line breaks. */
+export function lesbar(wert: unknown): string {
+  return (JSON.stringify(wert ?? null, null, 2) ?? "null").replace(/\\r\\n|\\n/g, "\n").replace(/\\t/g, "\t");
 }
 
 /** Number of placeholders left in a text (for protocols). */

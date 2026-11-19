@@ -56,6 +56,11 @@ export interface AgentRunOptions {
   abortSignal?: AbortSignal;
   /** Optional experimental_repairToolCall hook (from Plan 03) */
   repairToolCall?: ToolCallRepairFunction<ToolSet>;
+  /**
+   * Override of the time budget. External models run behind the
+   * Datenschutz-Schleuse, which adds 2-5 s of anonymisation per new tool result.
+   */
+  timeoutMs?: number;
 }
 
 export interface StepUpdate {
@@ -120,7 +125,7 @@ export async function runAgent(
 
   // 1. Determine caps based on mode
   const maxSteps = mode === "inline" ? 5 : 20;
-  const timeout = mode === "inline" ? 30_000 : 180_000;
+  const timeout = options.timeoutMs ?? (mode === "inline" ? 30_000 : 180_000);
 
   // 2. Create AbortController combining external signal with timeout
   const controller = new AbortController();

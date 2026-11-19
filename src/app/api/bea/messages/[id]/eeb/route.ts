@@ -12,6 +12,9 @@ const log = createLogger("bea-eeb");
 
 const eebSchema = z.object({ abgabeDatum: z.string().trim().min(1) });
 
+/** Claim marker while a submission runs; stays set if the outcome is unclear. */
+const ABGABE_LAEUFT = "WIRD_ABGEGEBEN";
+
 const NICHT_MOEGLICH = "Für diese Nachricht kann kein eEB abgegeben werden";
 
 /**
@@ -86,9 +89,28 @@ export async function POST(
     abgabeDatum,
   };
 
+  // Atomic claim before the irreversible provider call: of two concurrent
+  // requests only one gets count 1 and may submit.
+  const vorher = nachricht.eebStatus;
+  const claim = await prisma.beaNachricht.updateMany({
+    where: { id, eebStatus: { notIn: ["BESTAETIGT", ABGABE_LAEUFT] } },
+    data: { eebStatus: ABGABE_LAEUFT },
+  });
+  if (claim.count === 0) {
+    return NextResponse.json({ error: "Das eEB wird bereits abgegeben oder wurde schon abgegeben." }, { status: 409 });
+  }
+  const zuruecksetzen = async () => {
+    try {
+      await prisma.beaNachricht.updateMany({ where: { id, eebStatus: ABGABE_LAEUFT }, data: { eebStatus: vorher } });
+    } catch (err) {
+      log.error({ nachrichtId: id, err: err instanceof Error ? err.message : "Unbekannter Fehler" }, "eEB-Status konnte nicht zurückgesetzt werden");
+    }
+  };
+
   try {
     await mitBeaSitzung(userId, (s, p) => p.gibEebAb(s, auftrag), { wiederholen: false });
   } catch (e) {
+    await zuruecksetzen();
     if (e instanceof BeaNichtEingerichtetError) {
       return NextResponse.json(
         { error: "Für Ihren Benutzer ist kein gültiges beA-Softwarezertifikat hinterlegt", details: e.message },
@@ -104,10 +126,17 @@ export async function POST(
 
   // Stored as noon UTC so the calendar day is the same in every time zone.
   const eebDatum = new Date(`${abgabeDatum}T12:00:00Z`);
-  await prisma.beaNachricht.update({
-    where: { id },
-    data: { eebStatus: "BESTAETIGT", eebDatum },
-  });
+  let warnung: string | undefined;
+  try {
+    await prisma.beaNachricht.update({
+      where: { id },
+      data: { eebStatus: "BESTAETIGT", eebDatum },
+    });
+  } catch (e) {
+    // Submitted but not recorded: WIRD_ABGEGEBEN stays and signals "status unclear".
+    log.error({ nachrichtId: id, err: e instanceof Error ? e.message : "Unbekannter Fehler" }, "eEB abgegeben, Status nicht gespeichert");
+    warnung = "eEB wurde abgegeben, der Status konnte aber nicht gespeichert werden.";
+  }
 
   logAuditEvent({
     userId,
@@ -116,5 +145,5 @@ export async function POST(
     details: { nachrichtId: id, abgabeDatum, ergebnis: "ERFOLG" },
   }).catch(() => {});
 
-  return NextResponse.json({ success: true, eebDatum: eebDatum.toISOString() });
+  return NextResponse.json({ success: true, eebDatum: eebDatum.toISOString(), ...(warnung ? { warnung } : {}) });
 }

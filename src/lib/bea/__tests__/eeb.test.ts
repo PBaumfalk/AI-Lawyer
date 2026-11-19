@@ -9,6 +9,13 @@ const { nachrichten, akten, store, zert, prismaFake, auditLog } = vi.hoisted(() 
   const prismaFake = {
     beaNachricht: {
       findUnique: vi.fn(async ({ where }: { where: { id: string } }) => nachrichten.find((n) => n.id === where.id) ?? null),
+      updateMany: vi.fn(async ({ where, data }: { where: { id: string; eebStatus: { notIn: string[] } | string }; data: Record<string, unknown> }) => {
+        const n = nachrichten.find((x) => x.id === where.id);
+        const s = n?.eebStatus as string;
+        const ok = !!n && (typeof where.eebStatus === "string" ? s === where.eebStatus : !where.eebStatus.notIn.includes(s));
+        if (ok) Object.assign(n!, data);
+        return { count: ok ? 1 : 0 };
+      }),
       update: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
         const n = nachrichten.find((x) => x.id === where.id)!;
         Object.assign(n, data);
@@ -142,6 +149,42 @@ describe("POST /api/bea/messages/[id]/eeb – serverseitige Abgabe", () => {
     expect(abgabe).toHaveBeenCalledTimes(1);
     expect(nachrichten[0].eebStatus).toBe("AUSSTEHEND");
     expect(prismaFake.beaNachricht.update).not.toHaveBeenCalled();
+  });
+
+  it("gleichzeitige zweite Anfrage → 409, gibEebAb nur 1×", async () => {
+    let frei!: () => void;
+    const abgabe = vi.spyOn(provider, "gibEebAb").mockImplementation(
+      () => new Promise((r) => { frei = () => r({ messageId: "m" }); }),
+    );
+    const erste = post({ abgabeDatum: heuteBerlin() });
+    await vi.waitFor(() => expect(abgabe).toHaveBeenCalledTimes(1));
+    const zweite = await post({ abgabeDatum: heuteBerlin() });
+    expect(zweite.status).toBe(409);
+    expect((await zweite.json()).error).toBe("Das eEB wird bereits abgegeben oder wurde schon abgegeben.");
+    frei();
+    expect((await erste).status).toBe(200);
+    expect(abgabe).toHaveBeenCalledTimes(1);
+  });
+
+  it("Provider-Fehler setzt den vorherigen Status zurück", async () => {
+    vi.spyOn(provider, "gibEebAb").mockRejectedValue(new Error("x"));
+    await post({ abgabeDatum: heuteBerlin() });
+    expect(nachrichten[0].eebStatus).toBe("AUSSTEHEND");
+  });
+
+  it("Zertifikat fehlt nach dem Claim → 409 und Status zurückgesetzt", async () => {
+    zert.vorhanden = false;
+    expect((await post({ abgabeDatum: heuteBerlin() })).status).toBe(409);
+    expect(nachrichten[0].eebStatus).toBe("AUSSTEHEND");
+  });
+
+  it("Speichern nach erfolgreicher Abgabe schlägt fehl → 200 mit Warnung, Status bleibt WIRD_ABGEGEBEN", async () => {
+    prismaFake.beaNachricht.update.mockRejectedValueOnce(new Error("db down"));
+    const res = await post({ abgabeDatum: heuteBerlin() });
+    expect(res.status).toBe(200);
+    expect((await res.json()).warnung).toBe("eEB wurde abgegeben, der Status konnte aber nicht gespeichert werden.");
+    expect(nachrichten[0].eebStatus).toBe("WIRD_ABGEGEBEN");
+    expect((await post({ abgabeDatum: heuteBerlin() })).status).toBe(409);
   });
 
   it("ohne Zertifikat → 409, ohne Provider → 503", async () => {

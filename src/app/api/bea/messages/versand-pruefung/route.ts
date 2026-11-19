@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   }
 
   const user = { id: result.session.user.id, role: result.session.user.role as UserRole };
-  const doks = await loeseVersandDokumenteAuf(user, data.anhaenge);
+  const doks = await loeseVersandDokumenteAuf(user, data.anhaenge, data.akteId);
   if (!doks.ok) {
     const response: BeaVersandPruefungResponse = {
       ok: false, fehler: [doks.error], warnungen: [], verstoesse: [], errors: doks.errors,

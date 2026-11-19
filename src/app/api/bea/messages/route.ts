@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { requirePermission, akteAccessDenied } from "@/lib/rbac";
+import { requirePermission, akteAccessDenied, buildAkteAccessFilter } from "@/lib/rbac";
 import { beaVersandSchema, VERSANDSTATUS_UNKLAR, type BeaVersandRequest } from "@/lib/bea/versand";
 import { pruefeVersand } from "@/lib/bea/regeln";
 import { loeseVersandDokumenteAuf, type VersandDokument } from "@/lib/bea/versand-dokumente";
@@ -28,7 +28,14 @@ export async function GET(request: NextRequest) {
   const take = Math.min(parseInt(searchParams.get("take") ?? "50"), 100);
   const skip = parseInt(searchParams.get("skip") ?? "0");
 
-  const where: any = {};
+  // Only messages without Akte or with an Akte the user may access.
+  // An empty filter (ADMIN) means no restriction; Prisma would read `akte: {}`
+  // on the optional relation differently, so it is left out entirely.
+  const akteFilter = buildAkteAccessFilter(result.session.user.id, result.session.user.role as UserRole);
+  const where: any =
+    Object.keys(akteFilter).length === 0
+      ? {}
+      : { AND: [{ OR: [{ akteId: null }, { akte: { is: akteFilter } }] }] };
 
   if (status) {
     where.status = status;
@@ -112,7 +119,7 @@ export async function POST(request: NextRequest) {
 
   // Versand-Gate: every attachment must be accessible and FREIGEGEBEN
   const user = { id: userId, role: result.session.user.role as UserRole };
-  const doks = await loeseVersandDokumenteAuf(user, data.anhaenge);
+  const doks = await loeseVersandDokumenteAuf(user, data.anhaenge, data.akteId);
   if (!doks.ok) {
     return NextResponse.json({ error: doks.error, details: doks.errors }, { status: doks.status });
   }

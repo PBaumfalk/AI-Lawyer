@@ -21,17 +21,24 @@ export type VersandDokumentAufloesung =
   | { ok: true; dokumente: VersandDokument[] }
   | { ok: false; status: number; error: string; errors: BeaDokumentFehler[] };
 
-/** Resolves attachments in request order; rejects unless every document is accessible and approved. */
+/**
+ * Resolves attachments in request order. Rejects unless an Akte is given,
+ * every document belongs to that Akte, is accessible to the user and approved.
+ */
 export async function loeseVersandDokumenteAuf(
   user: { id: string; role: UserRole },
   anhaenge: { dokumentId: string; art: "SCHRIFTSATZ" | "ATTACHMENT" }[],
+  akteId: string | null | undefined,
 ): Promise<VersandDokumentAufloesung> {
   if (anhaenge.length === 0) return { ok: true, dokumente: [] };
+  if (!akteId) {
+    return { ok: false, status: 400, error: "Für Anhänge muss eine Akte angegeben werden", errors: [] };
+  }
   const ids = anhaenge.map((a) => a.dokumentId);
 
   const zugaenglich = await prisma.dokument.findMany({
     where: { id: { in: ids }, akte: buildAkteAccessFilter(user.id, user.role) },
-    select: { id: true, name: true, dateipfad: true, mimeType: true, groesse: true },
+    select: { id: true, akteId: true, name: true, dateipfad: true, mimeType: true, groesse: true },
   });
   const fehlend = ids.filter((id) => !zugaenglich.some((d) => d.id === id));
   if (fehlend.length > 0) {
@@ -41,6 +48,18 @@ export async function loeseVersandDokumenteAuf(
       error: "Dokument nicht gefunden",
       errors: fehlend.map((dokumentId) => ({
         dokumentId, name: "", status: "UNBEKANNT", reason: "Dokument nicht gefunden",
+      })),
+    };
+  }
+
+  const fremd = zugaenglich.filter((d) => d.akteId !== akteId);
+  if (fremd.length > 0) {
+    return {
+      ok: false,
+      status: 400,
+      error: "Dokument gehört nicht zur Akte",
+      errors: fremd.map((d) => ({
+        dokumentId: d.id, name: d.name, status: "FREMDE_AKTE", reason: "Dokument gehört nicht zur Akte",
       })),
     };
   }
@@ -57,6 +76,9 @@ export async function loeseVersandDokumenteAuf(
 
   return {
     ok: true,
-    dokumente: anhaenge.map((a) => ({ ...zugaenglich.find((d) => d.id === a.dokumentId)!, art: a.art })),
+    dokumente: anhaenge.map((a) => {
+      const { akteId: _akteId, ...d } = zugaenglich.find((z) => z.id === a.dokumentId)!;
+      return { ...d, art: a.art };
+    }),
   };
 }

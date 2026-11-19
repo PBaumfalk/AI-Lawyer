@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useBeaSession } from "@/lib/bea/session";
-import { beaSendMessage, type BeaSendPayload } from "@/lib/bea/client";
 import {
-  buildGesendetNachricht,
+  type BeaVersandRequest,
   type BeaVersandPruefungRequest,
   type BeaVersandPruefungResponse,
 } from "@/lib/bea/versand";
@@ -40,23 +38,15 @@ interface DokumentAttachment {
   status?: string;
 }
 
-/** Load a DMS document's content as base64 (for the bea.expert payload). */
-async function ladeDokumentBase64(dokumentId: string): Promise<string> {
-  const res = await fetch(`/api/dokumente/${encodeURIComponent(dokumentId)}?download=true`);
-  if (!res.ok) throw new Error("Anhang konnte nicht geladen werden");
-  const bytes = new Uint8Array(await res.arrayBuffer());
-  let bin = "";
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    bin += String.fromCharCode(...Array.from(bytes.subarray(i, i + 0x8000)));
-  }
-  return btoa(bin);
-}
+const VERSAND_UMSTELLUNG = "Der Versand wird gerade auf die serverseitige beA-Anbindung umgestellt.";
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function BeaCompose() {
   const router = useRouter();
-  const { session, isAuthenticated } = useBeaSession();
+  // Own postbox: SAFE-ID stored with the user's certificate after the first beA login.
+  const [postfachSafeId, setPostfachSafeId] = useState<string | null>(null);
+  const [statusGeladen, setStatusGeladen] = useState(false);
 
   // Form state
   const [recipientSafeId, setRecipientSafeId] = useState("");
@@ -79,6 +69,14 @@ export function BeaCompose() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/bea/status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setPostfachSafeId(d?.eingerichtet ? d?.zertifikat?.safeId ?? null : null))
+      .catch(() => setPostfachSafeId(null))
+      .finally(() => setStatusGeladen(true));
+  }, []);
 
   // Fetch Kontakte with beaSafeId for autocomplete
   useEffect(() => {
@@ -118,94 +116,72 @@ export function BeaCompose() {
     setShowSafeIdDropdown(false);
   };
 
-  // Handle send
+  // Handle send: pre-flight, then the server sends through the beA provider.
+  // Interim version until the compose form is rebuilt (Task 12).
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!recipientSafeId || !subject) {
-      setError("Empfaenger-SAFE-ID und Betreff sind erforderlich");
+      setError("Empfänger-SAFE-ID und Betreff sind erforderlich");
       return;
     }
-
-    if (!isAuthenticated || !session) {
-      setError("beA-Sitzung ist nicht aktiv. Bitte melden Sie sich zuerst an.");
+    if (!postfachSafeId) {
+      setError(VERSAND_UMSTELLUNG);
       return;
     }
 
     setSending(true);
     setError(null);
 
-    let gesendeteId: string | null = null;
+    const anhaenge = attachments.map((a) => ({ dokumentId: a.id, art: "ATTACHMENT" as const }));
     try {
-      // Step 1: Versand-Gate BEFORE transmitting (access + FREIGEGEBEN)
-      const dokumentIds = attachments.map((a) => a.id);
-      if (dokumentIds.length > 0) {
-        const pruefung = await fetch("/api/bea/messages/versand-pruefung", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            betreff: subject,
-            text: body,
-            empfaengerSafeIds: [recipientSafeId],
-            anhaenge: dokumentIds.map((dokumentId) => ({ dokumentId, art: "ATTACHMENT" as const })),
-          } satisfies BeaVersandPruefungRequest),
-        });
-        const pr: BeaVersandPruefungResponse = await pruefung
-          .json()
-          .catch(() => ({ ok: false, fehler: [], warnungen: [], verstoesse: [], errors: [] }));
-        if (!pruefung.ok || !pr.ok) {
-          const gruende = [
-            ...pr.errors.map((e) => `${e.name || e.dokumentId}: ${e.reason}`),
-            ...pr.fehler,
-            ...pr.verstoesse.map((v) => `Unzulässiges Zeichen ${v.zeichen} (${v.codePoint})`),
-          ].join("; ");
-          throw new Error(`Versand nicht moeglich. ${gruende || "Dokumente nicht freigegeben."}`);
-        }
-      }
-
-      // Step 2: load attachment contents (base64) for bea.expert
-      const anhaenge = await Promise.all(
-        attachments.map(async (a) => ({
-          name: a.name,
-          mimeType: a.mimeType,
-          content: await ladeDokumentBase64(a.id),
-        }))
-      );
-
-      // Step 3: send via bea.expert (browser-side)
-      const payload: BeaSendPayload = { recipientSafeId, subject, body, attachments: anhaenge };
-      const sendResult = await beaSendMessage(session, payload);
-
-      // Step 4: only a confirmed send (with beA message ID) is recorded as GESENDET;
-      // buildGesendetNachricht throws otherwise and nothing is stored.
-      const record = buildGesendetNachricht(sendResult, {
-        betreff: subject,
-        inhalt: body,
-        absender: session.displayName || session.safeId,
-        safeIdAbsender: session.safeId,
-        empfaenger: recipientName || recipientSafeId,
-        safeIdEmpfaenger: recipientSafeId,
-        dokumentIds,
-        anhaenge: attachments.map((a) => ({ name: a.name, mimeType: a.mimeType, dokumentId: a.id })),
-        akteId,
-      });
-      gesendeteId = record.nachrichtenId ?? null;
-
-      const storeRes = await fetch("/api/bea/messages", {
+      // Step 1: pre-flight (access, Versand-Gate, beA rules) — always, also without attachments
+      const pruefung = await fetch("/api/bea/messages/versand-pruefung", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(record),
+        body: JSON.stringify({
+          akteId: akteId ?? undefined,
+          betreff: subject,
+          text: body,
+          empfaengerSafeIds: [recipientSafeId],
+          anhaenge,
+        } satisfies BeaVersandPruefungRequest),
       });
+      const pr: BeaVersandPruefungResponse = await pruefung
+        .json()
+        .catch(() => ({ ok: false, fehler: [], warnungen: [], verstoesse: [], errors: [] }));
+      if (!pruefung.ok || !pr.ok) {
+        const gruende = [
+          ...(pr.errors ?? []).map((e) => `${e.name || e.dokumentId}: ${e.reason}`),
+          ...(pr.fehler ?? []),
+          ...(pr.verstoesse ?? []).map((v) => `Unzulässiges Zeichen ${v.zeichen} (${v.codePoint})`),
+        ].join("; ");
+        throw new Error(`Versand nicht möglich. ${gruende || "Prüfung fehlgeschlagen."}`);
+      }
 
-      if (!storeRes.ok && storeRes.status !== 409) {
-        const data = await storeRes.json().catch(() => ({}));
-        throw new Error(
-          `Die Nachricht wurde ueber beA versendet (Nachrichten-ID ${gesendeteId}), konnte aber nicht gespeichert werden: ${data.error || storeRes.status}. Bitte manuell in der Akte vermerken.`
-        );
+      // Step 2: server-side send (never retried by the server)
+      const res = await fetch("/api/bea/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          akteId: akteId ?? undefined,
+          postfachSafeId,
+          empfaengerSafeIds: [recipientSafeId],
+          betreff: subject,
+          text: body,
+          nachrichtenTyp: "ALLGEMEINE_NACHRICHT",
+          eebAnfordern: false,
+          dringend: false,
+          anhaenge,
+          alsEntwurf: false,
+        } satisfies BeaVersandRequest),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Versand fehlgeschlagen (${res.status})`);
       }
 
       setSuccess(true);
-      // Redirect after short delay
       setTimeout(() => router.push("/bea"), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unbekannter Fehler");
@@ -214,7 +190,7 @@ export function BeaCompose() {
     }
   };
 
-  if (!isAuthenticated) {
+  if (statusGeladen && !postfachSafeId) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -223,20 +199,12 @@ export function BeaCompose() {
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Zurueck
+            Zurück
           </Link>
         </div>
         <div className="glass rounded-xl p-12 text-center">
           <Shield className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-          <p className="text-muted-foreground">
-            Bitte melden Sie sich zuerst bei beA an, um Nachrichten zu senden.
-          </p>
-          <Link
-            href="/bea"
-            className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand/90 transition-colors"
-          >
-            Zur beA-Anmeldung
-          </Link>
+          <p className="text-muted-foreground">{VERSAND_UMSTELLUNG}</p>
         </div>
       </div>
     );
@@ -452,7 +420,7 @@ export function BeaCompose() {
           </Link>
           <button
             type="submit"
-            disabled={sending || !recipientSafeId || !subject}
+            disabled={sending || !postfachSafeId || !recipientSafeId || !subject}
             className="inline-flex items-center gap-2 rounded-lg bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {sending ? (

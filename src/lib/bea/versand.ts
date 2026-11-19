@@ -116,37 +116,3 @@ export function buildEebBestaetigung(
   }
   return { nachrichtenId, eebDatum: eebDatum.toISOString() };
 }
-
-// ---------------------------------------------------------------------------
-// Legacy browser send contract: only still imported by bea-compose.tsx, which
-// Task 12 rebuilds on POST /api/bea/messages. The server no longer accepts it.
-// ---------------------------------------------------------------------------
-
-/** @deprecated Removed with the browser send in Task 12. */
-export interface BeaVersandFormular {
-  betreff: string;
-  inhalt: string;
-  absender: string;
-  safeIdAbsender: string;
-  empfaenger: string;
-  safeIdEmpfaenger: string;
-  dokumentIds: string[];
-  anhaenge: { name: string; mimeType: string; dokumentId: string }[];
-  akteId?: string | null;
-}
-
-/** @deprecated Removed with the browser send in Task 12. */
-export function buildGesendetNachricht(
-  ergebnis: BeaErgebnis<{ nachrichtenId: string }>,
-  form: BeaVersandFormular,
-  jetzt: Date = new Date()
-): BeaVersandFormular & { nachrichtenId: string; status: "GESENDET"; gesendetAm: string } {
-  const id = ergebnis.data?.nachrichtenId?.trim();
-  if (!ergebnis.ok || !id) {
-    throw new Error(
-      ergebnis.error ||
-        "beA-Versand nicht bestaetigt (keine Nachrichten-ID). Die Nachricht wurde nicht als gesendet gespeichert."
-    );
-  }
-  return { ...form, nachrichtenId: id, status: "GESENDET", gesendetAm: jetzt.toISOString() };
-}

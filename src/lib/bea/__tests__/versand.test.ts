@@ -80,7 +80,7 @@ let provider: MockProvider;
 
 function dokument(id: string, extra: Record<string, unknown> = {}) {
   const d = {
-    id, name: `${id}.pdf`, dateipfad: `akten/a1/${id}.pdf`, mimeType: "application/pdf", groesse: 4,
+    id, akteId: "a1", name: `${id}.pdf`, dateipfad: `akten/a1/${id}.pdf`, mimeType: "application/pdf", groesse: 4,
     status: "FREIGEGEBEN", freigegebenDurchId: "u1", ...extra,
   };
   dokumente.push(d);
@@ -262,6 +262,32 @@ describe("POST /api/bea/messages – serverseitiger Versand", () => {
     expect(beaVersandSchema.safeParse(body()).success).toBe(true);
   });
 
+  it("Dokument einer anderen Akte → 400 „Dokument gehört nicht zur Akte“, Provider nicht aufgerufen", async () => {
+    dokument("d3", { akteId: "a2" });
+    const sende = vi.spyOn(provider, "sende");
+    const res = await post(body({ anhaenge: [{ dokumentId: "d1", art: "SCHRIFTSATZ" }, { dokumentId: "d3", art: "ATTACHMENT" }] }));
+    expect(res.status).toBe(400);
+    const j = await res.json();
+    expect(j.error).toBe("Dokument gehört nicht zur Akte");
+    expect(j.details).toEqual([expect.objectContaining({ dokumentId: "d3" })]);
+    expect(sende).not.toHaveBeenCalled();
+    expect(nachrichten).toHaveLength(0);
+  });
+
+  it("Anhänge ohne akteId → 400 „Für Anhänge muss eine Akte angegeben werden“", async () => {
+    const sende = vi.spyOn(provider, "sende");
+    const res = await post(body({ akteId: undefined }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("Für Anhänge muss eine Akte angegeben werden");
+    expect(sende).not.toHaveBeenCalled();
+  });
+
+  it("ohne Anhänge und ohne Akte → Versand erlaubt", async () => {
+    const res = await post(body({ akteId: undefined, anhaenge: [] }));
+    expect(res.status).toBe(201);
+    expect(nachrichten[0]).toMatchObject({ akteId: null, status: "GESENDET" });
+  });
+
   it("doppelt angehängtes Dokument → 400", async () => {
     const res = await post(body({ anhaenge: [{ dokumentId: "d1", art: "SCHRIFTSATZ" }, { dokumentId: "d1", art: "ATTACHMENT" }] }));
     expect(res.status).toBe(400);
@@ -271,7 +297,7 @@ describe("POST /api/bea/messages – serverseitiger Versand", () => {
 describe("POST /api/bea/messages/versand-pruefung", () => {
   it("liefert Fehler, Warnungen und Zeichenverstöße ohne beA-Aufruf", async () => {
     const anmelden = vi.spyOn(provider, "anmelden");
-    const res = await post({ betreff: "", text: "a…", empfaengerSafeIds: [], anhaenge: [{ dokumentId: "d1", art: "SCHRIFTSATZ" }] }, PRUEFUNG);
+    const res = await post({ akteId: "a1", betreff: "", text: "a…", empfaengerSafeIds: [], anhaenge: [{ dokumentId: "d1", art: "SCHRIFTSATZ" }] }, PRUEFUNG);
     expect(res.status).toBe(200);
     const j = await res.json();
     expect(j.ok).toBe(false);
@@ -283,6 +309,16 @@ describe("POST /api/bea/messages/versand-pruefung", () => {
   it("gültige Nachricht → ok", async () => {
     const res = await post(body(), PRUEFUNG);
     expect(await res.json()).toEqual({ ok: true, fehler: [], warnungen: [], verstoesse: [], errors: [] });
+  });
+
+  it("Akte-Bindung: fremde Akte und fehlende Akte → 400", async () => {
+    dokument("d3", { akteId: "a2" });
+    const fremd = await post(body({ anhaenge: [{ dokumentId: "d3", art: "SCHRIFTSATZ" }] }), PRUEFUNG);
+    expect(fremd.status).toBe(400);
+    expect(await fremd.json()).toMatchObject({ ok: false, fehler: ["Dokument gehört nicht zur Akte"] });
+    const ohne = await post(body({ akteId: undefined }), PRUEFUNG);
+    expect(ohne.status).toBe(400);
+    expect(await ohne.json()).toMatchObject({ ok: false, fehler: ["Für Anhänge muss eine Akte angegeben werden"] });
   });
 
   it("nicht freigegebenes Dokument → 400 mit errors", async () => {

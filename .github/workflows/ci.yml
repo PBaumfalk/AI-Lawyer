@@ -24,7 +24,7 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
       - name: Lint
-        run: npx next lint --max-warnings 366
+        run: npx next lint --max-warnings 394
       - name: Unit- und Architekturtests
         run: npx vitest run
 

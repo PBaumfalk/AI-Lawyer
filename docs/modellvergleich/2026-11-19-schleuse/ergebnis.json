@@ -1,0 +1,134 @@
+[
+  {
+    "modell": "anthropic/claude-opus-5.5",
+    "ok": true,
+    "werkzeugaufrufe": [
+      {
+        "werkzeug": "akte_lesen"
+      },
+      {
+        "werkzeug": "muster_suchen(Kündigungsschutzklage)"
+      },
+      {
+        "werkzeug": "kontakt_details",
+        "argumentHatPlatzhalter": true,
+        "aufgeloest": true
+      }
+    ],
+    "schritte": 3,
+    "dauerS": 55,
+    "anymizeJobs": 4,
+    "anymizeMsJeJob": [
+      2846,
+      5534,
+      2518,
+      2594
+    ],
+    "geprueftAnfragen": 3,
+    "blockiert": 0,
+    "lecks": [],
+    "offenePlatzhalter": 0,
+    "ergebnisEnthaeltMandantin": true,
+    "platzhalterKonsistenz": {
+      "F*** ******-*****": 1,
+      "H***\\***. ******** **********": 1,
+      "D*. ******** **********": 1,
+      "S***** ******-*****": 1
+    },
+    "ergebnisAuszug": "# Entwurf: Kündigungsschutzklage\n\n**Grundlagen:** Akte (Gesprächsnotiz und E-Mail vom 03.11.2026), das kanzleieigene Muster „Kündigungsschutzklage“ und die Stammdaten der Mandantin.\n\n---\n\n**An das Arbeitsgericht [FEHLT: zuständiges Arbeitsgericht, § 46 Abs. 2 ArbGG i. V. m. §§ 12 ff. ZPO; ggf. § 48 Abs. 1a ArbGG (Arbeitsort)]**\n\n## Klage\n\nin dem Rechtsstreit\n\n**Sabine Krüger-Wendt**, geb. 14.07.1983,\nLindenstraße 42, 50674 Köln\n– Klägerin –\n\nProzessbevollmächtigte: [FEHLT: Kanzleibezeichnung, Anschrift]\n\ngegen\n\n**Rheinland Logistik Hoffmann GmbH**,\nvertreten durch [FEHLT: gesetzliche Vertretun"
+  },
+  {
+    "modell": "waterfall-2.0",
+    "ok": true,
+    "werkzeugaufrufe": [
+      {
+        "werkzeug": "akte_lesen"
+      },
+      {
+        "werkzeug": "muster_suchen(Kündigungsschutzklage)"
+      },
+      {
+        "werkzeug": "kontakt_details",
+        "argumentHatPlatzhalter": true,
+        "aufgeloest": false
+      },
+      {
+        "werkzeug": "kontakt_details",
+        "argumentHatPlatzhalter": true,
+        "aufgeloest": true
+      },
+      {
+        "werkzeug": "kontakt_details",
+        "argumentHatPlatzhalter": true,
+        "aufgeloest": false
+      }
+    ],
+    "schritte": 3,
+    "dauerS": 26,
+    "anymizeJobs": 6,
+    "anymizeMsJeJob": [
+      2400,
+      2392,
+      2436,
+      5326,
+      2172,
+      2247
+    ],
+    "geprueftAnfragen": 3,
+    "blockiert": 0,
+    "lecks": [],
+    "offenePlatzhalter": 0,
+    "ergebnisEnthaeltMandantin": true,
+    "platzhalterKonsistenz": {
+      "F*** ******-*****": 1,
+      "H***\\***. ******** **********": 1,
+      "D*. ******** **********": 1,
+      "S***** ******-*****": 1
+    },
+    "ergebnisAuszug": "## Aktenauswertung (vorab, zur Prüfung)\n\n- **Frist (§ 4 Satz 1 KSchG):** Zugang der Kündigung am 03.11.2026 → Dreiwochenfrist endet **Dienstag, 24.11.2026** (Fristbeginn § 187 Abs. 1 BGB, Fristende § 188 Abs. 2 BGB). Klageerhebung innerhalb dieser Frist ist zwingend, sonst gilt die Kündigung nach § 7 KSchG als wirksam; ggf. nachträgliche Zulassung nach § 5 KSchG.\n- **Unstimmigkeit in der Akte:** Die Gesprächsnotiz bezeichnet die Mandantin zunächst als Sabine Krüger-Wendt, im Sachverhalt sodann als Frau Krüger-Wendt („seit 01.04.2015 … beschäftigt\"). Die Stammdatenabfrage zu Sabine Krüger-Wendt"
+  },
+  {
+    "modell": "mistralai/mistral-large-4",
+    "ok": false,
+    "werkzeugaufrufe": [
+      {
+        "werkzeug": "akte_lesen"
+      },
+      {
+        "werkzeug": "muster_suchen(Kündigungsschutzklage Antrag Begründung )"
+      },
+      {
+        "werkzeug": "kontakt_details",
+        "argumentHatPlatzhalter": true,
+        "aufgeloest": true
+      },
+      {
+        "werkzeug": "kontakt_details",
+        "argumentHatPlatzhalter": true,
+        "aufgeloest": false
+      }
+    ],
+    "schritte": 0,
+    "dauerS": 584,
+    "anymizeJobs": 5,
+    "anymizeMsJeJob": [
+      2537,
+      2333,
+      5617,
+      2518,
+      2533
+    ],
+    "geprueftAnfragen": 5,
+    "blockiert": 0,
+    "lecks": [],
+    "offenePlatzhalter": 0,
+    "ergebnisEnthaeltMandantin": false,
+    "platzhalterKonsistenz": {
+      "F*** ******-*****": 1,
+      "S***** ******-*****": 1,
+      "H***\\***. ******** **********": 1
+    },
+    "ergebnisAuszug": "",
+    "fehler": "AI_RetryError: Failed after 3 attempts. Last error: Cannot connect to API: getaddrinfo ENOTFOUND app.anymize.ai"
+  }
+]

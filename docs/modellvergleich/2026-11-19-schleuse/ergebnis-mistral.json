@@ -1,0 +1,40 @@
+[
+  {
+    "modell": "mistralai/mistral-large-4",
+    "ok": true,
+    "werkzeugaufrufe": [
+      {
+        "werkzeug": "akte_lesen"
+      },
+      {
+        "werkzeug": "muster_suchen(Kündigungsschutzklage Antrag Begründung )"
+      },
+      {
+        "werkzeug": "kontakt_details",
+        "argumentHatPlatzhalter": true,
+        "aufgeloest": true
+      }
+    ],
+    "schritte": 3,
+    "dauerS": 111,
+    "anymizeJobs": 4,
+    "anymizeMsJeJob": [
+      2797,
+      3127,
+      5389,
+      2225
+    ],
+    "geprueftAnfragen": 4,
+    "blockiert": 0,
+    "lecks": [],
+    "offenePlatzhalter": 0,
+    "ergebnisEnthaeltMandantin": true,
+    "platzhalterKonsistenz": {
+      "F*** ******-*****": 1,
+      "H***\\***. ******** **********": 1,
+      "D*. ******** **********": 1,
+      "S***** ******-*****": 1
+    },
+    "ergebnisAuszug": "# Entwurf: Kündigungsschutzklage\n\n**Hinweis:** Dieser Entwurf wurde auf Grundlage der Akte und des kanzleieigenen Musters erstellt. Angaben, die der Akte nicht entnommen werden können, sind als **[FEHLT: …]** gekennzeichnet und vor Einreichung zu ergänzen bzw. zu prüfen.\n\n---\n\n**Rubrum**\n\n> **Arbeitsgericht [FEHLT: zuständiges Gericht, z. B. am Sitz der Beklagten oder am Wohnsitz der Klägerin gem. § 48 Abs. 2 ArbGG i. V. m. § 12 ff. ZPO]**\n>\n> – [FEHLT: Geschäftszeichen] –\n>\n> In dem Rechtsstreit\n>\n> **Sabine Krüger-Wendt**, geboren am 14.07.1983, wohnhaft Lindenstraße 42, 50674 Köln\n>\n> – Klä"
+  }
+]

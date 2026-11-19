@@ -1,0 +1,7 @@
+{
+  "A": "anthropic/claude-sonnet-5.5",
+  "B": "fountain-2.0",
+  "C": "waterfall-2.0",
+  "D": "mistralai/mistral-large-4",
+  "E": "anthropic/claude-opus-5.5"
+}

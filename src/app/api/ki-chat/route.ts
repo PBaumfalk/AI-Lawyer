@@ -17,6 +17,7 @@
  * ===========================
  */
 
+import { setzeKiKontext } from "@/lib/ai/datenschutz-schleuse";
 import { NextRequest } from "next/server";
 import type { UserRole } from "@prisma/client";
 import { akteAccessDenied, PERMISSIONS } from "@/lib/rbac";
@@ -217,6 +218,9 @@ export async function POST(req: NextRequest) {
   if (!PERMISSIONS[(session.user as any).role as UserRole]?.canUseKI) {
     return new Response("Keine Berechtigung", { status: 403 });
   }
+  // Datenschutz-Schleuse: consent and placeholder mapping of this Akte for the whole request.
+  setzeKiKontext(akteId ?? null);
+
   if (akteId) {
     const denied = await akteAccessDenied(session, akteId);
     if (denied) return denied;

@@ -22,6 +22,7 @@
  * ```
  */
 
+import { mitKiKontext } from "@/lib/ai/datenschutz-schleuse";
 import type { UserRole } from "@prisma/client";
 import type { ExtendedPrismaClient } from "@/lib/db";
 import type { CoreMessage } from "ai";
@@ -104,6 +105,14 @@ export interface HelenaAgentResult {
  * 8. Auto-escalation on stall (max 1 retry)
  */
 export async function runHelenaAgent(
+  options: HelenaAgentOptions,
+): Promise<HelenaAgentResult> {
+  // Datenschutz-Schleuse: all model calls of this run share one placeholder mapping
+  // and the consent of this Akte.
+  return mitKiKontext({ akteId: options.akteId }, () => runHelenaAgentImKontext(options));
+}
+
+async function runHelenaAgentImKontext(
   options: HelenaAgentOptions,
 ): Promise<HelenaAgentResult> {
   const {
@@ -318,6 +327,7 @@ export async function runHelenaAgent(
     onStepUpdate,
     abortSignal,
     repairToolCall,
+    timeoutMs: schleusenZeitbudget(providerName, actualMode),
   });
 
   // -----------------------------------------------------------------------
@@ -383,6 +393,7 @@ export async function runHelenaAgent(
         abortSignal,
         repairToolCall:
           providerName === "ollama" ? ollamaResponseGuard : undefined,
+        timeoutMs: schleusenZeitbudget(providerName, actualMode),
       });
 
       if (!escalatedResult.stalled) {
@@ -464,3 +475,12 @@ export type { RateLimitResult } from "./rate-limiter";
 // Schriftsatz pipeline re-exports
 export { runSchriftsatzPipeline, isSchriftsatzIntent } from "./schriftsatz";
 export type { SchriftsatzPipelineResult, SchriftsatzPipelineOptions } from "./schriftsatz";
+
+/**
+ * External models run behind the Datenschutz-Schleuse (anymize adds 2-5 s per
+ * new tool result). Inline gets 90 s instead of 30 s; background stays at 3 min.
+ */
+function schleusenZeitbudget(provider: string, mode: "inline" | "background"): number | undefined {
+  if (provider === "ollama") return undefined;
+  return mode === "inline" ? 90_000 : undefined;
+}

@@ -1,0 +1,923 @@
+[
+  {
+    "modell": "B",
+    "aufgabe": "extrahieren",
+    "ok": true,
+    "text": "# Übersicht – Kündigungsschutzklage (Entwurf, prüffähig)\n\n## 1. Beteiligte mit Rolle\n\n| Beteiligter | Rolle |\n|---|---|\n| Sabine Krüger-Wendt | Mandantin; Empfängerin der Kündigung (E-Mail-Absenderin) |\n| Frau Krüger-Wendt | Beschäftigte als Disponentin bei der Rheinland Logistik\\nHoffmann GmbH seit 01.04.2015 |\n| Rheinland Logistik\\nHoffmann GmbH | Arbeitgeberin (Kündigungsschuldnerin) |\n| Herr\\nDr. Matthias Oberländer | Vorgesetzter; überreichte die Kündigung am 03.11.2026 |\n| Jürgen Pakulla | Betriebsratsvorsitzender |\n| Aylin Demirtaş | Kollegin; Zeugin für „Kündigung ohne Vorwarnung\"; laut E-Mail bei Übergabe anwesend |\n| kanzlei@example.org | E-Mail-Empfänger (Kanzlei; Rolle nicht im Dokument benannt) – *unsicher* |\n\n**Hinweis:** Der Zusammenhang zwischen Sabine Krüger-Wendt und Frau Krüger-Wendt ist nicht eindeutig benannt (vermutlich dieselbe Person bzw. Mandantin/Betroffene – *unklar, prüfen*).\n\n## 2. Daten mit Bedeutung\n\n| Datum | Bedeutung |\n|---|---|\n| 01.04.2015 | Beginn des Beschäftigungsverhältnisses |\n| 03.11.2026 | Übergabe der ordentlichen Kündigung (auch Sendedatum der E-Mail, 18:12 Uhr) |\n| 31.03.2027 | Beendigungsdatum des Arbeitsverhältnisses |\n| – | Geburtsdatum: 14.07.1983 (personalbezogen) |\n| – | Klagefrist § 4 KSchG: **3 Wochen ab Zugang der Kündigung** – Zugangsdatum (03.11.2026?) prüfen; Berechnung im Dokument nicht ausgeführt |\n\n## 3. Beträge\n\n| Betrag | Bedeutung |\n|---|---|\n| 3.850,00 EUR | Bruttomonatsgehalt |\n\n## 4. Weitere Angaben\n\n| Angabe | Bedeutung |\n|---|---|\n| Lindenstraße 42, 50674\\nKöln | Anschrift Mandantin |\n| 0221 4789123 | Telefonische Erreichbarkeit |\n| sabine.krueger-wendt@beispielmail.de | E-Mail Mandantin |\n| DE89 3704 0044\\n0532 0130 00 | Bankverbindung |\n| 47 036 892 815 | Steuer-ID |\n| Zwei unterhaltspflichtige Kinder | Sozial/unterhaltsrelevant |\n\n## 5. Offene Punkte\n\n- Zugangsnachweis der Kündigung (Datum/Art der Übergabe) – maßgeblich für Fristberechnung § 4 KSchG.\n- Betriebsratsanhörung: Nach Angaben der Mandantin nicht erfolgt (§ 102 BetrVG) – Beweis/Schriftform der Anhörung prüfen.\n- Zeugin Aylin Demirtaş kontaktieren (Zeugnis „ohne Vorwarnung\", Anwesenheit bei Übergabe).\n- Klagefrist calendarmäßig berechnen und notieren (Auftrag im Dokument).\n- Verhältnis Sabine Krüger-Wendt / Frau Krüger-Wendt klären.\n- E-Mail-Empfänger kanzlei@example.org nicht identifiziert.\n- Keine Angaben im Dokument zu: Kündigungsschutzanwendbarkeit (Betriebsgröße, Wartezeit geprüft ab 01.04.2015 erfüllt?), Schwerbehinderung, oder möglichen Abfindungsregelungen.",
+    "protokoll": {
+      "laufId": "014d14b0-8452-4ed4-b976-6baac097113f",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 1,
+      "ersetzungen": 21,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:fountain-2.0",
+      "aufgabe": "extrahieren",
+      "dauerMs": {
+        "konvertieren": 6,
+        "anonymisieren": 5965,
+        "guard": 45,
+        "verarbeiten": 5940,
+        "rueckfuehrung": 27
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen"
+      ],
+      "nutzung": {
+        "tokensEin": 806,
+        "tokensAus": 898
+      }
+    },
+    "dauerMs": 12189
+  },
+  {
+    "modell": "C",
+    "aufgabe": "extrahieren",
+    "ok": true,
+    "text": "# Faktenübersicht\n\n## Beteiligte und Rollen\n\n| Platzhalter | Rolle laut Dokument | Fundstelle |\n|---|---|---|\n| Sabine Krüger-Wendt | Mandantin; Verfasserin der E-Mail; Kündigungsempfängerin | Gesprächsnotiz, EML |\n| Frau Krüger-Wendt | Im Sachverhalt als seit 01.04.2015 bei der Arbeitgeberin beschäftigte Person bezeichnet (Verhältnis zu Sabine Krüger-Wendt im Dokument nicht ausdrücklich klargestellt) | Gesprächsnotiz |\n| Rheinland Logistik\\nHoffmann GmbH | Arbeitgeberin | Gesprächsnotiz |\n| Herr\\nDr. Matthias Oberländer | Vorgesetzter; überreichte die Kündigung | Gesprächsnotiz, EML |\n| Jürgen Pakulla | Betriebsratsvorsitzender | Gesprächsnotiz |\n| Aylin Demirtaş | Kollegin; Zeugin (war bei Kündigungsübergabe anwesend) | Gesprächsnotiz, EML |\n| kanzlei@example.org | Empfänger der E-Mail der Mandantin (Rolle nicht bezeichnet) | EML |\n\n## Daten und ihre Bedeutung\n\n| Datum | Bedeutung | Fundstelle |\n|---|---|---|\n| 14.07.1983 | Geburtsdatum der Mandantin | Gesprächsnotiz |\n| 01.04.2015 | Beschäftigungsbeginn bei der Rheinland Logistik\\nHoffmann GmbH (bezogen auf Frau Krüger-Wendt) | Gesprächsnotiz |\n| 03.11.2026 | Übergabe der ordentlichen Kündigung durch Herr\\nDr. Matthias Oberländer | Gesprächsnotiz, EML |\n| 03.11.2026, 18:12:00 +0100 | Datum/Uhrzeit der E-Mail „Kündigung erhalten“ | EML |\n| 31.03.2027 | Beendigungszeitpunkt laut ordentlicher Kündigung | Gesprächsnotiz |\n\n## Beträge\n\n| Betrag | Bedeutung | Fundstelle |\n|---|---|---|\n| 3.850,00 EUR | Bruttomonatsgehalt | Gesprächsnotiz |\n\n## Weitere Angaben (Kontakt-/Identifikationsdaten)\n\n| Angabe | Wert | Fundstelle |\n|---|---|---|\n| Anschrift | Lindenstraße 42, 50674\\nKöln | Gesprächsnotiz, EML |\n| Telefon | 0221 4789123 | Gesprächsnotiz, EML |\n| E-Mail | sabine.krueger-wendt@beispielmail.de | Gesprächsnotiz, EML |\n| IBAN | DE89 3704 0044\\n0532 0130 00 | Gesprächsnotiz |\n| Steuer-ID | 47 036 892 815 | Gesprächsnotiz |\n| Unterhaltspflicht | Zwei unterhaltspflichtige Kinder | Gesprächsnotiz |\n\n## Offene Punkte\n\n| Punkt | Stand im Dokument |\n|---|---|\n| Klagefrist nach § 4 KSchG | Vom Auftraggeber zu notieren; im Dokument keine Fristberechnung enthalten (Zugang der Kündigung: 03.11.2026) |\n| Klageentwurf | Vorzubereiten (Auftrag im Dokument) |\n| Identität Mandantin / beschäftigte Person | Gesprächsnotiz nennt als Mandantin Sabine Krüger-Wendt, im Sachverhalt wird Frau Krüger-Wendt als beschäftigt bezeichnet – Verhältnis nicht erläutert |\n| Betriebsratsanhörung | Nach Angaben der Mandantin nicht erfolgt; Vorsitzender: Jürgen Pakulla |\n| Zeugenaussage | Aylin Demirtaş kann bezeugen, dass die Kündigung ohne Vorwarnung erfolgte; war nach E-Mail bei Übergabe anwesend |\n| Rolle des E-Mail-Empfängers | kanzlei@example.org – im Dokument nicht bezeichnet |\n\n*Hinweis: Diese Übersicht ist ein Entwurf zur Prüfung durch eine Anwältin oder einen Anwalt. Die Angaben sind ausschließlich dem vorliegenden Dokument entnommen; insbesondere wurde keine Fristberechnung vorgenommen.*",
+    "protokoll": {
+      "laufId": "3970db11-d07a-40dc-87d7-f0b8de41b6df",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 1,
+      "ersetzungen": 21,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:waterfall-2.0",
+      "aufgabe": "extrahieren",
+      "dauerMs": {
+        "konvertieren": 17,
+        "anonymisieren": 5542,
+        "guard": 32,
+        "verarbeiten": 5079,
+        "rueckfuehrung": 28
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen"
+      ],
+      "nutzung": {
+        "tokensEin": 849,
+        "tokensAus": 1773
+      }
+    },
+    "dauerMs": 10827
+  },
+  {
+    "modell": "D",
+    "aufgabe": "extrahieren",
+    "ok": true,
+    "text": "# Faktenübersicht (Entwurf zur anwaltlichen Prüfung)\n\n## 1. Beteiligte\n\n| Platzhalter | Rolle | Anmerkungen |\n|---|---|---|\n| Sabine Krüger-Wendt | Mandantin; Arbeitnehmerin | Absenderin der E-Mail (Dokument 2) |\n| Frau Krüger-Wendt | Beschäftigte bei Rheinland Logistik\\nHoffmann GmbH als Disponentin | *Unsicherheit: Text legt nahe, dass dies dieselbe Person wie Sabine Krüger-Wendt ist (Mandantin = Disponentin); Platzhalter sind jedoch verschieden* |\n| Rheinland Logistik\\nHoffmann GmbH | Arbeitgeberin | |\n| Herr\\nDr. Matthias Oberländer | Vorgesetzter der Mandantin | Überreichte die Kündigung am 03.11.2026 |\n| Jürgen Pakulla | Vorsitzender des Betriebsrats | |\n| Aylin Demirtaş | Kollegin der Mandantin | Zeugin; war bei der Übergabe der Kündigung dabei |\n| kanzlei@example.org | Empfänger der E-Mail (Dokument 2) | *Unsicherheit: Konkrete Zuordnung (z. B. Kanzlei-Adresse) nicht explizit im Text genannt* |\n\n## 2. Daten\n\n| Angabe | Bedeutung / Kontext |\n|---|---|\n| 01.04.2015 | Beginn der Beschäftigung bei Rheinland Logistik\\nHoffmann GmbH |\n| 03.11.2026 | Datum der Übergabe der ordentlichen Kündigung durch Herr\\nDr. Matthias Oberländer |\n| 03.11.2026, 18:12:00 +0100 | Zeitstempel des E-Mail-Versands (Dokument 2) |\n| 31.03.2027 | Beendigungsdatum der ordentlichen Kündigung |\n| 14.07.1983 | Geburtsdatum der Mandantin Sabine Krüger-Wendt |\n| Lindenstraße 42, 50674\\nKöln | Wohnadresse der Mandantin Sabine Krüger-Wendt |\n| 0221 4789123 | Telefonnummer der Mandantin Sabine Krüger-Wendt |\n| sabine.krueger-wendt@beispielmail.de | E-Mail-Adresse der Mandantin Sabine Krüger-Wendt |\n| DE89 3704 0044\\n0532 0130 00 | IBAN der Mandantin Sabine Krüger-Wendt |\n| 47 036 892 815 | Steuer-ID der Mandantin Sabine Krüger-Wendt |\n| 2 | Anzahl unterhaltspflichtiger Kinder der Mandantin |\n\n## 3. Beträge\n\n| Betrag | Bedeutung |\n|---|---|\n| 3.850,00 EUR | Bruttomonatsgehalt der Mandantin |\n\n## 4. Offene Punkte / Zu prüfende Umstände\n\n| Punkt | Quelle / Anmerkung |\n|---|---|\n| Klagefrist gemäß § 4 KSchG | Auftrag aus Dokument 1: Frist zu notieren und Klageentwurf vorzubereiten |\n| Betriebsratsanhörung | Nach Angaben der Mandantin nicht erfolgt (Vorsitzender: Jürgen Pakulla) |\n| Fehlende Vorwarnung | Laut Aussage der Kollegin Aylin Demirtaş erfolgte die Kündigung ohne Vorwarnung |\n| Unterhaltspflichten | Zwei unterhaltspflichtige Kinder (ggf. relevant für die Sozialauswahl) |\n\n---\n\n*Hinweis: Dieser Entwurf wurde maschinell erstellt und dient ausschließlich der Vorbereitung durch eine Anwältin oder einen Anwalt. Alle Platzhalter wurden exakt und unverändert aus dem Ausgangstext übernommen.*",
+    "protokoll": {
+      "laufId": "98b9f4d7-e026-41ff-9941-3a7919e813ff",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 1,
+      "ersetzungen": 21,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:mistralai/mistral-large-4",
+      "aufgabe": "extrahieren",
+      "dauerMs": {
+        "konvertieren": 13,
+        "anonymisieren": 5474,
+        "guard": 1,
+        "verarbeiten": 132416,
+        "rueckfuehrung": 1
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen"
+      ],
+      "nutzung": {
+        "tokensEin": 724,
+        "tokensAus": 5400
+      }
+    },
+    "dauerMs": 138037
+  },
+  {
+    "modell": "A",
+    "aufgabe": "extrahieren",
+    "ok": true,
+    "text": "# Faktenübersicht (Entwurf zur anwaltlichen Prüfung)\n\n## 1. Beteiligte mit Rolle\n\n| Platzhalter / Angabe | Rolle | Quelle / Anmerkung |\n|---|---|---|\n| Sabine Krüger-Wendt | Mandantin, Absenderin der E-Mail | Dok. 1 und 2 |\n| Frau Krüger-Wendt | Im Sachverhalt als Arbeitnehmerin (Disponentin) genannt | Dok. 1. **Unsicher:** Der Platzhalter weicht von dem der Mandantin ab. Es liegt nahe, dass dieselbe Person gemeint ist, das Dokument sagt es aber nicht ausdrücklich. |\n| Rheinland Logistik\\nHoffmann GmbH | Arbeitgeberin | Dok. 1 |\n| Herr\\nDr. Matthias Oberländer | Vorgesetzter der Mandantin, hat die Kündigung überreicht | Dok. 1 und 2 |\n| Jürgen Pakulla | Vorsitzender des Betriebsrats | Dok. 1 |\n| Aylin Demirtaş | Kollegin der Mandantin, mögliche Zeugin (laut Notiz kann sie bezeugen, dass die Kündigung ohne Vorwarnung erfolgte; laut E-Mail war sie bei der Übergabe dabei) | Dok. 1 und 2 |\n| kanzlei@example.org | Empfängeradresse der E-Mail | Dok. 2. Die Rolle ist nicht näher bezeichnet. |\n\nKontaktdaten der Mandantin laut Dokument: Anschrift Lindenstraße 42, 50674\\nKöln, Telefon 0221 4789123, E-Mail sabine.krueger-wendt@beispielmail.de, IBAN DE89 3704 0044\\n0532 0130 00, Steuer-ID 47 036 892 815.\n\n## 2. Daten mit Bedeutung\n\n| Datum | Bedeutung | Quelle |\n|---|---|---|\n| 14.07.1983 | Geburtsdatum der Mandantin | Dok. 1 |\n| 01.04.2015 | Beginn des Beschäftigungsverhältnisses | Dok. 1 |\n| 03.11.2026 | Übergabe der ordentlichen Kündigung durch den Vorgesetzten. Die E-Mail der Mandantin trägt dasselbe Datum (18:12 Uhr, +0100). | Dok. 1 und 2 |\n| 31.03.2027 | Beendigungstermin laut Kündigung | Dok. 1 |\n| Frist nach § 4 KSchG | Klagefrist. Das Dokument nennt kein Fristende, die Berechnung ist laut Auftrag noch vorzunehmen. | Dok. 1 |\n\n## 3. Beträge\n\n| Betrag | Bedeutung | Quelle |\n|---|---|---|\n| 3.850,00 EUR | Bruttomonatsgehalt der Mandantin | Dok. 1 |\n\nAußerdem ist angegeben: zwei unterhaltspflichtige Kinder (ohne Betragsangabe).\n\n## 4. Offene Punkte\n\n| Nr. | Offener Punkt | Quelle / Anmerkung |\n|---|---|---|\n| 1 | Klagefrist nach § 4 KSchG notieren. Das Fristende ist im Dokument nicht berechnet. | Auftrag in Dok. 1 |\n| 2 | Klageentwurf vorbereiten | Auftrag in Dok. 1 |\n| 3 | Anhörung des Betriebsrats: Nach Angaben der Mandantin erfolgte sie nicht. Das ist eine Angabe der Mandantin und nicht anderweitig belegt. | Dok. 1 |\n| 4 | Zeugin Aylin Demirtaş: Ihre Aussage ist zur Kündigung „ohne Vorwarnung“ angegeben. Es ist nicht dokumentiert, dass sie bereits befragt wurde. | Dok. 1 und 2 |\n| 5 | Identität von Frau Krüger-Wendt und Sabine Krüger-Wendt klären (siehe Tabelle 1) | Dok. 1 |",
+    "protokoll": {
+      "laufId": "05ec54e5-4856-4b3b-b6cb-119506d71a17",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 1,
+      "ersetzungen": 21,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:anthropic/claude-sonnet-5.5",
+      "aufgabe": "extrahieren",
+      "dauerMs": {
+        "konvertieren": 21,
+        "anonymisieren": 6046,
+        "guard": 1,
+        "verarbeiten": 17344,
+        "rueckfuehrung": 1
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen"
+      ],
+      "nutzung": {
+        "tokensEin": 1386,
+        "tokensAus": 2464
+      }
+    },
+    "dauerMs": 23589
+  },
+  {
+    "modell": "E",
+    "aufgabe": "extrahieren",
+    "ok": true,
+    "text": "# Faktenübersicht: Kündigungsschutzsache Sabine Krüger-Wendt\n\n## Beteiligte mit Rolle\n\n| Platzhalter | Rolle | Quelle | Anmerkung |\n|---|---|---|---|\n| Sabine Krüger-Wendt | Mandantin; Absenderin der E-Mail vom 03.11.2026 | Dok. 1, Dok. 2 | geb. 14.07.1983, wohnhaft Lindenstraße 42, 50674\\nKöln |\n| Frau Krüger-Wendt | Arbeitnehmerin (Disponentin) bei Rheinland Logistik\\nHoffmann GmbH, Kündigungsempfängerin | Dok. 1 | ⚠️ Vermutlich identisch mit Sabine Krüger-Wendt, denn der Sachverhalt bezieht sich durchgehend auf „ihr“ bzw. „die Mandantin“. Der Platzhalter ist aber ein anderer, daher bitte prüfen. |\n| Rheinland Logistik\\nHoffmann GmbH | Arbeitgeberin, kündigende Partei | Dok. 1 | |\n| Herr\\nDr. Matthias Oberländer | Vorgesetzter; hat die Kündigung überreicht | Dok. 1, Dok. 2 | |\n| Jürgen Pakulla | Betriebsratsvorsitzender | Dok. 1 | Betriebsrat wurde laut Mandantin nicht angehört |\n| Aylin Demirtaş | Kollegin, mögliche Zeugin | Dok. 1, Dok. 2 | Soll bezeugen können, dass die Kündigung ohne Vorwarnung erfolgte. Laut E-Mail war sie bei der Übergabe dabei. |\n| kanzlei@example.org | Empfänger der E-Mail (vermutlich die Kanzlei) | Dok. 2 | „Sehr geehrte Damen und Herren“; die Zuordnung ist nicht ausdrücklich genannt |\n\n## Kontakt- und Identifikationsdaten der Mandantin\n\n| Angabe | Wert |\n|---|---|\n| Anschrift | Lindenstraße 42, 50674\\nKöln |\n| Telefon | 0221 4789123 |\n| E-Mail | sabine.krueger-wendt@beispielmail.de |\n| IBAN | DE89 3704 0044\\n0532 0130 00 |\n| Steuer-ID | 47 036 892 815 |\n\n## Daten mit Bedeutung\n\n| Datum | Bedeutung | Quelle |\n|---|---|---|\n| 14.07.1983 | Geburtsdatum der Mandantin | Dok. 1 |\n| 01.04.2015 | Beginn des Arbeitsverhältnisses als Disponentin | Dok. 1 |\n| 03.11.2026 | Übergabe der ordentlichen Kündigung durch Herr\\nDr. Matthias Oberländer | Dok. 1; Dok. 2 („heute“) |\n| 03.11.2026, 18:12 Uhr (+0100) | E-Mail der Mandantin „Kündigung erhalten“ | Dok. 2 |\n| 31.03.2027 | Kündigungstermin (Ende des Arbeitsverhältnisses laut Kündigung) | Dok. 1 |\n\n## Beträge\n\n| Betrag | Bezeichnung | Quelle |\n|---|---|---|\n| 3.850,00 EUR | Bruttomonatsgehalt | Dok. 1 |\n\n## Sonstige Fakten\n\n| Fakt | Quelle |\n|---|---|\n| Art der Kündigung: ordentlich | Dok. 1 |\n| Zwei unterhaltspflichtige Kinder | Dok. 1 |\n| Betriebsrat laut Angaben der Mandantin nicht angehört | Dok. 1 |\n| Kündigung erfolgte laut Mandantin ohne Vorwarnung | Dok. 1 |\n\n## Offene Punkte\n\n| Nr. | Punkt | Hinweis |\n|---|---|---|\n| 1 | Klagefrist nach § 4 KSchG notieren | Auftrag laut Dok. 1. Das Dokument nennt kein Fristende. Rechnerisch ergibt sich bei Zugang am 03.11.2026 und drei Wochen Frist der **24.11.2026**. ⚠️ Das ist eine eigene Berechnung und muss anwaltlich geprüft werden, insbesondere der Zugangszeitpunkt. |\n| 2 | Klageentwurf vorbereiten | Auftrag laut Dok. 1 |\n| 3 | Identität Frau Krüger-Wendt / Sabine Krüger-Wendt klären | Unterschiedliche Platzhalter im Sachverhalt bzw. bei der Mandantin |\n| 4 | Fehlende Betriebsratsanhörung | Beruht nur auf Angaben der Mandantin; nicht weiter belegt |\n| 5 | Aussageinhalt der Zeugin Aylin Demirtaş | In Dok. 1 „ohne Vorwarnung“, in Dok. 2 „war dabei“; Umfang der Wahrnehmungen noch nicht näher festgehalten |\n| 6 | Kündigungsschreiben selbst | Liegt nicht vor; Inhalt und Form sind nicht dokumentiert |\n\n*Entwurf zur Prüfung durch eine Anwältin oder einen Anwalt.*",
+    "protokoll": {
+      "laufId": "3639685c-238d-436a-98d8-235a75f7426f",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 1,
+      "ersetzungen": 21,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:anthropic/claude-opus-5.5",
+      "aufgabe": "extrahieren",
+      "dauerMs": {
+        "konvertieren": 20,
+        "anonymisieren": 5879,
+        "guard": 2,
+        "verarbeiten": 22490,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen"
+      ],
+      "nutzung": {
+        "tokensEin": 1386,
+        "tokensAus": 2620
+      }
+    },
+    "dauerMs": 28544
+  },
+  {
+    "modell": "B",
+    "aufgabe": "zusammenfassen",
+    "ok": true,
+    "text": "## Sachstand\n\n- Frau Krüger-Wendt ist seit 01.04.2015 als Disponentin bei der Rheinland Logistik\\nHoffmann GmbH beschäftigt.\n- Am 03.11.2026 überreichte ihr Vorgesetzter Herr\\nDr. Matthias Oberländer persönlich die ordentliche Kündigung zum 31.03.2027 (Tatsache; Übermittlung am 03.11.2026 auch durch E-Mail der Mandantin vom selben Tag bestätigt).\n- Bruttomonatsgehalt: 3.850,00 EUR; zwei unterhaltspflichtige Kinder.\n- Nach **Angabe der Mandantin** (Behauptung) wurde der Betriebsrat (Vorsitzender: Jürgen Pakulla) nicht angehört.\n- Kollegin Aylin Demirtaş soll bezeugen, dass die Kündigung ohne Vorwarnung erfolgte (Angabe der Mandantin; noch nicht geprüft).\n- Auftrag: Klagefrist notieren und Klageentwurf vorbereiten.\n\n**Klagefrist § 4 KSchG:** Die Kündigungsschutzklage muss innerhalb von **drei Wochen** nach Zugang der Kündigung erhoben werden. Bei Zugang am **03.11.2026** endet die Klagefrist somit am **Dienstag, den 24.11.2026** (Tag des Zugangs nicht mitgerechnet; Fristende lt. Berechnung: 03.11. + 3 Wochen). Die fristgerechte Erhebung der Klage ist dringend zu prüfen.\n\n*Hinweis: Berechnung zur Prüfung; bitte verifizieren, ob es sich um einen Kleinbetrieb (§ 1 Abs. 2 KSchG) bzw. ob das Kündigungsschutzgesetz anwendbar ist.*",
+    "protokoll": {
+      "laufId": "787f579e-d612-4134-9c9e-be6213ecbe1f",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:fountain-2.0",
+      "aufgabe": "zusammenfassen",
+      "dauerMs": {
+        "konvertieren": 8,
+        "anonymisieren": 13314,
+        "guard": 1,
+        "verarbeiten": 2841,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 810,
+        "tokensAus": 409
+      }
+    },
+    "dauerMs": 16777
+  },
+  {
+    "modell": "C",
+    "aufgabe": "zusammenfassen",
+    "ok": true,
+    "text": "## Sachstand (Entwurf zur anwaltlichen Prüfung)\n\n1. Die Mandantin Sabine Krüger-Wendt ist seit dem 01.04.2015 bei der Rheinland Logistik\\nHoffmann GmbH als Disponentin beschäftigt; ihr Bruttomonatsgehalt beträgt 3.850,00 EUR, sie hat zwei unterhaltspflichtige Kinder.\n2. Am 03.11.2026 übergab ihr Vorgesetzter Herr\\nDr. Matthias Oberländer ihr persönlich eine ordentliche Kündigung zum 31.03.2027; die Übergabe ist durch die E-Mail der Mandantin vom selben Tag (18:12 Uhr) dokumentiert.\n3. Nach Angaben der Mandantin – also bislang als Behauptung, nicht als erwiesene Tatsache – wurde der Betriebsrat (Vorsitzender: Jürgen Pakulla) vor Ausspruch der Kündigung nicht angehört.\n4. Die Mandantin behauptet weiter, die Kündigung sei ohne Vorwarnung erfolgt, und benennt hierfür ihre Kollegin Aylin Demirtaş als Zeugin, die bei der Übergabe anwesend war.\n5. Auftragsgemäß ist ein Klageentwurf vorzubereiten; die Klagefrist ist zu notieren und zu überwachen.\n\n## Klagefrist nach § 4 KSchG\n\n- Zugang der Kündigung: **03.11.2026** (persönliche Übergabe)\n- Fristbeginn: 04.11.2026 (§ 187 Abs. 1 BGB)\n- **Fristende: Dienstag, 24.11.2026, 24:00 Uhr** (§ 188 Abs. 2 BGB; drei Wochen)\n\nHinweis: Es handelt sich um eine Notfrist; eine Verspätung führt zur Fiktion der Wirksamkeit der Kündigung (§ 7 KSchG). Das Fristende ist nach h. M. nicht wegen § 193 BGB verschiebbar. Bitte Fristeintragung und Vorfrist (z. B. 17.11.2026) veranlassen.\n\n*Unsicherheiten:* Das Zugangsdatum stützt sich auf die Angaben der Mandantin (Gesprächsnotiz und E-Mail stimmen überein); eine Zustellungsbestätigung liegt nicht vor. Die Angaben zum Betriebsrat und zum Ablauf der Übergabe sind derzeit ungeprüfte Behauptungen der Mandantin.",
+    "protokoll": {
+      "laufId": "b7a95542-242c-4cc7-9e80-b32d6a5726eb",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:waterfall-2.0",
+      "aufgabe": "zusammenfassen",
+      "dauerMs": {
+        "konvertieren": 6,
+        "anonymisieren": 11075,
+        "guard": 0,
+        "verarbeiten": 5629,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 852,
+        "tokensAus": 1850
+      }
+    },
+    "dauerMs": 17162
+  },
+  {
+    "modell": "D",
+    "aufgabe": "zusammenfassen",
+    "ok": true,
+    "text": "**Entwurf zur Prüfung durch die Anwältin/den Anwalt**\n\n**Sachstand:**\nTatsachen: Sabine Krüger-Wendt ist seit dem 01.04.2015 bei der Rheinland Logistik\\nHoffmann GmbH als Disponentin beschäftigt (Bruttomonatsgehalt: 3.850,00 EUR; zwei unterhaltspflichtige Kinder). Am 03.11.2026 wurde ihr von ihrem Vorgesetzten Herr\\nDr. Matthias Oberländer eine ordentliche Kündigung zum 31.03.2027 persönlich übergeben, was die Mandantin noch am selben Tag per E-Mail bestätigte.\n\nBehauptungen der Mandantin: Sie gibt an, dass der Betriebsrat (Vorsitzender Jürgen Pakulla) vor Ausspruch der Kündigung nicht angehört wurde und die Kündigung ohne Vorwarnung erfolgte; die Kollegin Aylin Demirtaş, die bei der Übergabe anwesend gewesen sein soll, könne dies bezeugen.\n\n**Klagefrist nach § 4 KSchG:**\nDie Klagefrist endet am **25. November 2026** (drei Wochen nach Zugang der Kündigung am 03.11.2026; beginnt am 04.11.2026). *Hinweis:* Fällt der 25.11.2026 auf einen Sonn- oder gesetzlichen Feiertag (z. B. Buß- und Bettag in Sachsen), verlängert sich die Frist auf den nächsten Werktag (dann 26.11.2026).",
+    "protokoll": {
+      "laufId": "b10fb08b-1a9d-4b1a-a9a6-711f0264a1e7",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:mistralai/mistral-large-4",
+      "aufgabe": "zusammenfassen",
+      "dauerMs": {
+        "konvertieren": 6,
+        "anonymisieren": 13091,
+        "guard": 0,
+        "verarbeiten": 96364,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 728,
+        "tokensAus": 4468
+      }
+    },
+    "dauerMs": 110241
+  },
+  {
+    "modell": "A",
+    "aufgabe": "zusammenfassen",
+    "ok": true,
+    "text": "## Entwurf Sachstand (zur anwaltlichen Prüfung)\n\n**Tatsachen (laut Gesprächsnotiz und E-Mail, soweit nicht anders gekennzeichnet)**\n1. Die Mandantin Sabine Krüger-Wendt (in der Notiz im Sachverhalt als Frau Krüger-Wendt bezeichnet; die Identität ist nicht ausdrücklich bestätigt) ist seit dem 01.04.2015 bei der Rheinland Logistik\\nHoffmann GmbH als Disponentin beschäftigt, bei einem Bruttomonatsgehalt von 3.850,00 EUR und zwei unterhaltspflichtigen Kindern.\n2. Ihr Vorgesetzter Herr\\ndr. Matthias Oberländer übergab ihr am 03.11.2026 persönlich die ordentliche Kündigung zum 31.03.2027.\n\n**Behauptungen der Mandantin (nicht belegt)**\n3. Der Betriebsrat (Vorsitzender: Jürgen Pakulla) sei nach ihren Angaben nicht angehört worden.\n4. Die Kündigung sei „ohne Vorwarnung“ erfolgt, was die Kollegin Aylin Demirtaş bezeugen könne. Laut E-Mail war sie bei der Übergabe anwesend.\n\n**Offen**\n5. Das Kündigungsschreiben, der Kündigungsgrund, die Betriebsgröße (Anwendbarkeit des KSchG) und die Sicht der Arbeitgeberin liegen nicht vor.\n\n**Klagefrist (§ 4 KSchG)**\n6. Die Klage ist innerhalb von drei Wochen nach Zugang der Kündigung zu erheben. Bei Zugang am 03.11.2026 (Dienstag) endet die Frist nach §§ 187 Abs. 1, 188 Abs. 2 BGB am **Dienstag, 24.11.2026**, 24:00 Uhr. Ein Feiertag, der die Frist verschieben würde, ist nicht ersichtlich.\n7. Die Klage muss bis dahin beim Arbeitsgericht eingegangen sein. Der Zugangstag sollte anhand des Kündigungsschreibens und der E-Mail vom 03.11.2026 bestätigt und eine Vorfrist notiert werden.",
+    "protokoll": {
+      "laufId": "aeab6076-afa8-4b15-ad36-2ffe21ab6492",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 18,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:anthropic/claude-sonnet-5.5",
+      "aufgabe": "zusammenfassen",
+      "dauerMs": {
+        "konvertieren": 9,
+        "anonymisieren": 13438,
+        "guard": 2,
+        "verarbeiten": 14679,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 1366,
+        "tokensAus": 2041
+      }
+    },
+    "dauerMs": 28837
+  },
+  {
+    "modell": "E",
+    "aufgabe": "zusammenfassen",
+    "ok": true,
+    "text": "# Sachstand Kündigungsschutzsache Sabine Krüger-Wendt\n\n## Zusammenfassung\n\n**Tatsachen (laut Unterlagen):**\n1. Die Mandantin Sabine Krüger-Wendt ist nach der Gesprächsnotiz seit dem 01.04.2015 als Disponentin bei der Rheinland Logistik\\nHoffmann GmbH beschäftigt. Die Notiz nennt an dieser Stelle Frau Krüger-Wendt. Aus dem Kontext ist vermutlich die Mandantin gemeint, das ist aber nicht eindeutig belegt.\n2. Am 03.11.2026 überreichte ihr Vorgesetzter Herr\\nDr. Matthias Oberländer ihr persönlich die ordentliche Kündigung zum 31.03.2027. Das bestätigt auch ihre E-Mail an die Kanzlei vom selben Tag, 18:12 Uhr.\n3. Die Mandantin erhält ein Bruttomonatsgehalt von 3.850,00 EUR und hat zwei unterhaltspflichtige Kinder.\n\n**Behauptungen der Mandantin:**\n4. Der Betriebsrat (Vorsitzender: Jürgen Pakulla) sei vor der Kündigung nicht angehört worden. Dies wäre ein möglicher Unwirksamkeitsgrund nach § 102 Abs. 1 BGB i. V. m. BetrVG und ist noch zu prüfen.\n5. Die Kündigung sei ohne Vorwarnung erfolgt. Als Zeugin benennt sie ihre Kollegin Aylin Demirtaş, die laut E-Mail bei der Übergabe anwesend war.\n\n**Auftrag:**\n6. Die Klagefrist ist zu notieren und ein Klageentwurf vorzubereiten.\n\n## Klagefrist nach § 4 KSchG\n\n| Punkt | Angabe |\n|---|---|\n| Zugang der Kündigung | 03.11.2026 (Dienstag), persönliche Übergabe |\n| Fristberechnung | 3 Wochen, §§ 187 Abs. 1, 188 Abs. 2 BGB |\n| **Fristende** | **Dienstag, 24.11.2026, 24:00 Uhr** |\n\nDas Fristende fällt auf einen Werktag, § 193 BGB greift daher nicht. **Empfehlung:** Vorfrist notieren und die Klage deutlich vor dem 24.11.2026 einreichen.\n\n## Prüfhinweise (Entwurf, bitte anwaltlich prüfen)\n\n- **Betriebsratsanhörung:** Die Angabe beruht allein auf der Aussage der Mandantin. Im Prozess trägt der Arbeitgeber die Darlegungslast für eine ordnungsgemäße Anhörung.\n- **Kündigungsfrist:** Bei rund 11,5 Jahren Betriebszugehörigkeit gilt nach § 622 Abs. 2 Nr. 4 BGB eine Frist von 4 Monaten zum Monatsende. Der Termin 31.03.2027 erscheint damit eingehalten, vorbehaltlich eines Tarif- oder Arbeitsvertrags.\n- **Schriftform (§ 623 BGB):** Das Original des Kündigungsschreibens sollte angefordert werden, um Unterschrift und Vertretungsbefugnis zu prüfen.\n- **Zuordnung der Platzhalter:** Ob Frau Krüger-Wendt und Sabine Krüger-Wendt dieselbe Person bezeichnen, sollte kurz verifiziert werden.",
+    "protokoll": {
+      "laufId": "3ccfe028-b607-48b5-83c1-d4fad1df4905",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:anthropic/claude-opus-5.5",
+      "aufgabe": "zusammenfassen",
+      "dauerMs": {
+        "konvertieren": 8,
+        "anonymisieren": 13265,
+        "guard": 1,
+        "verarbeiten": 15434,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 1366,
+        "tokensAus": 1698
+      }
+    },
+    "dauerMs": 29068
+  },
+  {
+    "modell": "B",
+    "aufgabe": "mandantenbrief",
+    "ok": true,
+    "text": "# Entwurf Mandantin\n\nSehr geehrte Frau Sabine Krüger-Wendt (**Entwurf – bitte prüfen**),\n\nvielen Dank für Ihr Vertrauen und die schnelle Rückmeldung nach der Übergabe der Kündigung am 03.11.2026. Wir haben Ihr Mandat übernommen und bereiten nun die Kündigungsschutzklage gegen die Rheinland Logistik\\nHoffmann GmbH vor.\n\n## Was wir jetzt tun\n- Wir prüfen die Rechtmäßigkeit der Kündigung und erstellen den Klageentwurf.\n- Danach legen wir die Klage beim zuständigen Arbeitsgericht ein.\n\n## Wichtig: Die Frist\nDie Klage muss spätestens **Dienstag, den 24.11.2026** beim Arbeitsgericht eingehen (drei Wochen nach Zugang der Kündigung am 03.11.2026). Verstreicht diese Frist, ist die Kündigung in der Regel unwiderruflich wirksam – selbst wenn sie falsch wäre. **Damit Ihnen keine Zeit verloren geht, werden wir die Klage rechtzeitig vorher einreichen.**\n\n## Was wir von Ihnen benötigen\nBitte senden Sie uns bis **spätestens 18.11.2026** (bzw. so bald wie möglich) folgende Unterlagen:\n\n1. Die **Kündigung** (Original oder Kopie des Schreibens, das Ihnen übergeben wurde)\n2. Ihren **Arbeitsvertrag** sowie ggf. Änderungen oder Zusatzvereinbarungen\n3. Die letzten **drei Gehaltsabrechnungen** (Lohnzettel)\n4. Ggf. **Ausschöpfungsbescheinigung** der Agentur für Arbeit (falls Sie diese bereits erhalten haben – für den Abfindungsanspruch nach § 1a KSchG, den wir gerne mit Ihnen besprechen)\n5. Ihre **Steuer-Identifikationsnummer** (47 036 892 815) – liegt uns bereits vor\n6. Ggf. weitere **Unterlagen**, die für Ihren Fall wichtig sein könnten (z. B. Zeugnisse, E-Mails, Zeugenkontaktdaten)\n\n## Zeugen\nIhre Kollegin Aylin Demirtaş hat die Übergabe der Kündigung mitbekommen und kann bezeugen, dass die Kündigung ohne Vorwarnung erfolgte. Bitte halten Sie sie bereit – wir melden uns ggf. mit konkreten Fragen dazu. Auch die Tatsache, dass der Betriebsrat (Vorsitzender: Jürgen Pakulla) nach Ihrer Angabe nicht angehört wurde, prüfen wir.\n\n## Nächste Schritte\n1. **Sie:** Senden Sie uns die oben genannten Unterlagen, bitte mit Angabe Ihrer telefonischen Erreichbarkeit unter 0221 4789123.\n2. **Wir:** Vervollständigen die Akte und erstellen den Klageentwurf.\n3. **Wir:** Reichen die Klage fristgerecht (spätestens am 24.11.2026) ein und teilen Ihnen das Aktenzeichen mit.\n4. **Gericht:** Das Arbeitsgericht lädt anschließend zu einem **Gütetermin** ein – dazu erhalten Sie eine Ladung mit Datum und Ort. Bitte nehmen Sie sich Zeit dafür.\n\nSollten Sie Fragen haben oder Unterlagen nicht finden können, melden Sie sich gerne jederzeit.\n\nMit freundlichen Grüßen\n\n[[Name Anwältin/Anwalt – bitte ergänzen]]\n\n---\n\n*Hinweis für die Kanzlei (nicht Teil des Briefs):*\n- Fristberechnung: Zugang am 03.11.2026 → Fristablauf 24.11.2026 (Di), da der 21.11.2026 (Sa) ein Samstag ist. **Bitte verifizieren.**\n- Prüfen: Betriebsrat-Anhörung (§ 102 BetrVG) könnte Einrede begründen; Zeugin Aylin Demirtaş ggf. im Gütetermin vorladen.\n- Bitte Mandantin auch auf schriftliche Klageantragstellung und ggf. Prozesskostenhilfe ansprechen.\n\nBitte prüfen Sie den Entwurf vor Versand – insbesondere Fristen, Formulierungen und die Zuständigkeit des Arbeitsgerichts.",
+    "protokoll": {
+      "laufId": "b6ca6a3a-3039-424d-95a7-64654b9e4561",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 1,
+      "verarbeiter": "anymize:fountain-2.0",
+      "aufgabe": "mandantenbrief",
+      "dauerMs": {
+        "konvertieren": 10,
+        "anonymisieren": 13157,
+        "guard": 2,
+        "verarbeiten": 14606,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert",
+        "1 Platzhalter konnten nicht zurückgeführt werden, bitte manuell prüfen"
+      ],
+      "nutzung": {
+        "tokensEin": 831,
+        "tokensAus": 953
+      }
+    },
+    "dauerMs": 28104
+  },
+  {
+    "modell": "C",
+    "aufgabe": "mandantenbrief",
+    "ok": true,
+    "text": "# Entwurf – Brief an die Mandantin\n\n**Betreff: Ihre Kündigung vom 03.11.2026 – Klagefrist und nächste Schritte**\n\nSehr geehrte Frau Sabine Krüger-Wendt,\n\nvielen Dank für Ihre Nachricht und das Gespräch. Wir haben den Vorgang aufgenommen und fassen hier für Sie zusammen, was jetzt passiert.\n\n**Das Wichtigste zuerst: Es gibt eine gesetzliche Frist.**\nGegen eine Kündigung muss innerhalb von **drei Wochen** nach Erhalt Klage beim Arbeitsgericht erhoben werden. Diese Frist kann nicht verlängert werden. Da Ihnen die Kündigung am **03.11.2026** persönlich übergeben wurde, läuft die Frist am **24.11.2026** ab. Bis zu diesem Tag muss die Klage spätestens beim Arbeitsgericht eingegangen sein. Wir werden die Klage rechtzeitig vorher für Sie einreichen und Sie selbst müssen dabei nichts veranlassen. Bitte beachten Sie aber: Sollte sich der Zugangszeitpunkt wider Erwarten anders darstellen, sagen Sie uns bitte umgehend Bescheid – die Fristberechnung prüfen wir dann erneut.\n\n**Was wir jetzt tun:**\nWir bereiten die Klage vor und reichen sie fristgerecht beim zuständigen Arbeitsgericht ein. Dabei gehen wir unter anderem dem von Ihnen geschilderten Punkt nach, dass der Betriebsrat vor der Kündigung nicht beteiligt worden sein soll. Sobald die Klage eingereicht ist, informieren wir Sie und erklären Ihnen das weitere Verfahren.\n\n**Was wir von Ihnen brauchen – bitte möglichst zeitnah:**\n1. Das **Kündigungsschreiben** selbst (Original oder gut lesbarer Scan/Foto, gern mit Umschlag, falls vorhanden).\n2. Ihren **Arbeitsvertrag** sowie alle späteren Änderungen oder Zusatzvereinbarungen.\n3. Ihre **letzten drei Gehaltsabrechnungen**.\n4. Die **Kontaktdaten Ihrer Kollegin Aylin Demirtaş** (Telefon oder E-Mail), damit wir sie als Zeugin erreichen können.\n5. Falls vorhanden: **Schriftverkehr** mit Ihrem Arbeitgeber oder dem Betriebsrat zur Kündigung.\n\nSie können uns die Unterlagen per E-Mail an kanzlei@example.org oder per Post an unsere Kanzlei senden. Sollten Sie einzelne Unterlagen nicht zur Hand haben, genügt zunächst ein kurzer Hinweis – wir besprechen dann das Vorgehen.\n\nBei Fragen erreichen Sie uns jederzeit unter den Ihnen bekannten Kontaktdaten. Wir melden uns wieder bei Ihnen, sobald die Klage eingereicht ist.\n\nMit freundlichen Grüßen\n\nHelena\nim Auftrag der Kanzlei\n\n---\n\n*Hinweis für die Anwältin/den Anwalt: Die Fristberechnung (§§ 187 Abs. 1, 188 Abs. 2 BGB i. V. m. § 4 Satz 1 KSchG) ergibt bei Zugang am 03.11.2026 einen Fristablauf am 24.11.2026 (Dienstag, Werktag). Bitte vor Versand prüfen, ob die Klage ausnahmsweise als bestimmender Schriftsatz vorab per Fax oder besonderem elektronischem Weg einzureichen ist. Die Angaben zur fehlenden Betriebsratsanhörung stützen sich bislang nur auf die Schilderung der Mandantin.*",
+    "protokoll": {
+      "laufId": "2f9a9637-9132-47f6-ad44-a59a47abebb3",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 18,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:waterfall-2.0",
+      "aufgabe": "mandantenbrief",
+      "dauerMs": {
+        "konvertieren": 5,
+        "anonymisieren": 13242,
+        "guard": 1,
+        "verarbeiten": 7152,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 872,
+        "tokensAus": 1491
+      }
+    },
+    "dauerMs": 20759
+  },
+  {
+    "modell": "D",
+    "aufgabe": "mandantenbrief",
+    "ok": true,
+    "text": "Sabine Krüger-Wendt\nLindenstraße 42, 50674\\nKöln\n\n**Betreff: Ihre Kündigung vom 03.11.2026 – Wichtige Frist bis 24.11.2026 und nächste Schritte**\n\nSehr geehrte Frau Sabine Krüger-Wendt,\n\nvielen Dank für Ihre Nachricht vom 03.11.2026. Wir haben zur Kenntnis genommen, dass Ihnen Herr\\nDr. Matthias Oberländer von der Rheinland Logistik\\nHoffmann GmbH am 03.11.2026 eine Kündigung zum 31.03.2027 persönlich überreicht hat.\n\n**Das Wichtigste zuerst – die Frist:**\nDamit wir gegen die Kündigung vorgehen können, müssen wir spätestens bis zum **24. November 2026** Klage beim Arbeitsgericht einreichen. Diese Frist beträgt drei Wochen ab dem Tag, an dem Ihnen die Kündigung übergeben wurde (03.11.2026), und kann nicht verlängert werden. Wir sorgen dafür, dass die Klage rechtzeitig eingereicht wird.\n\n**Was wir jetzt für Sie tun:**\nWir bereiten die Klage für Sie vor. Dabei prüfen wir unter anderem, ob der Betriebsrat vor der Kündigung ordnungsgemäß angehört wurde – nach Ihren Angaben war das nicht der Fall, was die Kündigung möglicherweise unwirksam machen könnte. Außerdem bereiten wir die Aussage Ihrer Kollegin Aylin Demirtaş als Zeugin vor.\n\n**Welche Unterlagen Sie uns bitte schicken:**\nBitte senden Sie uns folgende Unterlagen, gerne per E-Mail an kanzlei@example.org:\n\n*   Das Kündigungsschreiben im Original\n*   Ihren Arbeitsvertrag\n*   Die letzten drei Gehaltsabrechnungen\n*   Alle weiteren Schreiben, die Sie von der Rheinland Logistik\\nHoffmann GmbH erhalten haben\n*   Die Kontaktdaten von Aylin Demirtaş (vollständiger Name, Adresse, Telefonnummer), damit wir sie als Zeugin einbeziehen können\n\n**Nächste Schritte:**\nSobald wir Ihre Unterlagen erhalten haben, melden wir uns bei Ihnen unter 0221 4789123 oder per E-Mail an sabine.krueger-wendt@beispielmail.de, um einen Termin für ein persönliches Gespräch zu vereinbaren. In diesem Gespräch besprechen wir alle Details, und Sie unterschreiben die fertige Klage.\n\nBei Fragen erreichen Sie uns jederzeit telefonisch oder per E-Mail.\n\nMit freundlichen Grüßen\n\nHelena\n[Ihre Anwaltskanzlei]\n\n---\n\n*Hinweis: Dies ist ein Entwurf zur Prüfung durch die zuständige Anwältin bzw. den zuständigen Anwalt. Die Fristberechnung (24.11.2026) basiert auf der persönlichen Übergabe der Kündigung am 03.11.2026 gemäß Ihren Angaben.*",
+    "protokoll": {
+      "laufId": "fb2b76d2-0364-465f-9179-b6674bda354f",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 18,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:mistralai/mistral-large-4",
+      "aufgabe": "mandantenbrief",
+      "dauerMs": {
+        "konvertieren": 7,
+        "anonymisieren": 10031,
+        "guard": 1,
+        "verarbeiten": 71601,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 746,
+        "tokensAus": 4607
+      }
+    },
+    "dauerMs": 81978
+  },
+  {
+    "modell": "A",
+    "aufgabe": "mandantenbrief",
+    "ok": true,
+    "text": "# Entwurf: Brief an die Mandantin\n\n*Zur Prüfung durch die zuständige Anwältin bzw. den zuständigen Anwalt. Unsicherheiten stehen am Ende.*\n\n---\n\nSabine Krüger-Wendt\nLindenstraße 42, 50674\\nKöln\n\nDatum: [bitte ergänzen]\n\n**Ihre Kündigung vom 03.11.2026: unsere nächsten Schritte**\n\nSehr geehrte Frau Sabine Krüger-Wendt,\n\nvielen Dank für Ihre Nachricht und das Gespräch. Wir können gut nachvollziehen, dass die Kündigung ein Schock für Sie ist. Wir kümmern uns darum und sagen Ihnen hier, wie es weitergeht.\n\n**Das Wichtigste: die Frist**\n\nGegen eine Kündigung können Sie sich nur innerhalb von **drei Wochen** wehren. Die Frist beginnt mit dem Tag, an dem Sie die Kündigung erhalten haben. Das war der 03.11.2026.\n\n**Die Klage muss deshalb spätestens am Dienstag, 24.11.2026, beim Arbeitsgericht eingegangen sein.**\n\nWird die Frist versäumt, gilt die Kündigung in aller Regel als wirksam, selbst wenn sie Fehler hat. Wir planen deshalb mit einem deutlichen Puffer und wollen die Klage **deutlich vor dem 24.11.2026** einreichen.\n\n**Was wir jetzt tun**\n\n1. Wir prüfen die Kündigung, insbesondere ob der Betriebsrat vor der Kündigung ordnungsgemäß beteiligt wurde. Sie haben uns mitgeteilt, dass das nicht geschehen ist.\n2. Wir bereiten die Kündigungsschutzklage vor und reichen sie fristgerecht beim Arbeitsgericht ein.\n3. Wir prüfen, ob Ihre Kollegin Aylin Demirtaş als Zeugin in Betracht kommt.\n4. Wir informieren Sie, sobald das Gericht einen Termin bestimmt hat.\n\n**Was wir von Ihnen brauchen**\n\nBitte schicken Sie uns **bis zum [Datum ergänzen, Vorschlag: 10.11.2026]** folgende Unterlagen, gern als Scan oder gut lesbares Foto per E-Mail:\n\n- das **Kündigungsschreiben** (bitte das Original gut aufbewahren und nicht verändern, z. B. durch Anmerkungen)\n- Ihren **Arbeitsvertrag** mit allen Änderungen und Zusatzvereinbarungen\n- Ihre **letzten drei Gehaltsabrechnungen**\n- eventuelle **Abmahnungen** oder andere Schreiben des Arbeitgebers zu Ihrem Verhalten oder Ihrer Leistung\n- Angaben zu einer **Rechtsschutzversicherung**, falls vorhanden (Versicherung und Versicherungsnummer)\n- die **Kontaktdaten** Ihrer Kollegin Aylin Demirtaş, falls wir sie noch nicht haben\n- eine kurze **schriftliche Schilderung**, wie die Übergabe der Kündigung am 03.11.2026 ablief (wer war dabei, was wurde gesagt)\n\n**Das sollten Sie jetzt beachten**\n\n- **Unterschreiben Sie nichts**, was Ihnen der Arbeitgeber vorlegt, etwa einen Aufhebungsvertrag oder eine Bestätigung, ohne sich vorher mit uns abzustimmen.\n- Bitte **melden Sie sich bei der Agentur für Arbeit arbeitsuchend**. Das ist auch dann wichtig, wenn Sie gegen die Kündigung vorgehen. Die Meldung muss spätestens drei Monate vor dem Ende des Arbeitsverhältnisses erfolgen, also bis zum 31.12.2026. Wir empfehlen, sie möglichst bald zu erledigen, damit Ihnen später keine Nachteile entstehen.\n- Arbeiten Sie bis zum Ende der Kündigungsfrist wie gewohnt weiter, sofern Sie nicht freigestellt werden.\n\nWenn Sie Fragen haben oder etwas unklar ist, rufen Sie uns jederzeit an.\n\nMit freundlichen Grüßen\n\n[Name der Anwältin / des Anwalts und Kanzlei ergänzen]\n\n---\n\n## Hinweise an die prüfende Anwältin / den prüfenden Anwalt\n\n- **Fristberechnung:** Zugang am 03.11.2026 (Dienstag, persönliche Übergabe). Nach § 4 KSchG i. V. m. § 187 Abs. 1, § 188 Abs. 2 BGB endet die Frist am Dienstag, 24.11.2026, 24:00 Uhr. Das ist ein Werktag, eine Verlängerung nach § 193 BGB greift nicht. Bitte prüfen. Für den Zugang habe ich allein die Angaben der Mandantin und der Gesprächsnotiz zugrunde gelegt.\n- **Name der Mandantin:** In der Gesprächsnotiz erscheint im Sachverhalt der Platzhalter Frau Krüger-Wendt, in der Kopfzeile und in der E-Mail Sabine Krüger-Wendt. Ich habe Sabine Krüger-Wendt verwendet. Ob beide Platzhalter dieselbe Person meinen, geht aus dem Text nicht eindeutig hervor.\n- **Wartezeit und Betriebsgröße:** Das Arbeitsverhältnis besteht seit 01.04.2015, die Wartezeit ist also erfüllt. Die Anwendbarkeit des KSchG (Betriebsgröße, § 23 KSchG) ist aus den Unterlagen nicht ersichtlich und noch zu klären.\n- **Meldung bei der Agentur für Arbeit:** Die Angabe „bis 31.12.2026“ (§ 38 SGB III, drei Monate vor Beendigung zum 31.03.2027) bitte gegenprüfen. Die Empfehlung, sich früher zu melden, ist bewusst vorsichtig formuliert.\n- **Interne Frist für die Unterlagen:** Der Vorschlag 10.11.2026 ist ein Platzhalter. Bitte anpassen.\n- **Datenschutz:** Der Brief enthält bewusst keine Angaben zu Steuer-ID, Bankverbindung, Gehalt oder Geburtsdatum.",
+    "protokoll": {
+      "laufId": "3ce96a5f-40e9-43c1-8ace-704633f4aa78",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:anthropic/claude-sonnet-5.5",
+      "aufgabe": "mandantenbrief",
+      "dauerMs": {
+        "konvertieren": 8,
+        "anonymisieren": 13772,
+        "guard": 1,
+        "verarbeiten": 23265,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 1407,
+        "tokensAus": 3278
+      }
+    },
+    "dauerMs": 37423
+  },
+  {
+    "modell": "E",
+    "aufgabe": "mandantenbrief",
+    "ok": true,
+    "text": "# Entwurf: Schreiben an die Mandantin\n\n**An:** Sabine Krüger-Wendt\nLindenstraße 42, 50674\\nKöln\n\n**Per E-Mail:** sabine.krueger-wendt@beispielmail.de\n\n**Ihre Kündigung durch die Rheinland Logistik\\nHoffmann GmbH: Wie es jetzt weitergeht**\n\nSehr geehrte Frau Frau Krüger-Wendt,\n\nvielen Dank für Ihr Vertrauen und Ihre Nachricht vom 03.11.2026. Wir wissen, dass eine Kündigung nach so vielen Jahren im Betrieb belastend ist. Wir kümmern uns jetzt darum, dass Ihre Rechte gewahrt bleiben.\n\n## Das Wichtigste vorab: die Frist\n\nGegen eine Kündigung kann man nur innerhalb von **drei Wochen** vor dem Arbeitsgericht klagen. Die Frist beginnt mit dem Tag, an dem Sie die Kündigung erhalten haben. Bei Ihnen war das der 03.11.2026.\n\n**Die Klage muss deshalb spätestens am Dienstag, 24.11.2026, beim Arbeitsgericht eingegangen sein.**\n\nWird diese Frist versäumt, gilt die Kündigung in aller Regel als wirksam, auch wenn sie eigentlich fehlerhaft war. Wir wollen die Klage daher **deutlich vor diesem Termin** einreichen.\n\n## Was wir jetzt für Sie tun\n\n1. **Frist notieren:** Wir haben den 24.11.2026 fest in unserem Kalender eingetragen.\n2. **Klage vorbereiten:** Wir bereiten die Klage gegen die Kündigung vor und reichen sie beim Arbeitsgericht ein.\n3. **Kündigung prüfen:** Wir prüfen, ob die Kündigung Fehler hat. Sie haben uns gesagt, dass der Betriebsrat vor der Kündigung wohl nicht beteiligt wurde. Wenn das stimmt, kann die Kündigung allein schon deshalb unwirksam sein. Das klären wir.\n4. **Auf dem Laufenden halten:** Sobald die Klage eingereicht ist, schicken wir Ihnen eine Kopie. Wir sagen Ihnen dann auch, wie es beim Gericht weitergeht.\n\n## Was Sie jetzt tun sollten\n\n**Bitte schicken Sie uns möglichst bis Freitag, 13.11.2026, folgende Unterlagen**, gern als Scan oder Handyfoto per E-Mail:\n\n- **das Kündigungsschreiben** (alle Seiten, auch die Rückseite), und, falls vorhanden, den Umschlag\n- **Ihren Arbeitsvertrag** und spätere Änderungen oder Zusatzvereinbarungen\n- **Ihre letzten drei Gehaltsabrechnungen**\n- **Abmahnungen** oder andere schriftliche Beschwerden Ihres Arbeitgebers, falls Sie welche erhalten haben\n- **Schriftverkehr zur Kündigung**, etwa E-Mails oder Nachrichten von Herr\\nDr. Matthias Oberländer oder der Personalabteilung\n- falls vorhanden: **Ihre Rechtsschutzversicherung** (Name der Versicherung und Versicherungsnummer)\n\n**Bitte beantworten Sie uns außerdem kurz diese Fragen:**\n\n- Wie viele Personen arbeiten ungefähr bei Ihrem Arbeitgeber? Eine grobe Schätzung reicht.\n- Hat jemand vom Betriebsrat mit Ihnen über die Kündigung gesprochen, zum Beispiel Jürgen Pakulla?\n- Wie können wir Ihre Kollegin Aylin Demirtaş erreichen? Sie kann bestätigen, wie die Kündigung übergeben wurde. Bitte fragen Sie Ihre Kollegin vorher, ob sie mit der Weitergabe ihrer Kontaktdaten einverstanden ist.\n\n**Zwei wichtige Hinweise:**\n\n- **Bitte unterschreiben Sie nichts**, was Ihr Arbeitgeber Ihnen im Zusammenhang mit der Kündigung vorlegt, zum Beispiel einen Aufhebungsvertrag oder eine Erklärung, dass Sie die Kündigung annehmen. Sprechen Sie vorher mit uns.\n- **Melden Sie sich bei der Agentur für Arbeit arbeitsuchend.** Das sollten Sie spätestens drei Monate vor dem Ende Ihres Arbeitsverhältnisses tun, also **bis spätestens 31.12.2026**. Am besten erledigen Sie das gleich, auch wenn wir gegen die Kündigung vorgehen. So vermeiden Sie Nachteile beim Arbeitslosengeld. Die Meldung geht auch online.\n\nWenn Sie Fragen haben, rufen Sie uns gern jederzeit an.\n\nMit freundlichen Grüßen\n\n*[Name Rechtsanwältin / Rechtsanwalt]*\n\n---\n\n## Interne Hinweise zur Prüfung (nicht an die Mandantin)\n\n- **Fristberechnung:** Zugang am Di., 03.11.2026, durch persönliche Übergabe. Laut Auftrag und E-Mail ist das eindeutig. Fristende nach § 4 KSchG i. V. m. §§ 187 Abs. 1, 188 Abs. 2 BGB ist **Di., 24.11.2026**. Kein Wochenende, kein bundeseinheitlicher Feiertag. Bitte im Fristenkalender gegenprüfen.\n- **Namenszuordnung:** Ich gehe davon aus, dass Sabine Krüger-Wendt (Mandantin, voller Name) und Frau Krüger-Wendt (Sachverhalt) dieselbe Person bezeichnen. Der Kontext spricht stark dafür, eindeutig belegt ist es aber nicht. Bitte die Anrede prüfen.\n- **Kündigungsfrist:** Beschäftigt seit 01.04.2015, also über 10 Jahre. Nach § 622 Abs. 2 Nr. 4 BGB gelten 4 Monate zum Monatsende. Das Kündigungsdatum 31.03.2027 erscheint plausibel. Abweichende Regelungen in Arbeits- oder Tarifvertrag sind noch zu prüfen.\n- **KSchG-Anwendbarkeit:** Die Wartezeit ist erfüllt. Die Betriebsgröße (> 10 Arbeitnehmer, § 23 KSchG) ist noch offen, daher die Frage im Schreiben.\n- **Betriebsratsanhörung (§ 102 BetrVG):** Die Angabe der Mandantin, der Betriebsrat sei nicht angehört worden, ist ungeprüft. Sie ist in der Klage zu rügen.\n- **Arbeitsuchendmeldung (§ 38 Abs. 1 SGB III):** Der Hinweis ist als Service gedacht. Bitte prüfen, ob er im Schreiben bleiben soll.\n- **Datensparsamkeit:** IBAN, Steuer-ID und Geburtsdatum habe ich bewusst nicht ins Schreiben übernommen, weil sie dafür nicht nötig sind.\n- Die Frist für die Unterlagen (13.11.2026) ist ein Vorschlag und kann angepasst werden.",
+    "protokoll": {
+      "laufId": "3b37cbae-e0db-464e-8ce3-9019b859f938",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:anthropic/claude-opus-5.5",
+      "aufgabe": "mandantenbrief",
+      "dauerMs": {
+        "konvertieren": 7,
+        "anonymisieren": 13168,
+        "guard": 1,
+        "verarbeiten": 33102,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 1407,
+        "tokensAus": 3546
+      }
+    },
+    "dauerMs": 46760
+  },
+  {
+    "modell": "B",
+    "aufgabe": "schriftsatz",
+    "ok": true,
+    "text": "# Kündigungsschutzklage – Entwurf\n\n> **Vorbemerkungen / Kennzeichnungen vorab:**\n> - Im Dokument ist als Mandantin `Sabine Krüger-Wendt` genannt, im Sachverhalt aber `Frau Krüger-Wendt` als seit 01.04.2015 beschäftigte Disponentin. Ob dieselbe Person gemeint ist, geht aus dem Text **nicht eindeutig** hervor → im Entwurf durchgängig `[PRÜFEN]` / Platzhalter eingesetzt.\n> - „`Arbeitsgericht Köln`“ (Auftrag) und „`Rheinland Logistik\\nHoffmann GmbH`“ (Dokument) sind inhaltlich nicht eindeutig identifizierbar → im Rubrum beides markiert.\n> - **Frist:** Die Klagefrist des § 4 KSchG beträgt **3 Wochen nach Zugang** der Kündigung (persönliche Übergabe am 03.11.2026) → mithin bis spätestens **Dienstag, den 24.11.2026**. Rechtzeitige Einreichung sicherstellen.\n> - Der Entwurf bedarf der Prüfung und Ergänzung durch eine Anwältin/einen Anwalt.\n\n---\n\n**Arbeitsgericht** `[FEHLT: zuständiges Arbeitsgericht/Ort]`\n\n```\nSabine Krüger-Wendt [PRÜFEN: identisch mit Frau Krüger-Wendt?]\nLindenstraße 42, 50674\\nKöln\n— Klägerin —\nProzessbevollmächtigte/Prozessbevollmächtigter: [FEHLT: Zustellungsanschrift ggf. Kanzlei]\n\nRheinland Logistik\\nHoffmann GmbH [PRÜFEN: identisch mit Arbeitsgericht Köln? Anschrift fehlt]\n[FEHLT: Anschrift des beklagten Betriebs]\n— Beklagte —\n```\n\n**Kündigungsschutzklage**\n\nAntrag Nr. 1: `[FEHLT: Streitwert]`\nDer Streitwert wird auf [FEHLT] EUR festgesetzt. [PRÜFEN: Anhaltspunkt: Bruttomonatsgehalt 3.850,00 EUR; ein Drittel des Jahreseinkommens gemäß § 42 GKG.]\n\n---\n\n## I. Antrag\n\nDie Klägerin beantragt,\n\n**1.** festzustellen, dass das zwischen den Parteien bestehende Arbeitsverhältnis **nicht** durch die ordentliche, dem Rest der Kette zuzurechnende Kündigung der Beklagten vom **03.11.2026** mit Endtermin zum **31.03.2027** aufgelöst worden ist, sondern **unbefristet über den 31.03.2027 hinaus fortbesteht**;\n\n**2.** hilfsweise: festzustellen, dass das Arbeitsverhältnis zwischen den Parteien nicht durch die Kündigung der Beklagten vom 03.11.2026 aufgelöst worden ist, sondern nur zu dem Rechtsnachfolger der Beklagten als dessen Rechte und Pflichten aus dem Arbeitsverhältnis vererbt übergeht; [PRÜFEN: nur beibetriebsbedingt geplanter Betriebsübergang – hier keine Anhaltspunkte]\n\n**3.** die Beklagte zu verurteilen, die Klägerin **ab dem 31.03.2027 unverändert zu den bisherigen Bedingungen** als Disponentin weiterzubeschäftigen, bis der Rechtsstreit rechtskräftig entschieden ist (§ 102 Abs. 5 BetrVG analog bzw. § 24 SächsArbG-Klagen [PRÜFEN: weiterbeschäftigender Hilfsantrag]); [PRÜFEN: Antrag 2/3 nur hilfsweise und nach Lage des Falls]\n\n**4.** hilfsweise unter Modifikation des Antrags zu 1.**: die Beklagte zu verurteilen, das Arbeitsverhältnis über den 31.03.2027 hinaus zum [FEHLT: Endtermin] fortzusetzen. [PRÜFEN: ggf. bei geänderten Kündigungsfristen]\n\n**5.** die Beklagte zu verurteilen, an die Klägerin [FEHLT: Betrag] EUR nebst Zinsen von [FEHLT] zu zahlen (Auszahlung bestehender unkündbarer Rückstände / Guthaben). [FEHLT: ggf. Untervergütung, Resturlaub, – hier keine konkreten Anhaltspunkte]\n\n**6.** die Kosten des Rechtsstreits der Beklagten aufzuerlegen.\n\n---\n\n## II. Tatsachenvortrag\n\nDie Klägerin ist seit dem **01.04.2015** bei der Beklagten als **Disponentin** beschäftigt (im Folgenden: `[PRÜFEN: Identität Sabine Krüger-Wendt = Frau Krüger-Wendt]`). Ihr Vorgesetzter, `Herr\\nDr. Matthias Oberländer`, übergab ihr am **03.11.2026** die ordentliche Kündigung mit Endtermin zum **31.03.2027** persönlich. Die Kündigung erfolgte **ohne jede Vorwarnung**. Dies kann `Aylin Demirtaş`, eine Kollegin der Klägerin, bezeugen.\n\nDie Klägerin verdient ein Bruttomonatsgehalt von **3.850,00 EUR**. Sie ist Mutter **zweier unterhaltspflichtiger Kinder**.\n\nDie Beklagte beschäftigt **ca. 120 Arbeitnehmer**, sodass die Voraussetzungen des § 1 Abs. 1 KSchG erfüllt sind; die Wartezeit nach § 1 Abs. 4 KSchG ist seit über zehn Jahren abgelaufen.\n\n**Kündigungsgrund:** [FEHLT: Im Schriftsatz ist ein Kündigungsgrund nicht erkennbar. Kündigungsgrund, Rz. der Kündigung, ggf. Verwarnungen, Abmahnungen, Betriebsratsschreiben der Beklagten ergänzen.]\n\n**Verwarnungen/Abmahnungen:** [FEHLT: Abmahnungen der Beklagten; hier keine Angaben vorhanden]\n\n**Betriebsrat:** Nach Angaben der Klägerin wurde der Betriebsrat (Vorsitzender: `Jürgen Pakulla`) **vor der Kündigung nicht angehört**.\n\n---\n\n## III. Rechtliche Ausführungen\n\n### 1. Klagefrist nach § 4 KSchG gewahrt\n\nDie Kündigung wurde der Klägerin am **03.11.2026** persönlich übergeben und ging ihr an diesem Tag zu (§ 130 BGB). Die Dreiwochenfrist des § 4 KSchG lief daher bis zum **24.11.2026**. Die vorliegende Klage wurde fristgerecht [FEHLT: Datum des Gerichtseingangs] eingereicht.\n\n### 2. Fehlende Anhörung des Betriebsrats (§ 102 BetrVG)\n\nDie Beklagte hat den Betriebsrat vor der Kündigung **nicht angehört**. Die Kündigung ist daher bereits wegen Verstoßes gegen § 102 Abs. 1 BetrVG rechtswidrig; ein Geltungsgrund nach § 102 Abs. 2 BetrVG ist vorliegend nicht erkennbar. [PRÜFEN: Zuständigkeit/Vertretung des Betriebsrats (Vorsitzender Jürgen Pakulla); ggf. Anhörungsbeweis]\n\n### 3. Kündigung ohne Grund – sozial ungerechtfertigt (§ 1 KSchG)\n\nSoweit der Klägerin der Kündigungsgrund nicht bekannt ist [FEHLT: Grund der Kündigung], sei vorgetragen:\n\n- **Betriebsbedingt:** Es sind [FEHLT: Wegfall des Arbeitsplatzes, innerbetriebliche Gründe, Sozialauswahl] nicht bekannt. Eine Sozialauswahl nach § 1 Abs. 3 KSchG scheitert mindestens an dem Aspekt, dass die Klägerin **zwei unterhaltspflichtige Kinder** hat. [PRÜFEN: Sozialauswahlvergleichsbetriebsregister, drei vergleichbare Arbeitnehmer]\n- **Verhaltensbedingt:** Eine Abmahnung ist nicht ergangen; die Kündigung erfolgte **ohne Vorwarnung**. [PRÜFEN: ggf. Kündigung ohne Abmahnung § 1 Abs. 2 Nr. 2 KSchG]\n- **Personenbedingt:** [FEHLT: keine Anhaltspunkte im Schriftsatz]\n\n[PRÜFEN: Darlegungslast der Beklagten; ggf. Auskunftsanspruch über Kündigungsgründe]\n\n### 4. Fristkontrolle § 622 BGB\n\nFür die ordentliche Kündigung der Beklagten gilt die gesetzliche Kündigungsfrist des § 622 BGB. Bei einer Betriebszugehörigkeit seit dem 01.04.2015 (mehr als elf Jahre) beträgt die Frist gemäß § 622 Abs. 2 S. 2 Nr. 3 BGB **4 Monate zum Monatsende**; der früheste mögliche Endtermin wäre der **28.02.2027**. [PRÜFEN: arbeitsvertragliche/tarifvertragliche Kündigungsfrist kann abweichen; hier keine Vertragstexte vorliegend] Die Kündigung zum **31.03.2027** unterschreitet die Frist nicht. [PRÜFEN: § 622 Abs. 6 BGB § 623 Schriftform: ob schriftlich oder elektronisch erfolgt, wurde bereits durch persönliche Übergabe erledigt]\n\n### 5. Fehlende Massenentlassungsanzeige\n\n[FEHLT: keine Anhaltspunkte, ob eine Massenentlassung vorliegt (§ 17 KSchG) – vorliegend wohl Einzelfall]\n\n---\n\n## IV. Verfahrenshinweise\n\n- **Kostenbeitrag:** [FEHLT: Schätzung]\n- **Zuständig:** [FEHLT: zuständiges Arbeitsgericht nach § 2 Arbeitsgerichtsgesetz]\n- **Fristen:** Klagefrist **24.11.2026**; ggf. Verlängerung nach § 5 KSchG nicht eingeholt [PRÜFEN]\n\n---\n\n## V. Anlagen\n\n1. Kündigungsschreiben vom 03.11.2026 [FEHLT: Kopie beifügen]\n2. Nachweis Betriebszugehörigkeit seit 01.04.2015 [FEHLT: Arbeitsvertrag/Lohnabrechnungen]\n3. Lohnabrechnung/Bruttomonatsgehalt 3.850,00 EUR [FEHLT: Kopie beifügen]\n4. Ggf. Betriebsratsanzeige [FEHLT]\n5. Ggf. Zeugenerklärung `Aylin Demirtaş` [FEHLT: ggf. beifügen bzw. Zeugenvorstellung beantragen]\n\n---\n\n### Offene Punkte für die Prüfung durch die Anwältin/den Anwalt\n\n| Punkt | Hinweis |\n|---|---|\n| Identität `Sabine Krüger-Wendt` / `Frau Krüger-Wendt` | Im Dokument nicht eindeutig; im Rubrum Platzhalter der Mandantin verwendet |\n| `Arbeitsgericht Köln` vs. `Rheinland Logistik\\nHoffmann GmbH` | Im Auftrag und im Dokument unterschiedliche Platzhalter – Zuspielung klären |\n| Kündigungsgrund | Im Dokument nicht angegeben |\n| Volltext der Kündigung | Nicht vorliegend (u.a. wichtig für Schriftform § 623 BGB) |\n| Betriebliche Kündigungsfristen / Tarifvertrag | Nicht bekannt |\n| Unterlagen Betriebsrat | Nie angehört nach Mandantin – Beweis sichern |\n| Sperren von Arbeitslosengeld, Mitteilverhalten, Nichtannahmelohn | Falls Geltungsfähigkeit [PRÜFEN] |\n| Bankverbindung, Steuer-ID, Geburtsdatum, E-Mail/Telefon | Im Klageschriftsatz grundsätzlich **nicht** aufgenommen (datenschutzrechtlich nicht erforderlich); vollständig pseudonymisiert belassen |",
+    "protokoll": {
+      "laufId": "d0ad7e1b-341b-4f5b-94c5-a8d15f3bd6d5",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 20,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:fountain-2.0",
+      "aufgabe": "schriftsatz",
+      "dauerMs": {
+        "konvertieren": 8,
+        "anonymisieren": 13549,
+        "guard": 9,
+        "verarbeiten": 34726,
+        "rueckfuehrung": 4
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 860,
+        "tokensAus": 3778
+      }
+    },
+    "dauerMs": 48726
+  },
+  {
+    "modell": "C",
+    "aufgabe": "schriftsatz",
+    "ok": true,
+    "text": "# Entwurf: Kündigungsschutzklage\n\n> **Entwurf zur Prüfung durch eine Anwältin/einen Anwalt.** Alle Platzhalter sind unverändert übernommen. Fehlende Angaben sind als `[FEHLT: …]` gekennzeichnet, Prüfungsbedarf als `[PRÜFEN]`.\n\n---\n\n## A. Fristennotiz (vorab – bitte sofort kalendarisch sichern)\n\n| Position | Eintrag |\n|---|---|\n| Zugang der Kündigung | **03.11.2026** (persönliche Übergabe durch Herr\\nDr. Matthias Oberländer) |\n| Klagefrist § 4 S. 1 KSchG | **24.11.2026** (3 Wochen; § 187 Abs. 1, § 188 Abs. 2 BGB) |\n| Fristende | Dienstag, 24.11.2026, 24:00 Uhr – keine Verlängerung nach § 193 BGB, da kein Sonn-/Feiertag |\n| Folge der Versäumung | Wirksamkeitsfiktion nach § 7 KSchG; nachträgliche Zulassung nur unter den engen Voraussetzungen des § 5 KSchG |\n| Weiteres | Klagezustellung „demnächst“ i.S.d. § 167 ZPO veranlassen |\n\n**Hinweis:** Die Dreiwochenfrist ist eine **Ausschlussfrist**. Die Klage muss innerhalb der Frist beim Arbeitsgericht eingehen; auf die Zustellung kommt es insoweit nicht an, wohl aber auf eine zeitnahe Zustellung.\n\n---\n\n## B. Klageentwurf\n\n**An das**\n**Arbeitsgericht Arbeitsgericht Köln**\n\n`[FEHLT: vollständige Gerichtsanschrift]`\n\n---\n\n### Rubrum\n\n**Klägerin:**\nSabine Krüger-Wendt, geb. 14.07.1983,\nLindenstraße 42, 50674\\nKöln\nTelefon: 0221 4789123 · E-Mail: sabine.krueger-wendt@beispielmail.de\n\n**Prozessbevollmächtigte:**\n`[FEHLT: Name und Anschrift der Kanzlei / der bevollmächtigten Anwältin oder des Anwalts]`\n`[FEHLT: Aktenzeichen]`\n\n**Beklagte:**\nRheinland Logistik\\nHoffmann GmbH,\n`[FEHLT: Anschrift des Betriebs/Sitzes]`\nvertreten durch `[FEHLT: gesetzliche Vertreterin/gesetzlichen Vertreter, Funktion]`\n\n**Streitgegenstand:** Kündigung vom 03.11.2026 zum 31.03.2027\n\n---\n\n### Anträge\n\nNamens und in Vollmacht der Klägerin erhebe ich **Kündigungsschutzklage** und beantrage:\n\n1. **Es wird festgestellt, dass das Arbeitsverhältnis der Parteien durch die Kündigung der Beklagten vom 03.11.2026 nicht aufgelöst worden ist.**\n\n2. **Hilfsweise für den Fall des Obsiegens mit dem Antrag zu 1.:**\n   Die Beklagte wird verurteilt, die Klägerin zu unveränderten Arbeitsbedingungen als Disponentin weiterzubeschäftigen.\n\n3. Die Beklagte trägt die Kosten des Rechtsstreits.\n\n---\n\n### Begründung\n\n#### I. Sachverhalt\n\n1. Die Klägerin ist seit dem **01.04.2015** bei der Beklagten als **Disponentin** beschäftigt. Ihr Bruttomonatsgehalt beträgt **3.850,00 EUR**.\n\n2. Mit Schreiben vom **03.11.2026**, das der Klägerin an diesem Tag persönlich durch ihren Vorgesetzten Herr\\nDr. Matthias Oberländer übergeben wurde, kündigte die Beklagte das Arbeitsverhältnis **ordentlich zum 31.03.2027**.\n\n3. Die Beklagte beschäftigt in ihrem Betrieb **etwa 120 Arbeitnehmer**. Bei ihr besteht ein **Betriebsrat**; dessen Vorsitzender ist Jürgen Pakulla.\n\n4. Der Betriebsrat wurde vor Ausspruch der Kündigung **nicht angehört**. Die Klägerin hat vor der Übergabe des Kündigungsschreibens keinerlei Beteiligung des Betriebsrats wahrgenommen; eine Anhörung ist auch nicht nachgeholt worden.\n\n5. Die Klägerin ist **zwei unterhaltspflichtigen Kindern** gegenüber zum Unterhalt verpflichtet.\n\n*Beweis:* Zeugnis der Aylin Demirtaş, zu laden über die Beklagte, zum Zugang und zu den Umständen der Übergabe am 03.11.2026; `[PRÜFEN: Zeugnis des Jürgen Pakulla zur unterbliebenen Anhörung des Betriebsrats – Benennung als Zeuge gegen die Beklagte ist taktisch abzuwägen]`\n\n#### II. Zulässigkeit\n\n1. **Rechtsweg und Zuständigkeit:** Der Rechtsweg zu den Gerichten für Arbeitssachen ist nach § 2 Abs. 1 Nr. 3 ArbGG eröffnet. Die örtliche Zuständigkeit des Arbeitsgerichts Arbeitsgericht Köln wird zugrunde gelegt. `[PRÜFEN: örtliche Zuständigkeit – Sitz der Beklagten bzw. Beschäftigungsort; ggf. Verweisungsantrag der Gegenseite]`\n\n2. **Klagefrist:** Die Klage wird innerhalb der Dreiwochenfrist des § 4 S. 1 KSchG erhoben. Die Kündigung ging der Klägerin am 03.11.2026 zu; die Frist endet mit Ablauf des **24.11.2026**.\n\n3. **Anwendbarkeit des KSchG:** Die Klägerin ist seit mehr als sechs Monaten beschäftigt (§ 1 Abs. 1 KSchG). Der Betrieb der Beklagten weist in der Regel mehr als zehn Arbeitnehmer auf (§ 23 Abs. 1 KSchG). Das Kündigungsschutzgesetz ist daher anwendbar.\n\n#### III. Begründetheit\n\n**1. Die Kündigung ist wegen fehlender Anhörung des Betriebsrats unwirksam (§ 102 Abs. 1 S. 3 BetrVG).**\n\nBesteht in einem Betrieb ein Betriebsrat, so ist dieser vor **jeder** Kündigung zu hören (§ 102 Abs. 1 S. 1 BetrVG). Eine ohne Anhörung ausgesprochene Kündigung ist **unwirksam** (§ 102 Abs. 1 S. 3 BetrVG). Die Anhörung muss **vor** Ausspruch der Kündigung abgeschlossen sein; eine Nachholung heilt den Mangel nicht.\n\nDer Betriebsrat der Beklagten wurde nicht beteiligt. Die Darlegungs- und Beweislast für die ordnungsgemäße Anhörung – einschließlich ihres Zugangs, ihres Inhalts und ihrer Vollständigkeit – trägt die Beklagte. `[PRÜFEN: ständige Rechtsprechung des BAG zur Beweislastverteilung – Fundstelle ergänzen]`\n\nDie Beklagte wird daher im Einzelnen darzulegen haben, wann, in welcher Form und mit welchem Inhalt der Betriebsrat unterrichtet und ob und mit welchem Ergebnis er beteiligt wurde. `[FEHLT: etwaige Angaben der Beklagten zur Betriebsratsanhörung]`\n\n**2. Die Kündigung ist sozial ungerechtfertigt (§ 1 Abs. 2 KSchG).**\n\nDie Kündigung ist nicht durch Gründe im Verhalten oder in der Person der Klägerin oder durch dringende betriebliche Erfordernisse bedingt.\n\n- **Betriebsbedingte Gründe** sind nicht ersichtlich. Die Beklagte hat weder einen Wegfall des Arbeitsplatzes der Klägerin noch eine fehlende anderweitige Beschäftigungsmöglichkeit dargelegt. `[FEHLT: von der Beklagten angegebener Kündigungsgrund; ggf. Kündigungsschreiben im Wortlaut]`\n- **Personen- oder verhaltensbedingte Gründe** sind nicht ersichtlich und wurden nicht mitgeteilt. `[FEHLT: etwaige Abmahnungen, Beurteilungen, Leistungsbeanstandungen]`\n\n**3. Jedenfalls fehlt es an einer ordnungsgemäßen Sozialauswahl (§ 1 Abs. 3 KSchG).**\n\nSollte die Kündigung auf betriebliche Erfordernisse gestützt werden, wäre eine Sozialauswahl unter den vergleichbaren Arbeitnehmern durchzuführen gewesen. Die Klägerin ist mit einer Betriebszugehörigkeit von über elf Jahren, ihrem Lebensalter und der Unterhaltspflicht gegenüber zwei Kindern in besonderem Maße schutzbedürftig (§ 1 Abs. 3 S. 1 KSchG). Die Beklagte hat eine Sozialauswahl weder vorgenommen noch dargelegt. `[FEHLT: Angaben zur Vergleichsgruppe, zur Betriebsabteilung und zur Sozialauswahl der Beklagten]`\n\n**4. Formelle Unwirksamkeit nach § 623 BGB.** `[PRÜFEN: Das Kündigungsschreiben liegt dem Entwurf nicht bei. Sofern das Original nicht ordnungsgemäß unterschrieben ist oder keine Urkunde, sondern nur eine Kopie/E-Mail zugegangen ist, ist die Kündigung auch nach § 623 BGB unwirksam.]`\n\n**5. Sonderkündigungsschutz.** `[FEHLT: Prüfung, ob zum Kündigungszeitpunkt Sonderkündigungsschutz bestand (Schwangerschaft, Elternzeit, Pflegezeit, Schwerbehinderung, Betriebsratsamt, Mandatsschutz).]`\n\n#### IV. Zum Weiterbeschäftigungsantrag\n\nFür den Fall des Obsiegens mit dem Kündigungsschutzantrag hat die Klägerin Anspruch auf Weiterbeschäftigung zu unveränderten Arbeitsbedingungen. Der Anspruch folgt aus §§ 611a, 613 BGB in Verbindung mit Art. 2 Abs. 1, Art. 12 Abs. 1 GG. `[PRÜFEN: BAG, Großer Senat, Beschluss vom 27.02.1985 – GS 1/84 – Fundstelle und Zitierweise ergänzen]`\n\n#### V. Streitwert\n\nDer Streitwert wird vorläufig mit **11.550,00 EUR** angegeben (drei Bruttomonatsgehälter zu je 3.850,00 EUR; § 42 Abs. 2 GKG). `[PRÜFEN: Bewertung des hilfsweisen Weiterbeschäftigungsantrags – nach verbreiteter Auffassung ein weiteres Bruttomonatsgehalt]`\n\n---\n\n### Anlagenverzeichnis\n\n| Anlage | Inhalt | Status |\n|---|---|---|\n| K 1 | Kündigungsschreiben der Beklagten vom 03.11.2026 | `[FEHLT: Original/Kopie beifügen]` |\n| K 2 | Arbeitsvertrag vom `[FEHLT: Datum]` | `[FEHLT]` |\n| K 3 | `[FEHLT: ggf. Gehaltsabrechnungen, Betriebsratsunterlagen, Schriftwechsel]` | `[FEHLT]` |\n\n---\n\n## C. Offene Punkte / Rückfragen an die Mandantin\n\n1. `[FEHLT: Kündigungsschreiben im Original – Wortlaut, Datum, Unterschrift, Begründung]`\n2. `[FEHLT: Anschrift und gesetzliche Vertretung der Beklagten]`\n3. `[FEHLT: Name, Anschrift und Kontaktdaten der Prozessbevollmächtigten]`\n4. `[FEHLT: Angaben zum Kündigungsgrund seitens der Beklagten]`\n5. `[FEHLT: Bestehen von Sonderkündigungsschutz (Schwangerschaft, Elternzeit, Schwerbehinderung, Betriebsratsamt)]`\n6. `[FEHLT: Angaben zur Vergleichsgruppe/Abteilung für die Sozialauswahl]`\n7. `[FEHLT: Wurde die Klägerin nach dem 03.11.2026 tatsächlich weiterbeschäftigt oder freigestellt?]`\n8. `[FEHLT: Liegen weitere Kündigungen oder Änderungsverträge vor?]`\n\n---\n\n## D. Prüfungsvermerk zur Aktenführung\n\n- **Namensplatzhalter:** In der Gesprächsnotiz wird die Mandantin im Sachverhalt als Frau Krüger-Wendt bezeichnet, im Rubrum und in der E-Mail demgegenüber als Sabine Krüger-Wendt. Nach dem Kontext (Disponentin, Vorgesetzter Herr\\nDr. Matthias Oberländer, Übergabe am 03.11.2026, Adresse Lindenstraße 42, 50674\\nKöln) ist von **derselben Person** auszugehen. `[PRÜFEN: Abgleich mit der Handakte vor Versand – die Platzhalter sind im Entwurf bewusst unverändert übernommen.]`\n- **Kündigungsfrist:** Bei Zugang am 03.11.2026 und einer Beschäftigungsdauer von mehr als zehn Jahren (§ 622 Abs. 2 BGB) erscheint die Kündigung zum 31.03.2027 **fristgerecht**. Angriffspunkte sind daher in erster Linie die **fehlende Betriebsratsanhörung** und die **fehlende soziale Rechtfertigung**, nicht die Fristberechnung. `[PRÜFEN: tarifvertragliche oder vertragliche Kündigungsfristen; § 622 Abs. 2 S. 2 BGB ist nach EuGH-Rechtsprechung nicht anzuwenden]`\n- **Beweislast:** Die Darlegungs- und Beweislast für die ordnungsgemäße Betriebsratsanhörung liegt bei der Beklagten. Die Klägerin muss die Nichtanhörung daher nicht positiv beweisen, sondern nur bestreiten. `[PRÜFEN: Fundstelle ergänzen]`\n- **Zustellung:** Klage nach Freigabe unverzüglich einreichen und Zustellung überwachen (§ 167 ZPO).\n\n---\n\n*Dieser Entwurf ist ein Arbeitsergebnis zur anwaltlichen Prüfung und noch nicht zur Einreichung bestimmt.*",
+    "protokoll": {
+      "laufId": "576d2cfb-a5d5-42b1-97bc-93671fbb378e",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 20,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:waterfall-2.0",
+      "aufgabe": "schriftsatz",
+      "dauerMs": {
+        "konvertieren": 20,
+        "anonymisieren": 13172,
+        "guard": 2,
+        "verarbeiten": 44580,
+        "rueckfuehrung": 1
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 902,
+        "tokensAus": 12722
+      }
+    },
+    "dauerMs": 58123
+  },
+  {
+    "modell": "D",
+    "aufgabe": "schriftsatz",
+    "ok": true,
+    "text": "**Entwurf – Kündigungsschutzklage**\n*(Zur Prüfung durch die zuständige Anwältin / den zuständigen Anwalt)*\n\n---\n\n### Rubrum\n\nAn das\n**Arbeitsgericht [FEHLT: Ort]**\n[Adresse des Gerichts: FEHLT]\n\n– **Klägerin** –\n**Sabine Krüger-Wendt**\ngeboren am 14.07.1983\nwohnhaft: Lindenstraße 42, 50674\\nKöln\nTelefon: 0221 4789123\nE-Mail: sabine.krueger-wendt@beispielmail.de\n\n– **Prozessbevollmächtigte** –\n[FEHLT: Name, Kanzlei, Anschrift, beA-Adresse der vertretenden Rechtsanwältin / des vertretenden Rechtsanwalts]\nProzessvollmacht: [FEHLT: liegt bei / wird nachgereicht]\n\ngegen\n\n– **Beklagte** –\n**Arbeitsgericht Köln**\nvertreten durch [FEHLT: gesetzlicher Vertreter, z. B. Geschäftsführer/Vorstand]\n[Adresse der Beklagten: FEHLT]\n\n**Streitwert:** 11.550,00 EUR (3 Monatsgehälter à 3.850,00 EUR gemäß § 61 Abs. 2 ArbGG) [PRÜFEN]\n\n---\n\n### Anträge\n\nEs wird beantragt,\n\n1. festzustellen, dass das zwischen der Klägerin und der Beklagten bestehende Arbeitsverhältnis durch die ordentliche Kündigung der Beklagten vom 03.11.2026 zum 31.03.2027 nicht aufgelöst worden ist;\n\n2. die Beklagte zu verurteilen, die Kosten des Rechtsstreits zu tragen.\n\n---\n\n### Begründung\n\n#### I. Sachverhalt\n\nDie Klägerin ist seit dem 01.04.2015 bei der Rheinland Logistik\\nHoffmann GmbH (Beklagte: Arbeitsgericht Köln) [PRÜFEN: Ob Rheinland Logistik\\nHoffmann GmbH und Arbeitsgericht Köln denselben Rechtsträger bezeichnen] als Disponentin beschäftigt. Ihr Bruttomonatsgehalt beträgt 3.850,00 EUR.\n\nDer Betrieb der Beklagten beschäftigt etwa 120 Arbeitnehmer.\n\nAm 03.11.2026 überreichte ihr der Vorgesetzte Herr\\nDr. Matthias Oberländer die ordentliche Kündigung zum 31.03.2027. Die Kündigung ging der Klägerin an diesem Tag persönlich zu. [PRÜFEN: Liegt die Kündigung in Schriftform i. S. d. § 623 BGB vor? Kopie der Kündigung: FEHLT]\n\nEin Betriebsrat besteht (Vorsitzender: Jürgen Pakulla). Dieser wurde nach Angaben der Klägerin vor Ausspruch der Kündigung nicht angehört.\n\nDie Kollegin Aylin Demirtaş war bei der Übergabe der Kündigung anwesend und kann bezeugen, dass die Kündigung ohne vorherige Warnung erfolgte.\n\n#### II. Rechtliche Würdigung\n\n**1. Zulässigkeit der Klage**\n\nDie Klage ist zulässig.\n\nDie Klagefrist des § 4 Satz 1 KSchG ist gewahrt. Die schriftliche Kündigung ging der Klägerin am 03.11.2026 zu. Die Klage wird innerhalb von drei Wochen nach Zugang der Kündigung beim Arbeitsgericht erhoben. [PRÜFEN: Fristablauf am 24.11.2026; rechtzeitiger Eingang beim Gericht]\n\nDas angerufene Arbeitsgericht ist gemäß § 2 Abs. 1 Nr. 3 lit. a) ArbGG sachlich und gemäß § 48 ArbGG örtlich zuständig. [FEHLT: Genaue Bezeichnung des Gerichts]\n\n**2. Begründetheit der Klage**\n\nDas Kündigungsschutzgesetz ist anwendbar. Die Beklagte beschäftigt mehr als zehn Arbeitnehmer (§ 1 Abs. 1 Satz 1 KSchG; hier: ca. 120 Arbeitnehmer). Die Klägerin ist seit dem 01.04.2015, mithin länger als sechs Monate, im Betrieb der Beklagten beschäftigt (§ 1 Abs. 1 Satz 1 KSchG).\n\nDie Kündigung ist unwirksam.\n\n**a) Formelle Unwirksamkeit wegen fehlender Betriebsratsanhörung**\n\nGemäß § 102 Abs. 1 Satz 1 BetrVG ist der Betriebsrat vor jeder Kündigung anzuhören. Die ordnungsgemäße Anhörung ist Wirksamkeitsvoraussetzung der Kündigung. Wurde der Betriebsrat nicht angehört, ist die Kündigung unwirksam (§ 102 Abs. 1 Satz 3 BetrVG).\n\nNach den Angaben der Klägerin wurde der Betriebsrat (Vorsitzender: Jürgen Pakulla) nicht angehört. [PRÜFEN: Tatsächliche Durchführung der Anhörung; Beweislast liegt beim Arbeitgeber]\n\n**b) Materielle Unwirksamkeit**\n\nUnabhängig von der formellen Wirksamkeit ist die Kündigung auch materiell rechtswidrig, da sie sozial nicht gerechtfertigt ist (§ 1 Abs. 2 KSchG). [FEHLT: Angaben zu den Kündigungsgründen (betriebsbedingt, personenbedingt oder verhaltensbedingt) sowie ggf. zur durchgeführten Sozialauswahl gemäß § 1 Abs. 3 KSchG]\n\n#### III. Beweismittel\n\n[FEHLT: Konkrete Beweismittel, z. B.:\n- Kündigungsschreiben vom 03.11.2026 (als Anlage)\n- Gehaltsabrechnungen der letzten 12 Monate\n- Zeugnis der Kollegin Aylin Demirtaş\n- Schreiben zur Betriebsratsanhörung (falls vorhanden) bzw. Negativzeugnis des Betriebsrats]\n\n---\n\n[Ort], den [FEHLT: Datum]\n\n_________________________\n[FEHLT: Unterschrift der Prozessbevollmächtigten]\n\n---\n\n### Hinweise für die anwaltliche Prüfung\n\n- [PRÜFEN: Ob Arbeitsgericht Köln und Rheinland Logistik\\nHoffmann GmbH identisch sind und welche Bezeichnung im Rubrum zu führen ist]\n- [PRÜFEN: Fristberechnung nach § 4 KSchG – Zugang am 03.11.2026, Fristablauf voraussichtlich am 24.11.2026; rechtzeitiger Eingang beim Gericht erforderlich]\n- [FEHLT: Vollständige Anschrift der Beklagten und deren gesetzlicher Vertreter]\n- [FEHLT: Prozessvollmacht der Klägerin]\n- [FEHLT: Kopie der Kündigung (Schriftformerfordernis § 623 BGB)]\n- [FEHLT: Kündigungsgründe und Unterlagen zur Sozialauswahl]\n- [PRÜFEN: Ob ergänzende Anträge (z. B. auf vorläufige Weiterbeschäftigung, Lohnzahlung für die Zeit nach dem 31.03.2027) gestellt werden sollen]\n- [PRÜFEN: Ggf. Anwendbarkeit von Sonderkündigungsschutz (z. B. Elternzeit, Schwerbehinderung) – hier: zwei unterhaltspflichtige Kinder, aber kein Hinweis auf besondere Schutzbedürftigkeit]",
+    "protokoll": {
+      "laufId": "d5877e2d-58fa-4b2b-9c32-5d234f208f13",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:mistralai/mistral-large-4",
+      "aufgabe": "schriftsatz",
+      "dauerMs": {
+        "konvertieren": 15,
+        "anonymisieren": 13218,
+        "guard": 2,
+        "verarbeiten": 169646,
+        "rueckfuehrung": 1
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 769,
+        "tokensAus": 8742
+      }
+    },
+    "dauerMs": 183314
+  },
+  {
+    "modell": "A",
+    "aufgabe": "schriftsatz",
+    "ok": true,
+    "text": "# Entwurf: Kündigungsschutzklage\n\n*Entwurf zur Prüfung durch die zuständige Anwältin bzw. den zuständigen Anwalt. Unsicherheiten und fehlende Angaben sind gekennzeichnet.*\n\n## Vorab: Frist und offene Punkte\n\n**Klagefrist (§ 4 S. 1 KSchG):** Drei Wochen nach Zugang der schriftlichen Kündigung. Die Kündigung wurde am Dienstag, 03.11.2026, übergeben. **Die Frist endet am Dienstag, 24.11.2026 (24:00 Uhr)**, vorbehaltlich der Prüfung nach §§ 187, 188 BGB. Die Klage muss bis dahin beim Gericht eingehen. Ein Eingang bei der Rechtsantragstelle genügt ebenfalls. Bitte eine Vorfrist notieren.\n\n**Unklarheiten und fehlende Unterlagen:**\n- Das **Kündigungsschreiben** liegt nicht vor. Zu prüfen sind Schriftform und eigenhändige Unterschrift (§ 623 BGB), der Unterzeichner und seine Vertretungsberechtigung (ggf. Rüge nach § 174 BGB) sowie ein genannter Kündigungsgrund.\n- Das **Gericht** ist im Auftrag nur als Platzhalter Arbeitsgericht Köln genannt. Ich gehe davon aus, dass das Arbeitsgericht gemeint ist. Bitte bestätigen und die örtliche Zuständigkeit prüfen (§ 46 Abs. 2 ArbGG i. V. m. § 48 ArbGG).\n- Die **Mandantin** erscheint in der Gesprächsnotiz unter zwei Platzhaltern (Sabine Krüger-Wendt im Kopf und in der E-Mail, Frau Krüger-Wendt im Sachverhalt). Vermutlich ist dieselbe Person gemeint, das ist aber nicht belegt. Bitte klären.\n- Zur **Betriebsratsanhörung** liegen nur Angaben der Mandantin vor („nach Angaben der Mandantin nicht angehört“). Ihre Wahrnehmung ist beschränkt. Bitte nachfragen, woher sie das weiß, und ob ein Betriebsrat tatsächlich besteht und wirksam gewählt ist.\n- Ein **Kündigungsgrund** ist nicht bekannt (verhaltens-, personen- oder betriebsbedingt).\n- **Sozialdaten** fehlen (Alter, Unterhaltspflichten sind nur teilweise genannt, Schwerbehinderung?, Vergleichsgruppe).\n- **Vollmacht**, Aktenzeichen und Angaben zur Kanzlei fehlen.\n- **Datenschutz:** Steuer-ID, IBAN, Geburtsdatum, Telefonnummer und E-Mail-Adresse sind für die Klage nicht erforderlich und wurden nicht übernommen.\n\n---\n\n## Entwurf des Schriftsatzes\n\n**An das**\nArbeitsgericht Köln\n[FEHLT: Anschrift / Bestätigung, dass es sich um das örtlich zuständige Arbeitsgericht handelt]\n\n[FEHLT: Ort, Datum]\n\n**Klage**\n\nder Frau Sabine Krüger-Wendt, Lindenstraße 42, 50674\\nKöln\n\n– Klägerin –\n\nProzessbevollmächtigte: [FEHLT: Kanzleibezeichnung und Anschrift]\n\ngegen\n\ndie Rheinland Logistik\\nHoffmann GmbH, [FEHLT: Anschrift, Rechtsform, gesetzliche Vertretung]\n\n– Beklagte –\n\nwegen Kündigungsschutz (Feststellung der Unwirksamkeit einer ordentlichen Kündigung) und Weiterbeschäftigung\n\n**Vorläufiger Streitwert:** 11.550,00 EUR (Vierteljahresverdienst, § 42 Abs. 2 GKG: 3 × 3.850,00 EUR; zuzüglich ggf. Weiterbeschäftigungsantrag, [PRÜFEN: Bewertung nach Gerichtspraxis])\n\nNamens und in Vollmacht der Klägerin erhebe ich Klage und werde beantragen:\n\n### Anträge\n\n1. Es wird festgestellt, dass das Arbeitsverhältnis der Parteien durch die Kündigung der Beklagten vom 03.11.2026, der Klägerin am 03.11.2026 übergeben, nicht zum 31.03.2027 aufgelöst wird.\n2. *(Optional, allgemeiner Feststellungsantrag, Prüfung der Zweckmäßigkeit)* Es wird festgestellt, dass das Arbeitsverhältnis auch nicht durch andere Beendigungstatbestände aufgelöst worden ist, sondern über den 31.03.2027 hinaus unverändert fortbesteht.\n3. Für den Fall des Obsiegens mit dem Antrag zu 1.: Die Beklagte wird verurteilt, die Klägerin bis zum rechtskräftigen Abschluss des Kündigungsschutzverfahrens zu unveränderten Bedingungen als Disponentin weiterzubeschäftigen.\n4. Die Beklagte trägt die Kosten des Rechtsstreits.\n\n[FEHLT: ggf. Antrag auf Erteilung eines Zwischenzeugnisses oder Weiterbeschäftigung, falls gewünscht]\n\n### Begründung\n\n**I. Sachverhalt**\n\n1. Die Klägerin ist seit dem 01.04.2015 bei der Beklagten als Disponentin beschäftigt. Ihr Bruttomonatsgehalt beträgt 3.850,00 EUR. Sie hat zwei unterhaltspflichtige Kinder. [FEHLT: Alter der Klägerin, ggf. Schwerbehinderung, Arbeitsvertrag als Anlage]\n2. Die Beklagte beschäftigt in ihrem Betrieb in der Regel etwa 120 Arbeitnehmer. [FEHLT: Betriebsstätte/Ort, genaue Zahl zur Darlegung der Betriebsgröße]\n3. Am 03.11.2026 übergab der Vorgesetzte der Klägerin, Herr\\nDr. Matthias Oberländer, ihr persönlich eine ordentliche Kündigung zum 31.03.2027. Die Kollegin Aylin Demirtaş war bei der Übergabe zugegen.\n   **Beweis:** Zeugnis Aylin Demirtaş, [FEHLT: ladungsfähige Anschrift]; Kündigungsschreiben vom 03.11.2026 als **Anlage K 1** [FEHLT: Kündigungsschreiben]\n4. Die Kündigung erfolgte ohne vorherige Warnung oder Abmahnung.\n   **Beweis:** wie oben, Zeugnis Aylin Demirtaş\n5. Die Klägerin hat nach ihren Angaben keine Kenntnis davon, dass die Beklagte den im Betrieb bestehenden Betriebsrat (Vorsitzender: Jürgen Pakulla) vor Ausspruch der Kündigung angehört hat. [FEHLT: Grundlage der Kenntnis der Klägerin; Bestätigung, dass ein Betriebsrat besteht]\n6. [FEHLT: Angaben zu Kündigungsgrund, Inhalt des Kündigungsschreibens, bisherigem Verlauf des Arbeitsverhältnisses, Abmahnungen]\n\n**II. Rechtliche Würdigung**\n\n**1. Zulässigkeit.** Der Rechtsweg zu den Arbeitsgerichten ist eröffnet (§ 2 Abs. 1 Nr. 3 ArbGG). Das Feststellungsinteresse ergibt sich aus § 4 S. 1 KSchG. Die Klage wahrt die Dreiwochenfrist, da sie innerhalb von drei Wochen nach Zugang der Kündigung am 03.11.2026 erhoben wird. [Voraussetzung: Eingang bis 24.11.2026]\n\n**2. Anwendbarkeit des Kündigungsschutzgesetzes.** Das Arbeitsverhältnis besteht seit mehr als sechs Monaten (§ 1 Abs. 1 KSchG). Der Betrieb beschäftigt regelmäßig deutlich mehr als zehn Arbeitnehmer (§ 23 Abs. 1 KSchG), sodass das KSchG Anwendung findet.\n\n**3. Fehlende soziale Rechtfertigung (§ 1 Abs. 2 KSchG).** Die Kündigung ist sozial ungerechtfertigt. Die Beklagte trägt die Darlegungs- und Beweislast für die Kündigungsgründe (§ 1 Abs. 2 S. 4 KSchG). Die Klägerin bestreitet vorsorglich, dass Gründe vorliegen, die die Kündigung bedingen. [FEHLT: Differenzierung nach dem von der Beklagten angegebenen Grund]\n- *Bei verhaltensbedingter Kündigung:* Eine Abmahnung ist nicht erfolgt, die Kündigung ist unverhältnismäßig. Die Kündigung erfolgte ohne Vorwarnung.\n- *Bei betriebsbedingter Kündigung:* Dringende betriebliche Erfordernisse und die Sozialauswahl (§ 1 Abs. 3 KSchG) werden bestritten. Die Klägerin ist seit über elf Jahren beschäftigt und hat zwei Unterhaltspflichten.\n- *Bei personenbedingter Kündigung:* [FEHLT]\n\n**4. Fehlerhafte Betriebsratsanhörung (§ 102 BetrVG).** Die Kündigung ist nach § 102 Abs. 1 S. 3 BetrVG unwirksam, wenn der Betriebsrat vor Ausspruch nicht ordnungsgemäß angehört wurde. Die Klägerin bestreitet, dass die Beklagte den Betriebsrat vor der Kündigung ordnungsgemäß unter Mitteilung der Kündigungsgründe angehört hat. Die Beklagte wird aufgefordert, Zeitpunkt, Inhalt und Ablauf der Anhörung darzulegen und zu beweisen. [PRÜFEN: Darlegungs- und Beweislast im Prozess, abgestufte Darlegungslast nach BAG-Rechtsprechung; konkretes Aktenzeichen bitte recherchieren]\n\n**5. Weitere Unwirksamkeitsgründe (Vorbehalt).** Die Klägerin behält sich vor, weitere Unwirksamkeitsgründe geltend zu machen, insbesondere Formmängel (§ 623 BGB), fehlende Vertretungsmacht des Unterzeichners (§ 174 BGB), Sonderkündigungsschutz sowie Fehler bei der Sozialauswahl. Die Kündigungsfrist von vier Monaten zum Monatsende (§ 622 Abs. 2 S. 1 Nr. 4 BGB) erscheint nach Aktenlage gewahrt. [PRÜFEN: tarif- oder arbeitsvertragliche Fristen]\n\n**6. Weiterbeschäftigung.** Die Klägerin hat einen Anspruch auf vorläufige Weiterbeschäftigung für die Dauer des Kündigungsschutzverfahrens, wenn die Kündigung unwirksam ist und überwiegende schutzwürdige Interessen der Beklagten nicht entgegenstehen. [PRÜFEN: Grundsatzentscheidung des Großen Senats des BAG zum allgemeinen Weiterbeschäftigungsanspruch, Fundstelle bitte verifizieren]\n\n**III. Weitere Hinweise**\n\n- Die Güteverhandlung ist nach § 54 ArbGG vorgesehen. [FEHLT: Haltung der Mandantin zu Vergleich/Abfindung]\n- Die Beklagte wird ggf. gemäß § 61a ArbGG zur Klageerwiderung aufgefordert.\n\n[FEHLT: Unterschrift der Prozessbevollmächtigten]\n\n**Anlagen:**\n- K 1: Kündigungsschreiben vom 03.11.2026 [FEHLT]\n- K 2: Arbeitsvertrag [FEHLT]\n- K 3: Vollmacht [FEHLT]\n- K 4: Gehaltsabrechnungen der letzten drei Monate [FEHLT]\n\n---\n\n## Hinweise an die Bearbeitung (nicht Teil des Schriftsatzes)\n\n1. **Mandantenhinweise:** Die Mandantin sollte unverzüglich Kontakt mit der Agentur für Arbeit aufnehmen und sich arbeitsuchend melden (§ 38 SGB III), um Sperrzeiten zu vermeiden. Ob die Meldefrist hier relevant ist, bitte prüfen.\n2. **Beweisangebot:** Die Zeugin Aylin Demirtaş kann nach den Angaben nur zur Übergabe und zur fehlenden Vorwarnung aussagen, nicht zur Betriebsratsanhörung. Gegebenenfalls ist ein Beweisangebot zur Anhörung nicht ergiebig. Die Beklagte trägt hierfür ohnehin die Last der Darlegung ihrer Anhörung.\n3. **Betriebsrat:** Eine Rückfrage beim Betriebsratsvorsitzenden Jürgen Pakulla (mit Einwilligung der Mandantin) könnte klären, ob eine Anhörung erfolgte.\n4. **Verjährung/Ausschlussfristen:** Zahlungsansprüche (Annahmeverzug) ggf. gesondert geltend machen; Ausschlussfristen im Arbeits- oder Tarifvertrag prüfen. [PRÜFEN]",
+    "protokoll": {
+      "laufId": "f3009e25-d1f9-454f-8a36-52db5e793c3f",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:anthropic/claude-sonnet-5.5",
+      "aufgabe": "schriftsatz",
+      "dauerMs": {
+        "konvertieren": 11,
+        "anonymisieren": 13381,
+        "guard": 2,
+        "verarbeiten": 45530,
+        "rueckfuehrung": 1
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 1457,
+        "tokensAus": 7036
+      }
+    },
+    "dauerMs": 59425
+  },
+  {
+    "modell": "E",
+    "aufgabe": "schriftsatz",
+    "ok": true,
+    "text": "# Entwurf: Kündigungsschutzklage\n\n> **Interne Vorbemerkungen (nicht Teil des Schriftsatzes)**\n>\n> **1. Klagefrist (§ 4 Satz 1 KSchG)**\n> - Zugang der Kündigung: persönliche Übergabe am **Dienstag, 03.11.2026**.\n> - Fristberechnung nach §§ 187 Abs. 1, 188 Abs. 2 BGB: Ablauf am **Dienstag, 24.11.2026, 24:00 Uhr**.\n> - **Bitte Frist und Vorfrist sofort notieren.** Wird die Frist versäumt, gilt die Kündigung als von Anfang an rechtswirksam (§ 7 KSchG). Die nachträgliche Zulassung nach § 5 KSchG kommt nur ausnahmsweise in Betracht.\n>\n> **2. Kündigungsfrist (§ 622 Abs. 2 BGB)**\n> - Bei Zugang bestand das Arbeitsverhältnis seit über 11 Jahren (seit 01.04.2015).\n> - Daraus folgt eine Frist von 4 Monaten zum Monatsende (§ 622 Abs. 2 Satz 1 Nr. 4 BGB).\n> - Der Termin 31.03.2027 erscheint daher gesetzlich zutreffend.\n> - **Zu prüfen:** längere Fristen aus Arbeitsvertrag oder Tarifvertrag [FEHLT: Arbeitsvertrag / anwendbarer Tarifvertrag].\n>\n> **3. Personenzuordnung (Unsicherheit)**\n> - In der Gesprächsnotiz wird die Beschäftigte als Frau Krüger-Wendt bezeichnet.\n> - Der Kontext legt nahe, dass dies die Mandantin Sabine Krüger-Wendt ist, etwa in abgekürzter Namensform. Eindeutig belegt ist das aber nicht.\n> - Im Entwurf wird durchgängig Sabine Krüger-Wendt verwendet. **Bitte verifizieren.**\n>\n> **4. Datensparsamkeit**\n> - Folgende Angaben gehören nicht in die Klageschrift und wurden bewusst weggelassen: Steuer-ID, IBAN, Telefonnummer, E-Mail-Adresse.\n> - Das Geburtsdatum wird nur angegeben, soweit es für die Sozialdaten erforderlich ist.\n>\n> **5. Zurückweisung nach § 174 BGB**\n> - Die Kündigung wurde vom Vorgesetzten Herr\\nDr. Matthias Oberländer überreicht.\n> - **Zu klären:**\n>   - Wer hat das Kündigungsschreiben unterzeichnet?\n>   - Lag eine Originalvollmacht bei?\n> - Eine Zurückweisung muss *unverzüglich* erfolgen. Dafür wird in der Rechtsprechung häufig ein Zeitraum von etwa einer Woche als Richtwert angesehen [PRÜFEN]. Gegebenenfalls ist **sofort** separat zurückzuweisen.\n>\n> **6. Schriftform (§ 623 BGB)**\n> - Bitte das Original des Kündigungsschreibens anfordern und die eigenhändige Unterschrift prüfen.\n\n---\n\n**An das**\n**Arbeitsgericht Köln**\n[FEHLT: Anschrift des Gerichts]\n\n**Klage**\n\nIn dem Rechtsstreit\n\n**Sabine Krüger-Wendt**, Lindenstraße 42, 50674\\nKöln,\n\n– Klägerin –\n\nProzessbevollmächtigte: [FEHLT: Kanzleibezeichnung, Anschrift, Aktenzeichen]\n\ngegen\n\n**Rheinland Logistik\\nHoffmann GmbH** [FEHLT: Rechtsform], vertreten durch [FEHLT: gesetzliche Vertreter, z. B. Geschäftsführer/in], [FEHLT: Anschrift der Beklagten],\n\n– Beklagte –\n\nwegen: Kündigungsschutz\n\n**Vorläufiger Streitwert:** 11.550,00 EUR (drei Bruttomonatsgehälter à 3.850,00 EUR, § 42 Abs. 2 Satz 1 GKG)\n\nerheben wir namens und in Vollmacht der Klägerin Klage und werden beantragen:\n\n1. **festzustellen**, dass das Arbeitsverhältnis der Parteien durch die ordentliche Kündigung der Beklagten vom [FEHLT: Datum des Kündigungsschreibens], der Klägerin zugegangen am 03.11.2026, nicht aufgelöst wird;\n\n2. **festzustellen**, dass das Arbeitsverhältnis der Parteien auch nicht durch andere Beendigungstatbestände endet, sondern zu unveränderten Bedingungen über den 31.03.2027 hinaus fortbesteht;\n\n3. **die Beklagte zu verurteilen**, die Klägerin im Falle des Obsiegens mit den Anträgen zu 1. und/oder 2. bis zum rechtskräftigen Abschluss des Verfahrens zu unveränderten arbeitsvertraglichen Bedingungen als Disponentin weiterzubeschäftigen.\n\n> *Interner Hinweis zum Antrag zu 3.:* Ob der Weiterbeschäftigungsantrag schon jetzt oder erst später gestellt wird, ist eine taktische Entscheidung. Bei Streitwert- und Kostenfragen kann er auch als uneigentlicher Hilfsantrag formuliert werden [PRÜFEN].\n\n---\n\n## Begründung\n\n### I. Sachverhalt\n\n**1. Arbeitsverhältnis**\n\nDie Klägerin ist seit dem 01.04.2015 bei der Beklagten als Disponentin beschäftigt. Ihr Bruttomonatsgehalt beträgt zuletzt 3.850,00 EUR.\n\n*Beweis:* Arbeitsvertrag vom [FEHLT: Datum] – Anlage K1 [FEHLT]; Gehaltsabrechnungen [FEHLT: Monate] – Anlage K2 [FEHLT]\n\n**2. Sozialdaten**\n\nDie Klägerin ist am 14.07.1983 geboren. Sie ist zwei Kindern gegenüber zum Unterhalt verpflichtet.\n[FEHLT: Familienstand; Angaben zu einer etwaigen Schwerbehinderung oder Gleichstellung]\n\n**3. Betrieb und Betriebsrat**\n\n- Die Beklagte beschäftigt in ihrem Betrieb regelmäßig ca. 120 Arbeitnehmer, ausschließlich der Auszubildenden. [Hinweis: Zahl beruht auf Angaben der Mandantin; ggf. präzisieren.]\n- Im Betrieb ist ein Betriebsrat gebildet. Dessen Vorsitzender ist Jürgen Pakulla.\n\n**4. Kündigung**\n\n- Mit Schreiben vom [FEHLT: Datum] kündigte die Beklagte das Arbeitsverhältnis ordentlich zum 31.03.2027.\n- Das Schreiben wurde der Klägerin am 03.11.2026 von ihrem Vorgesetzten Herr\\nDr. Matthias Oberländer persönlich übergeben.\n- Bei der Übergabe war die Kollegin Aylin Demirtaş anwesend.\n- Kündigungsgründe wurden der Klägerin nicht mitgeteilt.\n- Die Kündigung erfolgte ohne jede vorherige Ankündigung. Insbesondere ging ihr keine Abmahnung voraus.\n\n*Beweis:*\n- Kündigungsschreiben vom [FEHLT: Datum] – Anlage K3 [FEHLT]\n- Zeugnis der Aylin Demirtaş, zu laden über die Beklagte [FEHLT: ladungsfähige Anschrift der Zeugin oder Ladung über die Beklagte – bitte klären]\n\n> *Interner Hinweis:* Bitte bei der Mandantin klären, ob es Abmahnungen, Personalgespräche oder Hinweise auf Umstrukturierungen gab. Das Fehlen einer „Vorwarnung“ ist vor allem bei einer verhaltensbedingten Kündigung relevant.\n\n---\n\n### II. Rechtliche Würdigung\n\n**1. Zulässigkeit**\n\n- Das angerufene Gericht ist sachlich zuständig nach § 2 Abs. 1 Nr. 3 lit. b ArbGG.\n- Die örtliche Zuständigkeit ergibt sich aus dem Sitz der Beklagten bzw. dem gewöhnlichen Arbeitsort (§ 46 Abs. 2 ArbGG i. V. m. §§ 12, 17 ZPO; § 48 Abs. 1a ArbGG). [FEHLT: Arbeitsort/Sitz – Zuständigkeit des Arbeitsgericht Köln bitte verifizieren]\n- Die Klage ist innerhalb der Dreiwochenfrist des § 4 Satz 1 KSchG erhoben.\n\n**2. Anwendbarkeit des Kündigungsschutzgesetzes**\n\n- Das Kündigungsschutzgesetz ist anwendbar.\n- Das Arbeitsverhältnis besteht seit mehr als sechs Monaten (§ 1 Abs. 1 KSchG).\n- Die Beklagte beschäftigt regelmäßig deutlich mehr als zehn Arbeitnehmer (§ 23 Abs. 1 KSchG).\n\n**3. Unwirksamkeit wegen fehlender Anhörung des Betriebsrats (§ 102 Abs. 1 BetrVG)**\n\n- Nach § 102 Abs. 1 Satz 1 BetrVG ist der Betriebsrat vor jeder Kündigung zu hören.\n- Eine ohne Anhörung ausgesprochene Kündigung ist nach § 102 Abs. 1 Satz 3 BetrVG unwirksam.\n- Nach Kenntnis der Klägerin wurde der Betriebsrat vor Ausspruch der Kündigung nicht angehört.\n- Die Klägerin bestreitet daher mit Nichtwissen (§ 138 Abs. 4 ZPO), dass der Betriebsrat ordnungsgemäß angehört wurde. Das gilt insbesondere für:\n  - die vollständige Mitteilung der Kündigungsgründe,\n  - die Mitteilung der Sozialdaten,\n  - die Einhaltung der Äußerungsfrist.\n- Die Darlegungs- und Beweislast für die ordnungsgemäße Anhörung trägt die Beklagte [PRÜFEN: st. Rspr. des BAG zur abgestuften Darlegungslast bei § 102 BetrVG].\n\n**4. Fehlende soziale Rechtfertigung (§ 1 Abs. 2 KSchG)**\n\n- Die Kündigung ist zudem sozial ungerechtfertigt.\n- Gründe in der Person oder im Verhalten der Klägerin oder dringende betriebliche Erfordernisse sind weder mitgeteilt noch ersichtlich.\n- Die Beweislast für die Tatsachen, die die Kündigung bedingen, trägt die Beklagte (§ 1 Abs. 2 Satz 4 KSchG).\n- Vorsorglich rügt die Klägerin für den Fall einer betriebsbedingten Kündigung die Sozialauswahl (§ 1 Abs. 3 KSchG). Zu berücksichtigen sind die über elfjährige Betriebszugehörigkeit, das Lebensalter und die Unterhaltspflichten gegenüber zwei Kindern.\n- Die Klägerin fordert die Beklagte auf, die Gründe mitzuteilen, die zu der getroffenen Sozialauswahl geführt haben (§ 1 Abs. 3 Satz 1 Halbsatz 2 KSchG).\n- Für den Fall einer verhaltensbedingten Kündigung fehlt es an der erforderlichen vorherigen Abmahnung.\n- Die Klägerin behält sich weiteren Vortrag vor, sobald die Beklagte die Kündigungsgründe dargelegt hat.\n\n**5. Weitere Unwirksamkeitsgründe**\n\n- Die Klägerin bestreitet vorsorglich mit Nichtwissen, dass das Kündigungsschreiben der Schriftform des § 623 BGB genügt, insbesondere die eigenhändige Unterschrift eines Kündigungsberechtigten trägt.\n- Ebenso bestreitet sie die Vertretungsmacht des Unterzeichners. [Hinweis: Nach Sichtung des Originals konkretisieren oder streichen.]\n- Die Klägerin behält sich vor, sich gemäß § 6 KSchG bis zum Schluss der mündlichen Verhandlung erster Instanz auf weitere Unwirksamkeitsgründe zu berufen.\n\n**6. Zum Antrag zu 2. (allgemeiner Feststellungsantrag)**\n\n- Der Antrag zu 2. ist ein selbständiger allgemeiner Feststellungsantrag nach § 256 Abs. 1 ZPO.\n- Das Feststellungsinteresse ergibt sich aus der Gefahr weiterer Beendigungstatbestände, etwa Folgekündigungen, die die Beklagte im Laufe des Verfahrens aussprechen könnte.\n- Der Antrag ist zulässig [PRÜFEN: BAG, Urt. v. 13.03.1997 – 2 AZR 512/96].\n- Zur Konkretisierung des Feststellungsinteresses wird bei Bedarf weiter vorgetragen. [Hinweis: Das BAG verlangt hierzu konkreten Vortrag; derzeit sind keine weiteren Beendigungstatbestände bekannt.]\n\n**7. Zum Antrag zu 3. (Weiterbeschäftigung)**\n\n- Der allgemeine Weiterbeschäftigungsanspruch folgt aus §§ 611a, 613 BGB i. V. m. § 242 BGB, Art. 1 und 2 GG.\n- Er besteht, wenn die Kündigung unwirksam ist und keine überwiegenden schutzwürdigen Interessen des Arbeitgebers entgegenstehen [PRÜFEN: BAG, Großer Senat, Beschl. v. 27.02.1985 – GS 1/84].\n- Solche Interessen sind nicht ersichtlich.\n\n---\n\n**Güteverhandlung:** Die Klägerin ist zu einer gütlichen Einigung grundsätzlich bereit (§ 54 ArbGG).\n\n**Anlagen:**\n- Prozessvollmacht [FEHLT]\n- Anlagen K1 bis K3 [FEHLT]\n\n[FEHLT: Ort, Datum]\n\n[FEHLT: Name der Rechtsanwältin / des Rechtsanwalts]\nRechtsanwältin/Rechtsanwalt\n\n*(Einreichung über beA gemäß § 46g ArbGG)*\n\n---\n\n> **Checkliste vor Einreichung**\n> - [ ] Frist **24.11.2026** notiert (Vorfrist empfohlen)\n> - [ ] Zuordnung Frau Krüger-Wendt / Sabine Krüger-Wendt verifiziert\n> - [ ] Kündigungsschreiben im Original gesichtet (Datum, Unterschrift, Vollmacht, § 174 BGB)\n> - [ ] Rechtsform, Vertreter und Anschrift der Beklagten ergänzt\n> - [ ] Örtliche Zuständigkeit des Arbeitsgericht Köln geprüft\n> - [ ] Schwerbehinderung oder Sonderkündigungsschutz abgefragt (§ 168 SGB IX, MuSchG, BEEG, Pflegezeit)\n> - [ ] Arbeitsvertrag und Tarifbindung auf längere Kündigungsfristen oder Ausschlussfristen geprüft\n> - [ ] Mandantin über Arbeitslosmeldung informiert (§ 38 Abs. 1 SGB III: Meldung spätestens 3 Monate vor Beendigung bzw. binnen 3 Tagen nach Kenntnis)\n> - [ ] Rechtsprechungszitate mit [PRÜFEN] verifiziert",
+    "protokoll": {
+      "laufId": "6b0ed33b-c20a-43d2-aadd-b08e12e96e1e",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:anthropic/claude-opus-5.5",
+      "aufgabe": "schriftsatz",
+      "dauerMs": {
+        "konvertieren": 9,
+        "anonymisieren": 13598,
+        "guard": 2,
+        "verarbeiten": 61204,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 1457,
+        "tokensAus": 7215
+      }
+    },
+    "dauerMs": 75180
+  },
+  {
+    "modell": "B",
+    "aufgabe": "wuerdigung",
+    "ok": true,
+    "text": "# Gutachterliche Prüfung: Kündigungsschutzklage für Sabine Krüger-Wendt / Frau Krüger-Wendt\n\n**Hinweis:** Dieser Entwurf ist eine Arbeitsgrundlage und vor Weggabe durch eine Anwältin/einen Anwalt zu prüfen. Rechtsprechungsangaben sind als [PRÜFEN] markiert.\n\n---\n\n## I. Anwendbarkeit des KSchG\n\n**Zwischenergebnis: Anwendbarkeit ist nach dem bekannten Sachverhalt zu bejahen, aber Detailprüfung erforderlich.**\n\n1. **Betriebsgröße (§ 23 Abs. 1 KSchG):** Betrieb mit ca. 120 Arbeitnehmern. Für die volle Anwendung genügen **mehr als 10 Arbeitnehmer** (Schwellenwert seit 01.01.2004; Bezugnahme auf Stand 31.12.2003 nur bei Brückenkontinuität relevant [PRÜFEN]).\n\n2. **Betriebszugehörigkeit:** Beschäftigt seit 01.04.2015, also weit mehr als 6 Monate (§ 1 Abs. 1 KSchG). Zu klären: **ununterbrochene** Betriebszugehörigkeit? (Unterbrechungen wie befristete Auszeiten, Wechsel der Rechtsträger, Ruhensfälle können relevant sein.)\n\n3. **Offene Punkte zur Betriebsgröße:**\n   - Zählung **vollzeitäquivalent** (\"in der Regel\"), nicht Kopfzahl [PRÜFEN];\n   - **Welle/Brückenkontinuität** und etwaige Outsourcing-/Insolvenzfälle [PRÜFEN];\n   - Zugehörigkeit der Mandantin zum **Betrieb** (nicht zum Unternehmen) – Ort der Arbeitsleistung, Struktur der Rheinland Logistik\\nHoffmann GmbH.\n\n**Beweislast** für die Betriebsgröße und die Betriebszugehörigkeit: Arbeitgeber (Beweislastverteilung hier allerdings teilweise umstritten; Anzahl der Arbeitnehmer nach h.M. vom **Arbeitnehmer** darzulegen, Feinheiten [PRÜFEN]).\n\n---\n\n## II. Wirksamkeitsvoraussetzungen der Kündigung (Vorprüfung)\n\n1. **Schriftform (§ 623 BGB):** Die Kündigung wurde am 03.11.2026 **persönlich übergeben** – zu verlangen und zu prüfen: Original mit **eigenhändiger Unterschrift** einer kündigungsbefugten Person (Herr\\nDr. Matthias Oberländer? Vertretungsmacht?). **Unbedingt Original einsehen.**\n2. **Zugang (§ 130 BGB):** Persönliche Übergabe am 03.11.2026 = Zugang, sofern die übergebende Person zur Entgegennahme berechtigt war bzw. es sich um die \"Macht des Empfangsdienens\" handelte [PRÜFEN]. Zugang ist durch die E-Mail der Mandantin vom 03.11.2026 und die Aussage von Aylin Demirtaş belegt.\n3. **Begründung:** Liegt der Kündigung eine **schriftliche Begründung** bei? Für den Klageentwurf und die Kür der Angriffspunkte zentral. Deren Inhalt ist bislang **unbekannt**.\n\n---\n\n## III. Klagefrist (§ 4 KSchG) – dringlich\n\n- Die Kündigung wurde am **03.11.2026** zugegangen (Übergabe).\n- **§ 4 KSchG: Dreimonatsfrist** ab Zugang der Kündigung → Fristablauf: **Ende Mai 2027**.\n\n> **Korrektur zur Notiz der Mandantin:** Im Dokument ist von \"Klagefrist notieren\" die Rede, ohne Angabe einer abweichenden Frist. Eine kürzere Dreimonatsfrist gibt es nicht; die Frist beträgt einheitlich 3 Monate (§ 4 KSchG). Fristende danach: **ca. 03.05.2027 bis 04.05.2027** (kalendermäßig exakt zu bestätigen – Fristbeginn mit Ablauf des Zugangstags, § 187 Abs. 1, § 188 BGB).\n\n- **Empfehlung:** Klage dennoch **umgehend** einreichen – nicht wegen der Frist, sondern wegen:\n  - **Antrag auf vorläufigen Weiterbeschäftigungsschutz** (§ 102 Abs. 5 BetrVG, § 9 Abs. 1 S. 2 KSchG; EuGH-Rechtsprechung zum Effektivitätsgedanken [PRÜFEN]);\n  - **Sperrzeitvermeidung (§ 159 Abs. 1 S. 2 Nr. 1, § 144 SGB III):** Wer die Klage nicht innerhalb von 3 Wochen erhebt, riskiert Ruhen des Arbeitslosengeldanspruchs. Spätester Klageeinreichungstermin: **24.11.2026** [Frist rechnerisch nochmals zu bestätigen].\n- **Prozessuale Geltendmachung der Unwirksamkeit wegen Betriebsratsverstoßes:** Die Einrede muss im Prozess erhoben werden; sie kann nicht nachgeholt werden, wenn die 3-Wochen-Frist verstrichen ist. Da hier ohnehin fristgerecht geklagt wird, unkritisch.\n\n**Beweislast für den rechtzeitigen Zugang der Kündigung:** Arbeitgeber (bestreiten der Zugangsvoraussetzungen genügt). Hier unproblematisch, da Übergabe dokumentiert.\n\n---\n\n## IV. Anhörung des Betriebsrats (§ 102 BetrVG)\n\n**Zwischenergebnis: Nach Mandantinenaussage wurde der Betriebsrat (Vorsitzender: Jürgen Pakulla) nicht angehört. Wäre dies zutreffend, wäre die Kündigung nach § 102 Abs. 1 S. 4 BetrVG unverzüglich unwirksam – ein durchgreifender Angriffspunkt.**\n\n1. **Ziel der Prüfung:** Kündigung mangels Anhörung unwirksam.\n2. **Beweislast:** Arbeitgeber muss die **ordnungsgemäße Anhörung** darlegen und beweisen (Standard: schriftliche Unterrichtung mit Personendaten, Kündigungsgrund, Datum der Anhörung). Die Mandantin muss die Nichtanhörung nicht beweisen – die Behauptung der Mandantin genügt zunächst; der AG muss die Anhörung nachweisen.\n3. **Offene Punkte:**\n   - Existiert der Betriebsrat tatsächlich? (Nur laut Mandantin; zu verifizieren, ggf. über Jürgen Pakulla anfragen.)\n   - Wurde der Betriebsrat ggf. **doch** angehört, ohne dass die Mandantin davon Kenntnis hat? (Anhörung muss der Arbeitnehmer nicht kennen; sie muss nur ordnungsgemäß erfolgt sein. Vorsicht:Informationsverzerrung.)\n   - Form der Anhörung: **schriftlich** erforderlich (§ 102 Abs. 1 S. 2 BetrVG); formlos/telefonisch → Nichtigkeit [PRÜFEN].\n   - Ggf. **Stellungnahmefrist** (bis zu 1 Woche) abgelaufen?\n   - Kein \"Gleichlauf\"-Verstoß: Sozialdaten, Kündigungsgrund vollständig?\n4. **Sachverhaltsklärung:** Schriftliche Anfrage beim Betriebsrat, ggf. Bestätigung durch Aylin Demirtaş.\n\n---\n\n## V. Soziale Rechtfertigung (§ 1 Abs. 2 KSchG)\n\n**Zwischenergebnis: Unklar – Kündigungsgrund ist unbekannt. Hier hängt der Ausgang des Verfahrens maßgeblich ab.**\n\nMögliche Angriffspunkte nach Grundart:\n\n### 1. Betriebsbedingt (§ 1 Abs. 2 S. 1 Nr. 2, § 1 Abs. 3 KSchG)\n- Liegt ein **Unternehmerentschluss** vor (Betriebseinschränkung, Umstrukturierung)?\n- Folgt zwingend der Wegfall des Arbeitsplatzes der Mandantin?\n- Sozialauswahl (§ 1 Abs. 3 KSchG) unter den vergleichbaren Arbeitnehmern: Dauer der Betriebszugehörigkeit (Mandantin seit 2015 = langer Dreh- und Angelpunkt), Alter (geb. 14.07.1983 – Alter als Faktor), Unterhaltspflichten (zwei Kinder). Bei betriebsbedingter Kündigung: Sozialauswahl-Verteidigung ist **starker Angriffspunkt**.\n- Leichtbehinderung/Weiterbeschäftigungsmöglichkeit (§ 1 Abs. 3 S. 1 Nr. 2 KSchG, Anspielung auf Ausnahmen)? [PRÜFEN]\n\n### 2. Verhaltensbedingt (§ 1 Abs. 2 S. 1 Nr. 2 Alt. 2 KSchG)\n- Vorherige **Abmahnung** erforderlich? (Fehlende Vorwarnung laut Mandantin und Aylin Demirtaş – würde ggf. gegen verhaltensbedingte Kündigung sprechen.)\n- Steuer-ID und sonstige Daten lassen auf nichts Verhaltensbezogenes schließen; hier ist der Kündigungsschreiben-Text entscheidend.\n\n### 3. Personenbedingt (§ 1 Abs. 2 S. 1 Nr. 1 KSchG)\n- Langfristige Krankheit? (Bislang keine Information.) Falls ja: Negative Gesundheitsprognose, betriebliche Interessenbeeinträchtigung etc. [PRÜFEN].\n\n**Beweislast:** Für den **betriebsbedingten** Kündigungsgrund trägt der AG die Darlegungs- und Beweislast (Beweislastverteilung hier teilweise str.; dominierend h.M.: AG beweist Wegfall des Arbeitsplatzes, AN beweist ggf. \"Sonderrolle\"; Details [PRÜFEN]). Die **Auswahlrichtigkeit** der Sozialauswahl muss der AG darlegen (AN kann konkretisierten Einwand erheben [PRÜFEN]). Bei verhaltens- und personenbedingten Gründen liegt die Darlegungslast ebenfalls beim AG; die **Umfassende Überprüfung der Unternehmerentscheidung** ist dem Gericht nur eingeschränkt möglich (Kontrolle auf Ausübungsbefugnis, Tatsachen). Rechtsprechung zu Beweislastverteilung: [PRÜFEN].\n\n---\n\n## VI. Nebenfragen und Angriffspunkte im Übrigen\n\n1. **Kündigungsfrist:** Kündigung zum 31.03.2027 bei Betriebszugehörigkeit ab 01.04.2015. Nach § 622 Abs. 2 BGB (Arbeitnehmerseite, ohne einschlägigen Tarifvertrag/Arbeitsvertrag mit abweichender Regelung) betrug die Frist – je nach genauer Rechnung (in Richtung § 622 Abs. 2 S. 1 Nr. 5/6) – 3 Monate zum Monatsende. Zum 31.03.2027 erscheint die Frist lang genug; **zu prüfen:** einschlägiger Tarifvertrag/Arbeitsvertrag mit abweichenden Fristen, ordnungsgemäße Berechnung der Betriebszugehörigkeit.\n2. **Sonderkündigungsschutz:** Muss ausdrücklich geprüft werden –\n   - **Schwangerschaft** (§ 9 MuSchG)?\n   - **Schwerbehinderung** (§§ 84 ff. SGB IX, Zustimmung Inklusionsamt)?\n   - **Betriebsrats-/Jugend- und Auszubildendenvertretung?**\n   - **Elternzeit** (§ 18 BEEG)?\n   - **§ 15 AGG** (Diskriminierungsverbote – nur als Auffangbezug relevant).\n3. **Alter der Mandantin** – betriebsbedingt: ggf. Hinweis auf Sozialauswahl-Nachteile, aber auch: **Abfindungsanspruch § 1a KSchG** (nur bei betriebsbedingter Kündigung + ausdrücklicher Hinweis im Kündigungsschreiben) [PRÜFEN].\n4. **Aufhebungsvertrag?** Falls der AG ein Abwicklungsangebot macht: Warnung vor Annahme vor Klageerhebung (Sperrzeit-/Ruhen-Problem, § 158 SGB III). Aufforderung an Mandantin: nichts unterschreiben, was als Aufhebungsvertrag wirken könnte.\n5. **Antrag auf Weiterbeschäftigung** im Prozess (§ 9 KSchG: Weiterbeschäftigung bis rechtskräftige Entscheidung; § 102 Abs. 5 BetrVG: vorläufiger Weiterbeschäftigungsanspruch, sofern keine überwiegenden betrieblichen Interessen). Ergänzend: **Abfindungsvergleichskatalog BAG** [PRÜFEN].\n\n---\n\n## VII. Fehlende Informationen – Maßnahmenliste\n\n| Nr. | Zu klären | Dringlichkeit |\n|-----|-----------|---------------|\n| 1 | **Original-Kündigungsschreiben** einsehen (Form § 623 BGB, Begründung, Hinweis § 1a KSchG) | **sofort** |\n| 2 | Existenz und Tätigkeit des Betriebsrats; Anhörung verifizieren (Jürgen Pakulla kontaktieren) | **sofort** |\n| 3 | Kündigungsgrund klären (betriebs-/verhaltens-/personenbedingt) – Mandantin befragen; was wurde ihr mitgeteilt? | sofort |\n| 4 | Sonderkündigungsschutz: Schwangerschaft? Schwerbehinderung? Betriebsrat, Elternzeit? | sofort |\n| 5 | Tarifvertrag/Arbeitsvertrag einschlagen (Kündigungsfristen, verlängerte Fristen, anderweitige Regelungen) | hoch |\n| 6 | Sozialauswahl: vergleichbare Arbeitnehmer, Alter, Unterhaltspflichten, Betriebszugehörigkeit der Kollegen (nur strukturiert, keine Namen vorab) | hoch |\n| 7 | Abmahnungen/Verfehlungen in der Vergangenheit? Personalakte anfordern (§ 83 Abs. 1 BetrVG analog / Einsichtsrecht nach BAG [PRÜFEN]) | hoch |\n| 8 | Sperrzeit/ALG: Beratung zur Klage binnen 3 Wochen; weitere Anträge (Übergangsrenten etc.) | hoch |\n| 9 | Brückenkontinuität/Welle prüfen (Betriebsgröße) | mittel |\n| 10 | Gibt es ggf. einen **Anspruch nach § 1a KSchG**? Falls Kündigungsschreiben Hinweis enthält, Frist für Annahme beachten | mittel |\n| 11 | Zeugenaussage Aylin Demirtaş formalisieren (Vorwarnung, Ablauf der Übergabe) | mittel |\n| 12 | Prüfen, ob Mandantin **krankgeschrieben** war/wird (Fortbestehende Unwirksamkeitsgründe) | mittel |\n\n---\n\n## VIII. Zusammenfassung der Erfolgsaussichten\n\n- **Anwendbarkeit KSchG:** nach dem Aktenstand **ja** (Betriebsgröße 120, Betriebszugehörigkeit > 6 Monate) – Detailprüfung offen.\n- **Stärkster Angriffspunkt:** Verstoß gegen **§ 102 BetrVG** – falls verifizierbar, führt dies zur sofortigen Unwirksamkeit; Beweislast liegt beim Arbeitgeber. **Aber:** Vorhandensein des Betriebsrats ist bislang nur Behauptung.\n- **Soziale Rechtfertigung:** ohne Kenntnis des Kündigungsgrundes **nicht abschließend beurteilbar**. Betriebsbedingte Kündigung: Angriff über Sozialauswahl (lange Betriebszugehörigkeit, zwei unterhaltspflichtige Kinder) aussichtsreich. Verhaltensbedingte Kündigung ohne Abmahnung: Angriff auf § 1 Abs. 2 S. 2 KSchG.\n- **Frist:** keine Gefahr (§ 4 KSchG = 3 Monate), aber **DRINGEND** Empfehlung zur sofortigen Klageerhebung wegen Sperrzeit (§ 159/§ 144 SGB III) und vorläufigem Weiterbeschäftigungsanspruch (§ 102 Abs. 5 BetrVG).\n\n---\n\n## IX. Nächste Schritte (Empfehlung)\n\n1. **Sofort:** Originalkündigung einholen; mit Mandantin Gespräch zur Kündigungsursache; Betriebsrat kontaktieren.\n2. **Bis spätestens Mitte November 2026:** Klageentwurf fertigstellen und einreichen (Sperrzeitvermeidung + vorläufiger Weiterbeschäftigungsantrag).\n3. **Im Klageentwurf:** Antrag nach § 4 KSchG (unwirksamkeit) + Hilfsantrag ggf. Abfindung, § 9 KSchG-Weiterbeschäftigung, § 102 Abs. 5 BetrVG-Antrag.\n\n*Erstellt am [Datum einsetzen] als Entwurf – Prüfung durch Anwältin/Anwalt erforderlich.*",
+    "protokoll": {
+      "laufId": "f5e8bbcb-8bfe-486e-9abf-cf6d5e0a4a17",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:fountain-2.0",
+      "aufgabe": "wuerdigung",
+      "dauerMs": {
+        "konvertieren": 7,
+        "anonymisieren": 13554,
+        "guard": 1,
+        "verarbeiten": 30167,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 867,
+        "tokensAus": 5263
+      }
+    },
+    "dauerMs": 44177
+  },
+  {
+    "modell": "C",
+    "aufgabe": "wuerdigung",
+    "ok": false,
+    "text": "",
+    "fehler": "KI_FEHLER: Die KI-Verarbeitung ist fehlgeschlagen",
+    "protokoll": {
+      "laufId": "afb8121b-1461-4fb2-a4ee-acbfd05120dc",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 18,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:waterfall-2.0",
+      "aufgabe": "wuerdigung",
+      "dauerMs": {
+        "konvertieren": 6,
+        "anonymisieren": 13395,
+        "guard": 1
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert",
+        "KI-Fehler: Token-Limit erreicht, bevor eine Antwort kam"
+      ],
+      "fehler": {
+        "schritt": "verarbeiten",
+        "code": "KI_FEHLER"
+      }
+    },
+    "dauerMs": 76022
+  },
+  {
+    "modell": "D",
+    "aufgabe": "wuerdigung",
+    "ok": true,
+    "text": "**Entwurf zur Prüfung durch eine Anwältin oder einen Anwalt – nicht zur Weitergabe an Dritte bestimmt**\n\n---\n\n## 1. Zusammenfassung des Sachverhalts\n\nDie Mandantin **Sabine Krüger-Wendt** (im Dokument 1 auch als **Frau Krüger-Wendt** bezeichnet, geb. **14.07.1983**, wohnhaft **Lindenstraße 42, 50674\\nKöln**) ist seit dem **01.04.2015** bei der **Rheinland Logistik\\nHoffmann GmbH** als Disponentin beschäftigt. Der Betrieb beschäftigt ca. **120 Arbeitnehmer**.\n\nAm **03.11.2026** überreichte der Vorgesetzte **Herr\\nDr. Matthias Oberländer** der Mandantin persönlich eine **ordentliche Kündigung zum 31.03.2027**. Die Kollegin **Aylin Demirtaş** war bei der Übergabe anwesend und kann dies bezeugen (vgl. E-Mail vom 03.11.2026, 18:12 Uhr, an **kanzlei@example.org**).\n\nNach Angaben der Mandantin wurde der Betriebsrat (Vorsitzender: **Jürgen Pakulla**) **nicht angehört**. Das Bruttomonatsgehalt beträgt **3.850,00 EUR**; die Mandantin hat **zwei unterhaltspflichtige Kinder**.\n\n---\n\n## 2. Anwendbarkeit des Kündigungsschutzgesetzes (KSchG)\n\n**Ergebnis:** Das KSchG ist anwendbar.\n\n- **Betriebsgröße:** Bei ca. 120 Arbeitnehmern liegt die Schwelle von mehr als 10 Arbeitnehmern (§ 1 Abs. 2 S. 1 KSchG) deutlich vor. [PRÜFEN: Maßgeblich ist die regelmäßige Zahl der Beschäftigten im Zeitpunkt der Kündigung; Leiharbeitnehmer sind grundsätzlich mitzuzählen, sofern sie in den Betrieb eingegliedert sind.]\n- **Wartezeit:** Die Mandantin ist seit dem 01.04.2015 beschäftigt, also länger als sechs Monate (§ 1 Abs. 1 KSchG). Die Wartezeit ist erfüllt.\n- **Persönlicher Geltungsbereich:** Als Arbeitnehmerin fällt sie unter das KSchG.\n\n**Folge:** Die Kündigung bedarf einer sozialen Rechtfertigung (§ 1 Abs. 2 KSchG), um wirksam zu sein.\n\n---\n\n## 3. Klagefrist (§ 4 KSchG) – **HÖCHSTE DRINGLICHKEIT**\n\n**Fristablauf: Dienstag, 24.11.2026** (Ende der Geschäftszeit des zuständigen Arbeitsgerichts).\n\n**Berechnung:**\n- Zugang der schriftlichen Kündigung: **03.11.2026** (persönliche Übergabe, unstreitig).\n- Fristbeginn: **04.11.2026** (der Zugangstag wird nicht mitgerechnet, § 187 Abs. 1 BGB analog).\n- Drei Wochen = 21 Tage → letzter Tag: **24.11.2026** (Dienstag, Werktag; kein Fall des § 193 BGB).\n\n**Rechtsfolge bei Fristversäumnis:** Gilt die Kündigung gemäß § 7 KSchG als von Anfang an wirksam. Ein nachträgliches Klageverfahren ist ausgeschlossen (Ausnahme: Wiedereinsetzung in den vorigen Stand nach § 5 KSchG nur bei unverschuldeter Fristversäumnis, z. B. plötzliche schwere Erkrankung – hier nicht ersichtlich).\n\n**Handlungsbedarf:** Die Kündigungsschutzklage muss bis spätestens **24.11.2026** beim Arbeitsgericht eingegangen sein (§ 46 Abs. 2 ArbGG i. V. m. § 495 ZPO). Elektronische Einreichung (beA/EGVP) ist zulässig, muss aber rechtzeitig beim Gericht eingehen.\n\n---\n\n## 4. Anhörung des Betriebsrats (§ 102 BetrVG) – zentraler Angriffspunkt\n\n**Rechtslage:** Vor jeder Kündigung ist der Betriebsrat anzuhören (§ 102 Abs. 1 BetrVG). Unterlässt der Arbeitgeber die Anhörung, ist die Kündigung **unwirksam** (§ 102 Abs. 3 BetrVG). Dies gilt unabhängig davon, ob die Kündigung sozial gerechtfertigt wäre.\n\n**Beweislast:** Der Arbeitgeber trägt die Beweislast für die ordnungsgemäße Anhörung (BAG, Urteil vom 06.10.2005 – 2 AZR 280/04 [PRÜFEN]).\n\n**Sachverhalt:** Die Mandantin behauptet, der Betriebsrat (**Jürgen Pakulla**) sei nicht angehört worden. Dies ist derzeit unbewiesen, aber glaubhaft, da keine Anhörungsschreiben vorliegen.\n\n**Risiko:** Sollte der Arbeitgeber nachträglich eine schriftliche oder mündliche Anhörung nachweisen können, entfällt dieser Unwirksamkeitsgrund. Daher ist dringend eine schriftliche Stellungnahme des Betriebsratsvorsitzenden **Jürgen Pakulla** einzuholen.\n\n---\n\n## 5. Soziale Rechtfertigung (§ 1 Abs. 2 KSchG)\n\n**Grundsatz:** Die Kündigung ist nur wirksam, wenn sie durch\n- dringende betriebliche Erfordernisse (betriebsbedingt),\n- Gründe im Verhalten des Arbeitnehmers (verhaltensbedingt, nach Abmahnung), oder\n- Gründe in der Person des Arbeitnehmers (personenbedingt)\nbedingt ist (§ 1 Abs. 2 S. 1 KSchG).\n\n**Beweislast:** Der Arbeitgeber trägt die Beweislast für das Vorliegen der Kündigungsgründe und die Interessenabwägung (§ 1 Abs. 2 S. 4 KSchG).\n\n**Fehlende Informationen:** Aus den vorliegenden Unterlagen geht **kein Kündigungsgrund** hervor. Es ist unklar, ob eine betriebs-, verhaltens- oder personenbedingte Kündigung vorliegt.\n\n- **Bei betriebsbedingter Kündigung:** Es müsste geprüft werden, ob dringende betriebliche Erfordernisse vorliegen (z. B. Betriebsänderung, Auftragsrückgang) und ob eine **Sozialauswahl** (§ 1 Abs. 3 KSchG) durchgeführt wurde. Bei 120 Arbeitnehmern ist eine Sozialauswahl zwingend. Dabei sind Lebensalter, Betriebszugehörigkeit (hier: seit 2015, also > 11 Jahre), Unterhaltspflichten (hier: zwei Kinder) und Schwerbehinderung zu berücksichtigen. Eine fehlerhafte oder unterlassene Sozialauswahl macht die Kündigung unwirksam (BAG, Urteil vom 27.09.2012 – 2 AZR 381/12 [PRÜFEN]).\n- **Bei verhaltensbedingter Kündigung:** Es müssten wirksame Abmahnungen vorliegen. Die Behauptung der Kollegin **Aylin Demirtaş**, die Kündigung sei „ohne Vorwarnung“ erfolgt, deutet darauf hin, dass keine Abmahnungen vorliegen.\n- **Bei personenbedingter Kündigung:** Z. B. dauerhafte Arbeitsunfähigkeit – hier nicht ersichtlich.\n\n**Zwischenergebnis:** Solange der Arbeitgeber keine konkreten Kündigungsgründe darlegt und beweist, ist die Kündigung sozial ungerechtfertigt und damit unwirksam.\n\n---\n\n## 6. Weitere Angriffspunkte / Unwirksamkeitsgründe\n\n### a) Formelle Wirksamkeit\n- **Schriftform (§ 623 BGB):** Liegt vor (persönliche Übergabe eines Schreibens am 03.11.2026).\n- **Vertretungsmacht des Kündigenden:** Es muss geprüft werden, ob **Herr\\nDr. Matthias Oberländer** als Vorgesetzter vertretungsberechtigt war (Handelsregisterauszug, Prokura, Handlungsvollmacht). Fehlt die Vertretungsmacht, ist die Kündigung unwirksam.\n- **Kündigungsfrist (§ 622 BGB):** Bei einer Betriebszugehörigkeit von über 10 Jahren (erreicht am 01.04.2025) beträgt die gesetzliche Kündigungsfrist **4 Monate zum Monatsende** (§ 622 Abs. 2 Nr. 4 BGB). Zugang am 03.11.2026 + 4 Monate = 03.03.2027, zum Monatsende = **31.03.2027**. Die Frist ist also eingehalten. [PRÜFEN: Abweichende vertragliche oder tarifvertragliche Regelungen im Arbeitsvertrag prüfen.]\n\n### b) Sonderkündigungsschutz (muss dringend geklärt werden)\n- **Schwerbehinderung/Gleichstellung (§ 85 SGB IX):** Zustimmung des Integrationsamtes erforderlich. Fehlt diese, ist die Kündigung unwirksam.\n- **Schwangerschaft/Mutterschutz (§ 17 MuSchG):** Unwirksamkeit bei Kündigung während der Schwangerschaft oder bis 4 Monate nach Entbindung.\n- **Elternzeit (§ 18 BEEG):** Unwirksamkeit während der Elternzeit und bis zum Ablauf von 8 Wochen nach deren Ende.\n- **Betriebsratsmitglied/Wahlvorstand (§ 15 KSchG, § 103 BetrVG):** Besonderer Kündigungsschutz; Zustimmung des Betriebsrats erforderlich.\n\n**Hinweis:** Das Geburtsdatum **14.07.1983** ist vorhanden, aber es fehlen Angaben zu einer möglichen Behinderung, Schwangerschaft oder Elternzeit.\n\n### c) Massenentlassung (§ 17 KSchG)\nBei 120 Arbeitnehmern greift § 17 KSchG, wenn mehr als 30 Arbeitnehmer (oder mehr als 25 %) innerhalb von 30 Tagen entlassen werden (§ 17 Abs. 1 Nr. 2 KSchG). Dann ist eine Anzeige beim Arbeitsamt erforderlich. Liegt eine Massenentlassung vor, ohne dass die Anzeige erfolgte, sind die Kündigungen unwirksam. [PRÜFEN: Ob weitere Kündigungen ausgesprochen wurden.]\n\n---\n\n## 7. Beweislastverteilung (Übersicht)\n\n| Umstand | Beweislast |\n|---------|------------|\n| Zugang der Kündigung | Arbeitgeber (hier unstreitig: 03.11.2026) |\n| Ordnungsgemäße Betriebsratsanhörung | Arbeitgeber (BAG, Urt. v. 06.10.2005 – 2 AZR 280/04 [PRÜFEN]) |\n| Soziale Rechtfertigung (Kündigungsgründe, Interessenabwägung, Sozialauswahl) | Arbeitgeber (§ 1 Abs. 2 S. 4 KSchG) |\n| Vorliegen von Sonderkündigungsschutz (z. B. Schwerbehinderung) | Arbeitnehmerin (sie muss den Schutzstatus glaubhaft machen) |\n| Formelle Wirksamkeit (Vertretungsmacht) | Arbeitgeber |\n\n---\n\n## 8. Risiken\n\n1. **Fristversäumnis (§ 4 KSchG):** Größtes Risiko. Bei Versäumnis des 24.11.2026 ist die Kündigung endgültig wirksam (§ 7 KSchG).\n2. **Nachweis der Betriebsratsanhörung:** Sollte der Arbeitgeber nachträglich eine Anhörung beweisen, entfällt der Unwirksamkeitsgrund des § 102 Abs. 3 BetrVG.\n3. **Betriebliche Rechtfertigung:** Sollte der Arbeitgeber betriebliche Gründe (z. B. Umstrukturierung) nachweisen und eine ordnungsgemäße Sozialauswahl durchführen, könnte die Kündigung sozial gerechtfertigt sein. Die Mandantin hat jedoch gute Sozialauswahlkriterien (lange Betriebszugehörigkeit, zwei unterhaltspflichtige Kinder).\n4. **Aufhebungsvertrag:** Sollte der Arbeitgeber behaupten, es habe ein Aufhebungsvertrag vorgelegen, müsste die Mandantin diesen anfechten (z. B. wegen widerrechtlicher Drohung, § 123 BGB). Hier nicht ersichtlich.\n5. **Prozesskosten:** Bei einem Streitwert von ca. 3 Monatsgehältern (3 × 3.850,00 EUR = 11.550,00 EUR) entstehen Gerichts- und Anwaltskosten. [PRÜFEN: Besteht eine Rechtsschutzversicherung oder Gewerkschaftsmitgliedschaft der Mandantin?]\n\n---\n\n## 9. Fehlende Informationen / To-Do-Liste (was wir noch klären müssen)\n\n1. **Original des Kündigungsschreibens:** Vollständiger Wortlaut, Datum, Unterschrift (Original oder beglaubigte Kopie). Welche Kündigungsart wird genannt? Ist eine Begründung enthalten?\n2. **Betriebsratsanhörung:** Schriftliche Stellungnahme des Betriebsratsvorsitzenden **Jürgen Pakulla** einholen. Gab es eine mündliche oder schriftliche Anhörung?\n3. **Kündigungsgrund:** Liegen betriebliche Erfordernisse vor (z. B. Betriebsänderung, Auftragsrückgang)? Wurden weitere Arbeitnehmer gekündigt (Massenentlassung)? Gab es Abmahnungen (bei verhaltensbedingter Kündigung)?\n4. **Sozialauswahl:** Wurde eine Sozialauswahl durchgeführt? Wenn ja, nach welchen Kriterien? Wurden die Unterhaltspflichten (zwei Kinder) und die Betriebszugehörigkeit (seit 2015) berücksichtigt?\n5. **Sonderkündigungsschutz:** Ist die Mandantin **Sabine Krüger-Wendt** schwerbehindert oder gleichgestellt? Befindet sie sich in Schwangerschaft/Mutterschutz oder Elternzeit? Ist sie Betriebsratsmitglied?\n6. **Vertretungsmacht:** Ist **Herr\\nDr. Matthias Oberländer** vertretungsberechtigt (Handelsregister, Prokura)?\n7. **Arbeitsvertrag & Tarifvertrag:** Gibt es abweichende Kündigungsfristen, Ausschlussfristen oder tarifvertragliche Sonderkündigungsschutzbestimmungen?\n8. **Zeugnis:** Liegt ein Zwischenzeugnis vor?\n9. **Rechtsschutz:** Besteht eine Rechtsschutzversicherung (Deckungszusage einholen) oder Gewerkschaftsmitgliedschaft?\n10. **Arbeitsamt:** Wurde die Kündigung beim Arbeitsamt angezeigt (relevant bei Massenentlassung)?\n11. **Beweismittel:** Eidesstattliche Versicherung der Kollegin **Aylin Demirtaş** zur Übergabe ohne Vorwarnung einholen.\n\n---\n\n## 10. Empfehlung\n\nAngesichts der **kurzen Klagefrist (bis 24.11.2026)** sollte umgehend die **Klage beim Arbeitsgericht** eingereicht werden (ggf. zunächst als „Sicherungsklage“ mit dem Antrag auf Feststellung des Fortbestands des Arbeitsverhältnisses). Parallel sind die unter Ziffer 9 genannten Informationen einzuholen, insbesondere die Stellungnahme des Betriebsrats **Jürgen Pakulla** zur Anhörung.\n\nDie Erfolgsaussichten sind derzeit **günstig**, da (a) die Betriebsratsanhörung angeblich unterblieb und (b) keine sozialen Kündigungsgründe ersichtlich sind. Dies ist jedoch vorbehaltlich der Klärung der offenen Fragen zu prüfen.\n\n---\n\n*Dieser Entwurf dient ausschließlich der internen Vorbereitung und bedarf der rechtlichen Prüfung und Freigabe durch eine Rechtsanwältin oder einen Rechtsanwalt.*",
+    "protokoll": {
+      "laufId": "5b7fe2a8-68c0-4162-b4db-64cb2c9ba80f",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 18,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:mistralai/mistral-large-4",
+      "aufgabe": "wuerdigung",
+      "dauerMs": {
+        "konvertieren": 6,
+        "anonymisieren": 14202,
+        "guard": 1,
+        "verarbeiten": 230316,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 772,
+        "tokensAus": 8967
+      }
+    },
+    "dauerMs": 244878
+  },
+  {
+    "modell": "A",
+    "aufgabe": "wuerdigung",
+    "ok": false,
+    "text": "",
+    "fehler": "KI_FEHLER: Die KI-Verarbeitung ist fehlgeschlagen",
+    "protokoll": {
+      "laufId": "094452b2-2cdb-4406-a838-db480529000b",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:anthropic/claude-sonnet-5.5",
+      "aufgabe": "wuerdigung",
+      "dauerMs": {
+        "konvertieren": 8,
+        "anonymisieren": 14325,
+        "guard": 1
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert",
+        "KI-Fehler: Fehler im Antwortstrom"
+      ],
+      "fehler": {
+        "schritt": "verarbeiten",
+        "code": "KI_FEHLER"
+      }
+    },
+    "dauerMs": 98542
+  },
+  {
+    "modell": "E",
+    "aufgabe": "wuerdigung",
+    "ok": true,
+    "text": "# Gutachterliche Ersteinschätzung: Kündigungsschutzklage\n\n**Mandantin:** Sabine Krüger-Wendt\n**Arbeitgeberin:** Rheinland Logistik\\nHoffmann GmbH\n**Gegenstand:** Ordentliche Kündigung vom 03.11.2026 zum 31.03.2027\n\n> **Entwurf zur anwaltlichen Prüfung.** Rechtsprechungshinweise sind mit **[PRÜFEN]** gekennzeichnet und müssen vor Verwendung verifiziert werden.\n\n---\n\n## 0. Vorab: Fristen und Sofortmaßnahmen\n\n| Frist / Maßnahme | Grundlage | Datum | Hinweis |\n|---|---|---|---|\n| **Klagefrist** | § 4 S. 1 KSchG i. V. m. §§ 187 Abs. 1, 188 Abs. 2 BGB | **Dienstag, 24.11.2026** (Fristablauf 24:00 Uhr) | Ist ein Werktag und kein bundesweiter Feiertag. Ein regionaler Feiertag am Gerichtsort wäre zu prüfen, ist an diesem Datum aber nicht ersichtlich. |\n| **Zurückweisung nach § 174 BGB** | § 174 S. 1 BGB | **unverzüglich**, also binnen weniger Tage | Nur relevant, wenn ein Bevollmächtigter ohne Originalvollmacht unterschrieben hat (siehe 4.2). |\n| **Arbeitsuchendmeldung** | § 38 Abs. 1 SGB III | spätestens **31.12.2026** (drei Monate vor Beendigung) | Mandantin sollte sich vorsorglich sofort melden. Sonst droht eine Sperrzeit nach § 159 Abs. 1 S. 2 Nr. 7 SGB III. |\n\n**Empfehlung:** Die Klage sollte deutlich vor dem 24.11.2026 eingereicht werden, und zwar per beA (§ 46g ArbGG). Die Frist ist im Fristenkalender mit Vorfrist zu notieren. Nach § 167 ZPO genügt der Eingang bei Gericht, wenn die Zustellung „demnächst“ erfolgt.\n\n**Folge der Fristversäumung:** Die Kündigung gilt nach § 7 KSchG als von Anfang an rechtswirksam. Das betrifft auch eine fehlende Betriebsratsanhörung, da seit 2004 alle Unwirksamkeitsgründe außer dem Schriftformmangel (§ 623 BGB) innerhalb der Klagefrist geltend zu machen sind. Eine nachträgliche Zulassung nach § 5 KSchG gibt es nur ausnahmsweise.\n\n---\n\n## 1. Zugang der Kündigung\n\n- Die Kündigung wurde laut Gesprächsnotiz und E-Mail der Mandantin am **03.11.2026 persönlich übergeben**. Unter Anwesenden geht eine verkörperte Willenserklärung mit der Übergabe zu. Der Fristbeginn ist damit der 03.11.2026.\n- **Beweis:** Die Kollegin Aylin Demirtaş war laut E-Mail bei der Übergabe dabei. Das ist für den Zugangsnachweis nützlich, voraussichtlich aber unstreitig.\n- **Klärungsbedarf zur Identität:** In der Gesprächsnotiz wird im Sachverhalt Frau Krüger-Wendt als Beschäftigte genannt, als Mandantin dagegen Sabine Krüger-Wendt. Wahrscheinlich ist dieselbe Person gemeint (etwa Vollname und Kurzform). Aus dem Text ergibt sich das aber nicht zwingend. **Bitte abgleichen**, damit das Rubrum der Klage korrekt ist.\n\n---\n\n## 2. Anwendbarkeit des KSchG\n\n### 2.1 Persönlicher Anwendungsbereich (§ 1 Abs. 1 KSchG)\n- Beschäftigt seit 01.04.2015, also rund 11 Jahre und 7 Monate bei Zugang. Die Wartezeit von sechs Monaten ist **deutlich erfüllt**.\n- Die Mandantin ist als Disponentin tätig. Anhaltspunkte für eine Stellung als leitende Angestellte (§ 14 Abs. 2 KSchG) bestehen nicht. Das sollte kurz verifiziert werden.\n\n### 2.2 Betrieblicher Anwendungsbereich (§ 23 Abs. 1 KSchG)\n- Mit etwa 120 Arbeitnehmern wird der Schwellenwert von mehr als 10 Arbeitnehmern (§ 23 Abs. 1 S. 3 KSchG) **klar überschritten**, auch bei anteiliger Zählung von Teilzeitkräften.\n- **Darlegungs- und Beweislast:** Sie liegt grundsätzlich bei der Arbeitnehmerin, mit abgestuften Erleichterungen. Hier ist das unproblematisch.\n- **Zu klären:** Bezieht sich die Zahl 120 auf den *Betrieb* (Beschäftigungsort der Mandantin) oder auf das *Unternehmen*? Gibt es mehrere Standorte? Für § 23 KSchG ist das hier kaum relevant, wohl aber für die Sozialauswahl und § 17 KSchG.\n\n**Ergebnis:** Das KSchG ist anwendbar. Die Kündigung bedarf der sozialen Rechtfertigung.\n\n---\n\n## 3. Soziale Rechtfertigung (§ 1 Abs. 2, 3 KSchG)\n\n### 3.1 Ausgangslage\n- **Der Kündigungsgrund ist bislang unbekannt.** Dem Sachverhalt lässt sich nicht entnehmen, ob die Kündigung personen-, verhaltens- oder betriebsbedingt ist.\n- **Beweislast:** Die Arbeitgeberin trägt die Darlegungs- und Beweislast für die Tatsachen, die die Kündigung bedingen (§ 1 Abs. 2 S. 4 KSchG). In der Klage genügt zunächst die Rüge der fehlenden sozialen Rechtfertigung.\n\n### 3.2 Mögliche Konstellationen\n\n**a) Verhaltensbedingte Kündigung**\n- Regelmäßig ist eine **vorherige einschlägige Abmahnung** erforderlich (Ultima-Ratio-Prinzip, Prognoseprinzip).\n- Der Hinweis „ohne Vorwarnung“ spricht gegen eine vorherige Abmahnung. Das wäre ein starker Angriffspunkt.\n- **Einschränkung zur Zeugin:** Die Aussage von Aylin Demirtaş, die Kündigung sei „ohne Vorwarnung“ erfolgt, hat begrenzten Beweiswert. Ob abgemahnt wurde, ergibt sich typischerweise aus Personalakte und Schriftverkehr. Die Beweislast für die Abmahnung trägt ohnehin die Arbeitgeberin. Die Zeugin ist eher für den Zugang und die Begleitumstände der Übergabe relevant.\n\n**b) Betriebsbedingte Kündigung**\n- Die Arbeitgeberin muss darlegen:\n  - eine unternehmerische Entscheidung,\n  - den dauerhaften Wegfall des Beschäftigungsbedarfs,\n  - das Fehlen einer anderweitigen Beschäftigungsmöglichkeit (§ 1 Abs. 2 S. 2 KSchG).\n- **Sozialauswahl (§ 1 Abs. 3 KSchG):** Kriterien sind Betriebszugehörigkeit, Lebensalter, Unterhaltspflichten und Schwerbehinderung.\n  - Für die Mandantin sprechen eine Betriebszugehörigkeit von über 11 Jahren und **zwei unterhaltspflichtige Kinder**.\n  - Das Lebensalter ist aus der Akte nicht auswertbar, da das Geburtsdatum pseudonymisiert ist. **Bitte intern ergänzen.**\n- **Beweislast Sozialauswahl:** Grundsätzlich trägt sie die Arbeitnehmerin (§ 1 Abs. 3 S. 3 KSchG). Sie hat aber einen **Auskunftsanspruch** über die Gründe der Auswahl (§ 1 Abs. 3 S. 1 Hs. 2 KSchG). Nach h. M. gilt eine abgestufte Darlegungslast [PRÜFEN: einschlägige BAG-Rechtsprechung zur abgestuften Darlegungslast bei der Sozialauswahl]. **Empfehlung:** Auskunft schriftlich verlangen.\n- Zu prüfen sind außerdem Auswahlrichtlinien (§ 95 BetrVG), eine Namensliste (§ 1 Abs. 5 KSchG, mit Beweislastumkehr) und ein Interessenausgleich.\n\n**c) Personenbedingte Kündigung (etwa krankheitsbedingt)**\n- Es gilt die dreistufige Prüfung: negative Prognose, erhebliche Beeinträchtigung betrieblicher Interessen, Interessenabwägung.\n- Bei krankheitsbedingter Kündigung ist zu fragen, ob ein **betriebliches Eingliederungsmanagement (§ 167 Abs. 2 SGB IX)** durchgeführt wurde. Fehlt es, verschärft das die Darlegungslast der Arbeitgeberin [PRÜFEN: BAG-Rechtsprechung zu den Folgen eines unterlassenen BEM].\n\n**Zwischenergebnis:** Ohne Kenntnis des Kündigungsgrundes ist keine belastbare Prognose möglich. Wegen der Beweislast der Arbeitgeberin und der langen Betriebszugehörigkeit erscheinen die Erfolgsaussichten aber **tendenziell günstig**. Das ist eine **vorläufige Einschätzung**.\n\n---\n\n## 4. Weitere Unwirksamkeitsgründe\n\n### 4.1 Anhörung des Betriebsrats (§ 102 BetrVG)\n- Es besteht ein Betriebsrat (Vorsitzender: Jürgen Pakulla).\n- Eine **ohne Anhörung** ausgesprochene Kündigung ist **unwirksam** (§ 102 Abs. 1 S. 3 BetrVG). Gleiches gilt bei nicht ordnungsgemäßer Anhörung, etwa bei unvollständiger oder irreführender Unterrichtung oder bei Kündigung vor Ablauf der Wochenfrist (§ 102 Abs. 2 S. 1 BetrVG).\n- **Beweislast:**\n  - Die Arbeitnehmerin trägt vor, dass ein Betriebsrat besteht und die Anhörung erforderlich war.\n  - Die Arbeitgeberin muss die ordnungsgemäße Anhörung darlegen und beweisen.\n  - Die Arbeitnehmerin kann die Anhörung mit Nichtwissen bestreiten (§ 138 Abs. 4 ZPO) [PRÜFEN: BAG zur abgestuften Darlegungslast bei § 102 BetrVG].\n- **Risiko:** Die Angabe „nicht angehört“ beruht nur auf der Darstellung der Mandantin. Woher hat sie diese Kenntnis? In der Praxis wird die Anhörung häufig nachgewiesen. Der Angriffspunkt verlagert sich dann auf die **Ordnungsgemäßheit**, insbesondere auf den Inhalt der Unterrichtung, die Sozialdaten und den Kündigungsgrund.\n- **Empfehlung:**\n  - In der Klage die ordnungsgemäße Anhörung vorsorglich mit Nichtwissen bestreiten.\n  - Die Mandantin sollte beim Betriebsrat nachfragen, ob und wann er angehört wurde und ob er **widersprochen** hat.\n  - Ein frist- und ordnungsgemäßer Widerspruch begründet den **Weiterbeschäftigungsanspruch** nach § 102 Abs. 5 BetrVG und stärkt die Verhandlungsposition.\n\n### 4.2 Schriftform und Vertretung (§§ 623, 126, 174 BGB)\n- Ist das übergebene Schreiben ein **Original mit eigenhändiger Unterschrift**? Eine Kopie, ein Scan oder eine E-Mail genügt nicht (§ 623 BGB, elektronische Form ausgeschlossen).\n- **Wer hat unterschrieben?** Wenn Herr\\nDr. Matthias Oberländer oder eine andere Person ohne Organstellung unterschrieben und keine Originalvollmacht beigefügt hat, ist eine **unverzügliche Zurückweisung nach § 174 BGB** zu prüfen. Sie ist ausgeschlossen, wenn die Mandantin von der Bevollmächtigung in Kenntnis gesetzt war (§ 174 S. 2 BGB), etwa bei einer Personalleiterin oder einem Personalleiter [PRÜFEN: BAG zur Kündigungsbefugnis des Personalleiters].\n- **Das Kündigungsschreiben muss uns umgehend im Original vorliegen.**\n\n### 4.3 Sonderkündigungsschutz\nFolgende Punkte sind abzufragen:\n- **Schwangerschaft** (§ 17 MuSchG; Mitteilung binnen zwei Wochen nach Zugang möglich, § 17 Abs. 1 S. 1 MuSchG)\n- **Elternzeit** (§ 18 BEEG; wegen der zwei Kinder relevant) oder Pflegezeit (§ 5 PflegeZG)\n- **Schwerbehinderung oder Gleichstellung** (§§ 168 ff. SGB IX: Zustimmung des Integrationsamts; § 178 Abs. 2 S. 3 SGB IX: Beteiligung der Schwerbehindertenvertretung)\n- Amt als Betriebsratsmitglied, Wahlbewerberin oder Ersatzmitglied (§ 15 KSchG, § 103 BetrVG)\n- Funktion als Datenschutzbeauftragte, Immissionsschutzbeauftragte o. Ä.\n- **Tarifvertraglicher oder arbeitsvertraglicher Ausschluss** der ordentlichen Kündigung\n\n### 4.4 Massenentlassung (§ 17 KSchG)\n- Bei 60 bis 499 Arbeitnehmern ist eine Anzeige nötig, wenn innerhalb von 30 Kalendertagen mehr als 10 % der Arbeitnehmer **oder mehr als 25** entlassen werden. Bei 120 Arbeitnehmern ist die Schwelle also **ab 12 Entlassungen** erreicht.\n- **Zu klären:** Wurden zeitgleich weitere Kündigungen ausgesprochen?\n- Die Rechtsfolgen von Fehlern im Anzeigeverfahren sind in jüngerer Zeit Gegenstand von Vorlagen an den EuGH und Änderungen der BAG-Rechtsprechung gewesen [PRÜFEN: aktueller Stand EuGH/BAG zu § 17 KSchG].\n\n### 4.5 Kündigungsfrist\n- Zum Zeitpunkt des Zugangs bestand das Arbeitsverhältnis 11 Jahre und 7 Monate. Nach § 622 Abs. 2 S. 1 Nr. 4 BGB gelten **vier Monate zum Monatsende**.\n- Ab dem 03.11.2026 ergibt das den **31.03.2027**. Die Frist ist nach Gesetz **gewahrt**.\n- **Zu prüfen:** Sehen Arbeitsvertrag oder Tarifvertrag längere Fristen vor? Eine falsch berechnete Frist führt im Zweifel zur Auslegung als Kündigung zum nächstzulässigen Termin, nicht zur Unwirksamkeit [PRÜFEN].\n\n---\n\n## 5. Prozessuales und Wirtschaftliches\n\n- **Zuständigkeit:**\n  - Rechtsweg zum Arbeitsgericht nach § 2 Abs. 1 Nr. 3 lit. b ArbGG\n  - örtlich: Sitz der Beklagten oder gewöhnlicher Arbeitsort (§ 48 Abs. 1a ArbGG)\n- **Anträge (Vorschlag):**\n  1. Feststellung, dass das Arbeitsverhältnis durch die Kündigung vom 03.11.2026 nicht aufgelöst wird (§ 4 S. 1 KSchG)\n  2. ggf. allgemeiner Feststellungsantrag (§ 256 ZPO) gegen Folgekündigungen; das Feststellungsinteresse ist zu begründen\n  3. ggf. Weiterbeschäftigungsantrag, als allgemeiner Anspruch oder nach § 102 Abs. 5 BetrVG\n- **Streitwert:** in der Regel drei Bruttomonatsgehälter (§ 42 Abs. 2 S. 1 GKG), also 3 × 3.850,00 EUR = **11.550,00 EUR**.\n- **Kosten:** In der ersten Instanz gibt es keine Erstattung der Anwaltskosten (§ 12a Abs. 1 ArbGG). Die Mandantin ist darüber zu belehren. Besteht eine Rechtsschutzversicherung? Deckungsanfrage stellen.\n- **Vergleich und Abfindung:** Eine Orientierung bietet die Faustformel von 0,5 Bruttomonatsgehältern pro Beschäftigungsjahr, hier etwa 0,5 × 11,5 × 3.850 EUR ≈ **22.000 EUR**. Das ist nur ein grober Verhandlungsanker und kein Anspruch. Er hängt stark von der Prozessprognose ab.\n- **Annahmeverzug:** Ist die Kündigung unwirksam, besteht ein Vergütungsanspruch nach § 615 BGB mit Anrechnung nach § 11 KSchG. Die Mandantin ist auf ihre Obliegenheit hinzuweisen, zumutbare Arbeit nicht böswillig auszuschlagen [PRÜFEN: neuere BAG-Rechtsprechung zu § 11 Nr. 2 KSchG und Vermittlungsvorschlägen der Agentur].\n\n---\n\n## 6. Fehlende Informationen / Rückfragen an die Mandantin\n\n1. **Kündigungsschreiben im Original**: Unterzeichner, Vollmacht, Datum, angegebener Grund\n2. **Arbeitsvertrag**, ggf. Änderungsverträge, anwendbarer **Tarifvertrag**\n3. **Kündigungsgrund**: Was hat die Arbeitgeberin mündlich gesagt? Gab es Abmahnungen, Personalgespräche, Krankheitszeiten oder Umstrukturierungen?\n4. **Betriebsrat**: Worauf stützt die Mandantin die Annahme, der Betriebsrat sei nicht angehört worden? Kontakt zu Jürgen Pakulla aufnehmen: Gab es eine Anhörung oder einen Widerspruch?\n5. **Sonderkündigungsschutz**: Schwangerschaft, Elternzeit, Schwerbehinderung bzw. Gleichstellung, Betriebsratsamt\n6. **Vergleichbare Arbeitnehmer** (für die Sozialauswahl) und **weitere Kündigungen** im Betrieb (für § 17 KSchG)\n7. **Geburtsdatum bzw. Lebensalter** und **Familienstand** (für die Sozialauswahl)\n8. Ist die Zahl von 120 Arbeitnehmern betriebs- oder unternehmensbezogen? Gibt es mehrere Standorte?\n9. **Rechtsschutzversicherung**\n10. **Ziel der Mandantin**: Fortsetzung des Arbeitsverhältnisses oder Abfindung?\n11. Abgleich Frau Krüger-Wendt / Sabine Krüger-Wendt (siehe 1.)\n\n---\n\n## 7. Hinweis zur Datensparsamkeit\n\nDie Akte enthält Steuer-ID und IBAN der Mandantin. Für die Kündigungsschutzklage werden diese Daten **nicht benötigt**. Sie sollten weder in die Klageschrift noch in die Korrespondenz mit der Gegenseite übernommen werden.\n\n---\n\n## 8. Gesamtergebnis (vorläufig)\n\n| Prüfpunkt | Einschätzung |\n|---|---|\n| Anwendbarkeit KSchG | **gegeben** |\n| Soziale Rechtfertigung | **offen**, da Grund unbekannt; Beweislast liegt bei der Arbeitgeberin; tendenziell günstig für die Mandantin |\n| Betriebsratsanhörung | **potenziell durchgreifend**, Tatsachengrundlage aber unsicher |\n| Formalien (§§ 623, 174 BGB) | **ungeprüft**, Original erforderlich |\n| Sonderkündigungsschutz / § 17 KSchG | **ungeklärt** |\n| Klagefrist | **läuft bis 24.11.2026** |\n\n**Nächste Schritte:**\n1. Frist notieren.\n2. Kündigungsschreiben und Arbeitsvertrag anfordern.\n3. § 174 BGB sofort prüfen.\n4. Rückfragen an die Mandantin klären.\n5. Klageentwurf mit dem Antrag nach § 4 KSchG und vorsorglichen Rügen fertigen: fehlende soziale Rechtfertigung, Betriebsratsanhörung mit Nichtwissen bestritten, Sozialauswahl, Auskunftsverlangen.",
+    "protokoll": {
+      "laufId": "8211599c-27bb-4df6-8440-1f2e46397259",
+      "format": "pdf",
+      "bytes": 27920,
+      "zeichenMarkdown": 1315,
+      "ocr": false,
+      "anymizeJobs": 3,
+      "ersetzungen": 19,
+      "guardOk": true,
+      "guardFunde": [],
+      "anymizeJobsGeloescht": true,
+      "offenePlatzhalter": 0,
+      "verarbeiter": "anymize:anthropic/claude-opus-5.5",
+      "aufgabe": "wuerdigung",
+      "dauerMs": {
+        "konvertieren": 8,
+        "anonymisieren": 13189,
+        "guard": 1,
+        "verarbeiten": 90328,
+        "rueckfuehrung": 0
+      },
+      "hinweise": [
+        "Dokument 2: 1 E-Mail-Anhang/Anhänge nicht verarbeitet, bitte einzeln einreichen",
+        "Auftrag und Dokument wurden getrennt anonymisiert"
+      ],
+      "nutzung": {
+        "tokensEin": 1479,
+        "tokensAus": 10457
+      }
+    },
+    "dauerMs": 103862
+  }
+]

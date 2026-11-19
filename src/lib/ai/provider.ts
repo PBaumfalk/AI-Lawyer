@@ -22,6 +22,12 @@ import { createOllama } from "ollama-ai-provider";
 import { generateText, type LanguageModel } from "ai";
 import { getSettingTyped } from "@/lib/settings/service";
 import { prisma } from "@/lib/db";
+import { createLogger } from "@/lib/logger";
+import { schuetzeModell } from "./datenschutz-schleuse";
+import { AnymizeClient } from "@/lib/helena/datei-pipeline/anymize-client";
+import { modellEintrag, DENKAUFWAND } from "@/lib/helena/datei-pipeline/modelle";
+import { bekannteWerteDerAkte } from "@/lib/helena/datei-pipeline/akte-daten";
+import { nerPruefer } from "@/lib/helena/datei-pipeline/ner-pruefer";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -31,6 +37,7 @@ export const PROVIDER_OPTIONS = [
   { value: "ollama", label: "Ollama (Lokal)" },
   { value: "openai", label: "OpenAI" },
   { value: "anthropic", label: "Anthropic" },
+  { value: "anymize", label: "anymize (Pseudonymisierung, Modelle in Deutschland oder Foundation-Modelle)" },
 ] as const;
 
 export type AiProvider = (typeof PROVIDER_OPTIONS)[number]["value"];
@@ -40,6 +47,7 @@ export const DEFAULT_MODELS: Record<AiProvider, string> = {
   ollama: "qwen3.5:35b",
   openai: "gpt-4o",
   anthropic: "claude-sonnet-4-20250514",
+  anymize: "waterfall-2.0",
 };
 
 // ---------------------------------------------------------------------------
@@ -47,11 +55,78 @@ export const DEFAULT_MODELS: Record<AiProvider, string> = {
 // ---------------------------------------------------------------------------
 
 let cachedOllama: ReturnType<typeof createOllama> | null = null;
-let cachedOpenAI: ReturnType<typeof createOpenAI> | null = null;
-let cachedAnthropic: ReturnType<typeof createAnthropic> | null = null;
 let cachedOllamaUrl = "";
-let cachedOpenAIKey = "";
-let cachedAnthropicKey = "";
+
+// ---------------------------------------------------------------------------
+// Datenschutz-Schleuse for every external model
+// ---------------------------------------------------------------------------
+
+const schleusenLog = createLogger("datenschutz-schleuse");
+
+function anymizeChatModell(apiKey: string, baseUrl: string, modellId: string): LanguageModel {
+  if (!modellEintrag(modellId)) {
+    throw new Error(`Modell "${modellId}" steht nicht auf der Positivliste der Datei-Pipeline (modelle.ts)`);
+  }
+  const provider = createOpenAI({
+    apiKey,
+    baseURL: `${baseUrl.replace(/\/+$/, "")}/api/v1/llm`,
+    compatibility: "compatible",
+    // anymize's own reasoning models answer only with a limited reasoning budget (live 2026-11-19).
+    fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (typeof init?.body === "string" && modellEintrag(modellId)?.denkaufwand) {
+        const body = JSON.parse(init.body);
+        body.reasoning_effort ??= DENKAUFWAND.allgemein;
+        init = { ...init, body: JSON.stringify(body) };
+      }
+      return fetch(input, init);
+    }) as typeof fetch,
+  });
+  // JSON-schema output (response_format) instead of a forced tool call: with long
+  // prompts waterfall-2.0 answered in prose instead of calling the forced tool
+  // ("No object generated: the tool was not called", live 2026-11-19).
+  return provider.chat(modellId, { structuredOutputs: true });
+}
+
+/**
+ * External model wrapped in the Datenschutz-Schleuse: content is pseudonymised
+ * by anymize before it leaves, checked by the egress guard, and re-identified
+ * locally. Without an anymize key external providers are refused.
+ */
+export async function schleusenModell(provider: string, modellName: string): Promise<LanguageModel> {
+  const anymizeKey = await getSettingTyped<string>("anymize.apiKey", process.env.ANYMIZE_API_KEY ?? "");
+  const anymizeUrl = await getSettingTyped<string>("anymize.baseUrl", "https://app.anymize.ai");
+  if (!anymizeKey) {
+    throw new Error(
+      "Externe KI-Anbieter sind nur über die Datenschutz-Schleuse erlaubt. Bitte anymize unter Einstellungen → KI einrichten oder Ollama (lokal) verwenden.",
+    );
+  }
+  const providerKey = await getSettingTyped<string>("ai.provider.apiKey", "");
+  let basis: LanguageModel;
+  if (provider === "anymize") {
+    basis = anymizeChatModell(anymizeKey, anymizeUrl, modellName);
+  } else if (provider === "openai") {
+    basis = createOpenAI({ apiKey: providerKey })(modellName);
+  } else if (provider === "anthropic") {
+    basis = createAnthropic({ apiKey: providerKey })(modellName);
+  } else {
+    throw new Error(`Unbekannter KI-Anbieter: ${provider}`);
+  }
+  const nerAn = await getSettingTyped<boolean>("helena.datei.nerPruefung", true);
+  const kanzlei = await prisma.kanzlei.findFirst({ select: { name: true } }).catch(() => null);
+  const zusatzBegriffe = await getSettingTyped<unknown>("ai.schleuse.erlaubteBegriffe", []);
+  return schuetzeModell(basis, {
+    anymize: () => new AnymizeClient({ apiKey: anymizeKey, baseUrl: anymizeUrl }),
+    bekannteWerteLaden: (akteId) => bekannteWerteDerAkte(akteId),
+    // Own firm name and admin-configured terms are not client data.
+    erlaubteBegriffe: [
+      ...(kanzlei?.name ? [kanzlei.name] : []),
+      ...(Array.isArray(zusatzBegriffe) ? zusatzBegriffe.filter((x): x is string => typeof x === "string") : []),
+    ],
+    zusatzPruefer: nerAn ? nerPruefer : undefined,
+    log: schleusenLog,
+    immerStreamen: provider === "anymize",
+  });
+}
 
 // ---------------------------------------------------------------------------
 // getModel — Main factory function
@@ -64,7 +139,6 @@ let cachedAnthropicKey = "";
  */
 export async function getModel(): Promise<LanguageModel> {
   const provider = await getSettingTyped<string>("ai.provider", "ollama");
-  const apiKey = await getSettingTyped<string>("ai.provider.apiKey", "");
   const model = await getSettingTyped<string>(
     "ai.provider.model",
     DEFAULT_MODELS[provider as AiProvider] ?? "qwen3.5:35b"
@@ -75,20 +149,11 @@ export async function getModel(): Promise<LanguageModel> {
   );
 
   switch (provider) {
-    case "openai": {
-      if (!cachedOpenAI || cachedOpenAIKey !== apiKey) {
-        cachedOpenAI = createOpenAI({ apiKey });
-        cachedOpenAIKey = apiKey;
-      }
-      return cachedOpenAI(model);
-    }
-    case "anthropic": {
-      if (!cachedAnthropic || cachedAnthropicKey !== apiKey) {
-        cachedAnthropic = createAnthropic({ apiKey });
-        cachedAnthropicKey = apiKey;
-      }
-      return cachedAnthropic(model);
-    }
+    case "openai":
+    case "anthropic":
+    case "anymize":
+      // External providers only ever behind the Datenschutz-Schleuse.
+      return schleusenModell(provider, model);
     case "ollama":
     default: {
       if (!cachedOllama || cachedOllamaUrl !== ollamaUrl) {
@@ -161,6 +226,10 @@ export async function testProviderConnection(config?: {
           break;
         case "anthropic":
           model = createAnthropic({ apiKey: config.apiKey || "" })(modelName);
+          break;
+        case "anymize":
+          // Connection test with a fixed text, no case data: no Schleuse needed.
+          model = anymizeChatModell(config.apiKey || "", "https://app.anymize.ai", modelName);
           break;
         case "ollama":
         default: {

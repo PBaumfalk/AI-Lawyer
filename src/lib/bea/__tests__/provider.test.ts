@@ -7,6 +7,7 @@ vi.mock("@/lib/settings/service", () => ({
 import { getBeaProvider, type BeaVersandAuftrag, type BeaSitzung } from "../provider";
 import { BeaExpertProvider } from "../expert/provider";
 import { MockProvider } from "../mock-provider";
+import { BeaExpertError } from "../expert/transport";
 
 const auftrag: BeaVersandAuftrag = {
   postfachSafeId: "DE.Justiztest.a",
@@ -120,6 +121,31 @@ describe("BeaExpertProvider", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "invalid" }), { status: 200 })));
     vi.stubEnv("BEA_EXPERT_IDENT", "ident");
     expect(await new BeaExpertProvider().pruefeSitzung(sitzung)).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it("pruefeSitzung wirft erneut bei Netzwerkfehler", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("fetch failed"); }));
+    vi.stubEnv("BEA_EXPERT_IDENT", "ident");
+    await expect(new BeaExpertProvider().pruefeSitzung(sitzung)).rejects.toBeInstanceOf(BeaExpertError);
+    vi.unstubAllGlobals();
+  });
+
+  it("pruefeSitzung wirft erneut bei HTTP 503", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("down", { status: 503 })));
+    vi.stubEnv("BEA_EXPERT_IDENT", "ident");
+    await expect(new BeaExpertProvider().pruefeSitzung(sitzung)).rejects.toMatchObject({ status: 503 });
+    vi.unstubAllGlobals();
+  });
+
+  it("abmelden verschluckt BeaExpertError und loggt kein Token", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "expired" }), { status: 200 })));
+    vi.stubEnv("BEA_EXPERT_IDENT", "ident");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await expect(new BeaExpertProvider().abmelden(sitzung)).resolves.toBeUndefined();
+    expect(warn).toHaveBeenCalledWith("beA-Abmeldung fehlgeschlagen", { funktion: "bea_logout", status: 200 });
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(sitzung.token === "t" ? "\"t\"" : sitzung.token);
+    warn.mockRestore();
     vi.unstubAllGlobals();
   });
 });

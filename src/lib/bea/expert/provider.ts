@@ -38,13 +38,21 @@ export class BeaExpertProvider implements BeaProvider {
       await bexAufruf("bea_check_session", { token: s.token });
       return true;
     } catch (err) {
-      if (err instanceof BeaExpertError) return false;
+      // Only an API-level answer (HTTP < 500 or error body) means the session is invalid.
+      // Network errors, timeouts, missing config and 5xx are outages and must surface.
+      if (err instanceof BeaExpertError && err.status !== null && err.status < 500) return false;
       throw err;
     }
   }
 
   async abmelden(s: BeaSitzung): Promise<void> {
-    await bexAufruf("bea_logout", { token: s.token });
+    // Best effort: logging out an already expired session is normal. Never log the token.
+    try {
+      await bexAufruf("bea_logout", { token: s.token });
+    } catch (err) {
+      if (!(err instanceof BeaExpertError)) throw err;
+      console.warn("beA-Abmeldung fehlgeschlagen", { funktion: err.funktion, status: err.status });
+    }
   }
 
   listePostfaecher(s: BeaSitzung): Promise<BeaPostfachInfo[]> {

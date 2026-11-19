@@ -1,9 +1,11 @@
 import { Worker } from "bullmq";
 import { createRedisConnection } from "@/lib/redis";
 import { createLogger } from "@/lib/logger";
-import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerAkteEmbeddingJob, registerUrteileSyncJob, registerScannerJob, registerGamificationCrons, registerCalDavSyncJob, ocrQueue } from "@/lib/queue/queues";
+import { calculateBackoff, registerFristReminderJob, registerAiProactiveJob, registerAiBriefingJob, registerGesetzeSyncJob, registerAkteEmbeddingJob, registerUrteileSyncJob, registerScannerJob, registerGamificationCrons, registerCalDavSyncJob, registerBeaSyncJob, ocrQueue } from "@/lib/queue/queues";
 import type { CalDavSyncJobData } from "@/lib/queue/queues";
 import { processCalDavSync } from "@/lib/queue/processors/caldav-sync.processor";
+import type { BeaSyncJobData } from "@/lib/queue/queues";
+import { processBeaSync } from "@/lib/queue/processors/bea-sync.processor";
 import type { GamificationJobData } from "@/lib/queue/queues";
 import { processGamificationJob } from "@/lib/queue/processors/gamification.processor";
 import { processMusterIngestionJob, processMusterIngestPending, type MusterIngestionJobData } from "@/lib/queue/processors/muster-ingestion.processor";
@@ -908,6 +910,50 @@ caldavSyncWorker.on("error", (err) => {
 workers.push(caldavSyncWorker);
 log.info("[Worker] caldav-sync processor registered");
 
+// ─── beA Sync Queue Worker ────────────────────────────────────────────────
+
+const beaSyncWorker = new Worker<BeaSyncJobData>(
+  "bea-sync",
+  async (job) => processBeaSync(job),
+  {
+    connection,
+    concurrency: 1, // One retrieval at a time; duplicates are caught via unique nachrichtenId
+    settings: {
+      backoffStrategy: (attemptsMade: number) => calculateBackoff(attemptsMade),
+    },
+  }
+);
+
+beaSyncWorker.on("completed", (job) => {
+  if (!job) return;
+  log.info({ jobId: job.id, userId: job.data.userId }, "beA sync job completed");
+});
+
+beaSyncWorker.on("failed", (job, err) => {
+  if (!job) return;
+  log.error(
+    { jobId: job.id, userId: job.data.userId, err: err.message, attemptsMade: job.attemptsMade },
+    "beA sync job failed"
+  );
+
+  // Notify admins on final failure
+  if (job.attemptsMade >= (job.opts.attempts ?? 2)) {
+    socketEmitter.to("role:ADMIN").emit("notification", {
+      type: "job:failed",
+      title: "beA-Abruf fehlgeschlagen",
+      message: `beA-Abruf fehlgeschlagen: ${err.message}`,
+      data: { jobId: job.id, queue: "bea-sync", userId: job.data.userId },
+    });
+  }
+});
+
+beaSyncWorker.on("error", (err) => {
+  log.error({ err }, "beA sync worker error");
+});
+
+workers.push(beaSyncWorker);
+log.info("[Worker] bea-sync processor registered");
+
 // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function gracefulShutdown(signal: string) {
@@ -1107,6 +1153,14 @@ async function startup() {
     log.warn({ err }, "Failed to register CalDAV sync job (non-fatal)");
   }
 
+  // Register beA sync job (every 5 minutes)
+  try {
+    await registerBeaSyncJob();
+    log.info("beA sync job registered (*/5 * * * * Europe/Berlin)");
+  } catch (err) {
+    log.warn({ err }, "Failed to register beA sync job (non-fatal)");
+  }
+
   // Recover any Muster rows stuck in NER_RUNNING from a previous crashed worker
   try {
     await recoverStuckNerJobs();
@@ -1237,6 +1291,7 @@ async function startup() {
         "urteile-sync", "muster-ingestion", "helena-task", "akte-embedding", "scanner", "gamification",
         "portal-notification",
         "caldav-sync",
+        "bea-sync",
       ],
       fristScanZeit: scanZeit,
     },

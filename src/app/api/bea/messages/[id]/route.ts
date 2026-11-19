@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { requirePermission, akteAccessDenied } from "@/lib/rbac";
 import { logAuditEvent } from "@/lib/audit";
+import { getFileStream } from "@/lib/storage";
+import { legeDokumenteAn } from "@/lib/bea/abruf";
 
 // --- Validation ---
 
@@ -66,10 +68,28 @@ export async function GET(
         nachrichtId: nachricht.id,
         anhangId: downloadAttachmentId,
         anhangName: attachment?.name || "Unbekannt",
-        anhangGroesse: attachment?.size || null,
+        anhangGroesse: attachment?.groesse ?? attachment?.size ?? null,
         ergebnis: "ERFOLG",
       },
     }).catch(() => {});
+
+    // Attachments retrieved via bea.expert are stored in MinIO under storageKey
+    if (attachment?.storageKey) {
+      try {
+        const stream = await getFileStream(attachment.storageKey);
+        if (!stream) {
+          return NextResponse.json({ error: "Datei nicht gefunden im Speicher" }, { status: 404 });
+        }
+        return new NextResponse(stream.transformToWebStream() as any, {
+          headers: {
+            "Content-Type": attachment.mimeType || "application/octet-stream",
+            "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(attachment.name)}`,
+          },
+        });
+      } catch {
+        return NextResponse.json({ error: "Datei konnte nicht geladen werden" }, { status: 500 });
+      }
+    }
   }
 
   return NextResponse.json(nachricht);
@@ -107,6 +127,20 @@ export async function PATCH(
 
   if (!existing) {
     return NextResponse.json({ error: "Nachricht nicht gefunden" }, { status: 404 });
+  }
+
+  // On (re)assignment create the Akte documents first, so a failure changes nothing.
+  // Idempotent: attachments that already have a document are skipped.
+  if (parsed.data.akteId && parsed.data.akteId !== existing.akteId) {
+    try {
+      await legeDokumenteAn(id, parsed.data.akteId, result.session!.user.id);
+    } catch (e) {
+      console.error(`[bea] Dokumente für Nachricht ${id} nicht angelegt:`, e instanceof Error ? e.message : e);
+      return NextResponse.json(
+        { error: "Die Anhänge konnten nicht in der Akte abgelegt werden" },
+        { status: 500 }
+      );
+    }
   }
 
   const updateData: any = {};

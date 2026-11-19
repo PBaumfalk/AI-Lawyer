@@ -249,6 +249,21 @@ export interface CalDavSyncJobData {
   kontoId?: string; // If provided, sync specific konto; if omitted, sync all active konten
 }
 
+/** beA-Sync queue for periodic and on-demand retrieval via bea.expert */
+export const beaSyncQueue = new Queue<BeaSyncJobData>("bea-sync", {
+  connection: getQueueConnection(),
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: "custom" },
+    removeOnComplete: { age: 86_400 },   // 24h
+    removeOnFail: { age: 604_800 },      // 7 days
+  },
+});
+
+export interface BeaSyncJobData {
+  userId?: string; // If provided, fetch only this user's certificate; else all AKTIV certificates
+}
+
 /** Portal-notification queue for Mandant email notifications (MSG-04/05/06) */
 export const portalNotificationQueue = new Queue<PortalNotificationJobData>("portal-notification", {
   connection: getQueueConnection(),
@@ -282,6 +297,7 @@ export const ALL_QUEUES: Queue[] = [
   gamificationQueue,
   portalNotificationQueue,
   caldavSyncQueue,
+  beaSyncQueue,
 ];
 
 /**
@@ -523,6 +539,28 @@ export async function registerCalDavSyncJob(
     },
     {
       name: "sync-all-caldav",
+      data: {},
+      opts: {
+        removeOnComplete: { count: 50 },
+        removeOnFail: { count: 20 },
+      },
+    }
+  );
+}
+
+/**
+ * Register the repeatable beA sync job.
+ * Runs every 5 minutes for all certificates with status AKTIV.
+ */
+export async function registerBeaSyncJob(cronPattern = "*/5 * * * *"): Promise<void> {
+  await beaSyncQueue.upsertJobScheduler(
+    "bea-sync-periodic",
+    {
+      pattern: cronPattern,
+      tz: "Europe/Berlin",
+    },
+    {
+      name: "bea-sync",
       data: {},
       opts: {
         removeOnComplete: { count: 50 },

@@ -1,30 +1,29 @@
 "use client";
 
 import { beaAutoZuordnen } from "@/lib/bea/zuordnung";
-import { useEffect, useState, useCallback } from "react";
-import { useBeaSession } from "@/lib/bea/session";
-import {
-  beaGetMessages,
-  beaGetFolders,
-  type BeaMessageSummary,
-} from "@/lib/bea/client";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Inbox,
   Send,
   RefreshCw,
   Loader2,
-  AlertCircle,
   FolderOpen,
   Search,
   Link2,
+  RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useBeaStatus, beaStatusMeldung, Hinweis, formatDatumZeit } from "./bea-status";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface StoredMessage {
   id: string;
   nachrichtenId: string | null;
+  richtung: "EINGANG" | "AUSGANG";
   betreff: string;
   absender: string;
   empfaenger: string;
@@ -38,156 +37,176 @@ interface StoredMessage {
 
 // ─── Status Config ───────────────────────────────────────────────────────────
 
-const statusConfig: Record<string, { label: string; color: string; dotColor: string }> = {
-  EINGANG: { label: "Eingang", color: "text-blue-600 dark:text-blue-400", dotColor: "bg-blue-500" },
-  GELESEN: { label: "Gelesen", color: "text-slate-500", dotColor: "bg-slate-400" },
-  ZUGEORDNET: { label: "Zugeordnet", color: "text-emerald-600 dark:text-emerald-400", dotColor: "bg-emerald-500" },
-  GESENDET: { label: "Gesendet", color: "text-violet-600 dark:text-violet-400", dotColor: "bg-violet-500" },
-  FEHLER: { label: "Fehler", color: "text-rose-600 dark:text-rose-400", dotColor: "bg-rose-500" },
+const statusConfig: Record<string, { label: string; dotColor: string }> = {
+  EINGANG: { label: "Eingang", dotColor: "bg-primary" },
+  GELESEN: { label: "Gelesen", dotColor: "bg-muted-foreground/50" },
+  ZUGEORDNET: { label: "Zugeordnet", dotColor: "bg-emerald-500" },
+  GESENDET: { label: "Gesendet", dotColor: "bg-muted-foreground" },
+  FEHLER: { label: "Fehler", dotColor: "bg-destructive" },
 };
+
+/** Delay before the list is reloaded after a manual retrieval was queued. */
+const NEU_LADEN_NACH_MS = 5000;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function BeaInbox() {
-  const { session, isAuthenticated } = useBeaSession();
+  const { status, fehler: statusFehler, neuLaden: statusNeuLaden } = useBeaStatus();
+  const { data: session } = useSession();
+  const istAdmin = session?.user?.role === "ADMIN";
+  const [zuruecksetzen, setZuruecksetzen] = useState(false);
+  const [zuruecksetzenFehler, setZuruecksetzenFehler] = useState<string | null>(null);
   const [tab, setTab] = useState<"eingang" | "ausgang">("eingang");
   const [messages, setMessages] = useState<StoredMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [syncHinweis, setSyncHinweis] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [showAssignDialog, setShowAssignDialog] = useState<string | null>(null);
+  const reloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fetch stored messages from database
+  // Fetch stored messages from the database (server filters by Akte access)
   const fetchStored = useCallback(async () => {
     try {
-      const statusFilter = tab === "eingang" ? "EINGANG" : "GESENDET";
       const params = new URLSearchParams();
-      // For inbox, show EINGANG, GELESEN, ZUGEORDNET
-      // For outbox, show GESENDET
-      if (tab === "ausgang") {
-        params.set("status", "GESENDET");
-      }
-      if (search) {
-        params.set("q", search);
-      }
+      params.set("richtung", tab === "eingang" ? "EINGANG" : "AUSGANG");
+      if (search) params.set("q", search);
       params.set("take", "100");
 
       const res = await fetch(`/api/bea/messages?${params.toString()}`);
       if (!res.ok) throw new Error("Fehler beim Laden der Nachrichten");
       const data = await res.json();
 
-      // For inbox, filter out GESENDET messages
-      let filtered = data.nachrichten;
-      if (tab === "eingang") {
-        filtered = filtered.filter((m: StoredMessage) => m.status !== "GESENDET");
-      }
-
-      setMessages(filtered);
+      setMessages(data.nachrichten as StoredMessage[]);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unbekannter Fehler");
     }
   }, [tab, search]);
 
-  // Sync from bea.expert API (browser-side) to database
-  const syncFromBeaExpert = useCallback(async () => {
-    if (!isAuthenticated || !session) return;
-
-    setSyncing(true);
-    setError(null);
-
-    try {
-      // Get folders to find inbox/sent
-      const foldersResult = await beaGetFolders(session, session.safeId);
-      if (!foldersResult.ok || !foldersResult.data) {
-        // If bea.expert library not loaded, just load from DB
-        await fetchStored();
-        setSyncing(false);
-        return;
-      }
-
-      // Find Posteingang folder
-      const inboxFolder = foldersResult.data.find(
-        (f) =>
-          f.name.toLowerCase().includes("posteingang") ||
-          f.name.toLowerCase().includes("inbox")
-      );
-
-      if (inboxFolder) {
-        const messagesResult = await beaGetMessages(
-          session,
-          session.safeId,
-          inboxFolder.id,
-          { limit: 50 }
-        );
-
-        if (messagesResult.ok && messagesResult.data) {
-          // Sync each new message to database
-          for (const msg of messagesResult.data) {
-            try {
-              await fetch("/api/bea/messages", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  nachrichtenId: msg.nachrichtenId,
-                  betreff: msg.betreff,
-                  absender: msg.absender,
-                  empfaenger: msg.empfaenger,
-                  safeIdAbsender: msg.absenderSafeId,
-                  safeIdEmpfaenger: msg.empfaengerSafeId,
-                  status: "EINGANG",
-                  empfangenAm: msg.datum,
-                  eebErforderlich: msg.eebErforderlich,
-                }),
-              });
-            } catch {
-              // 409 = already exists, that's fine
-            }
-          }
-        }
-      }
-    } catch (err) {
-      // Non-fatal: we can still show stored messages
-      console.warn("beA sync error:", err);
-    }
-
-    // Reload from database
-    await fetchStored();
-    setSyncing(false);
-  }, [isAuthenticated, session, fetchStored]);
-
-  // Initial load
-  useEffect(() => {
-    setLoading(true);
-    syncFromBeaExpert().finally(() => setLoading(false));
-  }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Search with debounce
+  // Initial load and reload on tab change / search (debounced)
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchStored();
-    }, 300);
+      fetchStored().finally(() => setLoading(false));
+    }, search ? 300 : 0);
     return () => clearTimeout(timer);
-  }, [search, fetchStored]);
+  }, [fetchStored, search]);
 
-  const handleAssign = async (messageId: string, akteId: string) => {
+  useEffect(() => () => {
+    if (reloadTimer.current) clearTimeout(reloadTimer.current);
+  }, []);
+
+  // Queue a server-side retrieval, then reload list and status after 5 s
+  const jetztAbrufen = async () => {
+    if (syncing) return;
+    setSyncing(true);
+    setSyncHinweis(null);
+    setError(null);
     try {
-      await fetch(`/api/bea/messages/${messageId}`, {
+      const res = await fetch("/api/bea/sync", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // 409 "Abruf läuft bereits": a retrieval for this user is already queued or running
+        if (res.status === 409 && data.error === "Abruf läuft bereits") {
+          setSyncHinweis("Abruf läuft bereits");
+        } else {
+          throw new Error(data.error || `Abruf fehlgeschlagen (${res.status})`);
+        }
+      } else {
+        setSyncHinweis("Abruf gestartet – die Liste wird in wenigen Sekunden aktualisiert.");
+      }
+      await new Promise<void>((resolve) => {
+        reloadTimer.current = setTimeout(resolve, NEU_LADEN_NACH_MS);
+      });
+      await Promise.all([fetchStored(), statusNeuLaden()]);
+      setSyncHinweis(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Abruf fehlgeschlagen");
+      statusNeuLaden();
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const statusMeldung = status ? beaStatusMeldung(status) : null;
+  const uebersprungen = status?.uebersprungen ?? 0;
+
+  // Admin: release skipped messages of the postbox for the next retrieval
+  const fehlversucheZuruecksetzen = async () => {
+    const postfachSafeId = status?.zertifikat?.safeId;
+    if (!postfachSafeId) return;
+    setZuruecksetzen(true);
+    setZuruecksetzenFehler(null);
+    try {
+      const res = await fetch("/api/bea/fehlversuche/zuruecksetzen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postfachSafeId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Zurücksetzen fehlgeschlagen (${res.status})`);
+      }
+      await statusNeuLaden();
+    } catch (e) {
+      setZuruecksetzenFehler(e instanceof Error ? e.message : "Zurücksetzen fehlgeschlagen");
+    } finally {
+      setZuruecksetzen(false);
+    }
+  };
+  const abrufMoeglich = !!status && !statusMeldung;
+
+  // Returns an error message (e.g. 409: documents already in another Akte) or null
+  const handleAssign = async (messageId: string, akteId: string): Promise<string | null> => {
+    try {
+      const res = await fetch(`/api/bea/messages/${encodeURIComponent(messageId)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ akteId }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return data.error || `Zuordnung fehlgeschlagen (${res.status})`;
+      }
       setShowAssignDialog(null);
       await fetchStored();
+      return null;
     } catch {
-      setError("Zuordnung fehlgeschlagen");
+      return "Zuordnung fehlgeschlagen";
     }
   };
 
   return (
     <div className="space-y-4">
+      {/* beA status banner */}
+      {statusFehler && <Hinweis art="fehler">{statusFehler}</Hinweis>}
+      {statusMeldung && <Hinweis art="warnung">{statusMeldung}</Hinweis>}
+      {uebersprungen > 0 && (
+        <Hinweis art="warnung">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              {uebersprungen === 1
+                ? "1 beA-Nachricht konnte nicht übernommen werden – bitte im beA-Webclient prüfen."
+                : `${uebersprungen} beA-Nachrichten konnten nicht übernommen werden – bitte im beA-Webclient prüfen.`}
+            </span>
+            {istAdmin && (
+              <Button variant="outline" size="sm" onClick={fehlversucheZuruecksetzen} disabled={zuruecksetzen}>
+                {zuruecksetzen ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                Erneut versuchen
+              </Button>
+            )}
+          </div>
+          {zuruecksetzenFehler && <p className="mt-1 text-destructive">{zuruecksetzenFehler}</p>}
+        </Hinweis>
+      )}
+
       {/* Tabs + Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-1 rounded-lg bg-muted/50 p-1">
           <button
             onClick={() => setTab("eingang")}
@@ -213,35 +232,32 @@ export function BeaInbox() {
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {status?.zertifikat && (
+            <span className="text-xs text-muted-foreground">
+              Zuletzt abgerufen: {formatDatumZeit(status.zertifikat.letzterAbruf)}
+            </span>
+          )}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Suchen..."
+              placeholder="Suchen…"
+              aria-label="Nachrichten durchsuchen"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-64 rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand/50"
+              className="w-64 rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
-          <button
-            onClick={() => syncFromBeaExpert()}
-            disabled={syncing}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
-            Synchronisieren
-          </button>
+          <Button variant="outline" size="sm" onClick={jetztAbrufen} disabled={syncing || !abrufMoeglich}>
+            <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+            Jetzt abrufen
+          </Button>
         </div>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="flex items-center gap-2 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 p-3">
-          <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0" />
-          <p className="text-sm text-rose-700 dark:text-rose-400">{error}</p>
-        </div>
-      )}
+      {syncHinweis && <Hinweis art="info">{syncHinweis}</Hinweis>}
+      {error && <Hinweis art="fehler">{error}</Hinweis>}
 
       {/* Message List */}
       <div className="glass rounded-xl overflow-hidden">
@@ -269,7 +285,7 @@ export function BeaInbox() {
                   Betreff
                 </th>
                 <th className="text-left py-2.5 px-4 font-medium text-muted-foreground">
-                  {tab === "eingang" ? "Absender" : "Empfaenger"}
+                  {tab === "eingang" ? "Absender" : "Empfänger"}
                 </th>
                 <th className="text-left py-2.5 px-4 font-medium text-muted-foreground">
                   Akte
@@ -296,14 +312,18 @@ export function BeaInbox() {
                     <td className="py-2.5 px-4">
                       <Link
                         href={`/bea/${msg.id}`}
-                        className="font-medium text-foreground hover:text-brand transition-colors"
+                        className="font-medium text-foreground hover:text-primary transition-colors"
                       >
                         {msg.betreff}
                       </Link>
                       {msg.eebStatus === "AUSSTEHEND" && (
-                        <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-950 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                          eEB ausstehend
-                        </span>
+                        <Badge variant="warning" className="ml-2">eEB ausstehend</Badge>
+                      )}
+                      {msg.eebStatus === "WIRD_ABGEGEBEN" && (
+                        <Badge variant="danger" className="ml-2">eEB-Abgabe unklar</Badge>
+                      )}
+                      {msg.status === "FEHLER" && (
+                        <Badge variant="danger" className="ml-2">Fehler</Badge>
                       )}
                     </td>
                     <td className="py-2.5 px-4 text-muted-foreground">
@@ -331,7 +351,7 @@ export function BeaInbox() {
                       )}
                     </td>
                     <td className="py-2.5 px-4 text-muted-foreground whitespace-nowrap">
-                      {formatDate(msg.empfangenAm || msg.gesendetAm || msg.createdAt)}
+                      {formatDatumZeit(msg.empfangenAm || msg.gesendetAm || msg.createdAt)}
                     </td>
                   </tr>
                 );
@@ -361,12 +381,13 @@ function AkteAssignDialog({
   onClose,
 }: {
   messageId: string;
-  onAssign: (messageId: string, akteId: string) => Promise<void>;
+  onAssign: (messageId: string, akteId: string) => Promise<string | null>;
   onClose: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [akten, setAkten] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fehler, setFehler] = useState<string | null>(null);
 
   useEffect(() => {
     if (!search || search.length < 2) {
@@ -392,6 +413,7 @@ function AkteAssignDialog({
   // Also try auto-assign
   const handleAutoAssign = async () => {
     setLoading(true);
+    setFehler(null);
     try {
       const r = await beaAutoZuordnen(messageId);
       if (r.zugeordnet) {
@@ -399,10 +421,18 @@ function AkteAssignDialog({
         window.location.reload();
         return;
       }
-      if (r.meldung) alert(r.meldung);
+      if (r.meldung) setFehler(r.meldung);
     } catch {
-      alert("Zuordnung fehlgeschlagen");
+      setFehler("Zuordnung fehlgeschlagen");
     }
+    setLoading(false);
+  };
+
+  const zuordnen = async (akteId: string) => {
+    setLoading(true);
+    setFehler(null);
+    const meldung = await onAssign(messageId, akteId);
+    if (meldung) setFehler(meldung);
     setLoading(false);
   };
 
@@ -413,22 +443,21 @@ function AkteAssignDialog({
           Nachricht einer Akte zuordnen
         </h3>
 
-        <button
-          onClick={handleAutoAssign}
-          disabled={loading}
-          className="w-full rounded-lg border border-brand/30 bg-brand/5 px-4 py-2 text-sm font-medium text-brand hover:bg-brand/10 transition-colors disabled:opacity-50"
-        >
+        <Button variant="outline" className="w-full" onClick={handleAutoAssign} disabled={loading}>
           Automatische Zuordnung versuchen
-        </button>
+        </Button>
+
+        {fehler && <Hinweis art="fehler">{fehler}</Hinweis>}
 
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Aktenzeichen oder Rubrum suchen..."
+            placeholder="Aktenzeichen oder Rubrum suchen…"
+            aria-label="Akte suchen"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand/50"
+            className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             autoFocus
           />
         </div>
@@ -444,8 +473,9 @@ function AkteAssignDialog({
             {akten.map((akte: any) => (
               <button
                 key={akte.id}
-                onClick={() => onAssign(messageId, akte.id)}
-                className="w-full text-left rounded-lg px-3 py-2 hover:bg-muted transition-colors"
+                onClick={() => zuordnen(akte.id)}
+                disabled={loading}
+                className="w-full disabled:opacity-50 text-left rounded-lg px-3 py-2 hover:bg-muted transition-colors"
               >
                 <span className="font-medium text-sm text-foreground">
                   {akte.aktenzeichen}
@@ -469,21 +499,4 @@ function AkteAssignDialog({
       </div>
     </div>
   );
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "-";
-  try {
-    return new Date(dateStr).toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return dateStr;
-  }
 }

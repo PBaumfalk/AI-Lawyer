@@ -100,6 +100,7 @@ export const LUCIDE_ZU_PERSIMMON = {
   Edit2: "edit",
   Edit3: "edit",
   PenLine: "edit",
+  Wand2: "edit", // beA: typografische Zeichen ersetzen (keine KI, daher nicht Helena)
   Trash2: "trash",
   Copy: "copy",
   Link: "link",
@@ -316,6 +317,7 @@ export const Edit = persimmon("edit", "Edit");
 export const Edit2 = persimmon("edit", "Edit2");
 export const Edit3 = persimmon("edit", "Edit3");
 export const PenLine = persimmon("edit", "PenLine");
+export const Wand2 = persimmon("edit", "Wand2");
 export const Trash2 = persimmon("trash", "Trash2");
 export const Copy = persimmon("copy", "Copy");
 export const Link = persimmon("link", "Link");

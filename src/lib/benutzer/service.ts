@@ -60,7 +60,7 @@ export async function listeBenutzer(): Promise<BenutzerZeile[]> {
   return rows.map(zeile);
 }
 
-async function findeKanzleiKonto(id: string) {
+export async function findeKanzleiKonto(id: string) {
   const u = await prisma.user.findFirst({ where: { id, ...kanzleiKonto }, select: { ...auswahl, kanzleiId: true } });
   if (!u) throw new BenutzerFehler("Benutzer nicht gefunden", 404);
   return u;

@@ -1,126 +1,83 @@
 /**
- * Contract between beA UI (bea-compose, eeb-button) and the server routes
- * POST /api/bea/messages and POST /api/bea/messages/[id]/eeb.
+ * Contract for outgoing beA messages between the UI and the server routes
+ * POST /api/bea/messages (send or save draft, server-side via the beA provider)
+ * and POST /api/bea/messages/versand-pruefung (pre-flight check, sends nothing).
  *
- * The actual transmission happens in the browser through the bea.expert
- * library (src/lib/bea/client.ts). The server can only record what the
- * browser reports, so the rules are enforced on both sides:
- *  - a message is recorded as GESENDET only with the beA message ID that
- *    bea.expert returned for the send;
- *  - an eEB is recorded as BESTAETIGT only after bea.expert confirmed it,
- *    referencing the stored beA message ID.
- * If the library is missing or the call fails, nothing is recorded.
+ * Client-safe: zod and types only, no server imports.
  */
 import { z } from "zod";
+import type { ZeichenVerstoss } from "./regeln";
 
-/** Minimal shape of a bea.expert call result (see BeaResult in client.ts). */
-export interface BeaErgebnis<T> {
-  ok: boolean;
-  data?: T;
-  error?: string;
-  code?: string;
-}
+export const BEA_NACHRICHTEN_TYPEN = ["ALLGEMEINE_NACHRICHT", "MAHN_ANTRAG", "TESTNACHRICHT"] as const;
 
-export const beaNachrichtSchema = z
-  .object({
-    nachrichtenId: z.string().trim().min(1).optional(),
-    betreff: z.string().min(1, "Betreff ist erforderlich"),
-    absender: z.string().min(1, "Absender ist erforderlich"),
-    empfaenger: z.string().min(1, "Empfaenger ist erforderlich"),
-    inhalt: z.string().optional(),
-    status: z.enum(["EINGANG", "GELESEN", "ZUGEORDNET", "GESENDET", "FEHLER"]).default("EINGANG"),
-    safeIdAbsender: z.string().optional(),
-    safeIdEmpfaenger: z.string().optional(),
-    pruefprotokoll: z.any().optional(),
-    anhaenge: z.any().optional(),
-    dokumentIds: z.array(z.string()).optional(), // DMS document IDs for Versand-Gate check
-    akteId: z.string().optional(),
-    empfangenAm: z.string().optional(),
-    gesendetAm: z.string().optional(),
-    eebErforderlich: z.boolean().optional(),
-    xjustizXml: z.string().optional(),
-  })
-  .refine((d) => d.status !== "GESENDET" || !!d.nachrichtenId, {
-    message: "Gesendete Nachrichten brauchen die beA-Nachrichten-ID aus dem Versand",
-    path: ["nachrichtenId"],
-  });
-
-export type BeaNachrichtRequest = z.input<typeof beaNachrichtSchema>;
-
-/** Form data of bea-compose. */
-export interface BeaVersandFormular {
-  betreff: string;
-  inhalt: string;
-  absender: string;
-  safeIdAbsender: string;
-  empfaenger: string;
-  safeIdEmpfaenger: string;
-  dokumentIds: string[];
-  anhaenge: { name: string; mimeType: string; dokumentId: string }[];
-  akteId?: string | null;
-}
-
-/**
- * Build the record for a sent message. Throws unless bea.expert reported a
- * successful send with a message ID — a failed or unconfirmed send is never
- * stored as GESENDET.
- */
-export function buildGesendetNachricht(
-  ergebnis: BeaErgebnis<{ nachrichtenId: string }>,
-  form: BeaVersandFormular,
-  jetzt: Date = new Date()
-): BeaNachrichtRequest {
-  const id = ergebnis.data?.nachrichtenId?.trim();
-  if (!ergebnis.ok || !id) {
-    throw new Error(
-      ergebnis.error ||
-        "beA-Versand nicht bestaetigt (keine Nachrichten-ID). Die Nachricht wurde nicht als gesendet gespeichert."
-    );
-  }
-  return {
-    nachrichtenId: id,
-    betreff: form.betreff,
-    absender: form.absender,
-    empfaenger: form.empfaenger,
-    inhalt: form.inhalt,
-    status: "GESENDET",
-    safeIdAbsender: form.safeIdAbsender,
-    safeIdEmpfaenger: form.safeIdEmpfaenger,
-    gesendetAm: jetzt.toISOString(),
-    dokumentIds: form.dokumentIds,
-    anhaenge: form.anhaenge,
-    akteId: form.akteId ?? undefined,
-  };
-}
-
-export const eebBestaetigungSchema = z.object({
-  /** beA message ID the eEB was sent for (must match the stored message). */
-  nachrichtenId: z.string().trim().min(1),
-  /** Date stated in the eEB as sent to bea.expert. */
-  eebDatum: z.string().datetime(),
+const anhangSchema = z.object({
+  dokumentId: z.string().trim().min(1),
+  art: z.enum(["SCHRIFTSATZ", "ATTACHMENT"]),
 });
 
-export type EebBestaetigung = z.infer<typeof eebBestaetigungSchema>;
+const eindeutigeDokumente = (anhaenge: { dokumentId: string }[]) =>
+  new Set(anhaenge.map((a) => a.dokumentId)).size === anhaenge.length;
+const DOPPELT = { message: "Ein Dokument ist mehrfach angehängt", path: ["anhaenge"] };
 
-/** Build the eEB record; throws unless bea.expert confirmed the eEB. */
-export function buildEebBestaetigung(
-  ergebnis: BeaErgebnis<{ success: boolean }>,
-  nachrichtenId: string,
-  eebDatum: Date
-): EebBestaetigung {
-  if (!ergebnis.ok || !ergebnis.data?.success) {
-    throw new Error(
-      ergebnis.error || "eEB wurde von beA nicht bestaetigt und daher nicht gespeichert."
-    );
-  }
-  return { nachrichtenId, eebDatum: eebDatum.toISOString() };
+export const beaVersandSchema = z
+  .object({
+    akteId: z.string().min(1).optional(),
+    postfachSafeId: z.string().trim().min(1, "Absender-Postfach fehlt"),
+    empfaengerSafeIds: z.array(z.string().trim().min(1)).min(1, "Mindestens ein Empfänger ist erforderlich"),
+    betreff: z.string().min(1, "Betreff fehlt"),
+    text: z.string(),
+    aktenzeichenAbsender: z.string().optional(),
+    aktenzeichenEmpfaenger: z.string().optional(),
+    nachrichtenTyp: z.enum(BEA_NACHRICHTEN_TYPEN),
+    eebAnfordern: z.boolean(),
+    dringend: z.boolean(),
+    anhaenge: z.array(anhangSchema),
+    alsEntwurf: z.boolean(),
+  })
+  .refine((d) => eindeutigeDokumente(d.anhaenge), DOPPELT);
+
+export type BeaVersandRequest = z.infer<typeof beaVersandSchema>;
+
+/**
+ * Pre-flight body: same fields as the send, but lenient so that a missing
+ * subject or recipient is reported by pruefeVersand instead of a 400.
+ */
+export const beaVersandPruefungSchema = z
+  .object({
+    akteId: z.string().min(1).optional(),
+    postfachSafeId: z.string().optional(),
+    empfaengerSafeIds: z.array(z.string()).default([]),
+    betreff: z.string().default(""),
+    text: z.string().default(""),
+    aktenzeichenAbsender: z.string().optional(),
+    aktenzeichenEmpfaenger: z.string().optional(),
+    nachrichtenTyp: z.enum(BEA_NACHRICHTEN_TYPEN).optional(),
+    eebAnfordern: z.boolean().default(false),
+    dringend: z.boolean().optional(),
+    anhaenge: z.array(anhangSchema).max(5000).default([]),
+    alsEntwurf: z.boolean().optional(),
+  })
+  .refine((d) => eindeutigeDokumente(d.anhaenge), DOPPELT);
+
+export type BeaVersandPruefungRequest = z.input<typeof beaVersandPruefungSchema>;
+
+/** Document that failed access or the Versand-Gate. */
+export interface BeaDokumentFehler {
+  dokumentId: string;
+  name: string;
+  status: string;
+  reason: string;
 }
 
-/** Body/response of POST /api/bea/messages/versand-pruefung (pre-flight). */
-export interface BeaVersandPruefungRequest {
-  dokumentIds: string[];
-}
+/** Response of versand-pruefung; POST /api/bea/messages answers 422 with fehler/warnungen/verstoesse. */
 export interface BeaVersandPruefungResponse {
   ok: boolean;
-  errors: { dokumentId: string; name: string; status: string; reason: string }[];
+  fehler: string[];
+  warnungen: string[];
+  verstoesse: ZeichenVerstoss[];
+  /** Documents rejected by access check or Versand-Gate (HTTP 400). */
+  errors: BeaDokumentFehler[];
 }
+
+/** Hint stored on a message whose send outcome is unknown. */
+export const VERSANDSTATUS_UNKLAR = "Versandstatus unklar – bitte im beA-Webclient prüfen";

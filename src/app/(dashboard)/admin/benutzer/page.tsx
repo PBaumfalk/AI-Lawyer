@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Copy, KeyRound, LockOpen, Plus, ShieldCheck, UserRound } from "lucide-react";
+import { Copy, FileKey2, KeyRound, LockOpen, Plus, ShieldCheck, UserRound } from "lucide-react";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { BeaZertifikatDialog } from "@/components/admin/bea-zertifikat-dialog";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +45,7 @@ export default function BenutzerPage() {
   const [ladefehler, setLadefehler] = useState<string | null>(null);
   const [anlegenOffen, setAnlegenOffen] = useState(false);
   const [zuruecksetzen, setZuruecksetzen] = useState<BenutzerZeile | null>(null);
+  const [beaZertifikat, setBeaZertifikat] = useState<BenutzerZeile | null>(null);
   const [startpasswort, setStartpasswort] = useState<{ email: string; passwort: string } | null>(null);
 
   const laden = useCallback(async () => {
@@ -169,6 +171,10 @@ export default function BenutzerPage() {
                         <KeyRound className="w-4 h-4 mr-1.5" />
                         Passwort zurücksetzen
                       </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setBeaZertifikat(u)}>
+                        <FileKey2 className="w-4 h-4 mr-1.5" />
+                        beA-Zertifikat
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -203,6 +209,8 @@ export default function BenutzerPage() {
           if (r.startpasswort) setStartpasswort({ email: r.benutzer.email, passwort: r.startpasswort });
         }}
       />
+
+      <BeaZertifikatDialog benutzer={beaZertifikat} onSchliessen={() => setBeaZertifikat(null)} />
 
       <Dialog open={!!startpasswort} onOpenChange={(o) => !o && setStartpasswort(null)}>
         <DialogContent>

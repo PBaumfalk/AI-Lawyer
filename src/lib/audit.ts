@@ -54,12 +54,16 @@ export type AuditAktion =
   | "DSGVO_AUSKUNFT_EXPORTIERT"
   | "BEA_NACHRICHT_GESENDET"
   | "BEA_NACHRICHT_EMPFANGEN"
+  | "BEA_NACHRICHT_FEHLER"
+  | "BEA_FEHLVERSUCHE_ZURUECKGESETZT"
   | "BEA_EEB_BESTAETIGT"
   | "BEA_NACHRICHT_GELESEN"
   | "BEA_ZUORDNUNG_GEAENDERT"
   | "BEA_ANHANG_HERUNTERGELADEN"
   | "BEA_SAFEID_GEAENDERT"
   | "BEA_POSTFACH_GEWECHSELT" // BEA_POSTFACH_GEWECHSELT: reserved for future multi-postbox UI
+  | "BEA_ZERTIFIKAT_HINTERLEGT"
+  | "BEA_ZERTIFIKAT_ENTFERNT"
   | "NORM_VERKNUEPFT"
   | "NORM_ENTFERNT"
   | "PORTAL_EINLADUNG"
@@ -136,12 +140,16 @@ export const AKTION_LABELS: Record<string, string> = {
   DSGVO_AUSKUNFT_EXPORTIERT: "hat Datenauskunft exportiert",
   BEA_NACHRICHT_GESENDET: "beA Nachricht gesendet",
   BEA_NACHRICHT_EMPFANGEN: "beA Nachricht empfangen",
+  BEA_NACHRICHT_FEHLER: "beA Nachricht konnte nicht abgerufen werden",
+  BEA_FEHLVERSUCHE_ZURUECKGESETZT: "hat übersprungene beA-Nachrichten zum erneuten Abruf freigegeben",
   BEA_EEB_BESTAETIGT: "eEB bestätigt",
   BEA_NACHRICHT_GELESEN: "beA Nachricht gelesen",
   BEA_ZUORDNUNG_GEAENDERT: "beA Zuordnung geändert",
   BEA_ANHANG_HERUNTERGELADEN: "beA Anhang heruntergeladen",
   BEA_SAFEID_GEAENDERT: "Safe-ID geändert",
   BEA_POSTFACH_GEWECHSELT: "beA Postfach gewechselt",
+  BEA_ZERTIFIKAT_HINTERLEGT: "hat ein beA-Zertifikat hinterlegt",
+  BEA_ZERTIFIKAT_ENTFERNT: "hat ein beA-Zertifikat entfernt",
   NORM_VERKNUEPFT: "hat Norm verknüpft",
   NORM_ENTFERNT: "hat Norm entfernt",
   PORTAL_EINLADUNG: "hat Portal-Einladung versendet",
@@ -174,6 +182,8 @@ export const SECURITY_ACTIONS: Set<string> = new Set([
   "BENUTZER_PASSWORT_ZURUECKGESETZT",
   "BENUTZER_ENTSPERRT",
   "PASSWORT_GEAENDERT",
+  "BEA_ZERTIFIKAT_HINTERLEGT",
+  "BEA_ZERTIFIKAT_ENTFERNT",
 ]);
 
 // German labels for field names used in change diffs

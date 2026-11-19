@@ -22,9 +22,9 @@ function istUuid(s: string): boolean {
   return s.length === 36 && [8, 13, 18, 23].every((i) => s[i] === "-");
 }
 
-// Non-UUID challenges arrive Base64 encoded and are decoded before signing
-function challengeText(wert: string): string {
-  return istUuid(wert) ? wert : Buffer.from(wert, "base64").toString("utf8");
+// Non-UUID challenges arrive Base64 encoded; the raw decoded bytes are signed (no text conversion)
+function challengeText(wert: string): string | Buffer {
+  return istUuid(wert) ? wert : Buffer.from(wert, "base64");
 }
 
 function pflichtfelder<T extends object>(antwort: T, felder: (keyof T)[], funktion: string): T {

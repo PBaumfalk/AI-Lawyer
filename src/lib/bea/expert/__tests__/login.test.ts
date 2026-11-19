@@ -100,10 +100,11 @@ describe("bea.expert Login", () => {
     expect(b3.validationKey).toBe(validationKey.toString("base64"));
   });
 
-  it("dekodiert Base64-Challenges, die keine UUID sind, vor dem Signieren", async () => {
+  it("dekodiert Base64-Challenges, die keine UUID sind, vor dem Signieren (Rohbytes)", async () => {
     const uuid = crypto.randomUUID();
+    const roh = Buffer.from([0xff, 0x00, 0x80, 0xfe, 0x01, 0xc3, 0x28, 0x7f, 0x90, 0xa5]);
     simuliere({
-      challengeVal: Buffer.from("Herausforderung-ü-1").toString("base64"),
+      challengeVal: roh.toString("base64"),
       challengeValidation: uuid,
       tokenPAOS: "paos-1",
     });
@@ -111,8 +112,13 @@ describe("bea.expert Login", () => {
 
     await anmelden(cert.p12, PIN);
 
-    expect(spy.mock.calls[0][0]).toBe("Herausforderung-ü-1");
+    expect(Buffer.isBuffer(spy.mock.calls[0][0])).toBe(true);
+    expect((spy.mock.calls[0][0] as Buffer).equals(roh)).toBe(true);
     expect(spy.mock.calls[1][0]).toBe(uuid);
+
+    // the CMS eContent holds exactly the raw bytes (DER OCTET STRING: tag 04, length, content)
+    const cms = Buffer.from(bodyVon(fetchMock.mock.calls[1]).challengeSigned, "base64");
+    expect(cms.includes(Buffer.concat([Buffer.from([0x04, roh.length]), roh]))).toBe(true);
   });
 
   it("wirft BeaExpertError, wenn step2 einen error liefert", async () => {

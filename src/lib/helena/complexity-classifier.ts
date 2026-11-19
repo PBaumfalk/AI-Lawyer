@@ -42,6 +42,8 @@ const DRAFTING_TERMS = [
   "erstelle",
   "verfasse",
   "formuliere",
+  "entwirf",
+  "entwerfe",
 ];
 
 /** Legal research combined with legal terms (background + tier 2) */
@@ -57,6 +59,26 @@ const EXHAUSTIVE_SCOPE = ["alle", "vollstaendig", "komplett", "saemtliche"];
 
 /** Legal filing types that warrant tier 3 */
 const FILING_TERMS = ["klage", "antrag", "berufung", "revision", "widerspruch"];
+
+/**
+ * Filing documents named directly ("Kündigungsschutzklage", "Klageerwiderung",
+ * "Berufungsbegründung") count as filings with or without the word "Schriftsatz".
+ */
+const FILING_DOCUMENTS = [
+  "klage", "klageerwiderung", "replik", "duplik", "berufung", "revision", "beschwerde",
+  "widerspruch", "einspruch", "stellungnahme", "schriftsatz", "antragsschrift", "mahnbescheid",
+];
+
+/** Legal assessment: highest quality as well (Modellvergleich 2026-11-19: Opus 5/5). */
+const WUERDIGUNG_TERMS = [
+  "erfolgsaussicht", "wuerdigung", "rechtliche bewertung", "rechtlich bewerte", "rechtslage",
+  "gutachten", "risikoeinschaetzung", "prozessrisiko", "pruefe die wirksamkeit", "ist die kuendigung wirksam",
+];
+
+/** Lower-case and fold umlauts, so "prüfe" and "pruefe" match the same rule. */
+function normalisiere(text: string): string {
+  return text.toLowerCase().trim().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
+}
 
 /** Simple question indicators (inline + tier 1) */
 const SIMPLE_QUESTION_STARTS = ["was ist", "zeige", "welche", "wie viele", "wann", "wer ist", "wo ist"];
@@ -75,7 +97,7 @@ const SIMPLE_QUESTION_STARTS = ["was ist", "zeige", "welche", "wie viele", "wann
  * 4. Default: Inline + Tier 2
  */
 export function classifyComplexity(query: string): ComplexityResult {
-  const lower = query.toLowerCase().trim();
+  const lower = normalisiere(query);
 
   // --- Background + Tier 3: Legal filing drafts ---
   if (
@@ -86,6 +108,26 @@ export function classifyComplexity(query: string): ComplexityResult {
       mode: "background",
       tier: 3,
       reason: `Schriftsatz mit ${FILING_TERMS.find((t) => lower.includes(t))} erkannt -- höchste Qualitätsstufe`,
+    };
+  }
+
+  // --- Background + Tier 3: Drafting a named filing ("Entwurf der Kündigungsschutzklage") ---
+  const filing = FILING_DOCUMENTS.find((t) => lower.includes(t));
+  if (filing && DRAFTING_TERMS.some((term) => lower.includes(term))) {
+    return {
+      mode: "background",
+      tier: 3,
+      reason: `Entwurf eines Schriftsatzes (${filing}) erkannt -- höchste Qualitätsstufe`,
+    };
+  }
+
+  // --- Background + Tier 3: Legal assessment ---
+  const wuerdigung = WUERDIGUNG_TERMS.find((t) => lower.includes(t));
+  if (wuerdigung) {
+    return {
+      mode: "background",
+      tier: 3,
+      reason: `Rechtliche Würdigung erkannt (${wuerdigung}) -- höchste Qualitätsstufe`,
     };
   }
 
@@ -193,6 +235,13 @@ export async function getModelForTier(
     modelName = tier2Model;
   } else if (tier1Model) {
     modelName = tier1Model;
+  }
+
+  // anymize: tiers follow the blind model comparison of 2026-11-19 unless configured.
+  // Routine work on waterfall-2.0 (Germany), filings and assessments on Claude Opus 5.5;
+  // without consent for foundation models the Datenschutz-Schleuse falls back to waterfall.
+  if (!modelName && provider === "anymize") {
+    modelName = tier === 3 ? "anthropic/claude-opus-5.5" : "waterfall-2.0";
   }
 
   // If no tier-specific model configured, use the global default

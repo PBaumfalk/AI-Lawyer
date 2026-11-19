@@ -135,7 +135,11 @@ Aufbau: isolierter Test-Stack (Postgres mit pgvector, Redis, Ollama mit Embeddin
 - Der Schnellmodus hat mit Schleuse 90 statt 30 Sekunden Zeit.
 
 **Offen**
-0. Helenas Agent wählt das Modell über die Komplexitätsstufe, nicht über das Routing je Aufgabe. Im Test lief auch die Klage über waterfall (Stufe 2). Opus greift nur bei Stufe 3. Das Routing sollte in die Stufenwahl einfließen, zum Beispiel Schriftsatz → Stufe 3.
+0. ~~Modellwahl im Agenten~~ behoben: Helena entscheidet weiter selbst über ihre Komplexitätsstufe, die Regeln sind korrigiert.
+   - Stufe 3 gilt jetzt auch für Entwürfe benannter Schriftsätze („Entwurf der Kündigungsschutzklage“, „Entwirf eine Klageerwiderung“) und für rechtliche Würdigungen (Erfolgsaussichten, Rechtslage, Wirksamkeit).
+   - Umlaute werden vereinheitlicht („prüfe“ entspricht „pruefe“).
+   - Mit anymize gilt ohne eigene Einstellung: Stufe 1 und 2 → waterfall-2.0, Stufe 3 → Claude Opus 5.5. Ohne Einwilligung in Fremdmodelle greift der deutsche Ersatz.
+   - Live mit Datenbank noch nicht nachgeprüft.
 1. Hintergrundaufgaben ohne Aktenkontext laufen pseudonymisiert und nur über deutsche Modelle, prüfen aber die Einwilligung nicht. Betroffen sind:
    - Scanner,
    - Tagesbriefing,

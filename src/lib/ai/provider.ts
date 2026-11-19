@@ -81,7 +81,10 @@ function anymizeChatModell(apiKey: string, baseUrl: string, modellId: string): L
       return fetch(input, init);
     }) as typeof fetch,
   });
-  return provider.chat(modellId);
+  // JSON-schema output (response_format) instead of a forced tool call: with long
+  // prompts waterfall-2.0 answered in prose instead of calling the forced tool
+  // ("No object generated: the tool was not called", live 2026-11-19).
+  return provider.chat(modellId, { structuredOutputs: true });
 }
 
 /**
@@ -130,6 +133,7 @@ export async function schleusenModell(provider: string, modellName: string): Pro
     ],
     zusatzPruefer: nerAn ? nerPruefer : undefined,
     log: schleusenLog,
+    immerStreamen: provider === "anymize",
   });
 }
 

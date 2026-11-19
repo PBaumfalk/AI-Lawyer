@@ -1,0 +1,26 @@
+{
+  "A": {
+    "variante": "helena-opus",
+    "modelle": [
+      "anthropic/claude-opus-5.5"
+    ]
+  },
+  "D": {
+    "variante": "helena-waterfall",
+    "modelle": [
+      "waterfall-2.0"
+    ]
+  },
+  "C": {
+    "variante": "einzel-opus",
+    "modelle": [
+      "anthropic/claude-opus-5.5"
+    ]
+  },
+  "B": {
+    "variante": "einzel-waterfall",
+    "modelle": [
+      "waterfall-2.0"
+    ]
+  }
+}

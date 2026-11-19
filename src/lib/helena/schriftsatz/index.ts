@@ -206,6 +206,9 @@ async function runSchriftsatzPipelineImKontext(
     onStepUpdate?.({ stage: "slots", detail: "Sammle Informationen..." });
 
     const prefilled = await prefillSlotsFromAkte(prisma, akteId, intent);
+    // The court named in the request ("zum Arbeitsgericht Köln") was recognised by the
+    // intent router but never used: only a GERICHT-Beteiligter or a Rückfrage filled it.
+    if (!prefilled["GERICHT"] && intent.gericht?.trim()) prefilled["GERICHT"] = intent.gericht.trim();
     const slotResult = fillSlots(intent, prefilled, userSlotValues ?? {});
 
     if (!slotResult.vollstaendig) {

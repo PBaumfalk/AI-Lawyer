@@ -92,12 +92,18 @@ export interface SchleusenKonfig {
   erlaubteBegriffe?: string[];
   zusatzPruefer?: ZusatzPruefer;
   log?: { warn(obj: object, msg: string): void };
+  /** Fetch generate calls as a stream (anymize: avoids the ~100 s gateway cutoff). */
+  immerStreamen?: boolean;
 }
 
 /** Never personal data; anymize sometimes tags them anyway (live 2026-11-19: "Helena", "Kanzlei"). */
 export const STANDARD_ERLAUBTE_BEGRIFFE = [
   "Helena", "Kanzlei", "Mandant", "Mandantin", "Mandantschaft", "Rechtsanwalt", "Rechtsanwältin",
   "Anwalt", "Anwältin", "Arbeitgeber", "Arbeitgeberin", "Arbeitnehmer", "Arbeitnehmerin", "Gegner", "Gegnerin",
+  // court types (the court's seat stays protected only where it is part of an address)
+  "Arbeitsgericht", "Landesarbeitsgericht", "Bundesarbeitsgericht", "Amtsgericht", "Landgericht", "Oberlandesgericht",
+  "Bundesgerichtshof", "Sozialgericht", "Landessozialgericht", "Bundessozialgericht", "Verwaltungsgericht",
+  "Oberverwaltungsgericht", "Bundesverwaltungsgericht", "Finanzgericht", "Bundesfinanzhof", "Bundesverfassungsgericht",
 ];
 
 interface Lauf {
@@ -162,6 +168,9 @@ export function schleusenMiddleware(k: SchleusenKonfig): LanguageModelV1Middlewa
         });
       }
 
+      // Constants from code-defined tool/schema definitions are not personal data.
+      schleuse.erlaubeBegriffe(JSON.stringify(params.mode).match(/\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b|\b[A-Z]{3,}\b/g) ?? []);
+
       // 3. Pseudonymise. First everything new (anymize), then the model's own output (local).
       const prompt = await pseudonymisierePrompt(params.prompt, schleuse);
 
@@ -178,14 +187,22 @@ export function schleusenMiddleware(k: SchleusenKonfig): LanguageModelV1Middlewa
       return neu;
     },
 
-    async wrapGenerate({ doGenerate, params }) {
+    async wrapGenerate({ doGenerate, doStream, params }) {
       const lauf = laeufe.get(params);
       if (!lauf) throw new PipelineFehler("guard", "UNGEPRUEFT", "Interner Fehler: Anfrage wurde nicht durch die Datenschutz-Schleuse geleitet");
-      const r = lauf.ersatz ? await lauf.ersatz.doGenerate(params) : await doGenerate();
+      // Non-streaming requests are cut by anymize's gateway after ~100 s (HTTP 504,
+      // observed live 2026-11-19); long Schriftsatz sections take longer. So even
+      // generate calls are fetched as a stream and assembled here.
+      const r = k.immerStreamen
+        ? await alsGenerate(lauf.ersatz ? lauf.ersatz.doStream(params) : doStream())
+        : lauf.ersatz
+          ? await lauf.ersatz.doGenerate(params)
+          : await doGenerate();
       const json = params.mode.type !== "regular";
+      const text = r.text === undefined ? undefined : params.mode.type === "object-json" ? jsonBereinigen(r.text) : r.text;
       return {
         ...r,
-        text: r.text === undefined ? undefined : lauf.schleuse.rueckfuehren(r.text, json).text,
+        text: text === undefined ? undefined : lauf.schleuse.rueckfuehren(text, json).text,
         reasoning: typeof r.reasoning === "string" ? lauf.schleuse.rueckfuehren(r.reasoning).text : undefined,
         toolCalls: r.toolCalls?.map((t) => ({ ...t, args: lauf.schleuse.rueckfuehren(t.args, true).text })),
       };
@@ -302,6 +319,82 @@ export function rueckfuehrungsStrom(s: DatenschutzSchleuse, json: boolean): Tran
       leeren(ctrl);
     },
   });
+}
+
+type GenerateErgebnis = Awaited<ReturnType<LanguageModelV1["doGenerate"]>>;
+
+/** Assembles a doStream result into the shape of doGenerate. */
+async function alsGenerate(p: ReturnType<LanguageModelV1["doStream"]>): Promise<GenerateErgebnis> {
+  const r = await p;
+  let text = "";
+  let reasoning = "";
+  const toolCalls: NonNullable<GenerateErgebnis["toolCalls"]> = [];
+  let finishReason: GenerateErgebnis["finishReason"] = "unknown";
+  let usage: GenerateErgebnis["usage"] = { promptTokens: NaN, completionTokens: NaN };
+  let response: GenerateErgebnis["response"];
+  let fehler: unknown;
+  const leser = r.stream.getReader();
+  for (;;) {
+    const { done, value } = await leser.read();
+    if (done) break;
+    switch (value.type) {
+      case "text-delta":
+        text += value.textDelta;
+        break;
+      case "reasoning":
+        reasoning += value.textDelta;
+        break;
+      case "tool-call":
+        toolCalls.push({ toolCallType: "function", toolCallId: value.toolCallId, toolName: value.toolName, args: value.args });
+        break;
+      case "response-metadata":
+        response = { id: value.id, timestamp: value.timestamp, modelId: value.modelId };
+        break;
+      case "finish":
+        finishReason = value.finishReason;
+        usage = value.usage;
+        break;
+      case "error": {
+        // anymize sometimes sends an error event ("temporarily unavailable") and then
+        // the full answer (internal retry, observed live 2026-11-19). Only an error
+        // without any answer afterwards counts.
+        fehler = value.error;
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  if (fehler !== undefined && !text && toolCalls.length === 0) {
+    if (fehler instanceof Error) throw fehler;
+    // Provider error objects may echo the prompt: report type and code only.
+    const e = fehler as { type?: unknown; code?: unknown; error?: { type?: unknown; code?: unknown } } | undefined;
+    const teile = [e?.type ?? e?.error?.type, e?.code ?? e?.error?.code].filter((x) => typeof x === "string" || typeof x === "number");
+    throw new Error(`Fehler im Antwortstrom des KI-Anbieters${teile.length ? ` (${teile.join(", ")})` : ""}`);
+  }
+  return {
+    text,
+    reasoning: reasoning || undefined,
+    toolCalls: toolCalls.length ? toolCalls : undefined,
+    finishReason,
+    usage,
+    rawCall: r.rawCall,
+    rawResponse: r.rawResponse,
+    request: r.request,
+    response,
+    warnings: r.warnings,
+  };
+}
+
+/** Models sometimes wrap JSON in a Markdown code fence or add a sentence around it. */
+export function jsonBereinigen(text: string): string {
+  const t = text.trim();
+  const zaun = /^```(?:json)?\s*([\s\S]*?)\s*```$/i.exec(t);
+  if (zaun) return zaun[1];
+  if (t.startsWith("{") || t.startsWith("[")) return t;
+  const a = t.indexOf("{");
+  const e = t.lastIndexOf("}");
+  return a >= 0 && e > a ? t.slice(a, e + 1) : t;
 }
 
 /** Tool result as readable, JSON-like text with real line breaks. */

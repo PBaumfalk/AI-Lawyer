@@ -38,8 +38,8 @@ export class DatenschutzSchleuse {
   ) {
     // An allowed term that is part of a Beteiligter's name (a Mandantin called Helena)
     // is not allowed for this Akte.
-    const namensteile = new Set((o.bekannteWerte ?? []).flatMap((w) => w.toLowerCase().split(/[\s,-]+/)));
-    this.erlaubt = (o.erlaubteWerte ?? []).filter((b) => !namensteile.has(b.toLowerCase()));
+    this.namensteile = new Set((o.bekannteWerte ?? []).flatMap((w) => w.toLowerCase().split(/[\s,-]+/)));
+    this.erlaubt = (o.erlaubteWerte ?? []).filter((b) => !this.namensteile.has(b.toLowerCase()));
     // Known values from the database (Beteiligte, staff) are replaced locally and
     // deterministically before anything goes to anymize: anymize misses e.g. a first
     // name standing alone in a JSON field (observed live 2026-11-19).
@@ -50,13 +50,28 @@ export class DatenschutzSchleuse {
     }
   }
 
-  /** Allowed terms and internal database ids (cuid) are not personal data. */
+  /**
+   * Not personal data: allowed terms (incl. technical constants registered from
+   * code-defined tool and schema definitions) and internal database ids (cuid).
+   */
   private istErlaubt(wert: string): boolean {
     const w = bereinigeOriginal(wert);
     return /^c[a-z0-9]{20,30}$/.test(w) || this.erlaubt.some((b) => b.toLowerCase() === w.toLowerCase());
   }
 
+  /**
+   * Registers terms from code-defined parts of a request (tool definitions, JSON
+   * schema), e.g. enum values like ERSTINSTANZ that anymize tags (live 2026-11-19).
+   * Terms that are part of a Beteiligter's name are never allowed.
+   */
+  erlaubeBegriffe(begriffe: Iterable<string>): void {
+    for (const b of begriffe) {
+      if (!this.namensteile.has(b.toLowerCase()) && !this.erlaubt.includes(b)) this.erlaubt.push(b);
+    }
+  }
+
   private readonly erlaubt: string[];
+  private readonly namensteile: Set<string>;
 
   /** Anonymises text before it may enter the model context (cached per run). */
   einlassen(text: string): Promise<string> {

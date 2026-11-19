@@ -269,3 +269,100 @@ describe("JSON-Zeilenumbrüche (live beobachtet)", () => {
     expect(JSON.parse(r).t).toContain("E-Mail:\n[[email-L");
   });
 });
+
+describe("Technische Konstanten und Gerichtstypen", () => {
+  it("von anymize markierte Konstanten und Gerichtstypen blockieren nicht und bleiben lesbar", async () => {
+    const { konfig } = aufbau({ erkennt: [...PII, "ERSTINSTANZ", "REVISION", "Arbeitsgericht"] });
+    let gesehen = "";
+    const modell = new MockLanguageModelV1({
+      doGenerate: async (opt) => {
+        gesehen = JSON.stringify(opt.prompt);
+        return { rawCall: { rawPrompt: null, rawSettings: {} }, finishReason: "stop", usage: USAGE, text: "ok" };
+      },
+    });
+    await mitKiKontext({ akteId: "a" }, () =>
+      generateText({
+        model: schuetzeModell(modell, konfig),
+        system: "Instanz: ERSTINSTANZ oder REVISION. Zuständig ist das Arbeitsgericht.",
+        prompt: AKTE,
+        tools: { t: tool({ description: "Instanz ERSTINSTANZ, REVISION; Gericht: Arbeitsgericht", parameters: z.object({}) }) },
+      }),
+    );
+    expect(gesehen).toContain("ERSTINSTANZ oder REVISION");
+    expect(gesehen).toContain("Arbeitsgericht");
+    for (const w of PII) expect(gesehen).not.toContain(w);
+  });
+
+  it("ein Name in Großbuchstaben im Dokument bleibt geschützt (keine Konstante aus dem Code)", async () => {
+    const { konfig } = aufbau({ erkennt: ["SCHMIDT"] });
+    let gesehen = "";
+    const modell = new MockLanguageModelV1({
+      doGenerate: async (opt) => {
+        gesehen = JSON.stringify(opt.prompt);
+        return { rawCall: { rawPrompt: null, rawSettings: {} }, finishReason: "stop", usage: USAGE, text: "ok" };
+      },
+    });
+    await mitKiKontext({ akteId: "c" }, () =>
+      generateText({ model: schuetzeModell(modell, konfig), prompt: "Rubrum: Zeuge SCHMIDT, Instanz REVISION", tools: { t: tool({ description: "Instanz REVISION", parameters: z.object({}) }) } }),
+    );
+    expect(gesehen).not.toContain("SCHMIDT");
+  });
+});
+
+describe("Generate über Stream (anymize-Gateway-Limit)", () => {
+  it("generateObject wird intern gestreamt, Codeblock-Rahmen entfernt, Werte zurückgeführt", async () => {
+    const { konfig } = aufbau();
+    let generateAufgerufen = false;
+    const modell = new MockLanguageModelV1({
+      defaultObjectGenerationMode: "json",
+      doGenerate: async () => { generateAufgerufen = true; throw new Error("darf nicht aufgerufen werden"); },
+      doStream: async (opt) => {
+        const ph = platzhalterIn(opt.prompt)[0] ?? "";
+        const json = "```json\n" + JSON.stringify({ klaeger: ph, gericht: "Arbeitsgericht Köln" }) + "\n```";
+        return {
+          rawCall: { rawPrompt: null, rawSettings: {} },
+          stream: simulateReadableStream({
+            chunks: [
+              { type: "text-delta" as const, textDelta: json.slice(0, 20) },
+              { type: "text-delta" as const, textDelta: json.slice(20) },
+              { type: "finish" as const, finishReason: "stop" as const, usage: USAGE },
+            ],
+          }),
+        };
+      },
+    });
+    const r = await mitKiKontext({ akteId: "s" }, () =>
+      generateObject({ model: schuetzeModell(modell, { ...konfig, immerStreamen: true }), schema: z.object({ klaeger: z.string(), gericht: z.string() }), prompt: AKTE }),
+    );
+    expect(generateAufgerufen).toBe(false);
+    expect(r.object.klaeger).toMatch(/Krüger-Wendt/);
+    expect(r.object.gericht).toBe("Arbeitsgericht Köln");
+  });
+});
+
+describe("Fehlerereignis mitten im Stream", () => {
+  const strom = (mitAntwort: boolean) =>
+    new MockLanguageModelV1({
+      doStream: async () => ({
+        rawCall: { rawPrompt: null, rawSettings: {} },
+        stream: simulateReadableStream({
+          chunks: [
+            { type: "error" as const, error: { message: "temporarily unavailable", type: "api_error", code: "upstream_error" } },
+            ...(mitAntwort ? [{ type: "text-delta" as const, textDelta: "Antwort nach Wiederholung" }] : []),
+            { type: "finish" as const, finishReason: "stop" as const, usage: USAGE },
+          ],
+        }),
+      }),
+    });
+  it("Fehlerereignis gefolgt von Antwort: Antwort zählt", async () => {
+    const { konfig } = aufbau();
+    const r = await mitKiKontext({ akteId: "f" }, () => generateText({ model: schuetzeModell(strom(true), { ...konfig, immerStreamen: true }), prompt: "Hallo" }));
+    expect(r.text).toBe("Antwort nach Wiederholung");
+  });
+  it("Fehlerereignis ohne Antwort: Fehler mit Typ und Code, ohne Text", async () => {
+    const { konfig } = aufbau();
+    const e = await mitKiKontext({ akteId: "f" }, () => generateText({ model: schuetzeModell(strom(false), { ...konfig, immerStreamen: true }), prompt: "Hallo", maxRetries: 0 })).catch((x) => x);
+    expect(String(e.message)).toMatch(/api_error, upstream_error/);
+    expect(String(e.message)).not.toMatch(/temporarily/);
+  });
+});
